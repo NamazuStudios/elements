@@ -1,10 +1,6 @@
 package com.namazustudios.promotion.client;
 
 import com.namazustudios.promotion.shared.FieldVerifier;
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.junit.client.GWTTestCase;
-import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.rpc.ServiceDefTarget;
 
 /**
  * GWT JUnit <b>integration</b> tests must extend GWTTestCase.
