@@ -29,6 +29,11 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+        <dependency>
+            <groupId>com.namazustudios.promotion</groupId>
+            <artifactId>common</artifactId>
+            <version>@{project.version}</version>
+        </dependency>
     </dependencies>
   </dependencyManagement>
 

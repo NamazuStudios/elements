@@ -15,6 +15,7 @@
 
   <properties>
     <guice.version>4.0-beta5</guice.version>
+    <javax.inject.version>1</javax.inject.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 

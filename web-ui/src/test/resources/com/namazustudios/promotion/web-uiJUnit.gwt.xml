@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<module rename-to="web-ui">
-  <!-- Inherit our applications main module.                      -->
-  <inherits name='com.namazustudios.promotion.web-ui' />
-
-  <!-- Specify the path to any remote services.                   -->
-  <servlet path="/web-ui/greet" class="com.namazustudios.promotion.server.GreetingServiceImpl" />
-
-</module>
