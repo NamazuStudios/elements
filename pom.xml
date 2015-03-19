@@ -10,6 +10,7 @@
     <module>common</module>
     <module>rest-api</module>
     <module>web-ui</module>
+    <module>service</module>
   </modules>
 
   <properties>
