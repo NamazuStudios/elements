@@ -15,7 +15,8 @@ public class User {
     private Level level;
 
     /**
-     * Gets the user's real name (eg John Smith).
+     * Gets the user's login name.
+     *
      * @return
      */
     public String getName() {
@@ -23,7 +24,7 @@ public class User {
     }
 
     /**
-     * Sets the user's real name.
+     * Sets the user's login name.
      *
      * @param name
      */
@@ -71,7 +72,13 @@ public class User {
         UNPRIVILEGED,
 
         /**
-         * An administrator user.
+         * A basic user who can create/manage campaigns.
+         */
+        USER,
+
+        /**
+         * An administrator user, who can do all of the above as well
+         * as delete/create users.
          */
         ADMIN
 

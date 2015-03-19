@@ -1,7 +1,8 @@
-package com.namazustudios.promotions.rest;
+package com.namazustudios.promotion.rest;
 
 import com.namazustudios.promotion.model.SocialCampaign;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -30,6 +31,12 @@ public class SocialCampaignResource {
 
     @POST
     public void createSocialCampaign(final SocialCampaign socialCampaign) {
+        // TODO
+    }
+
+    @DELETE
+    @Path("{name}")
+    public void finishCampaign(@PathParam("name") final String name) {
         // TODO
     }
 

@@ -17,9 +17,10 @@
     </modules>
 
     <properties>
-        <guice.version>4.0-beta5</guice.version>
+        <guice.version>3.0</guice.version>
         <javax.inject.version>1</javax.inject.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <javax.servlet.api.version>3.1.0</javax.servlet.api.version>
     </properties>
 
     <build>
