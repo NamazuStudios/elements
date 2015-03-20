@@ -1,36 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- This web.xml file is not required when using Servlet 3.0 container,
      see implementation details http://jersey.java.net/nonav/documentation/latest/jax-rs.html -->
-<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
-    <servlet>
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+         version="2.4">
 
-        <servlet-name>org.glassfish.jersey.examples.helloworld_servlet.MyApplication</servlet-name>
-        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
-        <init-param>
-            <param-name>javax.ws.rs.Application</param-name>
-            <param-value>example.jersey.MyApplication</param-value>
-        </init-param>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
+    <display-name>Namazu Promotions REST API</display-name>
 
-    <servlet-mapping>
-        <servlet-name>org.glassfish.jersey.examples.helloworld_servlet.MyApplication</servlet-name>
-        <url-pattern>/*</url-pattern>
-    </servlet-mapping>
+    <listener>
+        <listener-class>com.namazustudios.promotion.rest.guice.GuiceMain</listener-class>
+    </listener>
 
     <filter>
-        <filter-name>guice-filter</filter-name>
+        <filter-name>guiceFilter</filter-name>
         <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
     </filter>
 
     <filter-mapping>
-        <filter-name>guice-filter</filter-name>
+        <filter-name>guiceFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
-    <listener>
-        <listener-class>example.jersey.Main</listener-class>
-    </listener>
-
 </web-app>
+
