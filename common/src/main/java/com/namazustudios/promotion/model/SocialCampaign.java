@@ -1,5 +1,6 @@
 package com.namazustudios.promotion.model;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -19,6 +20,10 @@ public class SocialCampaign {
     private String linkUrl;
 
     private List<EntrantType> allowedEntrantTypes;
+
+    private Date beginDate;
+
+    private Date endDate;
 
     /**
      * An all-lowercase, no-spaces string which is used to identify the
@@ -47,6 +52,11 @@ public class SocialCampaign {
         return linkUrl;
     }
 
+    /**
+     * Sets the link URL which is to be shared by the user.
+     *
+     * @param linkUrl
+     */
     public void setLinkUrl(String linkUrl) {
         this.linkUrl = linkUrl;
     }
@@ -62,8 +72,46 @@ public class SocialCampaign {
         return allowedEntrantTypes;
     }
 
+    /**
+     * Sets the allowed entrant types.
+     *
+     * @param allowedEntrantTypes
+     */
     public void setAllowedEntrantTypes(List<EntrantType> allowedEntrantTypes) {
         this.allowedEntrantTypes = allowedEntrantTypes;
+    }
+
+    /**
+     * Gets the promotion's beginning date.
+     *
+     * @return the promotion's beginning date
+     */
+    public Date getBeginDate() {
+        return beginDate;
+    }
+
+    /**
+     * SEts the promotions end date.
+     * @param beginDate
+     */
+    public void setBeginDate(Date beginDate) {
+        this.beginDate = beginDate;
+    }
+
+    /**
+     * Gets the promotion's end date.
+     * @return
+     */
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    /**
+     * SEts the promotion's end date.
+     * @param endDate
+     */
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
     }
 
     /**

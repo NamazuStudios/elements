@@ -1,15 +1,9 @@
 package com.namazustudios.promotion.rest.guice;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.TypeLiteral;
-import com.google.inject.matcher.Matchers;
 import com.google.inject.servlet.ServletModule;
-import com.google.inject.spi.InjectionListener;
-import com.google.inject.spi.TypeEncounter;
-import com.google.inject.spi.TypeListener;
-import com.namazustudios.promotion.rest.BasicEntrantResource;
+import com.namazustudios.promotion.rest.EntrantResource;
 import com.namazustudios.promotion.rest.SocialCampaignResource;
-import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import javax.inject.Singleton;
@@ -25,7 +19,7 @@ public class JerseyModule extends ServletModule {
 
         // Setup JAX-RS resources
 
-        bind(BasicEntrantResource.class);
+        bind(EntrantResource.class);
         bind(SocialCampaignResource.class);
 
         // Setup servlets

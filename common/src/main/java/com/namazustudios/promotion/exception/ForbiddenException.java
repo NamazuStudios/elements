@@ -3,7 +3,7 @@ package com.namazustudios.promotion.exception;
 /**
  * Created by patricktwohig on 3/19/15.
  */
-public class ForbiddenException extends RuntimeException {
+public class ForbiddenException extends BaseException {
 
     public ForbiddenException() {
     }
@@ -23,5 +23,11 @@ public class ForbiddenException extends RuntimeException {
     public ForbiddenException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
+
+    @Override
+    public int getStatusCode() {
+        return 403;
+    }
+
 
 }

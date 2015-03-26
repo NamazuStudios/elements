@@ -3,7 +3,7 @@ package com.namazustudios.promotion.exception;
 /**
  * Created by patricktwohig on 3/19/15.
  */
-public class NotFoundException extends RuntimeException {
+public class NotFoundException extends BaseException {
     public NotFoundException() {
     }
 
@@ -21,6 +21,11 @@ public class NotFoundException extends RuntimeException {
 
     public NotFoundException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
+    }
+
+    @Override
+    public int getStatusCode() {
+        return 404;
     }
 
 }
