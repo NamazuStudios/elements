@@ -67,20 +67,20 @@ public class User {
     public enum Level {
 
         /**
-         * An unprivileged user.
+         * An unprivileged/anonymous user.
          */
         UNPRIVILEGED,
 
         /**
-         * A basic user who can create/manage campaigns.
+         * A basic user.
          */
         USER,
 
         /**
-         * An administrator user, who can do all of the above as well
+         * An administrator/super user, who can do all of the above as well
          * as delete/create users.
          */
-        ADMIN
+        SUPERUSER
 
     }
 

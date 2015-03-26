@@ -9,6 +9,24 @@ import com.namazustudios.promotion.model.User;
 public interface UserService {
 
     /**
+     * Gets the currently logged in user.
+     *
+     * @return the currently logged in user
+     */
+    public User getCurrentUser();
+
+    /**
+     * Given the userId, which may be either username or email address,
+     * will check for the current user.  If the current user does not match,
+     * then this throws an exception to indicate that the current user does not
+     * match.s
+     *
+     * @param userId the userId, which could be either email or name
+     * @throws com.namazustudios.promotion.exception.NotFoundException if the current user does not match
+     */
+    public void checkForCurrentUser(final String userId);
+
+    /**
      * Gets a user with unique user ID.
      *
      * @param userId the UserId

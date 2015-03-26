@@ -1,5 +1,6 @@
 package com.namazustudios.promotion.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,7 +12,7 @@ public class PaginatedEntry<T> {
 
     private int count;
 
-    private List<T> objects;
+    private List<T> objects = new ArrayList<>();
 
     public int getOffset() {
         return offset;

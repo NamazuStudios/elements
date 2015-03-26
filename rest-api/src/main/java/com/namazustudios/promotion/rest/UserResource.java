@@ -2,10 +2,10 @@ package com.namazustudios.promotion.rest;
 
 import com.namazustudios.promotion.exception.BadRequestException;
 import com.namazustudios.promotion.model.PaginatedEntry;
-import com.namazustudios.promotion.model.SocialCampaign;
 import com.namazustudios.promotion.model.User;
 import com.namazustudios.promotion.service.UserService;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -58,6 +58,12 @@ public class UserResource {
     @Path("{name}/password")
     public User updateUserPassword(@PathParam("name") final String name, final String password) {
         return userService.updateUserPassword(name, password);
+    }
+
+    @DELETE
+    @Path("{name}")
+    public void deactivateUser(@PathParam("name") final String name) {
+        userService.deleteUser(name);
     }
 
 }
