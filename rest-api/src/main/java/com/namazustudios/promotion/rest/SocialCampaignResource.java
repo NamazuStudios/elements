@@ -1,5 +1,6 @@
 package com.namazustudios.promotion.rest;
 
+import com.namazustudios.promotion.exception.BadRequestException;
 import com.namazustudios.promotion.model.PaginatedEntry;
 import com.namazustudios.promotion.model.SocialCampaign;
 import com.namazustudios.promotion.service.SocialCampaignService;
@@ -28,7 +29,17 @@ public class SocialCampaignResource {
     public PaginatedEntry<SocialCampaign> getSocialCampaigns(
             @PathParam("offset") @DefaultValue("0") int offset,
             @PathParam("count") @DefaultValue("20") int count) {
+
+        if (offset < 0) {
+            throw new BadRequestException("Offset must have positive value.");
+        }
+
+        if (count < 0) {
+            throw new BadRequestException("Count must have positive value.");
+        }
+
         return socialCampaignService.getSocialCampaigns(offset, count);
+
     }
 
     @GET
