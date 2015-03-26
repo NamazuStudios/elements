@@ -70,11 +70,11 @@ public interface UserService {
     /**
      * UPdates the password for a given user.
      *
-     * @param user the user's name
+     * @param userId the user's name
      * @param password the user's password
      *
      * @return the user.
      */
-    public User updateUserPassword(final String user, final String password);
+    public User updateUserPassword(final String userId, final String password);
 
 }

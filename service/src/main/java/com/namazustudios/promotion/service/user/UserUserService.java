@@ -1,6 +1,7 @@
 package com.namazustudios.promotion.service.user;
 
 import com.google.common.collect.Lists;
+import com.namazustudios.promotion.dao.UserDao;
 import com.namazustudios.promotion.exception.ForbiddenException;
 import com.namazustudios.promotion.exception.NotFoundException;
 import com.namazustudios.promotion.model.PaginatedEntry;
@@ -16,6 +17,9 @@ import java.util.Objects;
  */
 public class UserUserService extends AbstractUserService implements UserService {
 
+    @Inject
+    private UserDao userDao;
+
     @Override
     public User getUser(String userId) {
         checkForCurrentUser(userId);
@@ -27,11 +31,15 @@ public class UserUserService extends AbstractUserService implements UserService 
         if (offset < 0) {
             throw new IllegalArgumentException("Invalid offset: " + offset);
         } else if (offset == 0) {
+
+            // The only user you are allowed to see is yourself.
+
             final PaginatedEntry<User> entry = new PaginatedEntry<>();
             entry.setOffset(0);
             entry.setCount(1);
             entry.setObjects(Lists.newArrayList(getCurrentUser()));
             return entry;
+
         } else {
             return new PaginatedEntry<>();
         }
@@ -47,25 +55,25 @@ public class UserUserService extends AbstractUserService implements UserService 
 
         checkForCurrentUser(user.getName());
 
-        // Users cannot change their own level
+        // Regular users cannot change their own level or change their name.
         user.setLevel(User.Level.USER);
         user.setName(getCurrentUser().getName());
 
-        //TODO update user
-        return null;
+        return userDao.updateUser(user);
 
     }
 
     @Override
     public void deleteUser(String userId) {
+        // The user can only delete his or her own account.
         checkForCurrentUser(userId);
-        // TODO Delete the user
+        userDao.deleteUser(userId);
     }
 
     @Override
-    public User updateUserPassword(String user, String password) {
-        // TODO Update the user's password
-        return null;
+    public User updateUserPassword(String userId, String password) {
+        checkForCurrentUser(userId);
+        return userDao.updateUserPassword(userId, password);
     }
 
 }

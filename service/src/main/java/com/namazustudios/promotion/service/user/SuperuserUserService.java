@@ -1,42 +1,48 @@
 package com.namazustudios.promotion.service.user;
 
+import com.namazustudios.promotion.dao.UserDao;
 import com.namazustudios.promotion.model.PaginatedEntry;
 import com.namazustudios.promotion.model.User;
 import com.namazustudios.promotion.service.UserService;
+
+import javax.inject.Inject;
 
 /**
  * Created by patricktwohig on 3/26/15.
  */
 public class SuperuserUserService extends AbstractUserService implements UserService {
 
+    @Inject
+    private UserDao userDao;
+
     @Override
     public User getUser(String userId) {
-        return null;
+        return userDao.getUser(userId);
     }
 
     @Override
     public PaginatedEntry<User> getUsers(int offset, int count) {
-        return null;
+        return userDao.getUsers(offset, count);
     }
 
     @Override
     public User createUser(User user) {
-        return null;
+        return userDao.createUser(user);
     }
 
     @Override
     public User updateUser(User user) {
-        return null;
+        return userDao.updateUser(user);
     }
 
     @Override
     public void deleteUser(String userId) {
-
+        userDao.deleteUser(userId);
     }
 
     @Override
-    public User updateUserPassword(String user, String password) {
-        return null;
+    public User updateUserPassword(String userId, String password) {
+        return userDao.updateUserPassword(userId, password);
     }
 
 }

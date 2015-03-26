@@ -21,7 +21,7 @@ public class SocialCampaignServiceProvider implements Provider<SocialCampaignSer
     private Provider<UnprivilegedSocialCampaignService> unprivilegedSocialCampaignServiceProvider;
 
     @Inject
-    private Provider<UserSocialCampaignService> userSocialCampaignServiceProvider;
+    private Provider<SuperuserSocialCampaignService> userSocialCampaignServiceProvider;
 
     @Override
     public SocialCampaignService get() {

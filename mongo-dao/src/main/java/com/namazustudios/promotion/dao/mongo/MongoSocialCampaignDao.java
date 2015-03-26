@@ -1,48 +1,42 @@
-package com.namazustudios.promotion.service.social;
+package com.namazustudios.promotion.dao.mongo;
 
 import com.namazustudios.promotion.dao.SocialCampaignDao;
-import com.namazustudios.promotion.exception.ForbiddenException;
-import com.namazustudios.promotion.exception.NotFoundException;
 import com.namazustudios.promotion.model.BasicEntrant;
 import com.namazustudios.promotion.model.PaginatedEntry;
 import com.namazustudios.promotion.model.SocialCampaign;
 import com.namazustudios.promotion.model.SocialCampaignEntry;
-import com.namazustudios.promotion.service.SocialCampaignService;
 
-import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Created by patricktwohig on 3/26/15.
  */
-public class UnprivilegedSocialCampaignService implements SocialCampaignService {
-
-    @Inject
-    private SocialCampaignDao socialCampaignDao;
+@Singleton
+public class MongoSocialCampaignDao implements SocialCampaignDao {
 
     @Override
     public SocialCampaign createNewCampaign(SocialCampaign socialCampaign) {
-        throw new NotFoundException();
+        return null;
     }
 
     @Override
     public SocialCampaign updateSocialCampaign(SocialCampaign socialCampaign) {
-        throw new NotFoundException();
+        return null;
     }
 
     @Override
     public PaginatedEntry<SocialCampaign> getSocialCampaigns(int offset, int count) {
-        throw new NotFoundException();
+        return null;
     }
 
     @Override
     public SocialCampaign getSocialCampaign(String name) {
-        return socialCampaignDao.getSocialCampaign(name);
+        return null;
     }
 
     @Override
     public SocialCampaignEntry submitEntrant(String campaign, BasicEntrant entrant) {
-        return socialCampaignDao.submitEntrant(campaign, entrant);
+        return null;
     }
 
 }
-
