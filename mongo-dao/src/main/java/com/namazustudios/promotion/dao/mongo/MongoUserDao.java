@@ -1,7 +1,7 @@
 package com.namazustudios.promotion.dao.mongo;
 
 import com.namazustudios.promotion.dao.UserDao;
-import com.namazustudios.promotion.model.PaginatedEntry;
+import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.User;
 
 import javax.inject.Singleton;
@@ -18,7 +18,7 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public PaginatedEntry<User> getUsers(int offset, int count) {
+    public Pagination<User> getUsers(int offset, int count) {
         return null;
     }
 

@@ -1,11 +1,9 @@
 package com.namazustudios.promotion.service;
 
 import com.namazustudios.promotion.model.BasicEntrant;
-import com.namazustudios.promotion.model.PaginatedEntry;
+import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.SocialCampaign;
 import com.namazustudios.promotion.model.SocialCampaignEntry;
-
-import java.util.List;
 
 /**
  * Created by patricktwohig on 3/18/15.
@@ -34,7 +32,7 @@ public interface SocialCampaignService {
      *
      * @return all available social campaigns
      */
-    public PaginatedEntry<SocialCampaign> getSocialCampaigns(int offset, int count);
+    public Pagination<SocialCampaign> getSocialCampaigns(int offset, int count);
 
     /**
      * Gets the social campaign.

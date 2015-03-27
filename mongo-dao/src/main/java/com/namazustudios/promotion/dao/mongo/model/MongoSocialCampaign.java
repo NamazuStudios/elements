@@ -2,12 +2,14 @@ package com.namazustudios.promotion.dao.mongo.model;
 
 import com.namazustudios.promotion.model.SocialCampaign;
 import org.bson.types.ObjectId;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Reference;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -17,11 +19,7 @@ import java.util.List;
 public class MongoSocialCampaign {
 
     @Id
-    private ObjectId objectId;
-
-    @Indexed
-    @Property
-    private String name;
+    private String objectId;
 
     @Property
     private String linkUrl;
@@ -29,28 +27,26 @@ public class MongoSocialCampaign {
     @Property
     private List<SocialCampaign.EntrantType> allowedEntrantTypes;
 
+    @Property
+    private Date beginDate;
+
+    @Property
+    private Date endDate;
+
+    public String getObjectId() {
+        return objectId;
+    }
+
+    public void setObjectId(String objectId) {
+        this.objectId = objectId;
+    }
+
     public List<SocialCampaign.EntrantType> getAllowedEntrantTypes() {
         return allowedEntrantTypes;
     }
 
     public void setAllowedEntrantTypes(List<SocialCampaign.EntrantType> allowedEntrantTypes) {
         this.allowedEntrantTypes = allowedEntrantTypes;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public ObjectId getObjectId() {
-        return objectId;
-    }
-
-    public void setObjectId(ObjectId objectId) {
-        this.objectId = objectId;
     }
 
     public String getLinkUrl() {
@@ -61,4 +57,19 @@ public class MongoSocialCampaign {
         this.linkUrl = linkUrl;
     }
 
+    public Date getBeginDate() {
+        return beginDate;
+    }
+
+    public void setBeginDate(Date beginDate) {
+        this.beginDate = beginDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
 }

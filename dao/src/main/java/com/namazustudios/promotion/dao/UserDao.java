@@ -1,6 +1,6 @@
 package com.namazustudios.promotion.dao;
 
-import com.namazustudios.promotion.model.PaginatedEntry;
+import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.User;
 
 /**
@@ -23,7 +23,7 @@ public interface UserDao {
      * @param count the count
      * @return the users in the system
      */
-    public PaginatedEntry<User> getUsers(int offset, int count);
+    public Pagination<User> getUsers(int offset, int count);
 
     /**
      * Creates a user with the given User object.

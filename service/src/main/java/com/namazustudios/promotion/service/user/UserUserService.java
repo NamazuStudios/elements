@@ -3,14 +3,11 @@ package com.namazustudios.promotion.service.user;
 import com.google.common.collect.Lists;
 import com.namazustudios.promotion.dao.UserDao;
 import com.namazustudios.promotion.exception.ForbiddenException;
-import com.namazustudios.promotion.exception.NotFoundException;
-import com.namazustudios.promotion.model.PaginatedEntry;
+import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.User;
 import com.namazustudios.promotion.service.UserService;
-import org.apache.commons.lang3.ObjectUtils;
 
 import javax.inject.Inject;
-import java.util.Objects;
 
 /**
  * Created by patricktwohig on 3/26/15.
@@ -27,21 +24,21 @@ public class UserUserService extends AbstractUserService implements UserService 
     }
 
     @Override
-    public PaginatedEntry<User> getUsers(int offset, int count) {
+    public Pagination<User> getUsers(int offset, int count) {
         if (offset < 0) {
             throw new IllegalArgumentException("Invalid offset: " + offset);
         } else if (offset == 0) {
 
             // The only user you are allowed to see is yourself.
 
-            final PaginatedEntry<User> entry = new PaginatedEntry<>();
+            final Pagination<User> entry = new Pagination<>();
             entry.setOffset(0);
-            entry.setCount(1);
+            entry.setTotal(1);
             entry.setObjects(Lists.newArrayList(getCurrentUser()));
             return entry;
 
         } else {
-            return new PaginatedEntry<>();
+            return new Pagination<>();
         }
     }
 

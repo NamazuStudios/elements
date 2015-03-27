@@ -2,7 +2,7 @@ package com.namazustudios.promotion.service.social;
 
 import com.namazustudios.promotion.dao.SocialCampaignDao;
 import com.namazustudios.promotion.model.BasicEntrant;
-import com.namazustudios.promotion.model.PaginatedEntry;
+import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.SocialCampaign;
 import com.namazustudios.promotion.model.SocialCampaignEntry;
 import com.namazustudios.promotion.service.SocialCampaignService;
@@ -28,7 +28,7 @@ public class SuperuserSocialCampaignService implements SocialCampaignService {
     }
 
     @Override
-    public PaginatedEntry<SocialCampaign> getSocialCampaigns(int offset, int count) {
+    public Pagination<SocialCampaign> getSocialCampaigns(int offset, int count) {
         return socialCampaignDao.getSocialCampaigns(offset, count);
     }
 

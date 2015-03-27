@@ -1,6 +1,6 @@
 package com.namazustudios.promotion.service;
 
-import com.namazustudios.promotion.model.PaginatedEntry;
+import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.User;
 
 /**
@@ -42,7 +42,7 @@ public interface UserService {
      * @param count the count
      * @return the PaginatedEntry of users
      */
-    public PaginatedEntry<User> getUsers(int offset, int count);
+    public Pagination<User> getUsers(int offset, int count);
 
     /**
      * Creates a new user.

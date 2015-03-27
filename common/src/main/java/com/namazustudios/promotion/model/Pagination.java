@@ -6,11 +6,11 @@ import java.util.List;
 /**
  * Created by patricktwohig on 3/25/15.
  */
-public class PaginatedEntry<T> {
+public class Pagination<T> {
 
     private int offset;
 
-    private int count;
+    private int total;
 
     private List<T> objects = new ArrayList<>();
 
@@ -22,12 +22,12 @@ public class PaginatedEntry<T> {
         this.offset = offset;
     }
 
-    public int getCount() {
-        return count;
+    public int getTotal() {
+        return total;
     }
 
-    public void setCount(int count) {
-        this.count = count;
+    public void setTotal(int total) {
+        this.total = total;
     }
 
     public List<T> getObjects() {

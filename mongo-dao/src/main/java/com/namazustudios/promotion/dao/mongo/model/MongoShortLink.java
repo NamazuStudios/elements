@@ -1,5 +1,6 @@
 package com.namazustudios.promotion.dao.mongo.model;
 
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Property;
@@ -11,22 +12,16 @@ import org.mongodb.morphia.annotations.Property;
 public class MongoShortLink {
 
     @Id
-    private String objectId;
+    private Key<String> objectId;
 
     @Property
     private String destinationUrl;
 
-    @Property
-    private int shares;
-
-    @Property
-    private int views;
-
-    public String getObjectId() {
+    public Key<String> getObjectId() {
         return objectId;
     }
 
-    public void setObjectId(String objectId) {
+    public void setObjectId(Key<String> objectId) {
         this.objectId = objectId;
     }
 
@@ -36,22 +31,6 @@ public class MongoShortLink {
 
     public void setDestinationUrl(String destinationUrl) {
         this.destinationUrl = destinationUrl;
-    }
-
-    public int getShares() {
-        return shares;
-    }
-
-    public void setShares(int shares) {
-        this.shares = shares;
-    }
-
-    public int getViews() {
-        return views;
-    }
-
-    public void setViews(int views) {
-        this.views = views;
     }
 
 }

@@ -1,7 +1,7 @@
 package com.namazustudios.promotion.rest;
 
 import com.namazustudios.promotion.exception.BadRequestException;
-import com.namazustudios.promotion.model.PaginatedEntry;
+import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.User;
 import com.namazustudios.promotion.service.UserService;
 
@@ -22,7 +22,7 @@ public class UserResource {
     private UserService userService;
 
     @GET
-    public PaginatedEntry<User> getUsers(
+    public Pagination<User> getUsers(
             @PathParam("offset") @DefaultValue("0") int offset,
             @PathParam("count") @DefaultValue("20") int count) {
 

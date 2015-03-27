@@ -1,7 +1,7 @@
 package com.namazustudios.promotion.service.user;
 
 import com.namazustudios.promotion.dao.UserDao;
-import com.namazustudios.promotion.model.PaginatedEntry;
+import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.User;
 import com.namazustudios.promotion.service.UserService;
 
@@ -21,7 +21,7 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     }
 
     @Override
-    public PaginatedEntry<User> getUsers(int offset, int count) {
+    public Pagination<User> getUsers(int offset, int count) {
         return userDao.getUsers(offset, count);
     }
 

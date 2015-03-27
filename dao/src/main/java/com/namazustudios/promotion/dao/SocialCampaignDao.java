@@ -1,7 +1,7 @@
 package com.namazustudios.promotion.dao;
 
 import com.namazustudios.promotion.model.BasicEntrant;
-import com.namazustudios.promotion.model.PaginatedEntry;
+import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.SocialCampaign;
 import com.namazustudios.promotion.model.SocialCampaignEntry;
 
@@ -31,7 +31,7 @@ public interface SocialCampaignDao {
      *
      * @return all available social campaigns
      */
-    public PaginatedEntry<SocialCampaign> getSocialCampaigns(int offset, int count);
+    public Pagination<SocialCampaign> getSocialCampaigns(int offset, int count);
 
     /**
      * Gets the social campaign.

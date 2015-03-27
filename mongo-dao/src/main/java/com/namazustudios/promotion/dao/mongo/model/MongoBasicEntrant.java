@@ -1,6 +1,7 @@
 package com.namazustudios.promotion.dao.mongo.model;
 
 import org.bson.types.ObjectId;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Property;
@@ -15,7 +16,7 @@ import java.util.Date;
 public class MongoBasicEntrant {
 
     @Id
-    public ObjectId oid;
+    public Key<String> objectId;
 
     @Property
     private String salutation;
@@ -35,12 +36,12 @@ public class MongoBasicEntrant {
     @Reference
     private MongoShortLink shortLink;
 
-    public ObjectId getOid() {
-        return oid;
+    public Key<String> getObjectId() {
+        return objectId;
     }
 
-    public void setOid(ObjectId oid) {
-        this.oid = oid;
+    public void setObjectId(Key<String> objectId) {
+        this.objectId = objectId;
     }
 
     public String getSalutation() {

@@ -1,20 +1,17 @@
 package com.namazustudios.promotion.rest;
 
 import com.namazustudios.promotion.exception.BadRequestException;
-import com.namazustudios.promotion.model.PaginatedEntry;
+import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.SocialCampaign;
 import com.namazustudios.promotion.service.SocialCampaignService;
 
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Created by patricktwohig on 3/18/15.
@@ -26,7 +23,7 @@ public class SocialCampaignResource {
     private SocialCampaignService socialCampaignService;
 
     @GET
-    public PaginatedEntry<SocialCampaign> getSocialCampaigns(
+    public Pagination<SocialCampaign> getSocialCampaigns(
             @PathParam("offset") @DefaultValue("0") int offset,
             @PathParam("count") @DefaultValue("20") int count) {
 
