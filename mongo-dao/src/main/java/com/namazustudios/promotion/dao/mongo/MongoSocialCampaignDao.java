@@ -3,11 +3,15 @@ package com.namazustudios.promotion.dao.mongo;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.namazustudios.promotion.dao.SocialCampaignDao;
+import com.namazustudios.promotion.dao.mongo.model.MongoBasicEntrant;
+import com.namazustudios.promotion.dao.mongo.model.MongoShortLink;
 import com.namazustudios.promotion.dao.mongo.model.MongoSocialCampaign;
+import com.namazustudios.promotion.exception.InternalException;
 import com.namazustudios.promotion.exception.NotFoundException;
+import com.namazustudios.promotion.exception.TooBusyException;
 import com.namazustudios.promotion.model.BasicEntrant;
 import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.SocialCampaign;
@@ -18,7 +22,8 @@ import org.mongodb.morphia.query.Query;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by patricktwohig on 3/26/15.
@@ -28,6 +33,12 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
 
     @Inject
     private Datastore datastore;
+
+    @Inject
+    private MongoShortLinkDao mongoShortLinkDao;
+
+    @Inject
+    private Atomic atomic;
 
     @Inject
     @Named("com.namazustudios.promotion.query.max.results")
@@ -122,7 +133,73 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
     }
 
     @Override
-    public SocialCampaignEntry submitEntrant(String campaign, BasicEntrant entrant) {return null;}
+    public SocialCampaignEntry submitEntrant(final String campaign, final BasicEntrant entrant) {
+
+        final MongoSocialCampaign mongoSocialCampaign = datastore.get(MongoSocialCampaign.class, campaign);
+
+        if (mongoSocialCampaign == null) {
+            throw new NotFoundException("Social campaign " + campaign + " was not found.");
+        }
+
+        entrant.setSalutation(entrant.getSalutation().trim());
+        entrant.setFirstName(entrant.getFirstName().trim());
+        entrant.setLastName(entrant.getLastName().trim());
+
+        final Atomic.Once<MongoShortLink> mongoShortLinkOnce = atomic.once(new Atomic.Once<MongoShortLink>() {
+            @Override
+            public MongoShortLink call() throws Atomic.OptimistcException {
+                return mongoShortLinkDao.createShortLinkFromURL(mongoSocialCampaign.getLinkUrl());
+            }
+        });
+
+        try {
+
+            final MongoBasicEntrant mongoBasicEntrant = new MongoBasicEntrant();
+            mongoBasicEntrant.setEmail(entrant.getEmail());
+
+            return atomic.performOptimisticUpsert(mongoBasicEntrant, new Atomic.CriticalOperation<SocialCampaignEntry>() {
+
+                @Override
+                public SocialCampaignEntry attempt(Datastore datastore) throws Atomic.OptimistcException {
+
+                    mongoBasicEntrant.setSalutation(entrant.getSalutation());
+                    mongoBasicEntrant.setFirstName(entrant.getFirstName());
+                    mongoBasicEntrant.setLastName(entrant.getLastName());
+
+                    final Map<MongoSocialCampaign, MongoShortLink> shortLinksByCampaign;
+
+                    if (mongoBasicEntrant.getShortLinksByCampaign() == null) {
+                        shortLinksByCampaign = Maps.newHashMap();
+                    } else {
+                        shortLinksByCampaign = new HashMap<>(mongoBasicEntrant.getShortLinksByCampaign());
+                    }
+
+                    MongoShortLink mongoShortLink = shortLinksByCampaign.get(mongoSocialCampaign);
+
+                    if (mongoShortLink == null) {
+                        mongoShortLink = mongoShortLinkOnce.call();
+                        shortLinksByCampaign.put(mongoSocialCampaign, mongoShortLink);
+                    }
+
+                    final SocialCampaignEntry socialCampaignEntry = new SocialCampaignEntry();
+                    socialCampaignEntry.setUniqueUrl(mongoShortLinkDao.getURLFromShortLink(mongoShortLink));
+                    return socialCampaignEntry;
+
+                }
+
+            });
+
+        } catch (Atomic.ContentionException ex) {
+            throw new TooBusyException(ex);
+        } catch (Atomic.OptimistcException ex) {
+            throw new InternalException(ex);
+        }
+
+    }
+
+    private MongoBasicEntrant getOrCreateMongoBasicEntrant(final BasicEntrant entrant) {
+        return null;
+    }
 
     public void verify(final SocialCampaign socialCampaign) {
 

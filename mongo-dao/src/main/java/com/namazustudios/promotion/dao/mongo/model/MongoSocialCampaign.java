@@ -15,22 +15,22 @@ import java.util.List;
 /**
  * Created by patricktwohig on 3/26/15.
  */
-@Entity("social_campaign")
+@Entity(value = "social_campaign", noClassnameStored = true)
 public class MongoSocialCampaign {
 
     @Id
     private String objectId;
 
-    @Property
+    @Property("link_url")
     private String linkUrl;
 
-    @Property
+    @Property("allowed_entrant_types")
     private List<SocialCampaign.EntrantType> allowedEntrantTypes;
 
-    @Property
+    @Property("begin_date")
     private Date beginDate;
 
-    @Property
+    @Property("end_date")
     private Date endDate;
 
     public String getObjectId() {

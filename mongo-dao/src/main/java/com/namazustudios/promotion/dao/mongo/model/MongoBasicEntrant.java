@@ -1,48 +1,41 @@
 package com.namazustudios.promotion.dao.mongo.model;
 
-import org.bson.types.ObjectId;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Reference;
 
 import java.util.Date;
+import java.util.Map;
 
 /**
  * Created by patricktwohig on 3/26/15.
  */
-@Entity("entrant")
+@Entity(value = "entrant", noClassnameStored = true)
 public class MongoBasicEntrant {
 
     @Id
-    public Key<String> objectId;
+    public Object entrantId;
 
-    @Property
+    @Property("salutation")
     private String salutation;
 
-    @Property
+    @Property("first_name")
     private String firstName;
 
-    @Property
+    @Property("last_name")
     private String lastName;
 
-    @Property
+    @Property("email")
+    @Indexed(unique = true)
     private String email;
 
-    @Property
+    @Property("birthday")
     private Date birthday;
 
-    @Reference
-    private MongoShortLink shortLink;
-
-    public Key<String> getObjectId() {
-        return objectId;
-    }
-
-    public void setObjectId(Key<String> objectId) {
-        this.objectId = objectId;
-    }
+    @Reference("short_links_by_campaign")
+    private Map<MongoSocialCampaign, MongoShortLink> shortLinksByCampaign;
 
     public String getSalutation() {
         return salutation;
@@ -84,12 +77,12 @@ public class MongoBasicEntrant {
         this.birthday = birthday;
     }
 
-    public MongoShortLink getShortLink() {
-        return shortLink;
+    public Map<MongoSocialCampaign, MongoShortLink> getShortLinksByCampaign() {
+        return shortLinksByCampaign;
     }
 
-    public void setShortLink(MongoShortLink shortLink) {
-        this.shortLink = shortLink;
+    public void setShortLinksByCampaign(Map<MongoSocialCampaign, MongoShortLink> shortLinksByCampaign) {
+        this.shortLinksByCampaign = shortLinksByCampaign;
     }
 
 }

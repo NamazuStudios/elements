@@ -6,10 +6,10 @@ import org.mongodb.morphia.annotations.Property;
 /**
  * Created by patricktwohig on 3/26/15.
  */
-@Entity("entrant")
+@Entity(value = "entrant", noClassnameStored = true)
 public class MongoSteamEntrant extends MongoBasicEntrant {
 
-    @Property
+    @Property("steam_id")
     private String steamId;
 
     public String getSteamId() {
