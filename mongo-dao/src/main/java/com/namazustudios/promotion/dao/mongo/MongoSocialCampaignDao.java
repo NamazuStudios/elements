@@ -10,6 +10,7 @@ import com.namazustudios.promotion.dao.mongo.model.MongoBasicEntrant;
 import com.namazustudios.promotion.dao.mongo.model.MongoShortLink;
 import com.namazustudios.promotion.dao.mongo.model.MongoSocialCampaign;
 import com.namazustudios.promotion.exception.InternalException;
+import com.namazustudios.promotion.exception.InvalidDataException;
 import com.namazustudios.promotion.exception.NotFoundException;
 import com.namazustudios.promotion.exception.TooBusyException;
 import com.namazustudios.promotion.model.BasicEntrant;
@@ -49,16 +50,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
 
         final MongoSocialCampaign mongoSocialCampaign = new MongoSocialCampaign();
 
-        if (Strings.isNullOrEmpty(socialCampaign.getName())) {
-            throw new IllegalArgumentException("Social campaign name not specified.");
-        }
-
-        if (Strings.isNullOrEmpty(socialCampaign.getLinkUrl())) {
-            throw new IllegalArgumentException("Social campaign link URL not specified.");
-        }
-
-        socialCampaign.setName(socialCampaign.getName().trim());
-        socialCampaign.setLinkUrl(socialCampaign.getLinkUrl().trim());
+        validate(socialCampaign);
 
         mongoSocialCampaign.setObjectId(socialCampaign.getName());
         mongoSocialCampaign.setLinkUrl(socialCampaign.getLinkUrl());
@@ -75,7 +67,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
     @Override
     public SocialCampaign updateSocialCampaign(SocialCampaign socialCampaign) {
 
-        verify(socialCampaign);
+        validate(socialCampaign);
 
         final MongoSocialCampaign mongoSocialCampaign = datastore.get(MongoSocialCampaign.class, socialCampaign.getName());
 
@@ -141,9 +133,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
             throw new NotFoundException("Social campaign " + campaign + " was not found.");
         }
 
-        entrant.setSalutation(entrant.getSalutation().trim());
-        entrant.setFirstName(entrant.getFirstName().trim());
-        entrant.setLastName(entrant.getLastName().trim());
+        validate(entrant);
 
         final Atomic.Once<MongoShortLink> mongoShortLinkOnce = atomic.once(new Atomic.Once<MongoShortLink>() {
             @Override
@@ -201,18 +191,51 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
         return null;
     }
 
-    public void verify(final SocialCampaign socialCampaign) {
+    public void validate(final SocialCampaign socialCampaign) {
+
+        if (socialCampaign == null) {
+            throw new InvalidDataException("Social campaign. must not be null.");
+        }
+
+        socialCampaign.setName(Strings.nullToEmpty(socialCampaign.getName()).trim());
+        socialCampaign.setLinkUrl(Strings.nullToEmpty(socialCampaign.getLinkUrl()).trim());
 
         if (Strings.isNullOrEmpty(socialCampaign.getName())) {
-            throw new IllegalArgumentException("Social campaign name not specified.");
+            throw new InvalidDataException("Social campaign name not specified.", socialCampaign);
         }
 
         if (Strings.isNullOrEmpty(socialCampaign.getLinkUrl())) {
-            throw new IllegalArgumentException("Social campaign link URL not specified.");
+            throw new InvalidDataException("Social campaign link URL not specified.", socialCampaign);
         }
 
-        socialCampaign.setName(socialCampaign.getName().trim());
-        socialCampaign.setLinkUrl(socialCampaign.getLinkUrl().trim());
+    }
+
+    public void validate(final BasicEntrant entrant) {
+
+        if (entrant == null) {
+            throw new InvalidDataException("Entrant must not be null.");
+        }
+
+        entrant.setEmail(Strings.nullToEmpty(entrant.getEmail()).trim());
+        entrant.setSalutation(Strings.nullToEmpty(entrant.getSalutation()).trim());
+        entrant.setFirstName(Strings.nullToEmpty(entrant.getFirstName()).trim());
+        entrant.setLastName(Strings.nullToEmpty(entrant.getLastName()).trim());
+
+        if (Strings.isNullOrEmpty(entrant.getFirstName())) {
+            throw new InvalidDataException("First name campaign name not specified.", entrant);
+        }
+
+        if (Strings.isNullOrEmpty(entrant.getLastName())) {
+            throw new InvalidDataException("Last name not specified.", entrant);
+        }
+
+        if (Strings.isNullOrEmpty(entrant.getEmail())) {
+            throw new InvalidDataException("Email not specified.", entrant);
+        }
+
+        if (entrant.getBirthday() == null) {
+            throw new InvalidDataException("Birthday must not be null.", entrant);
+        }
 
     }
 
