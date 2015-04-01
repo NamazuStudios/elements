@@ -16,7 +16,7 @@ import java.util.Map;
 public class MongoBasicEntrant {
 
     @Id
-    public Object entrantId;
+    private Object objectId;
 
     @Property("salutation")
     private String salutation;
@@ -36,6 +36,14 @@ public class MongoBasicEntrant {
 
     @Reference("short_links_by_campaign")
     private Map<MongoSocialCampaign, MongoShortLink> shortLinksByCampaign;
+
+    public Object getObjectId() {
+        return objectId;
+    }
+
+    public void setObjectId(Object objectId) {
+        this.objectId = objectId;
+    }
 
     public String getSalutation() {
         return salutation;

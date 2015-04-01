@@ -52,7 +52,9 @@ public class UserUserService extends AbstractUserService implements UserService 
 
         checkForCurrentUser(user.getName());
 
-        // Regular users cannot change their own level or change their name.
+        // Regular users cannot change their own level or change their name.  The underlying DAO
+        // may support name changes, but this cannot be done here.
+
         user.setLevel(User.Level.USER);
         user.setName(getCurrentUser().getName());
 

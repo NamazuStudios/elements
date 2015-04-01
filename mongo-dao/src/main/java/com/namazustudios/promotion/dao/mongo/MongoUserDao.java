@@ -8,6 +8,7 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.namazustudios.promotion.dao.UserDao;
 import com.namazustudios.promotion.dao.mongo.model.MongoUser;
+import com.namazustudios.promotion.exception.InternalException;
 import com.namazustudios.promotion.exception.InvalidDataException;
 import com.namazustudios.promotion.exception.NotFoundException;
 import com.namazustudios.promotion.model.Pagination;
@@ -23,6 +24,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.util.Arrays;
 
@@ -42,6 +44,10 @@ public class MongoUserDao implements UserDao {
     @Inject
     @Named("com.namazustudios.promotion.password.digest")
     private Provider<MessageDigest> messageDigestProvider;
+
+    @Inject
+    @Named("com.namazustudios.promotion.password.encoding")
+    private String passwordEncoding;
 
     @Override
     public User getUser(String userId) {
@@ -113,6 +119,8 @@ public class MongoUserDao implements UserDao {
         query.and(
                 query.criteria("name").equal(user.getName()),
                 query.criteria("email").equal(user.getEmail())
+        ).and(
+                query.criteria("active").equal(true)
         );
 
         operations.set("name", user.getName());
@@ -153,7 +161,41 @@ public class MongoUserDao implements UserDao {
 
     @Override
     public User updateUserPassword(String userId, String password) {
-        return null;
+
+        password = Strings.nullToEmpty(password).trim();
+
+        if (Strings.isNullOrEmpty(password)) {
+            throw new InvalidDataException("Password must not be blank.");
+        }
+
+        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
+
+        query.or(
+                query.criteria("name").equal(userId),
+                query.criteria("email").equal(userId)
+        ).and(
+                query.criteria("active").equal(true)
+        );
+
+        final MessageDigest digest = messageDigestProvider.get();
+        final byte[] passwordBytes;
+
+        try {
+            passwordBytes = password.getBytes(passwordEncoding);
+        } catch (UnsupportedEncodingException ex) {
+            throw new InternalException(ex);
+        }
+
+        operations.set("password_hash", passwordBytes);
+
+        final MongoUser mongoUser = datastore.findAndModify(query, operations);
+
+        if (mongoUser == null) {
+            throw new NotFoundException("User with userid does not exist:" + userId);
+        }
+
+        return transform(mongoUser);
     }
 
     private User transform(final MongoUser mongoUser) {
