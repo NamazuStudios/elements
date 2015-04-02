@@ -8,6 +8,7 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.namazustudios.promotion.dao.UserDao;
 import com.namazustudios.promotion.dao.mongo.model.MongoUser;
+import com.namazustudios.promotion.exception.ForbiddenException;
 import com.namazustudios.promotion.exception.InternalException;
 import com.namazustudios.promotion.exception.InvalidDataException;
 import com.namazustudios.promotion.exception.NotFoundException;
@@ -233,4 +234,9 @@ public class MongoUserDao implements UserDao {
 
     }
 
+    @Override
+    public User validateUserPassword(String userId, String passsword) {
+        // TODO Implement
+        throw new ForbiddenException();
+    }
 }

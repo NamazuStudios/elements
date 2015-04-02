@@ -59,4 +59,15 @@ public interface UserDao {
      */
     public User updateUserPassword(final String userId, final String password);
 
+    /**
+     * Validates the user's password and returns the current User instance.  If the password validation fails,
+     * then this simply throws an instance of {@link com.namazustudios.promotion.exception.ForbiddenException}
+     *
+     * @param userId the userId
+     * @param passsword the password
+     *
+     * @return the User, never null
+     */
+    public User validateUserPassword(final String userId, final String passsword);
+
 }
