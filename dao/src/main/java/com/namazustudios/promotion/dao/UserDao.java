@@ -64,10 +64,10 @@ public interface UserDao {
      * then this simply throws an instance of {@link com.namazustudios.promotion.exception.ForbiddenException}
      *
      * @param userId the userId
-     * @param passsword the password
+     * @param password the password
      *
      * @return the User, never null
      */
-    public User validateUserPassword(final String userId, final String passsword);
+    public User validateUserPassword(final String userId, final String password);
 
 }

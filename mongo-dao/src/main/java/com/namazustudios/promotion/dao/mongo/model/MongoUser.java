@@ -24,7 +24,7 @@ public class MongoUser {
     private String email;
 
     @Property("password_hash")
-    private String passwordHash;
+    private byte[] passwordHash;
 
     @Property("level")
     private User.Level level;
@@ -57,11 +57,11 @@ public class MongoUser {
         this.email = email;
     }
 
-    public String getPasswordHash() {
+    public byte[] getPasswordHash() {
         return passwordHash;
     }
 
-    public void setPasswordHash(String passwordHash) {
+    public void setPasswordHash(byte[] passwordHash) {
         this.passwordHash = passwordHash;
     }
 

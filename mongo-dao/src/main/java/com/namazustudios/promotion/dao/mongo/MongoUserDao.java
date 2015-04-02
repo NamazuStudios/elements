@@ -235,8 +235,35 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User validateUserPassword(String userId, String passsword) {
-        // TODO Implement
+    public User validateUserPassword(String userId, String password) {
+
+        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
+
+        query.or(
+                query.criteria("name").equal(userId),
+                query.criteria("email").equal(userId)
+        ).and(
+                query.criteria("active").equal(true)
+        );
+
+        final MongoUser mongoUser = query.get();
+
+        final MessageDigest digest = messageDigestProvider.get();
+        final byte[] passwordHash;
+
+        try {
+            passwordHash = password.getBytes(passwordEncoding);
+        } catch (UnsupportedEncodingException ex) {
+            throw new InternalException(ex);
+        }
+
+        final byte[] existingPasswordHash = mongoUser.getPasswordHash();
+
+        if (existingPasswordHash != null && Arrays.equals(existingPasswordHash, passwordHash)) {
+            return transform(mongoUser);
+        }
+
         throw new ForbiddenException();
+
     }
 }
