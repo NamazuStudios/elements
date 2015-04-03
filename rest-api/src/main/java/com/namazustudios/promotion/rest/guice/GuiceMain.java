@@ -3,6 +3,7 @@ package com.namazustudios.promotion.rest.guice;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.namazustudios.promotion.dao.mongo.guice.MongoDaoModule;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -35,7 +36,8 @@ public class GuiceMain extends GuiceServletContextListener {
     protected Injector getInjector() {
         return injector = Guice.createInjector(
                 new JerseyModule(),
-                new ServicesModule()
+                new ServicesModule(),
+                new MongoDaoModule()
         );
     }
 

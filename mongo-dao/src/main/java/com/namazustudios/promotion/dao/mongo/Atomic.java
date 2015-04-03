@@ -11,6 +11,7 @@ import org.mongodb.morphia.query.UpdateResults;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 
@@ -20,6 +21,7 @@ import java.util.concurrent.Callable;
  *
  * Created by patricktwohig on 3/29/15.
  */
+@Singleton
 public class Atomic {
 
     @Inject

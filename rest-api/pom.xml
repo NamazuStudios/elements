@@ -19,6 +19,7 @@
     <properties>
         <jersey.version>2.17</jersey.version>
         <guice.bridge.version>2.4.0-b13</guice.bridge.version>
+        <servlet.version>3.1.0</servlet.version>
     </properties>
 
     <dependencies>
@@ -43,14 +44,24 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.namazustudios.promotion</groupId>
+            <artifactId>dao</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.promotion</groupId>
+            <artifactId>mongo-dao</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
+            <version>${servlet.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject.extensions</groupId>
             <artifactId>guice-servlet</artifactId>
-            <version>3.0</version>
+            <version>${guice.version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey</groupId>
