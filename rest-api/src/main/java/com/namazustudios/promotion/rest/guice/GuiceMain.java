@@ -37,7 +37,8 @@ public class GuiceMain extends GuiceServletContextListener {
         return injector = Guice.createInjector(
                 new JerseyModule(),
                 new ServicesModule(),
-                new MongoDaoModule()
+                new MongoDaoModule(),
+                new ConfigurationModule()
         );
     }
 
