@@ -11,10 +11,10 @@ import java.security.NoSuchAlgorithmException;
 /**
  * Created by patricktwohig on 4/6/15.
  */
-public class DigestProvider implements Provider<MessageDigest> {
+public class PasswordDigestProvider implements Provider<MessageDigest> {
 
     @Inject
-    @Named(Constants.DIGEST_ALGORITHM)
+    @Named(Constants.PASSWORD_DIGEST_ALGORITHM)
     private String digestAlgorithm;
 
     @Override

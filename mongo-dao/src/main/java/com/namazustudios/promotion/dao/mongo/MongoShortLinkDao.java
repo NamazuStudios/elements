@@ -1,12 +1,12 @@
 package com.namazustudios.promotion.dao.mongo;
 
+import com.namazustudios.promotion.Constants;
 import com.namazustudios.promotion.dao.mongo.model.MongoShortLink;
 import org.mongodb.morphia.Datastore;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.net.URI;
 
 /**
  * Created by patricktwohig on 3/26/15.
@@ -14,13 +14,11 @@ import java.net.URI;
 @Singleton
 public class MongoShortLinkDao {
 
-    public static final String SHORT_LINK_BASE = "com.namazustudios.promotion.short.link.base";
-
     @Inject
     private Datastore datastore;
 
     @Inject
-    @Named(SHORT_LINK_BASE)
+    @Named(Constants.SHORT_LINK_BASE)
     private String shortLinkBase;
 
     public MongoShortLink createShortLinkFromURL(final String url) {

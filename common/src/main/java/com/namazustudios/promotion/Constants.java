@@ -14,16 +14,31 @@ public interface Constants {
     /**
      * The Digest provider instance for hashing passwords.
      */
-    public static final String DIGEST_PROVIDER = "com.namazustudios.promotion.password.digest.provider";
+    public static final String PASSWORD_DIGEST = "com.namazustudios.promotion.password.digest";
 
     /**
      * The algorithm for hashing passwords.
      */
-    public static final String DIGEST_ALGORITHM = "com.namazustudios.promotion.password.digest.algorithm";
+    public static final String PASSWORD_DIGEST_ALGORITHM = "com.namazustudios.promotion.password.digest.algorithm";
 
     /**
      * The character encoding used for hashing passwords.
      */
     public static final String PASSWORD_ENCODING = "com.namazustudios.promotion.password.encoding";
+
+    /**
+     * The short-link base for all urls generated.
+     */
+    public static final String SHORT_LINK_BASE = "com.namazustudios.promotion.short.link.base";
+
+    /**
+     * The system property which defines the configuration file path
+     */
+    public String PROPERTIES_FILE = "com.namazustudios.promotions.configuration.properties";
+
+    /**
+     * The default property file to configure the server.
+     */
+    public String DEFAULT_PROPERTIES_FILE = "promotions-configuration.properties";
 
 }

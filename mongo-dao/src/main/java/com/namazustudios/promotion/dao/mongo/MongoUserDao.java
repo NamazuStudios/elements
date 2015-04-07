@@ -39,7 +39,7 @@ public class MongoUserDao implements UserDao {
     private int queryMaxResults;
 
     @Inject
-    @Named(Constants.DIGEST_PROVIDER)
+    @Named(Constants.PASSWORD_DIGEST)
     private Provider<MessageDigest> messageDigestProvider;
 
     @Inject
