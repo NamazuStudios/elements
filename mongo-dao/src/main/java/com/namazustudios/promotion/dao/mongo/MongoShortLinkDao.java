@@ -14,11 +14,13 @@ import java.net.URI;
 @Singleton
 public class MongoShortLinkDao {
 
+    public static final String SHORT_LINK_BASE = "com.namazustudios.promotion.short.link.base";
+
     @Inject
     private Datastore datastore;
 
     @Inject
-    @Named("com.namazustudios.promotion.short.link.base")
+    @Named(SHORT_LINK_BASE)
     private String shortLinkBase;
 
     public MongoShortLink createShortLinkFromURL(final String url) {

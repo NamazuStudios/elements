@@ -5,6 +5,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.namazustudios.promotion.Constants;
 import com.namazustudios.promotion.dao.SocialCampaignDao;
 import com.namazustudios.promotion.dao.mongo.model.MongoBasicEntrant;
 import com.namazustudios.promotion.dao.mongo.model.MongoShortLink;
@@ -42,7 +43,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
     private Atomic atomic;
 
     @Inject
-    @Named("com.namazustudios.promotion.query.max.results")
+    @Named(Constants.QUERY_MAX_RESULTS)
     private int queryMaxResults;
 
     @Override

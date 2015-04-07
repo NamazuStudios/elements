@@ -4,8 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
+import com.namazustudios.promotion.Constants;
 import com.namazustudios.promotion.dao.UserDao;
 import com.namazustudios.promotion.dao.mongo.model.MongoUser;
 import com.namazustudios.promotion.exception.ForbiddenException;
@@ -17,9 +16,6 @@ import com.namazustudios.promotion.model.User;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
-import org.omg.CORBA.DynAnyPackage.Invalid;
-import sun.plugin2.message.Message;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -39,15 +35,15 @@ public class MongoUserDao implements UserDao {
     private Datastore datastore;
 
     @Inject
-    @Named("com.namazustudios.promotion.query.max.results")
+    @Named(Constants.QUERY_MAX_RESULTS)
     private int queryMaxResults;
 
     @Inject
-    @Named("com.namazustudios.promotion.password.digest")
+    @Named(Constants.DIGEST_PROVIDER)
     private Provider<MessageDigest> messageDigestProvider;
 
     @Inject
-    @Named("com.namazustudios.promotion.password.encoding")
+    @Named(Constants.PASSWORD_ENCODING)
     private String passwordEncoding;
 
     @Override

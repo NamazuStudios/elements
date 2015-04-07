@@ -24,15 +24,19 @@ import java.util.concurrent.Callable;
 @Singleton
 public class Atomic {
 
+    public static final String FALLOFF_TIME_MS = "com.namazustudios.promotion.mongo.optimistic.falloff.time.ms";
+
+    public static final String OPTIMISTIC_RETRY_COUNT = "com.namazustudios.promotion.mongo.optimistic.retry.count";
+
     @Inject
     private Datastore datastore;
 
     @Inject
-    @Named("com.namazustudios.promotion.mongo.optimistic.retry.count")
+    @Named(OPTIMISTIC_RETRY_COUNT)
     private int numberOfRetries = 5;
 
     @Inject
-    @Named("com.namazustudios.promotion.mongo.optimistic.falloff.time.ms")
+    @Named(FALLOFF_TIME_MS)
     private int falloffTime = 100;
 
     /**
