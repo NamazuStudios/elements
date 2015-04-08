@@ -57,8 +57,9 @@ public class UserUserService extends AbstractUserService implements UserService 
 
         user.setLevel(User.Level.USER);
         user.setName(getCurrentUser().getName());
+        user.setActive(true);
 
-        return userDao.updateUser(user);
+        return userDao.updateActiveUser(user);
 
     }
 
@@ -66,7 +67,7 @@ public class UserUserService extends AbstractUserService implements UserService 
     public void deleteUser(String userId) {
         // The user can only delete his or her own account.
         checkForCurrentUser(userId);
-        userDao.deleteUser(userId);
+        userDao.softDeleteUser(userId);
     }
 
     @Override

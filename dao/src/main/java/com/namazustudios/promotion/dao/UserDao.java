@@ -35,21 +35,37 @@ public interface UserDao {
     public User createUser(final User user);
 
     /**
-     * Writes the user to the database, and returns the result
-     * of how the user was written to the databse
+     * Updates the given user, regardless of active status and then returns
+     * the user instance as it was written to the database.
      *
-     * @param user
+     * The given {@link com.namazustudios.promotion.model.User#isActive()} is only honored for this,
+     * call if setting to true.  This cannot be used to deactivate a user, if wishing to set
+     * a user as inactive please use the {@link #softDeleteUser(String)} instead.
+     *
+     * @param user the user to update
      * @return
      */
-    public User updateUser(final User user);
+    public User updateUser(User user);
 
     /**
-     * Deletes a user from the databse.  In actuality, this isn't a true delete, but
+     * Updates the given active user.  If the user has been deleted or has been
+     * flagged as inactive, then this method will fail.
+     *
+     * The given {@link com.namazustudios.promotion.model.User#isActive()} is ignored for this,
+     * if wishing to set a user as inactive, please use the {@link #softDeleteUser(String)} instead.
+     *
+     * @param user the user to update
+     * @return
+     */
+    public User updateActiveUser(final User user);
+
+    /**
+     * Deletes a user from the database.  In actuality, this isn't a true delete, but
      * rather just flags the user as inactive.
      *
      * @param userId the user's id (name or email address)
      */
-    public void deleteUser(final String userId);
+    public void softDeleteUser(final String userId);
 
     /**
      * Updates the user's password adn returns the user object.

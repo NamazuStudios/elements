@@ -14,6 +14,8 @@ public class User {
 
     private Level level;
 
+    private boolean active;
+
     /**
      * Gets the user's login name.
      *
@@ -62,6 +64,23 @@ public class User {
      */
     public void setLevel(Level level) {
         this.level = level;
+    }
+
+    /**
+     * Returns true if the user is active.
+     * @return
+     */
+    public boolean isActive() {
+        return active;
+    }
+
+    /**
+     * Sets the user active flag.
+     *
+     * @param active
+     */
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public enum Level {

@@ -5,6 +5,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.namazustudios.promotion.dao.UserDao;
 import com.namazustudios.promotion.dao.mongo.guice.MongoDaoModule;
+import com.namazustudios.promotion.exception.DuplicateException;
 import com.namazustudios.promotion.model.User;
 import com.namazustudios.promotion.rest.guice.ConfigurationModule;
 import joptsimple.OptionException;
@@ -107,10 +108,10 @@ public class Setup {
         }
 
         if (Strings.isNullOrEmpty(rootPassword)) {
-            setRootPassword(reads("Please enter root password: "));
+            rootPassword = reads("Please enter root password: ");
         }
 
-        getRootUser().setLevel(User.Level.SUPERUSER);
+        rootUser.setLevel(User.Level.SUPERUSER);
 
     }
 
@@ -119,10 +120,10 @@ public class Setup {
         final Console console = System.console();
 
         if (console == null) {
-            throw new IllegalStateException("No console instance available.");
+            throw new IllegalStateException("No console instance available.  Please pass setup params via args.");
         }
 
-        String value = null;
+        String value;
 
         do {
             value = console.readLine(fmt, args).trim();
@@ -137,10 +138,10 @@ public class Setup {
         final Console console = System.console();
 
         if (console == null) {
-            throw new IllegalStateException("No console instance available.");
+            throw new IllegalStateException("No console instance available.  Please pass setup params via args.");
         }
 
-        String value = null;
+        String value;
 
         do {
             value = new String(console.readPassword(fmt, args)).trim();
@@ -151,8 +152,21 @@ public class Setup {
     }
 
     private void writeRootUserToDatabase() {
-        userDao.createUser(rootUser);
+
+        // Creates or updates the user
+
+        try {
+            userDao.createUser(rootUser);
+        } catch (DuplicateException ex) {
+            userDao.updateUser(rootUser);
+        }
+
         userDao.updateUserPassword(rootUser.getName(), rootPassword);
+
+        // Validate that we can get both the username and password
+        userDao.validateUserPassword(rootUser.getName(), rootPassword);
+        userDao.validateUserPassword(rootUser.getEmail(), rootPassword);
+
     }
 
     public static void main( String[] args ) throws Exception {

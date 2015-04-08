@@ -32,12 +32,12 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
 
     @Override
     public User updateUser(User user) {
-        return userDao.updateUser(user);
+        return userDao.updateActiveUser(user);
     }
 
     @Override
     public void deleteUser(String userId) {
-        userDao.deleteUser(userId);
+        userDao.softDeleteUser(userId);
     }
 
     @Override

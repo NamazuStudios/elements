@@ -139,6 +139,37 @@ public class MongoUserDao implements UserDao {
         query.and(
                 query.criteria("name").equal(user.getName()),
                 query.criteria("email").equal(user.getEmail())
+        );
+
+        operations.set("name", user.getName());
+        operations.set("email", user.getEmail());
+        operations.set("level", user.getLevel());
+
+        if (user.isActive()) {
+            operations.set("active", user.isActive());
+        }
+
+        final MongoUser mongoUser = datastore.findAndModify(query, operations);
+
+        if (mongoUser == null) {
+            throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
+        }
+
+        return transform(mongoUser);
+
+    }
+
+    @Override
+    public User updateActiveUser(User user) {
+
+        validate(user);
+
+        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
+
+        query.and(
+                query.criteria("name").equal(user.getName()),
+                query.criteria("email").equal(user.getEmail())
         ).and(
                 query.criteria("active").equal(true)
         );
@@ -157,7 +188,7 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public void deleteUser(String userId) {
+    public void softDeleteUser(String userId) {
 
         final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
@@ -306,7 +337,7 @@ public class MongoUserDao implements UserDao {
             return transform(mongoUser);
         }
 
-        throw new ForbiddenException();
+        throw new ForbiddenException("Invalid credentials for " + userId);
 
     }
 }
