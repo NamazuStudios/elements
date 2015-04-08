@@ -157,7 +157,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
                     mongoBasicEntrant.setFirstName(entrant.getFirstName());
                     mongoBasicEntrant.setLastName(entrant.getLastName());
 
-                    final Map<MongoSocialCampaign, MongoShortLink> shortLinksByCampaign;
+                    final Map<String, MongoShortLink> shortLinksByCampaign;
 
                     if (mongoBasicEntrant.getShortLinksByCampaign() == null) {
                         shortLinksByCampaign = Maps.newHashMap();
@@ -165,11 +165,11 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
                         shortLinksByCampaign = new HashMap<>(mongoBasicEntrant.getShortLinksByCampaign());
                     }
 
-                    MongoShortLink mongoShortLink = shortLinksByCampaign.get(mongoSocialCampaign);
+                    MongoShortLink mongoShortLink = shortLinksByCampaign.get(mongoSocialCampaign.getObjectId());
 
                     if (mongoShortLink == null) {
                         mongoShortLink = mongoShortLinkOnce.call();
-                        shortLinksByCampaign.put(mongoSocialCampaign, mongoShortLink);
+                        shortLinksByCampaign.put(mongoSocialCampaign.getObjectId(), mongoShortLink);
                     }
 
                     final SocialCampaignEntry socialCampaignEntry = new SocialCampaignEntry();

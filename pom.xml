@@ -16,6 +16,7 @@
     <module>runner</module>
     <module>mongo-dao</module>
     <module>dao</module>
+    <module>setup</module>
   </modules>
 
     <properties>

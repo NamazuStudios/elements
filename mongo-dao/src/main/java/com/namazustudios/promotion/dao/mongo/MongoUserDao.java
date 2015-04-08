@@ -23,6 +23,7 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 /**
@@ -30,6 +31,8 @@ import java.util.Arrays;
  */
 @Singleton
 public class MongoUserDao implements UserDao {
+
+    private static final int SALT_LENGTH = 12;
 
     @Inject
     private Datastore datastore;
@@ -95,10 +98,22 @@ public class MongoUserDao implements UserDao {
         validate(user);
 
         final MongoUser mongoUser = new MongoUser();
+        final SecureRandom secureRandom = new SecureRandom();
 
+        mongoUser.setActive(true);
         mongoUser.setName(user.getName());
         mongoUser.setEmail(user.getEmail());
         mongoUser.setLevel(user.getLevel());
+
+        byte[] tmp;
+
+        tmp = new byte[SALT_LENGTH];
+        secureRandom.nextBytes(tmp);
+        mongoUser.setSalt(tmp);
+
+        tmp = new byte[SALT_LENGTH];
+        secureRandom.nextBytes(tmp);
+        mongoUser.setPasswordHash(tmp);
 
         datastore.save(mongoUser);
         return transform(mongoUser);
@@ -175,7 +190,8 @@ public class MongoUserDao implements UserDao {
                 query.criteria("active").equal(true)
         );
 
-        final MessageDigest digest = messageDigestProvider.get();
+        // Generate the password bytes from the encoding
+
         final byte[] passwordBytes;
 
         try {
@@ -184,7 +200,18 @@ public class MongoUserDao implements UserDao {
             throw new InternalException(ex);
         }
 
-        operations.set("password_hash", passwordBytes);
+        // Generate the hash
+
+        final byte[] salt = new byte[SALT_LENGTH];
+        final SecureRandom secureRandom = new SecureRandom();
+        secureRandom.nextBytes(salt);
+
+        final MessageDigest digest = messageDigestProvider.get();
+        digest.update(salt);
+        digest.update(passwordBytes);
+
+        operations.set("salt", salt);
+        operations.set("password_hash", digest.digest());
 
         final MongoUser mongoUser = datastore.findAndModify(query, operations);
 
@@ -213,8 +240,8 @@ public class MongoUserDao implements UserDao {
             throw new InvalidDataException("User must not be null.");
         }
 
-        user.setEmail(Strings.emptyToNull(user.getEmail()).trim());
-        user.setName(Strings.emptyToNull(user.getName()).trim());
+        user.setEmail(Strings.nullToEmpty(user.getEmail()).trim());
+        user.setName(Strings.nullToEmpty(user.getName()).trim());
 
         if (Strings.isNullOrEmpty(user.getEmail())) {
             throw new InvalidDataException("Email must not be null.");
@@ -244,18 +271,21 @@ public class MongoUserDao implements UserDao {
 
         final MongoUser mongoUser = query.get();
 
-        final MessageDigest digest = messageDigestProvider.get();
-        final byte[] passwordHash;
+        final byte[] passwordBytes;
 
         try {
-            passwordHash = password.getBytes(passwordEncoding);
+            passwordBytes = password.getBytes(passwordEncoding);
         } catch (UnsupportedEncodingException ex) {
             throw new InternalException(ex);
         }
 
+        final MessageDigest digest = messageDigestProvider.get();
+        digest.update(mongoUser.getSalt());
+        digest.update(passwordBytes);
+
         final byte[] existingPasswordHash = mongoUser.getPasswordHash();
 
-        if (existingPasswordHash != null && Arrays.equals(existingPasswordHash, passwordHash)) {
+        if (existingPasswordHash != null && Arrays.equals(existingPasswordHash, digest.digest())) {
             return transform(mongoUser);
         }
 

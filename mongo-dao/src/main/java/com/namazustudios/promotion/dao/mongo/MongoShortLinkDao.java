@@ -1,5 +1,6 @@
 package com.namazustudios.promotion.dao.mongo;
 
+import com.google.common.base.Strings;
 import com.namazustudios.promotion.Constants;
 import com.namazustudios.promotion.dao.mongo.model.MongoShortLink;
 import org.mongodb.morphia.Datastore;
@@ -28,7 +29,7 @@ public class MongoShortLinkDao {
         }
 
         final MongoShortLink mongoShortLink = new MongoShortLink();
-        mongoShortLink.setDestinationUrl(url.trim());
+        mongoShortLink.setDestinationUrl(Strings.nullToEmpty(url).trim());
         datastore.save(mongoShortLink);
         return mongoShortLink;
 

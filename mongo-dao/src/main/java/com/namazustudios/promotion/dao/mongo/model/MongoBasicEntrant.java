@@ -1,5 +1,6 @@
 package com.namazustudios.promotion.dao.mongo.model;
 
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
@@ -35,7 +36,7 @@ public class MongoBasicEntrant {
     private Date birthday;
 
     @Reference("short_links_by_campaign")
-    private Map<MongoSocialCampaign, MongoShortLink> shortLinksByCampaign;
+    private Map<String, MongoShortLink> shortLinksByCampaign;
 
     public Object getObjectId() {
         return objectId;
@@ -85,11 +86,11 @@ public class MongoBasicEntrant {
         this.birthday = birthday;
     }
 
-    public Map<MongoSocialCampaign, MongoShortLink> getShortLinksByCampaign() {
+    public Map<String, MongoShortLink> getShortLinksByCampaign() {
         return shortLinksByCampaign;
     }
 
-    public void setShortLinksByCampaign(Map<MongoSocialCampaign, MongoShortLink> shortLinksByCampaign) {
+    public void setShortLinksByCampaign(Map<String, MongoShortLink> shortLinksByCampaign) {
         this.shortLinksByCampaign = shortLinksByCampaign;
     }
 

@@ -1,19 +1,13 @@
 package com.namazustudios.promotion.dao.mongo;
 
-import com.mongodb.client.result.UpdateResult;
-import com.sun.org.apache.xpath.internal.operations.Mod;
-import com.sun.tools.internal.ws.processor.model.Model;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.Objects;
-import java.util.concurrent.Callable;
 
 /**
  *

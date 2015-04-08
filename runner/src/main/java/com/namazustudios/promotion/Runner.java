@@ -1,13 +1,9 @@
 package com.namazustudios.promotion;
 
-import com.namazustudios.promotion.rest.guice.GuiceMain;
-import com.sun.org.apache.xml.internal.utils.res.XResourceBundleBase;
 import org.eclipse.jetty.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.plus.webapp.EnvConfiguration;
 import org.eclipse.jetty.plus.webapp.PlusConfiguration;
-import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.webapp.Configuration;
 import org.eclipse.jetty.webapp.FragmentConfiguration;
@@ -18,7 +14,6 @@ import org.eclipse.jetty.webapp.WebInfConfiguration;
 import org.eclipse.jetty.webapp.WebXmlConfiguration;
 
 import java.io.File;
-import java.util.logging.Handler;
 
 /**
  * A class that loads up an embedded jetty server to run the application.

@@ -42,7 +42,9 @@ public class MongoDatastoreProvider implements Provider<Datastore> {
                 MongoUser.class
         );
 
-        return morphia.createDatastore(mongoClient, databaseName);
+        final Datastore datastore = morphia.createDatastore(mongoClient, databaseName);
+        datastore.ensureIndexes();
+        return datastore;
 
     }
 }

@@ -80,7 +80,7 @@ public class User {
          * An administrator/super user, who can do all of the above as well
          * as delete/create users.
          */
-        SUPERUSER
+        SUPERUSER,
 
     }
 
