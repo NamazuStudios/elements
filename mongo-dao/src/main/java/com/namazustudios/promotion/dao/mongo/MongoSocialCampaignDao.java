@@ -5,11 +5,13 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.mongodb.DuplicateKeyException;
 import com.namazustudios.promotion.Constants;
 import com.namazustudios.promotion.dao.SocialCampaignDao;
 import com.namazustudios.promotion.dao.mongo.model.MongoBasicEntrant;
 import com.namazustudios.promotion.dao.mongo.model.MongoShortLink;
 import com.namazustudios.promotion.dao.mongo.model.MongoSocialCampaign;
+import com.namazustudios.promotion.exception.DuplicateException;
 import com.namazustudios.promotion.exception.InternalException;
 import com.namazustudios.promotion.exception.InvalidDataException;
 import com.namazustudios.promotion.exception.NotFoundException;
@@ -59,7 +61,11 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
         mongoSocialCampaign.setEndDate(socialCampaign.getEndDate());
         mongoSocialCampaign.setAllowedEntrantTypes(socialCampaign.getAllowedEntrantTypes());
 
-        datastore.save(mongoSocialCampaign);
+        try {
+            datastore.save(mongoSocialCampaign);
+        } catch (DuplicateKeyException ex) {
+            throw new DuplicateException(ex);
+        }
 
         return socialCampaign;
 
@@ -186,10 +192,6 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
             throw new InternalException(ex);
         }
 
-    }
-
-    private MongoBasicEntrant getOrCreateMongoBasicEntrant(final BasicEntrant entrant) {
-        return null;
     }
 
     public void validate(final SocialCampaign socialCampaign) {

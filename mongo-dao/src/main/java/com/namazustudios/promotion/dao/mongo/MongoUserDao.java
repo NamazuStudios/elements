@@ -4,9 +4,11 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.mongodb.DuplicateKeyException;
 import com.namazustudios.promotion.Constants;
 import com.namazustudios.promotion.dao.UserDao;
 import com.namazustudios.promotion.dao.mongo.model.MongoUser;
+import com.namazustudios.promotion.exception.DuplicateException;
 import com.namazustudios.promotion.exception.ForbiddenException;
 import com.namazustudios.promotion.exception.InternalException;
 import com.namazustudios.promotion.exception.InvalidDataException;
@@ -23,6 +25,7 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -115,7 +118,12 @@ public class MongoUserDao implements UserDao {
         secureRandom.nextBytes(tmp);
         mongoUser.setPasswordHash(tmp);
 
-        datastore.save(mongoUser);
+        try {
+            datastore.save(mongoUser);
+        } catch (DuplicateKeyException ex) {
+            throw new DuplicateException(ex);
+        }
+
         return transform(mongoUser);
 
     }
@@ -212,6 +220,7 @@ public class MongoUserDao implements UserDao {
 
         operations.set("salt", salt);
         operations.set("password_hash", digest.digest());
+        operations.set("hash_algorithm", digest.getAlgorithm());
 
         final MongoUser mongoUser = datastore.findAndModify(query, operations);
 
@@ -279,7 +288,15 @@ public class MongoUserDao implements UserDao {
             throw new InternalException(ex);
         }
 
-        final MessageDigest digest = messageDigestProvider.get();
+        final MessageDigest digest;
+
+        try {
+            final String algo = Strings.nullToEmpty(mongoUser.getHashAlgorithm());
+            digest = MessageDigest.getInstance(algo);
+        } catch (NoSuchAlgorithmException ex) {
+            throw new ForbiddenException(ex);
+        }
+
         digest.update(mongoUser.getSalt());
         digest.update(passwordBytes);
 

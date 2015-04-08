@@ -23,6 +23,9 @@ public class MongoUser {
     @Indexed(unique = true)
     private String email;
 
+    @Property("hash_algorithm")
+    private String hashAlgorithm;
+
     @Property("salt")
     private byte[] salt;
 
@@ -60,8 +63,12 @@ public class MongoUser {
         this.email = email;
     }
 
-    public byte[] getPasswordHash() {
-        return passwordHash;
+    public String getHashAlgorithm() {
+        return hashAlgorithm;
+    }
+
+    public void setHashAlgorithm(String hashAlgorithm) {
+        this.hashAlgorithm = hashAlgorithm;
     }
 
     public byte[] getSalt() {
@@ -70,6 +77,10 @@ public class MongoUser {
 
     public void setSalt(byte[] salt) {
         this.salt = salt;
+    }
+
+    public byte[] getPasswordHash() {
+        return passwordHash;
     }
 
     public void setPasswordHash(byte[] passwordHash) {
