@@ -34,11 +34,11 @@ public interface Constants {
     /**
      * The system property which defines the configuration file path
      */
-    public String PROPERTIES_FILE = "com.namazustudios.promotions.configuration.properties";
+    public static final String PROPERTIES_FILE = "com.namazustudios.promotions.configuration.properties";
 
     /**
      * The default property file to configure the server.
      */
-    public String DEFAULT_PROPERTIES_FILE = "promotions-configuration.properties";
+    public static final String DEFAULT_PROPERTIES_FILE = "promotions-configuration.properties";
 
 }

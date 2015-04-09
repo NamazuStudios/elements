@@ -5,7 +5,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.namazustudios.promotion.dao.mongo.guice.MongoDaoModule;
-import com.namazustudios.promotion.rest.guice.ConfigurationModule;
+import com.namazustudios.promotion.guice.ConfigurationModule;
 
 import java.io.Console;
 import java.util.Arrays;

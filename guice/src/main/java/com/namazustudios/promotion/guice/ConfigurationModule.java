@@ -1,11 +1,8 @@
-package com.namazustudios.promotion.rest.guice;
+package com.namazustudios.promotion.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import com.namazustudios.promotion.Constants;
-import com.namazustudios.promotion.dao.mongo.Atomic;
-import com.namazustudios.promotion.dao.mongo.provider.MongoClientProvider;
-import com.namazustudios.promotion.dao.mongo.provider.MongoDatastoreProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

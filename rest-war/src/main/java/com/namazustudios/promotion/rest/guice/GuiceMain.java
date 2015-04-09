@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.namazustudios.promotion.dao.mongo.guice.MongoDaoModule;
+import com.namazustudios.promotion.guice.ConfigurationModule;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
