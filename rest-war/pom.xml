@@ -88,6 +88,11 @@
             <artifactId>javax.servlet-api</artifactId>
             <version>${javax.servlet.api.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-moxy</artifactId>
+            <version>${jersey.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

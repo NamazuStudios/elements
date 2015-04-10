@@ -27,4 +27,5 @@ public class GuiceResourceConfig extends ResourceConfig {
         guiceBridge.bridgeGuiceInjector(injector);
 
     }
+
 }

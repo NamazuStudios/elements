@@ -8,12 +8,13 @@ import com.namazustudios.promotion.model.ErrorResponse;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
-import java.util.EnumMap;
+import javax.ws.rs.ext.Provider;
 import java.util.Map;
 
 /**
  * Created by patricktwohig on 4/10/15.
  */
+@Provider
 public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
     private static final Map<ErrorCode, Response.Status> HTTP_STATUS_MAP = Maps.immutableEnumMap(
