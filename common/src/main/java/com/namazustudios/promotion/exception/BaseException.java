@@ -24,6 +24,11 @@ public abstract  class BaseException extends RuntimeException {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 
-    public abstract int getStatusCode();
+    /**
+     * Gets the error code.
+     *
+     * @return
+     */
+    public abstract ErrorCode getCode();
 
 }

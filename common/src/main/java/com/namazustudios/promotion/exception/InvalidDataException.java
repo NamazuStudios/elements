@@ -3,7 +3,7 @@ package com.namazustudios.promotion.exception;
 /**
  * Created by patricktwohig on 4/1/15.
  */
-public class InvalidDataException extends BadRequestException {
+public class InvalidDataException extends BaseException {
 
     private final Object model;
 
@@ -47,8 +47,9 @@ public class InvalidDataException extends BadRequestException {
         this.model = null;
     }
 
-    public Object getModel() {
-        return model;
+    @Override
+    public ErrorCode getCode() {
+        return ErrorCode.INVALID_DATA;
     }
 
 }

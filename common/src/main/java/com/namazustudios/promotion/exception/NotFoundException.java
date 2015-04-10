@@ -24,8 +24,8 @@ public class NotFoundException extends BaseException {
     }
 
     @Override
-    public int getStatusCode() {
-        return 404;
+    public ErrorCode getCode() {
+        return ErrorCode.NOT_FOUND;
     }
 
 }

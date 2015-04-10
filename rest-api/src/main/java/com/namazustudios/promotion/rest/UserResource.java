@@ -1,10 +1,11 @@
 package com.namazustudios.promotion.rest;
 
-import com.namazustudios.promotion.exception.BadRequestException;
+import com.namazustudios.promotion.exception.InvalidParameterException;
 import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.User;
 import com.namazustudios.promotion.service.UserService;
 
+import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -19,6 +20,7 @@ import javax.ws.rs.PathParam;
 @Path("user")
 public class UserResource {
 
+    @Inject
     private UserService userService;
 
     @GET
@@ -27,11 +29,11 @@ public class UserResource {
             @PathParam("count") @DefaultValue("20") int count) {
 
         if (offset < 0) {
-            throw new BadRequestException("Offset must have positive value.");
+            throw new InvalidParameterException("Offset must have positive value.");
         }
 
         if (count < 0) {
-            throw new BadRequestException("Count must have positive value.");
+            throw new InvalidParameterException("Count must have positive value.");
         }
 
         return userService.getUsers(offset, count);

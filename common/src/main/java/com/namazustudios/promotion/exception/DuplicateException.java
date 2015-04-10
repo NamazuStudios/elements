@@ -4,6 +4,7 @@ package com.namazustudios.promotion.exception;
  * Created by patricktwohig on 4/8/15.
  */
 public class DuplicateException extends BaseException {
+
     public DuplicateException() {
     }
 
@@ -24,7 +25,7 @@ public class DuplicateException extends BaseException {
     }
 
     @Override
-    public int getStatusCode() {
-        return 409;
+    public ErrorCode getCode() {
+        return ErrorCode.DUPLICATE;
     }
 }

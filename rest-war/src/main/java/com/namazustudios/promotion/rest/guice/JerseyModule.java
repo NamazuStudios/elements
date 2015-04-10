@@ -3,7 +3,10 @@ package com.namazustudios.promotion.rest.guice;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.servlet.ServletModule;
 import com.namazustudios.promotion.rest.EntrantResource;
+import com.namazustudios.promotion.rest.SessionResource;
 import com.namazustudios.promotion.rest.SocialCampaignResource;
+import com.namazustudios.promotion.rest.UserResource;
+import com.namazustudios.promotion.rest.support.DefaultExceptionMapper;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import javax.inject.Singleton;
@@ -19,8 +22,11 @@ public class JerseyModule extends ServletModule {
 
         // Setup JAX-RS resources
 
+        bind(UserResource.class);
         bind(EntrantResource.class);
+        bind(SessionResource.class);
         bind(SocialCampaignResource.class);
+        bind(DefaultExceptionMapper.class);
 
         // Setup servlets
 

@@ -24,8 +24,8 @@ public class TooBusyException extends BaseException {
     }
 
     @Override
-    public int getStatusCode() {
-        return 503;
+    public ErrorCode getCode() {
+        return ErrorCode.OVERLOAD;
     }
 
 }

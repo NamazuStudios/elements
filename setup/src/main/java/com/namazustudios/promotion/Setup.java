@@ -11,12 +11,17 @@ import java.io.Console;
 import java.util.Arrays;
 
 /**
- * Hello world!
- *
+ * A Setup utility that can be run from the command-line.  This operates git-style where
+ * there are several sub-commands to do things to get the application up and running.
  */
 public class Setup {
 
-
+    /**
+     * Runs the command.
+     *
+     * @param args the argument list
+     * @throws Exception in case something goes wrong.
+     */
     public void run(final String args[]) throws Exception {
 
         if (args.length < 1) {

@@ -31,7 +31,7 @@ public class Runner
         final Server server = new Server(8080);
         final HandlerList handlerList = new HandlerList();
 
-        addProjectContext(handlerList, "rest-api");
+        addProjectContext(handlerList, "rest-war");
 
         server.setHandler(handlerList);
         server.start();

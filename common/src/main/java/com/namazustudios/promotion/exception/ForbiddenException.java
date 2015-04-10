@@ -25,9 +25,8 @@ public class ForbiddenException extends BaseException {
     }
 
     @Override
-    public int getStatusCode() {
-        return 403;
+    public ErrorCode getCode() {
+        return ErrorCode.FORBIDDEN;
     }
-
 
 }

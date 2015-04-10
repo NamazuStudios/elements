@@ -28,7 +28,7 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.promotion</groupId>
-            <artifactId>rest-api</artifactId>
+            <artifactId>rest-war</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

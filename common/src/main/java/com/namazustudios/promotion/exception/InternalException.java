@@ -24,8 +24,8 @@ public class InternalException extends BaseException {
     }
 
     @Override
-    public int getStatusCode() {
-        return 500;
+    public ErrorCode getCode() {
+        return ErrorCode.UNKNOWN;
     }
 
 }
