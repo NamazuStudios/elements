@@ -1,5 +1,7 @@
 package com.namazustudios.promotion.rest;
 
+import com.google.common.base.Strings;
+import com.namazustudios.promotion.exception.InvalidDataException;
 import com.namazustudios.promotion.exception.InvalidParameterException;
 import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.User;
@@ -13,6 +15,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 
 /**
  * Created by patricktwohig on 3/25/15.
@@ -25,8 +28,8 @@ public class UserResource {
 
     @GET
     public Pagination<User> getUsers(
-            @PathParam("offset") @DefaultValue("0") int offset,
-            @PathParam("count") @DefaultValue("20") int count) {
+            @QueryParam("offset") @DefaultValue("0") int offset,
+            @QueryParam("count") @DefaultValue("20") int count) {
 
         if (offset < 0) {
             throw new InvalidParameterException("Offset must have positive value.");
@@ -58,8 +61,22 @@ public class UserResource {
 
     @PUT
     @Path("{name}/password")
-    public User updateUserPassword(@PathParam("name") final String name, final String password) {
+    public User updateUserPassword(@PathParam("name") String name,
+                                   @QueryParam("password") String password) {
+
+        name = Strings.nullToEmpty(name).trim();
+        password = Strings.nullToEmpty(password).trim();
+
+        if (Strings.isNullOrEmpty(name)) {
+            throw new InvalidDataException("Invalid user name.");
+        }
+
+        if (Strings.isNullOrEmpty(password)) {
+            throw new InvalidDataException("Password must be specified.", password);
+        }
+
         return userService.updateUserPassword(name, password);
+
     }
 
     @DELETE

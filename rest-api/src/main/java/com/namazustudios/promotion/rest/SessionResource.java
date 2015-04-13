@@ -13,6 +13,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 
 /**
  * Created by patricktwohig on 4/2/15.
@@ -27,8 +28,8 @@ public class SessionResource {
     private HttpServletRequest httpServletRequest;
 
     @GET
-    public User getSession(@PathParam("userId") String userId,
-                           @PathParam("password") String password) {
+    public User getSession(@QueryParam("userId") String userId,
+                           @QueryParam("password") String password) {
 
         userId = Strings.nullToEmpty(userId).trim();
         password = Strings.nullToEmpty(password).trim();

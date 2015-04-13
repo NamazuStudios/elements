@@ -12,6 +12,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 
 /**
  * Created by patricktwohig on 3/18/15.
@@ -24,8 +25,8 @@ public class SocialCampaignResource {
 
     @GET
     public Pagination<SocialCampaign> getSocialCampaigns(
-            @PathParam("offset") @DefaultValue("0") int offset,
-            @PathParam("count") @DefaultValue("20") int count) {
+            @QueryParam("offset") @DefaultValue("0") int offset,
+            @QueryParam("count") @DefaultValue("20") int count) {
 
         if (offset < 0) {
             throw new InvalidParameterException("Offset must have positive value.");

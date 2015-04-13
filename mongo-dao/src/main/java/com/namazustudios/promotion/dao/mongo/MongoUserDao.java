@@ -266,9 +266,10 @@ public class MongoUserDao implements UserDao {
 
         final User user = new User();
 
-        user.setName(mongoUser.getObjectId());
+        user.setName(mongoUser.getName());
         user.setEmail(mongoUser.getEmail());
         user.setLevel(mongoUser.getLevel());
+        user.setActive(mongoUser.isActive());
 
         return user;
 
