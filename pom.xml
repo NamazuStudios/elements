@@ -19,6 +19,7 @@
     <module>setup</module>
     <module>rest-war</module>
     <module>guice</module>
+    <module>rest-guice</module>
   </modules>
 
     <properties>

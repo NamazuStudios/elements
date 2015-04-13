@@ -14,16 +14,17 @@ import javax.servlet.ServletContext;
  */
 public class GuiceResourceConfig extends ResourceConfig {
 
+    public static final String INJECOR_ATTRIBUTE_NAME = GuiceResourceConfig.class.getName() + ".Injector";
+
     @Inject
     public GuiceResourceConfig(ServiceLocator serviceLocator, ServletContext context) {
-
 
         packages(true, "com.namazustudios.promotion.rest");
 
         GuiceBridge.getGuiceBridge().initializeGuiceBridge(serviceLocator);
 
         final GuiceIntoHK2Bridge guiceBridge = serviceLocator.getService(GuiceIntoHK2Bridge.class);
-        final Injector injector = (Injector) context.getAttribute(GuiceMain.INJECOR_ATTRIBUTE_NAME);
+        final Injector injector = (Injector) context.getAttribute(INJECOR_ATTRIBUTE_NAME);
         guiceBridge.bridgeGuiceInjector(injector);
 
     }

@@ -16,7 +16,7 @@ import javax.servlet.annotation.WebListener;
 @WebListener
 public class GuiceMain extends GuiceServletContextListener {
 
-    public static final String INJECOR_ATTRIBUTE_NAME = Injector.class.getName();
+
 
     private Injector injector;
 
@@ -24,7 +24,7 @@ public class GuiceMain extends GuiceServletContextListener {
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         super.contextInitialized(servletContextEvent);
         final ServletContext context = servletContextEvent.getServletContext();
-        context.setAttribute(INJECOR_ATTRIBUTE_NAME, injector);
+        context.setAttribute(GuiceResourceConfig.INJECOR_ATTRIBUTE_NAME, injector);
     }
 
     @Override
