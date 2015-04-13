@@ -114,7 +114,7 @@ public class Atomic {
      * {@link Atomic.CriticalOperation#attempt(org.mongodb.morphia.Datastore)} method to ensure the model is properly
      * refreshed.
      *
-     * After the operation is attempted, an attempt to insert using the generated Query By Example to ensure that
+     * After the operation is attempted, an attempt to update using the generated Query By Example to ensure that
      * the entire object is successfully udpated or not at all.  Similar to a compare and swap operation.
      *
      * @param modelToEdit the model object to edit
@@ -127,6 +127,12 @@ public class Atomic {
     public <ReturnT, ModelT> ReturnT performOptimisticUpsert(
             final ModelT modelToEdit,
             final CriticalOperation<ReturnT> operation) throws OptimistcException {
+
+        final Key<?> key = datastore.getKey(modelToEdit);
+
+        if (key == null) {
+            throw new IllegalArgumentException("Model to edit must have key.");
+        }
 
         return performOptimistic(new CriticalOperation<ReturnT>() {
 
@@ -155,6 +161,59 @@ public class Atomic {
         });
     }
 
+
+    /**
+     * Given a model object, this performs the given {@link Atomic.CriticalOperation} taking a Query By Example using
+     * {@link Datastore#queryByExample(Object)} just before the execution of the
+     * {@link Atomic.CriticalOperation#attempt(org.mongodb.morphia.Datastore)} method to ensure the model is properly
+     * refreshed.
+     *
+     * After the operation is attempted, an attempt to insert using the generated Query By Example to ensure that
+     * the entire object is successfully udpated or not at all.  Similar to a compare and swap operation.
+     *
+     * @param query the query to find the object
+     * @param modelToEdit the model object to edit
+     * @param operation the edit operation to perfrom
+     * @param <ReturnT> the return Type
+     * @param <ModelT> the model type
+     * @return the result of the given operation
+     * @throws OptimistcException if an exception occurred updaing the object.
+     */
+    public <ReturnT, ModelT> ReturnT performOptimisticUpsert(
+            final Query<ModelT> query,
+            final ModelT modelToEdit,
+            final CriticalOperation<ReturnT> operation) throws OptimistcException {
+
+        if (datastore.getCount(query) > 1) {
+            throw new IllegalArgumentException("Query must result in a single entity.");
+        }
+
+        return performOptimistic(new CriticalOperation<ReturnT>() {
+
+            @Override
+            public ReturnT attempt(Datastore datastore) throws OptimistcException {
+
+                final Key<?> key = datastore.getKey(modelToEdit);
+
+                if (key.getId() != null) {
+                    datastore.get(modelToEdit);
+                }
+
+                final Query<ModelT> qbe = datastore.queryByExample(modelToEdit);
+                final ReturnT out = operation.attempt(datastore);
+
+                final UpdateResults result = datastore.updateFirst(qbe, modelToEdit, true);
+
+                if (!(result.getUpdatedCount() == 1 || result.getInsertedCount() == 1)) {
+                    throw new ConflictException();
+                }
+
+                return out;
+
+            }
+
+        });
+    }
     /**
      * A basic a atomic operation.  The operation is supplied with a
      * {@link org.mongodb.morphia.Datastore} instance which is used to handel the atomic

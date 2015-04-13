@@ -11,6 +11,7 @@ import com.namazustudios.promotion.dao.SocialCampaignDao;
 import com.namazustudios.promotion.dao.mongo.model.MongoBasicEntrant;
 import com.namazustudios.promotion.dao.mongo.model.MongoShortLink;
 import com.namazustudios.promotion.dao.mongo.model.MongoSocialCampaign;
+import com.namazustudios.promotion.dao.mongo.model.MongoSteamEntrant;
 import com.namazustudios.promotion.exception.DuplicateException;
 import com.namazustudios.promotion.exception.InternalException;
 import com.namazustudios.promotion.exception.InvalidDataException;
@@ -20,6 +21,7 @@ import com.namazustudios.promotion.model.BasicEntrant;
 import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.SocialCampaign;
 import com.namazustudios.promotion.model.SocialCampaignEntry;
+import com.namazustudios.promotion.model.SteamEntrant;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 
@@ -194,6 +196,69 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
 
     }
 
+    @Override
+    public SocialCampaignEntry submitEntrant(final String campaign, final SteamEntrant entrant) {
+        final MongoSocialCampaign mongoSocialCampaign = datastore.get(MongoSocialCampaign.class, campaign);
+
+        if (mongoSocialCampaign == null) {
+            throw new NotFoundException("Social campaign " + campaign + " was not found.");
+        }
+
+        validate(entrant);
+
+        final Atomic.Once<MongoShortLink> mongoShortLinkOnce = atomic.once(new Atomic.Once<MongoShortLink>() {
+            @Override
+            public MongoShortLink call() throws Atomic.OptimistcException {
+                return mongoShortLinkDao.createShortLinkFromURL(mongoSocialCampaign.getLinkUrl());
+            }
+        });
+
+        try {
+
+            final MongoSteamEntrant mongoSteamEntrant = new MongoSteamEntrant();
+            mongoSteamEntrant.setEmail(entrant.getEmail());
+
+            return atomic.performOptimisticUpsert(mongoSteamEntrant, new Atomic.CriticalOperation<SocialCampaignEntry>() {
+
+                @Override
+                public SocialCampaignEntry attempt(Datastore datastore) throws Atomic.OptimistcException {
+
+                    mongoSteamEntrant.setSalutation(entrant.getSalutation());
+                    mongoSteamEntrant.setFirstName(entrant.getFirstName());
+                    mongoSteamEntrant.setLastName(entrant.getLastName());
+                    mongoSteamEntrant.setSteamId(entrant.getSteamId());
+
+                    final Map<String, MongoShortLink> shortLinksByCampaign;
+
+                    if (mongoSteamEntrant.getShortLinksByCampaign() == null) {
+                        shortLinksByCampaign = Maps.newHashMap();
+                    } else {
+                        shortLinksByCampaign = new HashMap<>(mongoSteamEntrant.getShortLinksByCampaign());
+                    }
+
+                    MongoShortLink mongoShortLink = shortLinksByCampaign.get(mongoSocialCampaign.getObjectId());
+
+                    if (mongoShortLink == null) {
+                        mongoShortLink = mongoShortLinkOnce.call();
+                        shortLinksByCampaign.put(mongoSocialCampaign.getObjectId(), mongoShortLink);
+                    }
+
+                    final SocialCampaignEntry socialCampaignEntry = new SocialCampaignEntry();
+                    socialCampaignEntry.setUniqueUrl(mongoShortLinkDao.getURLFromShortLink(mongoShortLink));
+                    return socialCampaignEntry;
+
+                }
+
+            });
+
+        } catch (Atomic.ContentionException ex) {
+            throw new TooBusyException(ex);
+        } catch (Atomic.OptimistcException ex) {
+            throw new InternalException(ex);
+        }
+
+    }
+
     public void validate(final SocialCampaign socialCampaign) {
 
         if (socialCampaign == null) {
@@ -238,6 +303,18 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
 
         if (entrant.getBirthday() == null) {
             throw new InvalidDataException("Birthday must not be null.", entrant);
+        }
+
+    }
+
+    public void validate(final SteamEntrant entrant) {
+
+        validate((BasicEntrant)entrant);
+
+        entrant.setLastName(Strings.nullToEmpty(entrant.getSteamId()).trim());
+
+        if (Strings.isNullOrEmpty(entrant.getSteamId())) {
+            throw new InvalidDataException("Steam ID must not be specified.");
         }
 
     }

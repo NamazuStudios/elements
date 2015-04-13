@@ -4,6 +4,7 @@ import com.namazustudios.promotion.model.BasicEntrant;
 import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.SocialCampaign;
 import com.namazustudios.promotion.model.SocialCampaignEntry;
+import com.namazustudios.promotion.model.SteamEntrant;
 
 /**
  * Created by patricktwohig on 3/26/15.
@@ -52,5 +53,16 @@ public interface SocialCampaignDao {
      * @return the SocialCampaignEntry object, which indicates which URL the user should share
      */
     public SocialCampaignEntry submitEntrant(final String campaign, final BasicEntrant entrant);
+
+    /**
+     * Given the campaign name and the entrant's information, this places the entrant into
+     * the campaign.
+     *
+     * The Entrant may be created, or may be linked from a previous campaign.
+     *
+     * @param entrant
+     * @return the SocialCampaignEntry object, which indicates which URL the user should share
+     */
+    public SocialCampaignEntry submitEntrant(final String campaign, final SteamEntrant entrant);
 
 }

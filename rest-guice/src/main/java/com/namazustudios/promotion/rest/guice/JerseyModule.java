@@ -33,7 +33,7 @@ public class JerseyModule extends ServletModule {
         bind(ServletContainer.class).in(Singleton.class);
 
         final Map<String, String> params = new ImmutableMap.Builder<String, String>()
-                .put("javax.ws.rs.Application", GuiceResourceConfig.class.getName())
+                    .put("javax.ws.rs.Application", GuiceResourceConfig.class.getName())
                 .build();
 
         serve("/*").with(ServletContainer.class, params);

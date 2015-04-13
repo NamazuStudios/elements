@@ -1,6 +1,7 @@
 package com.namazustudios.promotion.dao.mongo.model;
 
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Property;
 
 /**
@@ -9,7 +10,9 @@ import org.mongodb.morphia.annotations.Property;
 @Entity(value = "entrant", noClassnameStored = true)
 public class MongoSteamEntrant extends MongoBasicEntrant {
 
+
     @Property("steam_id")
+    @Indexed(unique = true)
     private String steamId;
 
     public String getSteamId() {

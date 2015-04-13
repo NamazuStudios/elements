@@ -5,6 +5,7 @@ import com.namazustudios.promotion.model.BasicEntrant;
 import com.namazustudios.promotion.model.Pagination;
 import com.namazustudios.promotion.model.SocialCampaign;
 import com.namazustudios.promotion.model.SocialCampaignEntry;
+import com.namazustudios.promotion.model.SteamEntrant;
 import com.namazustudios.promotion.service.SocialCampaignService;
 
 import javax.inject.Inject;
@@ -39,6 +40,11 @@ public class SuperuserSocialCampaignService implements SocialCampaignService {
 
     @Override
     public SocialCampaignEntry submitEntrant(String campaign, BasicEntrant entrant) {
+        return socialCampaignDao.submitEntrant(campaign, entrant);
+    }
+
+    @Override
+    public SocialCampaignEntry submitEntrant(String campaign, SteamEntrant entrant) {
         return socialCampaignDao.submitEntrant(campaign, entrant);
     }
 
