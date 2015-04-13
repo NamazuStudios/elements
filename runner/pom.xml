@@ -27,11 +27,6 @@
             <version>${slf4j.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.promotion</groupId>
-            <artifactId>rest-guice</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-http</artifactId>
             <version>${jetty.version}</version>
