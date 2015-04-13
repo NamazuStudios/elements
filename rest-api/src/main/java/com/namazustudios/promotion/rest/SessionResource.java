@@ -25,7 +25,7 @@ public class SessionResource {
     private HttpServletRequest httpServletRequest;
 
     @GET
-    private User getSession(@PathParam("userId") final String userId, @PathParam("password") final String password) {
+    public User getSession(@PathParam("userId") final String userId, @PathParam("password") final String password) {
 
         final User user = authService.loginUser(userId, password);
         final HttpSession httpSession = httpServletRequest.getSession(true);

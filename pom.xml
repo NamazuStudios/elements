@@ -31,6 +31,7 @@
         <guava.version>18.0</guava.version>
         <commons.lang.version>3.3.2</commons.lang.version>
         <jaxrs.api.version>2.0.1</jaxrs.api.version>
+        <jersey.version>2.17</jersey.version>
     </properties>
 
     <dependencies>

@@ -47,6 +47,11 @@
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-moxy</artifactId>
+            <version>${jersey.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.namazustudios.promotion</groupId>
             <artifactId>rest-guice</artifactId>
             <version>${project.version}</version>
