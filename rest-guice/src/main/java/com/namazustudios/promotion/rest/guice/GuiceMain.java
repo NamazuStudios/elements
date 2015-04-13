@@ -30,6 +30,8 @@ public class GuiceMain extends GuiceServletContextListener {
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
         super.contextDestroyed(servletContextEvent);
+        final ServletContext context = servletContextEvent.getServletContext();
+        context.removeAttribute(GuiceResourceConfig.INJECOR_ATTRIBUTE_NAME);
         injector = null;
     }
 

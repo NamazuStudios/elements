@@ -46,6 +46,11 @@
             <artifactId>jetty-annotations</artifactId>
             <version>${jetty.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.namazustudios.promotion</groupId>
+            <artifactId>rest-guice</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
 </project>
