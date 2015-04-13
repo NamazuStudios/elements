@@ -5,6 +5,8 @@ import com.google.common.collect.Maps;
 import com.namazustudios.promotion.exception.BaseException;
 import com.namazustudios.promotion.exception.ErrorCode;
 import com.namazustudios.promotion.model.ErrorResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -16,6 +18,8 @@ import java.util.Map;
  */
 @Provider
 public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultExceptionMapper.class);
 
     private static final Map<ErrorCode, Response.Status> HTTP_STATUS_MAP = Maps.immutableEnumMap(
             new ImmutableMap.Builder<ErrorCode, Response.Status>()
@@ -42,6 +46,8 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
             final ErrorResponse errorResponse = new ErrorResponse();
 
+            LOG.info("Caught unknown exception while processing request.", ex);
+
             errorResponse.setMessage(ex.getMessage());
             errorResponse.setCode(ex.getCode().toString());
 
@@ -53,6 +59,8 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
         } catch (Exception ex) {
 
             final ErrorResponse errorResponse = new ErrorResponse();
+
+            LOG.warn("Caught unknown exception while processing request.", ex);
 
             errorResponse.setMessage(ex.getMessage());
             errorResponse.setCode(ErrorCode.UNKNOWN.toString());

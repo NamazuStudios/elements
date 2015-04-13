@@ -1,5 +1,7 @@
 package com.namazustudios.promotion.rest;
 
+import com.google.common.base.Strings;
+import com.namazustudios.promotion.exception.InvalidDataException;
 import com.namazustudios.promotion.model.User;
 import com.namazustudios.promotion.rest.provider.UserProvider;
 import com.namazustudios.promotion.service.AuthService;
@@ -25,7 +27,19 @@ public class SessionResource {
     private HttpServletRequest httpServletRequest;
 
     @GET
-    public User getSession(@PathParam("userId") final String userId, @PathParam("password") final String password) {
+    public User getSession(@PathParam("userId") String userId,
+                           @PathParam("password") String password) {
+
+        userId = Strings.nullToEmpty(userId).trim();
+        password = Strings.nullToEmpty(password).trim();
+
+        if (Strings.isNullOrEmpty(userId)) {
+            throw new InvalidDataException("User ID must be specified.");
+        }
+
+        if (Strings.isNullOrEmpty(password)) {
+            throw new InvalidDataException("Password must be specified.");
+        }
 
         final User user = authService.loginUser(userId, password);
         final HttpSession httpSession = httpServletRequest.getSession(true);
