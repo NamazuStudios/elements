@@ -16,8 +16,6 @@ import javax.servlet.annotation.WebListener;
 @WebListener
 public class GuiceMain extends GuiceServletContextListener {
 
-
-
     private Injector injector;
 
     @Override

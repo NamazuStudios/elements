@@ -80,14 +80,13 @@ public class MongoUserDao implements UserDao {
         final Pagination<User> users = new Pagination<>();
 
         users.setOffset(offset);
-        users.setTotal((int)query.getCollection().getCount());
 
-        final Iterable<User> userIterable = Iterables.transform(query, new Function<MongoUser, User>() {
+        final Iterable<User> userIterable = Iterables.limit(Iterables.transform(query, new Function<MongoUser, User>() {
             @Override
             public User apply(MongoUser input) {
                 return transform(input);
             }
-        });
+        }), count);
 
         users.setObjects(Lists.newArrayList(userIterable));
 

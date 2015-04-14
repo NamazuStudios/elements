@@ -12,7 +12,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 /**
  * Created by patricktwohig on 3/18/15.
@@ -24,6 +26,7 @@ public class SocialCampaignResource {
     private SocialCampaignService socialCampaignService;
 
     @GET
+    @Produces(MediaType.APPLICATION_JSON)
     public Pagination<SocialCampaign> getSocialCampaigns(
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("count") @DefaultValue("20") int count) {
@@ -42,16 +45,19 @@ public class SocialCampaignResource {
 
     @GET
     @Path("{name}")
+    @Produces(MediaType.APPLICATION_JSON)
     public SocialCampaign getSocialCampaign(@PathParam("name") final String name) {
         return socialCampaignService.getSocialCampaign(name);
     }
 
     @POST
+    @Produces(MediaType.APPLICATION_JSON)
     public SocialCampaign createSocialCampaign(final SocialCampaign socialCampaign) {
         return socialCampaignService.createNewCampaign(socialCampaign);
     }
 
     @PUT
+    @Produces(MediaType.APPLICATION_JSON)
     public SocialCampaign updateSocialCampaign(final SocialCampaign socialCampaign) {
         return socialCampaignService.updateSocialCampaign(socialCampaign);
     }

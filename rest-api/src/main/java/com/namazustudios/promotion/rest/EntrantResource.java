@@ -12,6 +12,8 @@ import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 /**
  * Created by patricktwohig on 3/19/15.
@@ -26,6 +28,7 @@ public class EntrantResource {
 
     @POST
     @Path("basic/entrant")
+    @Produces(MediaType.APPLICATION_JSON)
     public SocialCampaignEntry addEntrant(@PathParam("name")final String name, final BasicEntrant basicEntrant) {
         LOGGER.info("Adding entrant for basic campaign: " + name);
         return socialCampaignService.submitEntrant(name, basicEntrant);
@@ -33,6 +36,7 @@ public class EntrantResource {
 
     @POST
     @Path("steam/entrant")
+    @Produces(MediaType.APPLICATION_JSON)
     public SocialCampaignEntry addEntrant(@PathParam("name")final String name, final SteamEntrant steamEntrant) {
         LOGGER.info("Adding entrant for Steam campaign: " + name);
         return socialCampaignService.submitEntrant(name, steamEntrant);

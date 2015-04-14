@@ -13,7 +13,9 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 /**
  * Created by patricktwohig on 4/2/15.
@@ -28,6 +30,7 @@ public class SessionResource {
     private HttpServletRequest httpServletRequest;
 
     @GET
+    @Produces(MediaType.APPLICATION_JSON)
     public User getSession(@QueryParam("userId") String userId,
                            @QueryParam("password") String password) {
 
