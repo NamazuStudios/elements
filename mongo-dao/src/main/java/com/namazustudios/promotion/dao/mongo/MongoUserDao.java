@@ -72,14 +72,17 @@ public class MongoUserDao implements UserDao {
     @Override
     public Pagination<User> getUsers(int offset, int count) {
 
+        count = Math.min(queryMaxResults, count);
+
         final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
 
         query.filter("active =", true);
-        query.offset(offset).limit(Math.min(queryMaxResults, count));
+        query.offset(offset);
 
         final Pagination<User> users = new Pagination<>();
 
         users.setOffset(offset);
+        users.setTotal((int)query.getCollection().getCount());
 
         final Iterable<User> userIterable = Iterables.limit(Iterables.transform(query, new Function<MongoUser, User>() {
             @Override
