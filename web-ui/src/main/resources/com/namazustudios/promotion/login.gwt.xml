@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module rename-to='webui'>
+<module rename-to='login'>
+
+  <inherits name="com.google.gwt.inject.Inject"/>
+  <inherits name="org.fusesource.restygwt.RestyGWT"/>
+  <inherits name="com.namazustudios.promotion.Common"/>
+
   <!-- Inherit the core Web Toolkit stuff.                        -->
   <inherits name='com.google.gwt.user.User' />
 
@@ -13,9 +18,12 @@
   <!-- Other module inherits                                      -->
 
   <!-- Specify the app entry point class.                         -->
-  <entry-point class='com.namazustudios.promotion.webui.Main' />
+  <entry-point class='com.namazustudios.promotion.client.login.Login' />
 
   <!-- Specify the paths for translatable code                    -->
-  <source path='webui' />
+  <source path="client"/>
+  <source path="client/rest"/>
+  <source path="client/guice"/>
+  <source path="client/login"/>
 
 </module>

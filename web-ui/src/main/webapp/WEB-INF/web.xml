@@ -5,20 +5,9 @@
 
 <web-app>
 
-  <!-- Servlets -->
-  <servlet>
-    <servlet-name>greetServlet</servlet-name>
-    <servlet-class>com.namazustudios.promotion.server.GreetingServiceImpl</servlet-class>
-  </servlet>
-
-  <servlet-mapping>
-    <servlet-name>greetServlet</servlet-name>
-    <url-pattern>/web-ui/greet</url-pattern>
-  </servlet-mapping>
-
   <!-- Default page to serve -->
   <welcome-file-list>
-    <welcome-file>web-ui.html</welcome-file>
+    <welcome-file>login.html</welcome-file>
   </welcome-file-list>
 
 </web-app>
