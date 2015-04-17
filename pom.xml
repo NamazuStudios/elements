@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.namazustudios.promotion</groupId>
@@ -13,14 +14,14 @@
         <module>rest-api</module>
         <module>web-ui</module>
         <module>service</module>
-    <module>runner</module>
-    <module>mongo-dao</module>
-    <module>dao</module>
-    <module>setup</module>
-    <module>rest-war</module>
-    <module>guice</module>
-    <module>rest-guice</module>
-  </modules>
+        <module>runner</module>
+        <module>mongo-dao</module>
+        <module>dao</module>
+        <module>setup</module>
+        <module>rest-war</module>
+        <module>guice</module>
+        <module>rest-guice</module>
+    </modules>
 
     <properties>
         <guice.version>3.0</guice.version>
@@ -39,11 +40,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
         </dependency>
     </dependencies>
 

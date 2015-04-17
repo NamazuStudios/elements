@@ -1,14 +1,17 @@
 package com.namazustudios.promotion.client.login;
 
+import com.google.gwt.dev.util.collect.Lists;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.user.client.ui.*;
 import com.namazustudios.promotion.client.rest.Client;
 
 import javax.inject.Inject;
+import javax.management.openmbean.SimpleType;
 
 /**
  * Created by patricktwohig on 4/16/15.
  */
-public class LoginPanel extends FlowPanel {
+public class LoginPanel extends LayoutPanel {
 
     @Inject
     private Client client;
@@ -20,33 +23,34 @@ public class LoginPanel extends FlowPanel {
     private final Button loginButton;
 
     public LoginPanel() {
-        Label label;
 
-        label = new Label("User ID");
-        label.setWidth("100%");
-        label.setHeight("15pt");
-        add(label);
+        final Label userIdLabel = new Label("User ID");
+        add(userIdLabel);
 
         userIdTextBox = new TextBox();
-        userIdTextBox.setWidth("100%");
-        userIdTextBox.setHeight("15pt");
         add(userIdTextBox);
 
-        label = new Label("Password");
-        label.setWidth("100%");
-        label.setHeight("15pt");
-        add(label);
+        final Label passwordLabel = new Label("Password");
+        add(passwordLabel);
 
         passwordTextBox = new PasswordTextBox();
-        passwordTextBox.setWidth("100%");
-        passwordTextBox.setHeight("15pt");
         add(passwordTextBox);
 
         loginButton = new Button();
-        loginButton.setText("Login");
-        loginButton.setWidth("25%");
-        loginButton.setHeight("25pt");
         add(loginButton);
+
+        setWidgetLeftRight(userIdLabel, 5, Style.Unit.PCT, 95, Style.Unit.PCT);
+        setWidgetLeftRight(userIdTextBox, 5, Style.Unit.PCT, 95, Style.Unit.PCT);
+        setWidgetLeftRight(passwordLabel, 5, Style.Unit.PCT, 95, Style.Unit.PCT);
+        setWidgetLeftRight(passwordTextBox, 5, Style.Unit.PCT, 95, Style.Unit.PCT);
+        setWidgetLeftRight(loginButton, 10, Style.Unit.PCT, 35, Style.Unit.PCT);
+
+        double em = 0;
+
+
+
+        setWidgetTopHeight(userIdLabel, 0.5, Style.Unit.EM, 1.5, Style.Unit.EM);
+        setWidgetTopHeight(userIdTextBox, 2.5, Style.Unit.EM, 1.5, Style.Unit.EM);
 
     }
 

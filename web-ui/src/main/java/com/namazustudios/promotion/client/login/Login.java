@@ -15,21 +15,15 @@ public class Login implements EntryPoint {
     @Override
     public void onModuleLoad() {
 
-        final FlowPanel flowPanel = new FlowPanel();
-
-        final Label headerLabel = new Label();
-        headerLabel.setText("Welcome!");
-        headerLabel.setSize("250px", "1.2em");
-        headerLabel.setHorizontalAlignment(HasAutoHorizontalAlignment.ALIGN_CENTER);
-        flowPanel.add(headerLabel);
-
-        flowPanel.add(new HTML("<br>"));
-
+        final LayoutPanel rootLayoutPanel = RootLayoutPanel.get();
         final LoginPanel loginPanel = loginWidgetGinjector.getLoginPanel();
-        loginPanel.setSize("250px", "100px");
-        flowPanel.add(loginPanel);
 
-        RootLayoutPanel.get().add(flowPanel);
+        loginPanel.setSize("250px", "100px");
+
+        rootLayoutPanel.add(loginPanel);
+        rootLayoutPanel.setWidgetLeftRight(loginPanel, 20, Style.Unit.PCT, 50, Style.Unit.PCT);
+        rootLayoutPanel.setWidgetTopBottom(loginPanel, 5, Style.Unit.EM, 5, Style.Unit.EM);
+
 
     }
 

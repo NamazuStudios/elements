@@ -61,6 +61,11 @@
             <artifactId>javax.ws.rs-api</artifactId>
             <version>${jaxrs.api.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava-gwt</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -87,9 +92,9 @@
                 <!-- Plugin configuration. There are many available options, see
                   gwt-maven-plugin documentation at codehaus.org -->
                 <configuration>
-                    <runTarget>web-ui.html</runTarget>
+                    <runTarget>login.html</runTarget>
                     <modules>
-                        <module>com.namazustudios.promotion.web-ui</module>
+                        <module>com.namazustudios.promotion.login</module>
                     </modules>
                 </configuration>
             </plugin>
