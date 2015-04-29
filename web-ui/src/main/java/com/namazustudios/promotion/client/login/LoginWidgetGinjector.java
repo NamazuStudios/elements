@@ -10,6 +10,6 @@ import com.namazustudios.promotion.client.guice.RestyModule;
 @GinModules(RestyModule.class)
 public interface LoginWidgetGinjector extends Ginjector {
 
-    LoginPanel getLoginPanel();
+    LoginView getLoginPanel();
 
 }

@@ -1,29 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <module rename-to='login'>
 
+  <!-- Inherit the core Web Toolkit stuff -->
+  <inherits name='com.google.gwt.user.User' />
+  <inherits name='com.google.gwt.user.theme.standard.Standard' />
+  <inherits name="com.google.gwt.uibinder.UiBinder"/>
+
+  <!-- Gin, Guice, and Dependency Injection -->
   <inherits name="com.google.gwt.inject.Inject"/>
+  <inherits name='com.gwtplatform.mvp.MvpWithEntryPoint'/>
+
+  <set-configuration-property name="gin.ginjector.modules"
+                              value="com.namazustudios.promotion.client.login.LoginModuleMain"/>
+
+  <!-- Namazu models and REST client library -->
   <inherits name="org.fusesource.restygwt.RestyGWT"/>
   <inherits name="com.namazustudios.promotion.Common"/>
 
-  <!-- Inherit the core Web Toolkit stuff.                        -->
-  <inherits name='com.google.gwt.user.User' />
+  <!-- Other libraries -->
+  <inherits name="com.google.common.collect.Collect"/>
 
-  <!-- Inherit the default GWT style sheet.  You can change       -->
-  <!-- the theme of your GWT application by uncommenting          -->
-  <!-- any one of the following lines.                            -->
-  <inherits name='com.google.gwt.user.theme.standard.Standard' />
-  <!-- <inherits name='com.google.gwt.user.theme.chrome.Chrome'/> -->
-  <!-- <inherits name='com.google.gwt.user.theme.dark.Dark'/>     -->
+  <!-- GWT Bootstrap and associated modules -->
+  <inherits name="org.gwtbootstrap3.GwtBootstrap3"/>
+  <inherits name="org.gwtbootstrap3.GwtBootstrap3Theme"/>
 
-  <!-- Other module inherits                                      -->
-
-  <!-- Specify the app entry point class.                         -->
-  <entry-point class='com.namazustudios.promotion.client.login.Login' />
-
-  <!-- Specify the paths for translatable code                    -->
+  <!-- Specify the paths for translatable code (not sure if this is necessary for each) -->
   <source path="client"/>
   <source path="client/rest"/>
   <source path="client/guice"/>
   <source path="client/login"/>
+
+  <!-- Finally, the entry point class-->
+  <entry-point class='com.namazustudios.promotion.client.login.LoginModuleMain' />
 
 </module>
