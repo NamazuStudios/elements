@@ -19,7 +19,12 @@ import javax.inject.Inject;
  */
 public class LoginView extends ViewImpl implements LoginViewPresenter.MyView {
 
-    interface LoginViewUiBinder extends UiBinder<Form, LoginView> {}
+    interface LoginViewUiBinder extends UiBinder<Panel, LoginView> {}
+
+    @UiField
+    private Input password;
+
+
 
     @Inject
     public LoginView(LoginViewUiBinder binder) {
