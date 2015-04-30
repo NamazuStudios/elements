@@ -3,8 +3,10 @@ package com.namazustudios.promotion.client.login;
 import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.Presenter;
 import com.gwtplatform.mvp.client.View;
+import com.gwtplatform.mvp.client.annotations.NameToken;
 import com.gwtplatform.mvp.client.annotations.ProxyStandard;
-import com.gwtplatform.mvp.client.proxy.Proxy;
+import com.gwtplatform.mvp.client.proxy.ProxyPlace;
+import com.namazustudios.promotion.client.place.NameTokens;
 
 import javax.inject.Inject;
 
@@ -14,7 +16,8 @@ import javax.inject.Inject;
 public class LoginViewPresenter extends Presenter<LoginViewPresenter.MyView, LoginViewPresenter.MyProxy> {
 
     @ProxyStandard
-    public interface MyProxy extends Proxy<LoginViewPresenter> {}
+    @NameToken(NameTokens.LOGIN)
+    public interface MyProxy extends ProxyPlace<LoginViewPresenter> {}
 
     public interface MyView extends View {}
 

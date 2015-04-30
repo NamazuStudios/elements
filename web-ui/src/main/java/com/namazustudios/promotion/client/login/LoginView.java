@@ -10,6 +10,7 @@ import org.gwtbootstrap3.client.ui.Form;
 import org.gwtbootstrap3.client.ui.Input;
 import org.gwtbootstrap3.client.ui.Panel;
 import org.gwtbootstrap3.client.ui.TextBox;
+import org.gwtbootstrap3.client.ui.gwt.Widget;
 
 import javax.inject.Inject;
 
@@ -18,15 +19,7 @@ import javax.inject.Inject;
  */
 public class LoginView extends ViewImpl implements LoginViewPresenter.MyView {
 
-    interface LoginViewUiBinder extends UiBinder<Panel, LoginView> {}
-
-    private static LoginViewUiBinder BINDER = GWT.create(LoginViewUiBinder.class);
-
-//    @UiField
-//    protected Input password;
-//
-//    @UiField
-//    protected TextBox username;
+    interface LoginViewUiBinder extends UiBinder<Form, LoginView> {}
 
     @Inject
     public LoginView(LoginViewUiBinder binder) {

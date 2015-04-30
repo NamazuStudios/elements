@@ -4,8 +4,8 @@
 
   <!-- Inherit the core Web Toolkit stuff -->
   <inherits name='com.google.gwt.user.User' />
-  <inherits name='com.google.gwt.user.theme.standard.Standard' />
   <inherits name="com.google.gwt.uibinder.UiBinder"/>
+  <inherits name='com.google.gwt.user.theme.standard.Standard' />
 
   <!-- Gin, Guice, and Dependency Injection -->
   <inherits name="com.google.gwt.inject.Inject"/>
@@ -19,7 +19,7 @@
   <inherits name="com.namazustudios.promotion.Common"/>
 
   <!-- Other libraries -->
-  <inherits name="com.google.common.collect.Collect"/>
+  <!--<inherits name="com.google.common.collect.Collect"/>-->
 
   <!-- GWT Bootstrap and associated modules -->
   <inherits name="org.gwtbootstrap3.GwtBootstrap3"/>
