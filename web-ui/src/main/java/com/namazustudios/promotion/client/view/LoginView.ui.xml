@@ -31,7 +31,7 @@
                         <b:Input b:id="password" type="PASSWORD" placeholder="(password)" ui:field="password"/>
                     </b:FormGroup>
 
-                    <b:Button>Send</b:Button>
+                    <b:Button ui:field="login">Login</b:Button>
 
                 </b:FieldSet>
             </b:Form>

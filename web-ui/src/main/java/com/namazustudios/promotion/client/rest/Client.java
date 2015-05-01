@@ -12,7 +12,7 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by patricktwohig on 4/16/15.
  */
-@Singleton
+@Path("/api")
 public interface Client extends RestService {
 
     /**
