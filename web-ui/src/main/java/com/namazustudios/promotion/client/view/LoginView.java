@@ -6,6 +6,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.Window;
 import com.gwtplatform.mvp.client.ViewImpl;
+import com.namazustudios.promotion.client.modal.ErrorModal;
 import com.namazustudios.promotion.client.rest.Client;
 import com.namazustudios.promotion.model.User;
 import org.fusesource.restygwt.client.Method;
@@ -32,6 +33,9 @@ public class LoginView extends ViewImpl implements LoginViewPresenter.MyView {
     @Inject
     private Client client;
 
+    @UiField
+    ErrorModal errorModal;
+
     @Inject
     public LoginView(LoginViewUiBinder binder) {
         initWidget(binder.createAndBindUi(this));
@@ -39,6 +43,7 @@ public class LoginView extends ViewImpl implements LoginViewPresenter.MyView {
 
     @UiHandler("login")
     void onClickLogin(final ClickEvent ev) {
+
         final String uid = username.getText();
         final String pw = password.getText();
 
@@ -46,12 +51,21 @@ public class LoginView extends ViewImpl implements LoginViewPresenter.MyView {
 
             @Override
             public void onFailure(Method method, Throwable throwable) {
-                Window.alert("Failed!" + throwable.getMessage());
+
+                if (throwable != null) {
+                    errorModal.setMessageWithThrowable(throwable);
+                } else {
+                    errorModal.setErrorMessage("Login failed.");
+                }
+
+                errorModal.show();
+
             }
 
             @Override
             public void onSuccess(Method method, User user) {
-                Window.alert("Success!");
+                errorModal.setErrorMessage("Success!");
+                errorModal.show();
             }
 
         });
