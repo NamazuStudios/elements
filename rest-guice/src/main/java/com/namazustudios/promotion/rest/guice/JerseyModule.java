@@ -36,7 +36,7 @@ public class JerseyModule extends ServletModule {
                     .put("javax.ws.rs.Application", GuiceResourceConfig.class.getName())
                 .build();
 
-        serve("/*").with(ServletContainer.class, params);
+        serve("/api/*").with(ServletContainer.class, params);
 
     }
 

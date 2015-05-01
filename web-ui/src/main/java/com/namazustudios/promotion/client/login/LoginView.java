@@ -22,9 +22,10 @@ public class LoginView extends ViewImpl implements LoginViewPresenter.MyView {
     interface LoginViewUiBinder extends UiBinder<Panel, LoginView> {}
 
     @UiField
-    private Input password;
+    public Input password;
 
-
+    @UiField
+    public TextBox username;
 
     @Inject
     public LoginView(LoginViewUiBinder binder) {
