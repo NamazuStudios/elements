@@ -1,15 +1,13 @@
-package com.namazustudios.promotion.client.login;
+package com.namazustudios.promotion.client;
 
-import com.gwtplatform.mvp.client.annotations.DefaultPlace;
-import com.gwtplatform.mvp.client.annotations.ErrorPlace;
-import com.gwtplatform.mvp.client.annotations.UnauthorizedPlace;
 import com.gwtplatform.mvp.client.gin.AbstractPresenterModule;
-import com.namazustudios.promotion.client.place.NameTokens;
+import com.namazustudios.promotion.client.view.LoginView;
+import com.namazustudios.promotion.client.view.LoginViewPresenter;
 
 /**
  * Created by patricktwohig on 4/28/15.
  */
-public class LoginPresenterModule extends AbstractPresenterModule {
+public class ControlPanelPresenter extends AbstractPresenterModule {
 
     @Override
     protected void configure() {

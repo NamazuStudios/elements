@@ -1,4 +1,4 @@
-package com.namazustudios.promotion.client.guice;
+package com.namazustudios.promotion.client.gin;
 
 import com.google.gwt.inject.client.AbstractGinModule;
 import com.namazustudios.promotion.client.rest.Client;

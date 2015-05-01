@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<module rename-to='login'>
+<module rename-to='ControlPanel'>
 
   <!-- Inherit the core Web Toolkit stuff -->
   <inherits name='com.google.gwt.user.User' />
@@ -12,7 +12,7 @@
   <inherits name='com.gwtplatform.mvp.MvpWithEntryPoint'/>
 
   <set-configuration-property name="gin.ginjector.modules"
-                              value="com.namazustudios.promotion.client.login.LoginModuleMain"/>
+                              value="com.namazustudios.promotion.client.ControlPanel"/>
 
   <!-- Namazu models and REST client library -->
   <inherits name="org.fusesource.restygwt.RestyGWT"/>
@@ -32,6 +32,6 @@
   <source path="client/login"/>
 
   <!-- Finally, the entry point class-->
-  <entry-point class='com.namazustudios.promotion.client.login.LoginModuleMain' />
+  <entry-point class='com.namazustudios.promotion.client.ControlPanel' />
 
 </module>

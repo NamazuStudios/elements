@@ -1,16 +1,11 @@
-package com.namazustudios.promotion.client.login;
+package com.namazustudios.promotion.client.view;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.Composite;
 import com.gwtplatform.mvp.client.ViewImpl;
-import org.gwtbootstrap3.client.ui.Form;
 import org.gwtbootstrap3.client.ui.Input;
 import org.gwtbootstrap3.client.ui.Panel;
 import org.gwtbootstrap3.client.ui.TextBox;
-import org.gwtbootstrap3.client.ui.gwt.Widget;
 
 import javax.inject.Inject;
 

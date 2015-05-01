@@ -74,7 +74,7 @@
                 <configuration>
                     <runTarget>login.html</runTarget>
                     <modules>
-                        <module>com.namazustudios.promotion.login</module>
+                        <module>com.namazustudios.promotion.Index</module>
                     </modules>
                 </configuration>
             </plugin>

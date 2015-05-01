@@ -1,4 +1,4 @@
-package com.namazustudios.promotion.client.login;
+package com.namazustudios.promotion.client.view;
 
 import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.Presenter;
