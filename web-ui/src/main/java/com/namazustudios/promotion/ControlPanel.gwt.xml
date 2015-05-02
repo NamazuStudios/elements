@@ -11,6 +11,7 @@
   <inherits name="com.google.gwt.inject.Inject"/>
   <inherits name="com.gwtplatform.mvp.Mvp"/>
   <inherits name='com.gwtplatform.mvp.MvpWithEntryPoint'/>
+  <inherits name="com.gwtplatform.dispatch.rest.DispatchRest"/>
 
   <set-configuration-property name="gin.ginjector.modules"
                               value="com.namazustudios.promotion.client.ControlPanelMain"/>
