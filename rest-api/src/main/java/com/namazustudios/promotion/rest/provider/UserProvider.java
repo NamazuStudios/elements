@@ -30,26 +30,18 @@ public class UserProvider implements Provider<User> {
         final HttpSession httpSession = httpServletRequest.getSession(false);
 
         if (httpSession == null) {
-            return getAnonymousUser();
+            return User.getUnprivileged();
         }
 
         final User user = (User) httpServletRequest.getSession().getAttribute(USER_SESSION_KEY);
 
         if (user == null) {
-            return getAnonymousUser();
+            return User.getUnprivileged();
         }
 
         httpServletRequest.setAttribute(USER_SESSION_KEY, user);
         return user;
 
-    }
-
-    private User getAnonymousUser() {
-        final User user = new User();
-        user.setName("");
-        user.setEmail("");
-        user.setLevel(User.Level.UNPRIVILEGED);
-        return user;
     }
 
 }

@@ -6,9 +6,9 @@ package com.namazustudios.promotion.client.place;
 public class NameTokens {
 
     public static final String LOGIN = "login";
+    public static final String CONTROL_PANEL = "controlpanel";
 
-    public static String getLogin() {
-        return LOGIN;
-    }
+    public static String getLogin() { return LOGIN; }
+    public static String getControlPanel() { return CONTROL_PANEL;}
 
 }

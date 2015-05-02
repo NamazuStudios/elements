@@ -16,6 +16,40 @@ public class User {
 
     private boolean active;
 
+    private static final User UNPRIVILIGED = new User() {
+
+        @Override
+        public String getEmail() {
+            return "";
+        }
+
+        @Override
+        public String getName() {
+            return "";
+        }
+
+        @Override
+        public Level getLevel() {
+            return Level.UNPRIVILEGED;
+        }
+
+        @Override
+        public boolean isActive() {
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return 0;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return  obj == this;
+        }
+
+    };
+
     /**
      * Gets the user's login name.
      *
@@ -81,6 +115,18 @@ public class User {
      */
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    /**
+     * Gets a special User object which is set to unprivileged.  This is used
+     * as a palceholder when a user is not logged in.
+     *
+     * This is a singleton object.
+     *
+     * @return an User with the UNPRIVILEGED state set
+     */
+    public static User getUnprivileged() {
+        return UNPRIVILIGED;
     }
 
     public enum Level {

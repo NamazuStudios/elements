@@ -25,12 +25,12 @@
 
                     <b:Legend>Welcome!</b:Legend>
 
-                    <b:FormGroup>
+                    <b:FormGroup ui:field="usernameFormGroup">
                         <b:FormLabel for="username">Login</b:FormLabel>
                         <b:TextBox b:id="username" placeholder="Username or email" ui:field="username"/>
                     </b:FormGroup>
 
-                    <b:FormGroup>
+                    <b:FormGroup ui:field="passwordFormGroup">
                         <b:FormLabel for="password">Password</b:FormLabel>
                         <b:Input b:id="password" type="PASSWORD" placeholder="(password)" ui:field="password"/>
                     </b:FormGroup>

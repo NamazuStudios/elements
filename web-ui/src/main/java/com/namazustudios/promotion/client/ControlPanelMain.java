@@ -5,19 +5,19 @@ import com.gwtplatform.mvp.client.annotations.DefaultPlace;
 import com.gwtplatform.mvp.client.annotations.ErrorPlace;
 import com.gwtplatform.mvp.client.annotations.UnauthorizedPlace;
 import com.gwtplatform.mvp.client.gin.DefaultModule;
-import com.namazustudios.promotion.client.gin.RestyModule;
+import com.namazustudios.promotion.client.rest.RestyModule;
 import com.namazustudios.promotion.client.place.NameTokens;
 
 /**
  * Created by patricktwohig on 4/28/15.
  */
-public class ControlPanel extends AbstractGinModule {
+public class ControlPanelMain extends AbstractGinModule {
 
     @Override
     protected void configure() {
 
         install(new DefaultModule());
-        install(new ControlPanelPresenter());
+        install(new ControlPanelPresenters());
         install(new RestyModule());
 
         bindConstant().annotatedWith(DefaultPlace.class).to(NameTokens.LOGIN);

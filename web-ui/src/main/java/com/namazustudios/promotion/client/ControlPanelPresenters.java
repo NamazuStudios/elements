@@ -1,13 +1,15 @@
 package com.namazustudios.promotion.client;
 
 import com.gwtplatform.mvp.client.gin.AbstractPresenterModule;
+import com.namazustudios.promotion.client.view.ControlPanelPresenter;
+import com.namazustudios.promotion.client.view.ControlPanelView;
 import com.namazustudios.promotion.client.view.LoginView;
 import com.namazustudios.promotion.client.view.LoginViewPresenter;
 
 /**
  * Created by patricktwohig on 4/28/15.
  */
-public class ControlPanelPresenter extends AbstractPresenterModule {
+public class ControlPanelPresenters extends AbstractPresenterModule {
 
     @Override
     protected void configure() {
@@ -17,6 +19,12 @@ public class ControlPanelPresenter extends AbstractPresenterModule {
                 LoginViewPresenter.MyView.class,
                 LoginView.class,
                 LoginViewPresenter.MyProxy.class);
+
+        bindPresenter(
+                ControlPanelPresenter.class,
+                ControlPanelPresenter.MyView.class,
+                ControlPanelView.class,
+                ControlPanelPresenter.MyProxy.class);
 
     }
 

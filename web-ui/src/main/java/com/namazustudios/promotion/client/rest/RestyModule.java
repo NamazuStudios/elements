@@ -1,8 +1,7 @@
-package com.namazustudios.promotion.client.gin;
+package com.namazustudios.promotion.client.rest;
 
 import com.google.gwt.inject.client.AbstractGinModule;
-import com.namazustudios.promotion.client.rest.Client;
-import com.namazustudios.promotion.client.rest.ClientProvider;
+import com.namazustudios.promotion.model.User;
 
 import javax.inject.Singleton;
 
@@ -14,6 +13,8 @@ public class RestyModule extends AbstractGinModule {
     @Override
     protected void configure() {
         binder().bind(Client.class).toProvider(ClientProvider.class).in(Singleton.class);
+        binder().bind(LoginService.class).to(RestyLoginService.class);
+        binder().bind(User.class).toProvider(UserProvider.class);
     }
 
 }
