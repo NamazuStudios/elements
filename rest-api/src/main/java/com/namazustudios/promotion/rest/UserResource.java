@@ -53,12 +53,6 @@ public class UserResource {
         return userService.getUser(name);
     }
 
-    @GET
-    @Path("me")
-    public User getUser() {
-        return userService.getCurrentUser();
-    }
-
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public User createUser(final User user) {
