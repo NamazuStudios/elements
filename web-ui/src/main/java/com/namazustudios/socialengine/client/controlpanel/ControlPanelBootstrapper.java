@@ -1,14 +1,12 @@
-package com.namazustudios.socialengine.client;
+package com.namazustudios.socialengine.client.controlpanel;
 
 import com.gwtplatform.mvp.client.Bootstrapper;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
-import com.namazustudios.socialengine.client.rest.LoginService;
+import com.namazustudios.socialengine.client.rest.service.LoginService;
 import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.Defaults;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 

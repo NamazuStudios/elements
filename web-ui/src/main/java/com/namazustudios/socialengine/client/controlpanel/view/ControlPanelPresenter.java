@@ -1,15 +1,14 @@
-package com.namazustudios.socialengine.client.view;
+package com.namazustudios.socialengine.client.controlpanel.view;
 
 import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.Presenter;
 import com.gwtplatform.mvp.client.View;
 import com.gwtplatform.mvp.client.annotations.NameToken;
 import com.gwtplatform.mvp.client.annotations.ProxyStandard;
-import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.gwtplatform.mvp.client.proxy.ProxyPlace;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
-import com.namazustudios.socialengine.client.place.NameTokens;
-import com.namazustudios.socialengine.client.rest.LoginService;
+import com.namazustudios.socialengine.client.controlpanel.NameTokens;
+import com.namazustudios.socialengine.client.rest.service.LoginService;
 import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;

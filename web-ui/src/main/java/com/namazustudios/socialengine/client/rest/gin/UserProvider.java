@@ -1,6 +1,7 @@
-package com.namazustudios.socialengine.client.rest;
+package com.namazustudios.socialengine.client.rest.gin;
 
 import com.google.gwt.user.client.Cookies;
+import com.namazustudios.socialengine.client.rest.service.LoginService;
 import com.namazustudios.socialengine.model.User;
 
 import javax.inject.Inject;

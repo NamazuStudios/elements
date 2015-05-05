@@ -3,7 +3,7 @@
              xmlns:g="urn:import:com.google.gwt.user.client.ui"
              xmlns:m="urn:import:com.namazustudios.socialengine.client.modal">
 
-    <ui:with field="nameTokens" type="com.namazustudios.socialengine.client.place.NameTokens.ControlPanel"/>
+    <ui:with field="nameTokens" type="com.namazustudios.socialengine.client.controlpanel.NameTokens.ControlPanel"/>
 
     <g:ScrollPanel>
         <b:Container>

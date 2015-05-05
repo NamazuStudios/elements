@@ -13,10 +13,10 @@
   <inherits name='com.gwtplatform.mvp.MvpWithEntryPoint'/>
 
   <set-configuration-property name="gin.ginjector.modules"
-                              value="com.namazustudios.socialengine.client.ControlPanelMain"/>
+                              value="com.namazustudios.socialengine.client.controlpanel.ControlPanelMain"/>
 
   <set-configuration-property name="gwtp.bootstrapper"
-                              value="com.namazustudios.socialengine.client.ControlPanelBootstrapper"/>
+                              value="com.namazustudios.socialengine.client.controlpanel.ControlPanelBootstrapper"/>
 
   <!-- Namazu models and REST client library -->
   <inherits name="org.fusesource.restygwt.RestyGWT"/>
@@ -31,9 +31,8 @@
   <inherits name="org.gwtbootstrap3.extras.animate.Animate"/>
 
   <!-- Specify the paths for translatable code (not sure if this is necessary for each) -->
-  <source path="client"/>
   <source path="client/rest"/>
-  <source path="client/guice"/>
-  <source path="client/login"/>
+  <source path="client/modal"/>
+  <source path="client/controlpanel"/>
 
 </module>

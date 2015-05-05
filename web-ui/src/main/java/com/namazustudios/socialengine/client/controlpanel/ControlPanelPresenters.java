@@ -1,10 +1,10 @@
-package com.namazustudios.socialengine.client;
+package com.namazustudios.socialengine.client.controlpanel;
 
 import com.gwtplatform.mvp.client.gin.AbstractPresenterModule;
-import com.namazustudios.socialengine.client.view.ControlPanelPresenter;
-import com.namazustudios.socialengine.client.view.ControlPanelView;
-import com.namazustudios.socialengine.client.view.LoginView;
-import com.namazustudios.socialengine.client.view.LoginViewPresenter;
+import com.namazustudios.socialengine.client.controlpanel.view.ControlPanelPresenter;
+import com.namazustudios.socialengine.client.controlpanel.view.ControlPanelView;
+import com.namazustudios.socialengine.client.controlpanel.view.LoginView;
+import com.namazustudios.socialengine.client.controlpanel.view.LoginViewPresenter;
 
 /**
  * Created by patricktwohig on 4/28/15.

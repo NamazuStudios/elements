@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.client.place;
+package com.namazustudios.socialengine.client.controlpanel;
 
 /**
  * Created by patricktwohig on 4/29/15.
