@@ -78,7 +78,7 @@ public class Setup {
         final Console console = System.console();
 
         if (console == null) {
-            throw new IllegalStateException("No console instance available.  Please pass setup params via args.");
+            throw new ConsoleException("No console instance available.  Please pass setup params via args.");
         }
 
         String value;
@@ -96,7 +96,7 @@ public class Setup {
         final Console console = System.console();
 
         if (console == null) {
-            throw new IllegalStateException("No console instance available.  Please pass setup params via args.");
+            throw new ConsoleException("No console instance available.  Please pass setup params via args.");
         }
 
         String value;
@@ -137,6 +137,12 @@ public class Setup {
             throw new IllegalArgumentException("Unknown command: " + name);
         }
 
+    }
+
+    public static class ConsoleException extends IllegalStateException {
+        public ConsoleException(String s) {
+            super(s);
+        }
     }
 
 }

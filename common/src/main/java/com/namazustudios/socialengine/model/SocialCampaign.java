@@ -91,7 +91,7 @@ public class SocialCampaign {
     }
 
     /**
-     * SEts the socialengines end date.
+     * SEts the promotion's end date.
      * @param beginDate
      */
     public void setBeginDate(Date beginDate) {
@@ -99,7 +99,7 @@ public class SocialCampaign {
     }
 
     /**
-     * Gets the socialengine's end date.
+     * Gets the promotion's end date.
      * @return
      */
     public Date getEndDate() {

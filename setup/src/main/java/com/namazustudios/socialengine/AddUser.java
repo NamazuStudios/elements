@@ -42,19 +42,19 @@ public class AddUser implements Command {
 
     public AddUser() {
 
-        usernameOptionSpec = optionParser.accepts("user", "Username")
+        usernameOptionSpec = optionParser.accepts("user", "Username/Unique Identifier.  (ex. bobsmith)")
                 .withRequiredArg()
                 .ofType(String.class);
 
-        emailOptionSpec = optionParser.accepts("email", "Email Address")
+        emailOptionSpec = optionParser.accepts("email", "Email Address.  (ex. bobsmith@yourcompany.com)")
                 .withRequiredArg()
                 .ofType(String.class);
 
-        levelOptionSpec = optionParser.accepts("level", "User Level")
+        levelOptionSpec = optionParser.accepts("level", "User Level.  One of the several predefined levels.")
                 .withRequiredArg()
                 .ofType(User.Level.class);
 
-        passwordOptionSpec = optionParser.accepts("password", "Password")
+        passwordOptionSpec = optionParser.accepts("password", "Password  The user's password.")
                 .withOptionalArg()
                 .ofType(String.class);
 
@@ -68,10 +68,13 @@ public class AddUser implements Command {
         } catch (OptionException ex) {
             optionParser.printHelpOn(System.err);
             return;
+        } catch (Setup.ConsoleException ex) {
+            System.err.println(ex.getMessage());
+            optionParser.printHelpOn(System.err);
         }
 
         try {
-            writeRootUserToDatabase();
+            writeUserToDatabase();
         } catch (Exception ex) {
             optionParser.printHelpOn(System.err);
             throw ex;
@@ -96,7 +99,7 @@ public class AddUser implements Command {
 
     }
 
-    private void writeRootUserToDatabase() {
+    private void writeUserToDatabase() {
 
         // Creates or updates the user.
 

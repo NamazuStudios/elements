@@ -18,7 +18,7 @@ import javax.inject.Provider;
  */
 public class MongoDatastoreProvider implements Provider<Datastore> {
 
-    public static final String DATABASE_NAME = "com.namazustudios.socialengines.mongo.database.name";
+    public static final String DATABASE_NAME = "com.namazustudios.socialengine.mongo.database.name";
 
     @Inject
     @Named(DATABASE_NAME)

@@ -23,7 +23,7 @@ public class MongoClientProvider implements Provider<MongoClient> {
 
     public static final String MONGO_SCHEME = "mongo";
 
-    public static final String MONGO_DB_URLS = "com.namazustudios.socialengines.mongo.db.url";
+    public static final String MONGO_DB_URLS = "com.namazustudios.socialengine.mongo.db.url";
 
     @Inject
     @Named(MONGO_DB_URLS)
