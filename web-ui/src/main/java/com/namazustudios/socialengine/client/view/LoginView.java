@@ -128,7 +128,7 @@ public class LoginView extends ViewImpl implements LoginViewPresenter.MyView {
     private void revealControlPanel(User user) {
 
         final PlaceRequest placeRequest = new PlaceRequest.Builder()
-                .nameToken(NameTokens.CONTROL_PANEL)
+                .nameToken(NameTokens.ControlPanel.MAIN)
                 .build();
 
         placeManager.revealPlace(placeRequest);
