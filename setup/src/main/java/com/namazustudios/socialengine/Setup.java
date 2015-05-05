@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 
 import java.io.Console;
+import java.lang.reflect.Array;
 import java.util.Arrays;
 
 /**
@@ -30,10 +31,21 @@ public class Setup {
 
         final Class<? extends Command> commandType;
 
+        if (args.length == 0) {
+            System.out.printf("Missing command.  Supported commands are:\n");
+
+            for (SupportedCommand supportedCommand : SupportedCommand.values()) {
+                System.out.println("    " + supportedCommand.commandName);
+            }
+
+            return;
+        }
+
         try {
             commandType = SupportedCommand.getCommandForName(args[0]);
         } catch (IllegalArgumentException ex) {
-            System.out.printf("Unknown commandType %s.  Supported commands are:\n", args[0]);
+
+            System.out.printf("Unknown command %s.  Supported commands are:\n", args[0]);
 
             for (SupportedCommand supportedCommand : SupportedCommand.values()) {
                 System.out.println("    " + supportedCommand.commandName);

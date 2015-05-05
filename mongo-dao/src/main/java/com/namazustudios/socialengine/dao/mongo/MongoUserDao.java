@@ -314,6 +314,10 @@ public class MongoUserDao implements UserDao {
 
         final MongoUser mongoUser = query.get();
 
+        if (mongoUser == null) {
+            throw new ForbiddenException("Invalid credentials for " + userId);
+        }
+
         final byte[] passwordBytes;
 
         try {
