@@ -2,7 +2,18 @@
              xmlns:b="urn:import:org.gwtbootstrap3.client.ui"
              xmlns:g="urn:import:com.google.gwt.user.client.ui"
              xmlns:m="urn:import:com.namazustudios.promotion.client.modal">
-    <b:Panel>
 
-    </b:Panel>
+
+    <g:ScrollPanel>
+        <b:Container>
+            <b:Navbar position="FIXED_TOP">
+                <b:Container>
+                    <b:NavbarHeader>
+                        <b:NavbarBrand ui:field="brand">Namazu Social Engine</b:NavbarBrand>
+                    </b:NavbarHeader>
+                </b:Container>
+            </b:Navbar>
+        </b:Container>
+    </g:ScrollPanel>
+
 </ui:UiBinder>

@@ -9,7 +9,9 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
+import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.promotion.client.modal.ErrorModal;
+import com.namazustudios.promotion.client.place.NameTokens;
 import com.namazustudios.promotion.client.rest.LoginService;
 import com.namazustudios.promotion.model.User;
 import org.fusesource.restygwt.client.Method;
@@ -124,6 +126,12 @@ public class LoginView extends ViewImpl implements LoginViewPresenter.MyView {
 
 
     private void revealControlPanel(User user) {
+
+        final PlaceRequest placeRequest = new PlaceRequest.Builder()
+                .nameToken(NameTokens.CONTROL_PANEL)
+                .build();
+
+        placeManager.revealPlace(placeRequest);
 
     }
 
