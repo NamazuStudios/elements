@@ -13,8 +13,8 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by patricktwohig on 4/16/15.
  */
-@Path("/api")
-public interface Client extends RestService {
+@Path("session")
+public interface LoginClient extends RestService {
 
     /**
      * Invokes GET /session
@@ -24,7 +24,6 @@ public interface Client extends RestService {
      * @param methodCallback the method callback
      */
     @GET
-    @Path("session")
     void login(@QueryParam("userId") final String userId,
                @QueryParam("password") final String password,
                final MethodCallback<User> methodCallback);
@@ -35,7 +34,6 @@ public interface Client extends RestService {
      * @param methodCallback
      */
     @DELETE
-    @Path("session")
     void logout(final MethodCallback<Void> methodCallback);
 
 }

@@ -3,12 +3,8 @@ package com.namazustudios.promotion.client.rest;
 import com.namazustudios.promotion.model.User;
 import org.fusesource.restygwt.client.MethodCallback;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
-
 /**
- * Sits on top of the {@link Client} and tracks the clients logged in state.
+ * Sits on top of the {@link LoginClient} and tracks the clients logged in state.
  *
  * Created by patricktwohig on 5/1/15.
  */
@@ -30,6 +26,12 @@ public interface LoginService {
      * @param methodCallback
      */
     void logout(final MethodCallback<Void> methodCallback);
+
+    /**
+     * Refreshs the current user.  If the user
+     * @param userMethodCallback
+     */
+    void refreshCurrentUser(final MethodCallback<User> userMethodCallback);
 
     /**
      * Gets the currently logged-in user;

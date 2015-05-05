@@ -5,8 +5,11 @@ import com.gwtplatform.mvp.client.Presenter;
 import com.gwtplatform.mvp.client.View;
 import com.gwtplatform.mvp.client.annotations.NameToken;
 import com.gwtplatform.mvp.client.annotations.ProxyStandard;
+import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.gwtplatform.mvp.client.proxy.ProxyPlace;
+import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.promotion.client.place.NameTokens;
+import com.namazustudios.promotion.client.rest.LoginService;
 
 import javax.inject.Inject;
 
@@ -22,8 +25,23 @@ public class ControlPanelPresenter extends Presenter<ControlPanelPresenter.MyVie
     public interface MyView extends View {}
 
     @Inject
+    private LoginService loginService;
+
+    @Inject
+    private PlaceManager placeManager;
+
+    @Inject
     public ControlPanelPresenter(EventBus eventBus, MyView view, MyProxy proxy) {
         super(eventBus, view, proxy, RevealType.Root);
     }
 
+    @Override
+    public boolean useManualReveal() {
+        return true;
+    }
+
+    @Override
+    public void prepareFromRequest(final PlaceRequest request) {
+        
+    }
 }

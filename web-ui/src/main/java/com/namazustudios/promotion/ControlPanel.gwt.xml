@@ -4,8 +4,8 @@
 
   <!-- Inherit the core Web Toolkit stuff -->
   <inherits name='com.google.gwt.user.User' />
+  <inherits name="com.google.gwt.logging.Logging"/>
   <inherits name="com.google.gwt.uibinder.UiBinder"/>
-  <inherits name='com.google.gwt.user.theme.standard.Standard' />
 
   <!-- Gin, Guice, and Dependency Injection -->
   <inherits name="com.google.gwt.inject.Inject"/>
@@ -14,6 +14,9 @@
 
   <set-configuration-property name="gin.ginjector.modules"
                               value="com.namazustudios.promotion.client.ControlPanelMain"/>
+
+  <set-configuration-property name="gwtp.bootstrapper"
+                              value="com.namazustudios.promotion.client.ControlPanelBootstrapper"/>
 
   <!-- Namazu models and REST client library -->
   <inherits name="org.fusesource.restygwt.RestyGWT"/>

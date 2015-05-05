@@ -10,7 +10,6 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.namazustudios.promotion.client.modal.ErrorModal;
-import com.namazustudios.promotion.client.rest.Client;
 import com.namazustudios.promotion.client.rest.LoginService;
 import com.namazustudios.promotion.model.User;
 import org.fusesource.restygwt.client.Method;

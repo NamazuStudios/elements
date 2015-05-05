@@ -14,13 +14,16 @@ import javax.inject.Singleton;
 public class RestyLoginService implements LoginService {
 
     @Inject
-    private Client client;
+    private LoginClient loginClient;
+
+    @Inject
+    private UserClient userClient;
 
     private User currentUser = User.getUnprivileged();
 
     @Override
     public void login(String userId, String password, final MethodCallback<User> methodCallback) {
-        client.login(userId, password, new MethodCallback<User>() {
+        loginClient.login(userId, password, new MethodCallback<User>() {
 
             @Override
             public void onFailure(Method method, Throwable throwable) {
@@ -40,7 +43,25 @@ public class RestyLoginService implements LoginService {
     @Override
     public void logout(MethodCallback<Void> methodCallback) {
         currentUser = User.getUnprivileged();
-        client.logout(methodCallback);
+        loginClient.logout(methodCallback);
+    }
+
+    @Override
+    public void refreshCurrentUser(final MethodCallback<User> userMethodCallback) {
+        userClient.refreshCurrentUser(new MethodCallback<User>() {
+
+            @Override
+            public void onFailure(Method method, Throwable throwable) {
+                userMethodCallback.onFailure(method, throwable);
+            }
+
+            @Override
+            public void onSuccess(Method method, User user) {
+                currentUser = user;
+                userMethodCallback.onSuccess(method, user);
+            }
+
+        });
     }
 
     @Override
