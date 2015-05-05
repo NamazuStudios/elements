@@ -10,6 +10,9 @@ import com.gwtplatform.mvp.client.proxy.ProxyPlace;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.socialengine.client.place.NameTokens;
 import com.namazustudios.socialengine.client.rest.LoginService;
+import com.namazustudios.socialengine.model.User;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import javax.inject.Inject;
 
@@ -42,6 +45,19 @@ public class ControlPanelPresenter extends Presenter<ControlPanelPresenter.MyVie
 
     @Override
     public void prepareFromRequest(final PlaceRequest request) {
-        
+        loginService.refreshCurrentUser(new MethodCallback<User>() {
+
+            @Override
+            public void onFailure(Method method, Throwable throwable) {
+                placeManager.revealPlace(request);
+            }
+
+            @Override
+            public void onSuccess(Method method, User user) {
+                placeManager.revealPlace(request);
+            }
+
+        });
     }
+
 }
