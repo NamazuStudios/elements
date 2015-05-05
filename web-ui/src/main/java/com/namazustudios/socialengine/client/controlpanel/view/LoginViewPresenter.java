@@ -16,7 +16,7 @@ import javax.inject.Inject;
 public class LoginViewPresenter extends Presenter<LoginViewPresenter.MyView, LoginViewPresenter.MyProxy> {
 
     @ProxyStandard
-    @NameToken(NameTokens.ControlPanel.LOGIN)
+    @NameToken(NameTokens.LOGIN)
     public interface MyProxy extends ProxyPlace<LoginViewPresenter> {}
 
     public interface MyView extends View {}

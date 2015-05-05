@@ -19,9 +19,9 @@ public class ControlPanelMain extends AbstractGinModule {
         install(new ControlPanelPresenters());
         install(new RestyModule());
 
-        bindConstant().annotatedWith(DefaultPlace.class).to(NameTokens.ControlPanel.LOGIN);
-        bindConstant().annotatedWith(ErrorPlace.class).to(NameTokens.ControlPanel.LOGIN);
-        bindConstant().annotatedWith(UnauthorizedPlace.class).to(NameTokens.ControlPanel.LOGIN);
+        bindConstant().annotatedWith(DefaultPlace.class).to(NameTokens.LOGIN);
+        bindConstant().annotatedWith(ErrorPlace.class).to(NameTokens.LOGIN);
+        bindConstant().annotatedWith(UnauthorizedPlace.class).to(NameTokens.LOGIN);
 
     }
 

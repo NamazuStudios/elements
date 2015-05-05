@@ -21,7 +21,7 @@ import javax.inject.Inject;
 public class ControlPanelPresenter extends Presenter<ControlPanelPresenter.MyView, ControlPanelPresenter.MyProxy> {
 
     @ProxyStandard
-    @NameToken(NameTokens.ControlPanel.MAIN)
+    @NameToken(NameTokens.MAIN)
     public interface MyProxy extends ProxyPlace<ControlPanelPresenter> {}
 
     public interface MyView extends View {}
