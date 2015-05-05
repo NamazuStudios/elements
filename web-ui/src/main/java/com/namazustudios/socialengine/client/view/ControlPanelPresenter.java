@@ -31,7 +31,7 @@ public class ControlPanelPresenter extends Presenter<ControlPanelPresenter.MyVie
     private LoginService loginService;
 
     @Inject
-    private PlaceManager placeManager;
+    private LoginViewPresenter loginViewPresenter;
 
     @Inject
     public ControlPanelPresenter(EventBus eventBus, MyView view, MyProxy proxy) {
@@ -45,19 +45,23 @@ public class ControlPanelPresenter extends Presenter<ControlPanelPresenter.MyVie
 
     @Override
     public void prepareFromRequest(final PlaceRequest request) {
+
+        super.prepareFromRequest(request);
+
         loginService.refreshCurrentUser(new MethodCallback<User>() {
 
             @Override
             public void onFailure(Method method, Throwable throwable) {
-                placeManager.revealPlace(request);
+                getProxy().manualRevealFailed();
             }
 
             @Override
             public void onSuccess(Method method, User user) {
-                placeManager.revealPlace(request);
+                getProxy().manualReveal(ControlPanelPresenter.this);
             }
 
         });
+
     }
 
 }
