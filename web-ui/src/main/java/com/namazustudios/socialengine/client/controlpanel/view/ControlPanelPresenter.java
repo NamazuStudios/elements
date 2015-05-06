@@ -21,6 +21,7 @@ import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * Created by patricktwohig on 5/1/15.
@@ -38,6 +39,9 @@ public class ControlPanelPresenter extends Presenter<ControlPanelPresenter.MyVie
 
     @Inject
     private LoginService loginService;
+
+    @Inject
+    private Provider<LoginViewPresenter> loginViewPresenterProvider;
 
     @Inject
     public ControlPanelPresenter(EventBus eventBus, MyView view, MyProxy proxy) {
@@ -68,7 +72,7 @@ public class ControlPanelPresenter extends Presenter<ControlPanelPresenter.MyVie
 
             @Override
             public void onFailure(Method method, Throwable throwable) {
-                getProxy().manualRevealFailed();
+                getProxy().manualReveal(loginViewPresenterProvider.get());
             }
 
             @Override

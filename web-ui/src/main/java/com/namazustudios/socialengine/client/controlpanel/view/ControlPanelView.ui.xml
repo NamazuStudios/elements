@@ -44,6 +44,8 @@
                                 </b:DropDownMenu>
                             </b:ListDropDown>
 
+                            <b:AnchorListItem text="Logout" ui:field="logout"/>
+
                         </b:NavbarNav>
                     </b:NavbarCollapse>
 
