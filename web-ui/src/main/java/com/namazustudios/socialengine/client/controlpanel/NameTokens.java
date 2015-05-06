@@ -7,12 +7,12 @@ public class NameTokens {
 
     public static final String LOGIN = "login";
     public static final String MAIN = "controlpanel";
-    public static final String USERS = "users";
+    public static final String USER_CREATE = "user_create";
     public static final String CAMPAIGNS = "campaigns";
     public static final String ENTRANTS = "entrants";
 
     public static String getLogin() { return LOGIN; }
-    public static String getUsers() {return USERS;}
+    public static String getUserCreate() {return USER_CREATE;}
     public static String getCampaigns() { return CAMPAIGNS; }
     public static String getEntrants() { return ENTRANTS; }
     public static String getMain() { return MAIN;}

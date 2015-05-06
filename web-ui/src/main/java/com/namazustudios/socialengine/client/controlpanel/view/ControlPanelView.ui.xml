@@ -21,7 +21,7 @@
                             <b:ListDropDown>
                                 <b:AnchorButton dataToggle="DROPDOWN">User Management</b:AnchorButton>
                                 <b:DropDownMenu>
-                                    <b:AnchorListItem>Create New User</b:AnchorListItem>
+                                    <b:AnchorListItem targetHistoryToken="{nameTokens.getUserCreate}">Create New User</b:AnchorListItem>
                                     <b:AnchorListItem>View/Edit Existing Users</b:AnchorListItem>
                                 </b:DropDownMenu>
                             </b:ListDropDown>
@@ -46,6 +46,8 @@
 
                         </b:NavbarNav>
                     </b:NavbarCollapse>
+
+                    <g:SimplePanel ui:field="contentContainer"/>
 
                 </b:Container>
             </b:Navbar>

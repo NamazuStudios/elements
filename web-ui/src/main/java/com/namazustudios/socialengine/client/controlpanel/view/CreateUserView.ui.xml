@@ -1,0 +1,67 @@
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:b="urn:import:org.gwtbootstrap3.client.ui"
+             xmlns:m="urn:import:com.namazustudios.socialengine.client.modal">
+
+    <ui:style>
+        .root-panel {
+            margin: 0 auto;
+            width: 80%;
+        }
+    </ui:style>
+
+    <b:Panel>
+
+        <m:ErrorModal ui:field="errorModal"/>
+
+        <b:PanelHeader>
+            <b:Heading size="H3" text="Create new User"/>
+        </b:PanelHeader>
+
+        <b:PanelBody>
+            <b:Form addStyleNames="{style.root-panel}">
+                <b:FieldSet>
+
+                    <b:Legend>User Details</b:Legend>
+
+                    <b:FormGroup ui:field="usernameFormGroup">
+                        <b:FormLabel for="username">Username</b:FormLabel>
+                        <b:TextBox b:id="username" placeholder="Username" ui:field="usernameTextBox"/>
+                    </b:FormGroup>
+
+                    <b:FormGroup ui:field="emailFormGroup">
+                        <b:FormLabel for="username">Email</b:FormLabel>
+                        <b:TextBox b:id="username" placeholder="Email" ui:field="emailTextBox"/>
+                    </b:FormGroup>
+
+                    <b:FormGroup ui:field="passwordFormGroup">
+                        <b:FormLabel for="password">Password</b:FormLabel>
+                        <b:Input b:id="password" type="PASSWORD" placeholder="(password)" ui:field="passwordInput"/>
+                    </b:FormGroup>
+
+                    <b:FormGroup ui:field="passwordConfirmFormGroup">
+                        <b:FormLabel for="password">Confirm Password</b:FormLabel>
+                        <b:Input b:id="passwordConfirm" type="PASSWORD" placeholder="(password confirm)" ui:field="passwordConfirmInput"/>
+                    </b:FormGroup>
+
+                    <b:FormGroup ui:field="levelFormGroup">
+                        <b:FormLabel for="password">User Level</b:FormLabel>
+                        <b:DropDown>
+                            <b:Anchor dataToggle="DROPDOWN">Click to SetLevel</b:Anchor>
+                            <b:DropDownMenu>
+                                <b:AnchorListItem>Unprivileged User</b:AnchorListItem>
+                                <b:AnchorListItem>Normal User</b:AnchorListItem>
+                                <b:AnchorListItem>Super-User</b:AnchorListItem>
+                            </b:DropDownMenu>
+                        </b:DropDown>
+                    </b:FormGroup>
+
+                    <b:Button ui:field="create">Submit</b:Button>
+
+                </b:FieldSet>
+            </b:Form>
+
+        </b:PanelBody>
+
+    </b:Panel>
+
+</ui:UiBinder>
