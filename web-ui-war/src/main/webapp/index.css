@@ -15,7 +15,7 @@ h1 {
   font-size: 16pt;
 }
 
-/** Most GWT widgets already have a style name defined */
+/** Most GWT widget already have a style name defined */
 .gwt-DialogBox {
   width: 400px;
 }
