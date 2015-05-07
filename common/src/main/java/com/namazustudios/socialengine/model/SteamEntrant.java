@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.model;
 
+import javax.validation.constraints.Pattern;
+
 /**
  * Extends the {@link com.namazustudios.socialengine.model.BasicEntrant} to include the
  * user's Steam ID.
@@ -8,6 +10,7 @@ package com.namazustudios.socialengine.model;
  */
 public class SteamEntrant extends BasicEntrant {
 
+    @Pattern(regexp = "\\s*")
     private String steamId;
 
     public String getSteamId() {

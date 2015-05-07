@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.model;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+
 /**
  * Represents a user in the system.  Users are differing from entrants in that they are active users
  * who have special privilege to create/manage content in the system.
@@ -8,10 +11,13 @@ package com.namazustudios.socialengine.model;
  */
 public class User {
 
+    @Pattern(regexp = "\\s*", message = "User name must not be blank.")
     private String name;
 
+    @Pattern(regexp = "\\s*", message = "Email must not be blank.")
     private String email;
 
+    @NotNull(message = "User Level must be specified.")
     private Level level;
 
     private boolean active;

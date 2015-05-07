@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model;
 
+import javax.validation.constraints.Pattern;
 import java.util.Date;
 import java.util.List;
 
@@ -15,8 +16,10 @@ import java.util.List;
  */
 public class SocialCampaign {
 
+    @Pattern(regexp = "\\s*", message = "Social Campaign name must not be null.")
     private String name;
 
+    @Pattern(regexp = "\\s*", message = "Link URL must not be null.")
     private String linkUrl;
 
     private List<EntrantType> allowedEntrantTypes;

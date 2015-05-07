@@ -14,6 +14,14 @@
     <artifactId>common</artifactId>
     <name>common</name>
 
+    <dependencies>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>${jsr349.version}</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>
