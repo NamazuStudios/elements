@@ -4,6 +4,14 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 
 /**
+ * This is the UserDao which is used to update users in the database.  Since users
+ * can remain long after deletion, this has several methods which behave slightly
+ * differently.
+ *
+ * Generally methods with the word "strict" in their prototype mean the operation
+ * without regard for the active flag.  Other methods may use the active flag to
+ * emulate a user that has been deleted from the system.
+ *
  * Created by patricktwohig on 3/26/15.
  */
 public interface UserDao {
@@ -15,7 +23,7 @@ public interface UserDao {
      * @param userId
      * @return
      */
-    public User getUser(String userId);
+    public User getActiveUser(String userId);
 
     /**
      * Gets a listing of all users given the offset, and count.  Additionally, the
@@ -25,30 +33,28 @@ public interface UserDao {
      * @param count the count
      * @return the users in the system
      */
-    public Pagination<User> getUsers(int offset, int count);
+    public Pagination<User> getActiveUsers(int offset, int count);
 
     /**
      * Creates a user with the given User object.  If the user exists
-     * then this will re-enstate the user's account.
+     * then this will throw an exception.
      *
      * @param user the user to create
      *
      * @return the User as it was created.
      */
-    public User createUser(final User user);
+    public User createUserStrict(final User user);
 
     /**
-     * Creates a user and sets the user's password, atomically.  If the user exists
+     * Creates a user and sets the user's password.  If the user exists
      * then this will reinstate the user's account with a new password.
-     *
-     * When calling this, the user,
      *
      * @param user the user to create
      * @param password the password for the user to use
      *
      * @return the User, as was written to the database
      */
-    public User createUser(final User user, final String password);
+    public User createOrActivateUser(final User user, final String password);
 
     /**
      * Updates the given user, regardless of active status and then returns
@@ -61,7 +67,7 @@ public interface UserDao {
      * @param user the user to update
      * @return the user as was written to the database
      */
-    public User updateUser(User user);
+    public User updateUserStrict(User user);
 
     /**
      * Updates the given active user.  If the user has been deleted or has been
@@ -90,7 +96,7 @@ public interface UserDao {
      * @param userId the userId of the user (which may be email or name)
      * @return the udpated user object
      */
-    public User updateUserPassword(final String userId, final String password);
+    public User updateActiveUserPassword(final String userId, final String password);
 
     /**
      * Validates the user's password and returns the current User instance.  If the password validation fails,
@@ -101,6 +107,6 @@ public interface UserDao {
      *
      * @return the User, never null
      */
-    public User validateUserPassword(final String userId, final String password);
+    public User validateActiveUserPassword(final String userId, final String password);
 
 }

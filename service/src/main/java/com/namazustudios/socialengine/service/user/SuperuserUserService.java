@@ -17,22 +17,22 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
 
     @Override
     public User getUser(String userId) {
-        return userDao.getUser(userId);
+        return userDao.getActiveUser(userId);
     }
 
     @Override
     public Pagination<User> getUsers(int offset, int count) {
-        return userDao.getUsers(offset, count);
+        return userDao.getActiveUsers(offset, count);
     }
 
     @Override
     public User createUser(User user) {
-        return userDao.createUser(user);
+        return userDao.createUserStrict(user);
     }
 
     @Override
     public User createUser(User user, String password) {
-        return userDao.createUser(user, password);
+        return userDao.createOrActivateUser(user, password);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
 
     @Override
     public User updateUserPassword(String userId, String password) {
-        return userDao.updateUserPassword(userId, password);
+        return userDao.updateActiveUserPassword(userId, password);
     }
 
 }

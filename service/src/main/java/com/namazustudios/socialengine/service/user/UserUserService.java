@@ -78,7 +78,7 @@ public class UserUserService extends AbstractUserService implements UserService 
     @Override
     public User updateUserPassword(String userId, String password) {
         checkForCurrentUser(userId);
-        return userDao.updateUserPassword(userId, password);
+        return userDao.updateActiveUserPassword(userId, password);
     }
 
 }

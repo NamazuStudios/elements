@@ -18,7 +18,7 @@ public class AnonAuthService implements AuthService  {
 
     @Override
     public User loginUser(String userId, String password) {
-        return userDao.validateUserPassword(userId, password);
+        return userDao.validateActiveUserPassword(userId, password);
     }
 
 }

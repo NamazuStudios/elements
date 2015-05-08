@@ -111,16 +111,16 @@ public class AddUser implements Command {
         // Creates or updates the user.
 
         try {
-            userDao.createUser(user);
+            userDao.createUserStrict(user);
         } catch (DuplicateException ex) {
-            userDao.updateUser(user);
+            userDao.updateUserStrict(user);
         }
 
-        userDao.updateUserPassword(user.getName(), password);
+        userDao.updateActiveUserPassword(user.getName(), password);
 
         // Validate that we can get both the username and password
-        userDao.validateUserPassword(user.getName(), password);
-        userDao.validateUserPassword(user.getEmail(), password);
+        userDao.validateActiveUserPassword(user.getName(), password);
+        userDao.validateActiveUserPassword(user.getEmail(), password);
 
     }
 

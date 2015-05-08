@@ -57,7 +57,7 @@ public class MongoUserDao implements UserDao {
     private ValidationHelper validationHelper;
 
     @Override
-    public User getUser(String userId) {
+    public User getActiveUser(String userId) {
 
         final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
 
@@ -74,7 +74,7 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public Pagination<User> getUsers(int offset, int count) {
+    public Pagination<User> getActiveUsers(int offset, int count) {
 
         count = Math.min(queryMaxResults, count);
 
@@ -86,7 +86,7 @@ public class MongoUserDao implements UserDao {
         final Pagination<User> users = new Pagination<>();
 
         users.setOffset(offset);
-        users.setTotal((int)query.getCollection().getCount());
+        users.setTotal((int) query.getCollection().getCount());
 
         final Iterable<User> userIterable = Iterables.limit(Iterables.transform(query, new Function<MongoUser, User>() {
             @Override
@@ -102,7 +102,7 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User createUser(User user) {
+    public User createUserStrict(User user) {
 
         validate(user);
 
@@ -134,13 +134,13 @@ public class MongoUserDao implements UserDao {
 
     }
 
-    public User createUser(final User user, final String password) {
+    public User createOrActivateUser(final User user, final String password) {
         // TODO implement
         return null;
     }
 
     @Override
-    public User updateUser(User user) {
+    public User updateUserStrict(User user) {
 
         validate(user);
 
@@ -148,8 +148,8 @@ public class MongoUserDao implements UserDao {
         final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
 
         query.and(
-                query.criteria("name").equal(user.getName()),
-                query.criteria("email").equal(user.getEmail())
+            query.criteria("name").equal(user.getName()),
+            query.criteria("email").equal(user.getEmail())
         );
 
         operations.set("name", user.getName());
@@ -222,7 +222,7 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User updateUserPassword(String userId, String password) {
+    public User updateActiveUserPassword(String userId, String password) {
 
         password = Strings.nullToEmpty(password).trim();
 
@@ -300,7 +300,7 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User validateUserPassword(String userId, String password) {
+    public User validateActiveUserPassword(String userId, String password) {
 
         final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
 
