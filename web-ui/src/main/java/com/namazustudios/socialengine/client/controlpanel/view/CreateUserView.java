@@ -7,14 +7,22 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Panel;
 import com.gwtplatform.mvp.client.ViewImpl;
+import com.gwtplatform.mvp.client.proxy.PlaceManager;
+import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
+import com.namazustudios.socialengine.client.controlpanel.NameTokens;
+import com.namazustudios.socialengine.client.modal.ErrorModal;
 import com.namazustudios.socialengine.client.rest.client.UserClient;
 import com.namazustudios.socialengine.client.widget.UserLevelEnumDropDown;
 import com.namazustudios.socialengine.model.User;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 import org.gwtbootstrap3.client.ui.*;
 import org.gwtbootstrap3.client.ui.constants.ValidationState;
+import org.gwtbootstrap3.extras.growl.client.ui.Growl;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolation;
@@ -30,6 +38,9 @@ public class CreateUserView extends ViewImpl implements CreateUserPresenter.MyVi
     interface Driver extends SimpleBeanEditorDriver<User, CreateUserView> {}
 
     interface CreateUserViewUiBinder extends UiBinder<Panel, CreateUserView> {}
+
+    @UiField
+    ErrorModal errorModal;
 
     @UiField
     FormGroup usernameFormGroup;
@@ -94,6 +105,9 @@ public class CreateUserView extends ViewImpl implements CreateUserPresenter.MyVi
 
     @Inject
     private Driver driver;
+
+    @Inject
+    private PlaceManager placeManager;
 
     @Inject
     public CreateUserView(final CreateUserViewUiBinder createUserViewUiBinder) {
@@ -170,7 +184,28 @@ public class CreateUserView extends ViewImpl implements CreateUserPresenter.MyVi
             passwordFormGroup.setValidationState(ValidationState.NONE);
         }
 
-        Window.alert("Validation failed: " + failed);
+        if (!failed) {
+            userClient.craeteNewUser(user, password, new MethodCallback<User>() {
+                @Override
+                public void onFailure(Method method, Throwable throwable) {
+                    errorModal.setErrorMessage("There was a problem creating the user.");
+                }
+
+                @Override
+                public void onSuccess(Method method, User user) {
+
+                    Growl.growl("Successfully created user.");
+
+                    final PlaceRequest placeRequest = new PlaceRequest.Builder()
+                            .nameToken(NameTokens.MAIN)
+                            .build();
+
+                    placeManager.revealPlace(placeRequest);
+
+                }
+
+            });
+        }
 
     }
 

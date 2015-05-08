@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.service.UserService;
 import com.namazustudios.socialengine.ValidationHelper;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -67,16 +68,18 @@ public class UserResource {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public User createUser(final User user) {
-        validationService.validateModel(user);
-        return userService.createUser(user);
-    }
-
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
     public User createUser(final User user, @PathParam("password") final String password) {
+
         validationService.validateModel(user);
-        return userService.createUser(user);
+
+        if (password == null) {
+            return userService.createUser(user);
+        } else if (password.trim().isEmpty()){
+            throw new InvalidDataException("Password must not be blank.");
+        } else {
+            return userService.createUser(user, password);
+        }
+
     }
 
     @PUT

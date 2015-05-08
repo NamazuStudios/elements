@@ -29,6 +29,7 @@
   <inherits name="org.gwtbootstrap3.GwtBootstrap3"/>
   <inherits name="org.gwtbootstrap3.GwtBootstrap3Theme"/>
   <inherits name="org.gwtbootstrap3.extras.animate.Animate"/>
+  <inherits name="org.gwtbootstrap3.extras.growl.Growl"/>
 
   <!-- Validation -->
   <inherits name="org.hibernate.validator.HibernateValidator" />
