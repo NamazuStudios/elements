@@ -27,21 +27,24 @@
                     <b:FormGroup ui:field="usernameFormGroup">
                         <b:FormLabel for="username">Username</b:FormLabel>
                         <b:TextBox b:id="username" placeholder="Username" ui:field="usernameTextBox"/>
+                        <b:Label ui:field="usernameWarningLabel" visible="false" text="Username must be alpha-numeric." type="DANGER"/>
                     </b:FormGroup>
 
                     <b:FormGroup ui:field="emailFormGroup">
                         <b:FormLabel for="email">Email</b:FormLabel>
                         <b:TextBox b:id="email" placeholder="Email" ui:field="emailTextBox"/>
+                        <b:Label ui:field="emailWarningLabel" visible="false" text="Email format not valid." type="DANGER"/>
                     </b:FormGroup>
 
                     <b:FormGroup ui:field="passwordFormGroup">
                         <b:FormLabel for="password">Password</b:FormLabel>
                         <b:Input b:id="password" type="PASSWORD" placeholder="(password)" ui:field="passwordInput"/>
+                        <b:Label ui:field="passwordWarningLabel" visible="false" text="Invalid Password." type="DANGER"/>
                     </b:FormGroup>
 
                     <b:FormGroup ui:field="passwordConfirmFormGroup">
-                        <b:FormLabel for="passwordConfirm">Confirm Password</b:FormLabel>
                         <b:Input b:id="passwordConfirm" type="PASSWORD" placeholder="(confirm password)" ui:field="passwordConfirmInput"/>
+                        <b:Label ui:field="passwordConfirmWarningLabel" visible="false" text="Passwords do not match." type="DANGER"/>
                     </b:FormGroup>
 
                     <b:FormGroup ui:field="levelFormGroup">
@@ -54,6 +57,8 @@
                                 <w:UserLevelAnchorListItem enumerant="SUPERUSER">Super-User</w:UserLevelAnchorListItem>
                             </b:DropDownMenu>
                         </w:UserLevelEnumDropDown>
+                        <b:Label visible="false" text="Please select user level." type="DANGER"/>
+                        <b:Label ui:field="levelWarningLabel" visible="false" text="User level not specified." type="DANGER"/>
                     </b:FormGroup>
 
                     <b:Button ui:field="create">Create</b:Button>

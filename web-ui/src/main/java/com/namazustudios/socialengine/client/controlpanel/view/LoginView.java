@@ -69,6 +69,17 @@ public class LoginView extends ViewImpl implements LoginViewPresenter.MyView {
         }
     }
 
+    @Override
+    protected void onAttach() {
+        super.onAttach();
+
+        username.setText(null);
+        password.setText(null);
+        passwordFormGroup.setValidationState(ValidationState.NONE);
+        usernameFormGroup.setValidationState(ValidationState.NONE);
+
+    }
+
     private void login() {
 
         final String uid = username.getText();

@@ -27,4 +27,13 @@ public class CreateUserPresenter extends Presenter<CreateUserPresenter.MyView, C
         super(eventBus, view, proxy, ControlPanelPresenter.SET_MAIN_CONTENT_TYPE);
     }
 
+    @Override
+    protected void onReset() {
+        super.onReset();
+    }
+
+    @Override
+    protected void onReveal() {
+        super.onReveal();
+    }
 }
