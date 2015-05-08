@@ -72,6 +72,13 @@ public class UserResource {
         return userService.createUser(user);
     }
 
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public User createUser(final User user, @PathParam("password") final String password) {
+        validationService.validateModel(user);
+        return userService.createUser(user);
+    }
+
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     public User updateUser(final User user) {

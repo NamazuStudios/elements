@@ -48,6 +48,11 @@ public class UserUserService extends AbstractUserService implements UserService 
     }
 
     @Override
+    public User createUser(User user, String password) {
+        throw new ForbiddenException();
+    }
+
+    @Override
     public User updateUser(User user) {
 
         checkForCurrentUser(user.getName());

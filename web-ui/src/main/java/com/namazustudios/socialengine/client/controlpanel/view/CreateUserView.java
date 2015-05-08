@@ -174,6 +174,4 @@ public class CreateUserView extends ViewImpl implements CreateUserPresenter.MyVi
 
     }
 
-
-
 }

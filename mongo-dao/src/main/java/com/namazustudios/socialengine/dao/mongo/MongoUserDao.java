@@ -80,7 +80,7 @@ public class MongoUserDao implements UserDao {
 
         final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
 
-        query.filter("active =", true);
+        query.filter("active = ", true);
         query.offset(offset);
 
         final Pagination<User> users = new Pagination<>();
@@ -132,6 +132,11 @@ public class MongoUserDao implements UserDao {
 
         return transform(mongoUser);
 
+    }
+
+    public User createUser(final User user, final String password) {
+        // TODO implement
+        return null;
     }
 
     @Override

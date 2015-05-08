@@ -31,6 +31,11 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     }
 
     @Override
+    public User createUser(User user, String password) {
+        return userDao.createUser(user, password);
+    }
+
+    @Override
     public User updateUser(User user) {
         return userDao.updateActiveUser(user);
     }

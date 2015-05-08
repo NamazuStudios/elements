@@ -53,6 +53,15 @@ public interface UserService {
     public User createUser(final User user);
 
     /**
+     * Creates a user with the given password.  The password must be non-null, non-empty
+     *
+     * @param user the User object
+     * @param password the newly created User's password
+     * @return the User, as it was created in the database
+     */
+    public User createUser(final User user, final String password);
+
+    /**
      * Updates a user.
      *
      * @param user the user to update

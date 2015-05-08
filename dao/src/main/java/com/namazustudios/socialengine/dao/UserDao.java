@@ -9,7 +9,8 @@ import com.namazustudios.socialengine.model.User;
 public interface UserDao {
 
     /**
-     * Gets the user with the userId, which may be either email addres or name.
+     * Gets the user with the userId, which may be either email address or name.  Additionally,
+     * the user requested must be active.
      *
      * @param userId
      * @return
@@ -17,7 +18,8 @@ public interface UserDao {
     public User getUser(String userId);
 
     /**
-     * Gets a listing of all users given the offset, and count.
+     * Gets a listing of all users given the offset, and count.  Additionally, the
+     * user requested must be active.
      *
      * @param offset the offset
      * @param count the count
@@ -26,13 +28,27 @@ public interface UserDao {
     public Pagination<User> getUsers(int offset, int count);
 
     /**
-     * Creates a user with the given User object.
+     * Creates a user with the given User object.  If the user exists
+     * then this will re-enstate the user's account.
      *
      * @param user the user to create
      *
      * @return the User as it was created.
      */
     public User createUser(final User user);
+
+    /**
+     * Creates a user and sets the user's password, atomically.  If the user exists
+     * then this will reinstate the user's account with a new password.
+     *
+     * When calling this, the user,
+     *
+     * @param user the user to create
+     * @param password the password for the user to use
+     *
+     * @return the User, as was written to the database
+     */
+    public User createUser(final User user, final String password);
 
     /**
      * Updates the given user, regardless of active status and then returns
@@ -43,7 +59,7 @@ public interface UserDao {
      * a user as inactive please use the {@link #softDeleteUser(String)} instead.
      *
      * @param user the user to update
-     * @return
+     * @return the user as was written to the database
      */
     public User updateUser(User user);
 
@@ -61,14 +77,15 @@ public interface UserDao {
 
     /**
      * Deletes a user from the database.  In actuality, this isn't a true delete, but
-     * rather just flags the user as inactive.
+     * rather just flags the user as inactive.  Once flagged inactive, a user will
+     * not show up in any results for active users.
      *
      * @param userId the user's id (name or email address)
      */
     public void softDeleteUser(final String userId);
 
     /**
-     * Updates the user's password adn returns the user object.
+     * Updates the user's password and returns the user object.
      *
      * @param userId the userId of the user (which may be email or name)
      * @return the udpated user object
