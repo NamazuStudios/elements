@@ -46,6 +46,16 @@ public interface UserDao {
     public User createUserStrict(final User user);
 
     /**
+     * Creates or activates a user, or if the user is currently inactive
+     * this will reinstate access.  This securely scrambles the user's password
+     * and therefore the user must change password at a later date.
+     *
+     * @param user the user
+     * @return the User, as written to the database
+     */
+    public User createOrActivateUser(final User user);
+
+    /**
      * Creates a user and sets the user's password.  If the user exists
      * then this will reinstate the user's account with a new password.
      *

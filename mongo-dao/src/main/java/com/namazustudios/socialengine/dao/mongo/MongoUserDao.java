@@ -134,6 +134,11 @@ public class MongoUserDao implements UserDao {
 
     }
 
+    public User createOrActivateUser(final User user) {
+        // TODO Implement
+        return null;
+    }
+
     public User createOrActivateUser(final User user, final String password) {
         // TODO implement
         return null;
