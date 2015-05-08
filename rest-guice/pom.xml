@@ -16,6 +16,7 @@
     <name>rest-guice</name>
 
     <properties>
+        <bval.version>0.5</bval.version>
         <guice.bridge.version>2.4.0-b13</guice.bridge.version>
     </properties>
 
@@ -86,6 +87,16 @@
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>${javax.servlet.api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.bval</groupId>
+            <artifactId>bval-core</artifactId>
+            <version>${bval.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.bval</groupId>
+            <artifactId>bval-guice</artifactId>
+            <version>${bval.version}</version>
         </dependency>
     </dependencies>
 

@@ -1,16 +1,22 @@
 package com.namazustudios.socialengine.rest.support;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.namazustudios.socialengine.exception.BaseException;
 import com.namazustudios.socialengine.exception.ErrorCode;
+import com.namazustudios.socialengine.exception.ValidationFailureException;
 import com.namazustudios.socialengine.model.ErrorResponse;
+import com.namazustudios.socialengine.model.ValidationErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.ConstraintViolation;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -42,6 +48,30 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
         try {
             throw exception;
+        } catch (ValidationFailureException ex) {
+
+            final ValidationErrorResponse errorResponse = new ValidationErrorResponse();
+            final List<ConstraintViolation<Object>> violationList = ex.getConstraintViolations();
+
+            LOG.info("Caught unknown exception while processing request.", ex);
+
+            errorResponse.setMessage(ex.getMessage());
+            errorResponse.setCode(ex.getCode().toString());
+            errorResponse.setValidationFailureMessages(Lists.transform(violationList,
+                    new Function<ConstraintViolation<?>, String>() {
+
+                        @Override
+                        public String apply(ConstraintViolation<?> input) {
+                            return input.getMessage();
+                        }
+
+                    }));
+
+            return Response
+                    .status(getStatusForCode(ex.getCode()))
+                    .entity(errorResponse)
+                .build();
+
         } catch (BaseException ex) {
 
             final ErrorResponse errorResponse = new ErrorResponse();

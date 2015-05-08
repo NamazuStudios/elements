@@ -5,7 +5,7 @@ package com.namazustudios.socialengine.exception;
  */
 public class InvalidDataException extends BaseException {
 
-    private final Object model;
+    private transient final Object model;
 
     public InvalidDataException() {
         this.model = null;

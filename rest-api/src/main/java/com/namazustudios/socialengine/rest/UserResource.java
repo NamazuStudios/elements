@@ -1,11 +1,13 @@
 package com.namazustudios.socialengine.rest;
 
 import com.google.common.base.Strings;
+import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.service.UserService;
+import com.namazustudios.socialengine.ValidationHelper;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -27,6 +29,9 @@ public class UserResource {
 
     @Inject
     private UserService userService;
+
+    @Inject
+    private ValidationHelper validationService;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -63,12 +68,14 @@ public class UserResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public User createUser(final User user) {
+        validationService.validateModel(user);
         return userService.createUser(user);
     }
 
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     public User updateUser(final User user) {
+        validationService.validateModel(user);
         return userService.updateUser(user);
     }
 

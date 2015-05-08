@@ -1,10 +1,10 @@
 package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.model.BasicEntrant;
-import com.namazustudios.socialengine.model.SocialCampaign;
 import com.namazustudios.socialengine.model.SocialCampaignEntry;
 import com.namazustudios.socialengine.model.SteamEntrant;
 import com.namazustudios.socialengine.service.SocialCampaignService;
+import com.namazustudios.socialengine.ValidationHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,11 +26,15 @@ public class EntrantResource {
     @Inject
     private SocialCampaignService socialCampaignService;
 
+    @Inject
+    private ValidationHelper validationService;
+
     @POST
     @Path("basic/entrant")
     @Produces(MediaType.APPLICATION_JSON)
     public SocialCampaignEntry addEntrant(@PathParam("name")final String name, final BasicEntrant basicEntrant) {
         LOGGER.info("Adding entrant for basic campaign: " + name);
+        validationService.validateModel(basicEntrant);
         return socialCampaignService.submitEntrant(name, basicEntrant);
     }
 
@@ -39,6 +43,7 @@ public class EntrantResource {
     @Produces(MediaType.APPLICATION_JSON)
     public SocialCampaignEntry addEntrant(@PathParam("name")final String name, final SteamEntrant steamEntrant) {
         LOGGER.info("Adding entrant for Steam campaign: " + name);
+        validationService.validateModel(steamEntrant);
         return socialCampaignService.submitEntrant(name, steamEntrant);
     }
 

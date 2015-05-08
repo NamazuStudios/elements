@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.SocialCampaign;
 import com.namazustudios.socialengine.service.SocialCampaignService;
+import com.namazustudios.socialengine.ValidationHelper;
 
 import javax.inject.Inject;
 import javax.ws.rs.DefaultValue;
@@ -24,6 +25,9 @@ public class SocialCampaignResource {
 
     @Inject
     private SocialCampaignService socialCampaignService;
+
+    @Inject
+    private ValidationHelper validationService;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -53,12 +57,14 @@ public class SocialCampaignResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public SocialCampaign createSocialCampaign(final SocialCampaign socialCampaign) {
+        validationService.validateModel(socialCampaign);
         return socialCampaignService.createNewCampaign(socialCampaign);
     }
 
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     public SocialCampaign updateSocialCampaign(final SocialCampaign socialCampaign) {
+        validationService.validateModel(socialCampaign);
         return socialCampaignService.updateSocialCampaign(socialCampaign);
     }
 

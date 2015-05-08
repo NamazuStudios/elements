@@ -33,6 +33,7 @@
   <!-- Specify the paths for translatable code (not sure if this is necessary for each) -->
   <source path="client/rest"/>
   <source path="client/modal"/>
+  <source path="client/widget"/>
   <source path="client/controlpanel"/>
 
 </module>

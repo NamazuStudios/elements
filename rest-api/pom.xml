@@ -28,6 +28,11 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>common-util</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>dao</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -45,6 +50,11 @@
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
             <version>${jaxrs.api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>${jsr349.version}</version>
         </dependency>
     </dependencies>
 
