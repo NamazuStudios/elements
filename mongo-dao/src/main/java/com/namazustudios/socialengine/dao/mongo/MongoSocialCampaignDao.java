@@ -23,6 +23,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.SocialCampaign;
 import com.namazustudios.socialengine.model.SocialCampaignEntry;
 import com.namazustudios.socialengine.model.SteamEntrant;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 
@@ -140,41 +141,40 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
     @Override
     public SocialCampaignEntry submitEntrant(final String campaign, final BasicEntrant entrant) {
 
+        validate(entrant);
+
         final MongoSocialCampaign mongoSocialCampaign = datastore.get(MongoSocialCampaign.class, campaign);
 
         if (mongoSocialCampaign == null) {
             throw new NotFoundException("Social campaign " + campaign + " was not found.");
         }
 
-        validate(entrant);
-
         final Atomic.Once<MongoShortLink> mongoShortLinkOnce = atomic.once(new Atomic.Once<MongoShortLink>() {
             @Override
-            public MongoShortLink call() throws Atomic.OptimistcException {
+            public MongoShortLink call() {
                 return mongoShortLinkDao.createShortLinkFromURL(mongoSocialCampaign.getLinkUrl());
             }
         });
 
         try {
 
-            final MongoBasicEntrant mongoBasicEntrant = new MongoBasicEntrant();
-            mongoBasicEntrant.setEmail(entrant.getEmail());
+            final Query<MongoBasicEntrant> query = datastore.createQuery(MongoBasicEntrant.class);
+            query.filter("email = ", entrant.getEmail());
 
-            return atomic.performOptimisticUpsert(mongoBasicEntrant, new Atomic.CriticalOperation<SocialCampaignEntry>() {
-
+            return atomic.performOptimisticUpsert(query, new Atomic.CriticalOperationWithModel<SocialCampaignEntry, MongoBasicEntrant>() {
                 @Override
-                public SocialCampaignEntry attempt(Datastore datastore) throws Atomic.OptimistcException {
+                public SocialCampaignEntry attempt(AdvancedDatastore datastore, MongoBasicEntrant model) throws Atomic.ContentionException {
 
-                    mongoBasicEntrant.setSalutation(entrant.getSalutation());
-                    mongoBasicEntrant.setFirstName(entrant.getFirstName());
-                    mongoBasicEntrant.setLastName(entrant.getLastName());
+                    model.setSalutation(entrant.getSalutation());
+                    model.setFirstName(entrant.getFirstName());
+                    model.setLastName(entrant.getLastName());
 
                     final Map<String, MongoShortLink> shortLinksByCampaign;
 
-                    if (mongoBasicEntrant.getShortLinksByCampaign() == null) {
+                    if (model.getShortLinksByCampaign() == null) {
                         shortLinksByCampaign = Maps.newHashMap();
                     } else {
-                        shortLinksByCampaign = new HashMap<>(mongoBasicEntrant.getShortLinksByCampaign());
+                        shortLinksByCampaign = new HashMap<>(model.getShortLinksByCampaign());
                     }
 
                     MongoShortLink mongoShortLink = shortLinksByCampaign.get(mongoSocialCampaign.getObjectId());
@@ -189,13 +189,10 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
                     return socialCampaignEntry;
 
                 }
-
             });
 
-        } catch (Atomic.ContentionException ex) {
+        } catch (Atomic.ConflictException ex) {
             throw new TooBusyException(ex);
-        } catch (Atomic.OptimistcException ex) {
-            throw new InternalException(ex);
         }
 
     }
@@ -212,7 +209,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
 
         final Atomic.Once<MongoShortLink> mongoShortLinkOnce = atomic.once(new Atomic.Once<MongoShortLink>() {
             @Override
-            public MongoShortLink call() throws Atomic.OptimistcException {
+            public MongoShortLink call() {
                 return mongoShortLinkDao.createShortLinkFromURL(mongoSocialCampaign.getLinkUrl());
             }
         });
@@ -220,17 +217,18 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
         try {
 
             final MongoSteamEntrant mongoSteamEntrant = new MongoSteamEntrant();
-            mongoSteamEntrant.setEmail(entrant.getEmail());
 
-            return atomic.performOptimisticUpsert(mongoSteamEntrant, new Atomic.CriticalOperation<SocialCampaignEntry>() {
+            final Query<MongoSteamEntrant> query = datastore.createQuery(MongoSteamEntrant.class);
+            query.filter("email = ", entrant.getEmail());
 
+            return atomic.performOptimisticUpsert(query, new Atomic.CriticalOperationWithModel<SocialCampaignEntry, MongoSteamEntrant>() {
                 @Override
-                public SocialCampaignEntry attempt(Datastore datastore) throws Atomic.OptimistcException {
+                public SocialCampaignEntry attempt(AdvancedDatastore datastore, MongoSteamEntrant model) throws Atomic.ContentionException {
 
-                    mongoSteamEntrant.setSalutation(entrant.getSalutation());
-                    mongoSteamEntrant.setFirstName(entrant.getFirstName());
-                    mongoSteamEntrant.setLastName(entrant.getLastName());
-                    mongoSteamEntrant.setSteamId(entrant.getSteamId());
+                    model.setSalutation(entrant.getSalutation());
+                    model.setFirstName(entrant.getFirstName());
+                    model.setLastName(entrant.getLastName());
+                    model.setSteamId(entrant.getSteamId());
 
                     final Map<String, MongoShortLink> shortLinksByCampaign;
 
@@ -252,13 +250,10 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
                     return socialCampaignEntry;
 
                 }
-
             });
 
-        } catch (Atomic.ContentionException ex) {
+        } catch (Atomic.ConflictException ex) {
             throw new TooBusyException(ex);
-        } catch (Atomic.OptimistcException ex) {
-            throw new InternalException(ex);
         }
 
     }

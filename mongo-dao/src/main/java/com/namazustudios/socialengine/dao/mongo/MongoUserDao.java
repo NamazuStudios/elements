@@ -9,13 +9,10 @@ import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
-import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.ForbiddenException;
-import com.namazustudios.socialengine.exception.InternalException;
-import com.namazustudios.socialengine.exception.InvalidDataException;
-import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -39,7 +36,7 @@ public class MongoUserDao implements UserDao {
     private static final int SALT_LENGTH = 12;
 
     @Inject
-    private Datastore datastore;
+    private AdvancedDatastore datastore;
 
     @Inject
     @Named(Constants.QUERY_MAX_RESULTS)
@@ -55,6 +52,9 @@ public class MongoUserDao implements UserDao {
 
     @Inject
     private ValidationHelper validationHelper;
+
+    @Inject
+    private Atomic atomic;
 
     @Override
     public User getActiveUser(String userId) {
@@ -135,13 +135,105 @@ public class MongoUserDao implements UserDao {
     }
 
     public User createOrActivateUser(final User user) {
-        // TODO Implement
-        return null;
+
+        validate(user);
+
+        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
+
+        query.and(
+            query.criteria("name").equal(user.getName()),
+            query.criteria("email").equal(user.getEmail())
+        ).and(
+                query.criteria("active").equal(false)
+        );
+
+        final MongoUser mongoUser;
+        final SecureRandom secureRandom = new SecureRandom();
+
+        try {
+            mongoUser = atomic.performOptimisticUpsert(query,
+                new Atomic.CriticalOperationWithModel<MongoUser, MongoUser>() {
+                    @Override
+                    public MongoUser attempt(AdvancedDatastore datastore, MongoUser model) {
+
+                        model.setEmail(user.getEmail());
+                        model.setName(user.getName());
+                        model.setActive(true);
+                        byte[] tmp;
+
+                        tmp = new byte[SALT_LENGTH];
+                        secureRandom.nextBytes(tmp);
+                        model.setSalt(tmp);
+
+                        tmp = new byte[SALT_LENGTH];
+                        secureRandom.nextBytes(tmp);
+                        model.setPasswordHash(tmp);
+
+                        return model;
+                    }
+                });
+        } catch (Atomic.ConflictException ex) {
+            throw new TooBusyException(ex);
+        }
+
+        return transform(mongoUser);
+
     }
 
     public User createOrActivateUser(final User user, final String password) {
-        // TODO implement
-        return null;
+        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
+
+        query.and(
+                query.criteria("name").equal(user.getName()),
+                query.criteria("email").equal(user.getEmail())
+        ).and(
+                query.criteria("active").equal(false)
+        );
+
+        final MongoUser mongoUser;
+        final SecureRandom secureRandom = new SecureRandom();
+        final MessageDigest digest = messageDigestProvider.get();
+
+        final byte[] passwordBytes;
+
+        try {
+            passwordBytes = password.getBytes(passwordEncoding);
+        } catch (UnsupportedEncodingException ex) {
+            throw new InternalException(ex);
+        }
+
+        final byte[] salt = new byte[SALT_LENGTH];
+        secureRandom.nextBytes(salt);
+
+        digest.update(salt);
+        digest.update(passwordBytes);
+
+        final byte[] passwordHash = digest.digest();
+
+        try {
+            mongoUser = atomic.performOptimisticUpsert(query,
+                    new Atomic.CriticalOperationWithModel<MongoUser, MongoUser>() {
+                        @Override
+                        public MongoUser attempt(AdvancedDatastore datastore, MongoUser model) {
+
+                            model.setEmail(user.getEmail());
+                            model.setName(user.getName());
+                            model.setActive(true);
+                            model.setSalt(salt);
+                            model.setPasswordHash(passwordHash);
+
+                            return model;
+
+                        }
+                    });
+        } catch (Atomic.ConflictException ex) {
+            throw new TooBusyException(ex);
+        }
+
+        return transform(mongoUser);
+
     }
 
     @Override

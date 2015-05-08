@@ -1,34 +1,30 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
 import com.mongodb.MongoClient;
-import com.namazustudios.socialengine.dao.mongo.model.MongoBasicEntrant;
-import com.namazustudios.socialengine.dao.mongo.model.MongoShortLink;
-import com.namazustudios.socialengine.dao.mongo.model.MongoSocialCampaign;
-import com.namazustudios.socialengine.dao.mongo.model.MongoSteamEntrant;
-import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
+import com.namazustudios.socialengine.dao.mongo.model.*;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.mapping.lazy.DatastoreProvider;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
 /**
- * Created by patricktwohig on 4/3/15.
+ * Created by patricktwohig on 5/8/15.
  */
-public class MongoDatastoreProvider implements Provider<Datastore> {
-
-    public static final String DATABASE_NAME = "com.namazustudios.socialengine.mongo.database.name";
+public class MongoAdvancedDatastoreProvider implements Provider<AdvancedDatastore> {
 
     @Inject
-    @Named(DATABASE_NAME)
+    @Named(MongoDatastoreProvider.DATABASE_NAME)
     private String databaseName;
 
     @Inject
     private Provider<MongoClient> mongoProvider;
 
     @Override
-    public Datastore get() {
+    public AdvancedDatastore get() {
 
         final MongoClient mongoClient = mongoProvider.get();
 
@@ -42,7 +38,10 @@ public class MongoDatastoreProvider implements Provider<Datastore> {
                 MongoUser.class
         );
 
-        final Datastore datastore = morphia.createDatastore(mongoClient, databaseName);
+        // There doesn't seem to be a good way to get an instanceof AdvancedDatastore
+        // maybe there's more to it than this but we're going with this for now.
+
+        final AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, databaseName);
         datastore.ensureIndexes();
         return datastore;
 

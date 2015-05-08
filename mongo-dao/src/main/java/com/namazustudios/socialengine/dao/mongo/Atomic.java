@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.namazustudios.socialengine.exception.DuplicateException;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
@@ -8,6 +10,7 @@ import org.mongodb.morphia.query.UpdateResults;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.Objects;
 
 /**
  *
@@ -23,7 +26,7 @@ public class Atomic {
     public static final String OPTIMISTIC_RETRY_COUNT = "com.namazustudios.socialengine.mongo.optimistic.retry.count";
 
     @Inject
-    private Datastore datastore;
+    private AdvancedDatastore datastore;
 
     @Inject
     @Named(OPTIMISTIC_RETRY_COUNT)
@@ -51,7 +54,7 @@ public class Atomic {
             ReturnT out = null;
 
             @Override
-            public ReturnT call() throws OptimistcException {
+            public ReturnT call() {
                 return  called && (called = true) ? (out = once.call()) : out;
             }
 
@@ -71,7 +74,7 @@ public class Atomic {
          * @return the value of the ReturnT
          * @throws OptimistcException if there was an Exception raised in the process.
          */
-        ReturnT call() throws OptimistcException;
+        ReturnT call();
 
     }
 
@@ -84,128 +87,101 @@ public class Atomic {
      * @return the return value from the Operation
      *
      */
-    public <ReturnT> ReturnT performOptimistic(final CriticalOperation<ReturnT> criticalOperation) throws OptimistcException {
+    public <ReturnT> ReturnT performOptimistic(final CriticalOperation<ReturnT> criticalOperation) throws ConflictException {
 
-        int retries = 0;
+        int attempts = 0;
         int falloff = 0;
 
         do {
 
+            ++attempts;
+
             try {
                 return criticalOperation.attempt(datastore);
-            } catch (ConflictException e) {
+            } catch (ContentionException e) {
                 try {
                     Thread.sleep(falloff += falloffTime);
                     continue;
                 } catch (InterruptedException ex) {
-                    throw new OptimistcException("Interrupted while falling off.", ex);
+                    throw new IllegalStateException("Interrupted while falling off.", ex);
                 }
             }
 
-        } while (retries < numberOfRetries);
+        } while (attempts < numberOfRetries);
 
-        throw new ContentionException("Exceeded number of retries " + numberOfRetries);
+        throw new ConflictException("Exceeded number of retries " + numberOfRetries);
 
     }
 
     /**
-     * Given a model object, this performs the given {@link Atomic.CriticalOperation} taking a Query By Example using
-     * {@link Datastore#queryByExample(Object)} just before the execution of the
-     * {@link Atomic.CriticalOperation#attempt(org.mongodb.morphia.Datastore)} method to ensure the model is properly
-     * refreshed.
+     * Given a {@link Query<ModelT>} object, this will attempt to find a single entity and perform
+     * an atomic update.
      *
-     * After the operation is attempted, an attempt to update using the generated Query By Example to ensure that
-     * the entire object is successfully udpated or not at all.  Similar to a compare and swap operation.
+     * The result of the query, or a freshly created instance, is passed to
+     * {@link com.namazustudios.socialengine.dao.mongo.Atomic.CriticalOperationWithModel#attempt(AdvancedDatastore, Object)}
+     * just before attempting the write.
      *
-     * @param modelToEdit the model object to edit
-     * @param operation the edit operation to perfrom
-     * @param <ReturnT> the return Type
-     * @param <ModelT> the model type
-     * @return the result of the given operation
-     * @throws OptimistcException if an exception occurred updaing the object.
-     */
-    public <ReturnT, ModelT> ReturnT performOptimisticUpsert(
-            final ModelT modelToEdit,
-            final CriticalOperation<ReturnT> operation) throws OptimistcException {
-
-        final Key<?> key = datastore.getKey(modelToEdit);
-
-        if (key == null) {
-            throw new IllegalArgumentException("Model to edit must have key.");
-        }
-
-        return performOptimistic(new CriticalOperation<ReturnT>() {
-
-            @Override
-            public ReturnT attempt(Datastore datastore) throws OptimistcException {
-
-                final Key<?> key = datastore.getKey(modelToEdit);
-
-                if (key.getId() != null) {
-                    datastore.get(modelToEdit);
-                }
-
-                final Query<ModelT> qbe = datastore.queryByExample(modelToEdit);
-                final ReturnT out = operation.attempt(datastore);
-
-                final UpdateResults result = datastore.updateFirst(qbe, modelToEdit, true);
-
-                if (!(result.getUpdatedCount() == 1 || result.getInsertedCount() == 1)) {
-                    throw new ConflictException();
-                }
-
-                return out;
-
-            }
-
-        });
-    }
-
-
-    /**
-     * Given a model object, this performs the given {@link Atomic.CriticalOperation} taking a Query By Example using
-     * {@link Datastore#queryByExample(Object)} just before the execution of the
-     * {@link Atomic.CriticalOperation#attempt(org.mongodb.morphia.Datastore)} method to ensure the model is properly
-     * refreshed.
+     * Before attempting an update, a snapshot of the object is taken using {@link Datastore#queryByExample(Object)}
+     * to ensure that the object can be updated completely (or not at all).
      *
-     * After the operation is attempted, an attempt to insert using the generated Query By Example to ensure that
-     * the entire object is successfully udpated or not at all.  Similar to a compare and swap operation.
+     * In the event the operation fails, the operation is retried until either it succeeds or a timeout happens.
      *
-     * @param query the query to find the object
-     * @param modelToEdit the model object to edit
-     * @param operation the edit operation to perfrom
-     * @param <ReturnT> the return Type
-     * @param <ModelT> the model type
-     * @return the result of the given operation
-     * @throws OptimistcException if an exception occurred updaing the object.
+     * @param query the query to find the objects
+     * @param operation the operation to perform
+     *
+     * @throws IllegalArgumentException if the query does not return a single result
+     * @throws ContentionException if the atomic operation fails
+     *
      */
     public <ReturnT, ModelT> ReturnT performOptimisticUpsert(
             final Query<ModelT> query,
-            final ModelT modelToEdit,
-            final CriticalOperation<ReturnT> operation) throws OptimistcException {
-
-        if (datastore.getCount(query) > 1) {
-            throw new IllegalArgumentException("Query must result in a single entity.");
-        }
+            final CriticalOperationWithModel<ReturnT, ModelT> operation) throws ConflictException {
 
         return performOptimistic(new CriticalOperation<ReturnT>() {
 
             @Override
-            public ReturnT attempt(Datastore datastore) throws OptimistcException {
+            public ReturnT attempt(AdvancedDatastore datastore) throws ContentionException {
 
-                final Key<?> key = datastore.getKey(modelToEdit);
+                final ModelT model;
+                final Key<ModelT> key;
 
-                if (key.getId() != null) {
-                    datastore.get(modelToEdit);
+                if (datastore.getCount(query) == 0) {
+
+                    key = null;
+
+                    try {
+                        model = query.getEntityClass().newInstance();
+                    } catch (InstantiationException ex) {
+                        throw new IllegalStateException(ex);
+                    } catch (IllegalAccessException ex) {
+                        throw new IllegalStateException(ex);
+                    }
+
+                } else if (datastore.getCount(query) == 1) {
+                    model = query.get();
+                    key = datastore.getKey(model);
+                } else {
+                    throw new IllegalArgumentException("Multiple objects exist for query.");
                 }
 
-                final Query<ModelT> qbe = datastore.queryByExample(modelToEdit);
-                final ReturnT out = operation.attempt(datastore);
+                final Query<ModelT> qbe = datastore.queryByExample(model);
+                final ReturnT out = operation.attempt(datastore, model);
 
-                final UpdateResults result = datastore.updateFirst(qbe, modelToEdit, true);
+                if (key != null && Objects.equals(key, datastore.getKey(model))) {
+
+                    // If we were looking to update a specific object we had better make sure
+                    // that nobody fucked with the key or else this operation will not behave
+                    // properly.
+
+                    throw new IllegalStateException("Key mismatch.  Expected " + key +
+                            " but got " + datastore.getKey(model) + " instead.");
+
+                }
+
+                final UpdateResults result = datastore.updateFirst(qbe, model, false);
 
                 if (!(result.getUpdatedCount() == 1 || result.getInsertedCount() == 1)) {
-                    throw new ConflictException();
+                    throw new ContentionException();
                 }
 
                 return out;
@@ -214,6 +190,83 @@ public class Atomic {
 
         });
     }
+
+    /**
+     * Given a {@link Query<ModelT>} object, this will attempt to find a single entity and perform
+     * an atomic update.
+     *
+     * The result of the query, or a freshly created instance, is passed to
+     * {@link CriticalOperationWithModel#attempt(AdvancedDatastore, Object)} just before attempting the write.
+     *
+     * Before attempting an update, a snapshot of the object is taken using {@link Datastore#queryByExample(Object)}
+     * to ensure that the object can be updated completely (or not at all).
+     *
+     * In the event the operation fails, the operation is retried until either it succeeds or a timeout happens.
+     *
+     * This has a slight advantage over {@link Atomic#performOptimisticUpsert(Query, CriticalOperationWithModel)} in
+     * that it is a slight bit more foolproof as it will only returna  single object.
+     *
+     * @param key they {@link Key<ModelT>} for the object
+     * @param operation the operation to perform
+     *
+     * @throws IllegalArgumentException if the query does not return a single result
+     * @throws ContentionException if the atomic operation fails
+     *
+     */
+    public <ReturnT, ModelT> ReturnT performOptimisticUpsert(
+            final Key<ModelT> key,
+            final CriticalOperationWithModel<ReturnT, ModelT> operation) throws ConflictException {
+
+        if (key == null) {
+            throw new IllegalArgumentException("key must not be null.");
+        }
+
+        return performOptimistic(new CriticalOperation<ReturnT>() {
+
+            @Override
+            public ReturnT attempt(AdvancedDatastore datastore) throws ContentionException {
+
+                ModelT model = datastore.get(key.getKind(), key.getKindClass(), key.getId());
+
+                if (model == null) {
+
+                    try {
+                        model = key.getKindClass().newInstance();
+                    } catch (InstantiationException ex) {
+                        throw new IllegalStateException(ex);
+                    } catch (IllegalAccessException ex) {
+                        throw new IllegalStateException(ex);
+                    }
+
+                }
+
+                final Query<ModelT> qbe = datastore.queryByExample(model);
+                final ReturnT out = operation.attempt(datastore, model);
+
+                if (!Objects.equals(key, datastore.getKey(model))) {
+
+                    // We now need to make damned sure that the key we get is the key
+                    // we expected.
+
+                    throw new IllegalStateException("Key mismatch.  Expected " + key +
+                            " but got " + datastore.getKey(model) + " instead.");
+
+                }
+
+
+                final UpdateResults result = datastore.updateFirst(qbe, model, false);
+
+                if (!(result.getUpdatedCount() == 1 || result.getInsertedCount() == 1)) {
+                    throw new ContentionException();
+                }
+
+                return out;
+
+            }
+
+        });
+    }
+
     /**
      * A basic a atomic operation.  The operation is supplied with a
      * {@link org.mongodb.morphia.Datastore} instance which is used to handel the atomic
@@ -225,10 +278,31 @@ public class Atomic {
 
         /**
          * Defines the logic for hte operation.
-         * @param datastore
+         * @param datastore the datastore
          * @return the return type
          */
-        ReturnT attempt(final Datastore datastore) throws OptimistcException;
+        ReturnT attempt(final AdvancedDatastore datastore) throws ContentionException;
+
+    }
+
+    /**
+     * A basic a atomic operation.  The operation is supplied with a
+     * {@link org.mongodb.morphia.Datastore} instance which is used to handel the atomic
+     * operation.
+     *
+     * @param <ReturnT> the operation
+     */
+    public interface CriticalOperationWithModel<ReturnT, ModelT> {
+
+        /**
+         * Defines the logic for hte operation.
+         *
+         * @param datastore the datastore
+         * @param model the model to edit
+         *
+         * @return the return type
+         */
+        ReturnT attempt(final AdvancedDatastore datastore, final ModelT model) throws ContentionException;
 
     }
 
@@ -263,8 +337,7 @@ public class Atomic {
      */
     public class ConflictException extends OptimistcException {
 
-        public ConflictException() {
-        }
+        public ConflictException() {}
 
         public ConflictException(String message) {
             super(message);
@@ -306,6 +379,7 @@ public class Atomic {
         public ContentionException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
             super(message, cause, enableSuppression, writableStackTrace);
         }
+
     }
 
 }

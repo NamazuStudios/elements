@@ -11,12 +11,15 @@ import com.namazustudios.socialengine.dao.mongo.Atomic;
 import com.namazustudios.socialengine.dao.mongo.MongoShortLinkDao;
 import com.namazustudios.socialengine.dao.mongo.MongoSocialCampaignDao;
 import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
+import com.namazustudios.socialengine.dao.mongo.provider.MongoAdvancedDatastoreProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDatastoreProvider;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Singleton;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -65,8 +68,9 @@ public class MongoDaoModule extends AbstractModule {
         binder().bind(UserDao.class).to(MongoUserDao.class);
         binder().bind(SocialCampaignDao.class).to(MongoSocialCampaignDao.class);
         binder().bind(MongoShortLinkDao.class);
-        binder().bind(MongoClient.class).toProvider(MongoClientProvider.class);
+        binder().bind(MongoClient.class).toProvider(MongoClientProvider.class).in(Singleton.class);
         binder().bind(Datastore.class).toProvider(MongoDatastoreProvider.class);
+        binder().bind(AdvancedDatastore.class).toProvider(MongoAdvancedDatastoreProvider.class);
 
         binder().bind(MessageDigest.class)
                 .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
