@@ -6,6 +6,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.mongodb.DuplicateKeyException;
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.DuplicateException;
@@ -51,6 +52,9 @@ public class MongoUserDao implements UserDao {
     @Inject
     @Named(Constants.PASSWORD_ENCODING)
     private String passwordEncoding;
+
+    @Inject
+    private ValidationHelper validationHelper;
 
     @Override
     public User getUser(String userId) {
@@ -283,20 +287,10 @@ public class MongoUserDao implements UserDao {
             throw new InvalidDataException("User must not be null.");
         }
 
+        validationHelper.validateModel(user);
+
         user.setEmail(Strings.nullToEmpty(user.getEmail()).trim());
         user.setName(Strings.nullToEmpty(user.getName()).trim());
-
-        if (Strings.isNullOrEmpty(user.getEmail())) {
-            throw new InvalidDataException("Email must not be null.");
-        }
-
-        if (Strings.isNullOrEmpty(user.getName())) {
-            throw new InvalidDataException("User name must not be null.");
-        }
-
-        if (user.getLevel() == null) {
-            throw new InvalidDataException("User level must be specified.");
-        }
 
     }
 

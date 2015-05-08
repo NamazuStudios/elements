@@ -30,10 +30,17 @@
   <inherits name="org.gwtbootstrap3.GwtBootstrap3Theme"/>
   <inherits name="org.gwtbootstrap3.extras.animate.Animate"/>
 
+  <!-- Validation -->
+  <inherits name="org.hibernate.validator.HibernateValidator" />
+  <replace-with class="com.namazustudios.socialengine.client.validation.ValidatiorFactory">
+    <when-type-is class="javax.validation.ValidatorFactory" />
+  </replace-with>
+
   <!-- Specify the paths for translatable code (not sure if this is necessary for each) -->
   <source path="client/rest"/>
   <source path="client/modal"/>
   <source path="client/widget"/>
+  <source path="client/validation"/>
   <source path="client/controlpanel"/>
 
 </module>

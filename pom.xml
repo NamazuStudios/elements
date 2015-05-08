@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.namazustudios.socialengine</groupId>
@@ -21,8 +22,8 @@
         <module>guice</module>
         <module>rest-guice</module>
         <module>web-ui-war</module>
-    <module>common-util</module>
-  </modules>
+        <module>common-util</module>
+    </modules>
 
     <properties>
         <guice.version>3.0</guice.version>
@@ -35,7 +36,7 @@
         <jaxrs.api.version>2.0.1</jaxrs.api.version>
         <jersey.version>2.17</jersey.version>
         <gwt.version>2.7.0</gwt.version>
-        <jsr349.version>1.1.0.Final</jsr349.version>
+        <javax.validation.version>1.0.0.GA</javax.validation.version>
     </properties>
 
     <dependencies>

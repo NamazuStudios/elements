@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.model;
 
+import com.namazustudios.socialengine.Constants;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
@@ -11,13 +13,15 @@ import javax.validation.constraints.Pattern;
  */
 public class User {
 
-    @Pattern(regexp = "\\s*", message = "User name must not be blank.")
+    @NotNull
+    @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
     private String name;
 
-    @Pattern(regexp = "\\s*", message = "Email must not be blank.")
+    @NotNull
+    @Pattern(regexp = Constants.Regexp.EMAIL_ADDRESS)
     private String email;
 
-    @NotNull(message = "User Level must be specified.")
+    @NotNull
     private Level level;
 
     private boolean active;

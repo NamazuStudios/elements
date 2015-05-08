@@ -3,6 +3,7 @@ package com.namazustudios.socialengine;
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.DuplicateException;
+import com.namazustudios.socialengine.exception.ValidationFailureException;
 import com.namazustudios.socialengine.model.User;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -10,6 +11,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import javax.inject.Inject;
+import javax.validation.ConstraintViolation;
 
 /**
  * Created by patricktwohig on 4/8/15.
@@ -75,6 +77,11 @@ public class AddUser implements Command {
 
         try {
             writeUserToDatabase();
+        } catch (ValidationFailureException ex) {
+            System.err.println("Encountered validation failures.");
+            for (final ConstraintViolation<?> failure : ex.getConstraintViolations()) {
+                System.err.println(failure.getPropertyPath() + " - " + failure.getMessage());
+            }
         } catch (Exception ex) {
             optionParser.printHelpOn(System.err);
             throw ex;

@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.mongodb.DuplicateKeyException;
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.SocialCampaignDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoBasicEntrant;
 import com.namazustudios.socialengine.dao.mongo.model.MongoShortLink;
@@ -49,6 +50,9 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
     @Inject
     @Named(Constants.QUERY_MAX_RESULTS)
     private int queryMaxResults;
+
+    @Inject
+    private ValidationHelper validationHelper;
 
     @Override
     public SocialCampaign createNewCampaign(SocialCampaign socialCampaign) {
@@ -265,16 +269,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
             throw new InvalidDataException("Social campaign. must not be null.");
         }
 
-        socialCampaign.setName(Strings.nullToEmpty(socialCampaign.getName()).trim());
-        socialCampaign.setLinkUrl(Strings.nullToEmpty(socialCampaign.getLinkUrl()).trim());
-
-        if (Strings.isNullOrEmpty(socialCampaign.getName())) {
-            throw new InvalidDataException("Social campaign name not specified.", socialCampaign);
-        }
-
-        if (Strings.isNullOrEmpty(socialCampaign.getLinkUrl())) {
-            throw new InvalidDataException("Social campaign link URL not specified.", socialCampaign);
-        }
+        validationHelper.validateModel(socialCampaign);
 
     }
 
@@ -284,38 +279,19 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
             throw new InvalidDataException("Entrant must not be null.");
         }
 
+        validationHelper.validateModel(entrant);
+
         entrant.setEmail(Strings.nullToEmpty(entrant.getEmail()).trim());
         entrant.setSalutation(Strings.nullToEmpty(entrant.getSalutation()).trim());
         entrant.setFirstName(Strings.nullToEmpty(entrant.getFirstName()).trim());
         entrant.setLastName(Strings.nullToEmpty(entrant.getLastName()).trim());
-
-        if (Strings.isNullOrEmpty(entrant.getFirstName())) {
-            throw new InvalidDataException("First name campaign name not specified.", entrant);
-        }
-
-        if (Strings.isNullOrEmpty(entrant.getLastName())) {
-            throw new InvalidDataException("Last name not specified.", entrant);
-        }
-
-        if (Strings.isNullOrEmpty(entrant.getEmail())) {
-            throw new InvalidDataException("Email not specified.", entrant);
-        }
-
-        if (entrant.getBirthday() == null) {
-            throw new InvalidDataException("Birthday must not be null.", entrant);
-        }
 
     }
 
     public void validate(final SteamEntrant entrant) {
 
         validate((BasicEntrant)entrant);
-
         entrant.setLastName(Strings.nullToEmpty(entrant.getSteamId()).trim());
-
-        if (Strings.isNullOrEmpty(entrant.getSteamId())) {
-            throw new InvalidDataException("Steam ID must not be specified.");
-        }
 
     }
 

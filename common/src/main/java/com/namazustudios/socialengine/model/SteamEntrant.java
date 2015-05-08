@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.model;
 
+import com.namazustudios.socialengine.Constants;
+
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
 /**
@@ -10,7 +13,8 @@ import javax.validation.constraints.Pattern;
  */
 public class SteamEntrant extends BasicEntrant {
 
-    @Pattern(regexp = "\\s*")
+    @NotNull
+    @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
     private String steamId;
 
     public String getSteamId() {

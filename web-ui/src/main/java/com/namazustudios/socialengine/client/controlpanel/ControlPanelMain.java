@@ -6,6 +6,7 @@ import com.gwtplatform.mvp.client.annotations.ErrorPlace;
 import com.gwtplatform.mvp.client.annotations.UnauthorizedPlace;
 import com.gwtplatform.mvp.client.gin.DefaultModule;
 import com.namazustudios.socialengine.client.rest.RestyModule;
+import com.namazustudios.socialengine.client.validation.gin.ValidationModule;
 
 /**
  * Created by patricktwohig on 4/28/15.
@@ -18,6 +19,7 @@ public class ControlPanelMain extends AbstractGinModule {
         install(new DefaultModule());
         install(new ControlPanelPresenters());
         install(new RestyModule());
+        install(new ValidationModule());
 
         bindConstant().annotatedWith(DefaultPlace.class).to(NameTokens.LOGIN);
         bindConstant().annotatedWith(ErrorPlace.class).to(NameTokens.LOGIN);

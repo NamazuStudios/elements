@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.model;
 
+import com.namazustudios.socialengine.Constants;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.util.Date;
@@ -12,19 +14,23 @@ import java.util.Date;
  */
 public class BasicEntrant {
 
-    @Pattern(regexp = "\\s*", message = "Salutation must not be empty.")
+    @NotNull
+    @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
     private String salutation;
 
-    @Pattern(regexp = "\\s*", message = "First Name must not be empty.")
+    @NotNull
+    @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
     private String firstName;
 
-    @Pattern(regexp = "\\s*", message = "Last Name must not be empty.")
+    @NotNull
+    @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
     private String lastName;
 
-    @Pattern(regexp = "\\s*", message = "Email must not be empty.")
+    @NotNull
+    @Pattern(regexp = Constants.Regexp.EMAIL_ADDRESS)
     private String email;
 
-    @NotNull(message = "Birthday must be specified.")
+    @NotNull
     private Date birthday;
 
     public String getSalutation() {

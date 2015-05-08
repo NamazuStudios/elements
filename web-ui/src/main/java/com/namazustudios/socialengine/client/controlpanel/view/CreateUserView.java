@@ -5,12 +5,17 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Panel;
 import com.gwtplatform.mvp.client.ViewImpl;
+import com.namazustudios.socialengine.client.widget.UserLevelEnumDropDown;
 import com.namazustudios.socialengine.model.User;
 import org.gwtbootstrap3.client.ui.*;
 
 import javax.inject.Inject;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
+import java.util.Set;
 
 /**
  * Created by patricktwohig on 5/5/15.
@@ -30,7 +35,7 @@ public class CreateUserView extends ViewImpl implements CreateUserPresenter.MyVi
     FormGroup emailFormGroup;
 
     @UiField
-    @Path("name")
+    @Path("email")
     TextBox emailTextBox;
 
     @UiField
@@ -45,43 +50,32 @@ public class CreateUserView extends ViewImpl implements CreateUserPresenter.MyVi
     @UiField
     FormGroup passwordConfirmFormGroup;
 
-//    @UiField
-//    Anchor levelAnchor;
-//
-//    @UiField
-//    AnchorListItem unprivilegedAnchor;
-//
-//    @UiField
-//    AnchorListItem normalAnchor;
-//
-//    @UiField
-//    AnchorListItem superUserAnchor;
-//
-//    private User user = new User();
-//
+    @UiField
+    @Path("level")
+    UserLevelEnumDropDown levelDropdown;
+
+    @Inject
+    private Validator validator;
+
 
     @Inject
     public CreateUserView(final CreateUserViewUiBinder createUserViewUiBinder) {
         initWidget(createUserViewUiBinder.createAndBindUi(this));
     }
 
-//
-//    @UiHandler("unprivilegedAnchor")
-//    void onClickUnprivileged(ClickEvent clickEvent) {
-//        levelAnchor.setText(unprivilegedAnchor.getText());
-//        user.setLevel(User.Level.UNPRIVILEGED);
-//    }
-//
-//    @UiHandler("normalAnchor")
-//    void onClickNormal(ClickEvent clickEvent) {
-//        levelAnchor.setText(normalAnchor.getText());
-//        user.setLevel(User.Level.USER);
-//    }
-//
-//    @UiHandler("superUserAnchor")
-//    void onClickSuperUser(ClickEvent clickEvent) {
-//        levelAnchor.setText(superUserAnchor.getText());
-//        user.setLevel(User.Level.SUPERUSER);
-//    }
+    @UiHandler("create")
+    void onClickCreate(final ClickEvent ev) {
+
+        final User user = new User();
+
+        String s = "";
+
+        for (ConstraintViolation<User> failure : validator.validate(user)) {
+            s += failure.getPropertyPath() + " " + failure.getMessage() + '\n';
+        }
+
+        Window.alert("Failures: \n" + s);
+
+    }
 
 }

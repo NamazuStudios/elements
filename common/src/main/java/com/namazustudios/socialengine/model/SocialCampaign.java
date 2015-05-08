@@ -1,6 +1,10 @@
 package com.namazustudios.socialengine.model;
 
+import com.namazustudios.socialengine.Constants;
+
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import java.util.Date;
 import java.util.List;
 
@@ -16,12 +20,16 @@ import java.util.List;
  */
 public class SocialCampaign {
 
-    @Pattern(regexp = "\\s*", message = "Social Campaign name must not be null.")
+    @NotNull
+    @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
     private String name;
 
-    @Pattern(regexp = "\\s*", message = "Link URL must not be null.")
+    @NotNull
+    @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
     private String linkUrl;
 
+    @NotNull
+    @Size(min = 1)
     private List<EntrantType> allowedEntrantTypes;
 
     private Date beginDate;

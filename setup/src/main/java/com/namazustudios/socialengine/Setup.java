@@ -6,6 +6,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
+import org.apache.bval.guice.ValidationModule;
 
 import java.io.Console;
 import java.lang.reflect.Array;
@@ -57,6 +58,7 @@ public class Setup {
         final Injector injector = Guice.createInjector(
                 new ConfigurationModule(),
                 new MongoDaoModule(),
+                new ValidationModule(),
                 new AbstractModule() {
 
                     @Override

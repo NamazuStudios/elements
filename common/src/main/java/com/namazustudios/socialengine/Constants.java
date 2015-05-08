@@ -41,4 +41,26 @@ public interface Constants {
      */
     public static final String DEFAULT_PROPERTIES_FILE = "socialengine-configuration.properties";
 
+    /**
+     * Defines some useful regex patterns.
+     */
+    interface Regexp {
+
+        /**
+         * Non-blank string.
+         */
+        public static final String NON_BLANK_STRING = "\\S+";
+
+        /**
+         * Alpha-numeric only
+         */
+        public static final String ALPHA_NUM_ONLY = "\\p{Alnum}";
+
+        /**
+         * A very simple validator
+         */
+        public static final String EMAIL_ADDRESS = "^(.+)@(.+)$";
+
+    }
+
 }

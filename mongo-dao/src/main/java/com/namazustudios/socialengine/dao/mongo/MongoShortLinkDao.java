@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.mongo.model.MongoShortLink;
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import org.mongodb.morphia.Datastore;
 
 import javax.inject.Inject;
@@ -25,7 +26,7 @@ public class MongoShortLinkDao {
     public MongoShortLink createShortLinkFromURL(final String url) {
 
         if (url == null) {
-            throw new IllegalArgumentException("URL must not be null.");
+            throw new InvalidDataException("URL must not be null.");
         }
 
         final MongoShortLink mongoShortLink = new MongoShortLink();

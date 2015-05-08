@@ -46,7 +46,7 @@
 
                     <b:FormGroup ui:field="levelFormGroup">
                         <b:FormLabel for="userLevel">User Level</b:FormLabel>
-                        <w:UserLevelEnumDropDown>
+                        <w:UserLevelEnumDropDown ui:field="levelDropdown">
                             <b:Anchor ui:field="levelAnchor" dataToggle="DROPDOWN">(please select)</b:Anchor>
                             <b:DropDownMenu b:id="userLevel">
                                 <w:UserLevelAnchorListItem enumerant="UNPRIVILEGED">Unprivileged User</w:UserLevelAnchorListItem>
@@ -56,7 +56,7 @@
                         </w:UserLevelEnumDropDown>
                     </b:FormGroup>
 
-                    <b:Button ui:field="create">Submit</b:Button>
+                    <b:Button ui:field="create">Create</b:Button>
 
                 </b:FieldSet>
             </b:Form>
