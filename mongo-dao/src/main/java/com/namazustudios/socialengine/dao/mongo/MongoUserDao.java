@@ -124,6 +124,9 @@ public class MongoUserDao implements UserDao {
         secureRandom.nextBytes(tmp);
         mongoUser.setPasswordHash(tmp);
 
+        final MessageDigest digest = messageDigestProvider.get();
+        mongoUser.setHashAlgorithm(digest.getAlgorithm());
+
         try {
             datastore.save(mongoUser);
         } catch (DuplicateKeyException ex) {
@@ -142,46 +145,45 @@ public class MongoUserDao implements UserDao {
         final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
 
         query.and(
-            query.criteria("name").equal(user.getName()),
-            query.criteria("email").equal(user.getEmail())
+                query.criteria("name").equal(user.getName()),
+                query.criteria("email").equal(user.getEmail())
         ).and(
                 query.criteria("active").equal(false)
         );
 
-        final MongoUser mongoUser;
         final SecureRandom secureRandom = new SecureRandom();
 
-        try {
-            mongoUser = atomic.performOptimisticUpsert(query,
-                new Atomic.CriticalOperationWithModel<MongoUser, MongoUser>() {
-                    @Override
-                    public MongoUser attempt(AdvancedDatastore datastore, MongoUser model) {
+        byte[] tmp;
 
-                        model.setEmail(user.getEmail());
-                        model.setName(user.getName());
-                        model.setActive(true);
-                        byte[] tmp;
 
-                        tmp = new byte[SALT_LENGTH];
-                        secureRandom.nextBytes(tmp);
-                        model.setSalt(tmp);
+        // Sets up the write operations from the provided model object
 
-                        tmp = new byte[SALT_LENGTH];
-                        secureRandom.nextBytes(tmp);
-                        model.setPasswordHash(tmp);
+        operations.set("active", true);
 
-                        return model;
-                    }
-                });
-        } catch (Atomic.ConflictException ex) {
-            throw new TooBusyException(ex);
-        }
+        operations.set("name", user.getName());
+        operations.set("email", user.getEmail());
+        operations.set("level", user.getLevel());
 
+        tmp = new byte[SALT_LENGTH];
+        secureRandom.nextBytes(tmp);
+        operations.set("salt", tmp);
+
+        tmp = new byte[SALT_LENGTH];
+        secureRandom.nextBytes(tmp);
+        operations.set("password_hash", tmp);
+
+        final MessageDigest digest = messageDigestProvider.get();
+        operations.set("hash_algorithm", digest.getAlgorithm());
+
+        final MongoUser mongoUser = datastore.findAndModify(query, operations, false, true);
         return transform(mongoUser);
 
     }
 
     public User createOrActivateUser(final User user, final String password) {
+
+        validate(user);
+
         final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
 
@@ -192,7 +194,6 @@ public class MongoUserDao implements UserDao {
                 query.criteria("active").equal(false)
         );
 
-        final MongoUser mongoUser;
         final SecureRandom secureRandom = new SecureRandom();
         final MessageDigest digest = messageDigestProvider.get();
 
@@ -210,28 +211,19 @@ public class MongoUserDao implements UserDao {
         digest.update(salt);
         digest.update(passwordBytes);
 
-        final byte[] passwordHash = digest.digest();
+        // Sets up the write oeprations from the provided model object
 
-        try {
-            mongoUser = atomic.performOptimisticUpsert(query,
-                    new Atomic.CriticalOperationWithModel<MongoUser, MongoUser>() {
-                        @Override
-                        public MongoUser attempt(AdvancedDatastore datastore, MongoUser model) {
+        operations.set("active", true);
 
-                            model.setEmail(user.getEmail());
-                            model.setName(user.getName());
-                            model.setActive(true);
-                            model.setSalt(salt);
-                            model.setPasswordHash(passwordHash);
+        operations.set("name", user.getName());
+        operations.set("email", user.getEmail());
+        operations.set("level", user.getLevel());
 
-                            return model;
+        operations.set("salt", salt);
+        operations.set("password_hash", digest.digest());
+        operations.set("hash_algorithm", digest.getAlgorithm());
 
-                        }
-                    });
-        } catch (Atomic.ConflictException ex) {
-            throw new TooBusyException(ex);
-        }
-
+        final MongoUser mongoUser = datastore.findAndModify(query, operations, false, true);
         return transform(mongoUser);
 
     }
@@ -257,7 +249,7 @@ public class MongoUserDao implements UserDao {
             operations.set("active", user.isActive());
         }
 
-        final MongoUser mongoUser = datastore.findAndModify(query, operations);
+        final MongoUser mongoUser = datastore.findAndModify(query, operations, false, false);
 
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
@@ -425,8 +417,14 @@ public class MongoUserDao implements UserDao {
         final MessageDigest digest;
 
         try {
+
+            if (mongoUser.getHashAlgorithm() == null) {
+                throw new ForbiddenException();
+            }
+
             final String algo = Strings.nullToEmpty(mongoUser.getHashAlgorithm());
             digest = MessageDigest.getInstance(algo);
+
         } catch (NoSuchAlgorithmException ex) {
             throw new ForbiddenException(ex);
         }

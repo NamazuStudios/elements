@@ -6,9 +6,9 @@ import joptsimple.OptionSet;
 import javax.inject.Inject;
 
 /**
- * Created by patricktwohig on 4/8/15.
+ * Created by patricktwohig on 5/8/15.
  */
-public class AddUser extends AbstractUserCommand {
+public class UpdateUser extends AbstractUserCommand {
 
     @Inject
     private UserDao userDao;
@@ -16,15 +16,12 @@ public class AddUser extends AbstractUserCommand {
     @Override
     protected void writeUserToDatabase(OptionSet optionSet) {
 
-        // Creates or updates the user.
-
         if (optionSet.valueOf(getStrictOptionSpec())) {
-            userDao.createUserStrict(getUser());
+            userDao.updateUserStrict(getUser());
         } else {
-            userDao.createOrActivateUser(getUser());
+            userDao.updateActiveUser(getUser());
+            userDao.updateActiveUserPassword(getUser().getName(), getPassword());
         }
-
-        userDao.updateActiveUserPassword(getUser().getName(), getPassword());
 
         // Validate that we can get both the username and password
         userDao.validateActiveUserPassword(getUser().getName(), getPassword());

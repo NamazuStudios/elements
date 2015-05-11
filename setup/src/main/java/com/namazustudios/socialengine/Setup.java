@@ -15,13 +15,18 @@ import java.util.Arrays;
 /**
  * A Setup utility that can be run from the command-line.  This operates git-style where
  * there are several sub-commands to do things to get the application up and running.
+ *
+ * This class starts sets up the IoC container, parses out the first command passed, and
+ * instantiates the individual {@link Command} which processes the rest from there.
+ *
  */
 public class Setup {
 
     /**
      * Runs the command.
      *
-     * @param args the argument list
+     * @param args the argument list.
+     *
      * @throws Exception in case something goes wrong.
      */
     public void run(final String args[]) throws Exception {
@@ -118,7 +123,8 @@ public class Setup {
 
     private enum SupportedCommand {
 
-        ADD_USER("add-user", AddUser.class);
+        ADD_USER("add-user", AddUser.class),
+        UPDATE_USER("update-user", UpdateUser.class);
 
         public final String commandName;
         public final Class<? extends Command> commandType;
