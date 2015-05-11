@@ -5,6 +5,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.MongoCommandException;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.UserDao;
@@ -12,6 +13,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
+import com.sun.org.apache.bcel.internal.generic.DUP;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
@@ -198,8 +200,16 @@ public class MongoUserDao implements UserDao {
 
         scramblePassword(operations);
 
-        final MongoUser mongoUser = datastore.findAndModify(query, operations, false, true);
-        return transform(mongoUser);
+        try {
+            final MongoUser mongoUser = datastore.findAndModify(query, operations, false, true);
+            return transform(mongoUser);
+        } catch (MongoCommandException ex) {
+            if (ex.getErrorCode() == 11000) {
+                throw new DuplicateException(ex);
+            } else {
+                throw new InternalException(ex);
+            }
+        }
 
     }
 
@@ -224,8 +234,18 @@ public class MongoUserDao implements UserDao {
 
         addPasswordToOperations(operations, password);
 
-        final MongoUser mongoUser = datastore.findAndModify(query, operations, false, true);
-        return transform(mongoUser);
+        try {
+            final MongoUser mongoUser = datastore.findAndModify(query, operations, false, true);
+            return transform(mongoUser);
+        } catch (MongoCommandException ex) {
+            if (ex.getErrorCode() == 11000) {
+                throw new DuplicateException(ex);
+            } else {
+                throw new InternalException(ex);
+            }
+        }
+
+
 
     }
 
@@ -298,7 +318,7 @@ public class MongoUserDao implements UserDao {
             query.criteria("name").equal(user.getName()),
             query.criteria("email").equal(user.getEmail())
         ).and(
-            query.criteria("active").equal(true)
+                query.criteria("active").equal(true)
         );
 
         operations.set("name", user.getName());
@@ -356,7 +376,7 @@ public class MongoUserDao implements UserDao {
             query.criteria("name").equal(userId),
             query.criteria("email").equal(userId)
         ).and(
-            query.criteria("active").equal(true)
+                query.criteria("active").equal(true)
         );
 
         operations.set("active", false);
