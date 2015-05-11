@@ -53,7 +53,7 @@ public interface UserClient extends RestService {
      * @param userMethodCallback the method callback
      */
     @PUT
-    @PathParam("{name}")
+    @Path("{name}")
     void updateUser(
             @PathParam("name") String name,
             @QueryParam("password") String password,

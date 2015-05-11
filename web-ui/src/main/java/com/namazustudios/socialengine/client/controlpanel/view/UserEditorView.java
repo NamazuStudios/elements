@@ -28,7 +28,6 @@ import org.gwtbootstrap3.extras.growl.client.ui.Growl;
 import javax.inject.Inject;
 import javax.validation.Validator;
 import java.util.Objects;
-import java.util.concurrent.Callable;
 
 /**
  * Created by patricktwohig on 5/5/15.
@@ -116,8 +115,24 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
         initWidget(userEditorViewUiBinder.createAndBindUi(this));
     }
 
+    public void lockOut() {
+
+        usernameTextBox.setEnabled(false);
+        emailTextBox.setEnabled(false);
+        passwordInput.setEnabled(false);
+        passwordConfirmInput.setEnabled(false);
+        levelDropdown.setEnabled(false);
+
+    }
+
     @Override
     public void reset() {
+
+        usernameTextBox.setEnabled(true);
+        emailTextBox.setEnabled(true);
+        passwordInput.setEnabled(true);
+        passwordConfirmInput.setEnabled(true);
+        levelDropdown.setEnabled(true);
 
         usernameWarningLabel.setVisible(false);
         usernameFormGroup.setValidationState(ValidationState.NONE);
@@ -254,20 +269,19 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
         final String password = passwordInput.getText();
 
         if (Strings.isNullOrEmpty(password)) {
-            passwordWarningLabel.setVisible(true);
-            passwordFormGroup.setValidationState(ValidationState.ERROR);
-        } else {
-            passwordWarningLabel.setVisible(false);
-            passwordFormGroup.setValidationState(ValidationState.NONE);
-        }
 
-        if(!Objects.equals(password, passwordConfirmInput.getText())) {
-            failed = true;
-            passwordConfirmWarningLabel.setVisible(true);
-            passwordFormGroup.setValidationState(ValidationState.ERROR);
+            if(!Objects.equals(password, passwordConfirmInput.getText())) {
+                failed = true;
+                passwordConfirmWarningLabel.setVisible(true);
+                passwordFormGroup.setValidationState(ValidationState.ERROR);
+            } else {
+                passwordWarningLabel.setVisible(false);
+                passwordConfirmWarningLabel.setVisible(false);
+                passwordFormGroup.setValidationState(ValidationState.NONE);
+            }
+
         } else {
             passwordWarningLabel.setVisible(false);
-            passwordConfirmWarningLabel.setVisible(false);
             passwordFormGroup.setValidationState(ValidationState.NONE);
         }
 

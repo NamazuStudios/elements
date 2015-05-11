@@ -31,6 +31,8 @@ public abstract class EnumDropDown<EnumT extends Enum<EnumT> > extends DropDown 
 
     private DropDownMenu dropDownMenu;
 
+    private boolean enabled;
+
     public EnumDropDown(final Class<EnumT> enumTClass) {
         this.enumTClass = enumTClass;
         enumTList = Lists.newArrayList();
@@ -57,12 +59,12 @@ public abstract class EnumDropDown<EnumT extends Enum<EnumT> > extends DropDown 
         return value;
     }
 
-    public String getDefaultDisplayText() {
-        return defaultDisplayText;
+    public boolean isEnabled() {
+        return enabled;
     }
 
-    public void setDefaultDisplayText(String defaultDisplayText) {
-        this.defaultDisplayText = defaultDisplayText;
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     @Override
@@ -137,8 +139,9 @@ public abstract class EnumDropDown<EnumT extends Enum<EnumT> > extends DropDown 
 
             @Override
             public void onClick(ClickEvent event) {
-                value = enumerant;
-                setAnchorText(displayText);
+                if (isEnabled()) {
+                    setValue(enumerant);
+                }
             }
 
         }, ClickEvent.getType());
