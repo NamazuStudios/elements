@@ -16,15 +16,19 @@ public class AddUser extends AbstractUserCommand {
     @Override
     protected void writeUserToDatabase(OptionSet optionSet) {
 
-        // Creates or updates the user.
-
-        if (optionSet.valueOf(getStrictOptionSpec())) {
-            userDao.createUserStrict(getUser());
+        if (optionSet.has(getPasswordOptionSpec())) {
+            if (optionSet.valueOf(getStrictOptionSpec())) {
+                userDao.createUserStrict(getUser(), getPassword());
+            } else {
+                userDao.createOrActivateUser(getUser(), getPassword());
+            }
         } else {
-            userDao.createOrActivateUser(getUser());
+            if (optionSet.valueOf(getStrictOptionSpec())) {
+                userDao.createUserStrict(getUser());
+            } else {
+                userDao.createOrActivateUser(getUser());
+            }
         }
-
-        userDao.updateActiveUserPassword(getUser().getName(), getPassword());
 
         // Validate that we can get both the username and password
         userDao.validateActiveUserPassword(getUser().getName(), getPassword());

@@ -62,7 +62,7 @@ public class MongoUserDao implements UserDao {
             query.criteria("name").equal(userId),
             query.criteria("email").equal(userId)
         ).and(
-            query.criteria("active").equal(true)
+                query.criteria("active").equal(true)
         );
 
         final MongoUser mongoUser = query.get();
@@ -134,6 +134,49 @@ public class MongoUserDao implements UserDao {
 
     }
 
+    public User createUserStrict(final User user, final String password) {
+
+        validate(user);
+
+        final MongoUser mongoUser = new MongoUser();
+
+        mongoUser.setActive(true);
+        mongoUser.setName(user.getName());
+        mongoUser.setEmail(user.getEmail());
+        mongoUser.setLevel(user.getLevel());
+
+        final byte[] passwordBytes;
+
+        try {
+            passwordBytes = password.getBytes(passwordEncoding);
+        } catch (UnsupportedEncodingException ex) {
+            throw new InternalException(ex);
+        }
+
+        // Generate the hash
+
+        final byte[] salt = new byte[SALT_LENGTH];
+        final SecureRandom secureRandom = new SecureRandom();
+        secureRandom.nextBytes(salt);
+
+        final MessageDigest digest = messageDigestProvider.get();
+        digest.update(salt);
+        digest.update(passwordBytes);
+
+        mongoUser.setSalt(salt);
+        mongoUser.setPasswordHash(digest.digest());
+        mongoUser.setHashAlgorithm(digest.getAlgorithm());
+
+        try {
+            datastore.save(mongoUser);
+        } catch (DuplicateKeyException ex) {
+            throw new DuplicateException(ex);
+        }
+
+        return transform(mongoUser);
+
+    }
+
     public User createOrActivateUser(final User user) {
 
         validate(user);
@@ -187,7 +230,7 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User updateUserStrict(User user) {
+         public User updateUserStrict(User user) {
 
         validate(user);
 
@@ -195,14 +238,43 @@ public class MongoUserDao implements UserDao {
         final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
 
         query.and(
-            query.criteria("name").equal(user.getName()),
-            query.criteria("email").equal(user.getEmail())
+                query.criteria("name").equal(user.getName()),
+                query.criteria("email").equal(user.getEmail())
         );
 
         operations.set("name", user.getName());
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
         operations.set("active", user.isActive());
+
+        final MongoUser mongoUser = datastore.findAndModify(query, operations, false, false);
+
+        if (mongoUser == null) {
+            throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
+        }
+
+        return transform(mongoUser);
+
+    }
+
+    @Override
+    public User updateUserStrict(User user, final String password) {
+
+        validate(user);
+
+        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
+
+        query.and(
+                query.criteria("name").equal(user.getName()),
+                query.criteria("email").equal(user.getEmail())
+        );
+
+        operations.set("name", user.getName());
+        operations.set("email", user.getEmail());
+        operations.set("level", user.getLevel());
+        operations.set("active", user.isActive());
+        addPasswordToOperations(operations, password);
 
         final MongoUser mongoUser = datastore.findAndModify(query, operations, false, false);
 

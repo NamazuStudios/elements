@@ -36,14 +36,25 @@ public interface UserDao {
     Pagination<User> getActiveUsers(int offset, int count);
 
     /**
-     * Creates a user with the given User object.  If the user exists
-     * then this will throw an exception.
+     * Creates a user with the given User object.  Using "Strict" semantics, if the user exists
+     * then this will throw an exception.  The resulting user will have a scrambled password.
      *
      * @param user the user to create
      *
      * @return the User as it was created.
      */
     User createUserStrict(final User user);
+
+    /**
+     * Creates a user with the given User object and password.  Using "Strict" semantics, if the
+     * user exists then this will throw an exception.  The resulting user will be assigned
+     * the given password.
+     *
+     * @param user
+     * @param password
+     * @return
+     */
+    User createUserStrict(final User user, final String password);
 
     /**
      * Creates or activates a user, or if the user is currently inactive
@@ -74,10 +85,27 @@ public interface UserDao {
      * call if setting to true.  This cannot be used to deactivate a user, if wishing to set
      * a user as inactive please use the {@link #softDeleteUser(String)} instead.
      *
+     * This does not change the user's password.
+     *
      * @param user the user to update
      * @return the user as was written to the database
      */
-    User updateUserStrict(User user);
+    User updateUserStrict(final User user);
+
+    /**
+     * Updates the given user, regardless of active status and then returns
+     * the user instance as it was written to the database.
+     *
+     * The given {@link com.namazustudios.socialengine.model.User#isActive()} is only honored for this,
+     * call if setting to true.  This cannot be used to deactivate a user, if wishing to set
+     * a user as inactive please use the {@link #softDeleteUser(String)} instead.
+     *
+     * This will update the user's password.
+     *
+     * @param user the user to update
+     * @return the user as was written to the database
+     */
+    User updateUserStrict(User user, final String password);
 
     /**
      * Updates the given active user.  If the user has been deleted or has been
