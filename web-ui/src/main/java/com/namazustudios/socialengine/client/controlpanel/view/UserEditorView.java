@@ -125,6 +125,17 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
 
     }
 
+    public void unlock() {
+
+        usernameTextBox.setEnabled(true);
+        emailTextBox.setEnabled(true);
+        passwordInput.setEnabled(true);
+        passwordConfirmInput.setEnabled(true);
+        levelDropdown.setEnabled(true);
+
+    }
+
+
     @Override
     public void reset() {
 
@@ -160,6 +171,7 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
         submitter = new Submitter() {
             @Override
             public void submit(User user, String password) {
+                lockOut();
                 createNewUser(user, password);
             }
         };
@@ -171,11 +183,14 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
 
             @Override
             public void onFailure(Method method, Throwable throwable) {
+                unlock();
                 errorModal.setErrorMessage("There was a problem creating the user.");
             }
 
             @Override
             public void onSuccess(Method method, User user) {
+
+                unlock();
 
                 Growl.growl("Successfully created user.");
 
@@ -201,6 +216,7 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
         submitter = new Submitter() {
             @Override
             public void submit(User user, String password) {
+                lockOut();
                 updateUser(user, password);
             }
         };
@@ -212,11 +228,14 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
 
             @Override
             public void onFailure(Method method, Throwable throwable) {
+                unlock();
                 errorModal.setErrorMessage("There was a problem updating the user.");
             }
 
             @Override
             public void onSuccess(Method method, User user) {
+
+                unlock();
 
                 Growl.growl("Successfully updated user.");
 

@@ -230,7 +230,7 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-         public User updateUserStrict(User user) {
+    public User updateUserStrict(User user) {
 
         validate(user);
 
@@ -298,7 +298,7 @@ public class MongoUserDao implements UserDao {
             query.criteria("name").equal(user.getName()),
             query.criteria("email").equal(user.getEmail())
         ).and(
-                query.criteria("active").equal(true)
+            query.criteria("active").equal(true)
         );
 
         operations.set("name", user.getName());

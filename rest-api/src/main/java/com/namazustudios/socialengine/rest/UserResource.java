@@ -98,7 +98,7 @@ public class UserResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public User createUser(final User user,
-                           @PathParam("password") String password) {
+                           @QueryParam("password") String password) {
 
         validationService.validateModel(user);
         password = Strings.nullToEmpty(password).trim();
