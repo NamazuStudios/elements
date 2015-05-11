@@ -32,11 +32,11 @@ import java.util.Objects;
 /**
  * Created by patricktwohig on 5/5/15.
  */
-public class CreateUserView extends ViewImpl implements CreateUserPresenter.MyView, Editor<User> {
+public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyView, Editor<User> {
 
-    interface Driver extends SimpleBeanEditorDriver<User, CreateUserView> {}
+    interface Driver extends SimpleBeanEditorDriver<User, UserEditorView> {}
 
-    interface CreateUserViewUiBinder extends UiBinder<Panel, CreateUserView> {}
+    interface UserEditorViewUiBinder extends UiBinder<Panel, UserEditorView> {}
 
     @UiField
     ErrorModal errorModal;
@@ -109,8 +109,8 @@ public class CreateUserView extends ViewImpl implements CreateUserPresenter.MyVi
     private PlaceManager placeManager;
 
     @Inject
-    public CreateUserView(final CreateUserViewUiBinder createUserViewUiBinder) {
-        initWidget(createUserViewUiBinder.createAndBindUi(this));
+    public UserEditorView(final UserEditorViewUiBinder userEditorViewUiBinder) {
+        initWidget(userEditorViewUiBinder.createAndBindUi(this));
     }
 
     @Override

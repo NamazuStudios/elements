@@ -21,7 +21,7 @@
                             <b:ListDropDown>
                                 <b:AnchorButton dataToggle="DROPDOWN">User Management</b:AnchorButton>
                                 <b:DropDownMenu>
-                                    <b:AnchorListItem targetHistoryToken="{nameTokens.getUserCreate}">Create New User</b:AnchorListItem>
+                                    <b:AnchorListItem targetHistoryToken="{nameTokens.getUserEdit}">Create New User</b:AnchorListItem>
                                     <b:AnchorListItem>View/Edit Existing Users</b:AnchorListItem>
                                 </b:DropDownMenu>
                             </b:ListDropDown>

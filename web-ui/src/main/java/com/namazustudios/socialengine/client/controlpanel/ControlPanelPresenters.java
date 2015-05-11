@@ -24,10 +24,10 @@ public class ControlPanelPresenters extends AbstractPresenterModule {
                 ControlPanelPresenter.MyProxy.class);
 
         bindPresenter(
-                CreateUserPresenter.class,
-                CreateUserPresenter.MyView.class,
-                CreateUserView.class,
-                CreateUserPresenter.MyProxy.class);
+                UserEditorPresenter.class,
+                UserEditorPresenter.MyView.class,
+                UserEditorView.class,
+                UserEditorPresenter.MyProxy.class);
 
     }
 

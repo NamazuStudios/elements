@@ -15,7 +15,7 @@
         <m:ErrorModal ui:field="errorModal"/>
 
         <b:PanelHeader>
-            <b:Heading size="H3" text="Create new User"/>
+            <b:Heading size="H3" text="User Information"/>
         </b:PanelHeader>
 
         <b:PanelBody>
@@ -61,7 +61,7 @@
                         <b:Label ui:field="levelWarningLabel" visible="false" text="User level not specified." type="DANGER"/>
                     </b:FormGroup>
 
-                    <b:Button ui:field="create">Create</b:Button>
+                    <b:Button ui:field="create">Submit</b:Button>
 
                 </b:FieldSet>
             </b:Form>

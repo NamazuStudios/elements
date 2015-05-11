@@ -20,11 +20,11 @@ import javax.inject.Inject;
 /**
  * Created by patricktwohig on 5/5/15.
  */
-public class CreateUserPresenter extends Presenter<CreateUserPresenter.MyView, CreateUserPresenter.MyProxy> {
+public class UserEditorPresenter extends Presenter<UserEditorPresenter.MyView, UserEditorPresenter.MyProxy> {
 
     @ProxyCodeSplit
-    @NameToken(NameTokens.USER_CREATE)
-    public interface MyProxy extends ProxyPlace<CreateUserPresenter> {}
+    @NameToken(NameTokens.USER_EDIT)
+    public interface MyProxy extends ProxyPlace<UserEditorPresenter> {}
 
     public interface MyView extends View {
 
@@ -40,7 +40,7 @@ public class CreateUserPresenter extends Presenter<CreateUserPresenter.MyView, C
     private UserClient userClient;
 
     @Inject
-    public CreateUserPresenter(EventBus eventBus, MyView view, MyProxy proxy) {
+    public UserEditorPresenter(EventBus eventBus, MyView view, MyProxy proxy) {
         super(eventBus, view, proxy, ControlPanelPresenter.SET_MAIN_CONTENT_TYPE);
     }
 
@@ -70,14 +70,14 @@ public class CreateUserPresenter extends Presenter<CreateUserPresenter.MyView, C
 
             @Override
             public void onFailure(Method method, Throwable throwable) {
-                getProxy().manualReveal(CreateUserPresenter.this);
+                getProxy().manualReveal(UserEditorPresenter.this);
                 getView().createUser();
                 Growl.growl("Could not load user " + method.getData());
             }
 
             @Override
             public void onSuccess(Method method, User user) {
-                getProxy().manualReveal(CreateUserPresenter.this);
+                getProxy().manualReveal(UserEditorPresenter.this);
                 getView().editUser(user);
             }
 
@@ -99,7 +99,7 @@ public class CreateUserPresenter extends Presenter<CreateUserPresenter.MyView, C
     public enum Param {
 
         /**
-         * Pass this param with a user ID to put the {@link CreateUserView} into editing mode
+         * Pass this param with a user ID to put the {@link UserEditorView} into editing mode
          * which will allow the user to edit an account.
          */
         user
