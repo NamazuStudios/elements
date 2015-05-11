@@ -244,10 +244,7 @@ public class MongoUserDao implements UserDao {
         operations.set("name", user.getName());
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
-
-        if (user.isActive()) {
-            operations.set("active", user.isActive());
-        }
+        operations.set("active", user.isActive());
 
         final MongoUser mongoUser = datastore.findAndModify(query, operations, false, false);
 

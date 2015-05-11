@@ -129,7 +129,7 @@ public class Setup {
         public final String commandName;
         public final Class<? extends Command> commandType;
 
-        private SupportedCommand(final String commandName, final Class<? extends  Command> command) {
+        SupportedCommand(final String commandName, final Class<? extends  Command> command) {
             this.commandName = commandName;
             this.commandType = command;
         }
@@ -154,4 +154,3 @@ public class Setup {
     }
 
 }
-
