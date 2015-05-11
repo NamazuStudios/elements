@@ -28,6 +28,7 @@ import org.gwtbootstrap3.extras.growl.client.ui.Growl;
 import javax.inject.Inject;
 import javax.validation.Validator;
 import java.util.Objects;
+import java.util.concurrent.Callable;
 
 /**
  * Created by patricktwohig on 5/5/15.
@@ -108,6 +109,8 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
     @Inject
     private PlaceManager placeManager;
 
+    private Submitter submitter;
+
     @Inject
     public UserEditorView(final UserEditorViewUiBinder userEditorViewUiBinder) {
         initWidget(userEditorViewUiBinder.createAndBindUi(this));
@@ -134,22 +137,85 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
     @Override
     public void createUser() {
 
-        usernameWarningLabel.setVisible(false);
-        emailWarningLabel.setVisible(false);
-        levelWarningLabel.setVisible(false);
-        passwordWarningLabel.setVisible(false);
-        passwordConfirmWarningLabel.setVisible(false);
+        reset();
 
         driver.initialize(this);
         driver.edit(new User());
 
+        submitter = new Submitter() {
+            @Override
+            public void submit(User user, String password) {
+                createNewUser(user, password);
+            }
+        };
+
+    }
+
+    private void createNewUser(final User user, final String password) {
+        userClient.createNewUser(user, password, new MethodCallback<User>() {
+
+            @Override
+            public void onFailure(Method method, Throwable throwable) {
+                errorModal.setErrorMessage("There was a problem creating the user.");
+            }
+
+            @Override
+            public void onSuccess(Method method, User user) {
+
+                Growl.growl("Successfully created user.");
+
+                final PlaceRequest placeRequest = new PlaceRequest.Builder()
+                        .nameToken(NameTokens.MAIN)
+                        .build();
+
+                placeManager.revealPlace(placeRequest);
+
+            }
+
+        });
     }
 
     @Override
     public void editUser(final User user) {
+
+        reset();
+
         driver.initialize(this);
         driver.edit(user);
+
+        submitter = new Submitter() {
+            @Override
+            public void submit(User user, String password) {
+                updateUser(user, password);
+            }
+        };
+
     }
+
+    private void updateUser(final User user, final String password) {
+        userClient.updateUser(user.getName(), password, user, new MethodCallback<User>() {
+
+            @Override
+            public void onFailure(Method method, Throwable throwable) {
+                errorModal.setErrorMessage("There was a problem updating the user.");
+            }
+
+            @Override
+            public void onSuccess(Method method, User user) {
+
+                Growl.growl("Successfully updated user.");
+
+                final PlaceRequest placeRequest = new PlaceRequest.Builder()
+                        .nameToken(NameTokens.MAIN)
+                        .build();
+
+                placeManager.revealPlace(placeRequest);
+
+            }
+
+        });
+    }
+
 
     @UiHandler("create")
     void onClickCreate(final ClickEvent ev) {
@@ -206,28 +272,14 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
         }
 
         if (!failed) {
-            userClient.craeteNewUser(user, password, new MethodCallback<User>() {
-
-                @Override
-                public void onFailure(Method method, Throwable throwable) {
-                    errorModal.setErrorMessage("There was a problem creating the user.");
-                }
-
-                @Override
-                public void onSuccess(Method method, User user) {
-
-                    Growl.growl("Successfully created user.");
-
-                    final PlaceRequest placeRequest = new PlaceRequest.Builder()
-                            .nameToken(NameTokens.MAIN)
-                            .build();
-
-                    placeManager.revealPlace(placeRequest);
-
-                }
-
-            });
+            submitter.submit(user, password);
         }
+
+    }
+
+    private interface Submitter {
+
+        void submit(final User user, final String password);
 
     }
 

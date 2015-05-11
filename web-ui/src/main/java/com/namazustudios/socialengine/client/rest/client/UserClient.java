@@ -39,9 +39,25 @@ public interface UserClient extends RestService {
      * @param userMethodCallback the callback
      */
     @POST
-    void craeteNewUser(
+    void createNewUser(
             User user,
             @QueryParam("password") String password,
             MethodCallback<User> userMethodCallback);
+
+    /**
+     * Updates a user with the given credentials.
+     *
+     * @param name the user name or email address
+     * @param password the user's password
+     * @param user the user JSON object
+     * @param userMethodCallback the method callback
+     */
+    @PUT
+    @PathParam("{name}")
+    void updateUser(
+            @PathParam("name") String name,
+            @QueryParam("password") String password,
+            final User user,
+            final MethodCallback<User> userMethodCallback);
 
 }

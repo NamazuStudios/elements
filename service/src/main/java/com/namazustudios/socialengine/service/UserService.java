@@ -13,7 +13,7 @@ public interface UserService {
      *
      * @return the currently logged in user
      */
-    public User getCurrentUser();
+    User getCurrentUser();
 
     /**
      * Given the userId, which may be either username or email address,
@@ -24,7 +24,7 @@ public interface UserService {
      * @param userId the userId, which could be either email or name
      * @throws com.namazustudios.socialengine.exception.NotFoundException if the current user does not match
      */
-    public void checkForCurrentUser(final String userId);
+    void checkForCurrentUser(final String userId);
 
     /**
      * Gets a user with unique user ID.
@@ -33,7 +33,7 @@ public interface UserService {
      *
      * @return the user ID
      */
-    public User getUser(final String userId);
+    User getUser(final String userId);
 
     /**
      * Gets a list of users the current user can see.
@@ -42,7 +42,7 @@ public interface UserService {
      * @param count the count
      * @return the PaginatedEntry of users
      */
-    public Pagination<User> getUsers(int offset, int count);
+    Pagination<User> getUsers(int offset, int count);
 
     /**
      * Creates a new user.
@@ -50,7 +50,7 @@ public interface UserService {
      * @param user the user to create
      * @return the User, as it was create
      */
-    public User createUser(final User user);
+    User createUser(final User user);
 
     /**
      * Creates a user with the given password.  The password must be non-null, non-empty
@@ -59,7 +59,7 @@ public interface UserService {
      * @param password the newly created User's password
      * @return the User, as it was created in the database
      */
-    public User createUser(final User user, final String password);
+    User createUser(final User user, final String password);
 
     /**
      * Updates a user.
@@ -67,14 +67,23 @@ public interface UserService {
      * @param user the user to update
      * @return the User, as it was updated
      */
-    public User updateUser(final User user);
+    User updateUser(final User user);
+
+    /**
+     * Updates a user.
+     *
+     * @param user the user to update
+     * @param password the user's password
+     * @return the User, as it was updated
+     */
+    User updateUser(final User user, final String password);
 
     /**
      * Removes a user from the system, effectively deleting his/her account.
      *
      * @param userId the userId
      */
-    public void deleteUser(final String userId);
+    void deleteUser(final String userId);
 
     /**
      * UPdates the password for a given user.
@@ -84,6 +93,6 @@ public interface UserService {
      *
      * @return the user.
      */
-    public User updateUserPassword(final String userId, final String password);
+    User updateUserPassword(final String userId, final String password);
 
 }

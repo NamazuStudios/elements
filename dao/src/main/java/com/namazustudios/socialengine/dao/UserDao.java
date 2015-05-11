@@ -23,7 +23,7 @@ public interface UserDao {
      * @param userId
      * @return
      */
-    public User getActiveUser(String userId);
+    User getActiveUser(String userId);
 
     /**
      * Gets a listing of all users given the offset, and count.  Additionally, the
@@ -33,7 +33,7 @@ public interface UserDao {
      * @param count the count
      * @return the users in the system
      */
-    public Pagination<User> getActiveUsers(int offset, int count);
+    Pagination<User> getActiveUsers(int offset, int count);
 
     /**
      * Creates a user with the given User object.  If the user exists
@@ -43,7 +43,7 @@ public interface UserDao {
      *
      * @return the User as it was created.
      */
-    public User createUserStrict(final User user);
+    User createUserStrict(final User user);
 
     /**
      * Creates or activates a user, or if the user is currently inactive
@@ -53,7 +53,7 @@ public interface UserDao {
      * @param user the user
      * @return the User, as written to the database
      */
-    public User createOrActivateUser(final User user);
+    User createOrActivateUser(final User user);
 
     /**
      * Creates a user and sets the user's password.  If the user exists
@@ -64,7 +64,7 @@ public interface UserDao {
      *
      * @return the User, as was written to the database
      */
-    public User createOrActivateUser(final User user, final String password);
+    User createOrActivateUser(final User user, final String password);
 
     /**
      * Updates the given user, regardless of active status and then returns
@@ -77,7 +77,7 @@ public interface UserDao {
      * @param user the user to update
      * @return the user as was written to the database
      */
-    public User updateUserStrict(User user);
+    User updateUserStrict(User user);
 
     /**
      * Updates the given active user.  If the user has been deleted or has been
@@ -89,7 +89,7 @@ public interface UserDao {
      * @param user the user to update
      * @return
      */
-    public User updateActiveUser(final User user);
+    User updateActiveUser(final User user);
 
     /**
      * Deletes a user from the database.  In actuality, this isn't a true delete, but
@@ -98,7 +98,7 @@ public interface UserDao {
      *
      * @param userId the user's id (name or email address)
      */
-    public void softDeleteUser(final String userId);
+    void softDeleteUser(final String userId);
 
     /**
      * Updates the user's password and returns the user object.
@@ -106,7 +106,7 @@ public interface UserDao {
      * @param userId the userId of the user (which may be email or name)
      * @return the udpated user object
      */
-    public User updateActiveUserPassword(final String userId, final String password);
+    User updateActiveUserPassword(final String userId, final String password);
 
     /**
      * Validates the user's password and returns the current User instance.  If the password validation fails,
@@ -117,6 +117,6 @@ public interface UserDao {
      *
      * @return the User, never null
      */
-    public User validateActiveUserPassword(final String userId, final String password);
+    User validateActiveUserPassword(final String userId, final String password);
 
 }

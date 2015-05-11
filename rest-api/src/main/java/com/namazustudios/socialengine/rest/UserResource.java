@@ -7,8 +7,6 @@ import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.service.UserService;
-import com.namazustudios.socialengine.ValidationHelper;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -21,6 +19,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import java.util.Objects;
 
 /**
  * Created by patricktwohig on 3/25/15.
@@ -68,14 +67,17 @@ public class UserResource {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public User createUser(final User user, @PathParam("password") final String password) {
+    public User createUser(final User user,
+                           @PathParam("password") String password) {
 
         validationService.validateModel(user);
+
+        password = Strings.nullToEmpty(password).trim();
 
         if (password == null) {
             return userService.createUser(user);
         } else if (password.trim().isEmpty()){
-            throw new InvalidDataException("Password must not be blank.");
+            return userService.createUser(user);
         } else {
             return userService.createUser(user, password);
         }
@@ -83,30 +85,32 @@ public class UserResource {
     }
 
     @PUT
+    @Path("{name}")
     @Produces(MediaType.APPLICATION_JSON)
-    public User updateUser(final User user) {
-        validationService.validateModel(user);
-        return userService.updateUser(user);
-    }
+    public User updateUser(final User user,
+                           @PathParam("name") String name,
+                           @QueryParam("password") String password) {
 
-    @PUT
-    @Path("{name}/password")
-    @Produces(MediaType.APPLICATION_JSON)
-    public User updateUserPassword(@PathParam("name") String name,
-                                   @QueryParam("password") String password) {
+        validationService.validateModel(user);
 
         name = Strings.nullToEmpty(name).trim();
         password = Strings.nullToEmpty(password).trim();
 
+        if (user.getName() == null) {
+            user.setName(name);
+        }
+
         if (Strings.isNullOrEmpty(name)) {
             throw new InvalidDataException("Invalid user name.");
+        } else if (!Objects.equals(user.getName(), name)) {
+            throw new InvalidDataException("User name mismatch.");
         }
 
         if (Strings.isNullOrEmpty(password)) {
-            throw new InvalidDataException("Password must be specified.", password);
+            return userService.updateUser(user);
+        } else {
+            return userService.updateUser(user, password);
         }
-
-        return userService.updateUserPassword(name, password);
 
     }
 

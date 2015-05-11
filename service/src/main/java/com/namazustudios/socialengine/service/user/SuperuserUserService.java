@@ -27,7 +27,7 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
 
     @Override
     public User createUser(User user) {
-        return userDao.createUserStrict(user);
+        return userDao.createOrActivateUser(user);
     }
 
     @Override
@@ -38,6 +38,12 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     @Override
     public User updateUser(User user) {
         return userDao.updateActiveUser(user);
+    }
+
+    @Override
+    public User updateUser(User user, String password) {
+        // TODO Implement this in the DAO level
+        return null;
     }
 
     @Override

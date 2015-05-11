@@ -69,6 +69,20 @@ public class UserUserService extends AbstractUserService implements UserService 
     }
 
     @Override
+    public User updateUser(User user, String password) {
+
+        checkForCurrentUser(user.getName());
+
+        user.setLevel(User.Level.USER);
+        user.setName(getCurrentUser().getName());
+        user.setActive(true);
+
+        // TODO Implement this in the DAO level
+
+        return null;
+    }
+
+    @Override
     public void deleteUser(String userId) {
         // The user can only delete his or her own account.
         checkForCurrentUser(userId);
