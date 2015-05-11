@@ -77,9 +77,8 @@ public class UserUserService extends AbstractUserService implements UserService 
         user.setName(getCurrentUser().getName());
         user.setActive(true);
 
-        // TODO Implement this in the DAO level
+        return userDao.updateActiveUser(user, password);
 
-        return null;
     }
 
     @Override

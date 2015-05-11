@@ -148,29 +148,12 @@ public class MongoUserDao implements UserDao {
             query.criteria("active").equal(false)
         );
 
-        final SecureRandom secureRandom = new SecureRandom();
-
-        byte[] tmp;
-
-
-        // Sets up the write operations from the provided model object
-
         operations.set("active", true);
-
         operations.set("name", user.getName());
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
 
-        tmp = new byte[SALT_LENGTH];
-        secureRandom.nextBytes(tmp);
-        operations.set("salt", tmp);
-
-        tmp = new byte[SALT_LENGTH];
-        secureRandom.nextBytes(tmp);
-        operations.set("password_hash", tmp);
-
-        final MessageDigest digest = messageDigestProvider.get();
-        operations.set("hash_algorithm", digest.getAlgorithm());
+        scramblePassword(operations);
 
         final MongoUser mongoUser = datastore.findAndModify(query, operations, false, true);
         return transform(mongoUser);
@@ -191,34 +174,12 @@ public class MongoUserDao implements UserDao {
             query.criteria("active").equal(false)
         );
 
-        final SecureRandom secureRandom = new SecureRandom();
-        final MessageDigest digest = messageDigestProvider.get();
-
-        final byte[] passwordBytes;
-
-        try {
-            passwordBytes = password.getBytes(passwordEncoding);
-        } catch (UnsupportedEncodingException ex) {
-            throw new InternalException(ex);
-        }
-
-        final byte[] salt = new byte[SALT_LENGTH];
-        secureRandom.nextBytes(salt);
-
-        digest.update(salt);
-        digest.update(passwordBytes);
-
-        // Sets up the write oeprations from the provided model object
-
         operations.set("active", true);
-
         operations.set("name", user.getName());
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
 
-        operations.set("salt", salt);
-        operations.set("password_hash", digest.digest());
-        operations.set("hash_algorithm", digest.getAlgorithm());
+        addPasswordToOperations(operations, password);
 
         final MongoUser mongoUser = datastore.findAndModify(query, operations, false, true);
         return transform(mongoUser);
@@ -265,7 +226,7 @@ public class MongoUserDao implements UserDao {
             query.criteria("name").equal(user.getName()),
             query.criteria("email").equal(user.getEmail())
         ).and(
-            query.criteria("active").equal(true)
+                query.criteria("active").equal(true)
         );
 
         operations.set("name", user.getName());
@@ -279,6 +240,38 @@ public class MongoUserDao implements UserDao {
         }
 
         return transform(mongoUser);
+
+    }
+
+    @Override
+    public User updateActiveUser(User user, String password) {
+
+        validate(user);
+
+        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
+
+        query.and(
+                query.criteria("name").equal(user.getName()),
+                query.criteria("email").equal(user.getEmail())
+        ).and(
+                query.criteria("active").equal(true)
+        );
+
+        operations.set("name", user.getName());
+        operations.set("email", user.getEmail());
+        operations.set("level", user.getLevel());
+
+        addPasswordToOperations(operations, password);
+
+        final MongoUser mongoUser = datastore.findAndModify(query, operations);
+
+        if (mongoUser == null) {
+            throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
+        }
+
+        return transform(mongoUser);
+
     }
 
     @Override
@@ -295,6 +288,7 @@ public class MongoUserDao implements UserDao {
         );
 
         operations.set("active", false);
+        scramblePassword(operations);
 
         final MongoUser mongoUser = datastore.findAndModify(query, operations);
 
@@ -435,4 +429,62 @@ public class MongoUserDao implements UserDao {
         throw new ForbiddenException("Invalid credentials for " + userId);
 
     }
+
+    /**
+     * Scrambles both the salt and the password.  This effectively wipes out the account's
+     * password making it inaccessible.
+     *
+     * @param operations the operations
+     */
+    private void scramblePassword(final UpdateOperations<MongoUser> operations) {
+
+        final SecureRandom secureRandom = new SecureRandom();
+
+        byte[] tmp;
+
+        tmp = new byte[SALT_LENGTH];
+        secureRandom.nextBytes(tmp);
+        operations.set("salt", tmp);
+
+        tmp = new byte[SALT_LENGTH];
+        secureRandom.nextBytes(tmp);
+        operations.set("password_hash", tmp);
+
+        final MessageDigest digest = messageDigestProvider.get();
+        operations.set("hash_algorithm", digest.getAlgorithm());
+
+    }
+
+    /**
+     * Generates salt and password hash according to the configuration.
+     *
+     * @param operations the operations to mutate
+     * @param password the password
+     */
+    private void addPasswordToOperations(final UpdateOperations<MongoUser> operations, final String password) {
+
+        final byte[] passwordBytes;
+
+        try {
+            passwordBytes = password.getBytes(passwordEncoding);
+        } catch (UnsupportedEncodingException ex) {
+            throw new InternalException(ex);
+        }
+
+        // Generate the hash
+
+        final byte[] salt = new byte[SALT_LENGTH];
+        final SecureRandom secureRandom = new SecureRandom();
+        secureRandom.nextBytes(salt);
+
+        final MessageDigest digest = messageDigestProvider.get();
+        digest.update(salt);
+        digest.update(passwordBytes);
+
+        operations.set("salt", salt);
+        operations.set("password_hash", digest.digest());
+        operations.set("hash_algorithm", digest.getAlgorithm());
+
+    }
+
 }
