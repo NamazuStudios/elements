@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.service.UserService;
@@ -65,25 +66,6 @@ public class UserResource {
         return userService.getCurrentUser();
     }
 
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    public User createUser(final User user,
-                           @PathParam("password") String password) {
-
-        validationService.validateModel(user);
-
-        password = Strings.nullToEmpty(password).trim();
-
-        if (password == null) {
-            return userService.createUser(user);
-        } else if (password.trim().isEmpty()){
-            return userService.createUser(user);
-        } else {
-            return userService.createUser(user, password);
-        }
-
-    }
-
     @PUT
     @Path("{name}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -92,7 +74,6 @@ public class UserResource {
                            @QueryParam("password") String password) {
 
         validationService.validateModel(user);
-
         name = Strings.nullToEmpty(name).trim();
         password = Strings.nullToEmpty(password).trim();
 
@@ -101,15 +82,31 @@ public class UserResource {
         }
 
         if (Strings.isNullOrEmpty(name)) {
-            throw new InvalidDataException("Invalid user name.");
-        } else if (!Objects.equals(user.getName(), name)) {
-            throw new InvalidDataException("User name mismatch.");
+            throw new NotFoundException("User not found.");
+        } else if (!(Objects.equals(user.getName(), name) || Objects.equals(user.getEmail(), name))) {
+            throw new InvalidDataException("User name does not match the path.");
         }
 
         if (Strings.isNullOrEmpty(password)) {
             return userService.updateUser(user);
         } else {
             return userService.updateUser(user, password);
+        }
+
+    }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public User createUser(final User user,
+                           @PathParam("password") String password) {
+
+        validationService.validateModel(user);
+        password = Strings.nullToEmpty(password).trim();
+
+        if (password.trim().isEmpty()){
+            return userService.createUser(user);
+        } else {
+            return userService.createUser(user, password);
         }
 
     }
