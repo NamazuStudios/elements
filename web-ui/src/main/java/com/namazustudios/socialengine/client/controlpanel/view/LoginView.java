@@ -129,14 +129,14 @@ public class LoginView extends ViewImpl implements LoginViewPresenter.MyView {
             @Override
             public void onSuccess(Method method, User user) {
                 finish();
-                revealControlPanel(user);
+                revealControlPanel();
             }
 
         });
     }
 
 
-    private void revealControlPanel(User user) {
+    private void revealControlPanel() {
 
         final PlaceRequest placeRequest = new PlaceRequest.Builder()
                 .nameToken(NameTokens.MAIN)

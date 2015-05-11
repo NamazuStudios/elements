@@ -65,7 +65,7 @@ public class ControlPanelView extends ViewImpl implements ControlPanelPresenter.
 
                 final PlaceRequest placeRequest = new PlaceRequest.Builder()
                         .nameToken(NameTokens.LOGIN)
-                        .with(LoginViewPresenter.REFRESH, Boolean.FALSE.toString())
+                        .with(LoginViewPresenter.Param.refresh.name(), Boolean.FALSE.toString())
                         .build();
 
                 placeManager.revealPlace(placeRequest);
@@ -73,10 +73,6 @@ public class ControlPanelView extends ViewImpl implements ControlPanelPresenter.
             }
 
         });
-    }
-
-    private void showLoginPlace() {
-
     }
 
 }

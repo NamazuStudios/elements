@@ -7,8 +7,6 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.History;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Panel;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
@@ -20,15 +18,16 @@ import com.namazustudios.socialengine.client.widget.UserLevelEnumDropDown;
 import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
-import org.gwtbootstrap3.client.ui.*;
+import org.gwtbootstrap3.client.ui.FormGroup;
+import org.gwtbootstrap3.client.ui.Input;
+import org.gwtbootstrap3.client.ui.Label;
+import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.constants.ValidationState;
 import org.gwtbootstrap3.extras.growl.client.ui.Growl;
 
 import javax.inject.Inject;
-import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * Created by patricktwohig on 5/5/15.
@@ -115,9 +114,25 @@ public class CreateUserView extends ViewImpl implements CreateUserPresenter.MyVi
     }
 
     @Override
-    protected void onAttach() {
+    public void reset() {
 
-        super.onAttach();
+        usernameWarningLabel.setVisible(false);
+        usernameFormGroup.setValidationState(ValidationState.NONE);
+
+        emailWarningLabel.setVisible(false);
+        emailFormGroup.setValidationState(ValidationState.NONE);
+
+        levelWarningLabel.setVisible(false);
+        levelFormGroup.setValidationState(ValidationState.NONE);
+
+        passwordWarningLabel.setVisible(false);
+        passwordConfirmWarningLabel.setVisible(false);
+        passwordFormGroup.setValidationState(ValidationState.NONE);
+
+    }
+
+    @Override
+    public void createUser() {
 
         usernameWarningLabel.setVisible(false);
         emailWarningLabel.setVisible(false);
@@ -128,6 +143,12 @@ public class CreateUserView extends ViewImpl implements CreateUserPresenter.MyVi
         driver.initialize(this);
         driver.edit(new User());
 
+    }
+
+    @Override
+    public void editUser(final User user) {
+        driver.initialize(this);
+        driver.edit(user);
     }
 
     @UiHandler("create")
@@ -186,6 +207,7 @@ public class CreateUserView extends ViewImpl implements CreateUserPresenter.MyVi
 
         if (!failed) {
             userClient.craeteNewUser(user, password, new MethodCallback<User>() {
+
                 @Override
                 public void onFailure(Method method, Throwable throwable) {
                     errorModal.setErrorMessage("There was a problem creating the user.");

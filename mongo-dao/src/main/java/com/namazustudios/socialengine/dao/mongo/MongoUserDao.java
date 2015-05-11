@@ -53,19 +53,16 @@ public class MongoUserDao implements UserDao {
     @Inject
     private ValidationHelper validationHelper;
 
-    @Inject
-    private Atomic atomic;
-
     @Override
     public User getActiveUser(String userId) {
 
         final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
 
         query.or(
-                query.criteria("name").equal(userId),
-                query.criteria("email").equal(userId)
+            query.criteria("name").equal(userId),
+            query.criteria("email").equal(userId)
         ).and(
-                query.criteria("active").equal(true)
+            query.criteria("active").equal(true)
         );
 
         final MongoUser mongoUser = query.get();
@@ -145,10 +142,10 @@ public class MongoUserDao implements UserDao {
         final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
 
         query.and(
-                query.criteria("name").equal(user.getName()),
-                query.criteria("email").equal(user.getEmail())
+            query.criteria("name").equal(user.getName()),
+            query.criteria("email").equal(user.getEmail())
         ).and(
-                query.criteria("active").equal(false)
+            query.criteria("active").equal(false)
         );
 
         final SecureRandom secureRandom = new SecureRandom();
@@ -188,10 +185,10 @@ public class MongoUserDao implements UserDao {
         final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
 
         query.and(
-                query.criteria("name").equal(user.getName()),
-                query.criteria("email").equal(user.getEmail())
+            query.criteria("name").equal(user.getName()),
+            query.criteria("email").equal(user.getEmail())
         ).and(
-                query.criteria("active").equal(false)
+            query.criteria("active").equal(false)
         );
 
         final SecureRandom secureRandom = new SecureRandom();
@@ -265,10 +262,10 @@ public class MongoUserDao implements UserDao {
         final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
 
         query.and(
-                query.criteria("name").equal(user.getName()),
-                query.criteria("email").equal(user.getEmail())
+            query.criteria("name").equal(user.getName()),
+            query.criteria("email").equal(user.getEmail())
         ).and(
-                query.criteria("active").equal(true)
+            query.criteria("active").equal(true)
         );
 
         operations.set("name", user.getName());
@@ -291,10 +288,10 @@ public class MongoUserDao implements UserDao {
         final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
 
         query.or(
-                query.criteria("name").equal(userId),
-                query.criteria("email").equal(userId)
+            query.criteria("name").equal(userId),
+            query.criteria("email").equal(userId)
         ).and(
-                query.criteria("active").equal(true)
+            query.criteria("active").equal(true)
         );
 
         operations.set("active", false);
@@ -320,10 +317,10 @@ public class MongoUserDao implements UserDao {
         final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
 
         query.or(
-                query.criteria("name").equal(userId),
-                query.criteria("email").equal(userId)
+            query.criteria("name").equal(userId),
+            query.criteria("email").equal(userId)
         ).and(
-                query.criteria("active").equal(true)
+            query.criteria("active").equal(true)
         );
 
         // Generate the password bytes from the encoding
@@ -391,10 +388,10 @@ public class MongoUserDao implements UserDao {
         final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
 
         query.or(
-                query.criteria("name").equal(userId),
-                query.criteria("email").equal(userId)
+            query.criteria("name").equal(userId),
+            query.criteria("email").equal(userId)
         ).and(
-                query.criteria("active").equal(true)
+            query.criteria("active").equal(true)
         );
 
         final MongoUser mongoUser = query.get();

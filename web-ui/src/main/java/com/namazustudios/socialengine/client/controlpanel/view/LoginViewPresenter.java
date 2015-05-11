@@ -21,8 +21,6 @@ import javax.inject.Provider;
  */
 public class LoginViewPresenter extends Presenter<LoginViewPresenter.MyView, LoginViewPresenter.MyProxy> {
 
-    public static final String REFRESH = "refresh";
-
     @Inject
     private LoginService loginService;
 
@@ -52,7 +50,7 @@ public class LoginViewPresenter extends Presenter<LoginViewPresenter.MyView, Log
 
         super.prepareFromRequest(request);
 
-        if (Boolean.parseBoolean(request.getParameter(REFRESH, Boolean.TRUE.toString()))) {
+        if (Boolean.parseBoolean(request.getParameter(Param.refresh.name(), Boolean.TRUE.toString()))) {
             loginService.refreshCurrentUser(new MethodCallback<User>() {
                 @Override
                 public void onFailure(Method method, Throwable throwable) {
@@ -76,6 +74,17 @@ public class LoginViewPresenter extends Presenter<LoginViewPresenter.MyView, Log
         } else {
             getProxy().manualReveal(this);
         }
+
+    }
+
+    public enum Param {
+
+        /**
+         * Pass this to force a refresh when the {@link LoginView} is shown.  The refresh will
+         * fetch the currently logged in user.  This is used when logging out as to avoid a
+         * redirection loop.
+         */
+        refresh
 
     }
 

@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine;
 
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.ValidationFailureException;
+import org.omg.CORBA.DynAnyPackage.Invalid;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolation;
@@ -22,7 +24,11 @@ public class ValidationHelper {
      * @param model the model
      * @throws ValidationFailureException if validation fails.
      */
-    public void validateModel(Object model) throws ValidationFailureException {
+    public void validateModel(Object model) throws InvalidDataException, ValidationFailureException {
+
+        if (model == null) {
+            throw new InvalidDataException("Received null instance.");
+        }
 
         final Set<ConstraintViolation<Object>> violationSet = validator.validate(model);
 
