@@ -16,14 +16,17 @@ public class AddUser extends AbstractUserCommand {
     @Override
     protected void writeUserToDatabase(OptionSet optionSet) {
 
-        if (optionSet.has(getPasswordOptionSpec())) {
-            if (optionSet.valueOf(getStrictOptionSpec())) {
+        final boolean strict = optionSet.has(getStrictOptionSpec());
+        final boolean hasPassword = optionSet.has(getPasswordOptionSpec());
+
+        if (hasPassword) {
+            if (strict) {
                 userDao.createUserStrict(getUser(), getPassword());
             } else {
                 userDao.createOrActivateUser(getUser(), getPassword());
             }
         } else {
-            if (optionSet.valueOf(getStrictOptionSpec())) {
+            if (strict) {
                 userDao.createUserStrict(getUser());
             } else {
                 userDao.createOrActivateUser(getUser());

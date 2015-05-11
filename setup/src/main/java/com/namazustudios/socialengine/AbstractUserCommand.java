@@ -50,8 +50,7 @@ public abstract class AbstractUserCommand implements Command {
                 .ofType(User.Level.class);
         strictOptionSpec = getOptionParser().accepts("strict", "Flag to toggle strict mode.  Default true.")
                 .withOptionalArg()
-                .defaultsTo("true")
-                .ofType(Boolean.class);
+                .ofType(boolean.class);
     }
 
     public OptionParser getOptionParser() {

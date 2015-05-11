@@ -16,17 +16,20 @@ public class UpdateUser extends AbstractUserCommand {
     @Override
     protected void writeUserToDatabase(OptionSet optionSet) {
 
-        if (optionSet.has(getPasswordOptionSpec())) {
-            if (optionSet.valueOf(getStrictOptionSpec())) {
+        final boolean strict = optionSet.has(getStrictOptionSpec());
+        final boolean hasPassword = optionSet.has(getPasswordOptionSpec());
+
+        if (hasPassword) {
+            if (strict) {
                 userDao.updateUserStrict(getUser(), getPassword());
             } else {
                 userDao.updateActiveUser(getUser(), getPassword());
             }
         } else {
-            if (optionSet.valueOf(getStrictOptionSpec())) {
-                userDao.updateActiveUser(getUser());
-            } else {
+            if (strict) {
                 userDao.updateUserStrict(getUser());
+            } else {
+                userDao.updateActiveUser(getUser());
             }
         }
 
