@@ -1,0 +1,35 @@
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'
+             xmlns:b.gwt="urn:import:org.gwtbootstrap3.client.ui.gwt"
+             xmlns:b="urn:import:org.gwtbootstrap3.client.ui">
+
+    <ui:style>
+
+        .root-panel {
+            margin: 0 auto;
+            width: 95%;
+        }
+
+        .table {
+            margin: 0 auto;
+            width: 85%;
+            height: 400px;
+        }
+
+    </ui:style>
+
+    <b:Panel addStyleNames="{style.root-panel}">
+
+        <b:PanelHeader>
+            <b:Heading size="H3" text="Users"/>
+        </b:PanelHeader>
+
+        <b:PanelBody>
+            <b.gwt:CellTable ui:field="userEditorCellTable" bordered="true"
+                             condensed="true"               striped="true"
+                             hover="true"                   addStyleNames="{style.table}"/>
+            <b:Pagination ui:field="userEditorCellTablePagination"/>
+        </b:PanelBody>
+
+    </b:Panel>
+</ui:UiBinder>
