@@ -46,7 +46,6 @@ public class ControlPanelPresenter extends Presenter<ControlPanelPresenter.MyVie
     @Inject
     public ControlPanelPresenter(EventBus eventBus, MyView view, MyProxy proxy) {
         super(eventBus, view, proxy, RevealType.Root);
-
         History.addValueChangeHandler(new ValueChangeHandler<String>() {
 
             @Override
@@ -55,7 +54,6 @@ public class ControlPanelPresenter extends Presenter<ControlPanelPresenter.MyVie
             }
 
         });
-
     }
 
     @Override

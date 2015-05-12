@@ -21,7 +21,7 @@ import javax.inject.Inject;
 /**
  * Created by patricktwohig on 5/11/15.
  */
-public class UserEditorTableView extends ViewImpl {
+public class UserEditorTableView extends ViewImpl implements UserEditorTablePresenter.MyView {
 
     interface UserEditorTableViewUiBinder extends UiBinder<Panel, UserEditorTableView> {}
 

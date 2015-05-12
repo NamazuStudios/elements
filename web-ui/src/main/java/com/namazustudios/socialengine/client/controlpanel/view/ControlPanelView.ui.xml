@@ -22,14 +22,14 @@
                                 <b:AnchorButton dataToggle="DROPDOWN">User Management</b:AnchorButton>
                                 <b:DropDownMenu>
                                     <b:AnchorListItem targetHistoryToken="{nameTokens.getUserEdit}">Create New User</b:AnchorListItem>
-                                    <b:AnchorListItem>View/Edit Existing Users</b:AnchorListItem>
+                                    <b:AnchorListItem targetHistoryToken="{nameTokens.getUserEditTable}">View/Edit Existing Users</b:AnchorListItem>
                                 </b:DropDownMenu>
                             </b:ListDropDown>
 
                             <b:ListDropDown>
                                 <b:AnchorButton dataToggle="DROPDOWN">Social Campaigns</b:AnchorButton>
                                 <b:DropDownMenu>
-                                    <b:AnchorListItem>Create New Campaign</b:AnchorListItem>
+
                                     <b:AnchorListItem>View/Edit Existing Campaigns</b:AnchorListItem>
                                     <b:AnchorListItem>View/Edit Entrants</b:AnchorListItem>
                                 </b:DropDownMenu>
