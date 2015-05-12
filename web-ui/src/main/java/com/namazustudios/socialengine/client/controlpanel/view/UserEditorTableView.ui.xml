@@ -7,13 +7,15 @@
 
         .root-panel {
             margin: 0 auto;
-            width: 95%;
+            width: 100%;
         }
 
         .table {
-            margin: 0 auto;
-            width: 85%;
-            height: 400px;
+        }
+
+        .searchbox {
+            width:35%;
+            margin-bottom: 5px;
         }
 
     </ui:style>
@@ -24,11 +26,20 @@
             <b:Heading size="H3" text="Users"/>
         </b:PanelHeader>
 
+
         <b:PanelBody>
+
+            <b:InputGroup addStyleNames="{style.searchbox}">
+                <b:InputGroupAddon icon="USER">User</b:InputGroupAddon>
+                <b:TextBox ui:field="searchUsersTextBox" placeholder="Search Users" autoComplete="false"/>
+            </b:InputGroup>
+
             <b.gwt:CellTable ui:field="userEditorCellTable" bordered="true"
                              condensed="true"               striped="true"
                              hover="true"                   addStyleNames="{style.table}"/>
+
             <b:Pagination ui:field="userEditorCellTablePagination"/>
+
         </b:PanelBody>
 
     </b:Panel>

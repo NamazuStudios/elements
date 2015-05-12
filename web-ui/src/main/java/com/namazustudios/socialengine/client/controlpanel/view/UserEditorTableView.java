@@ -13,6 +13,7 @@ import com.gwtplatform.mvp.client.ViewImpl;
 import com.namazustudios.socialengine.model.User;
 import org.gwtbootstrap3.client.ui.Pagination;
 import org.gwtbootstrap3.client.ui.Panel;
+import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
 
 import javax.inject.Inject;
@@ -29,6 +30,9 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
 
     @UiField
     Pagination userEditorCellTablePagination;
+
+    @UiField
+    TextBox searchUsersTextBox;
 
     private final UserDataProvider asyncUserDataProvider;
 
