@@ -7,9 +7,8 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.SimplePager;
-import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.view.client.AsyncDataProvider;
+import com.google.gwt.view.client.RangeChangeEvent;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.namazustudios.socialengine.model.User;
 import org.gwtbootstrap3.client.ui.Pagination;
@@ -31,14 +30,14 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
     @UiField
     Pagination userEditorCellTablePagination;
 
-    private final AsyncUserDataProvider asyncUserDataProvider;
+    private final UserDataProvider asyncUserDataProvider;
 
     private final SimplePager simplePager = new SimplePager();
 
     @Inject
     public UserEditorTableView(
             final UserEditorTableViewUiBinder userEditorTableViewUiBinder,
-            final AsyncUserDataProvider asyncUserDataProvider) {
+            final UserDataProvider asyncUserDataProvider) {
 
         initWidget(userEditorTableViewUiBinder.createAndBindUi(this));
 
@@ -96,25 +95,16 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
             }
         };
 
-        final Column<User, String> activeColumn;
+        final Column<User, String> editColumn;
 
-        activeColumn = new TextColumn<User>() {
-            @Override
-            public String getValue(User object) {
-                return Boolean.toString(object.isActive());
-            }
-        };
-
-        final Column<User, String> editColun;
-
-        editColun = new Column<User, String>(new ButtonCell()) {
+        editColumn = new Column<User, String>(new ButtonCell()) {
             @Override
             public String getValue(User object) {
                 return "Edit...";
             }
         };
 
-        editColun.setFieldUpdater(new FieldUpdater<User, String>() {
+        editColumn.setFieldUpdater(new FieldUpdater<User, String>() {
             @Override
             public void update(int index, User object, String value) {
                 //TODO User PlaceManager to edit the user
@@ -122,15 +112,47 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
             }
         });
 
-        userEditorCellTable.addColumn(nameColumn);
-        userEditorCellTable.addColumn(emailColumn);
-        userEditorCellTable.addColumn(levelColumn);
-        userEditorCellTable.addColumn(activeColumn);
-        userEditorCellTable.addColumn(editColun);
+        final Column<User, String> deleteColumn;
+
+        deleteColumn = new Column<User, String>(new ButtonCell()) {
+            @Override
+            public String getValue(User object) {
+                return "Delete";
+            }
+        };
+
+        deleteColumn.setFieldUpdater(new FieldUpdater<User, String>() {
+            @Override
+            public void update(int index, User object, String value) {
+                //TODO Confirm and make REST call to delete user
+                Window.alert("Deleting using " + object.getName());
+            }
+        });
+
+        userEditorCellTable.addColumn(nameColumn, "User Name");
+        userEditorCellTable.addColumn(emailColumn, "Email Address");
+        userEditorCellTable.addColumn(levelColumn, "User Access Level");
+        userEditorCellTable.addColumn(editColumn);
+        userEditorCellTable.addColumn(deleteColumn);
+
+        userEditorCellTable.addRangeChangeHandler(new RangeChangeEvent.Handler() {
+            @Override
+            public void onRangeChange(RangeChangeEvent event) {
+                userEditorCellTablePagination.rebuild(simplePager);
+            }
+        });
+
+        asyncUserDataProvider.addRefreshListener(new UserDataProvider.AsyncRefreshListener() {
+            @Override
+            public void onRefresh() {
+                userEditorCellTablePagination.rebuild(simplePager);
+            }
+        });
 
         simplePager.setDisplay(userEditorCellTable);
         userEditorCellTablePagination.clear();
         asyncUserDataProvider.addDataDisplay(userEditorCellTable);
+
 
     }
 

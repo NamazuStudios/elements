@@ -19,7 +19,7 @@
                         <b:NavbarNav>
 
                             <b:ListDropDown>
-                                <b:AnchorButton dataToggle="DROPDOWN">User Management</b:AnchorButton>
+                                <b:AnchorButton dataToggle="DROPDOWN">Users</b:AnchorButton>
                                 <b:DropDownMenu>
                                     <b:AnchorListItem targetHistoryToken="{nameTokens.getUserEdit}">Create New User</b:AnchorListItem>
                                     <b:AnchorListItem targetHistoryToken="{nameTokens.getUserEditTable}">View/Edit Existing Users</b:AnchorListItem>
@@ -27,7 +27,7 @@
                             </b:ListDropDown>
 
                             <b:ListDropDown>
-                                <b:AnchorButton dataToggle="DROPDOWN">Social Campaigns</b:AnchorButton>
+                                <b:AnchorButton dataToggle="DROPDOWN">Social</b:AnchorButton>
                                 <b:DropDownMenu>
 
                                     <b:AnchorListItem>View/Edit Existing Campaigns</b:AnchorListItem>

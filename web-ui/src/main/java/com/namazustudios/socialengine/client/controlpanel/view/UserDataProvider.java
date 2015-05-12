@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.client.controlpanel.view;
 
-import com.google.gwt.user.cellview.client.Column;
+import com.google.common.collect.Lists;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.view.client.AsyncDataProvider;
 import com.google.gwt.view.client.HasData;
 import com.google.gwt.view.client.ProvidesKey;
@@ -10,18 +11,19 @@ import com.namazustudios.socialengine.model.User;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
  * Created by patricktwohig on 5/11/15.
  */
-public class AsyncUserDataProvider extends AsyncDataProvider<User> {
+public class UserDataProvider extends AsyncDataProvider<User> {
 
     @Inject
     private UserClient userClient;
 
-    public AsyncUserDataProvider() {
+    private final List<AsyncRefreshListener> asyncRefreshListeners = new ArrayList<>();
+
+    public UserDataProvider() {
         super(new ProvidesKey<User>() {
             @Override
             public Object getKey(User item) {
@@ -36,6 +38,17 @@ public class AsyncUserDataProvider extends AsyncDataProvider<User> {
         final Range range = display.getVisibleRange();
 
         // TODO Wire up the actual REST calls
+
+        new Timer() {
+            @Override
+            public void run() {
+                populateMockData(range);
+            }
+        }.schedule(1000);
+
+    }
+
+    public void populateMockData(final Range range) {
 
         final List<User> userList = new ArrayList<User>();
 
@@ -52,8 +65,37 @@ public class AsyncUserDataProvider extends AsyncDataProvider<User> {
 
         }
 
-        updateRowCount(100, true);
         updateRowData(range.getStart(), userList);
+        updateRowCount(100, true);
+        notifyRefreshListeners();
+
+    }
+
+    private void notifyRefreshListeners() {
+
+        for (final AsyncRefreshListener asyncRefreshListener : Lists.newArrayList(asyncRefreshListeners)) {
+            asyncRefreshListener.onRefresh();
+        }
+
+    }
+
+    public void addRefreshListener(final AsyncRefreshListener asyncRefreshListener) {
+        asyncRefreshListeners.add(asyncRefreshListener);
+    }
+
+    public void removeRefreshListener(final  AsyncRefreshListener asyncRefreshListener) {
+        asyncRefreshListeners.remove(asyncRefreshListener);
+    }
+
+    /**
+     * Used to signal async changes to the user data provider.
+     */
+    public interface AsyncRefreshListener {
+
+        /**
+         * Called any time the data is refreshed, loaded, or changed.
+         */
+        void onRefresh();
 
     }
 
