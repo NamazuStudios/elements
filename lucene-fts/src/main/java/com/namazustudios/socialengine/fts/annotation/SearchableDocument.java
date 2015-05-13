@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.annotation;
+package com.namazustudios.socialengine.fts.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

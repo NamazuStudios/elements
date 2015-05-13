@@ -1,8 +1,7 @@
-package com.namazustudios.socialengine.annotation;
+package com.namazustudios.socialengine.fts.annotation;
 
-import com.namazustudios.socialengine.DefaultIndexableFieldConverter;
-import com.namazustudios.socialengine.IndexableFieldConverter;
-import org.apache.lucene.analysis.Analyzer;
+import com.namazustudios.socialengine.fts.DefaultIndexableFieldConverter;
+import com.namazustudios.socialengine.fts.IndexableFieldConverter;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexableField;
 

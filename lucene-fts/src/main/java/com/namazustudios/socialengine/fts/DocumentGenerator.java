@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.fts;
 
 import org.apache.lucene.document.Document;
 
@@ -10,7 +10,7 @@ public interface DocumentGenerator {
 
     /**
      * Analyzes the given {@link Class}, searching for the presence of
-     * the {@link com.namazustudios.socialengine.annotation.SearchableDocument} annotation
+     * the {@link com.namazustudios.socialengine.fts.annotation.SearchableDocument} annotation
      * generating an index of the fields.
      *
      * @param cls
@@ -25,5 +25,15 @@ public interface DocumentGenerator {
      *
      */
     Document generate(final Object object);
+
+    /***
+     * Processes the given object, adding all found {@link org.apache.lucene.index.IndexableField}
+     * instances to it.
+     *
+     * @param object the Object to proces
+     * @param document the target document
+     *
+     */
+    void process(final Object object, final Document document);
 
 }

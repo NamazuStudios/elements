@@ -1,52 +1,44 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.fts;
 
-import java.util.ArrayList;
-import java.util.List;
-import com.namazustudios.socialengine.annotation.SearchableField;
+import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.IndexableField;
 
-import java.util.Arrays;
-
 /**
  * The default implementation for {@link IndexableFieldConverter}.  This will
- * convert Object/primitive types to their respective {@link IndexableField}
+ * process Object/primitive types to their respective {@link IndexableField}
  * implementation.
  */
 public class DefaultIndexableFieldConverter implements IndexableFieldConverter<Object> {
 
     @Override
-    public List<IndexableField> convert(Object value, SearchableField field) {
-
-        final List<IndexableField> fieldList = new ArrayList<>();
+    public void process(final Document document, final Object value, final SearchableField field) {
 
         if (value instanceof Byte) {
-            fieldList.add(newIntegerField((Byte) value, field));
+            document.add(newIntegerField((Byte) value, field));
         } else if (value instanceof Character) {
-            fieldList.add(newTextOrStringField((Character)value, field));
+            document.add(newTextOrStringField((Character)value, field));
         } else if (value instanceof Short) {
-            fieldList.add(newIntegerField((Short)value, field));
+            document.add(newIntegerField((Short)value, field));
         } else if (value instanceof Integer) {
-            fieldList.add(newIntegerField((Integer)value, field));
+            document.add(newIntegerField((Integer)value, field));
         } else if (value instanceof Long) {
-            fieldList.add(newLongField((Long) value, field));
+            document.add(newLongField((Long) value, field));
         } else if (value instanceof Float) {
-            fieldList.add(newFloatField((Float)value, field));
+            document.add(newFloatField((Float)value, field));
         } else if (value instanceof Double) {
-            fieldList.add(newDoubleField((Float)value, field));
+            document.add(newDoubleField((Float)value, field));
         } else if ((value instanceof byte[]) && field.store().equals(Field.Store.YES)) {
-            fieldList.add(newStoredField((byte[])value, field));
+            document.add(newStoredField((byte[])value, field));
         } else if (value instanceof char[]) {
-            fieldList.add(newTextOrStringField(new String((char[])value), field));
+            document.add(newTextOrStringField(new String((char[])value), field));
         } else if (value instanceof CharSequence) {
-            fieldList.add(newTextOrStringField((CharSequence)value, field));
+            document.add(newTextOrStringField((CharSequence)value, field));
         } else if (value instanceof Iterable<?>) {
             for (final Object object : ((Iterable<?>)value)) {
-                fieldList.addAll(convert(object, field));
+                process(document, object, field);
             }
         }
-
-        return fieldList;
 
     }
 
