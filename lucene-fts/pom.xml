@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.namazustudios.socialengine</groupId>
+        <artifactId>namazu-socialengine-system</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>com.namazustudios.socialengine</groupId>
+    <artifactId>lucene-fts</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <name>lucene-fts</name>
+
+    <properties>
+        <lucene.version>5.1.0</lucene.version>
+        <jxpath.version>1.3</jxpath.version>
+        <commons.lang.version>3.4</commons.lang.version>
+        <commons.beanutils.version>1.9.2</commons.beanutils.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>commons-jxpath</groupId>
+            <artifactId>commons-jxpath</artifactId>
+            <version>${jxpath.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+            <version>${lucene.version}</version>
+        </dependency>
+    </dependencies>
+
+</project>
