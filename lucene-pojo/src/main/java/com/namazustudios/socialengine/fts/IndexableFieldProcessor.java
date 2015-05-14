@@ -2,16 +2,16 @@ package com.namazustudios.socialengine.fts;
 
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.search.Query;
 
 /**
  * Objects implementing this interface are used to generate any number of {@link IndexableField}
- * instances to be added to a {@link Document} instance.
+ * instances to be added to a {@link Document} or {@link Query}
  *
  * Created by patricktwohig on 5/12/15.
  */
-public interface IndexableFieldConverter<FieldT> {
+public interface IndexableFieldProcessor<FieldT> {
 
     /**
      * Given {@link SearchableField} object, this converts the given fields to an
@@ -29,11 +29,11 @@ public interface IndexableFieldConverter<FieldT> {
     interface Provider {
 
         /**
-         * Used to generate instances of the {@link IndexableFieldConverter} interface.
+         * Used to generate instances of the {@link IndexableFieldProcessor} interface.
          *
-         * @return an instance of {@link IndexableFieldConverter}
+         * @return an instance of {@link IndexableFieldProcessor}
          */
-        <T> IndexableFieldConverter<T> get(final FieldMetadata searchableField);
+        <T> IndexableFieldProcessor<T> get(final FieldMetadata searchableField);
 
     }
 

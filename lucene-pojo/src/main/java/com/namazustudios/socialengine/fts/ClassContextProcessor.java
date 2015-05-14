@@ -2,11 +2,10 @@ package com.namazustudios.socialengine.fts;
 
 import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
-import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
+import com.namazustudios.socialengine.fts.annotation.SearchableTypeIdentity;
 import org.apache.commons.jxpath.CompiledExpression;
 import org.apache.commons.jxpath.JXPathContext;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,15 +25,15 @@ public class ClassContextProcessor implements ContextProcessor {
 
     /**
      * Creates a new ClassContextProcessor for hte given class and the
-     * {@link com.namazustudios.socialengine.fts.IndexableFieldConverter.Provider}
+     * {@link IndexableFieldProcessor.Provider}
      *
      * @param cls the class
      * @param provider the provider
      */
-    public ClassContextProcessor(final Class<?> cls, final IndexableFieldConverter.Provider provider) {
+    public ClassContextProcessor(final Class<?> cls, final IndexableFieldProcessor.Provider provider) {
 
         final SearchableDocument searchableDocument = cls.getAnnotation(SearchableDocument.class);
-        final SearchableIdentity searchableIdentity = cls.getAnnotation(SearchableIdentity.class);;
+        final SearchableTypeIdentity searchableIdentity = cls.getAnnotation(SearchableTypeIdentity.class);;
 
         if (searchableIdentity != null) {
             addSearchableIdentityProcessors(cls, searchableIdentity, provider);
@@ -44,55 +43,47 @@ public class ClassContextProcessor implements ContextProcessor {
             LOG.warn("No @SearchableDocument annotation found on " + cls);
         } else {
             for (final SearchableField searchableField : searchableDocument.fields()) {
-
-                if (SearchableIdentity.CLASS_FIELD_NAME.equals(searchableField.name())) {
-                    throw new DocumentGeneratorException(SearchableIdentity.CLASS_FIELD_NAME + " is a reserved name.");
-                }
-
                 final FieldMetadata fieldMetadata = new FieldAnnotationFieldMetadata(searchableField);
-                addSearchableFieldProcessors(fieldMetadata, cls, provider);
-
+                addSearchableFieldProcessor(fieldMetadata, cls, provider);
             }
         }
 
     }
 
     private void addSearchableIdentityProcessors(final Class<?> cls,
-                                                 final SearchableIdentity searchableIdentity,
-                                                 final IndexableFieldConverter.Provider provider) {
+                                                 final SearchableTypeIdentity searchableIdentity,
+                                                 final IndexableFieldProcessor.Provider provider) {
 
-        contextProcessors.add(new ContextProcessor() {
+        final FieldMetadata typeFieldMetadata = new FieldAnnotationFieldMetadata(searchableIdentity.type()) {
+
             @Override
-            public void process(JXPathContext context, DocumentEntry<?, ?> documentEntry) {
-
-                final String className = cls.getName();
-
-                final StringField stringField = new StringField(
-                        SearchableIdentity.CLASS_FIELD_NAME,
-                        className,
-                        Field.Store.YES);
-
-                documentEntry.getDocument().removeFields(SearchableIdentity.CLASS_FIELD_NAME);
-                documentEntry.getDocument().add(stringField);
-
+            public Field.Store store() {
+                return Field.Store.YES;
             }
-        });
 
-        final String className = cls.getName();
-        final StringField stringField = new StringField(SearchableIdentity.CLASS_FIELD_NAME, className, Field.Store.YES);
+        };
 
-        final FieldMetadata identityAnnotationFieldMetadata = new IdentityAnnotationFieldMetadata(searchableIdentity);
-        addSearchableFieldProcessors(identityAnnotationFieldMetadata, cls, provider);
+        final FieldMetadata identityFieldMetadata = new FieldAnnotationFieldMetadata(searchableIdentity.type()) {
+
+            @Override
+            public Field.Store store() {
+                return Field.Store.YES;
+            }
+
+        };
+
+        addSearchableFieldProcessor(typeFieldMetadata, cls, provider);
+        addSearchableFieldProcessor(identityFieldMetadata, cls, provider);
 
     }
 
-    private void addSearchableFieldProcessors(final FieldMetadata searchableField,
-                                              final Class<?> cls,
-                                              final IndexableFieldConverter.Provider provider) {
+    private void addSearchableFieldProcessor(final FieldMetadata searchableField,
+                                             final Class<?> cls,
+                                             final IndexableFieldProcessor.Provider provider) {
 
 
-        LOG.debug("Using " + searchableField.converter() + " to process " + searchableField.name() + " on class " + cls);
-        final IndexableFieldConverter<Object> indexableFieldConverter = provider.get(searchableField);
+        LOG.debug("Using " + searchableField.processor() + " to process " + searchableField.name() + " on class " + cls);
+        final IndexableFieldProcessor<Object> indexableFieldProcessor = provider.get(searchableField);
 
         LOG.debug("Compiling JXPath Expression " + searchableField.path() + " for class " + cls);
         final CompiledExpression compiledExpression = JXPathContext.compile(searchableField.path());
@@ -101,7 +92,7 @@ public class ClassContextProcessor implements ContextProcessor {
             @Override
             public void process(JXPathContext context, DocumentEntry<?,?> documentEntry) {
                 final Object value = compiledExpression.getValue(context);
-                indexableFieldConverter.process(documentEntry.getDocument(), value, searchableField);
+                indexableFieldProcessor.process(documentEntry.getDocument(), value, searchableField);
             }
         });
 

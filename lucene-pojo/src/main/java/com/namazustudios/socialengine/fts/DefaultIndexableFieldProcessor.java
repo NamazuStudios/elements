@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The default implementation for {@link IndexableFieldConverter}.  This will
+ * The default implementation for {@link IndexableFieldProcessor}.  This will
  * process Object/primitive types to their respective {@link IndexableField}
  * implementation.
  *
@@ -22,8 +22,7 @@ import org.slf4j.LoggerFactory;
  *  <li>long - 64-bit integer {@link LongField}</li>
  *  <li>float - 32-bit float {@link FloatField}</li>
  *  <li>double - 64-bit integer {@link DoubleField}</li>
- *  <li>byte[] - {@link Store#YES} is specified on {@link SearchableField#store()}, stored as {@link Field}</li>
- *  <li>char - {@link StringField} or {@link TextField} depending on the fields of {@link SearchableField#text()}</li>
+ *  <li>String - {@link StringField} or {@link TextField} depending on the value of {@link SearchableField#text()}</li>
  *  <li>{@link CharSequence} - {@link StringField} or {@link TextField} depending on the fields of {@link SearchableField#text()}</li>
  *  <li>{@link Iterable} - One instance of {@link IndexableField} for each element provided each element is compatible</li>
  * </ul>
@@ -31,9 +30,9 @@ import org.slf4j.LoggerFactory;
  * Anything else is logged as a warning.
  *
  */
-public class DefaultIndexableFieldConverter implements IndexableFieldConverter<Object> {
+public class DefaultIndexableFieldProcessor implements IndexableFieldProcessor<Object> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DefaultIndexableFieldConverter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultIndexableFieldProcessor.class);
 
     @Override
     public void process(final Document document, final Object value, final FieldMetadata field) {

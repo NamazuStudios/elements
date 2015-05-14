@@ -25,7 +25,7 @@ public class FieldAnnotationFieldMetadata implements FieldMetadata {
     }
 
     @Override
-    public Class<? extends IndexableFieldConverter> converter() {
+    public Class<? extends IndexableFieldProcessor> processor() {
         return searchableField.converter();
     }
 

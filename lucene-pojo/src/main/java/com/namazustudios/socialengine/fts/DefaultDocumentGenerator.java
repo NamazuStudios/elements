@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.fts;
 
 import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
-import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
 import org.apache.commons.jxpath.JXPathContext;
 import org.apache.lucene.document.Document;
 import org.slf4j.Logger;
@@ -26,12 +25,12 @@ public class DefaultDocumentGenerator implements DocumentGenerator {
         public void process(JXPathContext context, DocumentEntry<?,?> documentEntry) {}
     };
 
-    private static final IndexableFieldConverter.Provider DEFAULT_CONVERTER_PROVIDER =
-            new IndexableFieldConverter.Provider() {
+    private static final IndexableFieldProcessor.Provider DEFAULT_CONVERTER_PROVIDER =
+            new IndexableFieldProcessor.Provider() {
                 @Override
-                public <T> IndexableFieldConverter<T> get(FieldMetadata fieldMetadata) {
+                public <T> IndexableFieldProcessor<T> get(FieldMetadata fieldMetadata) {
                     try {
-                        return fieldMetadata.converter().newInstance();
+                        return fieldMetadata.processor().newInstance();
                     } catch (IllegalAccessException ex) {
                         throw new DocumentGeneratorException(ex);
                     } catch (InstantiationException ex) {
@@ -44,14 +43,14 @@ public class DefaultDocumentGenerator implements DocumentGenerator {
     private final Lock r = reentrantReadWriteLock.readLock();
     private final Lock w = reentrantReadWriteLock.writeLock();
 
-    private final IndexableFieldConverter.Provider provider;
+    private final IndexableFieldProcessor.Provider provider;
     private final Map<Class<?>, ContextProcessor> contextProcessorMap = new HashMap<>();
 
     public DefaultDocumentGenerator() {
         this(DEFAULT_CONVERTER_PROVIDER);
     }
 
-    public DefaultDocumentGenerator(IndexableFieldConverter.Provider provider) {
+    public DefaultDocumentGenerator(IndexableFieldProcessor.Provider provider) {
         this.provider = provider;
     }
 

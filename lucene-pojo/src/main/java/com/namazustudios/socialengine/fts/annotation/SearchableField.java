@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.fts.annotation;
 
-import com.namazustudios.socialengine.fts.DefaultIndexableFieldConverter;
-import com.namazustudios.socialengine.fts.IndexableFieldConverter;
+import com.namazustudios.socialengine.fts.DefaultIndexableFieldProcessor;
+import com.namazustudios.socialengine.fts.IndexableFieldProcessor;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexableField;
 
@@ -51,15 +51,15 @@ public @interface SearchableField {
     float boost() default DEFAULT_BOOST;
 
     /**
-     * Specifies a custom {@link IndexableFieldConverter} to convert the the property value to an instance
+     * Specifies a custom {@link IndexableFieldProcessor} to convert the the property value to an instance
      * of {@link IndexableField}.
      *
      * @return the Class
      */
-    Class<? extends IndexableFieldConverter> converter() default DefaultIndexableFieldConverter.class;
+    Class<? extends IndexableFieldProcessor> converter() default DefaultIndexableFieldProcessor.class;
 
     /**
-     * A hint to the specified {@link IndexableFieldConverter} as to whether
+     * A hint to the specified {@link IndexableFieldProcessor} as to whether
      * or not to treat {@link CharSequence} types as text or individual strings.  By default,
      * this is false.
      *
