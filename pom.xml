@@ -22,7 +22,7 @@
         <module>rest-guice</module>
         <module>web-ui-war</module>
         <module>common-util</module>
-    <module>lucene-fts</module>
+	<module>lucene-pojo</module>
   </modules>
 
     <properties>

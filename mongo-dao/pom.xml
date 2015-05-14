@@ -66,7 +66,7 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>lucene-fts</artifactId>
+            <artifactId>lucene-pojo</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
