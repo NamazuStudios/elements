@@ -6,11 +6,11 @@ import org.apache.lucene.document.Field;
 /**
  * Created by patricktwohig on 5/13/15.
  */
-public class AnnotationFieldMetadata implements FieldMetadata {
+public class FieldAnnotationFieldMetadata implements FieldMetadata {
 
     private final SearchableField searchableField;
 
-    public AnnotationFieldMetadata(SearchableField searchableField) {
+    public FieldAnnotationFieldMetadata(SearchableField searchableField) {
         this.searchableField = searchableField;
     }
 

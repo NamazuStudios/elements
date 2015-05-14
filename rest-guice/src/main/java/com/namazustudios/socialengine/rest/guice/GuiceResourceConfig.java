@@ -31,7 +31,7 @@ public class GuiceResourceConfig extends ResourceConfig {
 
             // This attempts to soft-load Jackson support.  The jersey-media-moxy dependency
             // would be ideal.  However, it currently chokes on some of the generics stuff
-            // we're using in our data model.  I don't want to make this a hard dependency
+            // we're using in our data model.  DocumentEntry don't want to make this a hard dependency
             // so we safely try to load it from the classpath and log a warning if that fails.
 
             final Class<?> cls = getClass().forName("org.glassfish.jersey.jackson.JacksonFeature");

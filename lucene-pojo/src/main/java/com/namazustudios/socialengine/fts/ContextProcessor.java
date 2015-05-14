@@ -11,10 +11,9 @@ public interface ContextProcessor {
     /**
      * Given an instance of {@link JXPathContext} and a {@link Document} this
      * processes the given document for hte given context.
-     *
-     * @param context
-     * @param document
+     *  @param context
+     * @param documentEntry
      */
-    void process(JXPathContext context, Document document);
+    void process(JXPathContext context, DocumentEntry<?,?> documentEntry);
 
 }

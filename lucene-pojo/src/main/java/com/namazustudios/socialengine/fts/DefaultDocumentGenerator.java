@@ -1,13 +1,12 @@
 package com.namazustudios.socialengine.fts;
 
 import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
-import com.namazustudios.socialengine.fts.annotation.SearchableField;
+import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
 import org.apache.commons.jxpath.JXPathContext;
 import org.apache.lucene.document.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.JAXBContext;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -24,7 +23,7 @@ public class DefaultDocumentGenerator implements DocumentGenerator {
 
     private static final ContextProcessor EMPTY_CONTEXT_PROCESSOR = new ContextProcessor() {
         @Override
-        public void process(JXPathContext context, Document document) {}
+        public void process(JXPathContext context, DocumentEntry<?,?> documentEntry) {}
     };
 
     private static final IndexableFieldConverter.Provider DEFAULT_CONVERTER_PROVIDER =
@@ -117,33 +116,36 @@ public class DefaultDocumentGenerator implements DocumentGenerator {
             contextProcessorMap.put(cls, new ContextProcessor() {
 
                 @Override
-                public void process(JXPathContext context, Document document) {
-                    superclassContextProcessor.process(context, document);
-                    classContextProcessor.process(context, document);
+                public void process(JXPathContext context, DocumentEntry<?,?> documentEntry) {
+                    superclassContextProcessor.process(context, documentEntry);
+                    classContextProcessor.process(context, documentEntry);
                 }
 
             });
 
         }
 
+        // TODO Add identity to the document.
+
     }
 
     @Override
-    public Document generate(Object object) {
-        final Document document = new Document();
-        process(object, document);
-        return document;
+    public <DocumentT> DocumentEntry<?, ? extends DocumentT> generate(final DocumentT object) {
+        return process(object, new Document());
     }
 
     @Override
-    public void process(Object object, Document document) {
+    public <DocumentT> DocumentEntry<?, ? extends DocumentT> process(final DocumentT object, final Document document) {
 
         final JXPathContext jxPathContext = JXPathContext.newContext(object);
+        final GeneratorDocumentEntry generatorDocumentEntry = new GeneratorDocumentEntry(document);
 
         final Class<?> cls = object.getClass();
         final ContextProcessor contextProcessor = getOrCreateContextProcessor(cls);
 
-        contextProcessor.process(jxPathContext, document);
+        contextProcessor.process(jxPathContext, generatorDocumentEntry);
+
+        return null;
 
     }
 

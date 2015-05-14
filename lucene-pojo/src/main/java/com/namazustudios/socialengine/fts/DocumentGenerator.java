@@ -25,7 +25,7 @@ public interface DocumentGenerator {
      * @return a Document which can be written to the search index.
      *
      */
-    Document generate(final Object object);
+    <DocumentT> DocumentEntry<?, ? extends DocumentT> generate(final DocumentT object);
 
     /***
      * Processes the given object, adding all found {@link org.apache.lucene.index.IndexableField}
@@ -35,6 +35,6 @@ public interface DocumentGenerator {
      * @param document the target document
      *
      */
-    void process(final Object object, final Document document);
+    <DocumentT> DocumentEntry<?, ? extends DocumentT> process(final DocumentT object, final Document document);
 
 }

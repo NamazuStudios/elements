@@ -18,14 +18,6 @@ import java.lang.annotation.Target;
 public @interface SearchableDocument {
 
     /**
-     * The SearchableField which is used to identify the document.  This field
-     * MUST be stored to the inex so this will ignore the value of {@link SearchableField#store()}
-     * and always default to {@link Field.Store#YES}
-     * @return
-     */
-    SearchableField identity();
-
-    /**
      * Used to specify multiple {@link SearchableField} annotations. Which
      * are used to generate a {@link org.apache.lucene.document.Document} from
      * the annotated type.

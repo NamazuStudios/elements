@@ -51,11 +51,12 @@ public @interface SearchableField {
     float boost() default DEFAULT_BOOST;
 
     /**
-     * Specifies a custom {@link IndexableFieldConverter} to conver the
+     * Specifies a custom {@link IndexableFieldConverter} to convert the the property value to an instance
+     * of {@link IndexableField}.
      *
      * @return the Class
      */
-    Class<? extends IndexableFieldConverter> converter() default DefaultIndexableFieldConverter .class;
+    Class<? extends IndexableFieldConverter> converter() default DefaultIndexableFieldConverter.class;
 
     /**
      * A hint to the specified {@link IndexableFieldConverter} as to whether

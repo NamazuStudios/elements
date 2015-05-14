@@ -27,6 +27,11 @@
             <artifactId>lucene-core</artifactId>
             <version>${lucene.version}</version>
         </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>${javax.inject.version}</version>
+        </dependency>
     </dependencies>
 
 </project>
