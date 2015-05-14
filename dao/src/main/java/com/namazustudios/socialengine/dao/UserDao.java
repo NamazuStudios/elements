@@ -36,6 +36,18 @@ public interface UserDao {
     Pagination<User> getActiveUsers(int offset, int count);
 
     /**
+     * Gets a listing of all users given the offset, and count.  Additionally, the
+     * user requested must be active.
+     *
+     * @param offset the offset
+     * @param count the count
+     * @param query a query to filter the results
+     * @return the users in the system
+     */
+    Pagination<User> getActiveUsers(int offset, int count, String query);
+
+
+    /**
      * Creates a user with the given User object.  Using "Strict" semantics, if the user exists
      * then this will throw an exception.  The resulting user will have a scrambled password.
      *

@@ -19,6 +19,7 @@
     <properties>
         <morphia.version>0.110</morphia.version>
         <mongo.java.driver.version>3.0.0-beta3</mongo.java.driver.version>
+        <mongo.lucene.version>1.1</mongo.lucene.version>
     </properties>
 
     <dependencies>
@@ -62,6 +63,21 @@
             <groupId>javax.validation</groupId>
             <artifactId>validation-api</artifactId>
             <version>${javax.validation.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>lucene-fts</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+            <version>${lucene.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.mongoutils</groupId>
+            <artifactId>mongo-lucene</artifactId>
+            <version>${mongo.lucene.version}</version>
         </dependency>
     </dependencies>
 

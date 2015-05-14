@@ -101,6 +101,12 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
+    public Pagination<User> getActiveUsers(int offset, int count, String query) {
+        //TODO Implement this with Lucene
+        return null;
+    }
+
+    @Override
     public User createUserStrict(User user) {
 
         validate(user);
