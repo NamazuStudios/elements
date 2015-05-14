@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.fts;
 
 import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
-import com.namazustudios.socialengine.fts.annotation.SearchableTypeIdentity;
+import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
 import org.apache.commons.jxpath.CompiledExpression;
 import org.apache.commons.jxpath.JXPathContext;
 import org.apache.lucene.document.Field;
@@ -33,37 +33,32 @@ public class ClassContextProcessor implements ContextProcessor {
     public ClassContextProcessor(final Class<?> cls, final IndexableFieldProcessor.Provider provider) {
 
         final SearchableDocument searchableDocument = cls.getAnnotation(SearchableDocument.class);
-        final SearchableTypeIdentity searchableIdentity = cls.getAnnotation(SearchableTypeIdentity.class);;
-
-        if (searchableIdentity != null) {
-            addSearchableIdentityProcessors(cls, searchableIdentity, provider);
-        }
+        final SearchableIdentity searchableIdentity = cls.getAnnotation(SearchableIdentity.class);;
 
         if (searchableDocument == null) {
             LOG.warn("No @SearchableDocument annotation found on " + cls);
         } else {
+
+            addSearchableTypeProcessor(cls, searchableDocument, provider);
+
+            if (searchableIdentity != null) {
+                addSearchableIdentityProcessors(cls, searchableIdentity, provider);
+            }
+
             for (final SearchableField searchableField : searchableDocument.fields()) {
                 final FieldMetadata fieldMetadata = new FieldAnnotationFieldMetadata(searchableField);
                 addSearchableFieldProcessor(fieldMetadata, cls, provider);
             }
+
         }
 
     }
 
-    private void addSearchableIdentityProcessors(final Class<?> cls,
-                                                 final SearchableTypeIdentity searchableIdentity,
+    private void addSearchableTypeProcessor(final Class<?> cls,
+                                                 final SearchableDocument searchableDocument,
                                                  final IndexableFieldProcessor.Provider provider) {
 
-        final FieldMetadata typeFieldMetadata = new FieldAnnotationFieldMetadata(searchableIdentity.type()) {
-
-            @Override
-            public Field.Store store() {
-                return Field.Store.YES;
-            }
-
-        };
-
-        final FieldMetadata identityFieldMetadata = new FieldAnnotationFieldMetadata(searchableIdentity.type()) {
+        final FieldMetadata typeFieldMetadata = new FieldAnnotationFieldMetadata(searchableDocument.type()) {
 
             @Override
             public Field.Store store() {
@@ -73,6 +68,22 @@ public class ClassContextProcessor implements ContextProcessor {
         };
 
         addSearchableFieldProcessor(typeFieldMetadata, cls, provider);
+
+    }
+
+    private void addSearchableIdentityProcessors(final Class<?> cls,
+                                                 final SearchableIdentity searchableIdentity,
+                                                 final IndexableFieldProcessor.Provider provider) {
+
+        final FieldMetadata identityFieldMetadata = new FieldAnnotationFieldMetadata(searchableIdentity.value()) {
+
+            @Override
+            public Field.Store store() {
+                return Field.Store.YES;
+            }
+
+        };
+
         addSearchableFieldProcessor(identityFieldMetadata, cls, provider);
 
     }

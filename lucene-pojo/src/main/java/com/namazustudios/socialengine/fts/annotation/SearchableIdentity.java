@@ -16,11 +16,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface SearchableTypeIdentity {
-
-    String DEFAULT_CLASS_XPATH_QUERY = "/class";
-
-    String DEFAULT_CLASS_FIELD_NAME = "class";
+public @interface SearchableIdentity {
 
     /**
      * Used to specify a {@link SearchableField} which will be the object's
@@ -29,21 +25,8 @@ public @interface SearchableTypeIdentity {
      * Note that the value of {@link SearchableField#store()} is ignored and
      * will overwritten with a value of {@link org.apache.lucene.document.Field.Store#YES}
      *
-     * @return the SearchableTypeIdentity value
+     * @return the SearchableIdentity value
      */
     SearchableField value();
-
-    /**
-     * This specifies a way to store the Java fully qualified name for a {@link Class}
-     * so it can be used to query by type.
-     *
-     * Note that the value of {@link SearchableField#store()} is ignored and
-     * will overwritten with a value of {@link org.apache.lucene.document.Field.Store#YES}
-     *
-     * @return the searchable field representing the type
-     */
-    SearchableField type() default @SearchableField(
-        path = SearchableTypeIdentity.DEFAULT_CLASS_XPATH_QUERY,
-        name = SearchableTypeIdentity.DEFAULT_CLASS_FIELD_NAME);;
 
 }

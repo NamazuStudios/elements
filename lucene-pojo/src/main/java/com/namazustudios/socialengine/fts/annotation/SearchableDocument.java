@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.fts.annotation;
 
+import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
 import java.lang.annotation.ElementType;
@@ -16,6 +17,24 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SearchableDocument {
+
+    String DEFAULT_CLASS_XPATH_QUERY = "/class";
+
+    String DEFAULT_CLASS_FIELD_NAME = "class";
+
+    /**
+     * This specifies a way to store the Java fully qualified name for a {@link Class}
+     * so it can be used to index the types, or types, that the {@link Document} will
+     * contain.s
+     *
+     * Note that the value of {@link SearchableField#store()} is ignored and
+     * will overwritten with a value of {@link org.apache.lucene.document.Field.Store#YES}
+     *
+     * @return the searchable field representing the type
+     */
+    SearchableField type() default @SearchableField(
+            path = SearchableDocument.DEFAULT_CLASS_XPATH_QUERY,
+            name = SearchableDocument.DEFAULT_CLASS_FIELD_NAME);;
 
     /**
      * Used to specify multiple {@link SearchableField} annotations. Which
