@@ -5,33 +5,45 @@ import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import org.apache.commons.jxpath.CompiledExpression;
 import org.apache.commons.jxpath.JXPathContext;
 import org.apache.lucene.document.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * A {@link ContextProcessor} which will process a single annotated class.
+ *
  * Created by patricktwohig on 5/13/15.
  */
 public class ClassContextProcessor implements ContextProcessor {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ClassContextProcessor.class);
+
     private final List<ContextProcessor> contextProcessors = new ArrayList<>();
 
-    public ClassContextProcessor(Class<?> cls) {
+    /**
+     * Creates a new ClassContextProcessor for hte given class and the
+     * {@link com.namazustudios.socialengine.fts.IndexableFieldConverter.Provider}
+     *
+     * @param cls the class
+     * @param provider the provider
+     */
+    public ClassContextProcessor(Class<?> cls, IndexableFieldConverter.Provider provider) {
 
         final SearchableDocument searchableDocument = cls.getAnnotation(SearchableDocument.class);
 
+        if (searchableDocument == null) {
+            LOG.warn("No @SearchableDocument annotation found on " + cls);
+            return;
+        }
+
         for (final SearchableField searchableField : searchableDocument.value()) {
 
-            final IndexableFieldConverter<Object> indexableFieldConverter;
+            LOG.debug("Using " + searchableField.converter() + " to process " + searchableField.name() + " on class " + cls);
+            final IndexableFieldConverter<Object> indexableFieldConverter = provider.get(searchableField);
 
-            try {
-                indexableFieldConverter = searchableField.converter().newInstance();
-            } catch (IllegalAccessException ex) {
-                throw new IndexException(ex);
-            } catch (InstantiationException ex) {
-                throw new IndexException(ex);
-            }
-
+            LOG.debug("Compiling JXPath Expression " + searchableField.path() + " for class " + cls);
             final CompiledExpression compiledExpression = JXPathContext.compile(searchableField.path());
 
             contextProcessors.add(new ContextProcessor() {

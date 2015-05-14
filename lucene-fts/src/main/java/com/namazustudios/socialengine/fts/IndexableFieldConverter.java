@@ -5,6 +5,9 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexableField;
 
 /**
+ * Objects implementing this interface are used to generate any number of {@link IndexableField}
+ * instances to be added to a {@link Document} instance.
+ *
  * Created by patricktwohig on 5/12/15.
  */
 public interface IndexableFieldConverter<FieldT> {
@@ -18,9 +21,20 @@ public interface IndexableFieldConverter<FieldT> {
      * @param value the value read from the associated JXPath query
      * @param field the annotation
      *
-     * @return a list containing zero or more fields produced, this may never return null
-     *
+     * @throws DocumentGeneratorException if the implementation opts to do so
      */
     void process(final Document document, final FieldT value, SearchableField field);
+
+    interface Provider {
+
+        /**
+         * Used to generate instances of the {@link IndexableFieldConverter} interface.
+         *
+         * @param cls the subtype to create
+         * @return an instance of {@link IndexableFieldConverter}
+         */
+        <T> IndexableFieldConverter<T> get(final SearchableField searchableField);
+
+    }
 
 }

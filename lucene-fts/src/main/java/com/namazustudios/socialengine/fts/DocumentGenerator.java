@@ -14,8 +14,9 @@ public interface DocumentGenerator {
      * generating an index of the fields.
      *
      * @param cls
+     * @return a {@link ContextProcessor} which can be used to proces a context and Document
      */
-    void analyze(final Class<?> cls);
+    ContextProcessor analyze(final Class<?> cls);
 
     /**
      * Generates a {@link Document} from the given object.

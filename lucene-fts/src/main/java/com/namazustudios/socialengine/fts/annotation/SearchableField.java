@@ -21,6 +21,11 @@ import java.lang.annotation.Target;
 public @interface SearchableField {
 
     /**
+     * The default boost value.  This is derived from the current Lucene docs.
+     */
+    float DEFAULT_BOOST = 1.0f;
+
+    /**
      * A JXPath Query specifying the path to the field.
      *
      * @return the query path
@@ -43,7 +48,7 @@ public @interface SearchableField {
      *
      * @return
      */
-    float boost() default 1.0f;
+    float boost() default DEFAULT_BOOST;
 
     /**
      * Specifies a custom {@link IndexableFieldConverter} to conver the
