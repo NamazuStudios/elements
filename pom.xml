@@ -23,6 +23,7 @@
         <module>web-ui-war</module>
         <module>common-util</module>
 	<module>lucene-pojo</module>
+    <module>lucene-indexer</module>
   </modules>
 
     <properties>

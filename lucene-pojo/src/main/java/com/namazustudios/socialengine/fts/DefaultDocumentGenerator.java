@@ -30,9 +30,9 @@ public class DefaultDocumentGenerator implements DocumentGenerator {
     private static final IndexableFieldConverter.Provider DEFAULT_CONVERTER_PROVIDER =
             new IndexableFieldConverter.Provider() {
                 @Override
-                public <T> IndexableFieldConverter<T> get(SearchableField searchableField) {
+                public <T> IndexableFieldConverter<T> get(FieldMetadata fieldMetadata) {
                     try {
-                        return searchableField.converter().newInstance();
+                        return fieldMetadata.converter().newInstance();
                     } catch (IllegalAccessException ex) {
                         throw new DocumentGeneratorException(ex);
                     } catch (InstantiationException ex) {

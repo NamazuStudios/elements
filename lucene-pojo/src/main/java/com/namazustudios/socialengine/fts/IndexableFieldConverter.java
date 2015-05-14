@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.fts;
 
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexableField;
 
 /**
@@ -13,27 +14,26 @@ import org.apache.lucene.index.IndexableField;
 public interface IndexableFieldConverter<FieldT> {
 
     /**
-     * Given {@link SearchableField} object, this converts the given value to an
+     * Given {@link SearchableField} object, this converts the given fields to an
      * instance of {@link IndexableField}
      *
      *
      * @param document the document to which will receive the converted fields
-     * @param value the value read from the associated JXPath query
+     * @param value the fields read from the associated JXPath query
      * @param field the annotation
      *
      * @throws DocumentGeneratorException if the implementation opts to do so
      */
-    void process(final Document document, final FieldT value, SearchableField field);
+    void process(final Document document, final FieldT value, FieldMetadata field);
 
     interface Provider {
 
         /**
          * Used to generate instances of the {@link IndexableFieldConverter} interface.
          *
-         * @param cls the subtype to create
          * @return an instance of {@link IndexableFieldConverter}
          */
-        <T> IndexableFieldConverter<T> get(final SearchableField searchableField);
+        <T> IndexableFieldConverter<T> get(final FieldMetadata searchableField);
 
     }
 

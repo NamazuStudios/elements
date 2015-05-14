@@ -16,15 +16,15 @@ import org.slf4j.LoggerFactory;
  *
  * <ul>
  *  <li>byte - 32-bit integer {@link IntField}</li>
- *  <li>char - a single-character in {@link StringField} or {@link TextField} depending on the value of {@link SearchableField#text()}</li>
+ *  <li>char - a single-character in {@link StringField} or {@link TextField} depending on the fields of {@link SearchableField#text()}</li>
  *  <li>short - 32-bit integer {@link IntField}</li>
  *  <li>int - 32-bit integer {@link IntField}</li>
  *  <li>long - 64-bit integer {@link LongField}</li>
  *  <li>float - 32-bit float {@link FloatField}</li>
  *  <li>double - 64-bit integer {@link DoubleField}</li>
  *  <li>byte[] - {@link Store#YES} is specified on {@link SearchableField#store()}, stored as {@link Field}</li>
- *  <li>char - {@link StringField} or {@link TextField} depending on the value of {@link SearchableField#text()}</li>
- *  <li>{@link CharSequence} - {@link StringField} or {@link TextField} depending on the value of {@link SearchableField#text()}</li>
+ *  <li>char - {@link StringField} or {@link TextField} depending on the fields of {@link SearchableField#text()}</li>
+ *  <li>{@link CharSequence} - {@link StringField} or {@link TextField} depending on the fields of {@link SearchableField#text()}</li>
  *  <li>{@link Iterable} - One instance of {@link IndexableField} for each element provided each element is compatible</li>
  * </ul>
  *
@@ -36,7 +36,7 @@ public class DefaultIndexableFieldConverter implements IndexableFieldConverter<O
     private static final Logger LOG = LoggerFactory.getLogger(DefaultIndexableFieldConverter.class);
 
     @Override
-    public void process(final Document document, final Object value, final SearchableField field) {
+    public void process(final Document document, final Object value, final FieldMetadata field) {
 
         if (value instanceof Byte) {
             document.add(newIntegerField((Byte) value, field));
@@ -68,46 +68,46 @@ public class DefaultIndexableFieldConverter implements IndexableFieldConverter<O
                 process(document, object, field);
             }
         } else if (value != null) {
-            LOG.warn("Unable to value of type " + value.getClass() +  "(" + value + ")");
+            LOG.warn("Unable to fields of type " + value.getClass() +  "(" + value + ")");
         }
 
     }
 
-    private IndexableField newStoredField(final byte[] value, SearchableField field) {
+    private IndexableField newStoredField(final byte[] value, final FieldMetadata field) {
         final Field out = new StoredField(field.name(), value);
         applyRemainingProperties(out, field);
         return out;
     }
 
-    private IndexableField newIntegerField(final Number value, SearchableField field) {
+    private IndexableField newIntegerField(final Number value, final FieldMetadata field) {
         final Field out = new IntField(field.name(), value.intValue(), field.store());
         applyRemainingProperties(out, field);
         return out;
     }
 
-    private IndexableField newLongField(final Number value, SearchableField field) {
+    private IndexableField newLongField(final Number value, final FieldMetadata field) {
         final Field out = new LongField(field.name(), value.longValue(), field.store());
         applyRemainingProperties(out, field);
         return out;
     }
 
-    private IndexableField newFloatField(final Number value, SearchableField field) {
+    private IndexableField newFloatField(final Number value, final FieldMetadata field) {
         final Field out = new FloatField(field.name(), value.floatValue(), field.store());
         applyRemainingProperties(out, field);
         return out;
     }
 
-    private IndexableField newDoubleField(final Number value, SearchableField field) {
+    private IndexableField newDoubleField(final Number value, final FieldMetadata field) {
         final Field out = new DoubleField(field.name(), value.doubleValue(), field.store());
         applyRemainingProperties(out, field);
         return out;
     }
 
-    private IndexableField newTextOrStringField(final Character value, SearchableField field) {
+    private IndexableField newTextOrStringField(final Character value, final FieldMetadata field) {
         return newTextOrStringField(new String(new char[]{value.charValue()}), field);
     }
 
-    private IndexableField newTextOrStringField(final CharSequence value, SearchableField field) {
+    private IndexableField newTextOrStringField(final CharSequence value, final FieldMetadata field) {
 
         final Field out;
 
@@ -121,7 +121,7 @@ public class DefaultIndexableFieldConverter implements IndexableFieldConverter<O
         return out;
     }
 
-    private void applyRemainingProperties(final Field field, SearchableField searchableField) {
+    private void applyRemainingProperties(final Field field, final FieldMetadata searchableField) {
 
         if (searchableField.boost() != SearchableField.DEFAULT_BOOST) {
             // setBoost can result in an IllegalARgumentException, so this prevents that from

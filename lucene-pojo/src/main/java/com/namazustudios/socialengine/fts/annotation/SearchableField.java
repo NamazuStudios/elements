@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
 public @interface SearchableField {
 
     /**
-     * The default boost value.  This is derived from the current Lucene docs.
+     * The default boost fields.  This is derived from the current Lucene docs.
      */
     float DEFAULT_BOOST = 1.0f;
 

@@ -69,9 +69,9 @@ public class Atomic {
     public interface Once<ReturnT> {
 
         /**
-         * Called to get the value of the code, or get it on the first call.
+         * Called to get the fields of the code, or get it on the first call.
          *
-         * @return the value of the ReturnT
+         * @return the fields of the ReturnT
          * @throws OptimistcException if there was an Exception raised in the process.
          */
         ReturnT call();
@@ -84,7 +84,7 @@ public class Atomic {
      *
      * @param criticalOperation the criticalOperation to attempt
      * @param <ReturnT> the type to return
-     * @return the return value from the Operation
+     * @return the return fields from the Operation
      *
      */
     public <ReturnT> ReturnT performOptimistic(final CriticalOperation<ReturnT> criticalOperation) throws ConflictException {
