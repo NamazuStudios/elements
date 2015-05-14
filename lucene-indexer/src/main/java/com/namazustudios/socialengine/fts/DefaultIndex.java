@@ -21,7 +21,7 @@ public class DefaultIndex implements Index {
     @Override
     public void add(Object model) {
         try {
-            final GeneratorDocumentEntry<?, ?> documentEntry = documentGenerator.generate(model);
+            final DocumentEntry<?,?> documentEntry = documentGenerator.generate(model);
             indexWriter.addDocument(documentEntry.getDocument());
         } catch (IOException ex) {
             throw new SearchException(ex);
@@ -33,22 +33,22 @@ public class DefaultIndex implements Index {
 
     }
 
-    @Override
-    public <IdentifierT, ClassT> Iterable<GeneratorDocumentEntry<IdentifierT, ClassT>> search(
-            Class<IdentifierT> identifierClass,
-            Class<ClassT> cls,
-            String lql) {
-        return null;
-    }
-
-    @Override
-    public <IdentifierT, ClassT> Iterable<GeneratorDocumentEntry<IdentifierT, ClassT>> search(
-            Class<IdentifierT> identifierClass,
-            Class<ClassT> cls,
-            String lql,
-            Query query) {
-        return null;
-    }
+//    @Override
+//    public <IdentifierT, ClassT> Iterable<GeneratorDocumentEntry<IdentifierT, ClassT>> search(
+//            Class<IdentifierT> identifierClass,
+//            Class<ClassT> cls,
+//            String lql) {
+//        return null;
+//    }
+//
+//    @Override
+//    public <IdentifierT, ClassT> Iterable<GeneratorDocumentEntry<IdentifierT, ClassT>> search(
+//            Class<IdentifierT> identifierClass,
+//            Class<ClassT> cls,
+//            String lql,
+//            Query query) {
+//        return null;
+//    }
 
     public DocumentGenerator getDocumentGenerator() {
         return documentGenerator;
