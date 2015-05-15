@@ -34,7 +34,8 @@ public @interface SearchableDocument {
      */
     SearchableField type() default @SearchableField(
             path = SearchableDocument.DEFAULT_CLASS_XPATH_QUERY,
-            name = SearchableDocument.DEFAULT_CLASS_FIELD_NAME);;
+            name = SearchableDocument.DEFAULT_CLASS_FIELD_NAME,
+            type = Class.class);
 
     /**
      * Used to specify multiple {@link SearchableField} annotations. Which

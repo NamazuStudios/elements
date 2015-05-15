@@ -20,12 +20,12 @@ public class DefaultIndex implements Index {
 
     @Override
     public void add(Object model) {
-        try {
-            final DocumentEntry<?,?> documentEntry = documentGenerator.generate(model);
-            indexWriter.addDocument(documentEntry.getDocument());
-        } catch (IOException ex) {
-            throw new SearchException(ex);
-        }
+//        try {
+//            final DocumentEntry<?,?> documentEntry = documentGenerator.generate(model);
+//            indexWriter.addDocument(documentEntry.getDocument());
+//        } catch (IOException ex) {
+//            throw new SearchException(ex);
+//        }
     }
 
     @Override

@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
  *  <li>String - {@link StringField} or {@link TextField} depending on the value of {@link SearchableField#text()}</li>
  *  <li>{@link CharSequence} - {@link StringField} or {@link TextField} depending on the fields of {@link SearchableField#text()}</li>
  *  <li>{@link Iterable} - One instance of {@link IndexableField} for each element provided each element is compatible</li>
+ *  <li>{@link Class} - Stores the FQN name as a string</li>
  * </ul>
  *
  * When processing a field for indexing, this will ignore the value of {@link FieldMetadata#type()} and
@@ -70,6 +71,8 @@ public class DefaultIndexableFieldProcessor implements IndexableFieldProcessor<O
             for (final Object object : ((Iterable<?>)value)) {
                 process(document, object, field);
             }
+        } else if (value instanceof Class<?>) {
+
         } else if (value != null) {
             LOG.warn("Unable to fields of type " + value.getClass() +  "(" + value + ")");
         }

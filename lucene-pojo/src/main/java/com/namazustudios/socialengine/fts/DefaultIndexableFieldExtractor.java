@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.fts;
 
+import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.IndexableField;
@@ -7,7 +8,10 @@ import org.apache.lucene.util.BytesRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.*;
+
 /**
+ *
  * Extracts fields from a {@link Document} with the default rules.  This is similar to the
  * {@link DefaultIndexableFieldProcessor}.  This relies on the specification of the
  * {@link SearchableField#type()} field.  This gets the String value of each field and
@@ -23,11 +27,19 @@ import org.slf4j.LoggerFactory;
  *  <li>float - parsed as a float using new {@link Float#Float(String)}</li>
  *  <li>double - parsed as a double using new {@link Double#Double(String)}</li>
  *  <li>String - passed directly through</li>
+ *  <li>Class<?> - attempts to load using {@link Class#forName(String)}</?></li>
  *  <li>{@link CharSequence} - passed directly through</li>
  * </ul>
  *
+ * <p>
  * <em>Caveat:</em>  because of Java's type erasure, this has no means to handle any
  * {@link Iterable} types.
+ * </p>
+ *
+ * <p>
+ * <em>Caveat:</em>  because {@link SearchableDocument} can be processed for the entire class hierarchy,
+ * multiple classes may be present.  Therefore, this will always find the class lowest in the hierarchy.
+ * </p>
  *
  * Created by patricktwohig on 5/14/15.
  */
@@ -36,9 +48,11 @@ public class DefaultIndexableFieldExtractor implements IndexableFieldExtractor<O
     private static final Logger LOG = LoggerFactory.getLogger(DefaultIndexableFieldExtractor.class);
 
     @Override
-    public Object extract(Document document, FieldMetadata fieldMetadata) {
+    public Object extract(final Document document, final FieldMetadata fieldMetadata) {
 
         final Class<?> type = fieldMetadata.type();
+
+        // All numeric types which can be parsed as a string.
 
         try {
 
@@ -48,23 +62,38 @@ public class DefaultIndexableFieldExtractor implements IndexableFieldExtractor<O
                 throw new FieldExtractionException(fieldMetadata, document, "no string value for field " + fieldMetadata);
             }
 
-            if (type.isAssignableFrom(Byte.class)) {
+            if (Byte.class.isAssignableFrom(type) || byte.class.isAssignableFrom(type)) {
                 return new Byte(stringValue);
-            } else if (type.isAssignableFrom(Short.class)) {
+            } else if (Short.class.isAssignableFrom(type) || short.class.isAssignableFrom(type)) {
                 return new Short(stringValue);
-            } else if (type.isAssignableFrom(Integer.class)) {
+            } else if (Integer.class.isAssignableFrom(type) || int.class.isAssignableFrom(type)) {
                 return new Integer(stringValue);
-            } else if (type.isAssignableFrom(Long.class)) {
+            } else if (Long.class.isAssignableFrom(type) || long.class.isAssignableFrom(type)) {
                 return new Long(stringValue);
-            } else if (type.isAssignableFrom(Float.class)) {
+            } else if (Float.class.isAssignableFrom(type) || float.class.isAssignableFrom(type)) {
                 return new Float(stringValue);
-            } else if (type.isAssignableFrom(Double.class)) {
+            } else if (Double.class.isAssignableFrom(type) || double.class.isAssignableFrom(type)) {
                 return new Double(stringValue);
+            } else if (char[].class.isAssignableFrom(type)) {
+                return stringValue.toCharArray();
+            } else if (CharSequence.class.isAssignableFrom(type)) {
+                return stringValue;
+            } else if (Character.class.isAssignableFrom(type) || char.class.isAssignableFrom(type)) {
+
+                if (stringValue.length() > 1) {
+                    throw new FieldExtractionException(fieldMetadata, document,
+                        "string length >1 for field " + fieldMetadata);
+                }
+
+                return stringValue.isEmpty() ? Character.valueOf((char)0) : stringValue.charAt(0);
+
             }
 
         } catch (NumberFormatException nfe) {
             throw new FieldExtractionException(fieldMetadata, document, nfe);
         }
+
+        // The byte array type, which is just copied back out directly.
 
         if (type.isAssignableFrom(byte[].class)) {
 
@@ -78,27 +107,73 @@ public class DefaultIndexableFieldExtractor implements IndexableFieldExtractor<O
 
         }
 
-        final String stringValue = document.get(fieldMetadata.name());
+        throw new FieldExtractionException(fieldMetadata, document, "unable to extract value for field " + fieldMetadata);
 
-        if (stringValue == null) {
-            throw new FieldExtractionException(fieldMetadata, document, "no string value for field " + fieldMetadata);
+    }
+
+    private Class<?> extractClass(final Document document, final FieldMetadata fieldMetadata) {
+
+        // Load the classes and filter out any interface or annotation types, which
+        // shouldn't be in here but we can't trust that the incoming document.
+
+        final List<Class<?>> classList = new ArrayList<>();
+
+        for (final String className : document.getValues(fieldMetadata.name())) {
+            try {
+
+                final Class<?> cls = Class.forName(className);
+
+                // We really only care about concrete types here, so if it's
+                // an interface we skip over it.  Trying to support interfaces
+                // (or multipile inheritance) would be a nightmare.
+
+                if (!cls.isInterface() && !cls.isAnnotation()) {
+                    classList.add(cls);
+                }
+
+            } catch (ClassNotFoundException ex) {
+                throw new FieldExtractionException(fieldMetadata, document, ex);
+            }
         }
 
-        if (type.isAssignableFrom(char[].class)) {
-            return stringValue.toCharArray();
-        } else if (type.isAssignableFrom(CharSequence.class)) {
-            return stringValue;
-        } else if (type.isAssignableFrom(Character.class)) {
+        final SortedSet<Class<?>> classSortedSet = new TreeSet<>(new Comparator<Class<?>>() {
 
-            if (stringValue.length() > 1) {
-                throw new FieldExtractionException(fieldMetadata, document, "string length >1 for field " + fieldMetadata);
+            @Override
+            public int compare(Class<?> o1, Class<?> o2) {
+                return  o1.equals(o2)            ?  0 :
+                        o1.isAssignableFrom(o2)  ? -1 : 1;
             }
 
-            return stringValue.isEmpty() ? Character.valueOf((char)0) : stringValue.charAt(0);
+        });
+
+        classSortedSet.addAll(classList);
+
+        if (classSortedSet.isEmpty()) {
+            throw new FieldExtractionException(fieldMetadata, document);
+        }
+
+        // Do a sanity check to ensure that each type we've found is actually
+        // part of the same hierarchy.
+
+        Iterator<Class<?>> itr = classSortedSet.iterator();
+        Class<?> superclass = itr.next();
+
+        while (itr.hasNext()) {
+
+            final Class<?> cls = itr.next();
+
+            if (!superclass.isAssignableFrom(cls)) {
+                throw new FieldExtractionException(fieldMetadata, document,
+                    "Unable to understand the class heirarchy for document.  Found unrelated type " + cls);
+            }
+
+            superclass = cls;
 
         }
 
-        throw new FieldExtractionException(fieldMetadata, document, "unable to extract value for field " + fieldMetadata);
+        // Finally, returns the most specific subclass in the hierarchy.
+
+        return classSortedSet.last();
 
     }
 
