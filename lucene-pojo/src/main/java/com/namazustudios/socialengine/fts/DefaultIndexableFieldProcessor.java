@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.fts;
 
+import com.namazustudios.socialengine.fts.annotation.DefaultType;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.IndexableField;
@@ -26,6 +27,9 @@ import org.slf4j.LoggerFactory;
  *  <li>{@link CharSequence} - {@link StringField} or {@link TextField} depending on the fields of {@link SearchableField#text()}</li>
  *  <li>{@link Iterable} - One instance of {@link IndexableField} for each element provided each element is compatible</li>
  * </ul>
+ *
+ * When processing a field for indexing, this will ignore the value of {@link FieldMetadata#type()} and
+ * write it according to the object's type.
  *
  * Anything else is logged as a warning.
  *
@@ -124,7 +128,7 @@ public class DefaultIndexableFieldProcessor implements IndexableFieldProcessor<O
 
         if (searchableField.boost() != SearchableField.DEFAULT_BOOST) {
             // setBoost can result in an IllegalARgumentException, so this prevents that from
-            // happening if the boost
+            // happening if the boost is left as the default value.
             field.setBoost(searchableField.boost());
         }
 

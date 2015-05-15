@@ -5,16 +5,16 @@ import org.apache.lucene.document.Document;
 /**
  * Created by patricktwohig on 5/14/15.
  */
-public interface IndexableFieldExtractor<IdentityT> {
+public interface IndexableFieldExtractor<FieldT> {
 
     /**
      * Extracts the identity
      *
      * @param document
-     * @param field
+     * @param fieldMetadata
      * @return
      */
-    IdentityT extract(final Document document, FieldMetadata field);
+    FieldT extract(final Document document, FieldMetadata fieldMetadata);
 
     interface Provider {
 

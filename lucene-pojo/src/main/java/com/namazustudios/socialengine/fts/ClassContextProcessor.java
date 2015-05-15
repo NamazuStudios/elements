@@ -47,7 +47,7 @@ public class ClassContextProcessor implements ContextProcessor {
 
             for (final SearchableField searchableField : searchableDocument.fields()) {
                 final FieldMetadata fieldMetadata = new FieldAnnotationFieldMetadata(searchableField);
-                addSearchableFieldProcessor(fieldMetadata, cls, provider);
+                addSearchableFieldProcessors(fieldMetadata, cls, provider);
             }
 
         }
@@ -67,7 +67,7 @@ public class ClassContextProcessor implements ContextProcessor {
 
         };
 
-        addSearchableFieldProcessor(typeFieldMetadata, cls, provider);
+        addSearchableFieldProcessors(typeFieldMetadata, cls, provider);
 
     }
 
@@ -84,28 +84,32 @@ public class ClassContextProcessor implements ContextProcessor {
 
         };
 
-        addSearchableFieldProcessor(identityFieldMetadata, cls, provider);
+        addSearchableFieldProcessors(identityFieldMetadata, cls, provider);
 
     }
 
-    private void addSearchableFieldProcessor(final FieldMetadata searchableField,
+    private void addSearchableFieldProcessors(final FieldMetadata searchableField,
                                              final Class<?> cls,
                                              final IndexableFieldProcessor.Provider provider) {
 
+        for (final Class<? extends  IndexableFieldProcessor> implementationClass : searchableField.processors()) {
 
-        LOG.debug("Using " + searchableField.processor() + " to process " + searchableField.name() + " on class " + cls);
-        final IndexableFieldProcessor<Object> indexableFieldProcessor = provider.get(searchableField);
+            LOG.debug("Using " + implementationClass + " to process " + searchableField.name() + " on class " + cls);
+            final IndexableFieldProcessor<Object> indexableFieldProcessor = provider.get(searchableField, implementationClass);
 
-        LOG.debug("Compiling JXPath Expression " + searchableField.path() + " for class " + cls);
-        final CompiledExpression compiledExpression = JXPathContext.compile(searchableField.path());
+            LOG.debug("Compiling JXPath Expression " + searchableField.path() + " for class " + cls);
+            final CompiledExpression compiledExpression = JXPathContext.compile(searchableField.path());
 
-        contextProcessors.add(new ContextProcessor() {
-            @Override
-            public void process(JXPathContext context, DocumentEntry<?,?> documentEntry) {
-                final Object value = compiledExpression.getValue(context);
-                indexableFieldProcessor.process(documentEntry.getDocument(), value, searchableField);
-            }
-        });
+            contextProcessors.add(new ContextProcessor() {
+                @Override
+                public void process(JXPathContext context, DocumentEntry<?,?> documentEntry) {
+                    final Object value = compiledExpression.getValue(context);
+                    indexableFieldProcessor.process(documentEntry.getDocument(), value, searchableField);
+                }
+            });
+
+        }
+
 
     }
 

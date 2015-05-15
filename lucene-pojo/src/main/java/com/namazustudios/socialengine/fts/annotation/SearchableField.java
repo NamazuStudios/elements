@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.fts.annotation;
 
+import com.namazustudios.socialengine.fts.DefaultIndexableFieldExtractor;
 import com.namazustudios.socialengine.fts.DefaultIndexableFieldProcessor;
+import com.namazustudios.socialengine.fts.IndexableFieldExtractor;
 import com.namazustudios.socialengine.fts.IndexableFieldProcessor;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexableField;
@@ -42,6 +44,15 @@ public @interface SearchableField {
     String name();
 
     /**
+     * Used as a hint to designate the Java type of the field.  The specified
+     * {@link #processor} may ignore this in favor of its own scheme, but it may
+     * be necessary in others.
+     *
+     * @return
+     */
+    Class<?> type() default DefaultType.class;
+
+    /**
      * The index-time boost for the field.
      *
      * Corresponds to {@link IndexableField#boost()}
@@ -51,12 +62,20 @@ public @interface SearchableField {
     float boost() default DEFAULT_BOOST;
 
     /**
-     * Specifies a custom {@link IndexableFieldProcessor} to convert the the property value to an instance
-     * of {@link IndexableField}.
+     * Specifies one or more {@link IndexableFieldProcessor} to convert the the property value to
+     * one or more instances of {@link IndexableField}.
      *
      * @return the Class
      */
-    Class<? extends IndexableFieldProcessor> converter() default DefaultIndexableFieldProcessor.class;
+    Class<? extends IndexableFieldProcessor>[] processors() default DefaultIndexableFieldProcessor.class;
+
+    /**
+     * Specifies a custom {@link IndexableFieldProcessor} to convert the {@link IndexableField} property
+     * to a Java type.
+     *
+     * @return the Class
+     */
+    Class<? extends IndexableFieldExtractor> extractor() default DefaultIndexableFieldExtractor.class;
 
     /**
      * A hint to the specified {@link IndexableFieldProcessor} as to whether

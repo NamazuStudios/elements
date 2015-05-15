@@ -31,9 +31,13 @@ public interface IndexableFieldProcessor<FieldT> {
         /**
          * Used to generate instances of the {@link IndexableFieldProcessor} interface.
          *
+         * @param searchableField the field metadata from the annotated field
+         * @param implementationClass the implementation class
+         *
          * @return an instance of {@link IndexableFieldProcessor}
          */
-        <T> IndexableFieldProcessor<T> get(final FieldMetadata searchableField);
+        <T> IndexableFieldProcessor<T> get(final FieldMetadata searchableField,
+                                           Class<? extends IndexableFieldProcessor> implementationClass);
 
     }
 

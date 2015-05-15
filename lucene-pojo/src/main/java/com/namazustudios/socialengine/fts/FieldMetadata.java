@@ -30,7 +30,12 @@ public interface FieldMetadata {
     /**
      * {@see SearchableField#processor}
      */
-    Class<? extends IndexableFieldProcessor> processor();
+    Class<? extends IndexableFieldProcessor>[] processors();
+
+    /**
+     * {@see SearchableField#extractor}
+     */
+    Class<? extends IndexableFieldExtractor> extractor();
 
     /**
      * {@see SearchableField#text}
@@ -41,5 +46,10 @@ public interface FieldMetadata {
      * {@see SearchableField#store}
      */
     Field.Store store();
+
+    /**
+     * {@see SearchableField#type}
+     */
+    Class<?> type();
 
 }

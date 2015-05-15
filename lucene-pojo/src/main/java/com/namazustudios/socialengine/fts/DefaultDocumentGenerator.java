@@ -28,9 +28,10 @@ public class DefaultDocumentGenerator implements DocumentGenerator {
     private static final IndexableFieldProcessor.Provider DEFAULT_CONVERTER_PROVIDER =
             new IndexableFieldProcessor.Provider() {
                 @Override
-                public <T> IndexableFieldProcessor<T> get(FieldMetadata fieldMetadata) {
+                public <T> IndexableFieldProcessor<T> get(FieldMetadata fieldMetadata,
+                                                          Class<? extends IndexableFieldProcessor> implementationClass) {
                     try {
-                        return fieldMetadata.processor().newInstance();
+                        return implementationClass.newInstance();
                     } catch (IllegalAccessException ex) {
                         throw new DocumentGeneratorException(ex);
                     } catch (InstantiationException ex) {
@@ -123,8 +124,6 @@ public class DefaultDocumentGenerator implements DocumentGenerator {
             });
 
         }
-
-        // TODO Add identity to the document.
 
     }
 

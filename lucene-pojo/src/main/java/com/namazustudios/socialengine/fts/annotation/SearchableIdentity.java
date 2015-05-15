@@ -12,6 +12,8 @@ import java.lang.annotation.Target;
  * Represents a pair of {@link SearchableField} annotations which define the Document's
  * identity.  The {@link Document} will retain some {@link IndexableField}
  *
+ * You should only annotate one class in a class heirarchy with an identity.
+ *
  * Created by patricktwohig on 5/14/15.
  */
 @Target(ElementType.TYPE)
@@ -24,6 +26,8 @@ public @interface SearchableIdentity {
      *
      * Note that the value of {@link SearchableField#store()} is ignored and
      * will overwritten with a value of {@link org.apache.lucene.document.Field.Store#YES}
+     *
+     * <em>IMPORTANT.</em>  In general, the
      *
      * @return the SearchableIdentity value
      */
