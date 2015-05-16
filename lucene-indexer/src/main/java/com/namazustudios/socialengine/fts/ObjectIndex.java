@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.Query;
 
 /**
  * Manages objects in a Lucene search index.
@@ -55,7 +54,7 @@ public interface ObjectIndex {
      *
      * @return the Query a query generated from this type
      */
-    TypeQuery queryForType(final Class<?> type);
+    ObjectQuery queryForType(final Class<?> type);
 
     DocumentGenerator getDocumentGenerator();
 
