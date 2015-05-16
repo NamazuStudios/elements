@@ -20,7 +20,7 @@ import java.util.NoSuchElementException;
  *
  * Created by patricktwohig on 5/16/15.
  */
-public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<DocumentT> {
+public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<DocumentT, ScoredDocumentEntry<DocumentT>> {
 
     private static final Logger LOG = LoggerFactory.getLogger(TopDocsSearchResult.class);
 
@@ -43,8 +43,8 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
     }
 
     @Override
-    public Iterator<DocumentEntry<DocumentT>> iterator() {
-        return new Iterator<DocumentEntry<DocumentT>>() {
+    public Iterator<ScoredDocumentEntry<DocumentT>> iterator() {
+        return new Iterator<ScoredDocumentEntry<DocumentT>>() {
 
             int pos = 0;
 
@@ -56,7 +56,7 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
             }
 
             @Override
-            public DocumentEntry<DocumentT> next() {
+            public ScoredDocumentEntry<DocumentT> next() {
 
                 final ScoreDoc scoreDoc;
 
@@ -66,7 +66,7 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
                     throw new NoSuchElementException();
                 }
 
-                return getEntry(scoreDoc.doc);
+                return getEntry(scoreDoc);
 
             }
 
@@ -91,6 +91,32 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
             throw new MultipleResultException();
         }
 
+    }
+
+    protected ScoredDocumentEntry<DocumentT> getEntry(final ScoreDoc scoreDoc) {
+        final DocumentEntry<DocumentT> documentEntry = getEntry(scoreDoc.doc);
+        return new ScoredDocumentEntry<DocumentT>() {
+            @Override
+            public double getScore() {
+                return scoreDoc.score;
+            }
+
+            @Override
+            public Document getDocument() {
+                return documentEntry.getDocument();
+            }
+
+            @Override
+            public Identity<DocumentT> getIdentifier(Class<DocumentT> aClass) {
+                return documentEntry.getIdentifier(aClass);
+            }
+
+            @Override
+            public String toString() {
+                return documentEntry.toString();
+            }
+
+        };
     }
 
     /**

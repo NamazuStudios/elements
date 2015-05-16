@@ -31,7 +31,7 @@ public interface ObjectIndex {
      * Upon completion, this {@link IndexWriter#commit()}s the changes.
      *
      * @param model the object
-     * @return the a {@link DocumentEntry} instance
+     * @return the a {@link BasicDocumentEntry} instance
      *
      */
     <T> DocumentEntry<T> index(Class<T> type, T model);

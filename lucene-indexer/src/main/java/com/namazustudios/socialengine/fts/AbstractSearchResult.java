@@ -10,7 +10,8 @@ import java.io.IOException;
  *
  * Created by patricktwohig on 5/16/15.
  */
-public abstract class AbstractSearchResult<DocumentT> implements SearchResult<DocumentT> {
+public abstract class AbstractSearchResult<DocumentT, EntryT extends DocumentEntry<DocumentT>>
+        implements SearchResult<DocumentT, EntryT> {
 
     protected final ObjectQuery objectQuery;
 

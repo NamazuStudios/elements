@@ -6,7 +6,7 @@ import org.apache.lucene.index.IndexableField;
 
 /**
  * This creates and manages instances of {@link ContextProcessor}s which can be usd
- * to genrerate instances of {@link DocumentEntry}.
+ * to genrerate instances of {@link BasicDocumentEntry}.
  *
  * Created by patricktwohig on 5/12/15.
  */
@@ -16,7 +16,7 @@ public interface DocumentGenerator {
      * Analyzes the given {@link Class}, searching for the presence of the {@link SearchableDocument}
      * annotations generating an index of the fields.  This walks the whole hierarchy until it
      * hits {@link Object} generating a {@link ContextProcessor} which can be used to add
-     * {@link IndexableField} instances to a {@link DocumentEntry}.
+     * {@link IndexableField} instances to a {@link BasicDocumentEntry}.
      *
      * @param cls
      * @return a {@link ContextProcessor} which can be used to proces a context and Document
@@ -43,7 +43,7 @@ public interface DocumentGenerator {
     <DocumentT> DocumentEntry<DocumentT> process(final DocumentT object, final Document document);
 
     /**
-     * Creates a new {@link DocumentEntry} from the given {@link Document}.  This returns
+     * Creates a new {@link BasicDocumentEntry} from the given {@link Document}.  This returns
      * an empty entry with no
      *
      * @param document
@@ -52,7 +52,7 @@ public interface DocumentGenerator {
     DocumentEntry<?> entry(final Document document);
 
     /**
-     * Creates a new {@link DocumentEntry} from the given {@link Document}.
+     * Creates a new {@link BasicDocumentEntry} from the given {@link Document}.
      *
      * @param document
      * @return

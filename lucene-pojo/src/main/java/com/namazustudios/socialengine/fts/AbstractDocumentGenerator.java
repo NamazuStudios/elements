@@ -164,13 +164,13 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
 
     @Override
     public DocumentEntry<?> entry(final Document document) {
-        return new DocumentEntry<Object>(document, indexableFieldExtractorProvider);
+        return new BasicDocumentEntry<Object>(document, indexableFieldExtractorProvider);
     }
 
     @Override
     public <DocumentT> DocumentEntry<DocumentT> entry(final Class<DocumentT> documentTClass, final Document document) {
 
-        final DocumentEntry<DocumentT> documentEntry = new DocumentEntry<>(document, indexableFieldExtractorProvider);
+        final DocumentEntry<DocumentT> documentEntry = new BasicDocumentEntry<>(document, indexableFieldExtractorProvider);
         final Identity<DocumentT> documentTIdentity = documentEntry.getIdentifier(documentTClass);
 
         if (!documentTIdentity.getDocumentType().isAssignableFrom(documentTClass)) {

@@ -7,7 +7,7 @@ package com.namazustudios.socialengine.fts;
  *
  * Created by patricktwohig on 5/15/15.
  */
-public interface SearchResult<DocumentT> extends Iterable<DocumentEntry<DocumentT>> {
+public interface SearchResult<DocumentT, EntryT extends DocumentEntry<DocumentT>> extends Iterable<EntryT> {
 
     /**
      * Gets the total number of results in the set.  This may be an
