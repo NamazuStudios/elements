@@ -36,7 +36,7 @@ public abstract class AbstractUserCommand implements Command {
     private String password;
 
     public AbstractUserCommand() {
-        usernameOptionSpec = getOptionParser().accepts("user", "Username/Unique Identifier.  (ex. bobsmith)")
+        usernameOptionSpec = getOptionParser().accepts("user", "Username/Unique Identity.  (ex. bobsmith)")
                 .withRequiredArg()
                 .ofType(String.class);
         emailOptionSpec = getOptionParser().accepts("email", "Email Address.  (ex. bobsmith@yourcompany.com)")

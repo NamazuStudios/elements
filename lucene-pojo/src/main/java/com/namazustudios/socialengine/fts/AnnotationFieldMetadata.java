@@ -8,11 +8,11 @@ import java.lang.annotation.Annotation;
 /**
  * Created by patricktwohig on 5/13/15.
  */
-public class FieldAnnotationFieldMetadata implements FieldMetadata {
+public class AnnotationFieldMetadata implements FieldMetadata {
 
     private final SearchableField searchableField;
 
-    public FieldAnnotationFieldMetadata(SearchableField searchableField) {
+    public AnnotationFieldMetadata(SearchableField searchableField) {
         this.searchableField = searchableField;
     }
 

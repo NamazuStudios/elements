@@ -25,34 +25,26 @@ public class DefaultDocumentGenerator implements DocumentGenerator {
         public void process(JXPathContext context, DocumentEntry<?,?> documentEntry) {}
     };
 
-    private static final IndexableFieldProcessor.Provider DEFAULT_CONVERTER_PROVIDER =
-            new IndexableFieldProcessor.Provider() {
-                @Override
-                public <T> IndexableFieldProcessor<T> get(FieldMetadata fieldMetadata,
-                                                          Class<? extends IndexableFieldProcessor> implementationClass) {
-                    try {
-                        return implementationClass.newInstance();
-                    } catch (IllegalAccessException ex) {
-                        throw new DocumentGeneratorException(ex);
-                    } catch (InstantiationException ex) {
-                        throw new DocumentGeneratorException(ex);
-                    }
-                }
-            };
-
     private final ReentrantReadWriteLock reentrantReadWriteLock = new ReentrantReadWriteLock();
+
     private final Lock r = reentrantReadWriteLock.readLock();
     private final Lock w = reentrantReadWriteLock.writeLock();
 
-    private final IndexableFieldProcessor.Provider provider;
+    private final IndexableFieldProcessor.Provider indexableFieldProcessorProvider;
+    private final IndexableFieldExtractor.Provider indexableFieldExtractorProvider;
+
     private final Map<Class<?>, ContextProcessor> contextProcessorMap = new HashMap<>();
 
     public DefaultDocumentGenerator() {
-        this(DEFAULT_CONVERTER_PROVIDER);
+        this(DefaultIndexableFieldProcessorProvider.getInstance(),
+             DefaultIndexableFieldExtractorProvider.getInstance());
     }
 
-    public DefaultDocumentGenerator(IndexableFieldProcessor.Provider provider) {
-        this.provider = provider;
+    public DefaultDocumentGenerator(
+            final IndexableFieldProcessor.Provider indexableFieldProcessorProvider,
+            final IndexableFieldExtractor.Provider indexableFieldExtractorProvider) {
+        this.indexableFieldProcessorProvider = indexableFieldProcessorProvider;
+        this.indexableFieldExtractorProvider = indexableFieldExtractorProvider;
     }
 
     @Override
@@ -109,7 +101,7 @@ public class DefaultDocumentGenerator implements DocumentGenerator {
 
             final ContextProcessor classContextProcessor =
                     searchableDocument == null ? EMPTY_CONTEXT_PROCESSOR :
-                                                 new ClassContextProcessor(cls, null);
+                                                 new ClassContextProcessor(cls, indexableFieldProcessorProvider);
 
             // Lastly we put in a ContextProcessor that first calls the superclass context processor
             // and then calls the current class' contextProcessor
@@ -128,15 +120,15 @@ public class DefaultDocumentGenerator implements DocumentGenerator {
     }
 
     @Override
-    public <DocumentT> DocumentEntry<?, ? extends DocumentT> generate(final DocumentT object) {
+    public <DocumentT> DocumentEntry<? extends DocumentT, ?> generate(final DocumentT object) {
         return process(object, new Document());
     }
 
     @Override
-    public <DocumentT> DocumentEntry<?, ? extends DocumentT> process(final DocumentT object, final Document document) {
+    public <DocumentT> DocumentEntry<? extends DocumentT, ?> process(final DocumentT object, final Document document) {
 
         final JXPathContext jxPathContext = JXPathContext.newContext(object);
-        final GeneratorDocumentEntry generatorDocumentEntry = new GeneratorDocumentEntry(document);
+        final DocumentEntry generatorDocumentEntry = new DocumentEntry(document, indexableFieldExtractorProvider);
 
         final Class<?> cls = object.getClass();
         final ContextProcessor contextProcessor = getOrCreateContextProcessor(cls);

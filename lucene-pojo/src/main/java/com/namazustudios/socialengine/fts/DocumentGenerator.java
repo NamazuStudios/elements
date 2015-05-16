@@ -21,20 +21,20 @@ public interface DocumentGenerator {
     /**
      * Generates a {@link Document} from the given object.
      *
-     * @param object the object, not null
+     * @param object the object to index, not null
      * @return a Document which can be written to the search index.
      *
      */
-    <DocumentT> DocumentEntry<?, ? extends DocumentT> generate(final DocumentT object);
+    <DocumentT> DocumentEntry<? extends DocumentT, ?> generate(final DocumentT object);
 
     /***
      * Processes the given object, adding all found {@link org.apache.lucene.index.IndexableField}
      * instances to it.
      *
-     * @param object the Object to proces
+     * @param object the Object to index, not null
      * @param document the target document
      *
      */
-    <DocumentT> DocumentEntry<?, ? extends DocumentT> process(final DocumentT object, final Document document);
+    <DocumentT> DocumentEntry<? extends DocumentT, ?> process(final DocumentT object, final Document document);
 
 }

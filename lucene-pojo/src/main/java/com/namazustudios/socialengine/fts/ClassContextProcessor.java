@@ -46,7 +46,7 @@ public class ClassContextProcessor implements ContextProcessor {
             }
 
             for (final SearchableField searchableField : searchableDocument.fields()) {
-                final FieldMetadata fieldMetadata = new FieldAnnotationFieldMetadata(searchableField);
+                final FieldMetadata fieldMetadata = new AnnotationFieldMetadata(searchableField);
                 addSearchableFieldProcessors(fieldMetadata, cls, provider);
             }
 
@@ -58,7 +58,7 @@ public class ClassContextProcessor implements ContextProcessor {
                                                  final SearchableDocument searchableDocument,
                                                  final IndexableFieldProcessor.Provider provider) {
 
-        final FieldMetadata typeFieldMetadata = new FieldAnnotationFieldMetadata(searchableDocument.type()) {
+        final FieldMetadata typeFieldMetadata = new AnnotationFieldMetadata(searchableDocument.type()) {
 
             @Override
             public Field.Store store() {
@@ -75,7 +75,7 @@ public class ClassContextProcessor implements ContextProcessor {
                                                  final SearchableIdentity searchableIdentity,
                                                  final IndexableFieldProcessor.Provider provider) {
 
-        final FieldMetadata identityFieldMetadata = new FieldAnnotationFieldMetadata(searchableIdentity.value()) {
+        final FieldMetadata identityFieldMetadata = new AnnotationFieldMetadata(searchableIdentity.value()) {
 
             @Override
             public Field.Store store() {

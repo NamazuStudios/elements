@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.fts;
 
+import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexableField;
@@ -13,42 +14,42 @@ import org.apache.lucene.index.IndexableField;
 public interface FieldMetadata {
 
     /**
-     * {@see SearchableField#path}
+     * {@see {@link SearchableField#path()}}
      */
     String path();
 
     /**
-     * {@see SearchableField#name}
+     * {@see {@link SearchableField#name()}}
      */
     String name();
 
     /**
-     * {@see SearchableField#boost}
+     * {@see {@link SearchableField#boost()}}
      */
     float boost();
 
     /**
-     * {@see SearchableField#processor}
+     * {@see {@link SearchableField#processors()}}
      */
     Class<? extends IndexableFieldProcessor>[] processors();
 
     /**
-     * {@see SearchableField#extractor}
+     * {@see {@link SearchableField#extractor()}}
      */
     Class<? extends IndexableFieldExtractor> extractor();
 
     /**
-     * {@see SearchableField#text}
+     * {@see {@link SearchableField#text()}}
      */
     boolean text();
 
     /**
-     * {@see SearchableField#store}
+     * {@see {@link SearchableField#store()}}
      */
     Field.Store store();
 
     /**
-     * {@see SearchableField#type}
+     * {@see {@link SearchableField#type()}}
      */
     Class<?> type();
 

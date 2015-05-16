@@ -8,23 +8,23 @@ import org.apache.lucene.document.Document;
  *
  * Created by patricktwohig on 5/13/15.
  */
-public class DocumentGeneratorException extends RuntimeException {
+public class DocumentException extends RuntimeException {
 
-    public DocumentGeneratorException() {}
+    public DocumentException() {}
 
-    public DocumentGeneratorException(String message) {
+    public DocumentException(String message) {
         super(message);
     }
 
-    public DocumentGeneratorException(String message, Throwable cause) {
+    public DocumentException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public DocumentGeneratorException(Throwable cause) {
+    public DocumentException(Throwable cause) {
         super(cause);
     }
 
-    public DocumentGeneratorException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    public DocumentException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 

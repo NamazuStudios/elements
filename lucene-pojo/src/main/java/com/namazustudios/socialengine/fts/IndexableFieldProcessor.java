@@ -22,7 +22,7 @@ public interface IndexableFieldProcessor<FieldT> {
      * @param value the fields read from the associated JXPath query
      * @param field the annotation
      *
-     * @throws DocumentGeneratorException if the implementation opts to do so
+     * @throws DocumentException if the implementation opts to do so
      */
     void process(final Document document, final FieldT value, FieldMetadata field);
 

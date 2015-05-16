@@ -11,7 +11,7 @@ import org.apache.lucene.index.IndexableField;
  *
  * Created by patricktwohig on 5/15/15.
  */
-public class FieldExtractionException extends DocumentGeneratorException {
+public class FieldExtractionException extends DocumentException {
 
     private final Document document;
     private final FieldMetadata fieldMetadata;
