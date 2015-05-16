@@ -1,17 +1,22 @@
 package com.namazustudios.socialengine.fts;
 
+import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexableField;
 
 /**
- * Given an instance, annotated with th
+ * This creates and manages instances of {@link ContextProcessor}s which can be usd
+ * to genrerate instances of {@link DocumentEntry}.
+ *
  * Created by patricktwohig on 5/12/15.
  */
 public interface DocumentGenerator {
 
     /**
-     * Analyzes the given {@link Class}, searching for the presence of
-     * the {@link com.namazustudios.socialengine.fts.annotation.SearchableDocument} annotation
-     * generating an index of the fields.
+     * Analyzes the given {@link Class}, searching for the presence of the {@link SearchableDocument}
+     * annotations generating an index of the fields.  This walks the whole hierarchy until it
+     * hits {@link Object} generating a {@link ContextProcessor} which can be used to add
+     * {@link IndexableField} instances to a {@link DocumentEntry}.
      *
      * @param cls
      * @return a {@link ContextProcessor} which can be used to proces a context and Document
@@ -25,7 +30,7 @@ public interface DocumentGenerator {
      * @return a Document which can be written to the search index.
      *
      */
-    <DocumentT> DocumentEntry<? extends DocumentT, ?> generate(final DocumentT object);
+    <DocumentT> DocumentEntry<DocumentT> generate(final DocumentT object);
 
     /***
      * Processes the given object, adding all found {@link org.apache.lucene.index.IndexableField}
@@ -35,6 +40,6 @@ public interface DocumentGenerator {
      * @param document the target document
      *
      */
-    <DocumentT> DocumentEntry<? extends DocumentT, ?> process(final DocumentT object, final Document document);
+    <DocumentT> DocumentEntry<DocumentT> process(final DocumentT object, final Document document);
 
 }

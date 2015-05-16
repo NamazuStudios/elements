@@ -14,6 +14,15 @@ import java.util.List;
 
 /**
  * A {@link ContextProcessor} which will process a single annotated class.
+ * This does not touch any other types in the hierarchy.
+ *
+ * This will skip the class completely if {@link SearchableDocument} is missing,
+ * as it contains information necessary to properly index the object.
+ *
+ * It is important to node that, for the sake of efficiency, this pre-compiles
+ * the XPath expressions and saves them in memory.
+ *
+ * This class is thread safe as it is immutable.
  *
  * Created by patricktwohig on 5/13/15.
  */
@@ -102,7 +111,7 @@ public class ClassContextProcessor implements ContextProcessor {
 
             contextProcessors.add(new ContextProcessor() {
                 @Override
-                public void process(JXPathContext context, DocumentEntry<?,?> documentEntry) {
+                public void process(JXPathContext context, DocumentEntry<?> documentEntry) {
                     final Object value = compiledExpression.getValue(context);
                     indexableFieldProcessor.process(documentEntry.getDocument(), value, searchableField);
                 }
@@ -114,7 +123,7 @@ public class ClassContextProcessor implements ContextProcessor {
     }
 
     @Override
-    public void process(JXPathContext context, DocumentEntry<?, ?> documentEntry) {
+    public void process(JXPathContext context, DocumentEntry<?> documentEntry) {
 
         for (final ContextProcessor contextProcessor : contextProcessors) {
             contextProcessor.process(context, documentEntry);

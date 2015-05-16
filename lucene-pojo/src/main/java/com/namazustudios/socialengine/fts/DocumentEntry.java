@@ -7,6 +7,8 @@ import org.apache.lucene.document.Document;
 import java.util.Objects;
 
 /**
+ * Represents an entry in the index for a specific type, represented by a {@link Document}.
+ *
  * Created by patricktwohig on 5/14/15.
  */
 public class DocumentEntry<DocumentT> {
@@ -16,18 +18,21 @@ public class DocumentEntry<DocumentT> {
     private final IndexableFieldExtractor.Provider provider;
 
     /**
-     * Creates a DocumentEntry from a {@link Document}.
+     * Creates a DocumentEntry from a {@link Document} and the {@link DefaultIndexableFieldExtractor}
+     * instance.
      *
-     * @param document
+     * @param document the document
      */
     public DocumentEntry(final Document document) {
         this(document, DefaultIndexableFieldExtractorProvider.getInstance());
     }
 
     /**
-     * Creates a new Document
-     * @param document
-     * @param provider
+     * Creates a new Document with a {@link Document} and a custom{@link IndexableFieldExtractor.Provider}
+     * instance.
+     *
+     * @param document the document
+     * @param provider the provider
      */
     public DocumentEntry(final Document document, final IndexableFieldExtractor.Provider provider) {
         this.document = document;

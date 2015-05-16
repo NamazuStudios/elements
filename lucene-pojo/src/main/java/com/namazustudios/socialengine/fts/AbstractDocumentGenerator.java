@@ -12,8 +12,17 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * The abstract implementation of the {@link DocumentGenerator}.  This can accept custom
- * instances of both {@link IndexableFieldExtractor.Provider} and {@link IndexableFieldProcessor.Provider}
- * to process the various encountered fields.
+ * instances of both {@link IndexableFieldExtractor.Provider} and
+ * {@link IndexableFieldProcessor.Provider} to process and extract the various encountered fields.
+ *
+ * This object is considered "heavy" in that one should exist per application.  This object
+ * caches instances of {@link ContextProcessor} the first time so that subsequent calls using the
+ * same model type will process without requiring reanalysis of the type.
+ *
+ * This object is thread safe, and uses an instance of {@link ReentrantReadWriteLock} to allow
+ * multiple threads to process documents, but only one type may be analyzed at a time.  For maximum
+ * performance, it is advised that types are analyzed as part of application bootstrapping.  Howeer,
+ * this is not mandatory.
  *
  * Created by patricktwohig on 5/15/15.
  */
@@ -23,7 +32,7 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
 
     private static final ContextProcessor EMPTY_CONTEXT_PROCESSOR = new ContextProcessor() {
         @Override
-        public void process(JXPathContext context, DocumentEntry<?,?> documentEntry) {}
+        public void process(JXPathContext context, DocumentEntry<?> documentEntry) {}
     };
 
     protected final IndexableFieldProcessor.Provider indexableFieldProcessorProvider;
@@ -102,7 +111,7 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
             contextProcessorMap.put(cls, new ContextProcessor() {
 
                 @Override
-                public void process(JXPathContext context, DocumentEntry<?,?> documentEntry) {
+                public void process(JXPathContext context, DocumentEntry<?> documentEntry) {
                     superclassContextProcessor.process(context, documentEntry);
                     classContextProcessor.process(context, documentEntry);
                 }
@@ -114,22 +123,22 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
     }
 
     @Override
-    public <DocumentT> DocumentEntry<? extends DocumentT, ?> generate(final DocumentT object) {
+    public <DocumentT> DocumentEntry<DocumentT> generate(final DocumentT object) {
         return process(object, new Document());
     }
 
     @Override
-    public <DocumentT> DocumentEntry<? extends DocumentT, ?> process(final DocumentT object, final Document document) {
+    public <DocumentT> DocumentEntry<DocumentT> process(final DocumentT object, final Document document) {
 
         final JXPathContext jxPathContext = JXPathContext.newContext(object);
-        final DocumentEntry generatorDocumentEntry = new DocumentEntry(document, indexableFieldExtractorProvider);
+        final DocumentEntry documentEntry = new DocumentEntry(document, indexableFieldExtractorProvider);
 
         final Class<?> cls = object.getClass();
         final ContextProcessor contextProcessor = getOrCreateContextProcessor(cls);
 
-        contextProcessor.process(jxPathContext, generatorDocumentEntry);
+        contextProcessor.process(jxPathContext, documentEntry);
 
-        return null;
+        return documentEntry;
 
     }
 
@@ -149,8 +158,7 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
             r.unlock();
         }
 
-        analyze(cls);
-        return getOrCreateContextProcessor(cls);
+        return analyze(cls);
 
     }
 
