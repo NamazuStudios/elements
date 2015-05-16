@@ -163,6 +163,26 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
     }
 
     @Override
+    public DocumentEntry<?> entry(final Document document) {
+        return new DocumentEntry<Object>(document, indexableFieldExtractorProvider);
+    }
+
+    @Override
+    public <DocumentT> DocumentEntry<DocumentT> entry(final Class<DocumentT> documentTClass, final Document document) {
+
+        final DocumentEntry<DocumentT> documentEntry = new DocumentEntry<>(document, indexableFieldExtractorProvider);
+        final Identity<DocumentT> documentTIdentity = documentEntry.getIdentifier(documentTClass);
+
+        if (!documentTIdentity.getDocumentType().isAssignableFrom(documentTClass)) {
+            throw new DocumentException("document type mismatch (" +
+                                        documentTClass + " and " + documentTIdentity +
+                                        ") are not compatible types.");
+        }
+
+        return documentEntry;
+    }
+
+    @Override
     public IndexableFieldProcessor.Provider getIndexableFieldProcessorProvider() {
         return indexableFieldProcessorProvider;
     }

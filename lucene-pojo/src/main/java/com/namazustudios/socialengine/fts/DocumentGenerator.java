@@ -43,6 +43,22 @@ public interface DocumentGenerator {
     <DocumentT> DocumentEntry<DocumentT> process(final DocumentT object, final Document document);
 
     /**
+     * Creates a new {@link DocumentEntry} from the given {@link Document}.
+     *
+     * @param document
+     * @return
+     */
+    DocumentEntry<?> entry(final Document document);
+
+    /**
+     * Creates a new {@link DocumentEntry} from the given {@link Document}.
+     *
+     * @param document
+     * @return
+     */
+    <DocumentT> DocumentEntry<DocumentT> entry(final Class<DocumentT> documentTClass, final Document document);
+
+    /**
      * Gets the {@link IndexableFieldExtractor.Provider} used to extra field data rom
      * {@link Document instances.}
      *

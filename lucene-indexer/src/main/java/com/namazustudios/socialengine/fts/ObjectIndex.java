@@ -85,4 +85,13 @@ public interface ObjectIndex {
      */
     <T> ObjectQuery<T> queryByExample(final  Class<T> type, T object);
 
+    /**
+     * Performs the given Query and returns the {@link QueryExecutor} object.
+     *
+     * @param query
+     * @param <T>
+     * @return
+     */
+    <T> QueryExecutor<T> perform(ObjectQuery<T> query);
+
 }

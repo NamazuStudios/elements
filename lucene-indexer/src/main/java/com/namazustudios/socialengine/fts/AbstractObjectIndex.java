@@ -1,11 +1,9 @@
 package com.namazustudios.socialengine.fts;
 
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 
-import javax.inject.Inject;
 import java.io.IOException;
 
 /**
@@ -18,17 +16,13 @@ public abstract class AbstractObjectIndex implements ObjectIndex {
 
     private final IndexWriter indexWriter;
 
-    private final IndexReader indexReader;
-
     private final IndexSearcher indexSearcher;
 
     public AbstractObjectIndex(DocumentGenerator documentGenerator,
                                IndexWriter indexWriter,
-                               IndexReader indexReader,
                                IndexSearcher indexSearcher) {
         this.documentGenerator = documentGenerator;
         this.indexWriter = indexWriter;
-        this.indexReader = indexReader;
         this.indexSearcher = indexSearcher;
     }
 
@@ -82,5 +76,45 @@ public abstract class AbstractObjectIndex implements ObjectIndex {
     public <T> ObjectQuery<T> queryByExample(Class<T> type, T object) {
         return new ExampleObjectQuery<>(type, documentGenerator.getIndexableFieldProcessorProvider(), object);
     }
+
+    @Override
+    public <T> QueryExecutor<T> perform(ObjectQuery<T> query) {
+
+        return new QueryExecutor<>(documentGenerator, indexSearcher, query);
+    }
+
+
+}
+
+
+class Test {
+
+    class ClassTHolder<ClassT> {
+
+        private final Class<ClassT> cls;
+
+        public ClassTHolder(Class<ClassT> cls) {
+            this.cls = cls;
+        }
+
+        public Class<ClassT> getCls() {
+            return cls;
+        }
+
+        public ClassT cast(Object o) {
+            return cls.cast(o);
+        }
+
+    }
+
+    public <T> T get(Class<T> cls, Object o) {
+        return cls.cast(o);
+    }
+
+    public <T> T get(ClassTHolder<T> holder, Object o) {
+        Class<T> cls = holder.getCls();
+        return get(cls, o);
+    }
+
 
 }

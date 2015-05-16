@@ -6,10 +6,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.*;
 
 /**
  * Wrapper around a Lucene {@link Query} for a specific type in the search index.  This class
@@ -116,4 +113,5 @@ public abstract class ObjectQuery<DocumentT> {
         }
 
     }
+
 }

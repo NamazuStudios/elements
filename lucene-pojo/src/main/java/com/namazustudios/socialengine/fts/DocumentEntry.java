@@ -56,8 +56,9 @@ public class DocumentEntry<DocumentT> {
      *
      * @throws DocumentException if there is a problem generating the document's identity
      */
+
     public Identity<DocumentT> getIdentifier(final Class<DocumentT> aClass) {
-        return new Identity<DocumentT>(aClass, document, provider);
+        return new Identity<>(aClass, document, provider);
     }
 
 }
