@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.Query;
 
 /**
  * Manages objects in a Lucene search index.
@@ -33,7 +34,7 @@ public interface ObjectIndex {
      * @return the a {@link DocumentEntry} instance
      *
      */
-    DocumentEntry index(Object model);
+    <T> DocumentEntry<T> index(T model);
 
     /**
      * Deletes any {@link Document}(s) associated with the given object.  This uses the annotations
@@ -46,15 +47,42 @@ public interface ObjectIndex {
     void delete(Object model);
 
     /**
-     * Returns a Query for specific types in the search index.  Executing this query
-     * will return all isntances of this type, including subclasses.
+     * Returns an @{link ObjectQuery} for specific types in the search index.  Executing this query
+     * will return all instances of this type, including subclasses.
      *
+     * @param type the type for which to query
+     * @return a query generated from this type
      *
-     * @param type the type to query for.
-     * @param identifier the identifier of the object to find
-     *
-     * @return the Query a query generated from this type
      */
-    ObjectQuery queryForType(final Class<?> type, Object identifier);
+    <T> ObjectQuery<T> queryForType(final Class<T> type);
+
+    /**
+     * Returns an @{link ObjectQuery} for a specific type and identifier in the search index.  Excuting
+     * this query qill return a single instance identified with the type.
+     *
+     * @param type the type for which to query
+     * @param identifier the identifier of the object
+     * @return a query generated from this type
+     */
+    <T> ObjectQuery<T> queryForIdentifier(final Class<T> type, Object identifier);
+
+    /**
+     * Returns an @{link ObjectQuery} for a specific type and identifier in the search index.  Excuting
+     * this query qill return a single instance identified with the type.
+     *
+     * @param type the type for which to query
+     * @param query Lucene {@link Query} to query for objects
+     * @return a query generated from this type
+     */
+    <T> ObjectQuery<T> queryForObjects(final Class<T> type, Query query);
+
+    /**
+     * Creates a query that will return the {@link Document} for the given object.
+     *
+     * @param type the type
+     * @param object
+     * @return
+     */
+    <T> ObjectQuery<T> queryByExample(final  Class<T> type, T object);
 
 }

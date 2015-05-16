@@ -29,7 +29,7 @@ public abstract class ObjectQuery<DocumentT> {
     private final IndexableFieldProcessor.Provider indexableFieldProcessorProvider;
 
     public ObjectQuery(final Class<DocumentT> documentType,
-                       IndexableFieldProcessor.Provider indexableFieldProcessorProvider) {
+                       final IndexableFieldProcessor.Provider indexableFieldProcessorProvider) {
 
         final SearchableDocument searchableDocument = documentType.getAnnotation(SearchableDocument.class);
 
@@ -72,6 +72,15 @@ public abstract class ObjectQuery<DocumentT> {
      */
     public abstract Query getQuery();
 
+    /**
+     * Uses the internal {@link IndexableFieldProcessor.Provider} to generate {@link TermQuery}s
+     * to add to the given {@link BooleanQuery}.  Each generated {@link TermQuery} is added
+     * with {@link BooleanClause.Occur#FILTER} semantics.
+     *
+     * @param booleanQuery the query to modify
+     * @param searchableField the searchable field annotation
+     * @param value the value for which to generate {@link Term}s
+     */
     protected void addTermsToQuery(final BooleanQuery booleanQuery,
                                  final SearchableField searchableField,
                                  final Object value) {

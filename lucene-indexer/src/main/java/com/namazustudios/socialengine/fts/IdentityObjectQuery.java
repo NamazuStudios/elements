@@ -14,11 +14,11 @@ import org.apache.lucene.search.TermQuery;
 /**
  * Created by patricktwohig on 5/15/15.
  */
-public class ObjectIdentityQuery<DocumentT> extends ObjectQuery<DocumentT> {
+public class IdentityObjectQuery<DocumentT> extends ObjectQuery<DocumentT> {
 
     private final Object identifier;
 
-    public ObjectIdentityQuery(Class<DocumentT> documentType,
+    public IdentityObjectQuery(Class<DocumentT> documentType,
                                IndexableFieldProcessor.Provider indexableFieldProcessorProvider,
                                Object identifier) {
         super(documentType, indexableFieldProcessorProvider);
@@ -33,12 +33,14 @@ public class ObjectIdentityQuery<DocumentT> extends ObjectQuery<DocumentT> {
 
         do {
 
-            final SearchableIdentity searchableIdentity = getDocumentType().getAnnotation(SearchableIdentity.class);
+            final SearchableIdentity searchableIdentity = cls.getAnnotation(SearchableIdentity.class);
 
             if (searchableIdentity != null) {
                 searchableField = searchableIdentity.value();
                 break;
             }
+
+            cls = cls.getSuperclass();
 
         } while (cls != null);
 
