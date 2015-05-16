@@ -4,9 +4,13 @@ import com.namazustudios.socialengine.fts.annotation.DefaultType;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.document.Field.Store;
+import org.apache.lucene.index.Term;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * The default implementation for {@link IndexableFieldProcessor}.  This will
@@ -38,98 +42,122 @@ public class DefaultIndexableFieldProcessor implements IndexableFieldProcessor<O
     private static final Logger LOG = LoggerFactory.getLogger(DefaultIndexableFieldProcessor.class);
 
     @Override
-    public void process(final Document document, final Object value, final FieldMetadata field) {
+    public void process(final Document document, final Object value, final FieldMetadata fieldMetadata) {
 
-        final Class<?> type = field.type();
+        final Class<?> type = fieldMetadata.type();
 
         if (!type.equals(DefaultType.class) && !type.isInstance(value)) {
-            throw new DocumentGenerationException(document, value, field, "type mismatch for " + field  + " got " + value);
+            throw new DocumentGenerationException(document, value, fieldMetadata, "type mismatch for " + fieldMetadata
+                    + " got " + value + " instead");
         }
 
+        for (final Field field : generateFields(value, fieldMetadata)) {
+            document.add(field);
+        }
+
+    }
+
+    private List<Field> generateFields(final Object value, final FieldMetadata fieldMetadata) {
+        final List<Field> fields = new ArrayList<Field>();
+        generateFields(value, fieldMetadata, fields);
+        return fields;
+    }
+
+    private void generateFields(final Object value,
+                                final FieldMetadata fieldMetadata,
+                                final List<Field> fields) {
+
         if (value instanceof Byte) {
-            document.add(newIntegerField((Byte) value, field));
+            fields.add(newIntegerField((Byte) value, fieldMetadata));
         } else if (value instanceof Character) {
-            document.add(newTextOrStringField((Character) value, field));
+            fields.add(newTextOrStringField((Character) value, fieldMetadata));
         } else if (value instanceof Short) {
-            document.add(newIntegerField((Short)value, field));
+            fields.add(newIntegerField((Short)value, fieldMetadata));
         } else if (value instanceof Integer) {
-            document.add(newIntegerField((Integer) value, field));
+            fields.add(newIntegerField((Integer) value, fieldMetadata));
         } else if (value instanceof Long) {
-            document.add(newLongField((Long) value, field));
+            fields.add(newLongField((Long) value, fieldMetadata));
         } else if (value instanceof Float) {
-            document.add(newFloatField((Float) value, field));
+            fields.add(newFloatField((Float) value, fieldMetadata));
         } else if (value instanceof Double) {
-            document.add(newDoubleField((Float)value, field));
+            fields.add(newDoubleField((Float)value, fieldMetadata));
         } else if ((value instanceof byte[])) {
 
             // Added inside here to squelch log warning because byte fields
             // are store-only and not indexed.
 
-            if (field.store().equals(Field.Store.YES)) {
-                document.add(newStoredField((byte[])value, field));
+            if (fieldMetadata.store().equals(Field.Store.YES)) {
+                fields.add(newStoredField((byte[])value, fieldMetadata));
             }
 
         } else if (value instanceof char[]) {
-            document.add(newTextOrStringField(new String((char[])value), field));
+            fields.add(newTextOrStringField(new String((char[])value), fieldMetadata));
         } else if (value instanceof CharSequence) {
-            document.add(newTextOrStringField((CharSequence)value, field));
+            fields.add(newTextOrStringField((CharSequence)value, fieldMetadata));
         } else if (value instanceof Iterable<?>) {
             for (final Object object : ((Iterable<?>)value)) {
-                process(document, object, field);
+                generateFields(object, fieldMetadata, fields);
             }
         } else if (value instanceof Class<?>) {
-
+            final Class<?> cls = (Class<?>)value;
+            fields.add(newStringField(cls.getName(), fieldMetadata));
         } else if (value != null) {
-            LOG.warn("Unable to process field " + field +  "(" + value + ")");
+            LOG.warn("Unable to process field " + fieldMetadata +  "(" + value + ")");
         }
 
     }
 
-    private IndexableField newStoredField(final byte[] value, final FieldMetadata field) {
-        final Field out = new StoredField(field.name(), value);
-        applyRemainingProperties(out, field);
+    private Field newStoredField(final byte[] value, final FieldMetadata fieldMetadata) {
+        final Field out = new StoredField(fieldMetadata.name(), value);
+        applyRemainingProperties(out, fieldMetadata);
         return out;
     }
 
-    private IndexableField newIntegerField(final Number value, final FieldMetadata field) {
-        final Field out = new IntField(field.name(), value.intValue(), field.store());
-        applyRemainingProperties(out, field);
+    private Field newIntegerField(final Number value, final FieldMetadata fieldMetadata) {
+        final Field out = new IntField(fieldMetadata.name(), value.intValue(), fieldMetadata.store());
+        applyRemainingProperties(out, fieldMetadata);
         return out;
     }
 
-    private IndexableField newLongField(final Number value, final FieldMetadata field) {
-        final Field out = new LongField(field.name(), value.longValue(), field.store());
-        applyRemainingProperties(out, field);
+    private Field newLongField(final Number value, final FieldMetadata fieldMetadata) {
+        final Field out = new LongField(fieldMetadata.name(), value.longValue(), fieldMetadata.store());
+        applyRemainingProperties(out, fieldMetadata);
         return out;
     }
 
-    private IndexableField newFloatField(final Number value, final FieldMetadata field) {
-        final Field out = new FloatField(field.name(), value.floatValue(), field.store());
-        applyRemainingProperties(out, field);
+    private Field newFloatField(final Number value, final FieldMetadata fieldMetadata) {
+        final Field out = new FloatField(fieldMetadata.name(), value.floatValue(), fieldMetadata.store());
+        applyRemainingProperties(out, fieldMetadata);
         return out;
     }
 
-    private IndexableField newDoubleField(final Number value, final FieldMetadata field) {
-        final Field out = new DoubleField(field.name(), value.doubleValue(), field.store());
-        applyRemainingProperties(out, field);
+    private Field newDoubleField(final Number value, final FieldMetadata fieldMetadata) {
+        final Field out = new DoubleField(fieldMetadata.name(), value.doubleValue(), fieldMetadata.store());
+        applyRemainingProperties(out, fieldMetadata);
         return out;
     }
 
-    private IndexableField newTextOrStringField(final Character value, final FieldMetadata field) {
-        return newTextOrStringField(new String(new char[]{value.charValue()}), field);
+    private Field newStringField(final String value, final FieldMetadata fieldMetadata) {
+        final Field out = new StringField(fieldMetadata.name(), value, fieldMetadata.store());
+        applyRemainingProperties(out, fieldMetadata);
+        return out;
     }
 
-    private IndexableField newTextOrStringField(final CharSequence value, final FieldMetadata field) {
+    private Field newTextOrStringField(final Character value, final FieldMetadata fieldMetadata) {
+        return newTextOrStringField(new String(new char[]{value.charValue()}), fieldMetadata);
+    }
+
+    private Field newTextOrStringField(final CharSequence value, final FieldMetadata fieldMetadata) {
 
         final Field out;
 
-        if (field.text()) {
-            out = new TextField(field.name(), value.toString(), field.store());
+        if (fieldMetadata.text()) {
+            out = new TextField(fieldMetadata.name(), value.toString(), fieldMetadata.store());
         } else {
-            out = new StringField(field.name(), value.toString(), field.store());
+            out = new StringField(fieldMetadata.name(), value.toString(), fieldMetadata.store());
         }
 
-        applyRemainingProperties(out, field);
+        applyRemainingProperties(out, fieldMetadata);
         return out;
     }
 

@@ -42,4 +42,20 @@ public interface DocumentGenerator {
      */
     <DocumentT> DocumentEntry<DocumentT> process(final DocumentT object, final Document document);
 
+    /**
+     * Gets the {@link IndexableFieldExtractor.Provider} used to extra field data rom
+     * {@link Document instances.}
+     *
+     * @return
+     */
+    IndexableFieldProcessor.Provider getIndexableFieldProcessorProvider();
+
+    /**
+     * Gets the {@link IndexableFieldExtractor.Provider} used to extra field data rom
+     * {@link Document instances.}
+     *
+     * @return the extractor
+     */
+    IndexableFieldExtractor.Provider getIndexableFieldExtractorProvider();
+
 }

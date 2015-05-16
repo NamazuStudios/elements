@@ -162,4 +162,14 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
 
     }
 
+    @Override
+    public IndexableFieldProcessor.Provider getIndexableFieldProcessorProvider() {
+        return indexableFieldProcessorProvider;
+    }
+
+    @Override
+    public IndexableFieldExtractor.Provider getIndexableFieldExtractorProvider() {
+        return indexableFieldExtractorProvider;
+    }
+
 }

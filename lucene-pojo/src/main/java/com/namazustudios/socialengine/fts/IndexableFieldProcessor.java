@@ -3,7 +3,10 @@ package com.namazustudios.socialengine.fts;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
+
+import java.util.Collection;
 
 /**
  * Objects implementing this interface are used to generate any number of {@link IndexableField}
