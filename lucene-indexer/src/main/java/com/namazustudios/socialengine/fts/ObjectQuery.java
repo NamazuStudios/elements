@@ -1,7 +1,13 @@
 package com.namazustudios.socialengine.fts;
 
 import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
+import com.namazustudios.socialengine.fts.annotation.SearchableField;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
@@ -16,11 +22,14 @@ import org.apache.lucene.search.TermQuery;
  */
 public abstract class ObjectQuery<DocumentT> {
 
-    private final Query query;
-
     private final Class<DocumentT> documentType;
 
-    public ObjectQuery(final Class<DocumentT> documentType) {
+    private final SearchableDocument searchableDocument;
+
+    private final IndexableFieldProcessor.Provider indexableFieldProcessorProvider;
+
+    public ObjectQuery(final Class<DocumentT> documentType,
+                       IndexableFieldProcessor.Provider indexableFieldProcessorProvider) {
 
         final SearchableDocument searchableDocument = documentType.getAnnotation(SearchableDocument.class);
 
@@ -28,10 +37,9 @@ public abstract class ObjectQuery<DocumentT> {
             throw new IllegalArgumentException( documentType + " does not have annotation " + SearchableDocument.class);
         }
 
-        final Term term = new Term(searchableDocument.type().name(), documentType.getName());
-
-        this.query = new TermQuery(term);
         this.documentType = documentType;
+        this.searchableDocument = searchableDocument;
+        this.indexableFieldProcessorProvider = indexableFieldProcessorProvider;
 
     }
 
@@ -48,10 +56,13 @@ public abstract class ObjectQuery<DocumentT> {
      * The raw Query object that will find all objects of the
      * particuular type.
      *
-     * @return the raw query, untyped.
+     * @return the raw query which will fetch the objects by type.
      */
     public Query getTypeQuery() {
-        return query;
+        final BooleanQuery booleanQuery = new BooleanQuery();
+        final SearchableField searchableField = searchableDocument.type();
+        addTermsToQuery(booleanQuery, searchableField, getDocumentType());
+        return booleanQuery;
     }
 
     /**
@@ -61,4 +72,39 @@ public abstract class ObjectQuery<DocumentT> {
      */
     public abstract Query getQuery();
 
+    protected void addTermsToQuery(final BooleanQuery booleanQuery,
+                                 final SearchableField searchableField,
+                                 final Object value) {
+
+        final FieldMetadata fieldMetadata = new AnnotationFieldMetadata(searchableField) {
+
+            @Override
+            public Field.Store store() {
+                return Field.Store.YES;
+            }
+
+        };
+
+        for (final Class<? extends IndexableFieldProcessor> aClass : searchableField.processors()) {
+
+            final IndexableFieldProcessor<Object> indexableFieldProcessor =
+                    indexableFieldProcessorProvider.get(fieldMetadata, aClass);
+
+            final Document document = new Document();
+            indexableFieldProcessor.process(document, value, fieldMetadata);
+
+            for (final IndexableField indexableField : document.getFields()) {
+
+                if (indexableField.stringValue() == null) {
+                    continue;
+                }
+
+                final Term term = new Term(fieldMetadata.name(), indexableField.stringValue());
+                booleanQuery.add(new TermQuery(term), BooleanClause.Occur.FILTER);
+
+            }
+
+        }
+
+    }
 }

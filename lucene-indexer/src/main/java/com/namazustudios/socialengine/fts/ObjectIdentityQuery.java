@@ -18,14 +18,11 @@ public class ObjectIdentityQuery<DocumentT> extends ObjectQuery<DocumentT> {
 
     private final Object identifier;
 
-    private final IndexableFieldProcessor.Provider indexableFieldProcessorProvider;
-
     public ObjectIdentityQuery(Class<DocumentT> documentType,
-                               Object identifier,
-                               IndexableFieldProcessor.Provider indexableFieldProcessorProvider) {
-        super(documentType);
+                               IndexableFieldProcessor.Provider indexableFieldProcessorProvider,
+                               Object identifier) {
+        super(documentType, indexableFieldProcessorProvider);
         this.identifier = identifier;
-        this.indexableFieldProcessorProvider = indexableFieldProcessorProvider;
     }
 
     @Override
@@ -62,39 +59,4 @@ public class ObjectIdentityQuery<DocumentT> extends ObjectQuery<DocumentT> {
 
     }
 
-    private void addTermsToQuery(final BooleanQuery booleanQuery,
-                                 final SearchableField searchableField,
-                                 final Object identifier) {
-
-        final FieldMetadata fieldMetadata = new AnnotationFieldMetadata(searchableField) {
-
-            @Override
-            public Field.Store store() {
-                return Field.Store.YES;
-            }
-
-        };
-
-        for (final Class<? extends IndexableFieldProcessor> aClass : searchableField.processors()) {
-
-            final IndexableFieldProcessor<Object> indexableFieldProcessor =
-                    indexableFieldProcessorProvider.get(fieldMetadata, aClass);
-
-            final Document document = new Document();
-            indexableFieldProcessor.process(document, identifier, fieldMetadata);
-
-            for (final IndexableField indexableField : document.getFields()) {
-
-                if (indexableField.stringValue() == null) {
-                    continue;
-                }
-
-                final Term term = new Term(fieldMetadata.name(), indexableField.stringValue());
-                booleanQuery.add(new TermQuery(term), BooleanClause.Occur.FILTER);
-
-            }
-
-        }
-
-    }
 }

@@ -47,15 +47,14 @@ public interface ObjectIndex {
 
     /**
      * Returns a Query for specific types in the search index.  Executing this query
-     * will return all instanhes of this type, including subclasses.
+     * will return all isntances of this type, including subclasses.
      *
      *
      * @param type the type to query for.
+     * @param identifier the identifier of the object to find
      *
      * @return the Query a query generated from this type
      */
-    ObjectQuery queryForType(final Class<?> type);
-
-    DocumentGenerator getDocumentGenerator();
+    ObjectQuery queryForType(final Class<?> type, Object identifier);
 
 }
