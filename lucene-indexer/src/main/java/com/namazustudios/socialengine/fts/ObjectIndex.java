@@ -34,17 +34,17 @@ public interface ObjectIndex {
      * @return the a {@link DocumentEntry} instance
      *
      */
-    <T> DocumentEntry<T> index(T model);
+    <T> DocumentEntry<T> index(Class<T> type, T model);
 
     /**
      * Deletes any {@link Document}(s) associated with the given object.  This uses the annotations
-     * processed by the {@link #index(Object)} method to find the documents to delete.
+     * processed by the {@link #index(Class, Object)} method to find the documents to delete.
      *
      *
      *
      * @param model the model
      */
-    void delete(Object model);
+    <T> void delete(Class<T> type, T model);
 
     /**
      * Returns an @{link ObjectQuery} for specific types in the search index.  Executing this query

@@ -6,6 +6,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 
 import javax.inject.Inject;
+import java.io.IOException;
 
 /**
  *
@@ -32,13 +33,33 @@ public abstract class AbstractObjectIndex implements ObjectIndex {
     }
 
     @Override
-    public <T> DocumentEntry<T> index(T model) {
+    public <T> DocumentEntry<T> index(Class<T> type, T model) {
+
         final DocumentEntry<T> documentEntry = documentGenerator.generate(model);
-        return null;
+        final ObjectQuery<T> queryByExample = queryByExample(type, model);
+
+        try {
+            indexWriter.deleteDocuments(queryByExample.getQuery());
+            indexWriter.addDocument(documentEntry.getDocument());
+            indexWriter.commit();
+            return documentEntry;
+        } catch (IOException ex) {
+            throw new SearchException(ex);
+        }
+
     }
 
     @Override
-    public void delete(Object model) {
+    public <T> void delete(Class<T> type, T model) {
+
+        final ObjectQuery<?> queryByExample = queryByExample(type, model);
+
+        try {
+            indexWriter.deleteDocuments(queryByExample.getQuery());
+            indexWriter.commit();
+        } catch (IOException ex) {
+            throw new SearchException(ex);
+        }
 
     }
 
