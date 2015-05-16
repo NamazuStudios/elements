@@ -1,34 +1,40 @@
 package com.namazustudios.socialengine.fts;
 
+import com.sun.org.apache.xpath.internal.operations.Mult;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
+ * A {@link SearchResult} implementation that will fetch all results returned
+ * from the a {@link TopDocs} object.
+ *
  * Created by patricktwohig on 5/16/15.
  */
-public class TopDocsSearchResult<DocumentT> implements SearchResult<DocumentT> {
+public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<DocumentT> {
 
-    private final ObjectQuery objectQuery;
+    private static final Logger LOG = LoggerFactory.getLogger(TopDocsSearchResult.class);
 
     private final TopDocs topDocs;
 
-    private final IndexReader indexReader;
-
-    private final DocumentGenerator documentGenerator;
+    private final IndexSearcher indexSearcher;
 
     public TopDocsSearchResult(ObjectQuery objectQuery,
                                TopDocs topDocs,
-                               IndexReader indexReader,
+                               IndexSearcher indexSearcher,
                                DocumentGenerator documentGenerator) {
-        this.objectQuery = objectQuery;
+        super(objectQuery, documentGenerator, indexSearcher.getIndexReader());
         this.topDocs = topDocs;
-        this.indexReader = indexReader;
-        this.documentGenerator = documentGenerator;
+        this.indexSearcher = indexSearcher;
     }
 
     @Override
@@ -52,18 +58,15 @@ public class TopDocsSearchResult<DocumentT> implements SearchResult<DocumentT> {
             @Override
             public DocumentEntry<DocumentT> next() {
 
-                final ScoreDoc scoreDoc = scoreDocs[pos++];
-                final Class<DocumentT> cls = objectQuery.getDocumentType();
-
-                final Document document;
+                final ScoreDoc scoreDoc;
 
                 try {
-                    document = indexReader.document(scoreDoc.doc);
-                } catch (IOException ex) {
-                    throw new SearchException(ex);
+                    scoreDoc = scoreDocs[pos++];
+                } catch (ArrayIndexOutOfBoundsException ex) {
+                    throw new NoSuchElementException();
                 }
 
-                return documentGenerator.entry(cls, document);
+                return getEntry(scoreDoc.doc);
 
             }
 
@@ -73,6 +76,61 @@ public class TopDocsSearchResult<DocumentT> implements SearchResult<DocumentT> {
             }
 
         };
+    }
+
+    @Override
+    public DocumentEntry<DocumentT> singleResult() {
+
+        final ScoreDoc[] scoreDocs = topDocs.scoreDocs;
+
+        if (scoreDocs.length == 1) {
+            return getEntry(scoreDocs[0].doc);
+        } else if (scoreDocs.length == 0) {
+            throw new NoResultException();
+        } else {
+            throw new MultipleResultException();
+        }
+
+    }
+
+    /**
+     * Performs a subsequent query to fetch documents after this query.
+     *
+     * @param offset the offset, in this result set, to use
+     * @param count the number of documents to find.
+     * @return a new instance with the new results
+     */
+    public TopDocsSearchResult<DocumentT> after(int offset, int count) {
+
+        // Corrects the offset value, ensures it's zero or more.
+
+        if (offset >= topDocs.scoreDocs.length) {
+            LOG.warn("Offset exceeds available documents " + offset);
+            offset = Math.max(topDocs.scoreDocs.length - 1, 0);
+        }
+
+        if (offset < 0 || count < 0) {
+            throw new IllegalArgumentException("offset and count must be positive ");
+        }
+
+        final TopDocs newTopDocs;
+        final ScoreDoc scoreDoc = topDocs.scoreDocs[offset];
+
+        try {
+            newTopDocs = indexSearcher.searchAfter(scoreDoc, objectQuery.getQuery(), count);
+        } catch (IOException ex) {
+            throw new SearchException(ex);
+        }
+
+        return new TopDocsSearchResult<>(objectQuery, newTopDocs, indexSearcher, documentGenerator);
+
+    }
+
+    @Override
+    public String toString() {
+        return "TopDocsSearchResult{" +
+                "objectQuery=" + objectQuery +
+                '}';
     }
 
 }

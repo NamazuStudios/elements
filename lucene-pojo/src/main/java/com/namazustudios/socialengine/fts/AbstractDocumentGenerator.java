@@ -131,7 +131,7 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
     public <DocumentT> DocumentEntry<DocumentT> process(final DocumentT object, final Document document) {
 
         final JXPathContext jxPathContext = JXPathContext.newContext(object);
-        final DocumentEntry documentEntry = new DocumentEntry(document, indexableFieldExtractorProvider);
+        final DocumentEntry documentEntry = entry(document);
 
         final Class<?> cls = object.getClass();
         final ContextProcessor contextProcessor = getOrCreateContextProcessor(cls);

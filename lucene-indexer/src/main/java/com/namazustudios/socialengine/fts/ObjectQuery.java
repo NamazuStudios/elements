@@ -114,4 +114,12 @@ public abstract class ObjectQuery<DocumentT> {
 
     }
 
+    @Override
+    public String toString() {
+        return "ObjectQuery{" +
+                "documentType=" + documentType +
+                ", searchableDocument=" + searchableDocument +
+                '}';
+    }
+
 }

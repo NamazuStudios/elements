@@ -4,6 +4,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.*;
 
+import javax.print.Doc;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -35,7 +36,7 @@ public class QueryExecutor<DocumentT> {
      * @param count the number of documents to return (per page)
      * @return
      */
-    public SearchResult<DocumentEntry<DocumentT>> withTopScores(int count) {
+    public TopDocsSearchResult<DocumentEntry<DocumentT>> withTopScores(int count) {
 
         final TopDocs topDocs;
 
@@ -45,11 +46,14 @@ public class QueryExecutor<DocumentT> {
             throw new SearchException(ex);
         }
 
-        return new TopDocsSearchResult<>(objectQuery, topDocs, indexSearcher.getIndexReader(),documentGenerator);
+        return new TopDocsSearchResult<>(objectQuery, topDocs, indexSearcher, documentGenerator);
 
     }
 
-
-
-
+    @Override
+    public String toString() {
+        return "QueryExecutor{" +
+                "objectQuery=" + objectQuery +
+                '}';
+    }
 }

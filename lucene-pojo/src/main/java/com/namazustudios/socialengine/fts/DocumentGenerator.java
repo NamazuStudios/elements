@@ -43,7 +43,8 @@ public interface DocumentGenerator {
     <DocumentT> DocumentEntry<DocumentT> process(final DocumentT object, final Document document);
 
     /**
-     * Creates a new {@link DocumentEntry} from the given {@link Document}.
+     * Creates a new {@link DocumentEntry} from the given {@link Document}.  This returns
+     * an empty entry with no
      *
      * @param document
      * @return
