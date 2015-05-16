@@ -29,8 +29,6 @@ import org.slf4j.LoggerFactory;
  *  <li>{@link Class} - Stores the FQN name as a string</li>
  * </ul>
  *
- * When processing a field for indexing, this will ignore the value of {@link FieldMetadata#type()} and
- * write it according to the object's type.
  *
  * Anything else is logged as a warning.
  *
@@ -42,23 +40,31 @@ public class DefaultIndexableFieldProcessor implements IndexableFieldProcessor<O
     @Override
     public void process(final Document document, final Object value, final FieldMetadata field) {
 
+        final Class<?> type = field.type();
+
+        if (!type.equals(DefaultType.class) && !type.isInstance(value)) {
+            throw new DocumentGenerationException(document, value, field, "type mismatch for " + field  + " got " + value);
+        }
+
         if (value instanceof Byte) {
             document.add(newIntegerField((Byte) value, field));
         } else if (value instanceof Character) {
-            document.add(newTextOrStringField((Character)value, field));
+            document.add(newTextOrStringField((Character) value, field));
         } else if (value instanceof Short) {
             document.add(newIntegerField((Short)value, field));
         } else if (value instanceof Integer) {
-            document.add(newIntegerField((Integer)value, field));
+            document.add(newIntegerField((Integer) value, field));
         } else if (value instanceof Long) {
             document.add(newLongField((Long) value, field));
         } else if (value instanceof Float) {
-            document.add(newFloatField((Float)value, field));
+            document.add(newFloatField((Float) value, field));
         } else if (value instanceof Double) {
             document.add(newDoubleField((Float)value, field));
         } else if ((value instanceof byte[])) {
 
-            // Added inside here to squelch log warning
+            // Added inside here to squelch log warning because byte fields
+            // are store-only and not indexed.
+
             if (field.store().equals(Field.Store.YES)) {
                 document.add(newStoredField((byte[])value, field));
             }
@@ -74,7 +80,7 @@ public class DefaultIndexableFieldProcessor implements IndexableFieldProcessor<O
         } else if (value instanceof Class<?>) {
 
         } else if (value != null) {
-            LOG.warn("Unable to fields of type " + value.getClass() +  "(" + value + ")");
+            LOG.warn("Unable to process field " + field +  "(" + value + ")");
         }
 
     }
