@@ -9,7 +9,7 @@ import java.util.Objects;
 /**
  * Created by patricktwohig on 5/14/15.
  */
-public class DocumentEntry<DocumentT, IdentityT> {
+public class DocumentEntry<DocumentT> {
 
     private final Document document;
 
