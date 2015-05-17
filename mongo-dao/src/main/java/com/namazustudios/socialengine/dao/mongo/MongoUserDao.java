@@ -134,7 +134,9 @@ public class MongoUserDao implements UserDao {
             return new Pagination<>();
         }
 
-        return paginationFromQuery(userQuery, offset, count);
+        final Pagination<User> users = paginationFromQuery(userQuery, offset, count);
+        users.setApproximation(true);
+        return users;
 
     }
 
