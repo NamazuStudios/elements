@@ -3,11 +3,11 @@ package com.namazustudios.socialengine.dao.mongo.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.dao.mongo.Atomic;
-import com.namazustudios.socialengine.dao.mongo.provider.*;
+import com.namazustudios.socialengine.dao.mongo.provider.MongoDirectoryProvider;
+import com.namazustudios.socialengine.dao.mongo.provider.MongoObjectIndexProvider;
+import com.namazustudios.socialengine.dao.mongo.provider.MongoStandardAnalyzerProvider;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.util.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,13 +28,6 @@ import java.util.Properties;
 public class MongoSearchModule extends AbstractModule {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoSearchModule.class);
-
-//    public static final String SEARCH_INDEX_COLLECTION = "com.namazustudios.socialengine.mongo.search.index.collection";
-//
-//    public static final String DIRECTORY_KEY_NAME = "com.namazustudios.socialengine.mongo.search.index.directory.key.name";
-//
-//    public static final String DIRECTORY_ENTRY_NAME = "com.namazustudios.socialengine.mongo.search.index.directory.entry.name";
-
 
     @Override
     protected void configure() {
