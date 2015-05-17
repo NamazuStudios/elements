@@ -45,4 +45,12 @@ public class BasicDocumentEntry<DocumentT> implements DocumentEntry<DocumentT> {
         return new Identity<>(aClass, document, provider);
     }
 
+    @Override
+    public String toString() {
+        return "BasicDocumentEntry{" +
+                "document=" + document +
+                ", provider=" + provider +
+                '}';
+    }
+
 }

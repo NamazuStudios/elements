@@ -119,4 +119,15 @@ public class Identity<DocumentT> {
 
     }
 
+    @Override
+    public String toString() {
+        return "Identity{" +
+                "documentType=" + documentType +
+                ", document=" + document +
+                ", provider=" + provider +
+                ", searchableDocument=" + searchableDocument +
+                ", searchableIdentity=" + searchableIdentity +
+                '}';
+    }
+
 }

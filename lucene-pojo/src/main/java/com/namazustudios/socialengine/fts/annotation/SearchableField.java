@@ -28,13 +28,6 @@ public @interface SearchableField {
     float DEFAULT_BOOST = 1.0f;
 
     /**
-     * A JXPath Query specifying the path to the field.
-     *
-     * @return the query path
-     */
-    String path();
-
-    /**
      * The name of the field.
      *
      * Corresponds to {@link IndexableField#name()}
@@ -44,9 +37,14 @@ public @interface SearchableField {
     String name();
 
     /**
-     * Used as a hint to designate the Java type of the field.  The specified
-     * {@link #processor} may ignore this in favor of its own scheme, but it may
-     * be necessary in others.
+     * A JXPath Query specifying the path to the field.
+     *
+     * @return the query path
+     */
+    String path();
+
+    /**
+     * Used as a hint to designate the Java type of the field.
      *
      * @return
      */
@@ -79,17 +77,17 @@ public @interface SearchableField {
 
     /**
      * A hint to the specified {@link IndexableFieldProcessor} as to whether
-     * or not to treat {@link CharSequence} types as text or individual strings.  By default,
-     * this is false.
+     * or not to treat the value as text or individual strings.  By default, this
+     * is false.
      *
-     * For a more comprehensive explaination of what this means see {@link org.apache.lucene.document.TextField} and
-     * {@link org.apache.lucene.document.StringField}.
+     * For a more comprehensive explaination of what this means see
+     * {@link org.apache.lucene.document.TextField} and {@link org.apache.lucene.document.StringField}.
      *
-     * For non-textual types, this is simply ignored.
+     * This may or may not be ignored based on the field type.
      *
      * @return true if to prefer text, false to prefer string
      */
-    boolean text() default true;
+    boolean text() default false;
 
     /**
      * A hint as to whether or not the field should be stored.  For morre informatoin, see

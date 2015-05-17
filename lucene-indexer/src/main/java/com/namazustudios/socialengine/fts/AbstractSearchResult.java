@@ -4,6 +4,8 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * Pools some of the common functionality for all instances of {@link SearchResult}.
@@ -39,6 +41,103 @@ public abstract class AbstractSearchResult<DocumentT, EntryT extends DocumentEnt
 
         return documentGenerator.entry(cls, document);
 
+    }
+
+    @Override
+    public SearchResult<DocumentT, EntryT> prune(final int count) {
+
+        if (count < 0) {
+            throw new IllegalArgumentException("count must be positive");
+        }
+
+        final int pruned = Math.min(count, available());
+
+        return new SearchResult<DocumentT, EntryT>() {
+
+            @Override
+            public int total() {
+                return AbstractSearchResult.this.total();
+            }
+
+            @Override
+            public int available() {
+                return pruned;
+            }
+
+            @Override
+            public DocumentEntry<DocumentT> singleResult() {
+
+                final Iterator<EntryT> itr = iterator();
+
+                if (!itr.hasNext()) {
+                    throw new NoResultException();
+                }
+
+                final EntryT out = itr.next();
+
+                if (itr.hasNext()) {
+                    throw new MultipleResultException();
+                }
+
+                return out;
+
+            }
+
+            @Override
+            public SearchResult<DocumentT, EntryT> prune(int count) {
+                return AbstractSearchResult.this.prune(count);
+            }
+
+            @Override
+            public Iterator<EntryT> iterator() {
+                return new Iterator<EntryT>() {
+
+                    int count = 0;
+
+                    final Iterator<EntryT> wrapped = AbstractSearchResult.this.iterator();
+
+                    @Override
+                    public boolean hasNext() {
+                        return count < pruned;
+                    }
+
+                    @Override
+                    public EntryT next() {
+
+                        if (count++ >= pruned) {
+                            throw new NoSuchElementException();
+                        }
+
+                        return wrapped.next();
+
+                    }
+
+                    @Override
+                    public void remove() {
+                        wrapped.remove();
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "delegates to " + wrapped;
+                    }
+
+                };
+            }
+
+            @Override
+            public String toString() {
+                return "delegates to " + AbstractSearchResult.this;
+            }
+
+        };
+    }
+
+    @Override
+    public String toString() {
+        return "TopDocsSearchResult{" +
+                "objectQuery=" + objectQuery +
+                '}';
     }
 
 }

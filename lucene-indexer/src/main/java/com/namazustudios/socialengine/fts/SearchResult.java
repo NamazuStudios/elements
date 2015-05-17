@@ -14,6 +14,9 @@ public interface SearchResult<DocumentT, EntryT extends DocumentEntry<DocumentT>
      * estimate or an approximation of the actual number of documents
      * the query will return.
      *
+     * This is not the {@link #available()} number of results, but rather
+     * the total number of documents matching the query for the whole index.
+     *
      * <em>Caveat: </em>Logic should not rely on the value of this method, as it can
      * be an estimate of total number.
      *
@@ -22,9 +25,18 @@ public interface SearchResult<DocumentT, EntryT extends DocumentEntry<DocumentT>
     int total();
 
     /**
+     * Returns the number of results available to this result.  This is not
+     * the {@link #total()} number of results, but the number available
+     * from the current result.
+     *
+     * @return the number of results availble
+     */
+    int available();
+
+    /**
      * Gets a single result if only interested in a single result.  This will
-     * never return null.  If there is not a single result, this will throw
-     * an exception.
+     * never return null.  If there is more than one result or if there are
+     * no results this will throw an exception.  This will never return null.
      *
      * @return the document, not null
      *
@@ -33,5 +45,15 @@ public interface SearchResult<DocumentT, EntryT extends DocumentEntry<DocumentT>
      *
      */
     DocumentEntry<DocumentT> singleResult();
+
+    /**
+     * Prunes this search result to the given count.  This will return a new
+     * instance whose result set has been pruned to no greater than the given
+     * count.
+     *
+     * @param count
+     * @return
+     */
+    SearchResult<DocumentT, EntryT> prune(int count);
 
 }

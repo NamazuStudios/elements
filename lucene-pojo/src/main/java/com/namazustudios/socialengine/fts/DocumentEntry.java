@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.fts;
 import org.apache.lucene.document.Document;
 
 /**
+ *
+ *
  * Created by patricktwohig on 5/16/15.
  */
 public interface DocumentEntry<DocumentT> {

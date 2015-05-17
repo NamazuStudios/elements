@@ -58,7 +58,7 @@ public class DefaultIndexableFieldProcessor implements IndexableFieldProcessor<O
     }
 
     private List<Field> generateFields(final Object value, final FieldMetadata fieldMetadata) {
-        final List<Field> fields = new ArrayList<Field>();
+        final List<Field> fields = new ArrayList<>();
         generateFields(value, fieldMetadata, fields);
         return fields;
     }
@@ -81,15 +81,8 @@ public class DefaultIndexableFieldProcessor implements IndexableFieldProcessor<O
             fields.add(newFloatField((Float) value, fieldMetadata));
         } else if (value instanceof Double) {
             fields.add(newDoubleField((Float)value, fieldMetadata));
-        } else if ((value instanceof byte[])) {
-
-            // Added inside here to squelch log warning because byte fields
-            // are store-only and not indexed.
-
-            if (fieldMetadata.store().equals(Field.Store.YES)) {
-                fields.add(newStoredField((byte[])value, fieldMetadata));
-            }
-
+        } else if ((value instanceof byte[]) && fieldMetadata.store().equals(Field.Store.YES)) {
+            fields.add(newStoredField((byte[])value, fieldMetadata));
         } else if (value instanceof char[]) {
             fields.add(newTextOrStringField(new String((char[])value), fieldMetadata));
         } else if (value instanceof CharSequence) {
@@ -164,7 +157,7 @@ public class DefaultIndexableFieldProcessor implements IndexableFieldProcessor<O
     private void applyRemainingProperties(final Field field, final FieldMetadata searchableField) {
 
         if (searchableField.boost() != SearchableField.DEFAULT_BOOST) {
-            // setBoost can result in an IllegalARgumentException, so this prevents that from
+            // setBoost can result in an IllegalArgumentException, so this prevents that from
             // happening if the boost is left as the default value.
             field.setBoost(searchableField.boost());
         }

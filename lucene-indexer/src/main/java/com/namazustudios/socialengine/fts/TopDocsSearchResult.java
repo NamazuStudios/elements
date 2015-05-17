@@ -1,8 +1,6 @@
 package com.namazustudios.socialengine.fts;
 
-import com.sun.org.apache.xpath.internal.operations.Mult;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
@@ -35,6 +33,11 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
         super(objectQuery, documentGenerator, indexSearcher.getIndexReader());
         this.topDocs = topDocs;
         this.indexSearcher = indexSearcher;
+    }
+
+    @Override
+    public int available() {
+        return topDocs.scoreDocs.length;
     }
 
     @Override
@@ -75,6 +78,14 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
                 throw new UnsupportedOperationException();
             }
 
+            @Override
+            public String toString() {
+                return TopDocsSearchResult.class.getName() + "{" +
+                        "scoreDocs=" + Arrays.toString(scoreDocs) +
+                        ", objectQuery " + objectQuery +
+                        '}';
+            }
+
         };
     }
 
@@ -83,9 +94,9 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
 
         final ScoreDoc[] scoreDocs = topDocs.scoreDocs;
 
-        if (scoreDocs.length == 1) {
+        if (available() == 1) {
             return getEntry(scoreDocs[0].doc);
-        } else if (scoreDocs.length == 0) {
+        } else if (available() == 0) {
             throw new NoResultException();
         } else {
             throw new MultipleResultException();
@@ -96,6 +107,7 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
     protected ScoredDocumentEntry<DocumentT> getEntry(final ScoreDoc scoreDoc) {
         final DocumentEntry<DocumentT> documentEntry = getEntry(scoreDoc.doc);
         return new ScoredDocumentEntry<DocumentT>() {
+
             @Override
             public double getScore() {
                 return scoreDoc.score;
@@ -113,26 +125,31 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
 
             @Override
             public String toString() {
-                return documentEntry.toString();
+                return "Delegates to " + documentEntry.toString();
             }
 
         };
     }
 
     /**
-     * Performs a subsequent query to fetch documents after this query.
+     * Performs a subsequent query to fetch documents after this query.  It should
+     * be noted that the original query must have enough available results in order
+     * to find the starting document.  If there is not enough availble, then this
+     * will throw an instance of {@link NoResultException}.
      *
      * @param offset the offset, in this result set, to use
-     * @param count the number of documents to find.
+     * @param count the number of documents to find
+     *
      * @return a new instance with the new results
+     *
+     * @throws NoResultException if there are not enough availble results  to offset
      */
-    public TopDocsSearchResult<DocumentT> after(int offset, int count) {
+    public TopDocsSearchResult<DocumentT> after(final int offset, final int count) {
 
         // Corrects the offset value, ensures it's zero or more.
 
         if (offset >= topDocs.scoreDocs.length) {
-            LOG.warn("Offset exceeds available documents " + offset);
-            offset = Math.max(topDocs.scoreDocs.length - 1, 0);
+            throw new NoResultException("offset exceeds available documents " + offset);
         }
 
         if (offset < 0 || count < 0) {
@@ -150,13 +167,6 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
 
         return new TopDocsSearchResult<>(objectQuery, newTopDocs, indexSearcher, documentGenerator);
 
-    }
-
-    @Override
-    public String toString() {
-        return "TopDocsSearchResult{" +
-                "objectQuery=" + objectQuery +
-                '}';
     }
 
 }
