@@ -85,36 +85,3 @@ public abstract class AbstractObjectIndex implements ObjectIndex {
 
 
 }
-
-
-class Test {
-
-    class ClassTHolder<ClassT> {
-
-        private final Class<ClassT> cls;
-
-        public ClassTHolder(Class<ClassT> cls) {
-            this.cls = cls;
-        }
-
-        public Class<ClassT> getCls() {
-            return cls;
-        }
-
-        public ClassT cast(Object o) {
-            return cls.cast(o);
-        }
-
-    }
-
-    public <T> T get(Class<T> cls, Object o) {
-        return cls.cast(o);
-    }
-
-    public <T> T get(ClassTHolder<T> holder, Object o) {
-        Class<T> cls = holder.getCls();
-        return get(cls, o);
-    }
-
-
-}
