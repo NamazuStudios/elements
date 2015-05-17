@@ -78,10 +78,28 @@ public abstract class AbstractObjectIndex implements ObjectIndex {
     }
 
     @Override
-    public <T> QueryExecutor<T> perform(ObjectQuery<T> query) {
-
+    public <T> QueryExecutor<T> execute(ObjectQuery<T> query) {
         return new QueryExecutor<>(documentGenerator, indexSearcher, query);
     }
 
+    @Override
+    public <T> QueryExecutor<T> executeQueryForType(Class<T> type) {
+        return execute(queryForType(type));
+    }
+
+    @Override
+    public <T> QueryExecutor<T> executeQueryForIdentifier(Class<T> type, Object identifier) {
+        return execute(queryForIdentifier(type, identifier));
+    }
+
+    @Override
+    public <T> QueryExecutor<T> executeQueryForObjects(Class<T> type, Query query) {
+        return execute(queryForObjects(type, query));
+    }
+
+    @Override
+    public <T> QueryExecutor<T> executeQueryByExample(Class<T> type, T object) {
+        return execute(queryByExample(type, object));
+    }
 
 }

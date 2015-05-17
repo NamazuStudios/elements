@@ -12,6 +12,8 @@ public class Pagination<T> {
 
     private int total;
 
+    private boolean approximation;
+
     private List<T> objects = new ArrayList<>();
 
     public int getOffset() {
@@ -36,6 +38,14 @@ public class Pagination<T> {
 
     public void setObjects(List<T> objects) {
         this.objects = objects;
+    }
+
+    public boolean isApproximation() {
+        return approximation;
+    }
+
+    public void setApproximation(boolean approximation) {
+        this.approximation = approximation;
     }
 
 }

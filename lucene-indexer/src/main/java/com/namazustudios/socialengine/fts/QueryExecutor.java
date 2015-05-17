@@ -36,7 +36,7 @@ public class QueryExecutor<DocumentT> {
      * @param count the number of documents to return (per page)
      * @return
      */
-    public TopDocsSearchResult<DocumentEntry<DocumentT>> withTopScores(int count) {
+    public TopDocsSearchResult<DocumentT> withTopScores(int count) {
 
         final TopDocs topDocs;
 

@@ -51,6 +51,8 @@ public interface SearchResult<DocumentT, EntryT extends DocumentEntry<DocumentT>
      * instance whose result set has been pruned to no greater than the given
      * count.
      *
+     * The number of re
+     *
      * @param count
      * @return
      */

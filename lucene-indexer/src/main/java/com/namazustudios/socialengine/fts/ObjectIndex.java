@@ -92,6 +92,46 @@ public interface ObjectIndex {
      * @param <T>
      * @return
      */
-    <T> QueryExecutor<T> perform(ObjectQuery<T> query);
+    <T> QueryExecutor<T> execute(ObjectQuery<T> query);
+
+    /**
+     * Creates and executes a query for the given type.
+     *
+     * {@see {@link #queryForType(Class)}}
+     * {@see {@link #execute(ObjectQuery)}}
+     *
+     * @param type
+     */
+    <T> QueryExecutor<T> executeQueryForType(final Class<T> type);
+
+    /**
+     * Creates and executes a query for the given type and identifier.
+     *
+     * {@see {@link #queryForIdentifier(Class, Object)}}
+     * {@see {@link #execute(ObjectQuery)}}
+     *
+     * @param type
+     */
+    <T> QueryExecutor<T> executeQueryForIdentifier(final Class<T> type, Object identifier);
+
+    /**
+     * Creates and executes a query for the given type and object query
+     *
+     * {@see {@link #queryForObjects(Class, Query)}}
+     * {@see {@link #execute(ObjectQuery)}}
+     *
+     * @param type
+     */
+    <T> QueryExecutor<T> executeQueryForObjects(final Class<T> type, Query query);
+
+    /**
+     * Creates and executes a query for the given type and example object
+     *
+     * {@see {@link #queryByExample(Class, Object)}
+     * {@see {@link #execute(ObjectQuery)}}
+     *
+     * @param type
+     */
+    <T> QueryExecutor<T> executeQueryByExample(final  Class<T> type, T object);
 
 }

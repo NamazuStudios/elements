@@ -11,9 +11,16 @@ import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.*;
+import com.namazustudios.socialengine.fts.*;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.sun.org.apache.bcel.internal.generic.DUP;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.TermQuery;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
@@ -55,6 +62,12 @@ public class MongoUserDao implements UserDao {
     @Inject
     private ValidationHelper validationHelper;
 
+    @Inject
+    private ObjectIndex objectIndex;
+
+    @Inject
+    private StandardQueryParser standardQueryParser;
+
     @Override
     public User getActiveUser(String userId) {
 
@@ -64,7 +77,7 @@ public class MongoUserDao implements UserDao {
             query.criteria("name").equal(userId),
             query.criteria("email").equal(userId)
         ).and(
-                query.criteria("active").equal(true)
+            query.criteria("active").equal(true)
         );
 
         final MongoUser mongoUser = query.get();
@@ -82,6 +95,51 @@ public class MongoUserDao implements UserDao {
         query.filter("active = ", true);
         query.offset(offset);
 
+        return paginationFromQuery(query, offset, count);
+
+    }
+
+    @Override
+    public Pagination<User> getActiveUsers(int offset, int count, String queryString) {
+
+        final BooleanQuery booleanQuery = new BooleanQuery();
+
+        try {
+            final Term activeTerm = new Term("active", "true");
+            booleanQuery.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
+            booleanQuery.add(standardQueryParser.parse(queryString, "name"), BooleanClause.Occur.FILTER);
+        } catch (QueryNodeException ex) {
+            throw new BadQueryException(ex);
+        }
+
+        final Query<MongoUser> userQuery = datastore.createQuery(MongoUser.class);
+
+        try {
+            final TopDocsSearchResult<MongoUser> results = objectIndex
+                    .executeQueryForObjects(MongoUser.class, booleanQuery)
+                    .withTopScores(count + offset)
+                    .after(offset, count);
+
+            final Iterable<Object> identifiers = Iterables.transform(results,
+                    new Function<ScoredDocumentEntry<MongoUser>, Object>() {
+                        @Override
+                        public Object apply(ScoredDocumentEntry<MongoUser> input) {
+                            return input.getIdentifier(MongoUser.class).getIdentity();
+                        }
+                    });
+
+            userQuery.criteria("_id").in(identifiers);
+
+        } catch (NoResultException ex) {
+            return new Pagination<>();
+        }
+
+        return paginationFromQuery(userQuery, offset, count);
+
+    }
+
+    private Pagination<User> paginationFromQuery(final Query<MongoUser> query, final int offset, final int count) {
+
         final Pagination<User> users = new Pagination<>();
 
         users.setOffset(offset);
@@ -98,12 +156,6 @@ public class MongoUserDao implements UserDao {
 
         return users;
 
-    }
-
-    @Override
-    public Pagination<User> getActiveUsers(int offset, int count, String query) {
-        //TODO Implement this with Lucene
-        return null;
     }
 
     @Override
@@ -250,8 +302,6 @@ public class MongoUserDao implements UserDao {
                 throw new InternalException(ex);
             }
         }
-
-
 
     }
 

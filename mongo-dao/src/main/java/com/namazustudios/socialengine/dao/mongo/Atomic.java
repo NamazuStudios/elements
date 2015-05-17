@@ -114,7 +114,7 @@ public class Atomic {
     }
 
     /**
-     * Given a {@link Query<ModelT>} object, this will attempt to find a single entity and perform
+     * Given a {@link Query<ModelT>} object, this will attempt to find a single entity and execute
      * an atomic update.
      *
      * The result of the query, or a freshly created instance, is passed to
@@ -127,7 +127,7 @@ public class Atomic {
      * In the event the operation fails, the operation is retried until either it succeeds or a timeout happens.
      *
      * @param query the query to find the objects
-     * @param operation the operation to perform
+     * @param operation the operation to execute
      *
      * @throws IllegalArgumentException if the query does not return a single result
      * @throws ContentionException if the atomic operation fails
@@ -192,7 +192,7 @@ public class Atomic {
     }
 
     /**
-     * Given a {@link Query<ModelT>} object, this will attempt to find a single entity and perform
+     * Given a {@link Query<ModelT>} object, this will attempt to find a single entity and execute
      * an atomic update.
      *
      * The result of the query, or a freshly created instance, is passed to
@@ -207,7 +207,7 @@ public class Atomic {
      * that it is a slight bit more foolproof as it will only returna  single object.
      *
      * @param key they {@link Key<ModelT>} for the object
-     * @param operation the operation to perform
+     * @param operation the operation to execute
      *
      * @throws IllegalArgumentException if the query does not return a single result
      * @throws ContentionException if the atomic operation fails
