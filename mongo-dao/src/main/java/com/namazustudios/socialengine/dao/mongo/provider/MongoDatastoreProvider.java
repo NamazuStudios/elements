@@ -18,10 +18,8 @@ import javax.inject.Provider;
  */
 public class MongoDatastoreProvider implements Provider<Datastore> {
 
-    public static final String DATABASE_NAME = "com.namazustudios.socialengine.mongo.database.name";
-
     @Inject
-    @Named(DATABASE_NAME)
+    @Named(MongoDatabaseProvider.DATABASE_NAME)
     private String databaseName;
 
     @Inject
@@ -29,8 +27,6 @@ public class MongoDatastoreProvider implements Provider<Datastore> {
 
     @Override
     public Datastore get() {
-
-        final MongoClient mongoClient = mongoProvider.get();
 
         final Morphia morphia = new Morphia();
 
@@ -42,6 +38,8 @@ public class MongoDatastoreProvider implements Provider<Datastore> {
                 MongoUser.class
         );
 
+
+        final MongoClient mongoClient = mongoProvider.get();
         final Datastore datastore = morphia.createDatastore(mongoClient, databaseName);
         datastore.ensureIndexes();
         return datastore;

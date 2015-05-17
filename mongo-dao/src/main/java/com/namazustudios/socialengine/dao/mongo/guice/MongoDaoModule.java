@@ -13,7 +13,9 @@ import com.namazustudios.socialengine.dao.mongo.MongoSocialCampaignDao;
 import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoAdvancedDatastoreProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvider;
+import com.namazustudios.socialengine.dao.mongo.provider.MongoDatabaseProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDatastoreProvider;
+import com.namazustudios.socialengine.fts.ObjectIndex;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.slf4j.Logger;
@@ -29,6 +31,12 @@ import java.util.Properties;
 
 /**
  * Configures any Mongo-specific system properties.
+ *
+ * This is intentionally separated from the {@link MongoSearchModule} as it may or
+ * may not be desirable to use the mongo search, depending on the application.
+ *
+ * The only dependency this module has but does not not provide is one of
+ * an instance of {@link ObjectIndex}.
  *
  * Created by patricktwohig on 4/3/15.
  */
@@ -46,7 +54,7 @@ public class MongoDaoModule extends AbstractModule {
         final Properties defaultProperties = new Properties(System.getProperties());
 
         defaultProperties.setProperty(MongoClientProvider.MONGO_DB_URLS, "localhost");
-        defaultProperties.setProperty(MongoDatastoreProvider.DATABASE_NAME, "socialengine");
+        defaultProperties.setProperty(MongoDatabaseProvider.DATABASE_NAME, "socialengine");
         defaultProperties.setProperty(Atomic.FALLOFF_TIME_MS, Integer.toString(DEFAULT_FALLOFF_TIME_MS));
         defaultProperties.setProperty(Atomic.OPTIMISTIC_RETRY_COUNT, Integer.toString(OPTISMITIC_RETRY_COUNT));
 
