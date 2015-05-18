@@ -24,6 +24,7 @@
         <module>common-util</module>
 	<module>lucene-pojo</module>
     <module>lucene-indexer</module>
+    <module>mongo-lucene</module>
   </modules>
 
     <properties>
@@ -39,6 +40,7 @@
         <gwt.version>2.7.0</gwt.version>
         <javax.validation.version>1.0.0.GA</javax.validation.version>
         <lucene.version>5.1.0</lucene.version>
+        <mongo.java.driver.version>3.0.0-beta3</mongo.java.driver.version>
     </properties>
 
     <dependencies>

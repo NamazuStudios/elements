@@ -18,16 +18,9 @@
 
     <properties>
         <morphia.version>0.110</morphia.version>
-        <mongo.java.driver.version>3.0.0-beta3</mongo.java.driver.version>
-        <mongo.lucene.version>1.1</mongo.lucene.version>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
-            <version>${javax.inject.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>dao</artifactId>
@@ -42,6 +35,21 @@
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>lucene-indexer</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>lucene-pojo</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>mongo-lucene</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>${javax.inject.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mongodb</groupId>
@@ -70,11 +78,6 @@
             <version>${javax.validation.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>lucene-pojo</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-core</artifactId>
             <version>${lucene.version}</version>
@@ -85,9 +88,9 @@
             <version>${lucene.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github.mongoutils</groupId>
-            <artifactId>mongo-lucene</artifactId>
-            <version>${mongo.lucene.version}</version>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-common</artifactId>
+            <version>${lucene.version}</version>
         </dependency>
     </dependencies>
 

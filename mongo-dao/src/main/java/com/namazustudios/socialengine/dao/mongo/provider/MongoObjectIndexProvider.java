@@ -10,6 +10,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -32,11 +33,13 @@ public class MongoObjectIndexProvider implements Provider<ObjectIndex> {
 
         try {
 
+            final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzerProvider.get())
+                    .setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+
+            final IndexWriter indexWriter = new IndexWriter(directory, indexWriterConfig);
+
             final IndexReader indexReader = DirectoryReader.open(directory);
             final IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-
-            final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzerProvider.get());
-            final IndexWriter indexWriter = new IndexWriter(directory, indexWriterConfig);
 
             return new DefaultObjectIndex(indexWriter, indexSearcher);
 

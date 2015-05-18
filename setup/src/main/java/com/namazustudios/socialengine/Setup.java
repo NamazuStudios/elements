@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.guice.ConfigurationModule;
 import org.apache.bval.guice.ValidationModule;
 
 import java.io.Console;
-import java.lang.reflect.Array;
 import java.util.Arrays;
 
 /**

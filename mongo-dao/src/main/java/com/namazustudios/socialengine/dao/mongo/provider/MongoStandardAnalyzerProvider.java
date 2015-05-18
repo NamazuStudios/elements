@@ -13,7 +13,7 @@ public class MongoStandardAnalyzerProvider implements Provider<Analyzer> {
 
     @Override
     public Analyzer get() {
-        return new StandardAnalyzer(Version.LUCENE_5_1_0);
+        return new StandardAnalyzer();
     }
 
 }

@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.dao.mongo.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.dao.mongo.provider.MongoDirectoryProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoObjectIndexProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoStandardAnalyzerProvider;
 import com.namazustudios.socialengine.fts.ObjectIndex;
@@ -35,9 +34,8 @@ public class MongoSearchModule extends AbstractModule {
 
         final Properties defaultProperties = new Properties(System.getProperties());
 
-        defaultProperties.setProperty(MongoDirectoryProvider.DIRECTORY_KEY_NAME, "key");
-        defaultProperties.setProperty(MongoDirectoryProvider.DIRECTORY_ENTRY_NAME, "entry");
-        defaultProperties.setProperty(MongoDirectoryProvider.SEARCH_INDEX_COLLECTION, "fts-index");
+        defaultProperties.setProperty(MongoDirectoryProvider.LOCK_COLLECTION, "fts.locks");
+        defaultProperties.setProperty(MongoDirectoryProvider.SEARCH_INDEX_BUCKET, "fts.index");
 
         final Properties properties = new Properties(defaultProperties);
         final File propertiesFile = new File(properties.getProperty(
