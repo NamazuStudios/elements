@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
+import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import org.apache.bval.guice.ValidationModule;
 
@@ -40,6 +41,7 @@ public class GuiceMain extends GuiceServletContextListener {
                 new JerseyModule(),
                 new ServicesModule(),
                 new MongoDaoModule(),
+                new MongoSearchModule(),
                 new ConfigurationModule(),
                 new ValidationModule()
         );

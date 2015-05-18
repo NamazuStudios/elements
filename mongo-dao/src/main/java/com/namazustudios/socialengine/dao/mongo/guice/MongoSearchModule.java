@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.provider.MongoObjectIndexProvide
 import com.namazustudios.socialengine.dao.mongo.provider.MongoStandardAnalyzerProvider;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.store.Directory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +56,10 @@ public class MongoSearchModule extends AbstractModule {
 
         binder().bind(Analyzer.class)
                 .toProvider(MongoStandardAnalyzerProvider.class);
+
+        binder().bind(Directory.class)
+                .toProvider(MongoDirectoryProvider.class)
+                .in(Singleton.class);
 
         binder().bind(ObjectIndex.class)
                 .toProvider(MongoObjectIndexProvider.class)
