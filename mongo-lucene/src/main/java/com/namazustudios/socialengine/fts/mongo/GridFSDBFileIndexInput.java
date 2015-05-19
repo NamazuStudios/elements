@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.fts.mongo;
 import com.mongodb.gridfs.GridFSDBFile;
 import org.apache.lucene.store.IndexInput;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -63,7 +64,7 @@ public class GridFSDBFileIndexInput extends IndexInput {
     public void seek(final long pos) throws IOException {
 
         if (pos < 0 || pos >= length) {
-            throw new IllegalArgumentException("absolutePosition must be >0 and < length");
+            throw new EOFException("absolutePosition must be >0 and < length");
         }
 
         final long desiredAbsolutePosition = sliceBegin + pos;

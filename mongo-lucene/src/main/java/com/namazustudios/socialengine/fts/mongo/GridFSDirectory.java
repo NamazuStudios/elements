@@ -150,7 +150,7 @@ public class GridFSDirectory extends BaseDirectory {
 
     private void checkOpen() throws IOException {
         if (!open.get()) {
-            throw new IOException(toString() + " is closed");
+            throw new AlreadyClosedException(toString() + " is closed");
         }
     }
 
