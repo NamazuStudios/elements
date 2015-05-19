@@ -50,7 +50,7 @@ public class MongoClientProvider implements Provider<MongoClient> {
                         throw new IllegalArgumentException("Invalid scheme" + uri.getScheme());
                     }
 
-                    final String host = uri.getScheme();
+                    final String host = uri.getHost();
                     final int port = uri.getPort() < 0 ? DEFAULT_MONGO_PORT : uri.getPort();
 
                     return new ServerAddress(host, port);

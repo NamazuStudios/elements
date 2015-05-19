@@ -75,7 +75,7 @@ public class GridFSDBFileIndexInput extends IndexInput {
             // record the position so it doesn't get out of sync.
 
             final long toSkip = desiredAbsolutePosition - this.absolutePosition;
-            this.absolutePosition += inputStream.skip(toSkip);
+            skipNBytes(toSkip);
 
         } else {
 
@@ -85,9 +85,27 @@ public class GridFSDBFileIndexInput extends IndexInput {
 
             inputStream.close();
             inputStream = gridFSDBFile.getInputStream();
-            this.absolutePosition = inputStream.skip(desiredAbsolutePosition);
+            skipNBytes(desiredAbsolutePosition);
 
         }
+
+    }
+
+    private void skipNBytes(final long count) throws IOException {
+
+        long n = 0;
+
+        do {
+            n += inputStream.skip(count - n);
+        } while (n < count);
+
+        if (n > count) {
+            // This should never happen, but I want to make sure
+            // the situation is caught so we don't hose the index
+            throw new IOException("Accidentally over-skipped bytes.");
+        }
+
+        absolutePosition += count;
 
     }
 

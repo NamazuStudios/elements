@@ -41,6 +41,9 @@
         <javax.validation.version>1.0.0.GA</javax.validation.version>
         <lucene.version>5.1.0</lucene.version>
         <mongo.java.driver.version>3.0.0-beta3</mongo.java.driver.version>
+        <testng.version>6.9.4</testng.version>
+        <test.groups>unit</test.groups>
+        <surefire.version>2.18.1</surefire.version>
     </properties>
 
     <dependencies>
