@@ -9,6 +9,7 @@ import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import org.apache.lucene.store.*;
 import org.bson.Document;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -37,12 +38,12 @@ public class GridFSDirectory extends BaseDirectory {
         this(new MongoLockFactory(lockCollection), indexGridFSbucket);
     }
 
-    public GridFSDirectory(final MongoLockFactory lockFactory,
+    public GridFSDirectory(final LockFactory lockFactory,
                            final GridFS indexGridFSbucket) {
         this(lockFactory, indexGridFSbucket, DEFAULT_BUFFER_SIZE);
     }
 
-    public GridFSDirectory(final MongoLockFactory lockFactory,
+    public GridFSDirectory(final LockFactory lockFactory,
                            final GridFS indexGridFSbucket,
                            final int bufferSize) {
 
@@ -116,6 +117,8 @@ public class GridFSDirectory extends BaseDirectory {
     public void renameFile(String source, String dest) throws IOException {
 
         checkOpen();
+
+//        throw new NotImplementedException();
 
         final GridFSDBFile file = indexGridFSbucket.findOne(source);
 

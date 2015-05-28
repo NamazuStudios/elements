@@ -10,8 +10,12 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.gridfs.GridFS;
 import org.apache.lucene.store.BaseDirectoryTestCase;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.store.SingleInstanceLockFactory;
 import org.bson.Document;
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 
 import java.io.IOException;
@@ -44,21 +48,22 @@ public class GridFSDirectoryTest extends BaseDirectoryTestCase {
 
     private static MongoDatabase mongoDatabase;
 
-    @BeforeClass
-    public static void setUpMongo() {
+    @Before
+    public void setUpMongo() {
         mongoClient = getMongoClient();
         mongoDatabase = getMongoDatabase();
     }
 
-    @AfterClass
-    public static void tearDownMongo() {
+    @After
+    public void tearDownMongo() {
         mongoDatabase.dropDatabase();
         mongoClient.close();
     }
 
     @Override
     protected Directory getDirectory(Path path) throws IOException {
-        return new GridFSDirectory(getMongoLockFactory(), getDirectoryBucket());
+
+        return new GridFSDirectory(new SingleInstanceLockFactory(), getDirectoryBucket());
     }
 
     private static MongoLockFactory getMongoLockFactory() {
