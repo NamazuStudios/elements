@@ -118,8 +118,6 @@ public class GridFSDirectory extends BaseDirectory {
 
         checkOpen();
 
-//        throw new NotImplementedException();
-
         final GridFSDBFile file = indexGridFSbucket.findOne(source);
 
         if (file == null) {

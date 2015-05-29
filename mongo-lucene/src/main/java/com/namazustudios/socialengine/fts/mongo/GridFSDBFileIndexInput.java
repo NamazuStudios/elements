@@ -150,9 +150,9 @@ public class GridFSDBFileIndexInput extends IndexInput {
     public GridFSDBFileIndexInput slice(String sliceDescription, final long offset, final long length) throws IOException {
         synchronized (lock) {
 
-//            if ((begin + offset + length) > gridFSDBFile.getLength()) {
-//                throw new IllegalArgumentException("exceeds length of this slice " + length());
-//            }
+            if ((offset + length) > length()) {
+                throw new IllegalArgumentException("exceeds length of this slice " + length());
+            }
 
             return new GridFSDBFileIndexInput(sliceDescription, gridFSDBFile, begin + offset, length);
 
@@ -232,40 +232,44 @@ public class GridFSDBFileIndexInput extends IndexInput {
 
         final GridFSDBFileIndexInput cloneOfthis;
 
+
         // This one inherits the lock from the outer file.
 
-        try {
-            cloneOfthis = new GridFSDBFileIndexInput(lock, toString(), gridFSDBFile, begin, length) {
+        synchronized (lock) {
+            try {
+                cloneOfthis = new GridFSDBFileIndexInput(lock, toString(), gridFSDBFile, begin, length) {
 
-                @Override
-                protected void checkOpen() throws IOException {
+                    @Override
+                    protected void checkOpen() throws IOException {
 
-                    // We disregard this' open flag and delegate to the owning
-                    // instance's flag, not this object.
+                        // We disregard this' open flag and delegate to the owning
+                        // instance's flag, not this object.
 
-                    GridFSDBFileIndexInput.this.checkOpen();
+                        GridFSDBFileIndexInput.this.checkOpen();
 
-                }
+                    }
 
-                @Override
-                public void close() throws IOException {
+                    @Override
+                    public void close() throws IOException {
 
-                    // The API says it will never close the cloned instances of the
-                    // object and that it still has to signal properly with an
-                    // AlreadyClosedException.  However, if this should succeed
-                    // we simply want to throw an exception indicating that this
-                    // operation is not supported.
+                        // The API says it will never close the cloned instances of the
+                        // object and that it still has to signal properly with an
+                        // AlreadyClosedException.  However, if this should succeed
+                        // we simply want to throw an exception indicating that this
+                        // operation is not supported.
 
-                    throw new UnsupportedOperationException("close must not be called on clone");
+                        throw new UnsupportedOperationException("close must not be called on clone");
 
-                }
+                    }
 
-            };
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
+                };
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+
+            return cloneOfthis;
+
         }
-
-        return cloneOfthis;
 
     }
 
