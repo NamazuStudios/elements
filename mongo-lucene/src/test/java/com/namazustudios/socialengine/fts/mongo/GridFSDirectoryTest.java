@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.gridfs.GridFS;
@@ -62,7 +63,6 @@ public class GridFSDirectoryTest extends BaseDirectoryTestCase {
 
     @Override
     protected Directory getDirectory(Path path) throws IOException {
-
         return new GridFSDirectory(new SingleInstanceLockFactory(), getDirectoryBucket());
     }
 
@@ -79,7 +79,9 @@ public class GridFSDirectoryTest extends BaseDirectoryTestCase {
 
     private static DB getDB() {
         final String databaseName = System.getProperties().getProperty(MONGO_DB_NAME, "test-database");
-        return mongoClient.getDB(databaseName);
+        final DB db = mongoClient.getDB(databaseName);
+        db.setWriteConcern(WriteConcern.ACKNOWLEDGED);
+        return db;
     }
 
     private static MongoDatabase getMongoDatabase() {

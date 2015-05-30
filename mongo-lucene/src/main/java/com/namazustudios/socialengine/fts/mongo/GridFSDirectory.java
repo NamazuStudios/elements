@@ -49,6 +49,7 @@ public class GridFSDirectory extends BaseDirectory {
 
         super(lockFactory);
 
+
         this.bufferSize = bufferSize;
         this.indexGridFSbucket = indexGridFSbucket;
 

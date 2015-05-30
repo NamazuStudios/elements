@@ -27,7 +27,7 @@ public class GridFSDBFileIndexInput extends IndexInput {
 
     // Mutable members
 
-    private long pos = 0;  // position relative to beginning of the slice
+    private long pos;  // position relative to beginning of the slice
 
     private boolean open = true; // set to true until close is called, at which point all methods should throw
 
@@ -43,11 +43,11 @@ public class GridFSDBFileIndexInput extends IndexInput {
 
     public GridFSDBFileIndexInput(final String resourceDescription, final GridFSDBFile gridFSDBFile,
                                        final long begin, final long length)  throws IOException {
-        this(new Object(), resourceDescription, gridFSDBFile, begin, length);
+        this(new Object(), resourceDescription, gridFSDBFile, 0, begin, length);
     }
 
     private GridFSDBFileIndexInput(final Object lock, final String resourceDescription, final GridFSDBFile gridFSDBFile,
-                                  final long begin, final long length) throws IOException {
+                                  final long pos, final long begin, final long length) throws IOException {
 
         super(resourceDescription);
 
@@ -55,14 +55,19 @@ public class GridFSDBFileIndexInput extends IndexInput {
             throw new IllegalArgumentException("begin or length cannot be less than zero");
         } else if ((begin + length) > gridFSDBFile.getLength()) {
             throw new IllegalArgumentException("length exceeds length of file");
+        } else if (pos < 0) {
+            throw new IllegalArgumentException("position must be positive");
+        } else if (pos > length) {
+            throw new IllegalArgumentException("position must not be greater than length");
         }
 
         this.lock = lock;
+        this.pos = pos;
         this.begin = begin;
         this.length = length;
         this.gridFSDBFile = gridFSDBFile;
         this.inputStream = gridFSDBFile.getInputStream();
-        skipNBytes(begin);
+        skipNBytes(begin + pos);
 
     }
 
@@ -117,12 +122,14 @@ public class GridFSDBFileIndexInput extends IndexInput {
 
         if (toSkip > gridFSDBFile.getLength()) {
             // This will loop infinitely if we don't throw in a check here.
-            throw new EOFException("attempted to seek past end of file");
+            final String msg = String.format("attempted to seek past end of file toSkip: %d limit: %d",
+                    toSkip, gridFSDBFile.getLength());
+            throw new EOFException(msg);
         }
 
         do {
 
-            final long skipped = inputStream.skip(toSkip);
+            final long skipped = inputStream.skip(remaining);
 
             total += skipped;
             remaining -= skipped;
@@ -190,13 +197,7 @@ public class GridFSDBFileIndexInput extends IndexInput {
             // From what I can tell, the reference implementation does not enforce
             // an EOF in this method.  Rather, this will just read zero bytes.
 
-            final long absolute = Math.min(begin + pos, length());
-
-            // Correct the length of the read in case there are fewer bytes
-            // available.  If the absolute position ends up to be the end of
-            // the file, then this method call becomes a no-op
-
-            length = (int) Math.max(length, absolute - length());
+            length = (int)Math.min(length, length());
 
             int total = 0;
 
@@ -237,7 +238,7 @@ public class GridFSDBFileIndexInput extends IndexInput {
 
         synchronized (lock) {
             try {
-                cloneOfthis = new GridFSDBFileIndexInput(lock, toString(), gridFSDBFile, begin, length) {
+                cloneOfthis = new GridFSDBFileIndexInput(lock, toString(), gridFSDBFile, pos, begin, length) {
 
                     @Override
                     protected void checkOpen() throws IOException {
