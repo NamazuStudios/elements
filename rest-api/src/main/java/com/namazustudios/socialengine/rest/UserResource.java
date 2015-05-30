@@ -37,8 +37,9 @@ public class UserResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Pagination<User> getUsers(
-            @QueryParam("offset") @DefaultValue("0") int offset,
-            @QueryParam("count") @DefaultValue("20") int count) {
+            @QueryParam("offset") @DefaultValue("0")  int offset,
+            @QueryParam("count")  @DefaultValue("20") int count,
+            @QueryParam("search") @DefaultValue("")   String search) {
 
         if (offset < 0) {
             throw new InvalidParameterException("Offset must have positive value.");
@@ -48,9 +49,12 @@ public class UserResource {
             throw new InvalidParameterException("Count must have positive value.");
         }
 
-        return userService.getUsers(offset, count);
+        return Strings.nullToEmpty(search).trim().isEmpty() ?
+                userService.getUsers(offset, count) :
+                userService.getUsers(offset, count, search);
 
     }
+
 
     @GET
     @Path("{name}")

@@ -45,6 +45,17 @@ public interface UserService {
     Pagination<User> getUsers(int offset, int count);
 
     /**
+     * Gets a list of users the current user can see.
+     *
+     * @param offset the offset
+     * @param count the count
+     * @param search the search query
+     *
+     * @return the PaginatedEntry of users
+     */
+    Pagination<User> getUsers(int offset, int count, String search);
+
+    /**
      * Creates a new user.
      *
      * @param user the user to create

@@ -26,6 +26,11 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     }
 
     @Override
+    public Pagination<User> getUsers(int offset, int count, String search) {
+        return userDao.getActiveUsers(offset, count, search);
+    }
+
+    @Override
     public User createUser(User user) {
         return userDao.createOrActivateUser(user);
     }

@@ -43,6 +43,11 @@ public class UserUserService extends AbstractUserService implements UserService 
     }
 
     @Override
+    public Pagination<User> getUsers(int offset, int count, String search) {
+        return getUsers(offset, count);
+    }
+
+    @Override
     public User createUser(User user) {
         throw new ForbiddenException();
     }
