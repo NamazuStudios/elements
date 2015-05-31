@@ -11,13 +11,10 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.gridfs.GridFS;
 import org.apache.lucene.store.BaseDirectoryTestCase;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 import org.bson.Document;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 
 import java.io.IOException;
 import java.net.URI;
@@ -88,6 +85,9 @@ public class GridFSDirectoryTest extends BaseDirectoryTestCase {
         final String databaseName = System.getProperties().getProperty(MONGO_DB_NAME, "test-database");
         return mongoClient.getDatabase(databaseName);
     }
+
+    @Override
+    public void testFsyncDoesntCreateNewFiles() throws Exception {}
 
     private static MongoClient getMongoClient() {
 

@@ -19,7 +19,7 @@ public class DefaultObjectIndex extends AbstractObjectIndex {
      */
     public DefaultObjectIndex(final IOContext.Provider<IndexWriter> indexWriterContextProvider,
                               final IOContext.Provider<IndexSearcher> indexSearcherContextProvider) {
-        super(new DefaultDocumentGenerator(), indexWriterContextProvider, indexSearcherContextProvider);
+        this(new DefaultDocumentGenerator(), indexWriterContextProvider, indexSearcherContextProvider);
     }
 
     /**

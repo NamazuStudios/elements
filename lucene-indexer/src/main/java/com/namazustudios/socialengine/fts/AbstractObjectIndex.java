@@ -7,6 +7,7 @@ import org.apache.lucene.search.Query;
 import java.io.IOException;
 
 /**
+ * The abstract implementation of the {@link ObjectIndex}.  This includes the basic functionality.
  *
  * Created by patricktwohig on 5/14/15.
  */
@@ -79,7 +80,11 @@ public abstract class AbstractObjectIndex implements ObjectIndex {
 
     @Override
     public <T> QueryExecutor<T> execute(ObjectQuery<T> query) {
-        return new QueryExecutor<>(documentGenerator, indexSearcherContextProvider.get(), query);
+        try {
+            return new QueryExecutor<>(documentGenerator, indexSearcherContextProvider.get(), query);
+        } catch (IOException ex) {
+            throw new SearchException(ex);
+        }
     }
 
     @Override

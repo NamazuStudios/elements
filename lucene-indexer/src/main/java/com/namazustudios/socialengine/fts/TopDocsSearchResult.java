@@ -30,7 +30,7 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
                                final TopDocs topDocs,
                                final IOContext<IndexSearcher> indexSearcherIOContext,
                                final DocumentGenerator documentGenerator) {
-        super(objectQuery, documentGenerator, indexSearcherIOContext.instance().getIndexReader());
+        super(objectQuery, documentGenerator, indexSearcherIOContext);
         this.topDocs = topDocs;
         this.indexSearcherIOContext = indexSearcherIOContext;
     }
