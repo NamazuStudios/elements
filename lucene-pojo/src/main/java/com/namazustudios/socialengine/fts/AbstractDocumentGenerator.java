@@ -175,7 +175,7 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
     public <DocumentT> DocumentEntry<DocumentT> entry(final Class<DocumentT> documentTClass, final Document document) {
 
         final DocumentEntry<DocumentT> documentEntry = new BasicDocumentEntry<>(document, indexableFieldExtractorProvider);
-        final Identity<DocumentT> documentTIdentity = documentEntry.getIdentifier(documentTClass);
+        final Identity<DocumentT> documentTIdentity = documentEntry.getIdentity(documentTClass);
 
         if (!documentTIdentity.getDocumentType().isAssignableFrom(documentTClass)) {
             throw new DocumentException("document type mismatch (" +

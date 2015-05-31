@@ -16,90 +16,30 @@ import org.apache.lucene.document.Document;
  *
  * Created by patricktwohig on 5/15/15.
  */
-public class Identity<DocumentT> {
-
-    private final Class<DocumentT> documentType;
-
-    private final Document document;
-
-    private final IndexableFieldExtractor.Provider provider;
-
-    private final SearchableDocument searchableDocument;
-
-    private final SearchableIdentity searchableIdentity;
-
-    public Identity(Class<DocumentT> documentType) {
-        this(documentType, new Document());
-    }
-
-    public Identity(Class<DocumentT> documentType, Document document) {
-        this(documentType, document, DefaultIndexableFieldExtractorProvider.getInstance());
-    }
-
-    public Identity(Class<DocumentT> documentType, Document document, IndexableFieldExtractor.Provider provider) {
-
-        searchableDocument = documentType.getAnnotation(SearchableDocument.class);
-
-        if (searchableDocument == null) {
-            throw new DocumentException(documentType + " is not annotated with " + SearchableDocument.class);
-        } else if (!documentType.isAssignableFrom(searchableDocument.type().type())) {
-            throw new DocumentException(documentType + " is not compatible with " + searchableDocument.type().type());
-        }
-
-        Class<?> cls = documentType;
-        SearchableIdentity searchableIdentity;
-
-        do {
-
-            searchableIdentity = cls.getAnnotation(SearchableIdentity.class);
-            cls = cls.getSuperclass();
-
-            if (searchableIdentity != null) {
-                break;
-            }
-
-        } while(cls != null);
-
-        if (searchableIdentity == null) {
-            throw new DocumentException("Cannot find " + SearchableIdentity.class + " anywhere in the type " +
-                    "heirarchy for " + documentType);
-        }
-
-        this.documentType = documentType;
-        this.document = document;
-        this.provider = provider;
-        this.searchableIdentity = searchableIdentity;
-
-    }
+public interface Identity<DocumentT> {
 
     /**
-     * Gets the Document's type.  This corresponds to {@link SearchableDocument#type()}.
+     * Gets the Document's type.  This corresponds to {@link SearchableDocument#type()}.  Note,
+     * as subclasses of a document type may be stored, this may not be equal to the
+     * corresponding type.
      *
      * @return the document's type.
      */
-    public Class<DocumentT> getDocumentType() {
-        return documentType;
-    }
+    Class<? extends DocumentT> getDocumentType();
 
     /**
      * Gets the object's identity type.  This corresponds to {@link SearchableIdentity#value()}.
      *
      * @return the identity type
      */
-    public Class<?> getIdentityType() {
-        return searchableIdentity.value().type();
-    }
+    Class<?> getIdentityType();
 
     /**
      * Extracts the identity value from the actual underlying {@link Document}.
      *
      * @return the identity of the document.
      */
-    public Object getIdentity() {
-        final FieldMetadata fieldMetadata = new AnnotationFieldMetadata(searchableIdentity.value());
-        final IndexableFieldExtractor<?> indexableFieldExtractor = provider.get(fieldMetadata);
-        return indexableFieldExtractor.extract(document, fieldMetadata);
-    }
+    Object getIdentity();
 
     /**
      * Extracts and checks this object's identity type, returns the identity cast
@@ -108,26 +48,6 @@ public class Identity<DocumentT> {
      * @return this identity, cast as the correctly checked type
      *
      */
-    public <IdentityT> IdentityT getIdentity(Class<IdentityT> identityTClass) {
-
-        try {
-            final Object identity = getIdentity();
-            return identityTClass.cast(identity);
-        } catch (ClassCastException ex) {
-            throw new DocumentException(ex);
-        }
-
-    }
-
-    @Override
-    public String toString() {
-        return "Identity{" +
-                "documentType=" + documentType +
-                ", document=" + document +
-                ", provider=" + provider +
-                ", searchableDocument=" + searchableDocument +
-                ", searchableIdentity=" + searchableIdentity +
-                '}';
-    }
+    <IdentityT> IdentityT getIdentity(Class<IdentityT> identityTClass);
 
 }

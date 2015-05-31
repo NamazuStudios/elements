@@ -18,9 +18,17 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SearchableDocument {
 
+    /**
+     * This is the default query for extracting the document type from
+     * the model object.  This simply invokes model.getClass();
+     */
     String DEFAULT_CLASS_XPATH_QUERY = "getClass($document)";
 
-    String DEFAULT_CLASS_FIELD_NAME = "class";
+    /**
+     * The default field name to use when storing the class name in the
+     * document.
+     */
+    String DEFAULT_CLASS_FIELD_NAME = "java.class.fqn";
 
     /**
      * This specifies a way to store the Java fully qualified name for a {@link Class}

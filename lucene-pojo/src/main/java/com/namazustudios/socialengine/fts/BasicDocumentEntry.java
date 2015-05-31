@@ -41,8 +41,13 @@ public class BasicDocumentEntry<DocumentT> implements DocumentEntry<DocumentT> {
     }
 
     @Override
-    public Identity<DocumentT> getIdentifier(final Class<DocumentT> aClass) {
-        return new Identity<>(aClass, document, provider);
+    public Identity<DocumentT> getIdentity(final Class<DocumentT> aClass) {
+        return new BasicIdentity<>(aClass, document, provider);
+    }
+
+    @Override
+    public Fields<DocumentT> getFields(Class<DocumentT> documentTClassType) {
+        return null;
     }
 
     @Override

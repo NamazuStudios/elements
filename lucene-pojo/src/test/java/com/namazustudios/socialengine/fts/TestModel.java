@@ -10,7 +10,7 @@ import org.apache.lucene.document.Field;
  *
  * Created by patricktwohig on 5/31/15.
  */
-@SearchableIdentity(@SearchableField(name="id", path="/id"))
+@SearchableIdentity(@SearchableField(name = "id", path = "/id", type = String.class))
 @SearchableDocument(
         fields ={
             @SearchableField(name="byteValue", path="/byteValue"),

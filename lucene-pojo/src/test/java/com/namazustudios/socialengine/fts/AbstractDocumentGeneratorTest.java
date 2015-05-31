@@ -1,14 +1,12 @@
 package com.namazustudios.socialengine.fts;
 
-import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
-import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexableField;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import java.util.Iterator;
 import java.util.Random;
 
 /**
@@ -64,9 +62,24 @@ public abstract class AbstractDocumentGeneratorTest {
         final TestModel testModel = scramble(new TestModel());
         final DocumentEntry<TestModel> testModelDocumentEntry = underTest.generate(testModel);
 
-        // Check that the identity is sane
-        final Class<TestModel> type = testModelDocumentEntry.getIdentifier(TestModel.class).getDocumentType();
-        Assert.assertEquals(type, TestModel.class);
+        // So the TestModel has ten fields defined explicity, one field for the type, and finally
+        // an identity field.  That's a total of 12 fields.  We should only have generated
+        // exactly that may fields.
+
+        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 12);
+
+        // Check that the identity is sane.  We need to make sure that the identity is
+        // extracted properly and that the value matches.
+
+        final Identity<TestModel> type = testModelDocumentEntry.getIdentity(TestModel.class);
+        Assert.assertEquals(type.getIdentityType(), String.class);
+        Assert.assertEquals(type.getDocumentType(), TestModel.class);
+        Assert.assertEquals(type.getIdentity(String.class), testModel.getId());
+
+        // Lastly, let's check the fields in the document, make sure that lines up properly.
+        // The ordering is important.
+
+        final Iterator<IndexableField> indexableFieldIterator = testModelDocumentEntry.getDocument().iterator();
 
     }
 
@@ -96,6 +109,7 @@ public abstract class AbstractDocumentGeneratorTest {
         testModel.setDoubleValue(random.nextDouble());
         testModel.setStringValue(Long.toString(random.nextLong()));
         testModel.setStringValue(Long.toString(random.nextLong()) + " " + Long.toString(random.nextLong()));
+        testModel.setTextValue(Long.toString(random.nextLong()) + " " + Long.toString(random.nextLong()));
 
         final byte[] bytes = new byte[1024];
         random.nextBytes(bytes);

@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.fts;
 
 import org.apache.lucene.document.Document;
 
+import javax.print.Doc;
+
 /**
  *
  *
@@ -17,7 +19,7 @@ public interface DocumentEntry<DocumentT> {
     Document getDocument();
 
     /**
-     * Extracts and generates the {@link Identity} for the encapsulated {@link Document} by reading
+     * Extracts and generates the {@link BasicIdentity} for the encapsulated {@link Document} by reading
      * the annotations on the given class and extracting values from the document.
      *
      * @return the identity for this document
@@ -25,6 +27,14 @@ public interface DocumentEntry<DocumentT> {
      * @throws DocumentException if there is a problem generating the document's identity
      */
 
-    Identity<DocumentT> getIdentifier(Class<DocumentT> aClass);
+    Identity<DocumentT> getIdentity(Class<DocumentT> documentTClassType);
+
+    /**
+     * Gets the {@link Fields} of the document.
+     *
+     * @param documentTClassType the document type
+     * @return the document type
+     */
+    Fields<DocumentT> getFields(Class<DocumentT> documentTClassType);
 
 }

@@ -51,9 +51,24 @@ public class DefaultIndexableFieldExtractor implements IndexableFieldExtractor<O
     @Override
     public Object extract(final Document document, final FieldMetadata fieldMetadata) {
 
+
         final Class<?> type = fieldMetadata.type();
 
-        // All numeric types which can be parsed as a string.
+        // The byte array type, which is just copied back out directly.
+
+        if (type.isAssignableFrom(byte[].class)) {
+
+            final BytesRef bytesRef = document.getBinaryValue(fieldMetadata.name());
+
+            if (bytesRef == null) {
+                throw new FieldExtractionException(fieldMetadata, document, "no binary value for field " + fieldMetadata);
+            }
+
+            return bytesRef.bytes.clone();
+
+        }
+
+        // All remaining types can be parsed from the string.
 
         try {
 
@@ -98,19 +113,8 @@ public class DefaultIndexableFieldExtractor implements IndexableFieldExtractor<O
             throw new FieldExtractionException(fieldMetadata, document, nfe);
         }
 
-        // The byte array type, which is just copied back out directly.
-
-        if (type.isAssignableFrom(byte[].class)) {
-
-            final BytesRef bytesRef = document.getBinaryValue(fieldMetadata.name());
-
-            if (bytesRef == null) {
-                throw new FieldExtractionException(fieldMetadata, document, "no binary value for field " + fieldMetadata);
-            }
-
-            return bytesRef.bytes.clone();
-
-        }
+        // If we get to this point, then we simply just throw the exception.  We're simply
+        // not able to extract the field.
 
         throw new FieldExtractionException(fieldMetadata, document, "unable to extract value for field " + fieldMetadata);
 

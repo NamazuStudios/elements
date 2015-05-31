@@ -119,8 +119,8 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
             }
 
             @Override
-            public Identity<DocumentT> getIdentifier(Class<DocumentT> aClass) {
-                return documentEntry.getIdentifier(aClass);
+            public Identity<DocumentT> getIdentity(Class<DocumentT> aClass) {
+                return documentEntry.getIdentity(aClass);
             }
 
             @Override

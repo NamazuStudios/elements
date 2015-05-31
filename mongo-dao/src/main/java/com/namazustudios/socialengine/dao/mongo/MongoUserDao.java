@@ -14,7 +14,6 @@ import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.fts.*;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
-import com.sun.org.apache.bcel.internal.generic.DUP;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -22,7 +21,6 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -30,7 +28,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -124,7 +121,7 @@ public class MongoUserDao implements UserDao {
                     new Function<ScoredDocumentEntry<MongoUser>, Object>() {
                         @Override
                         public Object apply(ScoredDocumentEntry<MongoUser> input) {
-                            return input.getIdentifier(MongoUser.class).getIdentity();
+                            return input.getIdentity(MongoUser.class).getIdentity();
                         }
                     });
 
