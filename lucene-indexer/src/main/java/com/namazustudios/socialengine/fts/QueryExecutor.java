@@ -15,11 +15,11 @@ import java.util.List;
  * Responsible for exeucint a query.  This is intended to be a short-lived object which
  * only lives as long as it needs to in order to read from the index.
  *
- * This implements the {@link AutoCloseable} inteface such that it may be used in the
+ * This implements the {@link AutoCloseable} interface such that it may be used in the
  * try-with-resources block.
  *
- * <em>IMPORTANT</em> Instances of this object must be closed when they are finished.
- * Failure to do so will result in potential resources hogging.
+ * <em>IMPORTANT: </em> this, or one of the subsequent objects returned by this must be
+ * closed or else resource hogging may happen.
  *
  * Created by patricktwohig on 5/16/15.
  */
@@ -69,11 +69,6 @@ public class QueryExecutor<DocumentT> implements AutoCloseable, Closeable {
 
     @Override
     public void close() throws IOException {
-        indexSearcherIOContext.close();
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
         indexSearcherIOContext.close();
     }
 

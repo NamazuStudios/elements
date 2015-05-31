@@ -129,6 +129,11 @@ public abstract class AbstractSearchResult<DocumentT, EntryT extends DocumentEnt
             }
 
             @Override
+            public void close() {
+                AbstractSearchResult.this.close();
+            }
+
+            @Override
             public String toString() {
                 return "delegates to " + AbstractSearchResult.this;
             }
@@ -141,6 +146,15 @@ public abstract class AbstractSearchResult<DocumentT, EntryT extends DocumentEnt
         return "TopDocsSearchResult{" +
                 "objectQuery=" + objectQuery +
                 '}';
+    }
+
+    @Override
+    public void close() {
+        try {
+            indexSearcherIOContext.close();
+        } catch (IOException e) {
+            throw new SearchException(e.getMessage(), e);
+        }
     }
 
 }

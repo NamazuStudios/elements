@@ -1,13 +1,19 @@
 package com.namazustudios.socialengine.fts;
 
+import java.io.IOException;
+
 /**
  * This is the final result from a query.  This provides a means to walk the collection
  * of documents requested through an {@link ObjectQuery}.  Additionally, this is capable
  * of returning the total number of documents matching the query.
  *
+ * This extends the {@link AutoCloseable} interface such that it may be used in the
+ * try-with-resources block.
+ *
  * Created by patricktwohig on 5/15/15.
  */
-public interface SearchResult<DocumentT, EntryT extends DocumentEntry<DocumentT>> extends Iterable<EntryT> {
+public interface SearchResult<DocumentT, EntryT extends DocumentEntry<DocumentT>>
+        extends Iterable<EntryT>, AutoCloseable {
 
     /**
      * Gets the total number of results in the set.  This may be an
@@ -57,5 +63,13 @@ public interface SearchResult<DocumentT, EntryT extends DocumentEntry<DocumentT>
      * @return
      */
     SearchResult<DocumentT, EntryT> prune(int count);
+
+    /**
+     * Closes this result's underlying {@link IOContext}.
+     *
+     * @throws SearchException if a problem occurs while reading the
+     */
+    @Override
+    void close();
 
 }

@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -114,11 +115,10 @@ public class MongoUserDao implements UserDao {
 
         final Query<MongoUser> userQuery = datastore.createQuery(MongoUser.class);
 
-        try {
-            final TopDocsSearchResult<MongoUser> results = objectIndex
-                    .executeQueryForObjects(MongoUser.class, booleanQuery)
-                    .withTopScores(count + offset)
-                    .after(offset, count);
+        try (final TopDocsSearchResult<MongoUser> results = objectIndex
+                .executeQueryForObjects(MongoUser.class, booleanQuery)
+                .withTopScores(count + offset)
+                .after(offset, count)) {
 
             final Iterable<Object> identifiers = Iterables.transform(results,
                     new Function<ScoredDocumentEntry<MongoUser>, Object>() {
@@ -132,6 +132,8 @@ public class MongoUserDao implements UserDao {
 
         } catch (NoResultException ex) {
             return new Pagination<>();
+        } catch (SearchException ex) {
+            throw new InternalException(ex.getMessage(), ex);
         }
 
         final Pagination<User> users = paginationFromQuery(userQuery, offset, count);
