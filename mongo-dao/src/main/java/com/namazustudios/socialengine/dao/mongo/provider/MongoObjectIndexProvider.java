@@ -1,8 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
 import com.namazustudios.socialengine.exception.InternalException;
-import com.namazustudios.socialengine.fts.DefaultObjectIndex;
-import com.namazustudios.socialengine.fts.ObjectIndex;
+import com.namazustudios.socialengine.fts.*;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -35,25 +34,44 @@ public class MongoObjectIndexProvider implements Provider<ObjectIndex> {
 
     @Override
     public ObjectIndex get() {
-        final Directory directory = directoryProvider.get();
 
-        try {
+        final IOContext.Provider<IndexWriter> indexWriterProvider  = new IOContext.Provider<IndexWriter>() {
+            @Override
+            public IOContext get() throws IOException {
 
-            final IndexWriterConfig indexWriterConfig =
-                    new IndexWriterConfig(analyzerProvider.get())
-                    .setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+                final Directory directory = directoryProvider.get();
 
-            final IndexWriter indexWriter = new IndexWriter(directory, indexWriterConfig);
-            indexWriter.commit();
+                final IndexWriterConfig indexWriterConfig =
+                        new IndexWriterConfig(analyzerProvider.get())
+                                .setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 
-            final IndexReader indexReader = DirectoryReader.open(directory);
-            final IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+                final IndexWriter indexWriter = new IndexWriter(directory, indexWriterConfig);
+                indexWriter.commit();
 
-            return new DefaultObjectIndex(indexWriter, indexSearcher);
+                return new DefaultIOContext<>(indexWriter);
 
-        } catch (IOException e) {
-            throw new InternalException(e);
-        }
+            }
+        };
+
+        final IOContext.Provider<IndexSearcher> indexSearcherProvider = new IOContext.Provider<IndexSearcher>() {
+            @Override
+            public IOContext<IndexSearcher> get() throws IOException {
+
+                final Directory directory = directoryProvider.get();
+                final IndexReader indexReader = DirectoryReader.open(directory);
+                final IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+
+                return new AbstractIOContext<IndexSearcher>(indexSearcher) {
+                    @Override
+                    protected void doClose() throws IOException {
+                        indexReader.close();
+                    }
+                };
+
+            }
+        };
+
+        return new DefaultObjectIndex(indexWriterProvider, indexSearcherProvider);
 
     }
 

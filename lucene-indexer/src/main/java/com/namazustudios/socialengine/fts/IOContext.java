@@ -52,7 +52,7 @@ public interface IOContext<IOType> extends AutoCloseable, Closeable {
          *
          * @return
          */
-        IOContext get();
+        IOContext get() throws IOException;
 
     }
 
