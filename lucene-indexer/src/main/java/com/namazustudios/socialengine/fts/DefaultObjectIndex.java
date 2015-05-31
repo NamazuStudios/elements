@@ -12,27 +12,27 @@ import org.apache.lucene.search.IndexSearcher;
 public class DefaultObjectIndex extends AbstractObjectIndex {
 
     /**
-     * Initializes a new instance with a {@link DefaultDocumentGenerator} and an instance
-     * of {@link IndexWriter} and {@link IndexSearcher}.
+     * Initializes the DefaultObjectIndex with an instance of {@link DefaultDocumentGenerator}
      *
-     * @param indexWriter the index writer
-     * @param indexSearcher the index searcher
-     *
+     * @param indexWriterContextProvider the IOContextProvider for the index writer
+     * @param indexSearcherContextProvider the IOContextProvider for the index searcher
      */
-    public DefaultObjectIndex(IndexWriter indexWriter, IndexSearcher indexSearcher) {
-        this(new DefaultDocumentGenerator(), indexWriter, indexSearcher);
+    public DefaultObjectIndex(final IOContext.Provider<IndexWriter> indexWriterContextProvider,
+                              final IOContext.Provider<IndexSearcher> indexSearcherContextProvider) {
+        super(new DefaultDocumentGenerator(), indexWriterContextProvider, indexSearcherContextProvider);
     }
 
     /**
-     * Initializes a new instance with the given {@link DocumentGenerator} and an instance
-     * of {@link IndexWriter} and {@link IndexSearcher}.
+     * Initializes the DefaultObjectIndex with a specific instance of {@link DocumentGenerator}.
      *
-     * @param indexWriter the index writer
-     * @param indexSearcher the index searcher
-     *
+     * @param documentGenerator the {@link DocumentGenerator} used by the object index
+     * @param indexWriterContextProvider the IOContextProvider for the index writer
+     * @param indexSearcherContextProvider the IOContextProvider for the index searcher
      */
-    public DefaultObjectIndex(DocumentGenerator documentGenerator, IndexWriter indexWriter, IndexSearcher indexSearcher) {
-        super(documentGenerator, indexWriter, indexSearcher);
+    public DefaultObjectIndex(final DocumentGenerator documentGenerator,
+                              final IOContext.Provider<IndexWriter> indexWriterContextProvider,
+                              final IOContext.Provider<IndexSearcher> indexSearcherContextProvider) {
+        super(documentGenerator, indexWriterContextProvider, indexSearcherContextProvider);
     }
 
 }

@@ -24,15 +24,15 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
 
     private final TopDocs topDocs;
 
-    private final IndexSearcher indexSearcher;
+    private final IOContext<IndexSearcher> indexSearcherIOContext;
 
-    public TopDocsSearchResult(ObjectQuery objectQuery,
-                               TopDocs topDocs,
-                               IndexSearcher indexSearcher,
-                               DocumentGenerator documentGenerator) {
-        super(objectQuery, documentGenerator, indexSearcher.getIndexReader());
+    public TopDocsSearchResult(final ObjectQuery objectQuery,
+                               final TopDocs topDocs,
+                               final IOContext<IndexSearcher> indexSearcherIOContext,
+                               final DocumentGenerator documentGenerator) {
+        super(objectQuery, documentGenerator, indexSearcherIOContext.instance().getIndexReader());
         this.topDocs = topDocs;
-        this.indexSearcher = indexSearcher;
+        this.indexSearcherIOContext = indexSearcherIOContext;
     }
 
     @Override
@@ -160,12 +160,12 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
         final ScoreDoc scoreDoc = topDocs.scoreDocs[offset];
 
         try {
-            newTopDocs = indexSearcher.searchAfter(scoreDoc, objectQuery.getQuery(), count);
+            newTopDocs = indexSearcherIOContext.instance().searchAfter(scoreDoc, objectQuery.getQuery(), count);
         } catch (IOException ex) {
             throw new SearchException(ex);
         }
 
-        return new TopDocsSearchResult<>(objectQuery, newTopDocs, indexSearcher, documentGenerator);
+        return new TopDocsSearchResult<>(objectQuery, newTopDocs, indexSearcherIOContext, documentGenerator);
 
     }
 

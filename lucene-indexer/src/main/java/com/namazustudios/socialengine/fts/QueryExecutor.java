@@ -5,28 +5,38 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.*;
 
 import javax.print.Doc;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
 /**
+ * Responsible for exeucint a query.  This is intended to be a short-lived object which
+ * only lives as long as it needs to in order to read from the index.
+ *
+ * This implements the {@link AutoCloseable} inteface such that it may be used in the
+ * try-with-resources block.
+ *
+ * <em>IMPORTANT</em> Instances of this object must be closed when they are finished.
+ * Failure to do so will result in potential resources hogging.
+ *
  * Created by patricktwohig on 5/16/15.
  */
-public class QueryExecutor<DocumentT> {
+public class QueryExecutor<DocumentT> implements AutoCloseable, Closeable {
 
     private final ObjectQuery<DocumentT> objectQuery;
 
-    private final IndexSearcher indexSearcher;
+    private final IOContext<IndexSearcher> indexSearcherIOContext;
 
     private final DocumentGenerator documentGenerator;
 
     public QueryExecutor(final DocumentGenerator documentGenerator,
-                         final IndexSearcher indexSearcher,
+                         final IOContext<IndexSearcher> indexSearcherIOContext,
                          final ObjectQuery<DocumentT> objectQuery) {
         this.documentGenerator = documentGenerator;
         this.objectQuery = objectQuery;
-        this.indexSearcher = indexSearcher;
+        this.indexSearcherIOContext = indexSearcherIOContext;
     }
 
     /**
@@ -41,12 +51,12 @@ public class QueryExecutor<DocumentT> {
         final TopDocs topDocs;
 
         try {
-            topDocs = indexSearcher.search(objectQuery.getQuery(), count);
+            topDocs = indexSearcherIOContext.instance().search(objectQuery.getQuery(), count);
         } catch (IOException ex) {
             throw new SearchException(ex);
         }
 
-        return new TopDocsSearchResult<>(objectQuery, topDocs, indexSearcher, documentGenerator);
+        return new TopDocsSearchResult<>(objectQuery, topDocs, indexSearcherIOContext, documentGenerator);
 
     }
 
@@ -56,4 +66,15 @@ public class QueryExecutor<DocumentT> {
                 "objectQuery=" + objectQuery +
                 '}';
     }
+
+    @Override
+    public void close() throws IOException {
+        indexSearcherIOContext.close();
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        indexSearcherIOContext.close();
+    }
+
 }

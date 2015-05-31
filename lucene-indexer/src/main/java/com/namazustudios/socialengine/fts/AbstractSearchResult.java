@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.fts;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.IndexSearcher;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -17,14 +18,16 @@ public abstract class AbstractSearchResult<DocumentT, EntryT extends DocumentEnt
 
     protected final ObjectQuery objectQuery;
 
-    protected final IndexReader indexReader;
+    protected final IOContext<IndexSearcher> indexSearcherIOContext;
 
     protected final DocumentGenerator documentGenerator;
 
-    public AbstractSearchResult(ObjectQuery objectQuery, DocumentGenerator documentGenerator, IndexReader indexReader) {
+    public AbstractSearchResult(final ObjectQuery objectQuery,
+                                final DocumentGenerator documentGenerator,
+                                final IOContext<IndexSearcher> indexSearcherIOContext) {
         this.objectQuery = objectQuery;
         this.documentGenerator = documentGenerator;
-        this.indexReader = indexReader;
+        this.indexSearcherIOContext = indexSearcherIOContext;
     }
 
     protected DocumentEntry<DocumentT> getEntry(final int doc) {
@@ -34,7 +37,7 @@ public abstract class AbstractSearchResult<DocumentT, EntryT extends DocumentEnt
         final Document document;
 
         try {
-            document = indexReader.document(doc);
+            document = indexSearcherIOContext.instance().getIndexReader().document(doc);
         } catch (IOException ex) {
             throw new SearchException(ex);
         }

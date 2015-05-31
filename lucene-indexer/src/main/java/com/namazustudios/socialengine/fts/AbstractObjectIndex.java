@@ -14,16 +14,16 @@ public abstract class AbstractObjectIndex implements ObjectIndex {
 
     private final DocumentGenerator documentGenerator;
 
-    private final IndexWriter indexWriter;
+    private final IOContext.Provider<IndexWriter> indexWriterContextProvider;
 
-    private final IndexSearcher indexSearcher;
+    private final IOContext.Provider<IndexSearcher> indexSearcherContextProvider;
 
     public AbstractObjectIndex(DocumentGenerator documentGenerator,
-                               IndexWriter indexWriter,
-                               IndexSearcher indexSearcher) {
+                               IOContext.Provider<IndexWriter> indexWriterContextProvider,
+                               IOContext.Provider<IndexSearcher> indexSearcherContextProvider) {
         this.documentGenerator = documentGenerator;
-        this.indexWriter = indexWriter;
-        this.indexSearcher = indexSearcher;
+        this.indexWriterContextProvider = indexWriterContextProvider;
+        this.indexSearcherContextProvider = indexSearcherContextProvider;
     }
 
     @Override
@@ -32,10 +32,10 @@ public abstract class AbstractObjectIndex implements ObjectIndex {
         final DocumentEntry<T> documentEntry = documentGenerator.generate(model);
         final ObjectQuery<T> queryByExample = queryByExample(type, model);
 
-        try {
-            indexWriter.deleteDocuments(queryByExample.getQuery());
-            indexWriter.addDocument(documentEntry.getDocument());
-            indexWriter.commit();
+        try (final IOContext<IndexWriter> indexWriterIOContext = indexWriterContextProvider.get()) {
+            indexWriterIOContext.instance().deleteDocuments(queryByExample.getQuery());
+            indexWriterIOContext.instance().addDocument(documentEntry.getDocument());
+            indexWriterIOContext.instance().commit();
             return documentEntry;
         } catch (IOException ex) {
             throw new SearchException(ex);
@@ -48,9 +48,9 @@ public abstract class AbstractObjectIndex implements ObjectIndex {
 
         final ObjectQuery<?> queryByExample = queryByExample(type, model);
 
-        try {
-            indexWriter.deleteDocuments(queryByExample.getQuery());
-            indexWriter.commit();
+        try (final IOContext<IndexWriter> indexWriterIOContext = indexWriterContextProvider.get()) {
+            indexWriterIOContext.instance().deleteDocuments(queryByExample.getQuery());
+            indexWriterIOContext.instance().commit();
         } catch (IOException ex) {
             throw new SearchException(ex);
         }
@@ -79,7 +79,7 @@ public abstract class AbstractObjectIndex implements ObjectIndex {
 
     @Override
     public <T> QueryExecutor<T> execute(ObjectQuery<T> query) {
-        return new QueryExecutor<>(documentGenerator, indexSearcher, query);
+        return new QueryExecutor<>(documentGenerator, indexSearcherContextProvider.get(), query);
     }
 
     @Override
