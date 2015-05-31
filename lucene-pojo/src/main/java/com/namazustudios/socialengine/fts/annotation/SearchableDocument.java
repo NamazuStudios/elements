@@ -18,7 +18,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SearchableDocument {
 
-    String DEFAULT_CLASS_XPATH_QUERY = "/class";
+    String DEFAULT_CLASS_XPATH_QUERY = "getClass($document)";
 
     String DEFAULT_CLASS_FIELD_NAME = "class";
 

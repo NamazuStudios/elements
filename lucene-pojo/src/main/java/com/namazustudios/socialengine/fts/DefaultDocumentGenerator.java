@@ -21,7 +21,8 @@ public class DefaultDocumentGenerator extends AbstractDocumentGenerator {
 
     public DefaultDocumentGenerator() {
         super(DefaultIndexableFieldProcessorProvider.getInstance(),
-             DefaultIndexableFieldExtractorProvider.getInstance());
+             DefaultIndexableFieldExtractorProvider.getInstance(),
+             DefaultJXPathContextProvider.getInstance());
     }
 
 }

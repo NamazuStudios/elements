@@ -29,7 +29,7 @@
     </modules>
 
     <properties>
-        <test.suites></test.suites>
+        <test.suites>**/*UnitTestSuite.java</test.suites>
         <guice.version>3.0</guice.version>
         <javax.inject.version>1</javax.inject.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -46,6 +46,7 @@
         <testng.version>6.9.4</testng.version>
         <test.groups>unit</test.groups>
         <surefire.version>2.18.1</surefire.version>
+        <testng.version>6.8.21</testng.version>
     </properties>
 
     <dependencies>

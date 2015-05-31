@@ -35,8 +35,10 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
         public void process(JXPathContext context, DocumentEntry<?> documentEntry) {}
     };
 
-    protected final IndexableFieldProcessor.Provider indexableFieldProcessorProvider;
-    protected final IndexableFieldExtractor.Provider indexableFieldExtractorProvider;
+    private final IndexableFieldProcessor.Provider indexableFieldProcessorProvider;
+    private final IndexableFieldExtractor.Provider indexableFieldExtractorProvider;
+    private final JXPathContextProvider jxPathContextProvider;
+
 
     private final ReentrantReadWriteLock reentrantReadWriteLock = new ReentrantReadWriteLock();
     private final Lock r = reentrantReadWriteLock.readLock();
@@ -45,9 +47,11 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
     private final Map<Class<?>, ContextProcessor> contextProcessorMap = new HashMap<>();
 
     public AbstractDocumentGenerator(final IndexableFieldProcessor.Provider indexableFieldProcessorProvider,
-                                     final IndexableFieldExtractor.Provider indexableFieldExtractorProvider) {
+                                     final IndexableFieldExtractor.Provider indexableFieldExtractorProvider,
+                                     final JXPathContextProvider jxPathContextProvider) {
         this.indexableFieldProcessorProvider = indexableFieldProcessorProvider;
         this.indexableFieldExtractorProvider = indexableFieldExtractorProvider;
+        this.jxPathContextProvider = jxPathContextProvider;
     }
 
     @Override
@@ -130,7 +134,7 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
     @Override
     public <DocumentT> DocumentEntry<DocumentT> process(final DocumentT object, final Document document) {
 
-        final JXPathContext jxPathContext = JXPathContext.newContext(object);
+        final JXPathContext jxPathContext = jxPathContextProvider.get(object);
         final DocumentEntry documentEntry = entry(document);
 
         final Class<?> cls = object.getClass();

@@ -131,7 +131,9 @@ public class MongoUserDao implements UserDao {
             userQuery.criteria("_id").in(identifiers);
 
         } catch (NoResultException ex) {
-            return new Pagination<>();
+            final Pagination<User> pagination = new Pagination<>();
+            pagination.setApproximation(true);
+            return pagination;
         } catch (SearchException ex) {
             throw new InternalException(ex.getMessage(), ex);
         }

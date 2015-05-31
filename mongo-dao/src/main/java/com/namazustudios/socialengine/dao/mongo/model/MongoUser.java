@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
+import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
+import com.namazustudios.socialengine.fts.annotation.SearchableField;
+import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.model.User;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -10,6 +13,16 @@ import org.mongodb.morphia.annotations.Property;
  * Created by patricktwohig on 3/31/15.
  */
 @Entity(value = "user", noClassnameStored = true)
+
+@SearchableIdentity(@SearchableField(name = "id", path = "/objectId"))
+@SearchableDocument(
+        fields = {
+            @SearchableField(name = "name", path = "/name"),
+            @SearchableField(name = "email", path = "/email"),
+            @SearchableField(name = "active", path = "/active"),
+            @SearchableField(name = "level", path = "/level")
+        }
+)
 public class MongoUser {
 
     @Id

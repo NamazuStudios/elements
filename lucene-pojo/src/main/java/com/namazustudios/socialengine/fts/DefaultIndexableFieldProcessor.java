@@ -30,7 +30,8 @@ import java.util.List;
  *  <li>String - {@link StringField} or {@link TextField} depending on the value of {@link SearchableField#text()}</li>
  *  <li>{@link CharSequence} - {@link StringField} or {@link TextField} depending on the fields of {@link SearchableField#text()}</li>
  *  <li>{@link Iterable} - One instance of {@link IndexableField} for each element provided each element is compatible</li>
- *  <li>{@link Class} - Stores the FQN name as a string</li>
+ *  <li>{@link Class} - Stores the Class FQN as a string</li>
+ *  <li>{@link Enum} - Stores the enum value as a string using the {@link Enum#toString()}</li>
  * </ul>
  *
  *
@@ -72,7 +73,7 @@ public class DefaultIndexableFieldProcessor implements IndexableFieldProcessor<O
         } else if (value instanceof Character) {
             fields.add(newTextOrStringField((Character) value, fieldMetadata));
         } else if (value instanceof Short) {
-            fields.add(newIntegerField((Short)value, fieldMetadata));
+            fields.add(newIntegerField((Short) value, fieldMetadata));
         } else if (value instanceof Integer) {
             fields.add(newIntegerField((Integer) value, fieldMetadata));
         } else if (value instanceof Long) {
@@ -80,17 +81,19 @@ public class DefaultIndexableFieldProcessor implements IndexableFieldProcessor<O
         } else if (value instanceof Float) {
             fields.add(newFloatField((Float) value, fieldMetadata));
         } else if (value instanceof Double) {
-            fields.add(newDoubleField((Float)value, fieldMetadata));
+            fields.add(newDoubleField((Double) value, fieldMetadata));
         } else if ((value instanceof byte[]) && fieldMetadata.store().equals(Field.Store.YES)) {
-            fields.add(newStoredField((byte[])value, fieldMetadata));
+            fields.add(newStoredField((byte[]) value, fieldMetadata));
         } else if (value instanceof char[]) {
-            fields.add(newTextOrStringField(new String((char[])value), fieldMetadata));
+            fields.add(newTextOrStringField(new String((char[]) value), fieldMetadata));
         } else if (value instanceof CharSequence) {
-            fields.add(newTextOrStringField((CharSequence)value, fieldMetadata));
+            fields.add(newTextOrStringField((CharSequence) value, fieldMetadata));
         } else if (value instanceof Iterable<?>) {
-            for (final Object object : ((Iterable<?>)value)) {
+            for (final Object object : ((Iterable<?>) value)) {
                 generateFields(object, fieldMetadata, fields);
             }
+        } else if (value instanceof Enum<?>) {
+            fields.add(newTextOrStringField(value.toString(), fieldMetadata));
         } else if (value instanceof Class<?>) {
             final Class<?> cls = (Class<?>)value;
             fields.add(newStringField(cls.getName(), fieldMetadata));

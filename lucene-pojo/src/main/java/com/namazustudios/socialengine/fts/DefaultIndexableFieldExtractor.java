@@ -28,6 +28,7 @@ import java.util.*;
  *  <li>double - parsed as a double using new {@link Double#Double(String)}</li>
  *  <li>String - passed directly through</li>
  *  <li>Class<?> - attempts to load using {@link Class#forName(String)}</?></li>
+ *  <li>Enum<?> - attempts to find the enumerant using {@link Enum#valueOf(Class, String)}</li>
  *  <li>{@link CharSequence} - passed directly through</li>
  * </ul>
  *
@@ -78,6 +79,8 @@ public class DefaultIndexableFieldExtractor implements IndexableFieldExtractor<O
                 return stringValue.toCharArray();
             } else if (CharSequence.class.isAssignableFrom(type)) {
                 return stringValue;
+            } else if (Enum.class.isAssignableFrom(type)) {
+                return Enum.valueOf((Class<? extends Enum>)type, stringValue);
             } else if (Character.class.isAssignableFrom(type) || char.class.isAssignableFrom(type)) {
 
                 if (stringValue.length() > 1) {
@@ -87,6 +90,8 @@ public class DefaultIndexableFieldExtractor implements IndexableFieldExtractor<O
 
                 return stringValue.isEmpty() ? Character.valueOf((char)0) : stringValue.charAt(0);
 
+            } else if (Class.class.isAssignableFrom(type)) {
+                return extractClass(document, fieldMetadata);
             }
 
         } catch (NumberFormatException nfe) {
@@ -125,7 +130,7 @@ public class DefaultIndexableFieldExtractor implements IndexableFieldExtractor<O
 
                 // We really only care about concrete types here, so if it's
                 // an interface we skip over it.  Trying to support interfaces
-                // (or multipile inheritance) would be a nightmare.
+                // (or multiple inheritance) would be a nightmare.
 
                 if (!cls.isInterface() && !cls.isAnnotation()) {
                     classList.add(cls);
