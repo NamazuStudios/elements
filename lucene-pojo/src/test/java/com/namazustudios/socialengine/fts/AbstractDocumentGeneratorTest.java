@@ -1,12 +1,10 @@
 package com.namazustudios.socialengine.fts;
 
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.IndexableField;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.Iterator;
 import java.util.Random;
 
 /**
@@ -33,59 +31,79 @@ public abstract class AbstractDocumentGeneratorTest {
         underTest = getObjectToTest();
     }
 
-    // The document annotation from the models.  Just so we have them :)
-    //@SearchableIdentity(@SearchableField(name="id", path="/id"))
-    //@SearchableDocument(
-    //        fields ={
-    //                @SearchableField(name="byteValue", path="/byteValue"),
-    //                @SearchableField(name="charValue", path="/charValue"),
-    //                @SearchableField(name="intValue", path="/intValue"),
-    //                @SearchableField(name="longValue", path="/longValue"),
-    //                @SearchableField(name="floatValue", path="/floatValue"),
-    //                @SearchableField(name="doubleValue", path="/doubleValue"),
-    //                @SearchableField(name="stringValue", path="/stringValue"),
-    //                @SearchableField(name="textValue", path="/textValue"),
-    //                @SearchableField(name="blobValue", path="/blobValue", store = Field.Store.YES),
-    //                @SearchableField(name="enumValue", path="/enumValue"),
-    //        }
-    //)
-    //@SearchableDocument(
-    //        fields = {
-    //                @SearchableField(name="anotherStringValue", path="/anotherStringValue"),
-    //                @SearchableField(name="yetAnotherStringValue", path="/yetAnotherStringValue"),
-    //        }
-    //)
-
     @Test
     private void testGenerateDocumentFromModel() {
 
         final TestModel testModel = scramble(new TestModel());
         final DocumentEntry<TestModel> testModelDocumentEntry = underTest.generate(testModel);
 
-        // So the TestModel has ten fields defined explicity, one field for the type, and finally
-        // an identity field.  That's a total of 12 fields.  We should only have generated
+        // So the TestModel has eleven fields defined explicity, one field for the type, and finally
+        // an identity field.  That's a total of 13 fields.  We should only have generated
         // exactly that may fields.
 
-        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 12);
+        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 13);
 
         // Check that the identity is sane.  We need to make sure that the identity is
         // extracted properly and that the value matches.
 
-        final Identity<TestModel> type = testModelDocumentEntry.getIdentity(TestModel.class);
-        Assert.assertEquals(type.getIdentityType(), String.class);
-        Assert.assertEquals(type.getDocumentType(), TestModel.class);
-        Assert.assertEquals(type.getIdentity(String.class), testModel.getId());
+        final Identity<TestModel> identity = testModelDocumentEntry.getIdentity(TestModel.class);
+        Assert.assertEquals(identity.getIdentityType(), String.class);
+        Assert.assertEquals(identity.getDocumentType(), TestModel.class);
+        Assert.assertEquals(identity.getIdentity(String.class), testModel.getId());
 
-        // Lastly, let's check the fields in the document, make sure that lines up properly.
-        // The ordering is important.
+        // Let's check the fields in the document...
 
-        final Iterator<IndexableField> indexableFieldIterator = testModelDocumentEntry.getDocument().iterator();
+        final Fields<TestModel> fields = testModelDocumentEntry.getFields(TestModel.class);
+        Assert.assertEquals(identity.getDocumentType(), TestModel.class);
+
+        Assert.assertEquals(fields.extract(Byte.class, "byteValue"), (Byte)testModel.getByteValue());
+        Assert.assertEquals(fields.extract(Character.class, "charValue"), (Character)testModel.getCharValue());
+        Assert.assertEquals(fields.extract(Integer.class, "intValue"), (Integer)testModel.getIntValue());
+        Assert.assertEquals(fields.extract(Long.class, "longValue"), (Long)testModel.getLongValue());
+        Assert.assertEquals(fields.extract(Float.class, "floatValue"), (Float)testModel.getFloatValue());
+        Assert.assertEquals(fields.extract(Double.class, "doubleValue"), (Double) testModel.getDoubleValue());
+        Assert.assertEquals(fields.extract(String.class, "stringValue"), (String) testModel.getStringValue());
+        Assert.assertEquals(fields.extract(String.class, "textValue"), (String) testModel.getTextValue());
+        Assert.assertEquals(fields.extract(byte[].class, "blobValue"), (byte[]) testModel.getBlobValue());
+        Assert.assertEquals(fields.extract(TestEnum.class, "enumValue"), (TestEnum) testModel.getEnumValue());
 
     }
 
     @Test
     private void testGenerateDocumentFromModelSubclass() {
-        final TestModelSubclass testModel = scramble(new TestModelSubclass());
+// TODO Some details need ironed out here
+//        final TestModelSubclass testModel = scramble(new TestModelSubclass());
+//        final DocumentEntry<TestModelSubclass> testModelDocumentEntry = underTest.generate(testModel);
+//
+//        // In addition to the above test case, this has three more fields.  An additional
+//
+//
+//        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 16);
+//
+//        // Check that the identity is sane.  We need to make sure that the identity is
+//        // extracted properly and that the value matches.
+//
+//        final Identity<TestModel> identity = testModelDocumentEntry.getIdentity(TestModelSubclass.class);
+//        Assert.assertEquals(identity.getIdentityType(), String.class);
+//        Assert.assertEquals(identity.getDocumentType(), TestModel.class);
+//        Assert.assertEquals(identity.getIdentity(String.class), testModel.getId());
+//
+//        // Let's check the fields in the document...
+//
+//        final Fields<TestModel> fields = testModelDocumentEntry.getFields(TestModelSubclass.class);
+//        Assert.assertEquals(identity.getDocumentType(), TestModel.class);
+//
+//        Assert.assertEquals(fields.extract(Byte.class, "byteValue"), (Byte)testModel.getByteValue());
+//        Assert.assertEquals(fields.extract(Character.class, "charValue"), (Character)testModel.getCharValue());
+//        Assert.assertEquals(fields.extract(Integer.class, "intValue"), (Integer)testModel.getIntValue());
+//        Assert.assertEquals(fields.extract(Long.class, "longValue"), (Long)testModel.getLongValue());
+//        Assert.assertEquals(fields.extract(Float.class, "floatValue"), (Float)testModel.getFloatValue());
+//        Assert.assertEquals(fields.extract(Double.class, "doubleValue"), (Double) testModel.getDoubleValue());
+//        Assert.assertEquals(fields.extract(String.class, "stringValue"), (String) testModel.getStringValue());
+//        Assert.assertEquals(fields.extract(String.class, "textValue"), (String) testModel.getTextValue());
+//        Assert.assertEquals(fields.extract(byte[].class, "blobValue"), (byte[]) testModel.getBlobValue());
+//        Assert.assertEquals(fields.extract(TestEnum.class, "enumValue"), (TestEnum) testModel.getEnumValue());
+
     }
 
     /**
@@ -103,6 +121,7 @@ public abstract class AbstractDocumentGeneratorTest {
         testModel.setId(Long.toString(System.currentTimeMillis()));
         testModel.setByteValue((byte) (0xff & random.nextInt()));
         testModel.setCharValue(Long.toString(random.nextLong()).charAt(0));
+        testModel.setShortValue((short)random.nextInt());
         testModel.setIntValue(random.nextInt());
         testModel.setLongValue(random.nextLong());
         testModel.setFloatValue(random.nextFloat());
@@ -119,6 +138,7 @@ public abstract class AbstractDocumentGeneratorTest {
         testModel.setEnumValue(values[random.nextInt(values.length)]);
 
         return testModel;
+
     }
 
     /**

@@ -16,16 +16,7 @@ import org.apache.lucene.document.Document;
  *
  * Created by patricktwohig on 5/15/15.
  */
-public interface Identity<DocumentT> {
-
-    /**
-     * Gets the Document's type.  This corresponds to {@link SearchableDocument#type()}.  Note,
-     * as subclasses of a document type may be stored, this may not be equal to the
-     * corresponding type.
-     *
-     * @return the document's type.
-     */
-    Class<? extends DocumentT> getDocumentType();
+public interface Identity<DocumentT> extends HasDocumentType<DocumentT> {
 
     /**
      * Gets the object's identity type.  This corresponds to {@link SearchableIdentity#value()}.

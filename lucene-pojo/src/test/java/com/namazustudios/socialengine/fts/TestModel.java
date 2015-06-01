@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.fts;
 import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
+import org.apache.lucene.document.DoubleField;
 import org.apache.lucene.document.Field;
 
 /**
@@ -13,16 +14,17 @@ import org.apache.lucene.document.Field;
 @SearchableIdentity(@SearchableField(name = "id", path = "/id", type = String.class))
 @SearchableDocument(
         fields ={
-            @SearchableField(name="byteValue", path="/byteValue"),
-            @SearchableField(name="charValue", path="/charValue"),
-            @SearchableField(name="intValue", path="/intValue"),
-            @SearchableField(name="longValue", path="/longValue"),
-            @SearchableField(name="floatValue", path="/floatValue"),
-            @SearchableField(name="doubleValue", path="/doubleValue"),
-            @SearchableField(name="stringValue", path="/stringValue"),
-            @SearchableField(name="textValue", path="/textValue"),
-            @SearchableField(name="blobValue", path="/blobValue", store = Field.Store.YES),
-            @SearchableField(name="enumValue", path="/enumValue"),
+            @SearchableField(name="byteValue", path="/byteValue", type = Byte.class),
+            @SearchableField(name="charValue", path="/charValue", type = Character.class),
+            @SearchableField(name="shortValue", path="/shortValue", type = Short.class),
+            @SearchableField(name="intValue", path="/intValue", type = Integer.class),
+            @SearchableField(name="longValue", path="/longValue", type = Long.class),
+            @SearchableField(name="floatValue", path="/floatValue", type = Float.class),
+            @SearchableField(name="doubleValue", path="/doubleValue", type = Double.class),
+            @SearchableField(name="stringValue", path="/stringValue", type = String.class),
+            @SearchableField(name="textValue", path="/textValue", type = String.class),
+            @SearchableField(name="blobValue", path="/blobValue", type = byte[].class, store = Field.Store.YES),
+            @SearchableField(name="enumValue", path="/enumValue", type = TestEnum.class),
         }
 )
 public class TestModel {

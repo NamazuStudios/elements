@@ -47,7 +47,7 @@ public class BasicDocumentEntry<DocumentT> implements DocumentEntry<DocumentT> {
 
     @Override
     public Fields<DocumentT> getFields(Class<DocumentT> documentTClassType) {
-        return null;
+        return new BasicFields<>(documentTClassType, document, provider);
     }
 
     @Override
