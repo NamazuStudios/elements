@@ -41,4 +41,23 @@ public interface Identity<DocumentT> extends HasDocumentType<DocumentT> {
      */
     <IdentityT> IdentityT getIdentity(Class<IdentityT> identityTClass);
 
+    /**
+     * Satisifies the general contract for {@link Object#hashCode()} based on this
+     * object's implementation of {@link #equals(Object)}.
+     *
+     * @return the hash code
+     */
+    int hashCode();
+
+    /**
+     * Satisfies the general contract for {@link Object#equals(Object)} with the
+     * additional stipulation that equality is determined by the document type
+     * as well as the identifier.
+     *
+     * @param other the object object
+     * @return true if {@link #getDocumentType()} and {@link #getIdentity()} both are equal.
+     *
+     */
+    boolean equals(Object other);
+
 }

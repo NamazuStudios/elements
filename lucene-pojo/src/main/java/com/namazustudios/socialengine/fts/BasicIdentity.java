@@ -4,6 +4,8 @@ import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
 import org.apache.lucene.document.Document;
 
+import java.util.Objects;
+
 /**
  *
  * The basic implementation of the {@link Identity} interface.
@@ -87,4 +89,22 @@ public class BasicIdentity<DocumentT> extends AbstractHasDocumentType<DocumentT>
                 '}';
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(getDocumentType(), getIdentity());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+
+        if (!(obj instanceof Identity)) {
+            return false;
+        }
+
+        final Identity<?> otherIdentity = (Identity)obj;
+
+        return Objects.equals(getDocumentType(), otherIdentity.getDocumentType()) &&
+               Objects.equals(getIdentity(), otherIdentity.getIdentity());
+
+    }
 }

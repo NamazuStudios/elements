@@ -4,7 +4,10 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by patricktwohig on 6/1/15.
@@ -90,6 +93,34 @@ public abstract class AbstractObjectIndexTest {
         }
 
         underTest.delete(testModel);
+
+        try (final IOContext<IndexSearcher> indexReaderIOContext = underTest.getIndexSearcherContextProvider().get()) {
+            Assert.assertEquals(indexReaderIOContext.instance().getIndexReader().numDocs(), 1);
+        }
+
+    }
+
+    @Test
+    public void testCreateAndDeleteByTypeAndIdentifier() throws Exception {
+
+        // Indexes a test model instance
+
+        final String objectId = UUID.randomUUID().toString();
+
+        underTest.index(new TestModel().scramble());
+        underTest.index(new TestModel().scramble(objectId));
+
+        try (final IOContext<IndexSearcher> indexReaderIOContext = underTest.getIndexSearcherContextProvider().get()) {
+            Assert.assertEquals(indexReaderIOContext.instance().getIndexReader().numDocs(), 2);
+        }
+
+        underTest.delete(TestModel.class, objectId);
+
+        try (final IOContext<IndexSearcher> indexReaderIOContext = underTest.getIndexSearcherContextProvider().get()) {
+            Assert.assertEquals(indexReaderIOContext.instance().getIndexReader().numDocs(), 1);
+        }
+
+        underTest.delete(TestModel.class, UUID.randomUUID().toString());
 
         try (final IOContext<IndexSearcher> indexReaderIOContext = underTest.getIndexSearcherContextProvider().get()) {
             Assert.assertEquals(indexReaderIOContext.instance().getIndexReader().numDocs(), 1);

@@ -177,7 +177,7 @@ public abstract class AbstractDocumentGeneratorTest {
     }
 
     @Test
-    private void threadSafetyStressTest() throws Exception {
+    public void testThreadSafetyStressTest() throws Exception {
 
         final List<Thread> threadList = new ArrayList<>();
         final AtomicBoolean failed = new AtomicBoolean(false);
