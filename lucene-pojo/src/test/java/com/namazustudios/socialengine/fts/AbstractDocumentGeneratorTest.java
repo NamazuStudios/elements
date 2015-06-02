@@ -5,8 +5,11 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This is a base test case which can be used to test customizations and implementations
@@ -57,11 +60,11 @@ public abstract class AbstractDocumentGeneratorTest {
         final Fields<TestModel> fields = testModelDocumentEntry.getFields(TestModel.class);
 
         Assert.assertEquals(fields.getDocumentType(), TestModel.class);
-        Assert.assertEquals(fields.extract(Byte.class, "byteValue"), (Byte)testModel.getByteValue());
-        Assert.assertEquals(fields.extract(Character.class, "charValue"), (Character)testModel.getCharValue());
-        Assert.assertEquals(fields.extract(Integer.class, "intValue"), (Integer)testModel.getIntValue());
-        Assert.assertEquals(fields.extract(Long.class, "longValue"), (Long)testModel.getLongValue());
-        Assert.assertEquals(fields.extract(Float.class, "floatValue"), (Float)testModel.getFloatValue());
+        Assert.assertEquals(fields.extract(Byte.class, "byteValue"), (Byte) testModel.getByteValue());
+        Assert.assertEquals(fields.extract(Character.class, "charValue"), (Character) testModel.getCharValue());
+        Assert.assertEquals(fields.extract(Integer.class, "intValue"), (Integer) testModel.getIntValue());
+        Assert.assertEquals(fields.extract(Long.class, "longValue"), (Long) testModel.getLongValue());
+        Assert.assertEquals(fields.extract(Float.class, "floatValue"), (Float) testModel.getFloatValue());
         Assert.assertEquals(fields.extract(Double.class, "doubleValue"), (Double) testModel.getDoubleValue());
         Assert.assertEquals(fields.extract(String.class, "stringValue"), (String) testModel.getStringValue());
         Assert.assertEquals(fields.extract(String.class, "textValue"), (String) testModel.getTextValue());
@@ -168,6 +171,75 @@ public abstract class AbstractDocumentGeneratorTest {
 
         final DocumentEntry<TestModelSubclass> testModelDocumentEntry = underTest.generate(testModel);
         Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 11);
+
+    }
+
+    @Test
+    private void testHierarchySerialized() {
+
+        final TestModel testModel = new TestModel();
+        testModel.setId(UUID.randomUUID().toString());
+
+        final DocumentEntry<TestModel> testModelDocumentEntry = underTest.generate(testModel);
+        final Document document = testModelDocumentEntry.getDocument();
+
+        Assert.assertEquals(document.getFields("java.class.fqn").length, 2);
+        Assert.assertEquals(document.getFields("java.class.fqn")[0].stringValue(), Object.class.getName());
+        Assert.assertEquals(document.getFields("java.class.fqn")[1].stringValue(), TestModel.class.getName());
+
+    }
+
+    @Test
+    private void testHierarchySerializedForSubclass() {
+
+        final TestModelSubclass testModel = new TestModelSubclass();
+        testModel.setId(UUID.randomUUID().toString());
+
+        final DocumentEntry<TestModelSubclass> testModelDocumentEntry = underTest.generate(testModel);
+        final Document document = testModelDocumentEntry.getDocument();
+
+        Assert.assertEquals(document.getFields("java.class.fqn").length, 3);
+        Assert.assertEquals(document.getFields("java.class.fqn")[0].stringValue(), Object.class.getName());
+        Assert.assertEquals(document.getFields("java.class.fqn")[1].stringValue(), TestModel.class.getName());
+        Assert.assertEquals(document.getFields("java.class.fqn")[2].stringValue(), TestModelSubclass.class.getName());
+
+    }
+
+    @Test
+    private void testGeneratorHandlesStatesProperly() {
+        testGenerateDocumentFromModel();
+        testGenerateDocumentFromModelSubclass();
+    }
+
+    @Test
+    private void threadSafetyStressTest() throws Exception {
+
+        final List<Thread> threadList = new ArrayList<>();
+        final AtomicBoolean failed = new AtomicBoolean(false);
+
+        for (int i = 0; i < 500; ++i) {
+            threadList.add(new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        testGenerateDocumentFromModel();
+                        testGenerateDocumentFromModelSubclass();
+                    } catch (Exception ex) {
+                        failed.set(true);
+                    }
+                }
+            });
+        }
+
+        for (final Thread thread : threadList) {
+            thread.start();
+        }
+
+        for (final Thread thread : threadList) {
+            thread.join();
+        }
+
+        Assert.assertFalse(failed.get());
 
     }
 
