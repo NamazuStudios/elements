@@ -42,9 +42,9 @@ public class ExampleObjectQuery<DocumentT> extends IdentityObjectQuery<DocumentT
 
     }
 
-    public ExampleObjectQuery(Class<DocumentT> documentType,
-                              IndexableFieldProcessor.Provider indexableFieldProcessorProvider,
-                              DocumentT documentTInstance) {
+    public ExampleObjectQuery(final Class<? extends DocumentT> documentType,
+                              final IndexableFieldProcessor.Provider indexableFieldProcessorProvider,
+                              final DocumentT documentTInstance) {
         super(documentType, indexableFieldProcessorProvider, extractIdentifierFromInstance(documentTInstance));
     }
 

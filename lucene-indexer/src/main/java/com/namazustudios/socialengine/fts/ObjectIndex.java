@@ -3,8 +3,10 @@ package com.namazustudios.socialengine.fts;
 import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 
 /**
@@ -22,6 +24,22 @@ import org.apache.lucene.search.Query;
 public interface ObjectIndex {
 
     /**
+     * Gets the {@link IOContext.Provider} which is used to get an {@link IndexWriter}
+     * instance used for reading the underlying search index.
+     *
+     * @return the {@link IOContext.Provider} instance
+     */
+    IOContext.Provider<IndexWriter> getIndexWriterContextProvider();
+
+    /**
+     * Gets the {@link IOContext.Provider} which is used to get an {@link IndexSearcher}
+     * instance used for reading the underlying search index.
+     *
+     * @return the {@link IOContext.Provider} instance
+     */
+    IOContext.Provider<IndexSearcher> getIndexSearcherContextProvider();
+
+    /**
      *
      * Adds an object to the index, or updates an existing object's existing {@link Document}s
      *
@@ -34,17 +52,25 @@ public interface ObjectIndex {
      * @return the a {@link BasicDocumentEntry} instance
      *
      */
-    <T> DocumentEntry<T> index(Class<T> type, T model);
+    <T> DocumentEntry<T> index(final T model);
 
     /**
      * Deletes any {@link Document}(s) associated with the given object.  This uses the annotations
-     * processed by the {@link #index(Class, Object)} method to find the documents to delete.
-     *
-     *
+     * processed by the {@link #index(Object)} method to find the documents to delete.
      *
      * @param model the model
      */
-    <T> void delete(Class<T> type, T model);
+    <T> void delete(final T model);
+
+    /**
+     * Deletes any {@link Document}(s) associated with the given object.  This uses the annotations
+     * processed by the {@link #index(Object)} method to find the documents to delete.
+     *
+     * @param type the model
+     * @param identifier the identifier
+     *
+     */
+    <T> void delete(final Class<T> type, final Object identifier);
 
     /**
      * Returns an @{link ObjectQuery} for specific types in the search index.  Executing this query
@@ -64,7 +90,7 @@ public interface ObjectIndex {
      * @param identifier the identifier of the object
      * @return a query generated from this type
      */
-    <T> ObjectQuery<T> queryForIdentifier(final Class<T> type, Object identifier);
+    <T> ObjectQuery<T> queryForIdentifier(final Class<T> type, final Object identifier);
 
     /**
      * Returns an @{link ObjectQuery} for a specific type and identifier in the search index.  Excuting
@@ -74,16 +100,15 @@ public interface ObjectIndex {
      * @param query Lucene {@link Query} to query for objects
      * @return a query generated from this type
      */
-    <T> ObjectQuery<T> queryForObjects(final Class<T> type, Query query);
+    <T> ObjectQuery<T> queryForObjects(final Class<T> type, final Query query);
 
     /**
      * Creates a query that will return the {@link Document} for the given object.
      *
-     * @param type the type
      * @param object
      * @return
      */
-    <T> ObjectQuery<T> queryByExample(final  Class<T> type, T object);
+    <T> ObjectQuery<T> queryByExample(final T object);
 
     /**
      * Performs the given Query and returns the {@link QueryExecutor} object.
@@ -92,7 +117,7 @@ public interface ObjectIndex {
      * @param <T>
      * @return
      */
-    <T> QueryExecutor<T> execute(ObjectQuery<T> query);
+    <T> QueryExecutor<T> execute(final ObjectQuery<T> query);
 
     /**
      * Creates and executes a query for the given type.
@@ -122,16 +147,16 @@ public interface ObjectIndex {
      *
      * @param type
      */
-    <T> QueryExecutor<T> executeQueryForObjects(final Class<T> type, Query query);
+    <T> QueryExecutor<T> executeQueryForObjects(final Class<T> type, final Query query);
 
     /**
      * Creates and executes a query for the given type and example object
      *
-     * {@see {@link #queryByExample(Class, Object)}
+     * {@see {@link #queryByExample(Object)}
      * {@see {@link #execute(ObjectQuery)}}
      *
      * @param type
      */
-    <T> QueryExecutor<T> executeQueryByExample(final  Class<T> type, T object);
+    <T> QueryExecutor<T> executeQueryByExample(final T object);
 
 }

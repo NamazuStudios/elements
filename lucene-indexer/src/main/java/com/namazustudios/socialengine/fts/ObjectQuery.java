@@ -19,13 +19,13 @@ import org.apache.lucene.search.*;
  */
 public abstract class ObjectQuery<DocumentT> {
 
-    private final Class<DocumentT> documentType;
+    private final Class<? extends DocumentT> documentType;
 
     private final SearchableDocument searchableDocument;
 
     private final IndexableFieldProcessor.Provider indexableFieldProcessorProvider;
 
-    public ObjectQuery(final Class<DocumentT> documentType,
+    public ObjectQuery(final Class<? extends DocumentT> documentType,
                        final IndexableFieldProcessor.Provider indexableFieldProcessorProvider) {
 
         final SearchableDocument searchableDocument = documentType.getAnnotation(SearchableDocument.class);
@@ -45,7 +45,7 @@ public abstract class ObjectQuery<DocumentT> {
      *
      * @return the type returned by this query
      */
-    public Class<DocumentT> getDocumentType() {
+    public Class<? extends DocumentT> getDocumentType() {
         return documentType;
     }
 

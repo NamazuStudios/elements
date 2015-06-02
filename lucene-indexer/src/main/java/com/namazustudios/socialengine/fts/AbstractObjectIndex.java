@@ -28,10 +28,20 @@ public abstract class AbstractObjectIndex implements ObjectIndex {
     }
 
     @Override
-    public <T> DocumentEntry<T> index(Class<T> type, T model) {
+    public IOContext.Provider<IndexWriter> getIndexWriterContextProvider() {
+        return indexWriterContextProvider;
+    }
+
+    @Override
+    public IOContext.Provider<IndexSearcher> getIndexSearcherContextProvider() {
+        return indexSearcherContextProvider;
+    }
+
+    @Override
+    public <T> DocumentEntry<T> index(T model) {
 
         final DocumentEntry<T> documentEntry = documentGenerator.generate(model);
-        final ObjectQuery<T> queryByExample = queryByExample(type, model);
+        final ObjectQuery<T> queryByExample = queryByExample(model);
 
         try (final IOContext<IndexWriter> indexWriterIOContext = indexWriterContextProvider.get()) {
             indexWriterIOContext.instance().deleteDocuments(queryByExample.getQuery());
@@ -45,9 +55,9 @@ public abstract class AbstractObjectIndex implements ObjectIndex {
     }
 
     @Override
-    public <T> void delete(Class<T> type, T model) {
+    public <T> void delete(T model) {
 
-        final ObjectQuery<?> queryByExample = queryByExample(type, model);
+        final ObjectQuery<?> queryByExample = queryByExample(model);
 
         try (final IOContext<IndexWriter> indexWriterIOContext = indexWriterContextProvider.get()) {
             indexWriterIOContext.instance().deleteDocuments(queryByExample.getQuery());
@@ -59,22 +69,37 @@ public abstract class AbstractObjectIndex implements ObjectIndex {
     }
 
     @Override
-    public <T> ObjectQuery<T> queryForType(Class<T> type) {
+    public <T> void delete(Class<T> type, Object identifier) {
+
+        final ObjectQuery<T> objectQuery = queryForIdentifier(type, identifier);
+
+        try (final IOContext<IndexWriter> indexWriterIOContext = indexWriterContextProvider.get()) {
+            indexWriterIOContext.instance().deleteDocuments(objectQuery.getQuery());
+            indexWriterIOContext.instance().commit();
+        } catch (IOException ex) {
+            throw new SearchException(ex);
+        }
+
+    }
+
+    @Override
+    public <T> ObjectQuery<T> queryForType(final Class<T> type) {
         return new WildcardObjectQuery<>(type, documentGenerator.getIndexableFieldProcessorProvider());
     }
 
     @Override
-    public <T> ObjectQuery<T> queryForIdentifier(Class<T> type, Object identifier) {
+    public <T> ObjectQuery<T> queryForIdentifier(final Class<T> type, final Object identifier) {
         return new IdentityObjectQuery<>(type, documentGenerator.getIndexableFieldProcessorProvider(), identifier);
     }
 
     @Override
-    public <T> ObjectQuery<T> queryForObjects(Class<T> type, Query query) {
+    public <T> ObjectQuery<T> queryForObjects(final Class<T> type, final Query query) {
         return new ArbitraryObjectQuery<>(type, documentGenerator.getIndexableFieldProcessorProvider(), query);
     }
 
     @Override
-    public <T> ObjectQuery<T> queryByExample(Class<T> type, T object) {
+    public <T> ObjectQuery<T> queryByExample(final T object) {
+        final Class<? extends T> type = (Class<? extends T>)object.getClass();
         return new ExampleObjectQuery<>(type, documentGenerator.getIndexableFieldProcessorProvider(), object);
     }
 
@@ -103,8 +128,8 @@ public abstract class AbstractObjectIndex implements ObjectIndex {
     }
 
     @Override
-    public <T> QueryExecutor<T> executeQueryByExample(Class<T> type, T object) {
-        return execute(queryByExample(type, object));
+    public <T> QueryExecutor<T> executeQueryByExample(T object) {
+        return execute(queryByExample(object));
     }
 
 }

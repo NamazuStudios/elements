@@ -18,8 +18,8 @@ public class IdentityObjectQuery<DocumentT> extends ObjectQuery<DocumentT> {
 
     private final Object identifier;
 
-    public IdentityObjectQuery(Class<DocumentT> documentType,
-                               IndexableFieldProcessor.Provider indexableFieldProcessorProvider,
+    public IdentityObjectQuery(final Class<? extends DocumentT> documentType,
+                               final IndexableFieldProcessor.Provider indexableFieldProcessorProvider,
                                Object identifier) {
         super(documentType, indexableFieldProcessorProvider);
         this.identifier = identifier;

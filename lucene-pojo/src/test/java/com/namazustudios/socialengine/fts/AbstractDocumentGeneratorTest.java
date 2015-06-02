@@ -38,7 +38,7 @@ public abstract class AbstractDocumentGeneratorTest {
     @Test
     private void testGenerateDocumentFromModel() {
 
-        final TestModel testModel = scramble(new TestModel());
+        final TestModel testModel = new TestModel().scramble();
         final DocumentEntry<TestModel> testModelDocumentEntry = underTest.generate(testModel);
 
         // So the TestModel has eleven fields defined explicity, one field for the type, and finally
@@ -76,7 +76,7 @@ public abstract class AbstractDocumentGeneratorTest {
     @Test
     private void testGenerateDocumentFromModelSubclass() {
 
-        final TestModelSubclass testModel = scramble(new TestModelSubclass());
+        final TestModelSubclass testModel = new TestModelSubclass().scramble();
         final DocumentEntry<TestModelSubclass> testModelDocumentEntry = underTest.generate(testModel);
 
         // In addition to the above test case, this has three more fields.  An additional
@@ -114,41 +114,6 @@ public abstract class AbstractDocumentGeneratorTest {
         Assert.assertEquals(fields.extract(String.class, "textValue"), (String) testModel.getTextValue());
         Assert.assertEquals(fields.extract(byte[].class, "blobValue"), (byte[]) testModel.getBlobValue());
         Assert.assertEquals(fields.extract(TestEnum.class, "enumValue"), (TestEnum) testModel.getEnumValue());
-
-    }
-
-    /**
-     * Populates the given test model with scrambled data.
-     *
-     * The rationale behind this is to generate opaque data that can be extrated and
-     * tested against later.
-     *
-     * @param testModel the test model instance
-     * @return the same instance, populated with scrambled data
-     */
-    public TestModel scramble(final TestModel testModel) {
-        final Random random = new Random();
-
-        testModel.setId(Long.toString(System.currentTimeMillis()));
-        testModel.setByteValue((byte) (0xff & random.nextInt()));
-        testModel.setCharValue(Long.toString(random.nextLong()).charAt(0));
-        testModel.setShortValue((short)random.nextInt());
-        testModel.setIntValue(random.nextInt());
-        testModel.setLongValue(random.nextLong());
-        testModel.setFloatValue(random.nextFloat());
-        testModel.setDoubleValue(random.nextDouble());
-        testModel.setStringValue(Long.toString(random.nextLong()));
-        testModel.setStringValue(Long.toString(random.nextLong()) + " " + Long.toString(random.nextLong()));
-        testModel.setTextValue(Long.toString(random.nextLong()) + " " + Long.toString(random.nextLong()));
-
-        final byte[] bytes = new byte[1024];
-        random.nextBytes(bytes);
-        testModel.setBlobValue(bytes);
-
-        final TestEnum[] values = TestEnum.values();
-        testModel.setEnumValue(values[random.nextInt(values.length)]);
-
-        return testModel;
 
     }
 
@@ -240,27 +205,6 @@ public abstract class AbstractDocumentGeneratorTest {
         }
 
         Assert.assertFalse(failed.get());
-
-    }
-
-    /**
-     * Populates the given test model with scrambled data.
-     *
-     * The rationale behind this is to generate opaque data that can be extrated and
-     * tested against later.
-     *
-     * @param testModelSubclass the test model instance
-     * @return the same instance, populated with scrambled data
-     */
-    public TestModelSubclass scramble(final TestModelSubclass testModelSubclass) {
-        final Random random = new Random();
-
-        scramble((TestModel)testModelSubclass);
-
-        testModelSubclass.setAnotherStringValue(Long.toString(random.nextLong()));
-        testModelSubclass.setYetAnotherStringValue(Long.toString(random.nextLong()));
-
-        return testModelSubclass;
 
     }
 

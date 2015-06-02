@@ -4,6 +4,8 @@ import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import org.apache.lucene.document.Field;
 
+import java.util.Random;
+
 /**
  * Adds two more text fields.
  *
@@ -37,4 +39,22 @@ public class TestModelSubclass extends TestModel {
         this.yetAnotherStringValue = yetAnotherStringValue;
     }
 
+    @Override
+    public TestModelSubclass scramble() {
+        super.scramble();
+        return this;
+    }
+
+    @Override
+    public TestModelSubclass scramble(final String objectId) {
+
+        super.scramble(objectId);
+
+        final Random random = new Random();
+        setAnotherStringValue(Long.toString(random.nextLong()));
+        setYetAnotherStringValue(Long.toString(random.nextLong()));
+
+        return this;
+
+    }
 }

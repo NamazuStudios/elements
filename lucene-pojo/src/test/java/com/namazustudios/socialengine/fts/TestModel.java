@@ -6,6 +6,9 @@ import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
 import org.apache.lucene.document.DoubleField;
 import org.apache.lucene.document.Field;
 
+import java.util.Random;
+import java.util.UUID;
+
 /**
  * A test model instance.  This has all of the default supported fields.
  *
@@ -147,6 +150,50 @@ public class TestModel {
 
     public void setEnumValue(TestEnum enumValue) {
         this.enumValue = enumValue;
+    }
+
+    /**
+     * Same as {@link #scramble(String)}, only randomly assings an UUID
+     * using {@link UUID#randomUUID()}.
+     *
+     * @return this, scrambled
+     */
+    public TestModel scramble() {
+        return scramble(UUID.randomUUID().toString());
+    }
+
+    /**
+     * Populates this test model with scrambled data.
+     *
+     * The rationale behind this is to generate opaque data that can be extrated and
+     * tested against later.
+     *
+     * @param objectId the object's ID to be set using {@link #setId(String)}
+     */
+    public TestModel scramble(final String objectId) {
+
+        final Random random = new Random();
+
+        setId(objectId);
+        setByteValue((byte) (0xff & random.nextInt()));
+        setCharValue(Long.toString(random.nextLong()).charAt(0));
+        setShortValue((short) random.nextInt());
+        setIntValue(random.nextInt());
+        setLongValue(random.nextLong());
+        setFloatValue(random.nextFloat());
+        setDoubleValue(random.nextDouble());
+        setStringValue(Long.toString(random.nextLong()));
+        setStringValue(Long.toString(random.nextLong()) + " " + Long.toString(random.nextLong()));
+        setTextValue(Long.toString(random.nextLong()) + " " + Long.toString(random.nextLong()));
+
+        final byte[] bytes = new byte[1024];
+        random.nextBytes(bytes);
+        setBlobValue(bytes);
+
+        final TestEnum[] values = TestEnum.values();
+        setEnumValue(values[random.nextInt(values.length)]);
+
+        return this;
     }
 
 }
