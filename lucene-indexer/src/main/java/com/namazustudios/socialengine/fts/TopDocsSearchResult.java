@@ -26,13 +26,19 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
 
     private final IOContext<IndexSearcher> indexSearcherIOContext;
 
+    private final ObjectQuery objectQuery;
+
+    private final DocumentGenerator documentGenerator;
+
     public TopDocsSearchResult(final ObjectQuery objectQuery,
                                final TopDocs topDocs,
                                final IOContext<IndexSearcher> indexSearcherIOContext,
                                final DocumentGenerator documentGenerator) {
         super(objectQuery, documentGenerator, indexSearcherIOContext);
         this.topDocs = topDocs;
+        this.objectQuery = objectQuery;
         this.indexSearcherIOContext = indexSearcherIOContext;
+        this.documentGenerator = documentGenerator;
     }
 
     @Override
@@ -106,7 +112,12 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
 
     protected ScoredDocumentEntry<DocumentT> getEntry(final ScoreDoc scoreDoc) {
         final DocumentEntry<DocumentT> documentEntry = getEntry(scoreDoc.doc);
-        return new ScoredDocumentEntry<DocumentT>() {
+        return wrap(documentEntry, scoreDoc);
+    }
+
+    private <U> ScoredDocumentEntry<U> wrap(final DocumentEntry<U> documentEntry, final ScoreDoc scoreDoc) {
+
+        return new ScoredDocumentEntry<U>() {
 
             @Override
             public double getScore() {
@@ -119,8 +130,19 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
             }
 
             @Override
-            public Identity<DocumentT> getIdentity(Class<DocumentT> aClass) {
+            public Identity<U> getIdentity(Class<U> aClass) {
                 return documentEntry.getIdentity(aClass);
+            }
+
+            @Override
+            public <DocumentSuperT> ScoredDocumentEntry<DocumentSuperT> as(Class<? super U> cls) {
+                final DocumentEntry<DocumentSuperT> entry = documentEntry.as(cls);
+                return wrap(entry, scoreDoc);
+            }
+
+            @Override
+            public Fields<U> getFields(Class<U> documentTClassType) {
+                return documentEntry.getFields(documentTClassType);
             }
 
             @Override

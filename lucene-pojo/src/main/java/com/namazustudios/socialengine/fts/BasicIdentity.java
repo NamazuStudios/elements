@@ -85,4 +85,5 @@ public class BasicIdentity<DocumentT> extends AbstractHasDocumentType<DocumentT>
                 ", searchableIdentity=" + searchableIdentity +
                 '}';
     }
+
 }

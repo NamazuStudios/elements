@@ -15,4 +15,15 @@ public interface ScoredDocumentEntry<DocumentT> extends DocumentEntry<DocumentT>
      */
     double getScore();
 
+    /**
+     *
+     * {@see {@link DocumentEntry#as(Class)}}
+     *
+     * @param cls
+     * @param <DocumentSuperT>
+     * @return
+     */
+    @Override
+    <DocumentSuperT> ScoredDocumentEntry<DocumentSuperT> as(final Class<? super DocumentT> cls);
+
 }

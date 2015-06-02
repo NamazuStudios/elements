@@ -1,10 +1,10 @@
 package com.namazustudios.socialengine.fts;
 
+import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import org.apache.lucene.document.Document;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by patricktwohig on 5/31/15.
@@ -25,8 +25,36 @@ public class BasicFields<DocumentT> extends AbstractHasDocumentType<DocumentT> i
         this.document = document;
         this.provider = provider;
 
-        for (final SearchableField searchableField : getSearchableDocument().fields()) {
-            fieldMetadataMap.put(searchableField.name(), new AnnotationFieldMetadata(searchableField));
+        // We start at the top of the hierarchy, and we work downward
+        // until we've processed all the annotations.
+
+        // We do this by walking from the "bottom up", then flipping the
+        // list and working down.
+
+        final List<Class<?>> classList = new ArrayList<>();
+
+        Class<?> superClass = getDocumentType();
+
+        do {
+            classList.add(superClass);
+            superClass = superClass.getSuperclass();
+        } while (superClass != null);
+
+        Collections.reverse(classList);
+
+        for (final Class<?> cls : classList) {
+
+            final SearchableDocument searchableDocument = cls.getAnnotation(SearchableDocument.class);
+
+            if (searchableDocument == null) {
+                continue;
+            }
+
+            for (final SearchableField searchableField : searchableDocument.fields()) {
+                final FieldMetadata fieldMetadata = new AnnotationFieldMetadata(searchableField);
+                fieldMetadataMap.put(fieldMetadata.name(), fieldMetadata);
+            }
+
         }
 
     }

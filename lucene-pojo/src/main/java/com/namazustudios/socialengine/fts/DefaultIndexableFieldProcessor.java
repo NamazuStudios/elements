@@ -34,7 +34,6 @@ import java.util.List;
  *  <li>{@link Enum} - Stores the enum value as a string using the {@link Enum#toString()}</li>
  * </ul>
  *
- *
  * Anything else is logged as a warning.
  *
  */

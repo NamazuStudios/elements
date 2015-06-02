@@ -54,8 +54,8 @@ public abstract class AbstractDocumentGeneratorTest {
         // Let's check the fields in the document...
 
         final Fields<TestModel> fields = testModelDocumentEntry.getFields(TestModel.class);
-        Assert.assertEquals(identity.getDocumentType(), TestModel.class);
 
+        Assert.assertEquals(fields.getDocumentType(), TestModel.class);
         Assert.assertEquals(fields.extract(Byte.class, "byteValue"), (Byte)testModel.getByteValue());
         Assert.assertEquals(fields.extract(Character.class, "charValue"), (Character)testModel.getCharValue());
         Assert.assertEquals(fields.extract(Integer.class, "intValue"), (Integer)testModel.getIntValue());
@@ -71,38 +71,45 @@ public abstract class AbstractDocumentGeneratorTest {
 
     @Test
     private void testGenerateDocumentFromModelSubclass() {
-// TODO Some details need ironed out here
-//        final TestModelSubclass testModel = scramble(new TestModelSubclass());
-//        final DocumentEntry<TestModelSubclass> testModelDocumentEntry = underTest.generate(testModel);
-//
-//        // In addition to the above test case, this has three more fields.  An additional
-//
-//
-//        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 16);
-//
-//        // Check that the identity is sane.  We need to make sure that the identity is
-//        // extracted properly and that the value matches.
-//
-//        final Identity<TestModel> identity = testModelDocumentEntry.getIdentity(TestModelSubclass.class);
-//        Assert.assertEquals(identity.getIdentityType(), String.class);
-//        Assert.assertEquals(identity.getDocumentType(), TestModel.class);
-//        Assert.assertEquals(identity.getIdentity(String.class), testModel.getId());
-//
-//        // Let's check the fields in the document...
-//
-//        final Fields<TestModel> fields = testModelDocumentEntry.getFields(TestModelSubclass.class);
-//        Assert.assertEquals(identity.getDocumentType(), TestModel.class);
-//
-//        Assert.assertEquals(fields.extract(Byte.class, "byteValue"), (Byte)testModel.getByteValue());
-//        Assert.assertEquals(fields.extract(Character.class, "charValue"), (Character)testModel.getCharValue());
-//        Assert.assertEquals(fields.extract(Integer.class, "intValue"), (Integer)testModel.getIntValue());
-//        Assert.assertEquals(fields.extract(Long.class, "longValue"), (Long)testModel.getLongValue());
-//        Assert.assertEquals(fields.extract(Float.class, "floatValue"), (Float)testModel.getFloatValue());
-//        Assert.assertEquals(fields.extract(Double.class, "doubleValue"), (Double) testModel.getDoubleValue());
-//        Assert.assertEquals(fields.extract(String.class, "stringValue"), (String) testModel.getStringValue());
-//        Assert.assertEquals(fields.extract(String.class, "textValue"), (String) testModel.getTextValue());
-//        Assert.assertEquals(fields.extract(byte[].class, "blobValue"), (byte[]) testModel.getBlobValue());
-//        Assert.assertEquals(fields.extract(TestEnum.class, "enumValue"), (TestEnum) testModel.getEnumValue());
+
+        final TestModelSubclass testModel = scramble(new TestModelSubclass());
+        final DocumentEntry<TestModelSubclass> testModelDocumentEntry = underTest.generate(testModel);
+
+        // In addition to the above test case, this has three more fields.  An additional
+
+        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 16);
+
+        // Check that the identity is sane.  We need to make sure that the identity is
+        // extracted properly and that the value matches.  This is a littie bit more complicated
+        // with a subclass becuase we need to make sure that it always returns the most
+        // specific type in the type hierarchy.
+
+        final Identity<TestModelSubclass> identity = testModelDocumentEntry.getIdentity(TestModelSubclass.class);
+        Assert.assertEquals(identity.getIdentityType(), String.class);
+        Assert.assertEquals(identity.getDocumentType(), TestModelSubclass.class);
+        Assert.assertEquals(identity.getIdentity(String.class), testModel.getId());
+
+        final DocumentEntry<TestModel> entryAsTestModel = testModelDocumentEntry.as(TestModel.class);
+        final Identity<TestModel> testModelIdentity = entryAsTestModel.getIdentity(TestModel.class);
+        Assert.assertEquals(testModelIdentity.getIdentityType(), String.class);
+        Assert.assertEquals(testModelIdentity.getDocumentType(), TestModelSubclass.class);
+        Assert.assertEquals(testModelIdentity.getIdentity(String.class), testModel.getId());
+
+        // Let's check the fields in the document...
+
+        final Fields<TestModelSubclass> fields = testModelDocumentEntry.getFields(TestModelSubclass.class);
+        Assert.assertEquals(fields.getDocumentType(), TestModelSubclass.class);
+
+        Assert.assertEquals(fields.extract(Byte.class, "byteValue"), (Byte)testModel.getByteValue());
+        Assert.assertEquals(fields.extract(Character.class, "charValue"), (Character)testModel.getCharValue());
+        Assert.assertEquals(fields.extract(Integer.class, "intValue"), (Integer)testModel.getIntValue());
+        Assert.assertEquals(fields.extract(Long.class, "longValue"), (Long)testModel.getLongValue());
+        Assert.assertEquals(fields.extract(Float.class, "floatValue"), (Float)testModel.getFloatValue());
+        Assert.assertEquals(fields.extract(Double.class, "doubleValue"), (Double) testModel.getDoubleValue());
+        Assert.assertEquals(fields.extract(String.class, "stringValue"), (String) testModel.getStringValue());
+        Assert.assertEquals(fields.extract(String.class, "textValue"), (String) testModel.getTextValue());
+        Assert.assertEquals(fields.extract(byte[].class, "blobValue"), (byte[]) testModel.getBlobValue());
+        Assert.assertEquals(fields.extract(TestEnum.class, "enumValue"), (TestEnum) testModel.getEnumValue());
 
     }
 

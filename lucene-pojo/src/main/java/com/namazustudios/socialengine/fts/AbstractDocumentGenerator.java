@@ -44,7 +44,8 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
     private final Lock r = reentrantReadWriteLock.readLock();
     private final Lock w = reentrantReadWriteLock.writeLock();
 
-    private final Map<Class<?>, ContextProcessor> contextProcessorMap = new HashMap<>();
+    private final Map<Class<?>, ContextProcessor> individualClassContextProcessors = new HashMap<>();
+    private final Map<Class<?>, ContextProcessor> hierarchicalClassContextProcessors = new HashMap<>();
 
     public AbstractDocumentGenerator(final IndexableFieldProcessor.Provider indexableFieldProcessorProvider,
                                      final IndexableFieldExtractor.Provider indexableFieldExtractorProvider,
@@ -71,58 +72,69 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
 
         try {
             analyzeHierarchy(hierarchy);
-            return contextProcessorMap.get(cls);
+            return hierarchicalClassContextProcessors.get(cls);
         } finally {
             w.unlock();
         }
 
     }
 
-    private void analyzeHierarchy(final List<Class<?>> classes) {
+    private ContextProcessor analyzeHierarchy(final List<Class<?>> classes) {
+
+        final List<ContextProcessor> contextProcessors = new ArrayList<>();
+
+        // This operates in two phases.  First, it generates the individual
+        // class context processors, or fetches them from the already cached
+        // list of processors.
+
+        Class<?> theClass = Object.class;
 
         for (final Class<?> cls : classes) {
 
-            // If we've already found the context processor for this class
-            // we simply skip the addition of the context processor.
-
-            if (contextProcessorMap.containsKey(cls)) {
+            if (individualClassContextProcessors.containsKey(cls)) {
+                contextProcessors.add(individualClassContextProcessors.get(cls));
                 continue;
             }
 
             LOG.debug("Analyzing " + cls + " in DocumentGenerator " + getClass());
 
-            // Finds the superclass context processor, which may or may not exist.
-            // it is also possible we're dealing with java.lang.Object
-
-            final ContextProcessor superclassContextProcessor =
-                    cls.getSuperclass() == null          ? EMPTY_CONTEXT_PROCESSOR :
-                    contextProcessorMap.containsKey(cls) ? contextProcessorMap.get(cls) :
-                                                           EMPTY_CONTEXT_PROCESSOR;
-
             // Checks for the presence of the @SearchableDocument annotation.
 
             final SearchableDocument searchableDocument = cls.getAnnotation(SearchableDocument.class);
 
-            // Should it be found, we parse out the JXPath expressions and save them
-            // for future use (no need to recompile again and again)
+            if (searchableDocument == null) {
+                continue;
+            }
 
-            final ContextProcessor classContextProcessor =
-                    searchableDocument == null ? EMPTY_CONTEXT_PROCESSOR :
-                                                 new ClassContextProcessor(cls, indexableFieldProcessorProvider);
+            final ContextProcessor contextProcessor = new ClassContextProcessor(cls, indexableFieldProcessorProvider);
 
-            // Lastly we put in a ContextProcessor that first calls the superclass context processor
-            // and then calls the current class' contextProcessor
-            contextProcessorMap.put(cls, new ContextProcessor() {
-
-                @Override
-                public void process(JXPathContext context, DocumentEntry<?> documentEntry) {
-                    superclassContextProcessor.process(context, documentEntry);
-                    classContextProcessor.process(context, documentEntry);
-                }
-
-            });
+            contextProcessors.add(contextProcessor);
+            individualClassContextProcessors.put(cls, contextProcessor);
+            theClass = cls;
 
         }
+
+
+        final ContextProcessor contextProcessor;
+
+        // And finally creates a new context processor which simply just runs through the list
+        // in order.  Of course, if we didn't find any, we just return the empty context
+        // processor.
+
+        if (contextProcessors.isEmpty()) {
+            hierarchicalClassContextProcessors.put(theClass, contextProcessor = EMPTY_CONTEXT_PROCESSOR);
+        } else {
+            hierarchicalClassContextProcessors.put(theClass, contextProcessor = new ContextProcessor() {
+                @Override
+                public void process(JXPathContext context, DocumentEntry<?> documentEntry) {
+                    for (final ContextProcessor contextProcessor : contextProcessors) {
+                        contextProcessor.process(context, documentEntry);
+                    }
+                }
+            });
+        }
+
+        return contextProcessor;
 
     }
 
@@ -152,7 +164,7 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
 
         try {
 
-            final ContextProcessor out = contextProcessorMap.get(cls);
+            final ContextProcessor out = individualClassContextProcessors.get(cls);
 
             if (out != null) {
                 return out;

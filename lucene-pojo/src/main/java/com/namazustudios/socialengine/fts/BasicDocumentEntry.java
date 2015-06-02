@@ -41,6 +41,11 @@ public class BasicDocumentEntry<DocumentT> implements DocumentEntry<DocumentT> {
     }
 
     @Override
+    public <DocumentSuperT> DocumentEntry<DocumentSuperT> as(final Class<? super DocumentT> cls) {
+        return new BasicDocumentEntry<>(document, provider);
+    }
+
+    @Override
     public Identity<DocumentT> getIdentity(final Class<DocumentT> aClass) {
         return new BasicIdentity<>(aClass, document, provider);
     }

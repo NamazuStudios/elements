@@ -16,11 +16,11 @@ import java.util.NoSuchElementException;
 public abstract class AbstractSearchResult<DocumentT, EntryT extends DocumentEntry<DocumentT>>
         implements SearchResult<DocumentT, EntryT> {
 
-    protected final ObjectQuery objectQuery;
+    private final ObjectQuery objectQuery;
 
-    protected final IOContext<IndexSearcher> indexSearcherIOContext;
+    private final IOContext<IndexSearcher> indexSearcherIOContext;
 
-    protected final DocumentGenerator documentGenerator;
+    private final DocumentGenerator documentGenerator;
 
     public AbstractSearchResult(final ObjectQuery objectQuery,
                                 final DocumentGenerator documentGenerator,
