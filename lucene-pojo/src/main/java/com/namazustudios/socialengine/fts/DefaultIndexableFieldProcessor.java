@@ -37,7 +37,7 @@ import java.util.List;
  * Anything else is logged as a warning.
  *
  */
-public class DefaultIndexableFieldProcessor implements IndexableFieldProcessor<Object> {
+public class DefaultIndexableFieldProcessor extends AbstractIndexableFieldProcessor<Object> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultIndexableFieldProcessor.class);
 
@@ -46,12 +46,13 @@ public class DefaultIndexableFieldProcessor implements IndexableFieldProcessor<O
 
         final Class<?> type = fieldMetadata.type();
 
-        if (!type.equals(DefaultType.class) && !type.isInstance(value)) {
-            throw new DocumentGenerationException(document, value, fieldMetadata, "type mismatch for " + fieldMetadata
-                    + " got " + value + " instead");
+        if (value != null && !type.equals(DefaultType.class) && !type.isInstance(value)) {
+            throw new DocumentGenerationException(document, value, fieldMetadata,
+                    "type mismatch for " + fieldMetadata + " got " + value + " instead");
         }
 
         for (final Field field : generateFields(value, fieldMetadata)) {
+            document.removeFields(field.name());
             document.add(field);
         }
 
@@ -98,70 +99,6 @@ public class DefaultIndexableFieldProcessor implements IndexableFieldProcessor<O
             fields.add(newStringField(cls.getName(), fieldMetadata));
         } else if (value != null) {
             LOG.warn("Unable to process field " + fieldMetadata +  "(" + value + ")");
-        }
-
-    }
-
-    private Field newStoredField(final byte[] value, final FieldMetadata fieldMetadata) {
-        final Field out = new StoredField(fieldMetadata.name(), value);
-        applyRemainingProperties(out, fieldMetadata);
-        return out;
-    }
-
-    private Field newIntegerField(final Number value, final FieldMetadata fieldMetadata) {
-        final Field out = new IntField(fieldMetadata.name(), value.intValue(), fieldMetadata.store());
-        applyRemainingProperties(out, fieldMetadata);
-        return out;
-    }
-
-    private Field newLongField(final Number value, final FieldMetadata fieldMetadata) {
-        final Field out = new LongField(fieldMetadata.name(), value.longValue(), fieldMetadata.store());
-        applyRemainingProperties(out, fieldMetadata);
-        return out;
-    }
-
-    private Field newFloatField(final Number value, final FieldMetadata fieldMetadata) {
-        final Field out = new FloatField(fieldMetadata.name(), value.floatValue(), fieldMetadata.store());
-        applyRemainingProperties(out, fieldMetadata);
-        return out;
-    }
-
-    private Field newDoubleField(final Number value, final FieldMetadata fieldMetadata) {
-        final Field out = new DoubleField(fieldMetadata.name(), value.doubleValue(), fieldMetadata.store());
-        applyRemainingProperties(out, fieldMetadata);
-        return out;
-    }
-
-    private Field newStringField(final String value, final FieldMetadata fieldMetadata) {
-        final Field out = new StringField(fieldMetadata.name(), value, fieldMetadata.store());
-        applyRemainingProperties(out, fieldMetadata);
-        return out;
-    }
-
-    private Field newTextOrStringField(final Character value, final FieldMetadata fieldMetadata) {
-        return newTextOrStringField(new String(new char[]{value.charValue()}), fieldMetadata);
-    }
-
-    private Field newTextOrStringField(final CharSequence value, final FieldMetadata fieldMetadata) {
-
-        final Field out;
-
-        if (fieldMetadata.text()) {
-            out = new TextField(fieldMetadata.name(), value.toString(), fieldMetadata.store());
-        } else {
-            out = new StringField(fieldMetadata.name(), value.toString(), fieldMetadata.store());
-        }
-
-        applyRemainingProperties(out, fieldMetadata);
-        return out;
-    }
-
-    private void applyRemainingProperties(final Field field, final FieldMetadata searchableField) {
-
-        if (searchableField.boost() != SearchableField.DEFAULT_BOOST) {
-            // setBoost can result in an IllegalArgumentException, so this prevents that from
-            // happening if the boost is left as the default value.
-            field.setBoost(searchableField.boost());
         }
 
     }

@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.fts.annotation;
 
+import com.namazustudios.socialengine.fts.TypeFieldExtractor;
+import com.namazustudios.socialengine.fts.TypeFieldProcessor;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
@@ -43,6 +45,8 @@ public @interface SearchableDocument {
     SearchableField type() default @SearchableField(
             path = SearchableDocument.DEFAULT_CLASS_XPATH_QUERY,
             name = SearchableDocument.DEFAULT_CLASS_FIELD_NAME,
+            extractor = TypeFieldExtractor.class,
+            processors = TypeFieldProcessor.class,
             type = Class.class);
 
     /**

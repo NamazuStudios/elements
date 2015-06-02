@@ -6,6 +6,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.util.Random;
+import java.util.UUID;
 
 /**
  * This is a base test case which can be used to test customizations and implementations
@@ -41,7 +42,7 @@ public abstract class AbstractDocumentGeneratorTest {
         // an identity field.  That's a total of 13 fields.  We should only have generated
         // exactly that may fields.
 
-        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 13);
+        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 14);
 
         // Check that the identity is sane.  We need to make sure that the identity is
         // extracted properly and that the value matches.
@@ -77,7 +78,7 @@ public abstract class AbstractDocumentGeneratorTest {
 
         // In addition to the above test case, this has three more fields.  An additional
 
-        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 16);
+        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 17);
 
         // Check that the identity is sane.  We need to make sure that the identity is
         // extracted properly and that the value matches.  This is a littie bit more complicated
@@ -145,6 +146,28 @@ public abstract class AbstractDocumentGeneratorTest {
         testModel.setEnumValue(values[random.nextInt(values.length)]);
 
         return testModel;
+
+    }
+
+    @Test
+    public void testNullFieldsAreNotIndexed() {
+
+        final TestModel testModel = new TestModel();
+        testModel.setId(UUID.randomUUID().toString());
+
+        final DocumentEntry<TestModel> testModelDocumentEntry = underTest.generate(testModel);
+        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 10);
+
+    }
+
+    @Test
+    public void testNullFieldsAreNotIndexedForSubclass() {
+
+        final TestModelSubclass testModel = new TestModelSubclass();
+        testModel.setId(UUID.randomUUID().toString());
+
+        final DocumentEntry<TestModelSubclass> testModelDocumentEntry = underTest.generate(testModel);
+        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 11);
 
     }
 

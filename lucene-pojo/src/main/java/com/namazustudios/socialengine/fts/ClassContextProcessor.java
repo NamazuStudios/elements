@@ -64,8 +64,8 @@ public class ClassContextProcessor implements ContextProcessor {
     }
 
     private void addSearchableTypeProcessor(final Class<?> cls,
-                                                 final SearchableDocument searchableDocument,
-                                                 final IndexableFieldProcessor.Provider provider) {
+                                            final SearchableDocument searchableDocument,
+                                            final IndexableFieldProcessor.Provider provider) {
 
         final FieldMetadata typeFieldMetadata = new AnnotationFieldMetadata(searchableDocument.type()) {
 

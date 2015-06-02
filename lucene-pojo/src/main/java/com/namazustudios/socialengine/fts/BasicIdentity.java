@@ -34,11 +34,12 @@ public class BasicIdentity<DocumentT> extends AbstractHasDocumentType<DocumentT>
         do {
 
             searchableIdentity = cls.getAnnotation(SearchableIdentity.class);
-            cls = cls.getSuperclass();
 
             if (searchableIdentity != null) {
                 break;
             }
+
+            cls = cls.getSuperclass();
 
         } while(cls != null);
 
