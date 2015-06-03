@@ -6,40 +6,41 @@ package com.namazustudios.socialengine;
 public interface Constants {
 
     /**
-     * The number of max results the server will return for any resource.  THis is capped
-     * to avoid DDoS attacks.
+     * Used to controlt he maxmimum number of results returned via the REST api.  This cap is
+     * enforced to avoid an undue strain on the server by malicicous users requesting
+     * exceptionally large number of search results.
      */
-    public static final String QUERY_MAX_RESULTS = "com.namazustudios.socialengine.query.max.results";
+    String QUERY_MAX_RESULTS = "com.namazustudios.socialengine.query.max.results";
 
     /**
      * The Digest provider instance for hashing passwords.
      */
-    public static final String PASSWORD_DIGEST = "com.namazustudios.socialengine.password.digest";
+    String PASSWORD_DIGEST = "com.namazustudios.socialengine.password.digest";
 
     /**
      * The algorithm for hashing passwords.
      */
-    public static final String PASSWORD_DIGEST_ALGORITHM = "com.namazustudios.socialengine.password.digest.algorithm";
+    String PASSWORD_DIGEST_ALGORITHM = "com.namazustudios.socialengine.password.digest.algorithm";
 
     /**
      * The character encoding used for hashing passwords.
      */
-    public static final String PASSWORD_ENCODING = "com.namazustudios.socialengine.password.encoding";
+    String PASSWORD_ENCODING = "com.namazustudios.socialengine.password.encoding";
 
     /**
      * The short-link base for all urls generated.
      */
-    public static final String SHORT_LINK_BASE = "com.namazustudios.socialengine.short.link.base";
+    String SHORT_LINK_BASE = "com.namazustudios.socialengine.short.link.base";
 
     /**
      * The system property which defines the configuration file path
      */
-    public static final String PROPERTIES_FILE = "com.namazustudios.socialengine.configuration.properties";
+    String PROPERTIES_FILE = "com.namazustudios.socialengine.configuration.properties";
 
     /**
      * The default property file to configure the server.
      */
-    public static final String DEFAULT_PROPERTIES_FILE = "socialengine-configuration.properties";
+    String DEFAULT_PROPERTIES_FILE = "socialengine-configuration.properties";
 
     /**
      * Defines some useful regex patterns.

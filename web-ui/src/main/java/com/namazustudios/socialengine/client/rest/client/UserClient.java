@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.client.rest.client;
 
 import com.google.gwt.dev.generator.ast.MethodCall;
+import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.RestService;
@@ -12,6 +13,32 @@ import javax.ws.rs.*;
  */
 @Path("user")
 public interface UserClient extends RestService {
+
+    /**
+     * Gets the users in the system in a paginated fashion.
+     *
+     * @param offset the offset from zero
+     * @param count the number of results to return
+     */
+    @GET
+    void getUsers(@QueryParam("offset")int offset,
+                  @QueryParam("count") int count,
+                  MethodCallback<Pagination<User>> users);
+
+    /**
+     * Gets the users in the system in a paginated fashion.  Optionally, this
+     * allows for the specification of an additional "Search" parameter.
+     *
+     * @param offset the offset from zero
+     * @param count the number of results to return
+     * @param search a search query for the users
+     *
+     */
+    @GET
+    void getUsers(@QueryParam("offset") int offset,
+                  @QueryParam("count")  int count,
+                  @QueryParam("search") String search,
+                  MethodCallback<Pagination<User>> users);
 
     /**
      * Makes a round-trip call to refresh the currently logged-in user.

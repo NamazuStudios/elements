@@ -3,13 +3,19 @@ package com.namazustudios.socialengine.client.controlpanel.view;
 import com.google.gwt.cell.client.ButtonCell;
 import com.google.gwt.cell.client.EditTextCell;
 import com.google.gwt.cell.client.FieldUpdater;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.SimplePager;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.view.client.RangeChangeEvent;
 import com.gwtplatform.mvp.client.ViewImpl;
+import com.gwtplatform.mvp.client.proxy.PlaceManager;
+import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
+import com.namazustudios.socialengine.client.controlpanel.NameTokens;
 import com.namazustudios.socialengine.model.User;
 import org.gwtbootstrap3.client.ui.Pagination;
 import org.gwtbootstrap3.client.ui.Panel;
@@ -23,6 +29,8 @@ import javax.inject.Inject;
  */
 public class UserEditorTableView extends ViewImpl implements UserEditorTablePresenter.MyView {
 
+    private static final int SETTLE_TIMER = 250;
+
     interface UserEditorTableViewUiBinder extends UiBinder<Panel, UserEditorTableView> {}
 
     @UiField
@@ -33,6 +41,9 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
 
     @UiField
     TextBox searchUsersTextBox;
+
+    @Inject
+    private PlaceManager placeManager;
 
     private final UserDataProvider asyncUserDataProvider;
 
@@ -104,15 +115,21 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
         editColumn = new Column<User, String>(new ButtonCell()) {
             @Override
             public String getValue(User object) {
-                return "Edit...";
+                return "Edit";
             }
         };
 
         editColumn.setFieldUpdater(new FieldUpdater<User, String>() {
             @Override
             public void update(int index, User object, String value) {
-                //TODO User PlaceManager to edit the user
-                Window.alert("Editing user " + object.getName());
+
+                final PlaceRequest placeRequest = new PlaceRequest.Builder()
+                        .nameToken(NameTokens.USER_EDIT)
+                        .with(UserEditorPresenter.Param.user.toString(), object.getName())
+                        .build();
+
+                placeManager.revealPlace(placeRequest);
+
             }
         });
 
@@ -157,9 +174,22 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
         userEditorCellTablePagination.clear();
         asyncUserDataProvider.addDataDisplay(userEditorCellTable);
 
+        setupSearch();
 
     }
 
+    private void setupSearch() {
 
+        searchUsersTextBox.addChangeHandler(new ChangeHandler() {
+
+            @Override
+            public void onChange(ChangeEvent event) {
+                asyncUserDataProvider.filterWithSearch(searchUsersTextBox.getText());
+                userEditorCellTable.setVisibleRangeAndClearData(userEditorCellTable.getVisibleRange(), true);
+            }
+
+        });
+
+    }
 
 }
