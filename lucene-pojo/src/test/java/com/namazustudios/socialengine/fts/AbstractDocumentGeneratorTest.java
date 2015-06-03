@@ -172,8 +172,13 @@ public abstract class AbstractDocumentGeneratorTest {
 
     @Test
     private void testGeneratorHandlesStatesProperly() {
+
         testGenerateDocumentFromModel();
         testGenerateDocumentFromModelSubclass();
+
+        final UnrelatedType unrelatedType = new UnrelatedType(UUID.randomUUID().toString());
+        underTest.generate(unrelatedType);
+
     }
 
     @Test

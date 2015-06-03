@@ -88,13 +88,9 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
         // list of processors.
 
         Class<?> theClass = Object.class;
+        boolean foundSearchableDocumentAnnotation = false;
 
         for (final Class<?> cls : classes) {
-
-            if (individualClassContextProcessors.containsKey(cls)) {
-                contextProcessors.add(individualClassContextProcessors.get(cls));
-                continue;
-            }
 
             LOG.debug("Analyzing " + cls + " in DocumentGenerator " + getClass());
 
@@ -106,6 +102,13 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
                 continue;
             }
 
+            foundSearchableDocumentAnnotation = true;
+
+            if (individualClassContextProcessors.containsKey(cls)) {
+                contextProcessors.add(individualClassContextProcessors.get(cls));
+                continue;
+            }
+
             final ContextProcessor contextProcessor = new ClassContextProcessor(cls, indexableFieldProcessorProvider);
 
             contextProcessors.add(contextProcessor);
@@ -114,6 +117,9 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
 
         }
 
+        if (!foundSearchableDocumentAnnotation) {
+            throw new IllegalArgumentException("@SearchableDocument not found in class hiearchy " + classes);
+        }
 
         final ContextProcessor contextProcessor;
 
@@ -189,7 +195,7 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
         final DocumentEntry<DocumentT> documentEntry = new BasicDocumentEntry<>(document, indexableFieldExtractorProvider);
         final Identity<DocumentT> documentTIdentity = documentEntry.getIdentity(documentTClass);
 
-        if (!documentTIdentity.getDocumentType().isAssignableFrom(documentTClass)) {
+        if (!documentTClass.isAssignableFrom(documentTIdentity.getDocumentType())) {
             throw new DocumentException("document type mismatch (" +
                                         documentTClass + " and " + documentTIdentity +
                                         ") are not compatible types.");

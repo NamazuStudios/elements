@@ -4,7 +4,9 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -134,7 +136,6 @@ public abstract class AbstractObjectIndexTest {
         final TestModel testModel = new TestModel().scramble();
         underTest.index(testModel);
 
-
         try (final TopDocsSearchResult<TestModel> result = underTest.executeQueryForType(TestModel.class)
                                                                     .withTopScores(100)) {
 
@@ -149,5 +150,48 @@ public abstract class AbstractObjectIndexTest {
         }
 
     }
+
+    @Test
+    public void testWildcardPolymorphicQuery() throws Exception {
+
+        // Indexes a test model instance
+
+        final TestModel testModel = new TestModel().scramble();
+        underTest.index(testModel);
+
+        final TestModelSubclass testModelSubclass = new TestModelSubclass().scramble();
+        underTest.index(testModelSubclass);
+
+        final UnrelatedType unrelatedType = new UnrelatedType(UUID.randomUUID().toString());
+        underTest.index(unrelatedType);
+
+        final Set<String> ids = new HashSet<>();
+
+        ids.add(testModel.getId());
+        ids.add(testModelSubclass.getId());
+
+        final Set<Class<?>> types = new HashSet<>();
+        types.add(TestModel.class);
+        types.add(TestModelSubclass.class);
+
+        try (final TopDocsSearchResult<TestModel> result = underTest.executeQueryForType(TestModel.class)
+                                                                    .withTopScores(100)) {
+
+            for (final ScoredDocumentEntry<TestModel> testModelScoredDocumentEntry : result) {
+
+                final Identity<TestModel> identity = testModelScoredDocumentEntry.getIdentity(TestModel.class);
+
+                Assert.assertTrue(ids.remove(identity.getIdentity()));
+                Assert.assertTrue(types.remove(identity.getDocumentType()));
+
+            }
+
+        }
+
+        Assert.assertTrue(ids.isEmpty());
+        Assert.assertTrue(types.isEmpty());
+
+    }
+
 
 }
