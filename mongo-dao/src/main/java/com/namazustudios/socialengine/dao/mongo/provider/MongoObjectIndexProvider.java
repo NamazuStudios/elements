@@ -36,6 +36,7 @@ public class MongoObjectIndexProvider implements Provider<ObjectIndex> {
     public ObjectIndex get() {
 
         final IOContext.Provider<IndexWriter> indexWriterProvider  = new IOContext.Provider<IndexWriter>() {
+
             @Override
             public IOContext get() throws IOException {
 
@@ -43,14 +44,13 @@ public class MongoObjectIndexProvider implements Provider<ObjectIndex> {
 
                 final IndexWriterConfig indexWriterConfig =
                         new IndexWriterConfig(analyzerProvider.get())
-                                .setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+                            .setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 
                 final IndexWriter indexWriter = new IndexWriter(directory, indexWriterConfig);
-                indexWriter.commit();
-
                 return new DefaultIOContext<>(indexWriter);
 
             }
+
         };
 
         final IOContext.Provider<IndexSearcher> indexSearcherProvider = new IOContext.Provider<IndexSearcher>() {
@@ -71,8 +71,18 @@ public class MongoObjectIndexProvider implements Provider<ObjectIndex> {
             }
         };
 
+        // Before anything else, Lucene requires an index be created with the
+        // the
+
+        try (final IOContext<IndexWriter> indexWriterIOContext = indexWriterProvider.get()) {
+            indexWriterIOContext.instance().commit();
+        } catch (IOException ex) {
+            throw new RuntimeException("could not create search index", ex);
+        }
+
         return new DefaultObjectIndex(indexWriterProvider, indexSearcherProvider);
 
     }
+
 
 }

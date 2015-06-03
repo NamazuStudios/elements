@@ -189,6 +189,7 @@ public class MongoUserDao implements UserDao {
 
         try {
             datastore.save(mongoUser);
+            objectIndex.index(mongoUser);
         } catch (DuplicateKeyException ex) {
             throw new DuplicateException(ex);
         }
@@ -232,6 +233,7 @@ public class MongoUserDao implements UserDao {
 
         try {
             datastore.save(mongoUser);
+            objectIndex.index(mongoUser);
         } catch (DuplicateKeyException ex) {
             throw new DuplicateException(ex);
         }
@@ -297,6 +299,7 @@ public class MongoUserDao implements UserDao {
 
         try {
             final MongoUser mongoUser = datastore.findAndModify(query, operations, false, true);
+            objectIndex.index(mongoUser);
             return transform(mongoUser);
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
@@ -327,6 +330,7 @@ public class MongoUserDao implements UserDao {
         operations.set("active", user.isActive());
 
         final MongoUser mongoUser = datastore.findAndModify(query, operations, false, false);
+        objectIndex.index(mongoUser);
 
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
@@ -356,6 +360,7 @@ public class MongoUserDao implements UserDao {
         addPasswordToOperations(operations, password);
 
         final MongoUser mongoUser = datastore.findAndModify(query, operations, false, false);
+        objectIndex.index(mongoUser);
 
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
@@ -385,6 +390,7 @@ public class MongoUserDao implements UserDao {
         operations.set("level", user.getLevel());
 
         final MongoUser mongoUser = datastore.findAndModify(query, operations);
+        objectIndex.index(mongoUser);
 
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
@@ -416,6 +422,7 @@ public class MongoUserDao implements UserDao {
         addPasswordToOperations(operations, password);
 
         final MongoUser mongoUser = datastore.findAndModify(query, operations);
+        objectIndex.index(mongoUser);
 
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
@@ -442,6 +449,7 @@ public class MongoUserDao implements UserDao {
         scramblePassword(operations);
 
         final MongoUser mongoUser = datastore.findAndModify(query, operations);
+        objectIndex.index(mongoUser);
 
         if (mongoUser == null) {
             throw new NotFoundException("User with userid does not exist:" + userId);
@@ -493,6 +501,7 @@ public class MongoUserDao implements UserDao {
         operations.set("hash_algorithm", digest.getAlgorithm());
 
         final MongoUser mongoUser = datastore.findAndModify(query, operations);
+        objectIndex.index(mongoUser);
 
         if (mongoUser == null) {
             throw new NotFoundException("User with userid does not exist:" + userId);
