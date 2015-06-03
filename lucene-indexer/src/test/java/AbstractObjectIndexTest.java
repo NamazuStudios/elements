@@ -1,13 +1,13 @@
 import com.namazustudios.socialengine.fts.*;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Created by patricktwohig on 6/1/15.
@@ -193,5 +193,68 @@ public abstract class AbstractObjectIndexTest {
 
     }
 
+    @Test
+    public void testArbitraryQuery() {
+
+        final Random random = new Random();
+
+        final TestModel needle = new TestModel().scramble();
+        needle.setTextValue("needle");
+        underTest.index(needle);
+
+        for (int i = 0; i < 1000; ++i) {
+            final TestModel haystack =
+                random.nextBoolean() ? new TestModel().scramble() :
+                                       new TestModelSubclass().scramble();
+
+            haystack.setTextValue("haystack");
+
+            underTest.index(haystack);
+        }
+
+        final Query query = new TermQuery(new Term("textValue", "needle"));
+
+        try (final TopDocsSearchResult<TestModel> result = underTest.executeQueryForObjects(TestModel.class, query)
+                                                                    .withTopScores(100)) {
+
+            final Iterator<ScoredDocumentEntry<TestModel>> iterator = result.iterator();
+            final ScoredDocumentEntry<TestModel> entry = iterator.next();
+
+            Assert.assertEquals(entry.getIdentity(TestModel.class).getIdentity(), needle.getId());
+            Assert.assertFalse(iterator.hasNext());
+
+        }
+
+    }
+
+    @Test
+    public void testPagination() {
+
+        final Set<String> idSet = new HashSet<>();
+        final List<String> idList = new ArrayList<>();
+
+        for (int i = 0; i < 50; ++i) {
+            final TestModel model = new TestModel().scramble();
+            idList.add(model.getId());
+            underTest.index(model);
+        }
+
+        idSet.addAll(idList);
+
+        for (int i = 0; i < 50; i+=10) {
+            try (final TopDocsSearchResult<TestModel> result = underTest.executeQueryForType(TestModel.class)
+                                                                        .withTopScores(i + 10)
+                                                                        .after(i, 10)) {
+
+                for (final ScoredDocumentEntry<TestModel> testModelScoredDocumentEntry : result) {
+                    final Identity<TestModel> identity = testModelScoredDocumentEntry.getIdentity(TestModel.class);
+                    Assert.assertTrue(idSet.remove(identity.getIdentity()));
+                }
+
+
+            }
+        }
+
+    }
 
 }
