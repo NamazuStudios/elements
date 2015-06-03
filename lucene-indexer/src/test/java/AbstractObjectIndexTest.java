@@ -4,10 +4,8 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by patricktwohig on 6/1/15.
@@ -124,6 +122,30 @@ public abstract class AbstractObjectIndexTest {
 
         try (final IOContext<IndexSearcher> indexReaderIOContext = underTest.getIndexSearcherContextProvider().get()) {
             Assert.assertEquals(indexReaderIOContext.instance().getIndexReader().numDocs(), 1);
+        }
+
+    }
+
+    @Test
+    public void testWildcardQuery() throws Exception {
+
+        // Indexes a test model instance
+
+        final TestModel testModel = new TestModel().scramble();
+        underTest.index(testModel);
+
+
+        try (final TopDocsSearchResult<TestModel> result = underTest.executeQueryForType(TestModel.class)
+                                                                    .withTopScores(100)) {
+
+            final Iterator<ScoredDocumentEntry<TestModel>> iterator = result.iterator();
+            final ScoredDocumentEntry<TestModel> entry = iterator.next();
+
+            Assert.assertEquals(entry.getIdentity(TestModel.class).getIdentity(), testModel.getId());
+            Assert.assertEquals(entry.getIdentity(TestModel.class).getDocumentType(), TestModel.class);
+
+            Assert.assertFalse(iterator.hasNext());
+
         }
 
     }

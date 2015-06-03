@@ -7,8 +7,12 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
+import org.testng.Assert;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -18,6 +22,22 @@ import java.io.IOException;
  * Created by patricktwohig on 6/1/15.
  */
 public class DefaultObjectIndexTest extends AbstractObjectIndexTest {
+
+    private final AtomicInteger writerOpens = new AtomicInteger(0);
+
+    private final AtomicInteger readerOpens = new AtomicInteger(0);
+
+    @BeforeTest
+    public void resetOpenCloseCount() {
+        writerOpens.set(0);
+        readerOpens.set(0);
+    }
+
+    @AfterTest
+    public void checkOpenCloseCount() {
+        Assert.assertEquals(writerOpens.get(), 0);
+        Assert.assertEquals(readerOpens.get(), 0);
+    }
 
     @Override
     public ObjectIndex getObjectToTest() throws IOException {
@@ -34,7 +54,16 @@ public class DefaultObjectIndexTest extends AbstractObjectIndexTest {
                         .setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 
                 final IndexWriter indexWriter = new IndexWriter(directory, indexWriterConfig);
-                return new DefaultIOContext<>(indexWriter);
+                writerOpens.incrementAndGet();
+
+                return new DefaultIOContext<IndexWriter>(indexWriter){
+
+                    @Override
+                    protected void doClose() throws IOException {
+                        super.doClose();
+                        writerOpens.decrementAndGet();
+                    }
+                };
 
             }
         };
@@ -46,9 +75,12 @@ public class DefaultObjectIndexTest extends AbstractObjectIndexTest {
                 final IndexReader indexReader = DirectoryReader.open(directory);
                 final IndexSearcher indexSearcher = new IndexSearcher(indexReader);
 
+                readerOpens.incrementAndGet();
+
                 return new AbstractIOContext(indexSearcher) {
                     @Override
                     protected void doClose() throws IOException {
+                        readerOpens.decrementAndGet();
                         indexReader.close();
                     }
                 };
@@ -71,5 +103,6 @@ public class DefaultObjectIndexTest extends AbstractObjectIndexTest {
         }
 
     }
+
 
 }
