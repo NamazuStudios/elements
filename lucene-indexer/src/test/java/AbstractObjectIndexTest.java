@@ -233,7 +233,7 @@ public abstract class AbstractObjectIndexTest {
         final Set<String> idSet = new HashSet<>();
         final List<String> idList = new ArrayList<>();
 
-        for (int i = 0; i < 50; ++i) {
+        for (int i = 0; i < 1000; ++i) {
             final TestModel model = new TestModel().scramble();
             idList.add(model.getId());
             underTest.index(model);
@@ -241,7 +241,7 @@ public abstract class AbstractObjectIndexTest {
 
         idSet.addAll(idList);
 
-        for (int i = 0; i < 50; i+=10) {
+        for (int i = 0; i < 1000; i+=10) {
             try (final TopDocsSearchResult<TestModel> result = underTest.executeQueryForType(TestModel.class)
                                                                         .withTopScores(i + 10)
                                                                         .after(i, 10)) {
@@ -250,7 +250,6 @@ public abstract class AbstractObjectIndexTest {
                     final Identity<TestModel> identity = testModelScoredDocumentEntry.getIdentity(TestModel.class);
                     Assert.assertTrue(idSet.remove(identity.getIdentity()));
                 }
-
 
             }
         }
