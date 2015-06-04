@@ -177,19 +177,40 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
         if (offset < 0 || count < 0) {
             throw new IllegalArgumentException("offset and count must be positive ");
         } else if (offset == 0) {
-            return this;
+
+            // Because we use a different offsetting scheme than the Lucene native API,
+            // we have to slice the array down to size manually and then return the
+            // new result.
+
+            final int length = Math.min(count, topDocs.scoreDocs.length);
+            final ScoreDoc[] scoreDocs = new ScoreDoc[length];
+            System.arraycopy(topDocs.scoreDocs, 0, scoreDocs, 0, length);
+
+            float max = 0.0f;
+            for (final ScoreDoc scoreDoc : scoreDocs) {
+                max = Math.max(max, scoreDoc.score);
+            }
+
+            final TopDocs newTopDocs = new TopDocs(this.topDocs.totalHits, scoreDocs, max);
+            return new TopDocsSearchResult<>(objectQuery, newTopDocs, indexSearcherIOContext, documentGenerator);
+
+        } else {
+
+            // Because we call this an offset, we must subtract one and move forward with the
+            // search.
+
+            final TopDocs newTopDocs;
+            final ScoreDoc scoreDoc = topDocs.scoreDocs[offset - 1];
+
+            try {
+                newTopDocs = indexSearcherIOContext.instance().searchAfter(scoreDoc, objectQuery.getQuery(), count);
+            } catch (IOException ex) {
+                throw new SearchException(ex);
+            }
+
+            return new TopDocsSearchResult<>(objectQuery, newTopDocs, indexSearcherIOContext, documentGenerator);
+
         }
-
-        final TopDocs newTopDocs;
-        final ScoreDoc scoreDoc = topDocs.scoreDocs[offset - 1];
-
-        try {
-            newTopDocs = indexSearcherIOContext.instance().searchAfter(scoreDoc, objectQuery.getQuery(), count);
-        } catch (IOException ex) {
-            throw new SearchException(ex);
-        }
-
-        return new TopDocsSearchResult<>(objectQuery, newTopDocs, indexSearcherIOContext, documentGenerator);
 
     }
 
