@@ -17,9 +17,11 @@ import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.socialengine.client.controlpanel.NameTokens;
 import com.namazustudios.socialengine.model.User;
+import org.gwtbootstrap3.client.ui.Label;
 import org.gwtbootstrap3.client.ui.Pagination;
 import org.gwtbootstrap3.client.ui.Panel;
 import org.gwtbootstrap3.client.ui.TextBox;
+import org.gwtbootstrap3.client.ui.constants.LabelType;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
 import org.gwtbootstrap3.client.ui.html.Text;
 
@@ -156,7 +158,11 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
         userEditorCellTable.addColumn(levelColumn, "User Access Level");
         userEditorCellTable.addColumn(editColumn);
         userEditorCellTable.addColumn(deleteColumn);
-        userEditorCellTable.setEmptyTableWidget(new Text("No users found..."));
+
+        final Label emptyLabel = new Label();
+        emptyLabel.setType(LabelType.DANGER);
+        emptyLabel.setText("No users found matching query.");
+        userEditorCellTable.setEmptyTableWidget(emptyLabel);
 
         userEditorCellTable.addRangeChangeHandler(new RangeChangeEvent.Handler() {
             @Override

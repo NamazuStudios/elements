@@ -127,7 +127,7 @@ public class MongoUserDao implements UserDao {
                         }
                     });
 
-            userQuery.criteria("_id").in(Lists.newArrayList(identifiers));
+            userQuery.criteria("_id").in(identifiers);
 
         } catch (NoResultException ex) {
             final Pagination<User> pagination = new Pagination<>();
