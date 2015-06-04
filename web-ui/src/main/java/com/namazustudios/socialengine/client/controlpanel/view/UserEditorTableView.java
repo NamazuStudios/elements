@@ -21,6 +21,7 @@ import org.gwtbootstrap3.client.ui.Pagination;
 import org.gwtbootstrap3.client.ui.Panel;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
+import org.gwtbootstrap3.client.ui.html.Text;
 
 import javax.inject.Inject;
 
@@ -155,6 +156,7 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
         userEditorCellTable.addColumn(levelColumn, "User Access Level");
         userEditorCellTable.addColumn(editColumn);
         userEditorCellTable.addColumn(deleteColumn);
+        userEditorCellTable.setEmptyTableWidget(new Text("No users found..."));
 
         userEditorCellTable.addRangeChangeHandler(new RangeChangeEvent.Handler() {
             @Override

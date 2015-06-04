@@ -60,9 +60,14 @@ public class UserDataProvider extends AsyncDataProvider<User> {
 
                 @Override
                 public void onSuccess(Method method, Pagination<User> userPagination) {
-                    updateRowData(range.getStart(), userPagination.getObjects());
+
+                    if (!userPagination.getObjects().isEmpty()) {
+                        updateRowData(range.getStart(), userPagination.getObjects());
+                    }
+
                     updateRowCount(userPagination.getTotal(), !userPagination.isApproximation());
                     notifyRefreshListeners();
+
                 }
 
             });
@@ -121,5 +126,7 @@ public class UserDataProvider extends AsyncDataProvider<User> {
         void onError(final Throwable throwable);
 
     }
+
+
 
 }

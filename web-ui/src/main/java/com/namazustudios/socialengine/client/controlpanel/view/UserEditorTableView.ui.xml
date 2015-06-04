@@ -26,7 +26,6 @@
             <b:Heading size="H3" text="Users"/>
         </b:PanelHeader>
 
-
         <b:PanelBody>
 
             <b:InputGroup addStyleNames="{style.searchbox}">

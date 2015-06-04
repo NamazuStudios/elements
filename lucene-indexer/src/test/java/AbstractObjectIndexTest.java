@@ -254,6 +254,8 @@ public abstract class AbstractObjectIndexTest {
             }
         }
 
+        Assert.assertTrue(idSet.isEmpty());
+
     }
 
 }

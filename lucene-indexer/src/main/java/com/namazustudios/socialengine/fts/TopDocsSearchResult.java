@@ -176,10 +176,12 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
 
         if (offset < 0 || count < 0) {
             throw new IllegalArgumentException("offset and count must be positive ");
+        } else if (offset == 0) {
+            return this;
         }
 
         final TopDocs newTopDocs;
-        final ScoreDoc scoreDoc = topDocs.scoreDocs[offset];
+        final ScoreDoc scoreDoc = topDocs.scoreDocs[offset - 1];
 
         try {
             newTopDocs = indexSearcherIOContext.instance().searchAfter(scoreDoc, objectQuery.getQuery(), count);

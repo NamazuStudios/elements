@@ -14,7 +14,7 @@ import org.mongodb.morphia.annotations.Property;
  */
 @Entity(value = "user", noClassnameStored = true)
 
-@SearchableIdentity(@SearchableField(name = "id", path = "/objectId"))
+@SearchableIdentity(@SearchableField(name = "id", path = "/objectId", type = String.class))
 @SearchableDocument(
         fields = {
             @SearchableField(name = "name", path = "/name"),

@@ -20,6 +20,7 @@ import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -103,8 +104,8 @@ public class MongoUserDao implements UserDao {
         final BooleanQuery booleanQuery = new BooleanQuery();
 
         try {
-            final Term activeTerm = new Term("active", "true");
-            booleanQuery.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
+//            final Term activeTerm = new Term("active", "true");
+//            booleanQuery.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
             booleanQuery.add(standardQueryParser.parse(queryString, "name"), BooleanClause.Occur.FILTER);
         } catch (QueryNodeException ex) {
             throw new BadQueryException(ex);
@@ -117,15 +118,16 @@ public class MongoUserDao implements UserDao {
                 .withTopScores(count + offset)
                 .after(offset, count)) {
 
-            final Iterable<Object> identifiers = Iterables.transform(results,
-                    new Function<ScoredDocumentEntry<MongoUser>, Object>() {
+            final Iterable<ObjectId> identifiers = Iterables.transform(results,
+                    new Function<ScoredDocumentEntry<MongoUser>, ObjectId>() {
                         @Override
-                        public Object apply(ScoredDocumentEntry<MongoUser> input) {
-                            return input.getIdentity(MongoUser.class).getIdentity();
+                        public ObjectId apply(ScoredDocumentEntry<MongoUser> input) {
+                            final String objectId = input.getIdentity(MongoUser.class).getIdentity(String.class);
+                            return new ObjectId(objectId);
                         }
                     });
 
-            userQuery.criteria("_id").in(identifiers);
+            userQuery.criteria("_id").in(Lists.newArrayList(identifiers));
 
         } catch (NoResultException ex) {
             final Pagination<User> pagination = new Pagination<>();
