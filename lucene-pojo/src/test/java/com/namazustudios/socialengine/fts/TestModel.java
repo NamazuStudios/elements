@@ -24,6 +24,7 @@ import java.util.UUID;
             @SearchableField(name="longValue", path="/longValue", type = Long.class),
             @SearchableField(name="floatValue", path="/floatValue", type = Float.class),
             @SearchableField(name="doubleValue", path="/doubleValue", type = Double.class),
+            @SearchableField(name="booleanValue", path="/booleanValue", type = Boolean.class),
             @SearchableField(name="stringValue", path="/stringValue", type = String.class),
             @SearchableField(name="textValue", path="/textValue", type = String.class),
             @SearchableField(name="blobValue", path="/blobValue", type = byte[].class, store = Field.Store.YES),
@@ -47,6 +48,8 @@ public class TestModel {
     private float floatValue;
 
     private double doubleValue;
+
+    private boolean booleanValue;
 
     private String stringValue;
 
@@ -116,6 +119,14 @@ public class TestModel {
         return doubleValue;
     }
 
+    public boolean isBooleanValue() {
+        return booleanValue;
+    }
+
+    public void setBooleanValue(boolean booleanValue) {
+        this.booleanValue = booleanValue;
+    }
+
     public void setDoubleValue(double doubleValue) {
         this.doubleValue = doubleValue;
     }
@@ -182,6 +193,7 @@ public class TestModel {
         setLongValue(random.nextLong());
         setFloatValue(random.nextFloat());
         setDoubleValue(random.nextDouble());
+        setBooleanValue(random.nextBoolean());
         setStringValue(Long.toString(random.nextLong()));
         setStringValue(Long.toString(random.nextLong()) + " " + Long.toString(random.nextLong()));
         setTextValue(Long.toString(random.nextLong()) + " " + Long.toString(random.nextLong()));

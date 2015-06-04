@@ -90,6 +90,8 @@ public class DefaultIndexableFieldExtractor implements IndexableFieldExtractor<O
                 return new Float(stringValue);
             } else if (Double.class.isAssignableFrom(type) || double.class.isAssignableFrom(type)) {
                 return new Double(stringValue);
+            } else if (Boolean.class.isAssignableFrom(type) || boolean.class.isAssignableFrom(type)) {
+                return new Boolean(stringValue);
             } else if (char[].class.isAssignableFrom(type)) {
                 return stringValue.toCharArray();
             } else if (CharSequence.class.isAssignableFrom(type)) {

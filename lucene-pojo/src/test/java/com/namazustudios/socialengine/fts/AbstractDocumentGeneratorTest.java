@@ -45,7 +45,7 @@ public abstract class AbstractDocumentGeneratorTest {
         // an identity field.  That's a total of 13 fields.  We should only have generated
         // exactly that may fields.
 
-        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 14);
+        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 15);
 
         // Check that the identity is sane.  We need to make sure that the identity is
         // extracted properly and that the value matches.
@@ -81,7 +81,7 @@ public abstract class AbstractDocumentGeneratorTest {
 
         // In addition to the above test case, this has three more fields.  An additional
 
-        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 17);
+        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 18);
 
         // Check that the identity is sane.  We need to make sure that the identity is
         // extracted properly and that the value matches.  This is a littie bit more complicated
@@ -105,11 +105,13 @@ public abstract class AbstractDocumentGeneratorTest {
         Assert.assertEquals(fields.getDocumentType(), TestModelSubclass.class);
 
         Assert.assertEquals(fields.extract(Byte.class, "byteValue"), (Byte)testModel.getByteValue());
+        Assert.assertEquals(fields.extract(Short.class, "shortValue"), (Short)testModel.getShortValue());
         Assert.assertEquals(fields.extract(Character.class, "charValue"), (Character)testModel.getCharValue());
         Assert.assertEquals(fields.extract(Integer.class, "intValue"), (Integer)testModel.getIntValue());
         Assert.assertEquals(fields.extract(Long.class, "longValue"), (Long)testModel.getLongValue());
         Assert.assertEquals(fields.extract(Float.class, "floatValue"), (Float)testModel.getFloatValue());
         Assert.assertEquals(fields.extract(Double.class, "doubleValue"), (Double) testModel.getDoubleValue());
+        Assert.assertEquals(fields.extract(Boolean.class, "booleanValue"), (Boolean) testModel.isBooleanValue());
         Assert.assertEquals(fields.extract(String.class, "stringValue"), (String) testModel.getStringValue());
         Assert.assertEquals(fields.extract(String.class, "textValue"), (String) testModel.getTextValue());
         Assert.assertEquals(fields.extract(byte[].class, "blobValue"), (byte[]) testModel.getBlobValue());
@@ -124,7 +126,7 @@ public abstract class AbstractDocumentGeneratorTest {
         testModel.setId(UUID.randomUUID().toString());
 
         final DocumentEntry<TestModel> testModelDocumentEntry = underTest.generate(testModel);
-        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 10);
+        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 11);
 
     }
 
@@ -135,7 +137,7 @@ public abstract class AbstractDocumentGeneratorTest {
         testModel.setId(UUID.randomUUID().toString());
 
         final DocumentEntry<TestModelSubclass> testModelDocumentEntry = underTest.generate(testModel);
-        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 11);
+        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 12);
 
     }
 

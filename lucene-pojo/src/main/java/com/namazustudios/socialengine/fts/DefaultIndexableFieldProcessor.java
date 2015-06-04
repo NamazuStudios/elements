@@ -27,6 +27,7 @@ import java.util.List;
  *  <li>long - 64-bit integer {@link LongField}</li>
  *  <li>float - 32-bit float {@link FloatField}</li>
  *  <li>double - 64-bit integer {@link DoubleField}</li>
+ *  <li>boolean - {@link StringField} stored with {@link Boolean#toString()}</li>
  *  <li>String - {@link StringField} or {@link TextField} depending on the value of {@link SearchableField#text()}</li>
  *  <li>{@link CharSequence} - {@link StringField} or {@link TextField} depending on the fields of {@link SearchableField#text()}</li>
  *  <li>{@link Iterable} - One instance of {@link IndexableField} for each element provided each element is compatible</li>
@@ -82,6 +83,8 @@ public class DefaultIndexableFieldProcessor extends AbstractIndexableFieldProces
             fields.add(newFloatField((Float) value, fieldMetadata));
         } else if (value instanceof Double) {
             fields.add(newDoubleField((Double) value, fieldMetadata));
+        } else if (value instanceof Boolean) {
+            fields.add(newStringField(value.toString(), fieldMetadata));
         } else if ((value instanceof byte[]) && fieldMetadata.store().equals(Field.Store.YES)) {
             fields.add(newStoredField((byte[]) value, fieldMetadata));
         } else if (value instanceof char[]) {
