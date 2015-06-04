@@ -193,29 +193,28 @@ public abstract class AbstractObjectIndexTest {
 
     }
 
+
     @Test
-    public void testArbitraryQuery() {
+    public void testArbitraryQueryForBoolean() {
 
         final Random random = new Random();
 
         final TestModel needle = new TestModel().scramble();
-        needle.setTextValue("needle");
+        needle.setBooleanValue(true);
         underTest.index(needle);
 
         for (int i = 0; i < 1000; ++i) {
             final TestModel haystack =
-                random.nextBoolean() ? new TestModel().scramble() :
-                                       new TestModelSubclass().scramble();
-
-            haystack.setTextValue("haystack");
-
+                    random.nextBoolean() ? new TestModel().scramble() :
+                            new TestModelSubclass().scramble();
+            haystack.setBooleanValue(false);
             underTest.index(haystack);
         }
 
-        final Query query = new TermQuery(new Term("textValue", "needle"));
+        final Query query = new TermQuery(new Term("booleanValue", "true"));
 
         try (final TopDocsSearchResult<TestModel> result = underTest.executeQueryForObjects(TestModel.class, query)
-                                                                    .withTopScores(100)) {
+                .withTopScores(100)) {
 
             final Iterator<ScoredDocumentEntry<TestModel>> iterator = result.iterator();
             final ScoredDocumentEntry<TestModel> entry = iterator.next();
