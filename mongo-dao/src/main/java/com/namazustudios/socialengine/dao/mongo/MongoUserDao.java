@@ -104,8 +104,8 @@ public class MongoUserDao implements UserDao {
         final BooleanQuery booleanQuery = new BooleanQuery();
 
         try {
-//            final Term activeTerm = new Term("active", "true");
-//            booleanQuery.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
+            final Term activeTerm = new Term("active", "true");
+            booleanQuery.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
             booleanQuery.add(standardQueryParser.parse(queryString, "name"), BooleanClause.Occur.FILTER);
         } catch (QueryNodeException ex) {
             throw new BadQueryException(ex);
