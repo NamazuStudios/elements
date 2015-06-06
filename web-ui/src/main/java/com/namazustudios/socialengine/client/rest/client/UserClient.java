@@ -23,7 +23,7 @@ public interface UserClient extends RestService {
     @GET
     void getUsers(@QueryParam("offset")int offset,
                   @QueryParam("count") int count,
-                  MethodCallback<Pagination<User>> users);
+                  final MethodCallback<Pagination<User>> users);
 
     /**
      * Gets the users in the system in a paginated fashion.  Optionally, this
@@ -35,10 +35,10 @@ public interface UserClient extends RestService {
      *
      */
     @GET
-    void getUsers(@QueryParam("offset") int offset,
-                  @QueryParam("count")  int count,
-                  @QueryParam("search") String search,
-                  MethodCallback<Pagination<User>> users);
+    void getUsers(final @QueryParam("offset") int offset,
+                  final @QueryParam("count")  int count,
+                  final @QueryParam("search") String search,
+                  final MethodCallback<Pagination<User>> users);
 
     /**
      * Makes a round-trip call to refresh the currently logged-in user.
@@ -47,7 +47,7 @@ public interface UserClient extends RestService {
      */
     @GET
     @Path("me")
-    void refreshCurrentUser(MethodCallback<User> userMethodCallback);
+    void refreshCurrentUser(final MethodCallback<User> userMethodCallback);
 
     /**
      * Uses a GET request to fetch the user with the given user name.
@@ -57,7 +57,18 @@ public interface UserClient extends RestService {
      */
     @GET
     @Path("{userName}")
-    void getUser(final @PathParam("userName") String userName, MethodCallback<User> userMethodCallback);
+    void getUser(final @PathParam("userName") String userName,
+                 final MethodCallback<User> userMethodCallback);
+
+    /**
+     * Deletes the user with teh given username.
+     *
+     * @param methodCallback
+     */
+    @DELETE
+    @Path("{userName}")
+    void deleteUser(final @PathParam("userName") String userName,
+                    final MethodCallback<Void> methodCallback);
 
     /**
      * Creates a new user given the User object, password, and the method callback.
@@ -67,9 +78,9 @@ public interface UserClient extends RestService {
      */
     @POST
     void createNewUser(
-            User user,
-            @QueryParam("password") String password,
-            MethodCallback<User> userMethodCallback);
+            final User user,
+            final @QueryParam("password") String password,
+            final MethodCallback<User> userMethodCallback);
 
     /**
      * Updates a user with the given credentials.
@@ -82,8 +93,8 @@ public interface UserClient extends RestService {
     @PUT
     @Path("{name}")
     void updateUser(
-            @PathParam("name") String name,
-            @QueryParam("password") String password,
+            final @PathParam("name") String name,
+            final @QueryParam("password") String password,
             final User user,
             final MethodCallback<User> userMethodCallback);
 

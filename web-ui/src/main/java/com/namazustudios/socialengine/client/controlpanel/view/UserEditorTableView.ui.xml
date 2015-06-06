@@ -1,6 +1,6 @@
 <ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
-             xmlns:g='urn:import:com.google.gwt.user.client.ui'
              xmlns:b.gwt="urn:import:org.gwtbootstrap3.client.ui.gwt"
+             xmlns:m="urn:import:com.namazustudios.socialengine.client.modal"
              xmlns:b="urn:import:org.gwtbootstrap3.client.ui">
 
     <ui:style>
@@ -27,6 +27,9 @@
         </b:PanelHeader>
 
         <b:PanelBody>
+
+            <m:ErrorModal ui:field="errorModal"/>
+            <m:ConfirmationModal ui:field="confirmationModal"/>
 
             <b:InputGroup addStyleNames="{style.searchbox}">
                 <b:InputGroupAddon icon="USER">User</b:InputGroupAddon>

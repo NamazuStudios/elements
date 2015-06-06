@@ -1,8 +1,10 @@
 package com.namazustudios.socialengine.client.controlpanel.view;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gwt.cell.client.ButtonCell;
 import com.google.gwt.cell.client.EditTextCell;
 import com.google.gwt.cell.client.FieldUpdater;
+import com.google.gwt.cell.client.SelectionCell;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -16,7 +18,13 @@ import com.gwtplatform.mvp.client.ViewImpl;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.socialengine.client.controlpanel.NameTokens;
+import com.namazustudios.socialengine.client.modal.ConfirmationModal;
+import com.namazustudios.socialengine.client.modal.ErrorModal;
+import com.namazustudios.socialengine.client.modal.OnConfirmHandler;
+import com.namazustudios.socialengine.client.rest.client.UserClient;
 import com.namazustudios.socialengine.model.User;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 import org.gwtbootstrap3.client.ui.Label;
 import org.gwtbootstrap3.client.ui.Pagination;
 import org.gwtbootstrap3.client.ui.Panel;
@@ -24,8 +32,10 @@ import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.constants.LabelType;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
 import org.gwtbootstrap3.client.ui.html.Text;
+import org.gwtbootstrap3.extras.growl.client.ui.Growl;
 
 import javax.inject.Inject;
+import java.util.List;
 
 /**
  * Created by patricktwohig on 5/11/15.
@@ -36,6 +46,12 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
 
     interface UserEditorTableViewUiBinder extends UiBinder<Panel, UserEditorTableView> {}
 
+    private static final List<String> USER_LEVEL_OPTIONS = new ImmutableList.Builder<String>()
+            .add("Unprivileged User")
+            .add("Normal User")
+            .add("Super User")
+        .build();
+
     @UiField
     CellTable<User> userEditorCellTable;
 
@@ -44,6 +60,15 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
 
     @UiField
     TextBox searchUsersTextBox;
+
+    @UiField
+    ErrorModal errorModal;
+
+    @UiField
+    ConfirmationModal confirmationModal;
+
+    @Inject
+    private UserClient userClient;
 
     @Inject
     private PlaceManager placeManager;
@@ -72,8 +97,18 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
 
         nameColumn.setFieldUpdater(new FieldUpdater<User, String>() {
             @Override
-            public void update(int index, User object, String value) {
+            public void update(int index, final User object, String value) {
+
+                final String old = object.getName();
                 object.setName(value);
+
+                save(object, new Runnable() {
+                    @Override
+                    public void run() {
+                        object.setName(old);
+                    }
+                });
+
             }
         });
 
@@ -88,30 +123,44 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
 
         emailColumn.setFieldUpdater(new FieldUpdater<User, String>() {
             @Override
-            public void update(int index, User object, String value) {
+            public void update(int index, final User object, String value) {
+                final String old = object.getEmail();
                 object.setEmail(value);
+                save(object, new Runnable() {
+                    @Override
+                    public void run() {
+                        object.setEmail(old);
+                    }
+                });
             }
         });
 
         final Column<User, String> levelColumn;
 
-        levelColumn = new Column<User, String>(new EditTextCell()) {
+        levelColumn = new Column<User, String>(new SelectionCell(USER_LEVEL_OPTIONS)) {
             @Override
             public String getValue(User object) {
-
-                if (object.getLevel() == null) {
-                    return "";
-                }
-
-                switch (object.getLevel()) {
-                    case UNPRIVILEGED: return "Unprivileged User";
-                    case USER:         return "Normal User";
-                    case SUPERUSER:    return "Super-User";
-                    default:           return "";
-                }
-
+                return (object.getLevel() == null) ? "" : USER_LEVEL_OPTIONS.get(object.getLevel().ordinal());
             }
         };
+
+        levelColumn.setFieldUpdater(new FieldUpdater<User, String>() {
+            @Override
+            public void update(int index, final User object, String value) {
+
+                final User.Level old = object.getLevel();
+                final User.Level level = User.Level.values()[index];
+
+                object.setLevel(level);
+                save(object, new Runnable() {
+                    @Override
+                    public void run() {
+                        object.setLevel(old);
+                    }
+                });
+
+            }
+        });
 
         final Column<User, String> editColumn;
 
@@ -146,11 +195,12 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
         };
 
         deleteColumn.setFieldUpdater(new FieldUpdater<User, String>() {
+
             @Override
             public void update(int index, User object, String value) {
-                //TODO Confirm and make REST call to delete user
-                Window.alert("Deleting using " + object.getName());
+                confirmDelete(object);
             }
+
         });
 
         userEditorCellTable.addColumn(nameColumn, "User Name");
@@ -198,6 +248,64 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
 
         });
 
+    }
+
+    private void save(final User user, final Runnable unwwind) {
+        userClient.updateUser(user.getName(), null, user, new MethodCallback<User>() {
+
+            @Override
+            public void onFailure(Method method, Throwable throwable) {
+                unwwind.run();
+                showErrorModal(throwable);
+            }
+
+            @Override
+            public void onSuccess(Method method, User user) {
+                Growl.growl(user.getName() + " updated.");
+            }
+
+        });
+    }
+
+    private void confirmDelete(final User user) {
+
+        confirmationModal.getErrorTextLabel().setText("Delete user " + user.getName() + "?");
+        confirmationModal.setOnConfirmHandler(new OnConfirmHandler() {
+
+            @Override
+            public void onConfirm() {
+                delete(user);
+            }
+
+            @Override
+            public void onDismiss() {}
+
+        });
+
+        confirmationModal.show();
+
+    }
+
+    private void delete(final User user) {
+        userClient.deleteUser(user.getName(), new MethodCallback<Void>() {
+
+            @Override
+            public void onFailure(Method method, Throwable throwable) {
+                showErrorModal(throwable);
+            }
+
+            @Override
+            public void onSuccess(Method method, Void aVoid) {
+                Growl.growl(user.getName() + " deleted.");
+                userEditorCellTable.setVisibleRangeAndClearData(userEditorCellTable.getVisibleRange(), true);
+            }
+
+        });
+    }
+
+    private void showErrorModal(final Throwable throwable) {
+        errorModal.setMessageWithThrowable(throwable);
+        errorModal.show();
     }
 
 }
