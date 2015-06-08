@@ -102,7 +102,7 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
                 final String old = object.getName();
                 object.setName(value);
 
-                save(object, new Runnable() {
+                save(object, index, new Runnable() {
                     @Override
                     public void run() {
                         object.setName(old);
@@ -126,7 +126,7 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
             public void update(int index, final User object, String value) {
                 final String old = object.getEmail();
                 object.setEmail(value);
-                save(object, new Runnable() {
+                save(object, index, new Runnable() {
                     @Override
                     public void run() {
                         object.setEmail(old);
@@ -149,10 +149,10 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
             public void update(int index, final User object, String value) {
 
                 final User.Level old = object.getLevel();
-                final User.Level level = User.Level.values()[index];
+                final User.Level level = User.Level.values()[USER_LEVEL_OPTIONS.indexOf(value)];
 
                 object.setLevel(level);
-                save(object, new Runnable() {
+                save(object, index, new Runnable() {
                     @Override
                     public void run() {
                         object.setLevel(old);
@@ -250,18 +250,20 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
 
     }
 
-    private void save(final User user, final Runnable unwwind) {
+    private void save(final User user, final int toRedraw, final Runnable unwwind) {
         userClient.updateUser(user.getName(), null, user, new MethodCallback<User>() {
 
             @Override
             public void onFailure(Method method, Throwable throwable) {
                 unwwind.run();
+                userEditorCellTable.redrawRow(toRedraw);
                 showErrorModal(throwable);
             }
 
             @Override
             public void onSuccess(Method method, User user) {
                 Growl.growl(user.getName() + " updated.");
+                userEditorCellTable.redrawRow(toRedraw);
             }
 
         });
