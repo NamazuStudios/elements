@@ -1,10 +1,10 @@
 package com.namazustudios.socialengine.dao;
 
-import com.namazustudios.socialengine.model.BasicEntrant;
+import com.namazustudios.socialengine.model.BasicEntrantProfile;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.SocialCampaign;
 import com.namazustudios.socialengine.model.SocialCampaignEntry;
-import com.namazustudios.socialengine.model.SteamEntrant;
+import com.namazustudios.socialengine.model.SteamEntrantProfile;
 
 /**
  * Created by patricktwohig on 3/26/15.
@@ -52,7 +52,7 @@ public interface SocialCampaignDao {
      * @param entrant
      * @return the SocialCampaignEntry object, which indicates which URL the user should share
      */
-    public SocialCampaignEntry submitEntrant(final String campaign, final BasicEntrant entrant);
+    public SocialCampaignEntry submitEntrant(final String campaign, final BasicEntrantProfile entrant);
 
     /**
      * Given the campaign name and the entrant's information, this places the entrant into
@@ -63,6 +63,6 @@ public interface SocialCampaignDao {
      * @param entrant
      * @return the SocialCampaignEntry object, which indicates which URL the user should share
      */
-    public SocialCampaignEntry submitEntrant(final String campaign, final SteamEntrant entrant);
+    public SocialCampaignEntry submitEntrant(final String campaign, final SteamEntrantProfile entrant);
 
 }

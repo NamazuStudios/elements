@@ -2,11 +2,11 @@ package com.namazustudios.socialengine.service.social;
 
 import com.namazustudios.socialengine.dao.SocialCampaignDao;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.model.BasicEntrant;
+import com.namazustudios.socialengine.model.BasicEntrantProfile;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.SocialCampaign;
 import com.namazustudios.socialengine.model.SocialCampaignEntry;
-import com.namazustudios.socialengine.model.SteamEntrant;
+import com.namazustudios.socialengine.model.SteamEntrantProfile;
 import com.namazustudios.socialengine.service.SocialCampaignService;
 
 import javax.inject.Inject;
@@ -40,12 +40,12 @@ public class UnprivilegedSocialCampaignService implements SocialCampaignService 
     }
 
     @Override
-    public SocialCampaignEntry submitEntrant(String campaign, BasicEntrant entrant) {
+    public SocialCampaignEntry submitEntrant(String campaign, BasicEntrantProfile entrant) {
         return socialCampaignDao.submitEntrant(campaign, entrant);
     }
 
     @Override
-    public SocialCampaignEntry submitEntrant(String campaign, SteamEntrant entrant) {
+    public SocialCampaignEntry submitEntrant(String campaign, SteamEntrantProfile entrant) {
         return socialCampaignDao.submitEntrant(campaign, entrant);
     }
 

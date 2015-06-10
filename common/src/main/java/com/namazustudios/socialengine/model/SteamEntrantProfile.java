@@ -6,12 +6,12 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
 /**
- * Extends the {@link com.namazustudios.socialengine.model.BasicEntrant} to include the
+ * Extends the {@link BasicEntrantProfile} to include the
  * user's Steam ID.
  *
  * Created by patricktwohig on 3/18/15.
  */
-public class SteamEntrant extends BasicEntrant {
+public class SteamEntrantProfile extends BasicEntrantProfile {
 
     @NotNull
     @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)

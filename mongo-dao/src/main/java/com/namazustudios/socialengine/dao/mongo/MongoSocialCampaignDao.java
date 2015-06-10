@@ -14,15 +14,14 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoShortLink;
 import com.namazustudios.socialengine.dao.mongo.model.MongoSocialCampaign;
 import com.namazustudios.socialengine.dao.mongo.model.MongoSteamEntrant;
 import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
-import com.namazustudios.socialengine.model.BasicEntrant;
+import com.namazustudios.socialengine.model.BasicEntrantProfile;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.SocialCampaign;
 import com.namazustudios.socialengine.model.SocialCampaignEntry;
-import com.namazustudios.socialengine.model.SteamEntrant;
+import com.namazustudios.socialengine.model.SteamEntrantProfile;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
@@ -139,7 +138,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
     }
 
     @Override
-    public SocialCampaignEntry submitEntrant(final String campaign, final BasicEntrant entrant) {
+    public SocialCampaignEntry submitEntrant(final String campaign, final BasicEntrantProfile entrant) {
 
         validate(entrant);
 
@@ -198,7 +197,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
     }
 
     @Override
-    public SocialCampaignEntry submitEntrant(final String campaign, final SteamEntrant entrant) {
+    public SocialCampaignEntry submitEntrant(final String campaign, final SteamEntrantProfile entrant) {
         final MongoSocialCampaign mongoSocialCampaign = datastore.get(MongoSocialCampaign.class, campaign);
 
         if (mongoSocialCampaign == null) {
@@ -268,7 +267,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
 
     }
 
-    public void validate(final BasicEntrant entrant) {
+    public void validate(final BasicEntrantProfile entrant) {
 
         if (entrant == null) {
             throw new InvalidDataException("Entrant must not be null.");
@@ -283,9 +282,9 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
 
     }
 
-    public void validate(final SteamEntrant entrant) {
+    public void validate(final SteamEntrantProfile entrant) {
 
-        validate((BasicEntrant)entrant);
+        validate((BasicEntrantProfile)entrant);
         entrant.setLastName(Strings.nullToEmpty(entrant.getSteamId()).trim());
 
     }

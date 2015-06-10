@@ -12,7 +12,7 @@ import java.util.Date;
  *
  * Created by patricktwohig on 3/18/15.
  */
-public class BasicEntrant {
+public class BasicEntrantProfile {
 
     @NotNull
     @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
