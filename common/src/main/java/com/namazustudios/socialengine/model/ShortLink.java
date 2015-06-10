@@ -12,11 +12,27 @@ public class ShortLink {
 
     private String id;
 
-    @NotNull
+    private String shortLinkPath;
+
     private String shortLinkURL;
 
     @NotNull
     private String destinationURL;
+
+    /**
+     * Gets the path of the short link.  This is the path relative to
+     * the short link url base.
+     *
+     * @return the short link path
+     *
+     */
+    public String getShortLinkPath() {
+        return shortLinkPath;
+    }
+
+    public void setShortLinkPath(String shortLinkPath) {
+        this.shortLinkPath = shortLinkPath;
+    }
 
     /**
      * Gets the ID of the link.

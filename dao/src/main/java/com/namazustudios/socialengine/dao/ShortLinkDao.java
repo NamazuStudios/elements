@@ -4,6 +4,14 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ShortLink;
 
 /**
+ * Manages the {@link ShortLink} instances in the database.  This deals strictly
+ * with the database representation of the {@link ShortLink} object.
+ *
+ * Unless otherwise noted, the {@link ShortLinkDao} does not deal with the full-path
+ * url.  Instances returned from this may not have a valid value set for {@link ShortLink#getShortLinkPath()},
+ * and only guarantees a non-null return value for {@link ShortLink#getShortLinkPath()}. It is the responsibility
+ * of the calling code to derive the full URL using the value from {@link ShortLink#getShortLinkPath()}.
+ *
  * Created by patricktwohig on 6/9/15.
  */
 public interface ShortLinkDao {
@@ -37,7 +45,16 @@ public interface ShortLinkDao {
      *
      * @return the {@link ShortLink} object
      */
-    ShortLink getShortLink(final String id);
+    ShortLink getShortLinkWithId(final String id);
+
+    /**
+     * Gets an instance of {@link ShortLink} using the path of the short link, as
+     * returned from {@link ShortLink#getShortLinkPath()}
+     *
+     * @param shortLinkPath
+     * @return the short link instance
+     */
+    ShortLink getShortLinkWithPath(final String shortLinkPath);
 
     /**
      * Creates a {@link ShortLink} with the given object.

@@ -5,14 +5,14 @@ package com.namazustudios.socialengine.model;
  */
 public class SocialCampaignEntry {
 
-    private String uniqueUrl;
+    private ShortLink shortLink;
 
-    public String getUniqueUrl() {
-        return uniqueUrl;
+    public ShortLink getShortLink() {
+        return shortLink;
     }
 
-    public void setUniqueUrl(String uniqueUrl) {
-        this.uniqueUrl = uniqueUrl;
+    public void setShortLink(ShortLink shortLink) {
+        this.shortLink = shortLink;
     }
 
 }

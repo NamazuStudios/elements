@@ -2,8 +2,6 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.namazustudios.socialengine.Constants;
@@ -20,7 +18,6 @@ import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
-import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -36,6 +33,8 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 /**
+ * MongoDB implementation of {@link UserDao}.
+ *
  * Created by patricktwohig on 3/26/15.
  */
 @Singleton
@@ -66,6 +65,9 @@ public class MongoUserDao implements UserDao {
 
     @Inject
     private StandardQueryParser standardQueryParser;
+
+    @Inject
+    private MongoDBUtils mongoDBUtils;
 
     @Override
     public User getActiveUser(String userId) {
@@ -104,63 +106,33 @@ public class MongoUserDao implements UserDao {
         final BooleanQuery booleanQuery = new BooleanQuery();
 
         try {
+
             final Term activeTerm = new Term("active", "true");
+
             booleanQuery.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
             booleanQuery.add(standardQueryParser.parse(queryString, "name"), BooleanClause.Occur.FILTER);
+
         } catch (QueryNodeException ex) {
             throw new BadQueryException(ex);
         }
 
-        final Query<MongoUser> userQuery = datastore.createQuery(MongoUser.class);
-
-        try (final TopDocsSearchResult<MongoUser> results = objectIndex
-                .executeQueryForObjects(MongoUser.class, booleanQuery)
-                .withTopScores(count + offset)
-                .after(offset, count)) {
-
-            final Iterable<ObjectId> identifiers = Iterables.transform(results,
-                    new Function<ScoredDocumentEntry<MongoUser>, ObjectId>() {
-                        @Override
-                        public ObjectId apply(ScoredDocumentEntry<MongoUser> input) {
-                            final String objectId = input.getIdentity(MongoUser.class).getIdentity(String.class);
-                            return new ObjectId(objectId);
-                        }
-                    });
-
-            userQuery.criteria("_id").in(identifiers);
-
-        } catch (NoResultException ex) {
-            final Pagination<User> pagination = new Pagination<>();
-            pagination.setApproximation(true);
-            return pagination;
-        } catch (SearchException ex) {
-            throw new InternalException(ex.getMessage(), ex);
-        }
-
-        final Pagination<User> users = paginationFromQuery(userQuery, offset, count);
-        users.setApproximation(true);
-        return users;
+        return mongoDBUtils.paginationFromSearch(MongoUser.class, booleanQuery, offset, count,
+            new Function<MongoUser, User>() {
+                @Override
+                public User apply(MongoUser input) {
+                    return transform(input);
+                }
+            });
 
     }
 
     private Pagination<User> paginationFromQuery(final Query<MongoUser> query, final int offset, final int count) {
-
-        final Pagination<User> users = new Pagination<>();
-
-        users.setOffset(offset);
-        users.setTotal((int) query.getCollection().getCount());
-
-        final Iterable<User> userIterable = Iterables.limit(Iterables.transform(query, new Function<MongoUser, User>() {
+        return mongoDBUtils.paginationFromQuery(query, offset, count, new Function<MongoUser, User>() {
             @Override
             public User apply(MongoUser input) {
                 return transform(input);
             }
-        }), count);
-
-        users.setObjects(Lists.newArrayList(userIterable));
-
-        return users;
-
+        });
     }
 
     @Override
@@ -444,7 +416,7 @@ public class MongoUserDao implements UserDao {
             query.criteria("name").equal(userId),
             query.criteria("email").equal(userId)
         ).and(
-                query.criteria("active").equal(true)
+            query.criteria("active").equal(true)
         );
 
         operations.set("active", false);

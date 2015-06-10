@@ -17,11 +17,7 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
-import com.namazustudios.socialengine.model.BasicEntrantProfile;
-import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.SocialCampaign;
-import com.namazustudios.socialengine.model.SocialCampaignEntry;
-import com.namazustudios.socialengine.model.SteamEntrantProfile;
+import com.namazustudios.socialengine.model.*;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
@@ -151,7 +147,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
         final Atomic.Once<MongoShortLink> mongoShortLinkOnce = atomic.once(new Atomic.Once<MongoShortLink>() {
             @Override
             public MongoShortLink call() {
-                return mongoShortLinkDao.createShortLinkFromURL(mongoSocialCampaign.getLinkUrl());
+                return mongoShortLinkDao.createMongoShortLinkFromURL(mongoSocialCampaign.getLinkUrl());
             }
         });
 
@@ -184,7 +180,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
                     }
 
                     final SocialCampaignEntry socialCampaignEntry = new SocialCampaignEntry();
-                    socialCampaignEntry.setUniqueUrl(mongoShortLinkDao.getURLFromShortLink(mongoShortLink));
+                    socialCampaignEntry.setShortLink(mongoShortLinkDao.transform(mongoShortLink));
                     return socialCampaignEntry;
 
                 }
@@ -209,7 +205,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
         final Atomic.Once<MongoShortLink> mongoShortLinkOnce = atomic.once(new Atomic.Once<MongoShortLink>() {
             @Override
             public MongoShortLink call() {
-                return mongoShortLinkDao.createShortLinkFromURL(mongoSocialCampaign.getLinkUrl());
+                return mongoShortLinkDao.createMongoShortLinkFromURL(mongoSocialCampaign.getLinkUrl());
             }
         });
 
@@ -245,7 +241,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
                     }
 
                     final SocialCampaignEntry socialCampaignEntry = new SocialCampaignEntry();
-                    socialCampaignEntry.setUniqueUrl(mongoShortLinkDao.getURLFromShortLink(mongoShortLink));
+                    socialCampaignEntry.setShortLink(mongoShortLinkDao.transform(mongoShortLink));
                     return socialCampaignEntry;
 
                 }
