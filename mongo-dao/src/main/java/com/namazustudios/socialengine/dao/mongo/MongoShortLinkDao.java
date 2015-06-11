@@ -2,16 +2,22 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
+import com.mongodb.Mongo;
+import com.mongodb.WriteResult;
+import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.ShortLinkDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoShortLink;
 import com.namazustudios.socialengine.exception.BadQueryException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ShortLink;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
@@ -31,6 +37,9 @@ public class MongoShortLinkDao implements ShortLinkDao {
 
     @Inject
     private MongoDBUtils mongoDBUtils;
+
+    @Inject
+    private ValidationHelper validationHelper;
 
     @Inject
     private StandardQueryParser standardQueryParser;
@@ -61,30 +70,67 @@ public class MongoShortLinkDao implements ShortLinkDao {
                         return transform(input);
                     }
                 });
+
     }
 
     @Override
     public ShortLink getShortLinkWithId(String id) {
-        return null;
+
+        final MongoShortLink mongoShortLink = datastore.get(MongoShortLink.class, new ObjectId(id));
+
+        if (mongoShortLink == null) {
+            throw new NotFoundException("short link with id " + id + " not found");
+        }
+
+        return transform(mongoShortLink);
+
     }
 
     @Override
     public ShortLink getShortLinkWithPath(String shortLinkPath) {
-        return null;
+
+        final String shortLinkPaths[] = shortLinkPath.split("[/]*");
+
+        if (shortLinkPaths.length != 1) {
+            throw new NotFoundException();
+        }
+
+        return getShortLinkWithId(shortLinkPaths[0]);
+
     }
 
     @Override
     public ShortLink create(ShortLink link) {
-        return null;
+
+        validate(link);
+
+        final MongoShortLink mongoShortLink = new MongoShortLink();
+        mongoShortLink.setDestinationUrl(link.getDestinationURL());
+
+        datastore.save(mongoShortLink);
+        objectIndex.index(mongoShortLink);
+
+        return transform(mongoShortLink);
+
     }
 
     @Override
     public ShortLink createShortLinkFromURL(final String url) {
-        return null;
+        final ShortLink shortLink = new ShortLink();
+        shortLink.setDestinationURL(url);
+        return create(shortLink);
     }
 
     @Override
     public void deleteShortLink(String id) {
+
+        final WriteResult writeResult = datastore.delete(MongoShortLink.class, id);
+
+        if (writeResult.getN() == 0) {
+            throw new NotFoundException();
+        }
+
+        objectIndex.delete(MongoShortLink.class, id);
 
     }
 
@@ -104,7 +150,11 @@ public class MongoShortLinkDao implements ShortLinkDao {
     }
 
     public ShortLink transform(final MongoShortLink mongoShortLink) {
-        return null;
+        final ShortLink shortLink = new ShortLink();
+        shortLink.setId(mongoShortLink.getObjectId());
+        shortLink.setShortLinkPath(mongoShortLink.getObjectId());
+        shortLink.setDestinationURL(mongoShortLink.getDestinationUrl());
+        return shortLink;
     }
 
     private Pagination<ShortLink> paginationFromQuery(final Query<MongoShortLink> mongoShortLinkQuery,
@@ -118,6 +168,17 @@ public class MongoShortLinkDao implements ShortLinkDao {
                     }
 
                 });
+    }
+
+    public void validate(final ShortLink shortLink) {
+
+        if (shortLink == null) {
+            throw new InvalidDataException("ShortLink must not be null.");
+        }
+
+        validationHelper.validateModel(shortLink);
+        shortLink.setDestinationURL(shortLink.getDestinationURL().trim());
+
     }
 
 }
