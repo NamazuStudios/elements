@@ -5,6 +5,7 @@ import com.google.inject.name.Names;
 import com.mongodb.MongoClient;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.PasswordDigestProvider;
+import com.namazustudios.socialengine.dao.ShortLinkDao;
 import com.namazustudios.socialengine.dao.SocialCampaignDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.dao.mongo.Atomic;
@@ -75,7 +76,7 @@ public class MongoDaoModule extends AbstractModule {
 
         binder().bind(UserDao.class).to(MongoUserDao.class);
         binder().bind(SocialCampaignDao.class).to(MongoSocialCampaignDao.class);
-        binder().bind(MongoShortLinkDao.class);
+        binder().bind(ShortLinkDao.class).to(MongoShortLinkDao.class);
         binder().bind(MongoClient.class).toProvider(MongoClientProvider.class).in(Singleton.class);
         binder().bind(Datastore.class).toProvider(MongoDatastoreProvider.class);
         binder().bind(AdvancedDatastore.class).toProvider(MongoAdvancedDatastoreProvider.class);

@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
+import com.google.common.io.BaseEncoding;
 import com.mongodb.Mongo;
 import com.mongodb.WriteResult;
 import com.namazustudios.socialengine.ValidationHelper;
@@ -22,6 +23,7 @@ import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Created by patricktwohig on 3/26/15.
@@ -95,7 +97,22 @@ public class MongoShortLinkDao implements ShortLinkDao {
             throw new NotFoundException();
         }
 
-        return getShortLinkWithId(shortLinkPaths[0]);
+        final ObjectId objectId;
+
+        try {
+            final byte[] bytes = BaseEncoding.base64Url().decode(shortLinkPaths[0]);
+            objectId = new ObjectId(bytes);
+        } catch (IllegalArgumentException ex) {
+            throw new NotFoundException();
+        }
+
+        final MongoShortLink mongoShortLink = datastore.get(MongoShortLink.class, objectId);
+
+        if (mongoShortLink == null) {
+            throw new NotFoundException();
+        }
+
+        return transform(mongoShortLink);
 
     }
 
@@ -151,8 +168,9 @@ public class MongoShortLinkDao implements ShortLinkDao {
 
     public ShortLink transform(final MongoShortLink mongoShortLink) {
         final ShortLink shortLink = new ShortLink();
+        final ObjectId objectId = new ObjectId(mongoShortLink.getObjectId());
         shortLink.setId(mongoShortLink.getObjectId());
-        shortLink.setShortLinkPath(mongoShortLink.getObjectId());
+        shortLink.setShortLinkPath(BaseEncoding.base64Url().encode(objectId.toByteArray()));
         shortLink.setDestinationURL(mongoShortLink.getDestinationUrl());
         return shortLink;
     }

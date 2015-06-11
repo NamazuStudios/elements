@@ -46,10 +46,6 @@ public class MongoUserDao implements UserDao {
     private AdvancedDatastore datastore;
 
     @Inject
-    @Named(Constants.QUERY_MAX_RESULTS)
-    private int queryMaxResults;
-
-    @Inject
     @Named(Constants.PASSWORD_DIGEST)
     private Provider<MessageDigest> messageDigestProvider;
 
@@ -88,16 +84,9 @@ public class MongoUserDao implements UserDao {
 
     @Override
     public Pagination<User> getActiveUsers(int offset, int count) {
-
-        count = Math.min(queryMaxResults, count);
-
         final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
-
         query.filter("active = ", true);
-        query.offset(offset);
-
         return paginationFromQuery(query, offset, count);
-
     }
 
     @Override

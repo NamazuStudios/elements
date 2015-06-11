@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.fts.*;
 import com.namazustudios.socialengine.model.Pagination;
@@ -11,6 +12,7 @@ import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Created by patricktwohig on 6/10/15.
@@ -22,6 +24,10 @@ public class MongoDBUtils {
 
     @Inject
     private ObjectIndex objectIndex;
+
+    @Inject
+    @Named(Constants.QUERY_MAX_RESULTS)
+    private int queryMaxResults;
 
     /**
      * Transforms the given {@link Query} to the resulting {@link Pagination}.
@@ -41,9 +47,13 @@ public class MongoDBUtils {
         final Pagination<ModelT> pagination = new Pagination<>();
 
         pagination.setOffset(offset);
-        pagination.setTotal((int) query.getCollection().getCount());
+        pagination.setTotal((int) query.countAll());
 
-        final Iterable<ModelT> userIterable = Iterables.limit(Iterables.transform(query, function) , count);
+        final int limit = Math.min(queryMaxResults, count);
+
+        final Iterable<ModelT> userIterable =
+            Iterables.limit(Iterables.transform(query.offset(offset), function), limit);
+
         pagination.setObjects(Lists.newArrayList(userIterable));
         return pagination;
 

@@ -2,10 +2,7 @@ package com.namazustudios.socialengine.rest.guice;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.servlet.ServletModule;
-import com.namazustudios.socialengine.rest.EntrantResource;
-import com.namazustudios.socialengine.rest.SessionResource;
-import com.namazustudios.socialengine.rest.SocialCampaignResource;
-import com.namazustudios.socialengine.rest.UserResource;
+import com.namazustudios.socialengine.rest.*;
 import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
 import org.glassfish.jersey.servlet.ServletContainer;
 
@@ -25,6 +22,7 @@ public class JerseyModule extends ServletModule {
         bind(UserResource.class);
         bind(EntrantResource.class);
         bind(SessionResource.class);
+        bind(ShortLinkResource.class);
         bind(SocialCampaignResource.class);
         bind(DefaultExceptionMapper.class);
 

@@ -9,12 +9,22 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
+ * A class which helps implement the {@link javax.inject.Provider} instances
+ * for the service-level objects.
+ *
  * Created by patricktwohig on 4/2/15.
  */
 public class Services {
 
     private static final ConcurrentMap<Class<?>, Object> forbiddenServices = new ConcurrentHashMap<>();
 
+    /**
+     * Gets a proxy that always throws an instance of {@link ForbiddenException}.
+     *
+     * @param cls the service type
+     * @param <T> the service type
+     * @return a proxy instance of the service type
+     */
     public static <T> T forbidden(Class<T> cls) {
 
         T existing = (T) forbiddenServices.get(cls);
