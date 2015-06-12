@@ -28,10 +28,10 @@ public class Runner
     {
         System.out.println(new File(".").getAbsolutePath());
 
-        final Server server = new Server(8080);
+        final Server server = new Server(8888);
         final HandlerList handlerList = new HandlerList();
 
-        addProjectContext(handlerList, "rest-war");
+        addProjectContext("/api", handlerList, "rest-war");
 
         server.setHandler(handlerList);
         server.start();
@@ -39,14 +39,14 @@ public class Runner
 
     }
 
-    private static void addProjectContext(final HandlerList handlerList, final String module) {
+    private static void addProjectContext(final String contextPath, final HandlerList handlerList, final String module) {
 
         final WebAppContext webAppContext = new WebAppContext();
 
         final File base = new File(module);
         final File warDir = new File(base, "src/main/webapp");
 
-        webAppContext.setContextPath("/" + module);
+        webAppContext.setContextPath(contextPath);
         webAppContext.setResourceBase(warDir.getAbsolutePath());
 
         webAppContext.setConfigurations(new Configuration[] {

@@ -19,12 +19,15 @@ public class ShortLinkServiceProvider implements Provider<ShortLinkService> {
     @Inject
     private Provider<SuperuserShortLinkService> superuserShortLinkServiceProvider;
 
+    @Inject
+    private Provider<UnprivilegedShortLinkService> unprivilegedShortLinkServiceProvider;
+
     @Override
     public ShortLinkService get() {
 
         switch (user.getLevel()) {
             case SUPERUSER: return superuserShortLinkServiceProvider.get();
-            default:        return Services.forbidden(ShortLinkService.class);
+            default:        return unprivilegedShortLinkServiceProvider.get();
         }
 
     }

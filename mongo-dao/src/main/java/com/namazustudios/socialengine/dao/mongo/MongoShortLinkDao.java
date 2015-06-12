@@ -23,6 +23,8 @@ import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -78,7 +80,15 @@ public class MongoShortLinkDao implements ShortLinkDao {
     @Override
     public ShortLink getShortLinkWithId(String id) {
 
-        final MongoShortLink mongoShortLink = datastore.get(MongoShortLink.class, new ObjectId(id));
+        final ObjectId objectId;
+
+        try {
+            objectId = new ObjectId(id);
+        } catch (IllegalArgumentException ex) {
+            throw new NotFoundException("short link not found " + id);
+        }
+
+        final MongoShortLink mongoShortLink = datastore.get(MongoShortLink.class, objectId);
 
         if (mongoShortLink == null) {
             throw new NotFoundException("short link with id " + id + " not found");
@@ -91,7 +101,7 @@ public class MongoShortLinkDao implements ShortLinkDao {
     @Override
     public ShortLink getShortLinkWithPath(String shortLinkPath) {
 
-        final String shortLinkPaths[] = shortLinkPath.split("[/]*");
+        final String shortLinkPaths[] = shortLinkPath.split("[/]+");
 
         if (shortLinkPaths.length != 1) {
             throw new NotFoundException();
@@ -196,6 +206,12 @@ public class MongoShortLinkDao implements ShortLinkDao {
 
         validationHelper.validateModel(shortLink);
         shortLink.setDestinationURL(shortLink.getDestinationURL().trim());
+
+        try {
+            new URI(shortLink.getDestinationURL());
+        } catch (URISyntaxException ex) {
+            throw new InvalidDataException(shortLink.getDestinationURL() + " is not a valid URI");
+        }
 
     }
 

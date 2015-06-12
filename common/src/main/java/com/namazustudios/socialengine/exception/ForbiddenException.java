@@ -5,8 +5,7 @@ package com.namazustudios.socialengine.exception;
  */
 public class ForbiddenException extends BaseException {
 
-    public ForbiddenException() {
-    }
+    public ForbiddenException() {}
 
     public ForbiddenException(String message) {
         super(message);

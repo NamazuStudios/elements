@@ -57,4 +57,12 @@ public interface ShortLinkService {
      */
     void deleteShortLink(final String id);
 
+    /**
+     * Given the short link's path, this returns the associated object.
+     *
+     * @param path the path
+     * @return the ShortLink, never null
+     */
+    ShortLink getShortLinkWithPath(final String path);
+
 }
