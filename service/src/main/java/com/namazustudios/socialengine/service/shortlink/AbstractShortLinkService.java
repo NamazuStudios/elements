@@ -26,7 +26,7 @@ public abstract class AbstractShortLinkService implements ShortLinkService {
      * @return the full URL for the short link
      */
     public String getFullUrl(final String path) {
-        return shortLinkBase.replace("/+$", "") + path;
+        return shortLinkBase.replace("/+$", "") + "/" + path;
     }
 
     /**
