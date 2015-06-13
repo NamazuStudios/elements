@@ -24,7 +24,7 @@ public class ConfigurationModule extends AbstractModule {
 
         final Properties defaultProperties = new Properties(System.getProperties());
 
-        defaultProperties.setProperty(Constants.SHORT_LINK_BASE, "http://localhost/l/");
+        defaultProperties.setProperty(Constants.SHORT_LINK_BASE, "http://localhost/l");
         defaultProperties.setProperty(Constants.QUERY_MAX_RESULTS, Integer.valueOf(20).toString());
         defaultProperties.setProperty(Constants.PASSWORD_DIGEST_ALGORITHM, "SHA-256");
         defaultProperties.setProperty(Constants.PASSWORD_ENCODING, "UTF-8");

@@ -14,6 +14,12 @@ import java.util.Map;
  */
 public class JerseyModule extends ServletModule {
 
+    private final String apiRoot;
+
+    public JerseyModule(String apiRoot) {
+        this.apiRoot = apiRoot.replace("/.$","") + "/*";
+    }
+
     @Override
     protected void configureServlets() {
 
@@ -34,7 +40,7 @@ public class JerseyModule extends ServletModule {
                     .put("javax.ws.rs.Application", GuiceResourceConfig.class.getName())
                 .build();
 
-        serve("/api/*").with(ServletContainer.class, params);
+        serve(apiRoot).with(ServletContainer.class, params);
 
     }
 

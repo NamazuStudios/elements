@@ -37,14 +37,19 @@ public class GuiceMain extends GuiceServletContextListener {
 
     @Override
     protected Injector getInjector() {
+
+        final String apiRoot = "/api";
+
         return injector = Guice.createInjector(
-                new JerseyModule(),
+                new ConfigurationModule(),
+                new JerseyModule(apiRoot),
+                new ShortLinkFilterModule(apiRoot),
                 new ServicesModule(),
                 new MongoDaoModule(),
                 new MongoSearchModule(),
-                new ConfigurationModule(),
                 new ValidationModule()
         );
+
     }
 
 }
