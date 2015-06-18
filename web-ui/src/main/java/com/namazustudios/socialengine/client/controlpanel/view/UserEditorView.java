@@ -250,7 +250,6 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
         });
     }
 
-
     @UiHandler("create")
     void onClickCreate(final ClickEvent ev) {
 
