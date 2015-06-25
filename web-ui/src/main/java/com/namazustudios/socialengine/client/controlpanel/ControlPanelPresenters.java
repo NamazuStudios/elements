@@ -35,6 +35,12 @@ public class ControlPanelPresenters extends AbstractPresenterModule {
                 UserEditorTableView.class,
                 UserEditorTablePresenter.MyProxy.class);
 
+        bindPresenter(
+                ShortLinkEditorPresenter.class,
+                ShortLinkEditorPresenter.MyView.class,
+                ShortLinkEditorView.class,
+                ShortLinkEditorPresenter.MyProxy.class);
+
     }
 
 }

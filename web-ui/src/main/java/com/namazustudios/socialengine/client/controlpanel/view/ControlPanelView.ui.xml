@@ -38,9 +38,8 @@
                             <b:ListDropDown>
                                 <b:AnchorButton dataToggle="DROPDOWN">Short Links</b:AnchorButton>
                                 <b:DropDownMenu>
-                                    <b:AnchorListItem>Create New Short Link</b:AnchorListItem>
-                                    <b:AnchorListItem>View/Edit Short Links</b:AnchorListItem>
-                                    <b:AnchorListItem>Ranking/Performacne</b:AnchorListItem>
+                                    <b:AnchorListItem targetHistoryToken="{nameTokens.getShortLinkCreate}">Create New Short Link</b:AnchorListItem>
+                                    <b:AnchorListItem>View Short Links</b:AnchorListItem>
                                 </b:DropDownMenu>
                             </b:ListDropDown>
 

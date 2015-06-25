@@ -4,6 +4,7 @@ import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.Presenter;
 import com.gwtplatform.mvp.client.View;
 import com.gwtplatform.mvp.client.annotations.NameToken;
+import com.gwtplatform.mvp.client.annotations.ProxyCodeSplit;
 import com.gwtplatform.mvp.client.annotations.ProxyStandard;
 import com.gwtplatform.mvp.client.proxy.ProxyPlace;
 import com.namazustudios.socialengine.client.controlpanel.NameTokens;
@@ -17,13 +18,13 @@ public class ShortLinkEditorPresenter extends Presenter<ShortLinkEditorPresenter
 
     public interface MyView extends View {}
 
-    @ProxyStandard
-    @NameToken(NameTokens.SHORT_LINK_EDIT)
+    @ProxyCodeSplit
+    @NameToken(NameTokens.SHORT_LINK_CREATE)
     public interface MyProxy extends ProxyPlace<ShortLinkEditorPresenter> {}
 
     @Inject
     public ShortLinkEditorPresenter(final EventBus eventBus, final MyView view, final MyProxy proxy) {
-        super(eventBus, view, proxy, RevealType.Root);
+        super(eventBus, view, proxy, ControlPanelPresenter.SET_MAIN_CONTENT_TYPE);
     }
 
 }

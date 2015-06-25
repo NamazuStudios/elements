@@ -69,6 +69,16 @@ public class ShortLinkEditorView extends ViewImpl implements ShortLinkEditorPres
         initWidget(shortLinkEditorUiBinder.createAndBindUi(this));
     }
 
+    @Override
+    protected void onAttach() {
+
+        reset();
+
+        driver.initialize(this);
+        driver.edit(new ShortLink());
+
+    }
+
     private void lockOut() {
         create.setEnabled(false);
         destinationTextBox.setEnabled(false);

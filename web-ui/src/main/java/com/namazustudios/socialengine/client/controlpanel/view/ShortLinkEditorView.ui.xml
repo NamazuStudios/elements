@@ -23,7 +23,7 @@
                 <b:Legend>Short Link URL</b:Legend>
 
                 <b:FormGroup ui:field="destinationFormGroup">
-                    <b:FormLabel for="destination">Username</b:FormLabel>
+                    <b:FormLabel for="destination">Destination URL</b:FormLabel>
                     <b:TextBox b:id="destination" placeholder="Destination URL" ui:field="destinationTextBox"/>
                     <b:Label ui:field="destinationWarningLabel" visible="false" text="Destination URL Invalid!" type="DANGER"/>
                 </b:FormGroup>

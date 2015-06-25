@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.client.rest.client;
 import com.namazustudios.socialengine.model.ShortLink;
 import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.MethodCallback;
+import org.fusesource.restygwt.client.RestService;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -14,7 +15,7 @@ import javax.ws.rs.QueryParam;
  * Created by patricktwohig on 6/17/15.
  */
 @Path("short_link")
-public interface ShortLinkClient {
+public interface ShortLinkClient extends RestService {
 
     /**
      * Creates a new ShortLink given the ShortLink object, password, and the method callback.
