@@ -151,7 +151,15 @@ public class MongoShortLinkDao implements ShortLinkDao {
     @Override
     public void deleteShortLink(String id) {
 
-        final WriteResult writeResult = datastore.delete(MongoShortLink.class, id);
+        final ObjectId objectId;
+
+        try {
+            objectId = new ObjectId(id);
+        } catch (IllegalArgumentException ex) {
+            throw new NotFoundException();
+        }
+
+        final WriteResult writeResult = datastore.delete(MongoShortLink.class, objectId);
 
         if (writeResult.getN() == 0) {
             throw new NotFoundException();

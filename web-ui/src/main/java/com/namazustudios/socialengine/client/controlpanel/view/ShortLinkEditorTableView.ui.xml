@@ -10,9 +10,7 @@
             width: 100%;
         }
 
-        .table {
-            margin-bottom: 5px;
-        }
+        .table {}
 
         .searchbox {
             width:35%;
