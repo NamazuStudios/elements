@@ -31,13 +31,13 @@ public interface UserClient extends RestService {
      *
      * @param offset the offset from zero
      * @param count the number of results to return
-     * @param search a search query for the users
+     * @param search a searchFilter query for the users
      *
      */
     @GET
     void getUsers(final @QueryParam("offset") int offset,
                   final @QueryParam("count")  int count,
-                  final @QueryParam("search") String search,
+                  final @QueryParam("searchFilter") String search,
                   final MethodCallback<Pagination<User>> users);
 
     /**

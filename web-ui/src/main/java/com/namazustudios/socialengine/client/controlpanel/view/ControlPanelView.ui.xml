@@ -29,7 +29,6 @@
                             <b:ListDropDown>
                                 <b:AnchorButton dataToggle="DROPDOWN">Social</b:AnchorButton>
                                 <b:DropDownMenu>
-
                                     <b:AnchorListItem>View/Edit Existing Campaigns</b:AnchorListItem>
                                     <b:AnchorListItem>View/Edit Entrants</b:AnchorListItem>
                                 </b:DropDownMenu>
@@ -39,7 +38,7 @@
                                 <b:AnchorButton dataToggle="DROPDOWN">Short Links</b:AnchorButton>
                                 <b:DropDownMenu>
                                     <b:AnchorListItem targetHistoryToken="{nameTokens.getShortLinkCreate}">Create New Short Link</b:AnchorListItem>
-                                    <b:AnchorListItem>View Short Links</b:AnchorListItem>
+                                    <b:AnchorListItem targetHistoryToken="{nameTokens.getShortLinkEditTable}">View Short Links</b:AnchorListItem>
                                 </b:DropDownMenu>
                             </b:ListDropDown>
 

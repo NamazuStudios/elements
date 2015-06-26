@@ -11,8 +11,6 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.SimplePager;
-import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.view.client.RangeChangeEvent;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
@@ -31,7 +29,6 @@ import org.gwtbootstrap3.client.ui.Panel;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.constants.LabelType;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
-import org.gwtbootstrap3.client.ui.html.Text;
 import org.gwtbootstrap3.extras.growl.client.ui.Growl;
 
 import javax.inject.Inject;
@@ -41,8 +38,6 @@ import java.util.List;
  * Created by patricktwohig on 5/11/15.
  */
 public class UserEditorTableView extends ViewImpl implements UserEditorTablePresenter.MyView {
-
-    private static final int SETTLE_TIMER = 250;
 
     interface UserEditorTableViewUiBinder extends UiBinder<Panel, UserEditorTableView> {}
 
@@ -73,14 +68,14 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
     @Inject
     private PlaceManager placeManager;
 
-    private final UserDataProvider asyncUserDataProvider;
+    private final UserSearchableDataProvider asyncUserDataProvider;
 
     private final SimplePager simplePager = new SimplePager();
 
     @Inject
     public UserEditorTableView(
             final UserEditorTableViewUiBinder userEditorTableViewUiBinder,
-            final UserDataProvider asyncUserDataProvider) {
+            final UserSearchableDataProvider asyncUserDataProvider) {
 
         initWidget(userEditorTableViewUiBinder.createAndBindUi(this));
 
@@ -221,7 +216,7 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
             }
         });
 
-        asyncUserDataProvider.addRefreshListener(new UserDataProvider.AsyncRefreshListener() {
+        asyncUserDataProvider.addRefreshListener(new UserSearchableDataProvider.AsyncRefreshListener() {
             @Override
             public void onRefresh() {
                 userEditorCellTablePagination.rebuild(simplePager);
@@ -237,17 +232,15 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
     }
 
     private void setupSearch() {
-
         searchUsersTextBox.addChangeHandler(new ChangeHandler() {
 
             @Override
             public void onChange(ChangeEvent event) {
-                asyncUserDataProvider.filterWithSearch(searchUsersTextBox.getText());
+                asyncUserDataProvider.setSearchFilter(searchUsersTextBox.getText());
                 userEditorCellTable.setVisibleRangeAndClearData(userEditorCellTable.getVisibleRange(), true);
             }
 
         });
-
     }
 
     private void save(final User user, final int toRedraw, final Runnable unwwind) {
