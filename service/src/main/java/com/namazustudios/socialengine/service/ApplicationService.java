@@ -60,7 +60,7 @@ public interface ApplicationService {
     Application updateApplication(final String nameOrId, final Application application);
 
     /**
-     * Deletes an Applicank with the specific name or identifier.
+     * Deletes an Application with the specific name or identifier.
      *
      * @param nameOrId the name, or id
      */
