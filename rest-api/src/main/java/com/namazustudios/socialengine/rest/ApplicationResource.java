@@ -1,9 +1,11 @@
 package com.namazustudios.socialengine.rest;
 
+import com.google.common.base.Strings;
 import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.service.ApplicationService;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -19,6 +21,9 @@ public class ApplicationResource {
     public Application createApplication(final Application application) {
         return null;
     }
+
+    @Inject
+    private ApplicationService applicationService;
 
     @Inject
     private ValidationHelper validationService;
@@ -38,26 +43,42 @@ public class ApplicationResource {
             throw new InvalidParameterException("Count must have positive value.");
         }
 
-        return null;
+        final String searchQuery = Strings.nullToEmpty(search).trim();
+
+        return searchQuery.isEmpty() ?
+            applicationService.getApplications(offset, count) :
+            applicationService.getApplications(offset, count, searchQuery);
 
     }
 
     @GET
-    @Path("{name}")
-    public Application getApplication(@PathParam("name") final String name) {
-        return null;
+    @Path("{nameOrId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Application getApplication(@PathParam("nameOrId") final String nameOrId) {
+        return applicationService.getApplication(nameOrId);
+    }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Application createApplciation(final Application application) {
+        validationService.validateModel(application);
+        return applicationService.createApplication(application);
     }
 
     @PUT
-    @Path("{name}")
-    public Application updateApplication(@PathParam("name") final String name, final Application application) {
-        return null;
+    @Path("{nameOrId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Application updateApplication(@PathParam("nameOrId") final String nameOrId, final Application application) {
+        validationService.validateModel(application);
+        return applicationService.updateApplication(nameOrId, application);
     }
 
     @DELETE
-    @Path("{name}")
-    public void deleteApplication(@PathParam("name") final String name, final Application application) {
-
+    @Path("{nameOrId}")
+    public void deleteApplication(@PathParam("nameOrId") final String nameOrId) {
+        applicationService.deleteApplication(nameOrId);
     }
 
 }

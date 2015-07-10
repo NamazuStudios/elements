@@ -16,6 +16,8 @@ import javax.validation.constraints.Pattern;
  */
 public class Application {
 
+    private String id;
+
     @NotNull
     @Pattern(regexp = Constants.Regexp.ALPHA_NUM_ONLY)
     private String name;
@@ -23,6 +25,24 @@ public class Application {
     private String description;
 
     private PlatformProfileMap platformProfiles;
+
+    /**
+     * The globally-unique identifier.
+     *
+     * @return the identifier
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * The identifier.
+     *
+     * @param id the identifier
+     */
+    public void setId(String id) {
+        this.id = id;
+    }
 
     /**
      * Gets the unique name of the application.  Must be alpha-numeric
