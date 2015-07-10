@@ -1,10 +1,13 @@
 package com.namazustudios.socialengine.service.application;
 
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.service.ApplicationService;
 
 /**
+ * {@link ApplicationService} implemented for whent he current user has {@link User.Level#SUPERUSER} access.
+ *
  * Created by patricktwohig on 7/10/15.
  */
 public class SuperUserApplicationService implements ApplicationService {

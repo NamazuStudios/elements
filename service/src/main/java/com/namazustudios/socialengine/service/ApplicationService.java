@@ -7,6 +7,8 @@ import com.namazustudios.socialengine.model.application.Application;
 import javax.inject.Inject;
 
 /**
+ * Manages the lifecycle of the {@link Application} instance.
+ *
  * Created by patricktwohig on 7/10/15.
  */
 public interface ApplicationService {
