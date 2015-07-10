@@ -50,17 +50,17 @@ public interface Constants {
         /**
          * Non-blank string.
          */
-        public static final String NON_BLANK_STRING = "\\S+";
+        String NON_BLANK_STRING = "\\S+";
 
         /**
          * Alpha-numeric only
          */
-        public static final String ALPHA_NUM_ONLY = "\\p{Alnum}";
+        String ALPHA_NUM_ONLY = "\\p{Alnum}";
 
         /**
          * A very simple validator
          */
-        public static final String EMAIL_ADDRESS = "^(.+)@(.+)$";
+        String EMAIL_ADDRESS = "^(.+)@(.+)$";
 
     }
 
