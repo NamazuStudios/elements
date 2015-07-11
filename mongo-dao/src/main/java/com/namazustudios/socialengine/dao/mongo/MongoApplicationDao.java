@@ -1,42 +1,241 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.google.common.base.Function;
+import com.google.common.base.Strings;
+import com.mongodb.MongoCommandException;
+import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.ApplicationDao;
+import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
+import com.namazustudios.socialengine.exception.BadQueryException;
+import com.namazustudios.socialengine.exception.DuplicateException;
+import com.namazustudios.socialengine.exception.InternalException;
+import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.TermQuery;
+import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+
+import javax.inject.Inject;
 
 /**
  * Created by patricktwohig on 7/10/15.
  */
 public class MongoApplicationDao implements ApplicationDao {
 
+    @Inject
+    private ValidationHelper validationHelper;
+
+    @Inject
+    private ObjectIndex objectIndex;
+
+    @Inject
+    private StandardQueryParser standardQueryParser;
+
+    @Inject
+    private MongoDBUtils mongoDBUtils;
+
+    @Inject
+    private AdvancedDatastore datastore;
+
     @Override
-    public Application createOrUpdateInactiveApplication(Application application) {
-        return null;
+    public Application createOrUpdateInactiveApplication(final Application application) {
+
+        validate(application);
+
+        final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
+
+        query.and(
+            query.criteria("name").equal(application.getName()),
+            query.criteria("active").equal(false)
+        );
+
+        final UpdateOperations<MongoApplication> updateOperations = datastore.createUpdateOperations(MongoApplication.class);
+
+        updateOperations.set("name", application.getName().trim());
+        updateOperations.set("description", Strings.nullToEmpty(application.getDescription()).trim());
+        updateOperations.set("active", true);
+
+        final MongoApplication mongoApplication;
+
+        try {
+            mongoApplication = datastore.findAndModify(query, updateOperations, false, true);
+        } catch (MongoCommandException ex) {
+            if (ex.getErrorCode() == 11000) {
+                throw new DuplicateException(ex);
+            } else {
+                throw new InternalException(ex);
+            }
+        }
+
+        objectIndex.index(mongoApplication);
+        return transform(mongoApplication);
+
     }
 
     @Override
     public Pagination<Application> getActiveApplications(int offset, int count) {
-        return null;
+
+        final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
+        query.filter("active = ", true);
+
+        return mongoDBUtils.paginationFromQuery(query, offset, count, new Function<MongoApplication, Application>() {
+            @Override
+            public Application apply(MongoApplication input) {
+                return transform(input);
+            }
+        });
+
     }
 
     @Override
     public Pagination<Application> getActiveApplications(int offset, int count, String search) {
-        return null;
+
+        final BooleanQuery booleanQuery = new BooleanQuery();
+
+        try {
+
+            final Term activeTerm = new Term("active", "true");
+
+            booleanQuery.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
+            booleanQuery.add(standardQueryParser.parse(search, "name"), BooleanClause.Occur.FILTER);
+
+        } catch (QueryNodeException ex) {
+            throw new BadQueryException(ex);
+        }
+
+        return mongoDBUtils.paginationFromSearch(MongoApplication.class, booleanQuery, offset, count,
+                new Function<MongoApplication, Application>() {
+                    @Override
+                    public Application apply(MongoApplication input) {
+                        return transform(input);
+                    }
+                });
     }
 
     @Override
     public Application getActiveApplication(String nameOrId) {
-        return null;
+
+        final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
+
+        query.or(
+                query.criteria("_id").equal(nameOrId),
+                query.criteria("email").equal(nameOrId)
+        ).and(
+                query.criteria("active").equal(true)
+        );
+
+        final MongoApplication mongoApplication = query.get();
+        return transform(mongoApplication);
+
     }
 
     @Override
     public Application updateActiveApplication(String nameOrId, Application application) {
-        return null;
+
+        validate(application);
+
+        final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
+
+        query.or(
+                query.criteria("_id").equal(nameOrId),
+                query.criteria("email").equal(nameOrId)
+        ).and(
+                query.criteria("active").equal(true)
+        );
+
+        final UpdateOperations<MongoApplication> updateOperations = datastore.createUpdateOperations(MongoApplication.class);
+
+        updateOperations.set("name", application.getName().trim());
+        updateOperations.set("description", Strings.nullToEmpty(application.getDescription()).trim());
+        updateOperations.set("active", true);
+
+        final MongoApplication mongoApplication;
+
+        try {
+            mongoApplication = datastore.findAndModify(query, updateOperations, false, true);
+        } catch (MongoCommandException ex) {
+            if (ex.getErrorCode() == 11000) {
+                throw new DuplicateException(ex);
+            } else {
+                throw new InternalException(ex);
+            }
+        }
+
+        objectIndex.index(mongoApplication);
+        return transform(mongoApplication);
+
     }
 
     @Override
     public void softDeleteApplication(String nameOrId) {
 
+        final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
+
+        query.or(
+                query.criteria("_id").equal(nameOrId),
+                query.criteria("email").equal(nameOrId)
+        ).and(
+                query.criteria("active").equal(true)
+        );
+
+        final UpdateOperations<MongoApplication> updateOperations = datastore.createUpdateOperations(MongoApplication.class);
+        updateOperations.set("active", false);
+
+        final MongoApplication mongoApplication;
+
+        try {
+            mongoApplication = datastore.findAndModify(query, updateOperations, false, true);
+        } catch (MongoCommandException ex) {
+            if (ex.getErrorCode() == 11000) {
+                throw new DuplicateException(ex);
+            } else {
+                throw new InternalException(ex);
+            }
+        }
+
+        objectIndex.index(mongoApplication);
+
     }
 
+    public Application transform(final MongoApplication mongoApplication) {
+
+        final Application application = new Application();
+
+        application.setId(mongoApplication.getId());
+        application.setName(mongoApplication.getName());
+        application.setDescription(mongoApplication.getDescription());
+
+        return application;
+
+    }
+
+    public MongoApplication transform(final Application application) {
+
+        final MongoApplication mongoApplication = new MongoApplication();
+
+        mongoApplication.setId(application.getId());
+        mongoApplication.setName(application.getName());
+        mongoApplication.setDescription(application.getDescription());
+
+        return mongoApplication;
+
+    }
+
+    public void validate(final Application application) {
+
+        if (application == null) {
+            throw new InvalidDataException("application must not be null.");
+        }
+
+        validationHelper.validateModel(application);
+
+    }
 }

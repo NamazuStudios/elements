@@ -6,11 +6,11 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
 /**
- * Currently the WebAPI requires the usage of the
+ * Houses the necessary information for the Sony WebAPI to communicate with the SocialEngine system.
  *
  * Created by patricktwohig on 7/9/15.
  */
-public class PSNApplicationProfile {
+public class PSNApplicationProfile extends ApplicationProfile {
 
     @NotNull
     @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
@@ -19,6 +19,8 @@ public class PSNApplicationProfile {
     @NotNull
     @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
     private String clientSecret;
+
+
 
     /**
      * Corresponds to the SonyNP Identifier.

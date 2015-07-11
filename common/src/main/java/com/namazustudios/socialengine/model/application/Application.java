@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.Constants;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import java.util.List;
 
 /**
  * Represents an application.  This serves as place to house the
@@ -23,8 +24,6 @@ public class Application {
     private String name;
 
     private String description;
-
-    private PlatformProfileMap platformProfiles;
 
     /**
      * The globally-unique identifier.
@@ -79,24 +78,6 @@ public class Application {
      */
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    /**
-     * Gets the application's platform profile mapping.
-     *
-     * @return the platform profile map
-     */
-    public PlatformProfileMap getPlatformProfiles() {
-        return platformProfiles;
-    }
-
-    /**
-     * Sets the platform profile mapping.
-     *
-     * @param platformProfiles the platform profile mapping.
-     */
-    public void setPlatformProfiles(PlatformProfileMap platformProfiles) {
-        this.platformProfiles = platformProfiles;
     }
 
 }

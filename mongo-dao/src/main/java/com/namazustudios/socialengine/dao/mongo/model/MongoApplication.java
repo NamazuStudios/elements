@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
 /**
@@ -18,8 +19,9 @@ public class MongoApplication {
     @Property("description")
     private String description;
 
-    @Embedded("platform_profile")
-    private MongoPlatformProfileMap platformProfileMap;
+    @Indexed
+    @Property("active")
+    private boolean active;
 
     public String getId() {
         return id;
@@ -43,6 +45,14 @@ public class MongoApplication {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
 }

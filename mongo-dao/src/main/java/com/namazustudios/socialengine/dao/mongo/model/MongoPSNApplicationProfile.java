@@ -1,18 +1,15 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Property;
+import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.model.application.Platform;
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.annotations.*;
 
 /**
  * Created by patricktwohig on 7/10/15.
  */
-@Entity(value = "psn_application_profile", noClassnameStored = true)
-public class MongoPSNApplicationProfile {
-
-    @Id
-    private String id;
+@Entity(value = "application_profile", noClassnameStored = true)
+public class MongoPSNApplicationProfile extends AbstractMongoApplicationProfile {
 
     @Property("np_id")
     @Indexed(unique = true)
@@ -20,14 +17,6 @@ public class MongoPSNApplicationProfile {
 
     @Property("client_secret")
     private String clientSecret;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public String getNpIdentifier() {
         return npIdentifier;
