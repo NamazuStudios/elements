@@ -9,7 +9,7 @@ import com.namazustudios.socialengine.service.ApplicationService;
 import javax.inject.Inject;
 
 /**
- * {@link ApplicationService} implemented for whent he current user has {@link User.Level#SUPERUSER} access.
+ * {@link ApplicationService} implemented for when the current user has {@link User.Level#SUPERUSER} access.
  *
  * Created by patricktwohig on 7/10/15.
  */

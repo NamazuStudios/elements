@@ -20,8 +20,6 @@ public class PSNApplicationProfile extends ApplicationProfile {
     @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
     private String clientSecret;
 
-
-
     /**
      * Corresponds to the SonyNP Identifier.
      *
