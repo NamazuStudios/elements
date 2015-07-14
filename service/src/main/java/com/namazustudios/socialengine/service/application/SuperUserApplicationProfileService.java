@@ -31,13 +31,18 @@ public class SuperUserApplicationProfileService implements ApplicationProfileSer
     }
 
     @Override
-    public PSNApplicationProfile updateApplicationProfile(String applicationNameOrId, PSNApplicationProfile psnApplicationProfile) {
+    public PSNApplicationProfile createApplicationProfile(String applicationNameOrId, PSNApplicationProfile psnApplicationProfile) {
         return null;
     }
 
     @Override
-    public void deleteApplicationProfile(String applicationNameOrId, String applicationProfileNameOrId) {
-
+    public PSNApplicationProfile updateApplicationProfile(String applicationNameOrId, String applicationProfileNameOrId, PSNApplicationProfile psnApplicationProfile) {
+        return null;
     }
 
+    @Override
+    public void deleteApplicationProfile(String applicationNameOrId, String applicationProfileNameOrId, Class<? extends ApplicationProfile> type) {
+
+    }
+    
 }
