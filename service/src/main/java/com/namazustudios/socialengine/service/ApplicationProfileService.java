@@ -64,11 +64,25 @@ public interface ApplicationProfileService {
      * Updates an application with the specific name/identifiers.
      *
      * @param applicationNameOrId the {@link Application} name or id
-     * @param psnApplicationProfile the {@link ApplicationProfile} object to write
-     * @return the {@link Application} object as it was persisted to the database.
+     * @param psnApplicationProfile the {@link PSNApplicationProfile} object to write
+     * @return the {@link PSNApplicationProfile} object as it was persisted to the database.
+     *
+     */
+    PSNApplicationProfile createApplicationProfile(final String applicationNameOrId,
+                                                   final PSNApplicationProfile psnApplicationProfile);
+
+    /**
+     * Updates an application with the specific name/identifiers.
+     *
+     * @param applicationNameOrId the {@link Application} name or id
+     * @param applicationProfileNameOrId the {@link PSNApplicationProfile} id
+     * @param psnApplicationProfile the {@link PSNApplicationProfile} object to write
+     *
+     * @return the {@link PSNApplicationProfile} object as it was persisted to the database.
      *
      */
     PSNApplicationProfile updateApplicationProfile(final String applicationNameOrId,
+                                                   final String applicationProfileNameOrId,
                                                    final PSNApplicationProfile psnApplicationProfile);
 
     /**
@@ -78,6 +92,7 @@ public interface ApplicationProfileService {
      * @param applicationProfileNameOrId the {@link ApplicationProfile} id
      *
      */
-    void deleteApplicationProfile(final String applicationNameOrId, final String applicationProfileNameOrId);
+    void deleteApplicationProfile(final String applicationNameOrId, final String applicationProfileNameOrId,
+                                  final Class<? extends ApplicationProfile> type);
 
 }
