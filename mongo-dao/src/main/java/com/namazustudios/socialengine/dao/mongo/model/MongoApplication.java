@@ -1,16 +1,27 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
-import org.bson.types.ObjectId;
+import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
+import com.namazustudios.socialengine.fts.annotation.SearchableField;
+import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
 import org.mongodb.morphia.annotations.*;
 
 /**
  * Created by patricktwohig on 7/10/15.
  */
+
+@SearchableIdentity(@SearchableField(name = "id", path = "/objectId", type = String.class))
+@SearchableDocument(
+        fields = {
+                @SearchableField(name = "name", path = "/name"),
+                @SearchableField(name = "description", path = "/description"),
+                @SearchableField(name = "active", path = "/active")
+        }
+)
 @Entity(value = "application", noClassnameStored = true)
 public class MongoApplication {
 
     @Id
-    private String id;
+    private String objectId;
 
     @Property("name")
     @Indexed(unique = true)
@@ -23,12 +34,12 @@ public class MongoApplication {
     @Property("active")
     private boolean active;
 
-    public String getId() {
-        return id;
+    public String getObjectId() {
+        return objectId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setObjectId(String objectId) {
+        this.objectId = objectId;
     }
 
     public String getName() {

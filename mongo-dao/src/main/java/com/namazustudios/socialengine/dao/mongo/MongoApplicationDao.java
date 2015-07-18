@@ -209,7 +209,7 @@ public class MongoApplicationDao implements ApplicationDao {
 
         final Application application = new Application();
 
-        application.setId(mongoApplication.getId());
+        application.setId(mongoApplication.getObjectId());
         application.setName(mongoApplication.getName());
         application.setDescription(mongoApplication.getDescription());
 
@@ -221,7 +221,7 @@ public class MongoApplicationDao implements ApplicationDao {
 
         final MongoApplication mongoApplication = new MongoApplication();
 
-        mongoApplication.setId(application.getId());
+        mongoApplication.setObjectId(application.getId());
         mongoApplication.setName(application.getName());
         mongoApplication.setDescription(application.getDescription());
 
@@ -238,4 +238,5 @@ public class MongoApplicationDao implements ApplicationDao {
         validationHelper.validateModel(application);
 
     }
+
 }
