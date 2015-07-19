@@ -13,13 +13,14 @@ import org.mongodb.morphia.annotations.*;
  */
 @SearchableDocument(
         fields = {
+                @SearchableField(name = "name", path = "/npIdentifier"),
                 @SearchableField(name = "npIdentifier", path = "/npIdentifier")
         }
 )
-@Entity(value = "application_profile")
+@Entity(value = "application_profile", noClassnameStored = true)
 public class MongoPSNApplicationProfile extends AbstractMongoApplicationProfile {
 
-    @Property("np_id")
+    @Property("name")
     @Indexed(unique = true)
     private String npIdentifier;
 

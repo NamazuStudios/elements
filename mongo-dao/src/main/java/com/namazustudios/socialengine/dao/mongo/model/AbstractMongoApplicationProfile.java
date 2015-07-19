@@ -8,13 +8,15 @@ import com.namazustudios.socialengine.model.application.Platform;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Created by patricktwohig on 7/10/15.
  */
 @SearchableIdentity(@SearchableField(name = "id", path = "/objectId", type = String.class))
 @SearchableDocument(
         fields = {
-                @SearchableField(name = "name", path = "/name"),
                 @SearchableField(name = "applicationId", path = "/parent/objectId"),
                 @SearchableField(name = "applicationName", path = "/parent/name"),
                 @SearchableField(name = "description", path = "/description"),
@@ -28,7 +30,7 @@ public abstract class AbstractMongoApplicationProfile {
     @Id
     private String objectId;
 
-    @Reference("parent_application")
+    @Reference("parent")
     private MongoApplication parent;
 
     @Property("platform")
@@ -36,6 +38,9 @@ public abstract class AbstractMongoApplicationProfile {
 
     @Property("active")
     private boolean active;
+
+    @Property("class_heierarchy")
+    private Set<String> classHierarchy;
 
     public String getObjectId() {
         return objectId;
@@ -67,6 +72,23 @@ public abstract class AbstractMongoApplicationProfile {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    /**
+     * This is here because Morphia currently doesn't support polymorphic queries.
+     */
+    @PrePersist
+    public void storeTypeHierarchy() {
+
+        classHierarchy = new HashSet<>();
+
+        Class<?> cls = getClass();
+
+        do {
+            classHierarchy.add(cls.getName());
+            cls = cls.getSuperclass();
+        } while (cls != null);
+
     }
 
 }

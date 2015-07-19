@@ -59,7 +59,7 @@ public class SuperUserApplicationProfileService implements ApplicationProfileSer
     public void deleteApplicationProfile(String applicationNameOrId,
                                          String applicationProfileNameOrId,
                                          Class<? extends ApplicationProfile> type) {
-        applicationProfileDao.softDeleteApplicationProfile(applicationNameOrId, applicationProfileNameOrId, type);
+        applicationProfileDao.softDeleteApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
     }
 
 }

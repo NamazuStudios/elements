@@ -50,8 +50,8 @@ public class MongoApplicationDao implements ApplicationDao {
         final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
 
         query.and(
-            query.criteria("name").equal(application.getName()),
-            query.criteria("active").equal(false)
+                query.criteria("name").equal(application.getName()),
+                query.criteria("active").equal(false)
         );
 
         final UpdateOperations<MongoApplication> updateOperations = datastore.createUpdateOperations(MongoApplication.class);
@@ -122,11 +122,11 @@ public class MongoApplicationDao implements ApplicationDao {
 
         final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
 
-        query.filter("active =", true)
-            .or(
-                    query.criteria("_id").equal(nameOrId),
-                    query.criteria("name").equal(nameOrId)
-            );
+        query.filter("active =", true);
+        query.or(
+                query.criteria("_id").equal(nameOrId),
+                query.criteria("name").equal(nameOrId)
+        );
 
         final MongoApplication mongoApplication = query.get();
         return transform(mongoApplication);
@@ -140,11 +140,11 @@ public class MongoApplicationDao implements ApplicationDao {
 
         final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
 
-        query.filter("active =", true)
-            .or(
-                    query.criteria("_id").equal(nameOrId),
-                    query.criteria("name").equal(nameOrId)
-            );
+        query.filter("active =", true);
+        query.or(
+                query.criteria("_id").equal(nameOrId),
+                query.criteria("name").equal(nameOrId)
+        );
 
         final UpdateOperations<MongoApplication> updateOperations = datastore.createUpdateOperations(MongoApplication.class);
 
@@ -155,13 +155,17 @@ public class MongoApplicationDao implements ApplicationDao {
         final MongoApplication mongoApplication;
 
         try {
-            mongoApplication = datastore.findAndModify(query, updateOperations, false, true);
+            mongoApplication = datastore.findAndModify(query, updateOperations, false, false);
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
                 throw new DuplicateException(ex);
             } else {
                 throw new InternalException(ex);
             }
+        }
+
+        if (mongoApplication == null) {
+            throw new NotFoundException("application not found: " + nameOrId);
         }
 
         objectIndex.index(mongoApplication);
@@ -174,11 +178,11 @@ public class MongoApplicationDao implements ApplicationDao {
 
         final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
 
-        query.filter("active =", true)
-            .or(
-                    query.criteria("_id").equal(nameOrId),
-                    query.criteria("name").equal(nameOrId)
-            );
+        query.filter("active =", true);
+        query.or(
+                query.criteria("_id").equal(nameOrId),
+                query.criteria("name").equal(nameOrId)
+        );
 
         final UpdateOperations<MongoApplication> updateOperations = datastore.createUpdateOperations(MongoApplication.class);
         updateOperations.set("active", false);
@@ -200,6 +204,26 @@ public class MongoApplicationDao implements ApplicationDao {
         }
 
         objectIndex.index(mongoApplication);
+
+    }
+
+    public MongoApplication getActiveMongoApplication(final String mongoApplicationNameOrId) {
+
+        final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
+
+        query.filter("active =", true);
+        query.or(
+                query.criteria("_id").equal(mongoApplicationNameOrId),
+                query.criteria("name").equal(mongoApplicationNameOrId)
+        );
+
+        final MongoApplication mongoApplication = query.get();
+
+        if (mongoApplication == null) {
+            throw new NotFoundException("application not found: " + mongoApplicationNameOrId);
+        }
+
+        return mongoApplication;
 
     }
 
@@ -236,5 +260,5 @@ public class MongoApplicationDao implements ApplicationDao {
         validationHelper.validateModel(application);
 
     }
-    
+
 }

@@ -50,7 +50,7 @@ public interface Constants {
         /**
          * Non-blank string.
          */
-        String NON_BLANK_STRING = "\\S+";
+        String NON_BLANK_STRING = "^\\S+$";
 
         /**
          * Alpha-numeric only
