@@ -31,6 +31,7 @@ public class JerseyModule extends ServletModule {
         bind(ShortLinkResource.class);
         bind(SocialCampaignResource.class);
         bind(DefaultExceptionMapper.class);
+        bind(ApplicationResource.class);
 
         // Setup servlets
 

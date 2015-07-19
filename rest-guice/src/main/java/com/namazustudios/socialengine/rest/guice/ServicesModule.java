@@ -5,10 +5,8 @@ import com.google.inject.servlet.RequestScoped;
 import com.google.inject.servlet.ServletScopes;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.rest.provider.UserProvider;
-import com.namazustudios.socialengine.service.AuthService;
-import com.namazustudios.socialengine.service.ShortLinkService;
-import com.namazustudios.socialengine.service.SocialCampaignService;
-import com.namazustudios.socialengine.service.UserService;
+import com.namazustudios.socialengine.service.*;
+import com.namazustudios.socialengine.service.application.ApplicationServiceProvider;
 import com.namazustudios.socialengine.service.auth.AuthServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
@@ -41,6 +39,10 @@ public class ServicesModule extends AbstractModule {
 
         bind(ShortLinkService.class)
                 .toProvider(ShortLinkServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
+        bind(ApplicationService.class)
+                .toProvider(ApplicationServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
     }

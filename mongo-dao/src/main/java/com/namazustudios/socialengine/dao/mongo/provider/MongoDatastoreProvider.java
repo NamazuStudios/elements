@@ -1,11 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
 import com.mongodb.MongoClient;
-import com.namazustudios.socialengine.dao.mongo.model.MongoBasicEntrant;
-import com.namazustudios.socialengine.dao.mongo.model.MongoShortLink;
-import com.namazustudios.socialengine.dao.mongo.model.MongoSocialCampaign;
-import com.namazustudios.socialengine.dao.mongo.model.MongoSteamEntrant;
-import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
+import com.namazustudios.socialengine.dao.mongo.model.*;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 
@@ -35,7 +31,8 @@ public class MongoDatastoreProvider implements Provider<Datastore> {
                 MongoShortLink.class,
                 MongoSocialCampaign.class,
                 MongoSteamEntrant.class,
-                MongoUser.class
+                MongoUser.class,
+                MongoApplication.class
         );
 
 

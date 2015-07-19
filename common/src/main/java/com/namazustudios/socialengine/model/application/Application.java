@@ -20,7 +20,7 @@ public class Application {
     private String id;
 
     @NotNull
-    @Pattern(regexp = Constants.Regexp.ALPHA_NUM_ONLY)
+    @Pattern(regexp = Constants.Regexp.WORD_ONLY)
     private String name;
 
     private String description;

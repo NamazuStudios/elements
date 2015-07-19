@@ -16,13 +16,13 @@ public class ApplicationServiceProvider implements Provider<ApplicationService> 
     private User user;
 
     @Inject
-    private Provider<ApplicationService> applicationServiceProvider;
+    private Provider<SuperUserApplicationService> superUserApplicationServiceProvider;
 
     @Override
     public ApplicationService get() {
         switch (user.getLevel()) {
         case SUPERUSER:
-            return applicationServiceProvider.get();
+            return superUserApplicationServiceProvider.get();
         default:
             return Services.forbidden(ApplicationService.class);
 

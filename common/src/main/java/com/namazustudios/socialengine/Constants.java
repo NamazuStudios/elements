@@ -55,7 +55,7 @@ public interface Constants {
         /**
          * Alpha-numeric only
          */
-        String ALPHA_NUM_ONLY = "\\p{Alnum}";
+        String WORD_ONLY = "\\w+";
 
         /**
          * A very simple validator

@@ -62,7 +62,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
                         @Override
                         public String apply(ConstraintViolation<?> input) {
-                            return input.getMessage();
+                            return input.getPropertyPath() + " " + input.getMessage();
                         }
 
                     }));
