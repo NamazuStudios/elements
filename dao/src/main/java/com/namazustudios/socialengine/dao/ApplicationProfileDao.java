@@ -45,15 +45,6 @@ public interface ApplicationProfileDao {
                                                                 final int offset, final int count, final String search);
 
     /**
-     * Gets an application with the specific name or identifier.
-     *
-     * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationProfileNameOrId the {@link ApplicationProfile} id
-     *
-     */
-    ApplicationProfile getApplicationProfile(final String applicationNameOrId, final String applicationProfileNameOrId);
-
-    /**
      * Gets an {@link PSNApplicationProfile} with the specific name or identifier.
      *
      * @param applicationNameOrId the {@link Application} name or id

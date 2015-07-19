@@ -28,16 +28,8 @@ public class SuperUserApplicationProfileService implements ApplicationProfileSer
     }
 
     @Override
-    public ApplicationProfile getApplicationProfile(String applicationNameOrId,
-                                                    String applicationProfileNameOrId) {
-        return applicationProfileDao.getApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
-    }
-
-    @Override
-    public <T extends ApplicationProfile> T getApplicationProfile(String applicationNameOrId,
-                                                                  String applicationProfileNameOrId,
-                                                                  Class<T> type) {
-        return applicationProfileDao.getApplicationProfile(applicationNameOrId, applicationProfileNameOrId, type);
+    public PSNApplicationProfile getPSNApplicationProfile(String applicationNameOrId, String applicationProfileNameOrId) {
+        return applicationProfileDao.getPSNApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
     }
 
     @Override

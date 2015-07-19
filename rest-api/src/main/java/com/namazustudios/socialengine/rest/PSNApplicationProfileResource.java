@@ -33,8 +33,7 @@ public class PSNApplicationProfileResource {
     public PSNApplicationProfile getApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        return applicationProfileService.getApplicationProfile(applicationNameOrId,
-                applicationProfileNameOrId, PSNApplicationProfile.class);
+        return applicationProfileService.getPSNApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
     }
 
     /**

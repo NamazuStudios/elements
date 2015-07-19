@@ -45,20 +45,8 @@ public interface ApplicationProfileService {
      * @param applicationProfileNameOrId the {@link ApplicationProfile} id
      *
      */
-    ApplicationProfile getApplicationProfile(final String applicationNameOrId, final String applicationProfileNameOrId);
-
-    /**
-     * Gets an application with the specific name or identifier.  Additionally,
-     * this checks that the type of {@link ApplicationProfile} is of the given type or subtype.  IF
-     * the type does not match an instance of {@link NotFoundException} is thrown.
-     *
-     * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationProfileNameOrId the {@link ApplicationProfile} id
-     * @param type the type of profile to find
-     */
-    <T extends ApplicationProfile> T getApplicationProfile(final String applicationNameOrId,
-                                                           final String applicationProfileNameOrId,
-                                                           final Class<T> type);
+    PSNApplicationProfile getPSNApplicationProfile(final String applicationNameOrId,
+                                                   final String applicationProfileNameOrId);
 
     /**
      * Updates an application with the specific name/identifiers.

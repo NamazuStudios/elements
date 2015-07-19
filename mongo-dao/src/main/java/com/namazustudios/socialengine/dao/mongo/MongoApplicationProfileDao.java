@@ -141,31 +141,6 @@ public class MongoApplicationProfileDao implements ApplicationProfileDao {
     }
 
     @Override
-    public ApplicationProfile getApplicationProfile(final String applicationNameOrId,
-                                                    final String applicationProfileNameOrId) {
-
-        final MongoApplication mongoApplication = mongoApplicationDao.getActiveMongoApplication(applicationNameOrId);
-        final Query<AbstractMongoApplicationProfile> query = datastore.createQuery(AbstractMongoApplicationProfile.class);
-
-        query.filter("active =", true);
-        query.filter("parent_application =", mongoApplication);
-        query.field("class_heierarchy").hasThisOne(AbstractMongoApplicationProfile.class.getName());
-        query.or(
-            query.criteria("_id").equal(applicationProfileNameOrId),
-            query.criteria("name").equal(applicationProfileNameOrId)
-        );
-
-        final AbstractMongoApplicationProfile abstractMongoApplicationProfile = query.get();
-
-        if (abstractMongoApplicationProfile == null) {
-            throw new NotFoundException("application profile " + applicationProfileNameOrId + " not found.");
-        }
-
-        return transform(abstractMongoApplicationProfile);
-
-    }
-
-    @Override
     public PSNApplicationProfile getPSNApplicationProfile(final String applicationNameOrId,
                                                           final String applicationProfileNameOrId) {
 
