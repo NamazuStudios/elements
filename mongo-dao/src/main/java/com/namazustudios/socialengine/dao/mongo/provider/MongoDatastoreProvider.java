@@ -32,9 +32,9 @@ public class MongoDatastoreProvider implements Provider<Datastore> {
                 MongoSocialCampaign.class,
                 MongoSteamEntrant.class,
                 MongoUser.class,
-                MongoApplication.class
+                MongoApplication.class,
+                MongoPSNApplicationProfile.class
         );
-
 
         final MongoClient mongoClient = mongoProvider.get();
         final Datastore datastore = morphia.createDatastore(mongoClient, databaseName);

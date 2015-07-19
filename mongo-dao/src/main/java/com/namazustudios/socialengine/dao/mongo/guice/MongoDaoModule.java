@@ -72,6 +72,7 @@ public class MongoDaoModule extends AbstractModule {
         binder().bind(SocialCampaignDao.class).to(MongoSocialCampaignDao.class);
         binder().bind(ShortLinkDao.class).to(MongoShortLinkDao.class);
         binder().bind(ApplicationDao.class).to(MongoApplicationDao.class);
+        binder().bind(ApplicationProfileDao.class).to(MongoApplicationProfileDao.class);
 
         binder().bind(MongoClient.class).toProvider(MongoClientProvider.class).in(Singleton.class);
         binder().bind(Datastore.class).toProvider(MongoDatastoreProvider.class);
