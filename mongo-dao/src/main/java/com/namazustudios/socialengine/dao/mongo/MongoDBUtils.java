@@ -5,6 +5,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.exception.InternalException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.fts.*;
 import com.namazustudios.socialengine.model.Pagination;
 import org.bson.types.ObjectId;
@@ -28,6 +29,21 @@ public class MongoDBUtils {
     @Inject
     @Named(Constants.QUERY_MAX_RESULTS)
     private int queryMaxResults;
+
+    /**
+     * Parses the given ObjectID string using {@link ObjectId}.  If this fails, this
+     * throws the appropraite exception type.
+     *
+     * @param objectId
+     * @return
+     */
+    public ObjectId parse(final String objectId) {
+        try {
+            return new ObjectId(objectId);
+        } catch (IllegalArgumentException ex) {
+            throw new NotFoundException("Object wiht ID " + objectId + " not found.");
+        }
+    }
 
     /**
      * Transforms the given {@link Query} to the resulting {@link Pagination}.

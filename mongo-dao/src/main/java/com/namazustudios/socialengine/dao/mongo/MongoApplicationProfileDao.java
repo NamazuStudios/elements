@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.ApplicationProfileDao;
+import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
 import com.namazustudios.socialengine.dao.mongo.model.MongoPSNApplicationProfile;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
@@ -10,6 +11,7 @@ import com.namazustudios.socialengine.model.application.ApplicationProfile;
 import com.namazustudios.socialengine.model.application.PSNApplicationProfile;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
 
@@ -36,7 +38,9 @@ public class MongoApplicationProfileDao implements ApplicationProfileDao {
     @Override
     public PSNApplicationProfile createOrUpdateInactiveApplicationProfile(final String applicationNameOrId,
                                                                           final PSNApplicationProfile psnApplicationProfile) {
+
         validate(psnApplicationProfile);
+
         return null;
     }
 
@@ -54,38 +58,38 @@ public class MongoApplicationProfileDao implements ApplicationProfileDao {
     }
 
     @Override
-    public ApplicationProfile getApplicationProfile(String applicationNameOrId,
-                                                    String applicationProfileNameOrId) {
+    public ApplicationProfile getApplicationProfile(final String applicationNameOrId,
+                                                    final String applicationProfileNameOrId) {
 
         return null;
     }
 
     @Override
-    public <T extends ApplicationProfile> T getApplicationProfile(String applicationNameOrId,
-                                                                  String applicationProfileNameOrId,
-                                                                  Class<T> type) {
+    public <T extends ApplicationProfile> T getApplicationProfile(final String applicationNameOrId,
+                                                                  final String applicationProfileNameOrId,
+                                                                  final Class<T> type) {
         return null;
     }
 
     @Override
-    public PSNApplicationProfile createApplicationProfile(String applicationNameOrId,
-                                                          PSNApplicationProfile psnApplicationProfile) {
+    public PSNApplicationProfile createApplicationProfile(final String applicationNameOrId,
+                                                          final PSNApplicationProfile psnApplicationProfile) {
         validate(psnApplicationProfile);
         return null;
     }
 
     @Override
-    public PSNApplicationProfile updateApplicationProfile(String applicationNameOrId,
-                                                          String applicationProfileNameOrId,
-                                                          PSNApplicationProfile psnApplicationProfile) {
+    public PSNApplicationProfile updateApplicationProfile(final String applicationNameOrId,
+                                                          final String applicationProfileNameOrId,
+                                                          final PSNApplicationProfile psnApplicationProfile) {
         validate(psnApplicationProfile);
         return null;
     }
 
     @Override
-    public void softDeleteApplicationProfile(String applicationNameOrId,
-                                             String applicationProfileNameOrId,
-                                             Class<? extends ApplicationProfile> type) {
+    public void softDeleteApplicationProfile(final String applicationNameOrId,
+                                             final String applicationProfileNameOrId,
+                                             final Class<? extends ApplicationProfile> type) {
 
     }
 

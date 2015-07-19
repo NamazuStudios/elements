@@ -127,7 +127,7 @@ public class MongoApplicationDao implements ApplicationDao {
 
         query.or(
                 query.criteria("_id").equal(nameOrId),
-                query.criteria("email").equal(nameOrId)
+                query.criteria("name").equal(nameOrId)
         ).and(
                 query.criteria("active").equal(true)
         );

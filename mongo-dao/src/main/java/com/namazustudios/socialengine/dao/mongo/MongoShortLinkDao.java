@@ -80,14 +80,7 @@ public class MongoShortLinkDao implements ShortLinkDao {
     @Override
     public ShortLink getShortLinkWithId(String id) {
 
-        final ObjectId objectId;
-
-        try {
-            objectId = new ObjectId(id);
-        } catch (IllegalArgumentException ex) {
-            throw new NotFoundException("short link not found " + id);
-        }
-
+        final ObjectId objectId = mongoDBUtils.parse(id);
         final MongoShortLink mongoShortLink = datastore.get(MongoShortLink.class, objectId);
 
         if (mongoShortLink == null) {
