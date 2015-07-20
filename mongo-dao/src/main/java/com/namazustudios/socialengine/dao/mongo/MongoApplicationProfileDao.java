@@ -13,12 +13,14 @@ import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.ApplicationProfile;
 import com.namazustudios.socialengine.model.application.PSNApplicationProfile;
+import com.namazustudios.socialengine.model.application.Platform;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -65,7 +67,7 @@ public class MongoApplicationProfileDao implements ApplicationProfileDao {
         final UpdateOperations<MongoPSNApplicationProfile> updateOperations =
             datastore.createUpdateOperations(MongoPSNApplicationProfile.class);
 
-        updateOperations.set("np_id", psnApplicationProfile.getNpIdentifier().trim());
+        updateOperations.set("name", psnApplicationProfile.getNpIdentifier().trim());
         updateOperations.set("client_secret", Strings.nullToEmpty(psnApplicationProfile.getClientSecret()).trim());
         updateOperations.set("active", true);
         updateOperations.set("platform", psnApplicationProfile.getPlatform());
@@ -96,8 +98,7 @@ public class MongoApplicationProfileDao implements ApplicationProfileDao {
         final Query<AbstractMongoApplicationProfile> query = datastore.createQuery(AbstractMongoApplicationProfile.class);
 
         query.filter("active =", true);
-        query.filter("parent_application =", mongoApplication);
-        query.field("class_heierarchy").hasThisOne(AbstractMongoApplicationProfile.class.getName());
+        query.filter("parent =", mongoApplication);
 
         return mongoDBUtils.paginationFromQuery(query, offset, count, new Function<AbstractMongoApplicationProfile, ApplicationProfile>() {
             @Override
@@ -148,12 +149,14 @@ public class MongoApplicationProfileDao implements ApplicationProfileDao {
         final Query<MongoPSNApplicationProfile> query = datastore.createQuery(MongoPSNApplicationProfile.class);
 
         query.filter("active =", true);
-        query.filter("parent_application =", mongoApplication);
-        query.field("class_heierarchy").hasThisOne(PSNApplicationProfile.class.getName());
-        query.or(
-                query.criteria("_id").equal(applicationProfileNameOrId),
-                query.criteria("name").equal(applicationProfileNameOrId)
-        );
+        query.filter("parent =", mongoApplication);
+        query.filter("platform in", new Object[]{Platform.PSN_VITA, Platform.PSN_PS4});
+
+        try {
+            query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
+        } catch (IllegalArgumentException ex) {
+            query.filter("name = ", applicationProfileNameOrId);
+        }
 
         final MongoPSNApplicationProfile mongoPSNApplicationProfile = query.get();
 
@@ -176,17 +179,19 @@ public class MongoApplicationProfileDao implements ApplicationProfileDao {
         final Query<MongoPSNApplicationProfile> query = datastore.createQuery(MongoPSNApplicationProfile.class);
 
         query.filter("active =", true);
-        query.filter("parent_application =", mongoApplication);
-        query.field("class_heierarchy").hasThisOne(PSNApplicationProfile.class.getName());
-        query.or(
-                query.criteria("_id").equal(applicationProfileNameOrId),
-                query.criteria("name").equal(applicationProfileNameOrId)
-        );
+        query.filter("parent =", mongoApplication);
+        query.filter("platform in", new Object[]{Platform.PSN_VITA, Platform.PSN_PS4});
+
+        try {
+            query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
+        } catch (IllegalArgumentException ex) {
+            query.filter("name = ", applicationProfileNameOrId);
+        }
 
         final UpdateOperations<MongoPSNApplicationProfile> updateOperations =
                 datastore.createUpdateOperations(MongoPSNApplicationProfile.class);
 
-        updateOperations.set("np_id", psnApplicationProfile.getNpIdentifier().trim());
+        updateOperations.set("name", psnApplicationProfile.getNpIdentifier().trim());
         updateOperations.set("client_secret", Strings.nullToEmpty(psnApplicationProfile.getClientSecret()).trim());
         updateOperations.set("platform", psnApplicationProfile.getPlatform());
         updateOperations.set("parent", mongoApplication);
@@ -220,12 +225,14 @@ public class MongoApplicationProfileDao implements ApplicationProfileDao {
         final Query<MongoPSNApplicationProfile> query = datastore.createQuery(MongoPSNApplicationProfile.class);
 
         query.filter("active =", true);
-        query.filter("parent_application =", mongoApplication);
-        query.field("class_heierarchy").hasThisOne(PSNApplicationProfile.class.getName());
-        query.or(
-                query.criteria("_id").equal(applicationProfileNameOrId),
-                query.criteria("name").equal(applicationProfileNameOrId)
-        );
+        query.filter("parent =", mongoApplication);
+        query.filter("platform in", new Object[]{Platform.PSN_VITA, Platform.PSN_PS4});
+
+        try {
+            query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
+        } catch (IllegalArgumentException ex) {
+            query.filter("name = ", applicationProfileNameOrId);
+        }
 
         final UpdateOperations<MongoPSNApplicationProfile> updateOperations =
                 datastore.createUpdateOperations(MongoPSNApplicationProfile.class);

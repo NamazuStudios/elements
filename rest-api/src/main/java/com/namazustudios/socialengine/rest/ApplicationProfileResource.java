@@ -13,7 +13,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * Created by patricktwohig on 7/13/15.
  */
-@Path("application/profile/{applicationNameOrId}/profile")
+@Path("application/{applicationNameOrId}/profile")
 public class ApplicationProfileResource {
 
     @Inject

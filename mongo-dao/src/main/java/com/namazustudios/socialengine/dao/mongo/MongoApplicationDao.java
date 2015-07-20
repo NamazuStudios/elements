@@ -16,6 +16,7 @@ import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -123,10 +124,12 @@ public class MongoApplicationDao implements ApplicationDao {
         final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
 
         query.filter("active =", true);
-        query.or(
-                query.criteria("_id").equal(nameOrId),
-                query.criteria("name").equal(nameOrId)
-        );
+
+        try {
+            query.filter("_id", new ObjectId(nameOrId));
+        } catch (IllegalArgumentException ex) {
+            query.filter("name =", nameOrId);
+        }
 
         final MongoApplication mongoApplication = query.get();
         return transform(mongoApplication);
@@ -141,10 +144,12 @@ public class MongoApplicationDao implements ApplicationDao {
         final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
 
         query.filter("active =", true);
-        query.or(
-                query.criteria("_id").equal(nameOrId),
-                query.criteria("name").equal(nameOrId)
-        );
+
+        try {
+            query.filter("_id", new ObjectId(nameOrId));
+        } catch (IllegalArgumentException ex) {
+            query.filter("name =", nameOrId);
+        }
 
         final UpdateOperations<MongoApplication> updateOperations = datastore.createUpdateOperations(MongoApplication.class);
 
@@ -179,10 +184,12 @@ public class MongoApplicationDao implements ApplicationDao {
         final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
 
         query.filter("active =", true);
-        query.or(
-                query.criteria("_id").equal(nameOrId),
-                query.criteria("name").equal(nameOrId)
-        );
+
+        try {
+            query.filter("_id", new ObjectId(nameOrId));
+        } catch (IllegalArgumentException ex) {
+            query.filter("name =", nameOrId);
+        }
 
         final UpdateOperations<MongoApplication> updateOperations = datastore.createUpdateOperations(MongoApplication.class);
         updateOperations.set("active", false);
@@ -212,10 +219,12 @@ public class MongoApplicationDao implements ApplicationDao {
         final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
 
         query.filter("active =", true);
-        query.or(
-                query.criteria("_id").equal(mongoApplicationNameOrId),
-                query.criteria("name").equal(mongoApplicationNameOrId)
-        );
+
+        try {
+            query.filter("_id", new ObjectId(mongoApplicationNameOrId));
+        } catch (IllegalArgumentException ex) {
+            query.filter("name =", mongoApplicationNameOrId);
+        }
 
         final MongoApplication mongoApplication = query.get();
 

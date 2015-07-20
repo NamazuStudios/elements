@@ -24,7 +24,7 @@ import java.util.Set;
                 @SearchableField(name = "active", path = "/active")
         }
 )
-@Indexes(@Index(value = "parent_application, platform", unique = true))
+@Indexes(@Index(value = "parent, platform", unique = true))
 public abstract class AbstractMongoApplicationProfile {
 
     @Id
@@ -38,9 +38,6 @@ public abstract class AbstractMongoApplicationProfile {
 
     @Property("active")
     private boolean active;
-
-    @Property("class_heierarchy")
-    private Set<String> classHierarchy;
 
     public String getObjectId() {
         return objectId;
@@ -72,23 +69,6 @@ public abstract class AbstractMongoApplicationProfile {
 
     public void setActive(boolean active) {
         this.active = active;
-    }
-
-    /**
-     * This is here because Morphia currently doesn't support polymorphic queries.
-     */
-    @PrePersist
-    public void storeTypeHierarchy() {
-
-        classHierarchy = new HashSet<>();
-
-        Class<?> cls = getClass();
-
-        do {
-            classHierarchy.add(cls.getName());
-            cls = cls.getSuperclass();
-        } while (cls != null);
-
     }
 
 }

@@ -36,7 +36,8 @@ public interface ApplicationProfileService {
      * @return a {@link Pagination} of {@link Application} instances
      */
     Pagination<ApplicationProfile> getApplicationProfiles(final String applicationNameOrId,
-                                                          final int offset, final int count, final String search);
+                                                          final int offset, final int count,
+                                                          final String search);
 
     /**
      * Gets an application with the specific name or identifier.

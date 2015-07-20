@@ -33,6 +33,7 @@ public class JerseyModule extends ServletModule {
         bind(DefaultExceptionMapper.class);
         bind(ApplicationResource.class);
         bind(ApplicationProfileResource.class);
+        bind(PSNApplicationProfileResource.class);
 
         // Setup servlets
 

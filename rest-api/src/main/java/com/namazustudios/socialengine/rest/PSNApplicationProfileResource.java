@@ -12,7 +12,7 @@ import javax.ws.rs.core.MediaType;
  *
  * Created by patricktwohig on 7/13/15.
  */
-@Path("application/profile/{applicationNameOrId}/profile/psn")
+@Path("application/{applicationNameOrId}/profile/psn")
 public class PSNApplicationProfileResource {
 
     @Inject
@@ -45,6 +45,7 @@ public class PSNApplicationProfileResource {
      * @return the {@link PSNApplicationProfile} the PSN Application Profile
      */
     @POST
+    @Produces(MediaType.APPLICATION_JSON)
     public PSNApplicationProfile createApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             final PSNApplicationProfile psnApplicationProfile) {
@@ -62,6 +63,7 @@ public class PSNApplicationProfileResource {
      */
     @PUT
     @Path("{applicationProfileNameOrId}")
+    @Produces(MediaType.APPLICATION_JSON)
     public PSNApplicationProfile updateApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId,
@@ -82,8 +84,8 @@ public class PSNApplicationProfileResource {
     public void deleteApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        applicationProfileService.deleteApplicationProfile(applicationNameOrId,
-                applicationProfileNameOrId, PSNApplicationProfile.class);
+        applicationProfileService.deleteApplicationProfile(applicationNameOrId, applicationProfileNameOrId,
+                PSNApplicationProfile.class);
     }
 
 }
