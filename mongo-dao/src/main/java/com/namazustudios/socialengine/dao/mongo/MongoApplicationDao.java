@@ -240,7 +240,10 @@ public class MongoApplicationDao implements ApplicationDao {
 
         final Application application = new Application();
 
-        application.setId(mongoApplication.getObjectId());
+        if (mongoApplication.getObjectId() != null) {
+            application.setId(mongoApplication.getObjectId().toHexString());
+        }
+
         application.setName(mongoApplication.getName());
         application.setDescription(mongoApplication.getDescription());
 
@@ -252,7 +255,10 @@ public class MongoApplicationDao implements ApplicationDao {
 
         final MongoApplication mongoApplication = new MongoApplication();
 
-        mongoApplication.setObjectId(application.getId());
+        if (application.getId() != null) {
+            mongoApplication.setObjectId(new ObjectId(application.getId()));
+        }
+
         mongoApplication.setName(application.getName());
         mongoApplication.setDescription(application.getDescription());
 

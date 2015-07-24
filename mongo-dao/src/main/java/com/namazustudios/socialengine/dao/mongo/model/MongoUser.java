@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.model.User;
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
@@ -13,7 +14,13 @@ import org.mongodb.morphia.annotations.Property;
  * Created by patricktwohig on 3/31/15.
  */
 @Entity(value = "user", noClassnameStored = true)
-@SearchableIdentity(@SearchableField(name = "id", path = "/objectId", type = String.class))
+@SearchableIdentity(@SearchableField(
+        name = "id",
+        path = "/objectId",
+        type = ObjectId.class,
+        extractor = ObjectIdExtractor.class,
+        processors = ObjectIdProcessor.class)
+)
 @SearchableDocument(
         fields = {
             @SearchableField(name = "name", path = "/name"),
@@ -25,7 +32,7 @@ import org.mongodb.morphia.annotations.Property;
 public class MongoUser {
 
     @Id
-    private String objectId;
+    private ObjectId objectId;
 
     @Property("name")
     @Indexed(unique=true)
@@ -51,11 +58,11 @@ public class MongoUser {
     @Indexed
     private boolean active;
 
-    public String getObjectId() {
+    public ObjectId getObjectId() {
         return objectId;
     }
 
-    public void setObjectId(String objectId) {
+    public void setObjectId(ObjectId objectId) {
         this.objectId = objectId;
     }
 

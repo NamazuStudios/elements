@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.dao.mongo.model;
 import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
 /**
@@ -21,7 +22,7 @@ import org.mongodb.morphia.annotations.*;
 public class MongoApplication {
 
     @Id
-    private String objectId;
+    private ObjectId objectId;
 
     @Property("name")
     @Indexed(unique = true)
@@ -34,11 +35,11 @@ public class MongoApplication {
     @Property("active")
     private boolean active;
 
-    public String getObjectId() {
+    public ObjectId getObjectId() {
         return objectId;
     }
 
-    public void setObjectId(String objectId) {
+    public void setObjectId(ObjectId objectId) {
         this.objectId = objectId;
     }
 

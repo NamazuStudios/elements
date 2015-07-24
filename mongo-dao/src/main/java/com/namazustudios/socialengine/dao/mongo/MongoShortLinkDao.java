@@ -179,10 +179,15 @@ public class MongoShortLinkDao implements ShortLinkDao {
 
     public ShortLink transform(final MongoShortLink mongoShortLink) {
         final ShortLink shortLink = new ShortLink();
-        final ObjectId objectId = new ObjectId(mongoShortLink.getObjectId());
-        shortLink.setId(mongoShortLink.getObjectId());
+        final ObjectId objectId = mongoShortLink.getObjectId();
+
+        if (objectId != null) {
+            shortLink.setId(mongoShortLink.getObjectId().toHexString());
+        }
+
         shortLink.setShortLinkPath(BaseEncoding.base64Url().encode(objectId.toByteArray()));
         shortLink.setDestinationURL(mongoShortLink.getDestinationUrl());
+
         return shortLink;
     }
 

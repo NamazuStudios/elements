@@ -24,6 +24,7 @@ import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.testng.collections.Lists;
 
 import javax.inject.Inject;
 
@@ -60,8 +61,13 @@ public class MongoApplicationProfileDao implements ApplicationProfileDao {
         final Query<MongoPSNApplicationProfile> query = datastore.createQuery(MongoPSNApplicationProfile.class);
 
         query.and(
-            query.criteria("name").equal(psnApplicationProfile.getNpIdentifier()),
-            query.criteria("active").equal(false)
+            query.criteria("active").equal(false),
+            query.criteria("parent").equal(mongoApplication),
+            query.criteria("platform").in(Lists.newArrayList(
+                Platform.PSN_PS4,
+                Platform.PSN_VITA
+            )),
+            query.criteria("name").equal(psnApplicationProfile.getNpIdentifier())
         );
 
         final UpdateOperations<MongoPSNApplicationProfile> updateOperations =
@@ -281,10 +287,13 @@ public class MongoApplicationProfileDao implements ApplicationProfileDao {
 
         final MongoPSNApplicationProfile mongoPSNApplicationProfile = new MongoPSNApplicationProfile();
 
-        mongoPSNApplicationProfile.setObjectId(psnApplicationProfile.getId());
+        if (psnApplicationProfile.getId() != null) {
+            mongoPSNApplicationProfile.setObjectId(new ObjectId(psnApplicationProfile.getId()));
+        }
+
         mongoPSNApplicationProfile.setPlatform(psnApplicationProfile.getPlatform());
         mongoPSNApplicationProfile.setClientSecret(psnApplicationProfile.getClientSecret());
-        mongoPSNApplicationProfile.setNpIdentifier(psnApplicationProfile.getNpIdentifier());
+        mongoPSNApplicationProfile.setName(psnApplicationProfile.getNpIdentifier());
 
         return mongoPSNApplicationProfile;
 
@@ -294,7 +303,10 @@ public class MongoApplicationProfileDao implements ApplicationProfileDao {
 
         final ApplicationProfile applicationProfile = new ApplicationProfile() {};
 
-        applicationProfile.setId(abstractMongoApplicationProfile.getObjectId());
+        if (abstractMongoApplicationProfile.getObjectId() != null) {
+            applicationProfile.setId(abstractMongoApplicationProfile.getObjectId().toHexString());
+        }
+
         applicationProfile.setPlatform(abstractMongoApplicationProfile.getPlatform());
 
         return applicationProfile;
@@ -305,9 +317,12 @@ public class MongoApplicationProfileDao implements ApplicationProfileDao {
 
         final PSNApplicationProfile psnApplicationProfile = new PSNApplicationProfile();
 
-        psnApplicationProfile.setId(mongoPSNApplicationProfile.getObjectId());
+        if (mongoPSNApplicationProfile.getObjectId() != null) {
+            psnApplicationProfile.setId(mongoPSNApplicationProfile.getObjectId().toHexString());
+        }
+
         psnApplicationProfile.setPlatform(mongoPSNApplicationProfile.getPlatform());
-        psnApplicationProfile.setNpIdentifier(mongoPSNApplicationProfile.getNpIdentifier());
+        psnApplicationProfile.setNpIdentifier(mongoPSNApplicationProfile.getName());
         psnApplicationProfile.setClientSecret(mongoPSNApplicationProfile.getClientSecret());
 
         return psnApplicationProfile;

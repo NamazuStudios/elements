@@ -14,21 +14,27 @@ import org.mongodb.morphia.annotations.Property;
  * Created by patricktwohig on 3/26/15.
  */
 @Entity(value = "short_link", noClassnameStored = true)
-@SearchableIdentity(@SearchableField(name = "id", path = "/objectId", type = String.class))
+@SearchableIdentity(@SearchableField(
+        name = "id",
+        path = "/objectId",
+        type = ObjectId.class,
+        extractor = ObjectIdExtractor.class,
+        processors = ObjectIdProcessor.class)
+)
 @SearchableDocument(fields = @SearchableField(name = "destinationUrl", path = "/destinationUrl"))
 public class MongoShortLink {
 
     @Id
-    private String objectId;
+    private ObjectId objectId;
 
     @Property("destination_url")
     private String destinationUrl;
 
-    public String getObjectId() {
+    public ObjectId getObjectId() {
         return objectId;
     }
 
-    public void setObjectId(String objectId) {
+    public void setObjectId(ObjectId objectId) {
         this.objectId = objectId;
     }
 

@@ -102,8 +102,7 @@ public class MongoDBUtils {
                     new Function<ScoredDocumentEntry<MongoModelT>, ObjectId>() {
                         @Override
                         public ObjectId apply(ScoredDocumentEntry<MongoModelT> input) {
-                            final String objectId = input.getIdentity(kind).getIdentity(String.class);
-                            return new ObjectId(objectId);
+                            return input.getIdentity(kind).getIdentity(ObjectId.class);
                         }
                     });
 

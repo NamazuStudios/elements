@@ -11,29 +11,11 @@ import org.mongodb.morphia.annotations.*;
 /**
  * Created by patricktwohig on 7/10/15.
  */
-@SearchableDocument(
-        fields = {
-                @SearchableField(name = "name", path = "/npIdentifier"),
-                @SearchableField(name = "npIdentifier", path = "/npIdentifier")
-        }
-)
 @Entity(value = "application_profile", noClassnameStored = true)
 public class MongoPSNApplicationProfile extends AbstractMongoApplicationProfile {
 
-    @Property("name")
-    @Indexed(unique = true)
-    private String npIdentifier;
-
     @Property("client_secret")
     private String clientSecret;
-
-    public String getNpIdentifier() {
-        return npIdentifier;
-    }
-
-    public void setNpIdentifier(String npIdentifier) {
-        this.npIdentifier = npIdentifier;
-    }
 
     public String getClientSecret() {
         return clientSecret;

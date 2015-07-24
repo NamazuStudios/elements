@@ -14,21 +14,31 @@ import java.util.Set;
 /**
  * Created by patricktwohig on 7/10/15.
  */
-@SearchableIdentity(@SearchableField(name = "id", path = "/objectId", type = String.class))
+@SearchableIdentity(@SearchableField(
+        name = "id",
+        path = "/objectId",
+        type = ObjectId.class,
+        extractor = ObjectIdExtractor.class,
+        processors = ObjectIdProcessor.class)
+)
 @SearchableDocument(
         fields = {
+                @SearchableField(name = "name", path = "/name"),
                 @SearchableField(name = "applicationId", path = "/parent/objectId"),
                 @SearchableField(name = "applicationName", path = "/parent/name"),
-                @SearchableField(name = "description", path = "/description"),
                 @SearchableField(name = "platform", path = "/platform"),
                 @SearchableField(name = "active", path = "/active")
         }
 )
-@Indexes(@Index(value = "parent, platform", unique = true))
+@Indexes(@Index(value = "platform, parent, name", unique = true))
 public abstract class AbstractMongoApplicationProfile {
 
     @Id
-    private String objectId;
+    private ObjectId objectId;
+
+    @Indexed
+    @Property("name")
+    private String name;
 
     @Reference("parent")
     private MongoApplication parent;
@@ -39,12 +49,20 @@ public abstract class AbstractMongoApplicationProfile {
     @Property("active")
     private boolean active;
 
-    public String getObjectId() {
+    public ObjectId getObjectId() {
         return objectId;
     }
 
-    public void setObjectId(String objectId) {
+    public void setObjectId(ObjectId objectId) {
         this.objectId = objectId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public MongoApplication getParent() {
