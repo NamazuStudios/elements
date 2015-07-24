@@ -1,0 +1,79 @@
+package com.namazustudios.socialengine.model.rt;
+
+import java.util.Map;
+
+/**
+ * Simple implementation of the response.
+ *
+ * Created by patricktwohig on 7/24/15.
+ */
+public class SimpleRequest implements Request {
+
+    private int sequence;
+
+    private String method;
+
+    private String path;
+
+    private Map<String, String> headers;
+
+    @Override
+    public int getSequence() {
+        return sequence;
+    }
+
+    public void setSequence(int sequence) {
+        this.sequence = sequence;
+    }
+
+    @Override
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String method) {
+        this.method = method;
+    }
+
+    @Override
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    @Override
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(Map<String, String> headers) {
+        this.headers = headers;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SimpleRequest)) return false;
+
+        SimpleRequest that = (SimpleRequest) o;
+
+        if (getSequence() != that.getSequence()) return false;
+        if (getMethod() != null ? !getMethod().equals(that.getMethod()) : that.getMethod() != null) return false;
+        if (getPath() != null ? !getPath().equals(that.getPath()) : that.getPath() != null) return false;
+        return !(getHeaders() != null ? !getHeaders().equals(that.getHeaders()) : that.getHeaders() != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getSequence();
+        result = 31 * result + (getMethod() != null ? getMethod().hashCode() : 0);
+        result = 31 * result + (getPath() != null ? getPath().hashCode() : 0);
+        result = 31 * result + (getHeaders() != null ? getHeaders().hashCode() : 0);
+        return result;
+    }
+
+}

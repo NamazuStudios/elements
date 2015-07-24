@@ -25,8 +25,10 @@
         <module>lucene-pojo</module>
         <module>lucene-indexer</module>
         <module>mongo-lucene</module>
-    <module>servlet-support</module>
-  </modules>
+        <module>servlet-support</module>
+        <module>rt-common</module>
+        <module>rt-server</module>
+    </modules>
 
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
