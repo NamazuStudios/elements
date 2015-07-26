@@ -6,7 +6,7 @@ package com.namazustudios.socialengine.rt;
  *
  * Created by patricktwohig on 7/24/15.
  */
-public interface PathHandler<ClientT> {
+public interface PathHandler {
 
     /**
      * Handles the given request from a client.
@@ -15,6 +15,6 @@ public interface PathHandler<ClientT> {
      * @param receiver the request object
      *
      */
-    <PayloadT> void handle(ClientT client, Receiver<Response, PayloadT> receiver);
+    <PayloadT> void handle(Client client, Receiver<Response, PayloadT> receiver);
 
 }
