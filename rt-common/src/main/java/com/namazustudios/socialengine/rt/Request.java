@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.rt;
+package com.namazustudios.socialengine.rt;
 
 import java.util.Map;
 

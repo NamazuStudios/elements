@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.rt;
+package com.namazustudios.socialengine.rt;
 
 /**
  * Created by patricktwohig on 7/24/15.
