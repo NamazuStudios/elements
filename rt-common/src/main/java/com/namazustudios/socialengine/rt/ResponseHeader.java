@@ -70,7 +70,7 @@ public interface ResponseHeader {
         FAILED_AUTH_FATAL;
 
         /**
-         * Gets the actual code as returned by {@link ResponseHeader#getResponseCode()}.
+         * Gets the actual code as returned by {@link ResponseHeader#getCode()}.
          *
          * @return the response code
          */
