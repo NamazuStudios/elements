@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt;
 /**
  * Created by patricktwohig on 7/24/15.
  */
-public class SimpleResponse implements Response {
+public class SimpleResponseHeader implements ResponseHeader {
 
     int code;
 
@@ -30,9 +30,9 @@ public class SimpleResponse implements Response {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof SimpleResponse)) return false;
+        if (!(o instanceof SimpleResponseHeader)) return false;
 
-        SimpleResponse that = (SimpleResponse) o;
+        SimpleResponseHeader that = (SimpleResponseHeader) o;
 
         if (getCode() != that.getCode()) return false;
         return getSequence() == that.getSequence();

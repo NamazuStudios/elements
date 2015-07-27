@@ -2,12 +2,12 @@ package com.namazustudios.socialengine.rt;
 
 /**
  * Event objects are essentially server-to-client messages that do not come
- * in as part of a {@link Request}.  Rather, events, are send direct from
+ * in as part of a {@link RequestHeader}.  Rather, events, are send direct from
  * server to client.
  *
- * This has similar semantics to the {@link Response} class, however
+ * This has similar semantics to the {@link ResponseHeader} class, however
  * this is simplified in that it is not generated in response to
- * a specific {@link Request}.
+ * a specific {@link RequestHeader}.
  *
  * Created by patricktwohig on 7/24/15.
  */

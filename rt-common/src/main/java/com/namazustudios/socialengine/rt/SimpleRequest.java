@@ -1,79 +1,30 @@
 package com.namazustudios.socialengine.rt;
 
-import java.util.Map;
-
 /**
- * Simple implementation of the response.
- *
- * Created by patricktwohig on 7/24/15.
+ * Created by patricktwohig on 7/26/15.
  */
-public class SimpleRequest implements Request {
+public class SimpleRequest<PayloadT> implements Request<PayloadT> {
 
-    private int sequence;
+    private RequestHeader header;
 
-    private String method;
-
-    private String path;
-
-    private Map<String, String> headers;
+    private PayloadT payload;
 
     @Override
-    public int getSequence() {
-        return sequence;
+    public RequestHeader getHeader() {
+        return header;
     }
 
-    public void setSequence(int sequence) {
-        this.sequence = sequence;
+    public void setHeader(RequestHeader header) {
+        this.header = header;
     }
 
     @Override
-    public String getMethod() {
-        return method;
+    public PayloadT getPayload() {
+        return payload;
     }
 
-    public void setMethod(String method) {
-        this.method = method;
-    }
-
-    @Override
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    @Override
-    public Map<String, String> getHeaders() {
-        return headers;
-    }
-
-    public void setHeaders(Map<String, String> headers) {
-        this.headers = headers;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof SimpleRequest)) return false;
-
-        SimpleRequest that = (SimpleRequest) o;
-
-        if (getSequence() != that.getSequence()) return false;
-        if (getMethod() != null ? !getMethod().equals(that.getMethod()) : that.getMethod() != null) return false;
-        if (getPath() != null ? !getPath().equals(that.getPath()) : that.getPath() != null) return false;
-        return !(getHeaders() != null ? !getHeaders().equals(that.getHeaders()) : that.getHeaders() != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = getSequence();
-        result = 31 * result + (getMethod() != null ? getMethod().hashCode() : 0);
-        result = 31 * result + (getPath() != null ? getPath().hashCode() : 0);
-        result = 31 * result + (getHeaders() != null ? getHeaders().hashCode() : 0);
-        return result;
+    public void setPayload(PayloadT payload) {
+        this.payload = payload;
     }
 
 }

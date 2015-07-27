@@ -1,20 +1,27 @@
 package com.namazustudios.socialengine.rt;
 
 /**
- * An instance of PathHandler is responsible for producing {@link Response} objects
- * from instances of {@link Request}.
+ * An instance of PathHandler is responsible for producing {@link ResponseHeader} objects
+ * from instances of {@link RequestHeader}.
  *
  * Created by patricktwohig on 7/24/15.
  */
-public interface PathHandler {
+public interface PathHandler<PayloadT> {
+
+    /**
+     * Gets the {@link Class} which can be passed as the payload
+     * to this object.
+     *
+     * @return the type
+     */
+    Class<PayloadT> getPayloadType();
 
     /**
      * Handles the given request from a client.
      *
-     * @param client the client handle, this is opaque and should only be used
      * @param receiver the request object
      *
      */
-    <PayloadT> void handle(Client client, Receiver<Response, PayloadT> receiver);
+    void handle(final Request<PayloadT> payloadTRequest, Receiver<ResponseHeader, PayloadT> receiver);
 
 }

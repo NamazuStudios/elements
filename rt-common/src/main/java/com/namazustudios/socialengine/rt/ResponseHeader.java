@@ -12,7 +12,7 @@ package com.namazustudios.socialengine.rt;
  *
  * Created by patricktwohig on 7/24/15.
  */
-public interface Response {
+public interface ResponseHeader {
 
     /**
      * Gets the response code.
@@ -70,7 +70,7 @@ public interface Response {
         FAILED_AUTH_FATAL;
 
         /**
-         * Gets the actual code as returned by {@link Response#getResponseCode()}.
+         * Gets the actual code as returned by {@link ResponseHeader#getResponseCode()}.
          *
          * @return the response code
          */

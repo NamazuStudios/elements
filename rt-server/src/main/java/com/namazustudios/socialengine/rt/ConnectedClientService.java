@@ -32,7 +32,7 @@ public interface ConnectedClientService {
      *
      * @return the {@link Receiver} which will receive the response
      */
-    <PayloadT> Receiver<Response, PayloadT> getResponseReceiver(final Client client, Class<PayloadT> payloadTClass);
+    <PayloadT> Receiver<ResponseHeader, PayloadT> getResponseReceiver(final Client client, Class<PayloadT> payloadTClass);
 
     /**
      * Gets the {@link Receiver} instance which can be used to receive events
