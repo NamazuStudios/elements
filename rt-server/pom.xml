@@ -35,6 +35,11 @@
             <artifactId>jnlua</artifactId>
             <version>${jnlua.version}</version>
         </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>${javax.inject.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

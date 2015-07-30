@@ -9,20 +9,6 @@ package com.namazustudios.socialengine.rt;
 public interface ConnectedClientService {
 
     /**
-     * Used to indicate that a client has connected.
-     *
-     * @param client the client
-     */
-    void addConnection(final Client client);
-
-    /**
-     * Removes a connection from the pool.
-     *
-     * @param client the client
-     */
-    void removeConnection(final Client client);
-
-    /**
      * Gets the {@link Receiver} instance which can be used to receive messages
      * of the given type.
      *

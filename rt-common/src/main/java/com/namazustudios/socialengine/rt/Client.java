@@ -1,34 +1,51 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.model.User;
-
 /**
- * Represents a currently connected client.  This includes both a
- * unique connection ID and the {@link User} which is associated
- * with the connection.
+ * Represents a currently connected client.  The client also has associated
+ * a set of session variables which can be accessed at any time.
  *
- * Created by patricktwohig on 7/26/15.
+ * Created by patricktwohig on 7/29/15.
  */
-public class Client {
+public interface Client {
 
-    private String id;
+    /**
+     * Gets the ID of the client.
+     *
+     * @return the id
+     */
+    String getId();
 
-    private User user;
+    /**
+     * Sets the Client's session variable.
+     *
+     * @param key the key
+     * @param value the value
+     */
+    void setSessionVariable(Object key, Object value);
 
-    public String getId() {
-        return id;
-    }
+    /**
+     * Gets a session variable of the given key, type, and default value.
+     * @param key
+     * @param type
+     *
+     * @param <T>
+     */
+    <T> T getSessionVariable(Object key, Class<T> type);
 
-    public void setId(String id) {
-        this.id = id;
-    }
+    /**
+     * Gets a session variable of the given key, type, and default value.
+     * @param key the session key
+     * @param type the type
+     * @param defaultValue the default value, if no session variable is found
+     * @param <T>
+     */
+    <T> T getSessionVariable(Object key, Class<T> type, T defaultValue);
 
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
+    /**
+     * Removes the session variable with the given key.
+     *
+     * @param key the session value key
+     */
+    void removeSessionVariable(Object key);
 
 }
