@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.exception.NotFoundException;
+
 /**
  * Represents the currently connected clients and provides a means to
  * dispatch messages to clients.
@@ -17,6 +19,8 @@ public interface ConnectedClientService {
      * @param <PayloadT> the payload type
      *
      * @return the {@link Receiver} which will receive the response
+     *
+     * @throws {@link NotFoundException} if no active connection for the client can be found
      */
     <PayloadT> Receiver<ResponseHeader, PayloadT> getResponseReceiver(final Client client, Class<PayloadT> payloadTClass);
 
@@ -29,6 +33,7 @@ public interface ConnectedClientService {
      * @param <PayloadT> the payload type
      *
      * @return the {@link Receiver} instance which will event
+     * @throws {@link NotFoundException} if no active connection for the client can be found
      */
     <PayloadT> Receiver<Event, PayloadT> getEventReceiver(final Client client, Class<PayloadT> payloadTClass);
 

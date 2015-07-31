@@ -16,7 +16,7 @@ public interface Filter {
      * @param request the request
      *
      */
-    void filter(Chain chain, Client client, Request<?> request);
+    void filter(Chain chain, Client client, Request<?> request, Receiver<ResponseHeader, Object> receiver);
 
     /**
      * Represents the next filter in the chain of filters.
@@ -29,7 +29,7 @@ public interface Filter {
          * @param client the client
          * @param request the request
          */
-        void next(Client client, Request<?> request);
+        void next(Client client, Request<?> request, Receiver<ResponseHeader, Object> receiver);
 
     }
 

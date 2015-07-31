@@ -31,7 +31,7 @@ public interface ResponseHeader {
     /**
      * Gets the response code.
      */
-    enum ResponseCode {
+    enum Code {
 
         /**
          * The response was okay.
@@ -67,7 +67,17 @@ public interface ResponseHeader {
         /**
          * Auth failed, the request should be abandoned.
          */
-        FAILED_AUTH_FATAL;
+        FAILED_AUTH_FATAL,
+
+        /**
+         * indicates that the server cannot handle the current load
+         */
+        TOO_BUSY_FATAL,
+
+        /**
+         * Indicates that the server encountered an unknown or internal error.
+         */
+        INTERNAL_ERROR_FATAL;
 
         /**
          * Gets the actual code as returned by {@link ResponseHeader#getCode()}.
