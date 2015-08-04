@@ -22,13 +22,6 @@ public interface ResponseHeader {
     int getCode();
 
     /**
-     * Sets the response code.
-     *
-     * @param code the code
-     */
-    void setCode(final ResponseCode code);
-
-    /**
      * Gets the sequence of the response.
      *
      * @return the sequence

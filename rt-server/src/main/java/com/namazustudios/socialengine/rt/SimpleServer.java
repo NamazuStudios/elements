@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.namazustudios.socialengine.exception.BaseException;
 import com.namazustudios.socialengine.exception.ErrorCode;
-import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,7 +109,7 @@ public class SimpleServer implements Server {
             LOG.error("Caught exception handling request {} to client {}.", request, client, e);
         }
 
-        responseReceiver.receive(code, simpleExceptionResponsePayload);
+        responseReceiver.receive(code.getCode(), simpleExceptionResponsePayload);
 
     }
 
@@ -152,7 +151,7 @@ public class SimpleServer implements Server {
                                     final Request request,
                                     final ConnectedClientService.ResponseReceiver receiver) {
 
-        final PathHandler<Object> pathHandler = pathHandlerService.getPathHandler(request.getHeader());
+        final PathHandler<?> pathHandler = pathHandlerService.getPathHandler(request.getHeader());
 
         if (request.getPayload() == null) {
             pathHandler.handle(client, request, receiver);
@@ -189,11 +188,11 @@ public class SimpleServer implements Server {
         public DelegatingCheckedReceiver(final Client client,
                                          final Request request) {
             this.request = request;
-            this.delegate = connectedClientService.getResponseReceiver(client);
+            this.delegate = connectedClientService.getResponseReceiver(client, request);
         }
 
         @Override
-        public void receive(ResponseCode code, Object payload) {
+        public void receive(int code, Object payload) {
             if (received.compareAndSet(false, true)) {
                 delegate.receive(code, payload);
             } else {
@@ -211,7 +210,7 @@ public class SimpleServer implements Server {
                 simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();
                 simpleExceptionResponsePayload.setMessage(msg);
 
-                delegate.receive(ResponseCode.INTERNAL_ERROR_FATAL, simpleExceptionResponsePayload);
+                delegate.receive(ResponseCode.INTERNAL_ERROR_FATAL.getCode(), simpleExceptionResponsePayload);
 
             }
         }

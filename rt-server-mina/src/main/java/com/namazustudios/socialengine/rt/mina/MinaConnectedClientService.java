@@ -21,7 +21,7 @@ public class MinaConnectedClientService implements ConnectedClientService {
         return new ResponseReceiver() {
 
             @Override
-            public void receive(ResponseCode code, Object payload) {
+            public void receive(int code, Object payload) {
 
                 final SimpleResponseHeader simpleResponseHeader = new SimpleResponseHeader();
                 simpleResponseHeader.setCode(code);

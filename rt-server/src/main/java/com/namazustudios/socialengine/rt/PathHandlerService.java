@@ -14,26 +14,24 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 public interface PathHandlerService {
 
     /**
-     * Adds a path handler for hte given Payload type.
-     *
-     * @param handler the handler
-     * @param method the method to handle at the path
-     * @param payloadTClass the payload type
-     * @param <PayloadT> the payload type
-     */
-    <PayloadT> void addPathHandler(PathHandler handler, String method, Class<PayloadT> payloadTClass);
-
-    /**
      * Gets the request handler for the given path.  The path is
      * user defined and is ultimately the destination for a {@link RequestHeader}
      *
      * @param requestHeader the request header.
-     * @param <PayloadT> the payload type.
      * @return the PathHandler to handle the path
      *
      * @throws {@link NotFoundException} if the given handler cannot be found
      * @throws {@link InvalidDataException} if the handler is found, but does not match the payload type
      */
-    <PayloadT> PathHandler<PayloadT> getPathHandler(RequestHeader requestHeader);
+    PathHandler<?> getPathHandler(RequestHeader requestHeader);
+
+    /**
+     * Adds a path handler for hte given Payload type.
+     *
+     * @param handler the handler
+     * @param method the method to handle at the path
+     * @param <PayloadT> the payload type
+     */
+    <PayloadT> void addPathHandler(PathHandler<PayloadT> handler, String path, String method);
 
 }

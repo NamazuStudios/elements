@@ -44,9 +44,10 @@ public interface ConnectedClientService {
          * client.
          *
          * @Param code
+         * @param code
          * @param payload
          */
-        void receive(ResponseCode code, Object payload);
+        void receive(int code, Object payload);
 
     }
 

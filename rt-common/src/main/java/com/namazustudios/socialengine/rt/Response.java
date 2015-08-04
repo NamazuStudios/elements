@@ -19,11 +19,4 @@ public interface Response {
      */
     Object getPayload();
 
-    /**
-     * Sets the payload.
-     *
-     * @param payload
-     */
-    void setPayload(Object payload);
-
 }
