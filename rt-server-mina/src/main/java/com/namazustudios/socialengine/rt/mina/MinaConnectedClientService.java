@@ -2,19 +2,38 @@ package com.namazustudios.socialengine.rt.mina;
 
 import com.namazustudios.socialengine.rt.*;
 
+import java.util.Arrays;
+
 /**
  * Created by patricktwohig on 7/27/15.
  */
 public class MinaConnectedClientService implements ConnectedClientService {
 
     @Override
-    public <PayloadT> Receiver<ResponseHeader, PayloadT> getResponseReceiver(Client client, Class<PayloadT> payloadTClass) {
-        return null;
+    public ResponseReceiver getResponseReceiver(Client client) {
+
+        final MinaClient minaClient;
+
+        try {
+             minaClient = (MinaClient) client;
+        } catch (ClassCastException ex) {
+             throw new IllegalArgumentException(ex);
+        }
+
+        return new ResponseReceiver() {
+            @Override
+            public void receive(ResponseCode code, Object payload) {
+
+            }
+        };
+
     }
 
     @Override
-    public <PayloadT> Receiver<Event, PayloadT> getEventReceiver(Client client, Class<PayloadT> payloadTClass) {
+    public EventReceiver getEventReceiver(Client client) {
         return null;
     }
+
+
 
 }

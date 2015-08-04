@@ -16,7 +16,7 @@ public interface Filter {
      * @param request the request
      *
      */
-    void filter(Chain chain, Client client, Request<?> request, Receiver<ResponseHeader, Object> receiver);
+    void filter(Chain chain, Client client, Request request, ConnectedClientService.ResponseReceiver responseReceiver);
 
     /**
      * Represents the next filter in the chain of filters.
@@ -24,12 +24,13 @@ public interface Filter {
     interface Chain {
 
         /**
-         * Hands processing to the next filter.
+         * Hands processing to the next filter in the chain.
          *
-         * @param client the client
-         * @param request the request
+         * @param client the client the client
+         * @param request the request the request
+         *
          */
-        void next(Client client, Request<?> request, Receiver<ResponseHeader, Object> receiver);
+        void next(Client client, Request request, ConnectedClientService.ResponseReceiver responseReceiver);
 
     }
 

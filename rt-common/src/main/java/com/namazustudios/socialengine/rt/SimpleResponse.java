@@ -1,15 +1,13 @@
 package com.namazustudios.socialengine.rt;
 
-import javax.validation.Payload;
-
 /**
  * Created by patricktwohig on 7/31/15.
  */
-public class SimpleResponse<PayloadT> implements Response<PayloadT> {
+public class SimpleResponse implements Response {
 
     private ResponseHeader responseHeader;
 
-    private PayloadT payload;
+    private Object payload;
 
     @Override
     public ResponseHeader getResponseHeader() {
@@ -21,11 +19,11 @@ public class SimpleResponse<PayloadT> implements Response<PayloadT> {
     }
 
     @Override
-    public PayloadT getPayload() {
+    public Object getPayload() {
         return payload;
     }
 
-    public void setPayload(PayloadT payload) {
+    public void setPayload(Object payload) {
         this.payload = payload;
     }
 

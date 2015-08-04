@@ -5,7 +5,7 @@ import javax.validation.Payload;
 /**
  * Created by patricktwohig on 7/27/15.
  */
-public interface Response<PayloadT> {
+public interface Response {
 
     /**
      * Gets the response header.
@@ -17,6 +17,13 @@ public interface Response<PayloadT> {
     /**
      * Gets the payload of the response.
      */
-    PayloadT getPayload();
+    Object getPayload();
+
+    /**
+     * Sets the payload.
+     *
+     * @param payload
+     */
+    void setPayload(Object payload);
 
 }

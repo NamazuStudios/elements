@@ -11,18 +11,32 @@ package com.namazustudios.socialengine.rt;
  */
 public interface ExceptionMapper<ExceptionT extends Exception> {
 
-    /**
-     * Maps the given exception to a custom {@link Response}
-     *
-     * @param exception
-     * @return
-     */
-    Response<?> map(final ExceptionT exception);
 
+    /**
+     * Maps the given {@link Exception} to a custom payload.
+     *
+     * @param exception the exception
+     * @param request the request
+     * @param responseReceiver the response
+     *
+     */
+    void map(ExceptionT exception, Client client, Request request, ConnectedClientService.ResponseReceiver responseReceiver);
+
+    /**
+     * Resolves an {@link ExceptionMapper} for hte given {@link Exception} type.
+     */
     interface Resolver {
 
+        /**
+         * Returns and {@link ExceptionMapper} for the given {@link Exception} type.
+         *
+         * @param ex the exception itself
+         * @param <ExceptionT> the type of exception
+         *
+         * @return the {@link ExceptionMapper}
+         */
         <ExceptionT extends Exception>
-        ExceptionMapper<Exception> getExceptionMapper(ExceptionT ex);
+        ExceptionMapper<ExceptionT> getExceptionMapper(ExceptionT ex);
 
     }
 

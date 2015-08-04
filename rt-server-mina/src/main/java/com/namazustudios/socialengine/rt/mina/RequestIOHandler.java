@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.mina;
 
 import com.namazustudios.socialengine.exception.BaseException;
-import com.namazustudios.socialengine.rt.PathHandlerService;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.Server;
 import org.apache.mina.core.service.IoHandlerAdapter;
@@ -23,7 +22,7 @@ public class RequestIOHandler extends IoHandlerAdapter {
     @Override
     public void messageReceived(IoSession session, Object message) throws Exception {
 
-        final Request<?> request = (Request<?>)message;
+        final Request request = (Request)message;
 
         try {
 

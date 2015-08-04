@@ -19,9 +19,9 @@ public interface PathHandler<PayloadT> {
     /**
      * Handles the given request from a client.
      *
-     * @param receiver the request object
+     * @param responseReceiver the request object
      *
      */
-    void handle(final Request<PayloadT> payloadTRequest, Receiver<ResponseHeader, PayloadT> receiver);
+    void handle(Client client, Request request, ConnectedClientService.ResponseReceiver responseReceiver);
 
 }

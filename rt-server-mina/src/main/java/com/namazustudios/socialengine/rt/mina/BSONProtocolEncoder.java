@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.mina;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.ByteBufferBackedOutputStream;
 import com.namazustudios.socialengine.rt.Response;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
@@ -22,7 +21,7 @@ public class BSONProtocolEncoder implements ProtocolEncoder {
     @Override
     public void encode(IoSession session, Object message, ProtocolEncoderOutput out) throws Exception {
 
-        final Response<?> response = (Response<?>)message;
+        final Response response = (Response)message;
         final Object payload = response.getPayload();
 
         final IoBuffer ioBuffer;

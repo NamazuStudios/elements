@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import com.namazustudios.socialengine.exception.BaseException;
 import com.namazustudios.socialengine.exception.ErrorCode;
 import com.namazustudios.socialengine.exception.InternalException;
+import com.namazustudios.socialengine.exception.InvalidParameterException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,15 +24,15 @@ public class SimpleServer implements Server {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleServer.class);
 
-    private static final Map<ErrorCode, ResponseHeader.Code> RESPONSE_STATUS_MAP = Maps.immutableEnumMap(
-        new ImmutableMap.Builder<ErrorCode, ResponseHeader.Code>()
-            .put(ErrorCode.DUPLICATE, ResponseHeader.Code.BAD_REQUEST_FATAL)
-            .put(ErrorCode.FORBIDDEN, ResponseHeader.Code.FAILED_AUTH_FATAL)
-            .put(ErrorCode.INVALID_DATA, ResponseHeader.Code.BAD_REQUEST_FATAL)
-            .put(ErrorCode.NOT_FOUND, ResponseHeader.Code.PATH_NOT_FOUND)
-            .put(ErrorCode.OVERLOAD, ResponseHeader.Code.TOO_BUSY_FATAL)
-            .put(ErrorCode.INVALID_PARAMETER, ResponseHeader.Code.BAD_REQUEST_FATAL)
-            .put(ErrorCode.UNKNOWN, ResponseHeader.Code.INTERNAL_ERROR_FATAL)
+    private static final Map<ErrorCode, ResponseCode> RESPONSE_STATUS_MAP = Maps.immutableEnumMap(
+        new ImmutableMap.Builder<ErrorCode, ResponseCode>()
+            .put(ErrorCode.DUPLICATE, ResponseCode.BAD_REQUEST_FATAL)
+            .put(ErrorCode.FORBIDDEN, ResponseCode.FAILED_AUTH_FATAL)
+            .put(ErrorCode.INVALID_DATA, ResponseCode.BAD_REQUEST_FATAL)
+            .put(ErrorCode.NOT_FOUND, ResponseCode.PATH_NOT_FOUND)
+            .put(ErrorCode.OVERLOAD, ResponseCode.TOO_BUSY_FATAL)
+            .put(ErrorCode.INVALID_PARAMETER, ResponseCode.BAD_REQUEST_FATAL)
+            .put(ErrorCode.UNKNOWN, ResponseCode.INTERNAL_ERROR_FATAL)
         .build());
 
     @Inject
@@ -55,106 +56,61 @@ public class SimpleServer implements Server {
     }
 
     private void executeRootFilterChain(final Client client,
-                                        final Request<?> request,
-                                        final Receiver<ResponseHeader, Object> receiver) {
+                                        final Request request,
+                                        final ConnectedClientService.ResponseReceiver responseReceiver) {
         try {
-            rootFilterChain.next(client, request, receiver);
+            rootFilterChain.next(client, request, responseReceiver);
         } catch (Exception ex) {
-            handleExceptions(ex, client, request, receiver);
+            mapException(ex, client, request, responseReceiver);
         }
     }
 
-    private void resolveAndDispatch(final Client client,
-                                    final Request<?> request,
-                                    final Receiver<ResponseHeader, Object> receiver) {
-
-        final PathHandler<Object> pathHandler = pathHandlerService.getPathHandler(request.getHeader());
-
-        // The generics get a little screwy, but the interface demands that the
-        // path handler return an instance compatible with the given type, so we just
-        // force the cast anyhow.
-
-        final Request<Object> objectRequest = (Request<Object>) request;
-
-        if (request.getPayload() == null) {
-            pathHandler.handle(null, receiver);
-        } else if (pathHandler.getClass().isAssignableFrom(request.getPayload().getClass())) {
-            pathHandler.handle(objectRequest, receiver);
-        } else {
-            throw new InternalException("Method " + request.getHeader().getPath() + " " +
-                                        "at path " + request.getHeader().getPath() +
-                                        "does not handle payload (" + request.getPayload() + ") " +
-                                        "of type " + request.getPayload().getClass());
-        }
-
-    }
-
-
-    private <T extends Exception> void handleExceptions(final T ex,
-                                                        final Client client,
-                                                        final Request<?> request,
-                                                        final Receiver<ResponseHeader, Object> receiver) {
-
-        Response<?> response;
+    private <T extends Exception> void mapException(final T ex,
+                                                    final Client client,
+                                                    final Request request,
+                                                    final ConnectedClientService.ResponseReceiver responseReceiver) {
 
         try {
 
             LOG.info("Mapping exception for request {} and client {}", request, client, ex);
 
-            final ExceptionMapper<T> exceptionMapper = (ExceptionMapper<T>)exceptionMapperResolver.getExceptionMapper(ex);
+            final ExceptionMapper<T> exceptionMapper = exceptionMapperResolver.getExceptionMapper(ex);
 
             if (exceptionMapper == null) {
-                response = generateExceptionResponse(ex, client, request);
+                mapUnhandled(ex, client, request, responseReceiver);
             } else {
-                response = exceptionMapper.map(ex);
+                exceptionMapper.map(ex, client, request, responseReceiver);
             }
 
         } catch (Exception _ex) {
             LOG.error("Caught exception attempting to forumulate exception response from request {} for client {} ", request, client, _ex);
-            response = generateExceptionResponse(ex, client, request);
+            mapUnhandled(_ex, client, request, responseReceiver);
         }
-
-        receiver.receive(response.getResponseHeader(), response.getPayload());
 
     }
 
-    private  Response<?> generateExceptionResponse(final Exception ex,
-                                                   final Client client,
-                                                   final Request<?> request) {
+    private <T extends Exception> void mapUnhandled(final T ex,
+                                                    final Client client,
+                                                    final Request request,
+                                                    final ConnectedClientService.ResponseReceiver responseReceiver) {
 
-        ResponseHeader.Code code;
+        final SimpleExceptionResponsePayload simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();
+        simpleExceptionResponsePayload.setMessage(ex.getMessage());
+
+        ResponseCode code;
 
         try {
             throw ex;
         } catch (BaseException bex) {
             code = RESPONSE_STATUS_MAP.get(bex.getCode());
-            code = code == null ? ResponseHeader.Code.INTERNAL_ERROR_FATAL : code;
+            code = code == null ? ResponseCode.INTERNAL_ERROR_FATAL : code;
             LOG.warn("Caught exception handling request {} to client {}.", request, client, bex);
         } catch (Exception e) {
-            code = ResponseHeader.Code.INTERNAL_ERROR_FATAL;
+            code = ResponseCode.INTERNAL_ERROR_FATAL;
             LOG.error("Caught exception handling request {} to client {}.", request, client, e);
         }
 
-        return generateResponseForError(code, ex.getMessage(), request);
-
-    }
-
-    private SimpleResponse<SimpleExceptionResponsePayload> generateResponseForError(final ResponseHeader.Code code,
-                                                                                    final String message,
-                                                                                    final Request<?> request) {
-
-        final SimpleResponseHeader simpleResponseHeader = new SimpleResponseHeader();
-        simpleResponseHeader.setCode(code.getCode());
-        simpleResponseHeader.setSequence(request.getHeader().getSequence());
-
-        final SimpleExceptionResponsePayload simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();
-        simpleExceptionResponsePayload.setMessage(message);
-
-        final SimpleResponse<SimpleExceptionResponsePayload> errorResponseSimpleResponse = new SimpleResponse<>();
-        errorResponseSimpleResponse.setResponseHeader(simpleResponseHeader);
-        errorResponseSimpleResponse.setPayload(simpleExceptionResponsePayload);
-
-        return errorResponseSimpleResponse;
+        responseReceiver.receive(code, simpleExceptionResponsePayload);
 
     }
 
@@ -165,7 +121,9 @@ public class SimpleServer implements Server {
 
         Filter.Chain chain = new Filter.Chain() {
             @Override
-            public void next(Client client, Request<?> request, Receiver<ResponseHeader, Object> receiver) {
+            public void next(final Client client,
+                             final Request request,
+                             final ConnectedClientService.ResponseReceiver receiver) {
                 resolveAndDispatch(client, request, receiver);
             }
         };
@@ -176,8 +134,10 @@ public class SimpleServer implements Server {
 
             chain = new Filter.Chain() {
                 @Override
-                public void next(Client client, Request<?> request, Receiver<ResponseHeader, Object> receiver) {
-                    filter.filter(next, client, request, receiver);
+                public void next(final Client client,
+                                 final Request request,
+                                 final ConnectedClientService.ResponseReceiver responseReceiver) {
+                    filter.filter(next, client, request, responseReceiver);
                 }
             };
 
@@ -187,39 +147,55 @@ public class SimpleServer implements Server {
 
     }
 
+
+    private void resolveAndDispatch(final Client client,
+                                    final Request request,
+                                    final ConnectedClientService.ResponseReceiver receiver) {
+
+        final PathHandler<Object> pathHandler = pathHandlerService.getPathHandler(request.getHeader());
+
+        if (request.getPayload() == null) {
+            pathHandler.handle(client, request, receiver);
+        } else if (pathHandler.getClass().isAssignableFrom(request.getPayload().getClass())) {
+            pathHandler.handle(client, request, receiver);
+        } else {
+            throw new InvalidParameterException("Method " + request.getHeader().getPath() + " " +
+                    "at path " + request.getHeader().getPath() +
+                    "does not handle payload (" + request.getPayload() + ") " +
+                    "of type " + request.getPayload().getClass());
+        }
+
+    }
+
     /**
      *
      * Essentially, this checks for two conditions.  First, it ensures that only
      * a single response is sent to the client.  In the event the request does
      * not generate a response, a null response is generated with an instance of
-     * {@link ResponseHeader.Code#OK}.
+     * {@link ResponseCode#OK}.
      *
      * This uses an instance of {@link AtomicBoolean} to ensure that the response
      * is generated only once.
      *
      */
-    private class DelegatingCheckedReceiver implements Receiver<ResponseHeader, Object>, AutoCloseable {
+    private class DelegatingCheckedReceiver implements ConnectedClientService.ResponseReceiver, AutoCloseable {
 
-        final Client client;
+        private final Request request;
 
-        final Request<?> request;
+        private final ConnectedClientService.ResponseReceiver delegate;
 
-        final Receiver<ResponseHeader, Object> delegate;
+        private final AtomicBoolean received = new AtomicBoolean();
 
-        final AtomicBoolean received = new AtomicBoolean();
-
-        public DelegatingCheckedReceiver(final Client client, final Request<?> request) {
-            this.client = client;
+        public DelegatingCheckedReceiver(final Client client,
+                                         final Request request) {
             this.request = request;
-            this.delegate = connectedClientService.getResponseReceiver(client, Object.class);;
+            this.delegate = connectedClientService.getResponseReceiver(client);
         }
 
         @Override
-        public void receive(ResponseHeader header, Object payload) {
+        public void receive(ResponseCode code, Object payload) {
             if (received.compareAndSet(false, true)) {
-                final Receiver<ResponseHeader, Object> receiver;
-                receiver = connectedClientService.getResponseReceiver(client, Object.class);
-                receiver.receive(header, payload);
+                delegate.receive(code, payload);
             } else {
                 LOG.error("Attempted to dispatch duplicate responses for request {}", request);
             }
@@ -229,11 +205,13 @@ public class SimpleServer implements Server {
         public void close()  {
             if (received.compareAndSet(false, true)) {
 
-                final Response<?> response = generateResponseForError(ResponseHeader.Code.INTERNAL_ERROR_FATAL,
-                                                                      "Server failed to generate response.",
-                                                                      request);
+                final String msg = "Server failed to generate response.";
 
-                delegate.receive(response.getResponseHeader(), response.getPayload());
+                final SimpleExceptionResponsePayload simpleExceptionResponsePayload;
+                simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();
+                simpleExceptionResponsePayload.setMessage(msg);
+
+                delegate.receive(ResponseCode.INTERNAL_ERROR_FATAL, simpleExceptionResponsePayload);
 
             }
         }

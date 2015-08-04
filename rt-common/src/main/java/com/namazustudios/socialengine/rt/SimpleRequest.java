@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt;
 /**
  * Created by patricktwohig on 7/26/15.
  */
-public class SimpleRequest<PayloadT> implements Request<PayloadT> {
+public class SimpleRequest<PayloadT> implements Request {
 
     private RequestHeader header;
 

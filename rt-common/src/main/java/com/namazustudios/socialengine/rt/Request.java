@@ -6,10 +6,20 @@ package com.namazustudios.socialengine.rt;
  *
  * Created by patricktwohig on 7/26/15.
  */
-public interface Request<PayloadT> {
+public interface Request {
 
+    /**
+     * Gets ths {@link RequestHeader} object for this particular request.
+     *
+     * @return the header
+     */
     RequestHeader getHeader();
 
-    PayloadT getPayload();
+    /**
+     * Gets the payload object for this Request.
+     *
+     * @return the paylaod
+     */
+    Object getPayload();
 
 }
