@@ -6,11 +6,11 @@ import org.apache.mina.core.session.IoSession;
 /**
  * Created by patricktwohig on 8/1/15.
  */
-public class MinaClient implements Client {
+public class IoSessionClient implements Client {
 
     private final IoSession ioSession;
 
-    public MinaClient(IoSession ioSession) {
+    public IoSessionClient(IoSession ioSession) {
         this.ioSession = ioSession;
     }
 

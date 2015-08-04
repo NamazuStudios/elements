@@ -14,12 +14,13 @@ public interface ConnectedClientService {
      * Gets the {@link ResponseReceiver} instance which can be used to receive messages
      * of the given type.
      *
-     * @param client the client*
+     * @param client the client
+     * @param request the request
      * @return the {@link ResponseReceiver} which will receive the response
      *
      * @throws {@link NotFoundException} if no active connection for the client can be found
      */
-    ResponseReceiver getResponseReceiver(final Client client);
+    ResponseReceiver getResponseReceiver(Client client, Request request);
 
     /**
      * Gets the {@link ResponseReceiver} instance which can be used to receive events
