@@ -15,13 +15,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * The siple implementation of the {@link Server} inteface.
+ * The siple implementation of the {@link RequestDispatcher} inteface.
  *
  * Created by patricktwohig on 7/27/15.
  */
-public class SimpleServer implements Server {
+public class SimpleRequestDispatcher implements RequestDispatcher {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleServer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleRequestDispatcher.class);
 
     private static final Map<ErrorCode, ResponseCode> RESPONSE_STATUS_MAP = Maps.immutableEnumMap(
         new ImmutableMap.Builder<ErrorCode, ResponseCode>()
@@ -204,7 +204,7 @@ public class SimpleServer implements Server {
         public void close()  {
             if (received.compareAndSet(false, true)) {
 
-                final String msg = "Server failed to generate response.";
+                final String msg = "RequestDispatcher failed to generate response.";
 
                 final SimpleExceptionResponsePayload simpleExceptionResponsePayload;
                 simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();

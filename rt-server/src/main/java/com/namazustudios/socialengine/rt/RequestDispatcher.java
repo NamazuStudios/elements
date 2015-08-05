@@ -2,13 +2,13 @@ package com.namazustudios.socialengine.rt;
 
 /**
  *
- * The logical entry point for the RT Server.  This combines the funcionality
+ * The logical entry point for the RT RequestDispatcher.  This combines the funcionality
  * of the {@link PathHandlerService}, {@link Filter}, and {@link ExceptionMapper}
  * to process each request exchanged through the RT server.
  *
  * Created by patricktwohig on 7/27/15.
  */
-public interface Server {
+public interface RequestDispatcher {
 
     /**
      * Handles a request.  This is responsible for finding the appropriate
