@@ -19,6 +19,14 @@ import java.util.Set;
 public interface ResourceService {
 
     /**
+     * Gets a resource at the given path.
+     *
+     * @param path
+     * @return
+     */
+    Resource getResource(String path);
+
+    /**
      * Gets the request handler for the given path.  The path is
      * user defined and is ultimately the destination for a {@link RequestHeader}
      *
@@ -29,15 +37,6 @@ public interface ResourceService {
      * @throws {@link InvalidDataException} if the handler is found, but does not match the payload type
      */
     RequestPathHandler<?> getPathHandler(RequestHeader requestHeader);
-
-    /**
-     * Gets a set of {@link EventReceiver} instances for the given {@link EventHeader}.
-     *
-     * @param eventHeader the event header
-     *
-     * @return
-     */
-    Set<EventReceiver<?>> getEventReceiver(EventHeader eventHeader);
 
     /**
      * Subcribes the given event receiver to events at the given path.
@@ -54,14 +53,14 @@ public interface ResourceService {
      * @param eventReceiver
      * @param <EventT>
      */
-    <EventT> void unsubscribe(EventReceiver<EventT> eventReceiver);
+    <EventT> void unsubscribe(String path, String name, EventReceiver<EventT> eventReceiver);
 
     /**
      * Adds a {@link Resource} to this resource service.
      *
      * @param resource the resource
      */
-    void addResource(Resource resource);
+    void addResource(String path, Resource resource);
 
     /**
      * Moves the given resource to the given new destination.
@@ -69,17 +68,24 @@ public interface ResourceService {
      * This throws an instance of {@link NotFoundException} if the resource path
      * is not found.
      *
-     * @param path the resource path
-     * @param newDestination the new destination path of the resource.
+     * @param source the resource path
+     * @param destination the new destination path of the resource.
      *
      */
-    void moveResource(String path, String newDestination);
+    void moveResource(String source, String destination);
 
     /**
      * Removes a {@link Resource} instance from this resource service.
      *
-     * @param resource
+     * @param path
      */
-    void removeResource(Response resource);
+    Resource removeResource(String path);
+
+    /**
+     * Removes and closes the resource at the given path.
+     *
+     * @param path
+     */
+    void removeAndCloseResource(String path);
 
 }

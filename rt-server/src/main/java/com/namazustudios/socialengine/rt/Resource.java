@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -22,6 +25,11 @@ import java.util.Set;
 public interface Resource extends AutoCloseable {
 
     /**
+     * The path separator.  Literal value "/"
+     */
+    String PATH_SEPARATOR = "/";
+
+    /**
      * Gets the methods that are supported by this Resource.
      *
      * @return
@@ -38,7 +46,7 @@ public interface Resource extends AutoCloseable {
     /**
      * Gets the RequestHandler for the method.
      *
-     * @param method
+     * @param method the method
      * @return
      */
     RequestPathHandler<?> getHandler(final String method);
@@ -68,5 +76,28 @@ public interface Resource extends AutoCloseable {
      * @param deltaTime the delta time
      */
     void update(double deltaTime);
+
+    /**
+     * Closes and destroys this Resource.
+     */
+    void close();
+
+    /**
+     * Some utility methods used by all Resource and related instances.
+     *
+     */
+    final class Util {
+
+        /**
+         * Gets the path components from the given path.
+         *
+         * @param path the path
+         * @return the components
+         */
+        public static List<String> componentsFromPath(final String path) {
+            return ImmutableList.copyOf(path.split("/+"));
+        }
+
+    }
 
 }
