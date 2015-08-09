@@ -1,30 +1,25 @@
 package com.namazustudios.socialengine.rt;
 
 /**
- * Event objects are essentially server-to-client messages that do not come
- * in as part of a {@link RequestHeader}.  Rather, events, are send direct from
- * server to client.
+ * Represents a one-way message produced by a Resource, and dispatched to various
+ * clients both internal and external to the system.
  *
- * This has similar semantics to the {@link ResponseHeader} class, however
- * this is simplified in that it is not generated in response to
- * a specific {@link RequestHeader}.
- *
- * Created by patricktwohig on 7/24/15.
+ * Created by patricktwohig on 8/8/15.
  */
 public interface Event {
 
     /**
-     * Gets the sequence of the response.
+     * Gets the event header.
      *
-     * @return the sequence
+     * @return the event heder
      */
-    int getSequence();
+    EventHeader getEventHeader();
 
     /**
-     * The path which sourced the event.
+     * Gets the payload for the event.
      *
-     * @return the path of the event
+     * @return the payload
      */
-    String getPath();
+    Object getPayload();
 
 }

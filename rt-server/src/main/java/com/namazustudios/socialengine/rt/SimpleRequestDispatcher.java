@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * The siple implementation of the {@link RequestDispatcher} inteface.
+ * The siple implementation of the {@link RequestDispatcher} interface.
  *
  * Created by patricktwohig on 7/27/15.
  */
@@ -35,7 +35,7 @@ public class SimpleRequestDispatcher implements RequestDispatcher {
         .build());
 
     @Inject
-    private PathHandlerService pathHandlerService;
+    private ResourceService resourceService;
 
     @Inject
     private ConnectedClientService connectedClientService;
@@ -46,7 +46,7 @@ public class SimpleRequestDispatcher implements RequestDispatcher {
     private Filter.Chain rootFilterChain;
 
     @Override
-    public void handleRequest(final Client client, final Request request) {
+    public void dispatch(final Client client, final Request request) {
         try (final DelegatingCheckedReceiver receiver = new DelegatingCheckedReceiver(client, request)) {
             executeRootFilterChain(client, request, receiver);
         } catch (Exception ex) {
@@ -114,7 +114,7 @@ public class SimpleRequestDispatcher implements RequestDispatcher {
     }
 
     @Inject
-    void buildRootFilterChain(final List<Filter> filterList) {
+    public void buildRootFilterChain(final List<Filter> filterList) {
 
         Collections.reverse(filterList);
 
@@ -151,12 +151,12 @@ public class SimpleRequestDispatcher implements RequestDispatcher {
                                     final Request request,
                                     final ConnectedClientService.ResponseReceiver receiver) {
 
-        final PathHandler<?> pathHandler = pathHandlerService.getPathHandler(request.getHeader());
+        final RequestPathHandler<?> requestPathHandler = resourceService.getPathHandler(request.getHeader());
 
         if (request.getPayload() == null) {
-            pathHandler.handle(client, request, receiver);
-        } else if (pathHandler.getClass().isAssignableFrom(request.getPayload().getClass())) {
-            pathHandler.handle(client, request, receiver);
+            requestPathHandler.handle(client, request, receiver);
+        } else if (requestPathHandler.getClass().isAssignableFrom(request.getPayload().getClass())) {
+            requestPathHandler.handle(client, request, receiver);
         } else {
             throw new InvalidParameterException("Method " + request.getHeader().getPath() + " " +
                     "at path " + request.getHeader().getPath() +

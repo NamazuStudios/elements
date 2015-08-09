@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 /**
  * Used to filer requests or maniuplate requests before they ultimately arrive
- * in an instance of {@link PathHandler}.
+ * in an instance of {@link RequestPathHandler}.
  *
  * Created by patricktwohig on 7/29/15.
  */

@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt;
 /**
  *
  * The logical entry point for the RT RequestDispatcher.  This combines the funcionality
- * of the {@link PathHandlerService}, {@link Filter}, and {@link ExceptionMapper}
+ * of the {@link ResourceService}, {@link Filter}, and {@link ExceptionMapper}
  * to process each request exchanged through the RT server.
  *
  * Created by patricktwohig on 7/27/15.
@@ -18,12 +18,12 @@ public interface RequestDispatcher {
      *
      * This ensures that the given {@link Request} is properly handled through
      * each of the servers's configured {@link Filter} instances and ultimately
-     * ends up in the correct {@link PathHandler} supplied by the configurd
-     * {@link PathHandlerService}.
+     * ends up in the correct {@link RequestPathHandler} supplied by the configurd
+     * {@link ResourceService}.
      *
      * @param client the client the client making the request
      * @param request the request the request itself
      */
-    void handleRequest(final Client client, final Request request);
+    void dispatch(final Client client, final Request request);
 
 }

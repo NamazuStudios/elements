@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
 /**
- * Ties the {@link RequestHeader} to a specific payload type for
+ * A Request is a request sent to a particular {@link Resource}
+ *
+ * This ties the {@link RequestHeader} to a specific payload type for
  * the application.
  *
  * Created by patricktwohig on 7/26/15.

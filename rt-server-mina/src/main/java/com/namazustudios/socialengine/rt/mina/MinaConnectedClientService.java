@@ -38,11 +38,4 @@ public class MinaConnectedClientService implements ConnectedClientService {
 
     }
 
-    @Override
-    public EventReceiver getEventReceiver(Client client) {
-        return null;
-    }
-
-
-
 }

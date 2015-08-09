@@ -32,7 +32,7 @@ public class BSONProtocolDecoder extends CumulativeProtocolDecoder {
     private ObjectMapper objectMapper;
 
     @Inject
-    private PathHandlerService pathHandlerService;
+    private ResourceService resourceService;
 
     @Override
     protected boolean doDecode(final IoSession session,
@@ -110,8 +110,8 @@ public class BSONProtocolDecoder extends CumulativeProtocolDecoder {
         if (in.remaining() >= (BSON_DOCUMENT_LENGTH + documentSize)) {
 
             final RequestHeader requestHeader = getRequestHeader(ioSession);
-            final PathHandler<?> pathHandler = pathHandlerService.getPathHandler(requestHeader);
-            final Class<?> payloadType = pathHandler.getPayloadType();
+            final RequestPathHandler<?> requestPathHandler = resourceService.getPathHandler(requestHeader);
+            final Class<?> payloadType = requestPathHandler.getPayloadType();
             final SimpleRequest<Object> request = new SimpleRequest();
 
             try (final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(in.buf())) {

@@ -30,6 +30,7 @@
         <module>rt-common</module>
         <module>rt-server</module>
         <module>rt-server-mina</module>
+        <module>rt-server-lua</module>
     </modules>
 
     <properties>
