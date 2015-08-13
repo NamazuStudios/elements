@@ -1,22 +1,21 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-
-import java.util.Set;
+import com.namazustudios.socialengine.rt.edge.EdgeResource;
 
 /**
- * The core server to the RT component.  Note that the server itself is
- * just responsible for dispatching requests.  It actually has no logic
- * at all for handling network code.  Other downstream projects handle
- * that process.
+ * This is the service responsible for maintaining a set of {@link Resource} instances.  This
+ * contains code to handle a the path hierarchy for the resources housed in the service.
+ *
+ * Resources can be added, moved, or deleted as needed by external services.
  *
  * Note that implementations of this interface should be considered thread
- * safe.
+ * safe.  Each call must return or throw exceptions leaving the object in a consistent
+ * state.  This may be accomplished using locking.
  *
  * Created by patricktwohig on 7/24/15.
  */
-public interface ResourceService {
+public interface ResourceService<ResourceT extends Resource> {
 
     /**
      * Gets a resource at the given path.
@@ -24,43 +23,14 @@ public interface ResourceService {
      * @param path
      * @return
      */
-    Resource getResource(String path);
+    ResourceT getResource(String path);
 
     /**
-     * Gets the request handler for the given path.  The path is
-     * user defined and is ultimately the destination for a {@link RequestHeader}
-     *
-     * @param requestHeader the request header.
-     * @return the RequestPathHandler to handle the path
-     *
-     * @throws {@link NotFoundException} if the given handler cannot be found
-     * @throws {@link InvalidDataException} if the handler is found, but does not match the payload type
-     */
-    RequestPathHandler<?> getPathHandler(RequestHeader requestHeader);
-
-    /**
-     * Subcribes the given event receiver to events at the given path.
-     *
-     * @param path the path of the {@link Resource}
-     * @param name the name of the event
-     * @param eventReceiver
-     * @param <EventT>
-     */
-    <EventT> void subscribe(String path, String name, EventReceiver<EventT> eventReceiver);
-
-    /**
-     *
-     * @param eventReceiver
-     * @param <EventT>
-     */
-    <EventT> void unsubscribe(String path, String name, EventReceiver<EventT> eventReceiver);
-
-    /**
-     * Adds a {@link Resource} to this resource service.
+     * Adds a {@link EdgeResource} to this resource service.
      *
      * @param resource the resource
      */
-    void addResource(String path, Resource resource);
+    void addResource(String path, ResourceT resource);
 
     /**
      * Moves the given resource to the given new destination.
@@ -75,11 +45,11 @@ public interface ResourceService {
     void moveResource(String source, String destination);
 
     /**
-     * Removes a {@link Resource} instance from this resource service.
+     * Removes a {@link EdgeResource} instance from this resource service.
      *
      * @param path
      */
-    Resource removeResource(String path);
+    ResourceT removeResource(String path);
 
     /**
      * Removes and closes the resource at the given path.

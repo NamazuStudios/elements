@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.rt.mina;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
+import com.namazustudios.socialengine.rt.edge.EdgeResource;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.AttributeKey;
 import org.apache.mina.core.session.IoSession;
@@ -32,7 +34,7 @@ public class BSONProtocolDecoder extends CumulativeProtocolDecoder {
     private ObjectMapper objectMapper;
 
     @Inject
-    private ResourceService resourceService;
+    private ResourceService<EdgeResource> edgeResourceService;
 
     @Override
     protected boolean doDecode(final IoSession session,
@@ -110,8 +112,12 @@ public class BSONProtocolDecoder extends CumulativeProtocolDecoder {
         if (in.remaining() >= (BSON_DOCUMENT_LENGTH + documentSize)) {
 
             final RequestHeader requestHeader = getRequestHeader(ioSession);
-            final RequestPathHandler<?> requestPathHandler = resourceService.getPathHandler(requestHeader);
-            final Class<?> payloadType = requestPathHandler.getPayloadType();
+
+            final EdgeRequestPathHandler<?> edgeRequestPathHandler = edgeResourceService
+                    .getResource(requestHeader.getPath())
+                    .getHandler(requestHeader.getMethod());
+
+            final Class<?> payloadType = edgeRequestPathHandler.getPayloadType();
             final SimpleRequest<Object> request = new SimpleRequest();
 
             try (final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(in.buf())) {

@@ -2,24 +2,20 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
+import com.namazustudios.socialengine.rt.edge.EdgeResource;
 
-import javax.inject.Inject;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Created by patricktwohig on 8/4/15.
  */
-public class SimpleResourceService implements ResourceService {
+public class SimpleResourceService<ResourceT extends Resource> implements ResourceService<ResourceT> {
 
-    private final ConcurrentMap<List<String>, Resource> pathResourceMap =
+    private final ConcurrentMap<List<String>, ResourceT> pathResourceMap =
             new ConcurrentSkipListMap<>(new Comparator<List<String>>() {
 
                 @Override
@@ -30,10 +26,10 @@ public class SimpleResourceService implements ResourceService {
             });
 
     @Override
-    public Resource getResource(final String path) {
+    public ResourceT getResource(final String path) {
 
-        final List<String> components = Resource.Util.componentsFromPath(path);
-        final Resource resource = pathResourceMap.get(components);
+        final List<String> components = EdgeResource.Util.componentsFromPath(path);
+        final ResourceT resource = pathResourceMap.get(components);
 
         if (resource == null) {
             throw new NotFoundException("Resource at path not found: " + path);
@@ -44,27 +40,9 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
-    public RequestPathHandler<?> getPathHandler(final RequestHeader requestHeader) {
-        final Resource resource = getResource(requestHeader.getPath());
-        return resource.getHandler(requestHeader.getMethod());
-    }
+    public void addResource(final String path, final ResourceT resource) {
 
-    @Override
-    public <EventT> void subscribe(final String path, final String name, final EventReceiver<EventT> eventReceiver) {
-        final Resource resource = getResource(path);
-        resource.subscribe(name, eventReceiver);
-    }
-
-    @Override
-    public <EventT> void unsubscribe(final String path, String name, final EventReceiver<EventT> eventReceiver) {
-        final Resource resource = getResource(path);
-        resource.unsubscribe(name, eventReceiver);
-    }
-
-    @Override
-    public void addResource(final String path, final Resource resource) {
-
-        final List<String> components = Resource.Util.componentsFromPath(path);
+        final List<String> components = EdgeResource.Util.componentsFromPath(path);
         final Resource existing = pathResourceMap.putIfAbsent(components, resource);
 
         if (existing != null) {
@@ -74,16 +52,24 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
-    public void moveResource(String source, String destination) {
-        final Resource resource = removeResource(source);
-        addResource(destination, resource);
+    public void moveResource(final String source, final String destination) {
+
+        final ResourceT resource = getResource(source);
+        final List<String> components = Resource.Util.componentsFromPath(source);
+
+        if (pathResourceMap.putIfAbsent(components, resource) == null) {
+            pathResourceMap.remove(Resource.Util.componentsFromPath(source));
+        } else {
+            throw new DuplicateException("Resource at path already exists " + destination);
+        }
+
     }
 
     @Override
-    public Resource removeResource(String path) {
+    public ResourceT removeResource(String path) {
 
-        final List<String> components = Resource.Util.componentsFromPath(path);
-        final Resource resource = pathResourceMap.remove(components);
+        final List<String> components = EdgeResource.Util.componentsFromPath(path);
+        final ResourceT resource = pathResourceMap.remove(components);
 
         if (resource == null) {
             throw new NotFoundException("Resource at path not found: " + path);

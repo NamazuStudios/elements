@@ -5,14 +5,14 @@ package com.namazustudios.socialengine.rt;
  *
  * Created by patricktwohig on 8/8/15.
  */
-public interface EventReceiver<EventT> {
+public interface EventReceiver<PayloadT> {
 
     /**
      * Returns the event type for this receiver.
      *
      * @return the event type.
      */
-    Class<EventT> getEventType();
+    Class<PayloadT> getEventType();
 
     /**
      * Receives the event.  When the event is raised, the instance of
@@ -20,6 +20,6 @@ public interface EventReceiver<EventT> {
      *
      * @param event the event that was raised.
      */
-    void receive(final EventT event);
+    void receive(final PayloadT event);
 
 }

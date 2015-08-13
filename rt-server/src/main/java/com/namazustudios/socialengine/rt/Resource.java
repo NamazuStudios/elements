@@ -1,26 +1,13 @@
 package com.namazustudios.socialengine.rt;
 
 import com.google.common.collect.ImmutableList;
+import com.namazustudios.socialengine.exception.NotFoundException;
 
 import java.util.List;
 import java.util.Set;
 
 /**
- * A Resource is essentially a type that is capable primarly of both
- * receiving {@link Request} instances to produce {@link Response}
- * instances.
- *
- * Additionally, a Resource can be the source of {@link EventHeader} objects
- * which can be transmitted from the server to the client.
- *
- * Typically instances of Resource have their own scope, and
- * communicate primarily with other Resources through either events
- * or requests.
- *
- * Once a resource is no longer needed, it is necessary to destroy the
- * resource using the {@link AutoCloseable#close()} method.
- *
- * Created by patricktwohig on 8/8/15.
+ * Created by patricktwohig on 8/12/15.
  */
 public interface Resource extends AutoCloseable {
 
@@ -30,29 +17,27 @@ public interface Resource extends AutoCloseable {
     String PATH_SEPARATOR = "/";
 
     /**
-     * Gets the methods that are supported by this Resource.
+     * Gets the methods that are supported by this Resource.  Implementations of this
+     * interface may return immutable sets.  Take care when mutating the returned instances
+     * such that mutability is not guaranteed.
      *
-     * @return
+     * @return the list of methods, or an empty set if no methods are supported.
      */
     Set<String> getMethods();
 
     /**
-     * Gets the event names sourced by this resource.
+     * Gets the event names sourced by this Resource.  Implementations of this
+     * interface may return immutable sets.  Take care when mutating the returned instances
+     * such that mutability is not guaranteed.
      *
-     * @return the event names
+     * @return the event names, or an empty set if not methods are supported.
      */
     Set<String> getEventNames();
 
     /**
-     * Gets the RequestHandler for the method.
-     *
-     * @param method the method
-     * @return
-     */
-    RequestPathHandler<?> getHandler(final String method);
-
-    /**
-     * Subscribes to {@link Event}s using the given {@link EventReceiver}.
+     * Subscribes to {@link Event}s using the given {@link EventReceiver}.  If the
+     * event is not a supported even, as returned bye {@link #getEventNames()}, then
+     * this must throw an instance of {@link NotFoundException}
      *
      * @praam name the name of the event
      * @param eventReceiver the event receiver instance
@@ -61,13 +46,13 @@ public interface Resource extends AutoCloseable {
     <EventT> void subscribe(String name, EventReceiver<EventT> eventReceiver);
 
     /**
-     * Unsubscribes from {@link Event}s using the given {@link EventReceiver}.
+     * Unsubscribes from {@link Event}s using the given {@link EventReceiver}.  Note
+     * that the given {@link EventReceiver} must provide a type.
      *
-     * @param name the name of the event
      * @param eventReceiver the event receiver instance
      * @param <EventT>
      */
-    <EventT> void unsubscribe(String name, EventReceiver<EventT> eventReceiver);
+    <EventT> void unsubscribe(EventReceiver<EventT> eventReceiver);
 
     /**
      * Called by the container to update the {@link Resource}.  The value passed
@@ -84,7 +69,6 @@ public interface Resource extends AutoCloseable {
 
     /**
      * Some utility methods used by all Resource and related instances.
-     *
      */
     final class Util {
 

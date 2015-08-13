@@ -1,10 +1,11 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.edge;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.namazustudios.socialengine.exception.BaseException;
 import com.namazustudios.socialengine.exception.ErrorCode;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
+import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,13 +16,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * The siple implementation of the {@link RequestDispatcher} interface.
+ * The simple implementation of the {@link EdgeRequestDispatcher} interface.
  *
  * Created by patricktwohig on 7/27/15.
  */
-public class SimpleRequestDispatcher implements RequestDispatcher {
+public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleRequestDispatcher.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleEdgeRequestDispatcher.class);
 
     private static final Map<ErrorCode, ResponseCode> RESPONSE_STATUS_MAP = Maps.immutableEnumMap(
         new ImmutableMap.Builder<ErrorCode, ResponseCode>()
@@ -35,19 +36,16 @@ public class SimpleRequestDispatcher implements RequestDispatcher {
         .build());
 
     @Inject
-    private ResourceService resourceService;
-
-    @Inject
-    private ConnectedClientService connectedClientService;
+    private ResourceService<EdgeResource> resourceService;
 
     @Inject
     private ExceptionMapper.Resolver exceptionMapperResolver;
 
-    private Filter.Chain rootFilterChain;
+    private EdgeFilter.Chain rootFilterChain;
 
     @Override
-    public void dispatch(final Client client, final Request request) {
-        try (final DelegatingCheckedReceiver receiver = new DelegatingCheckedReceiver(client, request)) {
+    public void dispatch(final Client client, final Request request, final EdgeResponseReceiver edgeResponseReceiver) {
+        try (final DelegatingCheckedReceiver receiver = new DelegatingCheckedReceiver(client, request, edgeResponseReceiver)) {
             executeRootFilterChain(client, request, receiver);
         } catch (Exception ex) {
             LOG.error("Caught exception processing request {}.", request, ex);
@@ -56,18 +54,18 @@ public class SimpleRequestDispatcher implements RequestDispatcher {
 
     private void executeRootFilterChain(final Client client,
                                         final Request request,
-                                        final ConnectedClientService.ResponseReceiver responseReceiver) {
+                                        final EdgeResponseReceiver edgeResponseReceiver) {
         try {
-            rootFilterChain.next(client, request, responseReceiver);
+            rootFilterChain.next(client, request, edgeResponseReceiver);
         } catch (Exception ex) {
-            mapException(ex, client, request, responseReceiver);
+            mapException(ex, client, request, edgeResponseReceiver);
         }
     }
 
     private <T extends Exception> void mapException(final T ex,
                                                     final Client client,
                                                     final Request request,
-                                                    final ConnectedClientService.ResponseReceiver responseReceiver) {
+                                                    final EdgeResponseReceiver edgeResponseReceiver) {
 
         try {
 
@@ -76,14 +74,14 @@ public class SimpleRequestDispatcher implements RequestDispatcher {
             final ExceptionMapper<T> exceptionMapper = exceptionMapperResolver.getExceptionMapper(ex);
 
             if (exceptionMapper == null) {
-                mapUnhandled(ex, client, request, responseReceiver);
+                mapUnhandled(ex, client, request, edgeResponseReceiver);
             } else {
-                exceptionMapper.map(ex, client, request, responseReceiver);
+                exceptionMapper.map(ex, client, request, edgeResponseReceiver);
             }
 
         } catch (Exception _ex) {
             LOG.error("Caught exception attempting to forumulate exception response from request {} for client {} ", request, client, _ex);
-            mapUnhandled(_ex, client, request, responseReceiver);
+            mapUnhandled(_ex, client, request, edgeResponseReceiver);
         }
 
     }
@@ -91,7 +89,7 @@ public class SimpleRequestDispatcher implements RequestDispatcher {
     private <T extends Exception> void mapUnhandled(final T ex,
                                                     final Client client,
                                                     final Request request,
-                                                    final ConnectedClientService.ResponseReceiver responseReceiver) {
+                                                    final EdgeResponseReceiver edgeResponseReceiver) {
 
         final SimpleExceptionResponsePayload simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();
         simpleExceptionResponsePayload.setMessage(ex.getMessage());
@@ -109,34 +107,34 @@ public class SimpleRequestDispatcher implements RequestDispatcher {
             LOG.error("Caught exception handling request {} to client {}.", request, client, e);
         }
 
-        responseReceiver.receive(code.getCode(), simpleExceptionResponsePayload);
+        edgeResponseReceiver.receive(code.getCode(), simpleExceptionResponsePayload);
 
     }
 
     @Inject
-    public void buildRootFilterChain(final List<Filter> filterList) {
+    public void buildRootFilterChain(final List<EdgeFilter> edgeFilterList) {
 
-        Collections.reverse(filterList);
+        Collections.reverse(edgeFilterList);
 
-        Filter.Chain chain = new Filter.Chain() {
+        EdgeFilter.Chain chain = new EdgeFilter.Chain() {
             @Override
             public void next(final Client client,
                              final Request request,
-                             final ConnectedClientService.ResponseReceiver receiver) {
+                             final EdgeResponseReceiver receiver) {
                 resolveAndDispatch(client, request, receiver);
             }
         };
 
-        for (final Filter filter : filterList) {
+        for (final EdgeFilter filter : edgeFilterList) {
 
-            final Filter.Chain next = chain;
+            final EdgeFilter.Chain next = chain;
 
-            chain = new Filter.Chain() {
+            chain = new EdgeFilter.Chain() {
                 @Override
                 public void next(final Client client,
                                  final Request request,
-                                 final ConnectedClientService.ResponseReceiver responseReceiver) {
-                    filter.filter(next, client, request, responseReceiver);
+                                 final EdgeResponseReceiver edgeResponseReceiver) {
+                    filter.filter(next, client, request, edgeResponseReceiver);
                 }
             };
 
@@ -149,14 +147,16 @@ public class SimpleRequestDispatcher implements RequestDispatcher {
 
     private void resolveAndDispatch(final Client client,
                                     final Request request,
-                                    final ConnectedClientService.ResponseReceiver receiver) {
+                                    final EdgeResponseReceiver receiver) {
 
-        final RequestPathHandler<?> requestPathHandler = resourceService.getPathHandler(request.getHeader());
+        final EdgeRequestPathHandler<?> edgeRequestPathHandler =
+            resourceService.getResource(request.getHeader().getPath())
+                           .getHandler(request.getHeader().getMethod());
 
         if (request.getPayload() == null) {
-            requestPathHandler.handle(client, request, receiver);
-        } else if (requestPathHandler.getClass().isAssignableFrom(request.getPayload().getClass())) {
-            requestPathHandler.handle(client, request, receiver);
+            edgeRequestPathHandler.handle(client, request, receiver);
+        } else if (edgeRequestPathHandler.getClass().isAssignableFrom(request.getPayload().getClass())) {
+            edgeRequestPathHandler.handle(client, request, receiver);
         } else {
             throw new InvalidParameterException("Method " + request.getHeader().getPath() + " " +
                     "at path " + request.getHeader().getPath() +
@@ -177,18 +177,19 @@ public class SimpleRequestDispatcher implements RequestDispatcher {
      * is generated only once.
      *
      */
-    private class DelegatingCheckedReceiver implements ConnectedClientService.ResponseReceiver, AutoCloseable {
+    private class DelegatingCheckedReceiver implements EdgeResponseReceiver, AutoCloseable {
 
         private final Request request;
 
-        private final ConnectedClientService.ResponseReceiver delegate;
+        private final EdgeResponseReceiver delegate;
 
         private final AtomicBoolean received = new AtomicBoolean();
 
         public DelegatingCheckedReceiver(final Client client,
-                                         final Request request) {
+                                         final Request request,
+                                         final EdgeResponseReceiver delegate) {
             this.request = request;
-            this.delegate = connectedClientService.getResponseReceiver(client, request);
+            this.delegate = delegate;
         }
 
         @Override
@@ -204,7 +205,7 @@ public class SimpleRequestDispatcher implements RequestDispatcher {
         public void close()  {
             if (received.compareAndSet(false, true)) {
 
-                final String msg = "RequestDispatcher failed to generate response.";
+                final String msg = "EdgeRequestDispatcher failed to generate response.";
 
                 final SimpleExceptionResponsePayload simpleExceptionResponsePayload;
                 simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();
