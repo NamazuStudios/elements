@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.namazustudios.socialengine.exception.NotFoundException;
 
 import java.util.List;
@@ -112,6 +114,17 @@ public interface Resource extends AutoCloseable {
         public static String pathFromComponents(final List<String> pathComponents) {
             final StringBuilder stringBuilder = new StringBuilder();
             return Joiner.on(PATH_SEPARATOR).appendTo(stringBuilder, pathComponents).toString();
+        }
+
+        /**
+         * Normalizes the path.
+         *
+         * @param path
+         * @return
+         */
+        public String normalize(final String path) {
+            final List<String> pathComponents = componentsFromPath(path);
+            return pathFromComponents(pathComponents);
         }
 
     }

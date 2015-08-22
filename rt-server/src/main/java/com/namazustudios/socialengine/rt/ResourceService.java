@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.edge.EdgeResource;
 
+import java.util.List;
+
 /**
  * This is the service responsible for maintaining a set of {@link Resource} instances.  This
  * contains code to handle a the path hierarchy for the resources housed in the service.
@@ -20,10 +22,24 @@ public interface ResourceService<ResourceT extends Resource> {
     /**
      * Gets a resource at the given path.
      *
-     * @param path
-     * @return
+     * @param path the path
+     * @return the resource
+     *
+     * @throws {@link NotFoundException} if no resource exists at that path
+     *
      */
     ResourceT getResource(String path);
+
+    /**
+     * Gets a single resource at the given path.
+     *
+     * @param pathComponents the path components
+     * @return the resource
+     *
+     * @throws {@link NotFoundException} if no resource exists at that path
+     *
+     */
+    ResourceT getResource(List<String> pathComponents);
 
     /**
      * Adds a {@link EdgeResource} to this resource service.
