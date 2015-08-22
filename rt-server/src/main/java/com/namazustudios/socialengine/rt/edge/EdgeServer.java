@@ -9,7 +9,7 @@ import com.namazustudios.socialengine.rt.*;
  * and {@link ResourceService}.
  *
  * Additionally, this is responsible for handling any multi-threading and coordinating/driving
- * the calls to {@link EdgeResource#update(double)} calls.
+ * the calls to {@link EdgeResource#onUpdate(double)} calls.
  *
  * The EdgeServer is responsible for ensuring connections are secure from the outside world.  It may
  * implement a {@link EdgeFilter}, for example, to deny requests from unauthorized users.

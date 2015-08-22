@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.namazustudios.socialengine.exception.NotFoundException;
 
@@ -55,15 +56,34 @@ public interface Resource extends AutoCloseable {
     <EventT> void unsubscribe(EventReceiver<EventT> eventReceiver);
 
     /**
-     * Called by the container to update the {@link Resource}.  The value passed
-     * in is the time difference between the last update.
+     * Called by the container to onUpdate the {@link Resource}.  The value passed
+     * in is the time difference between the last onUpdate.
      *
      * @param deltaTime the delta time
      */
-    void update(double deltaTime);
+    void onUpdate(double deltaTime);
 
     /**
-     * Closes and destroys this Resource.
+     * Called when he resource has been added to the {@link ResourceService}.
+     *
+     * @param path
+     */
+    void onAdd(String path);
+
+    /**
+     * Called when the resource has been moved to a new path.  In the event
+     * of an exception the {@link ResourceService} guarantees that the state
+     * of the program remains consistent.
+     *
+     * @param oldPath the old path
+     * @param newPath the new path
+     *
+     */
+    void onMove(String oldPath, String newPath);
+
+    /**
+     * Closes and destroys this Resource.  A resource, once destroyed, cannot
+     * be used again.
      */
     void close();
 
@@ -80,6 +100,18 @@ public interface Resource extends AutoCloseable {
          */
         public static List<String> componentsFromPath(final String path) {
             return ImmutableList.copyOf(path.split("/+"));
+        }
+
+        /**
+         * Joins the given string components together to build a path string from
+         * the given componenets.
+         *
+         * @param pathComponents
+         * @return the string
+         */
+        public static String pathFromComponents(final List<String> pathComponents) {
+            final StringBuilder stringBuilder = new StringBuilder();
+            return Joiner.on(PATH_SEPARATOR).appendTo(stringBuilder, pathComponents).toString();
         }
 
     }
