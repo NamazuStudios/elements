@@ -24,7 +24,7 @@ public class RequestIOHandler extends IoHandlerAdapter {
     public void messageReceived(IoSession session, Object message) throws Exception {
         final Request request = (Request)message;
         final IoSessionClient ioSessionClient = new IoSessionClient(session);
-        edgeServer.dispatch(ioSessionClient, request);
+        edgeServer.dispatch(request, ioSessionClient);
     }
 
 }

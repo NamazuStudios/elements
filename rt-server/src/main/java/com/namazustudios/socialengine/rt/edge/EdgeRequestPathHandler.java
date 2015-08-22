@@ -1,12 +1,10 @@
 package com.namazustudios.socialengine.rt.edge;
 
 import com.namazustudios.socialengine.exception.InvalidDataException;
-import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.rt.Client;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.RequestHeader;
 import com.namazustudios.socialengine.rt.ResponseHeader;
-import com.namazustudios.socialengine.rt.edge.EdgeResponseReceiver;
+import com.namazustudios.socialengine.rt.ResponseReceiver;
 
 /**
  * An instance of EdgeRequestPathHandler is responsible for producing {@link ResponseHeader} objects
@@ -25,19 +23,19 @@ public interface EdgeRequestPathHandler<PayloadT> {
     Class<PayloadT> getPayloadType();
 
     /**
-     * Handles the given request from a client.
+     * Handles the given request from a edgeClient.
      *
      * In the event the {@link Request#getPayload()} method returns an object that is not compatible
      * with this instance and exception can be raised.  Acceptability can be determined by
      * the usage of {@link Class#isAssignableFrom(Class)}.
      *
-     * @param client the {@link Client} making the request.
+     * @param edgeClient the {@link EdgeClient} making the request.
      * @param request the {@link Request} object
-     * @param edgeResponseReceiver the request object
+     * @param responseReceiver the request object
      *
      * @throws {@link InvalidDataException} if the return of the {@link Request#getPayload()} method is not suitab.e
      *
      */
-    void handle(Client client, Request request, EdgeResponseReceiver edgeResponseReceiver);
+    void handle(EdgeClient edgeClient, Request request, ResponseReceiver responseReceiver);
 
 }

@@ -1,26 +1,27 @@
 package com.namazustudios.socialengine.rt.mina;
 
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.edge.ConnectedClientService;
-import com.namazustudios.socialengine.rt.edge.EdgeResponseReceiver;
+import com.namazustudios.socialengine.rt.edge.EdgeClient;
+import com.namazustudios.socialengine.rt.edge.ConnectedEdgeClientService;
+import com.namazustudios.socialengine.rt.ResponseReceiver;
 
 /**
  * Created by patricktwohig on 7/27/15.
  */
-public class MinaConnectedClientService implements ConnectedClientService {
+public class MinaConnectedEdgeClientService implements ConnectedEdgeClientService {
 
     @Override
-    public EdgeResponseReceiver getResponseReceiver(final Client client, final Request request) {
+    public ResponseReceiver getResponseReceiver(final EdgeClient edgeClient, final Request request) {
 
         final IoSessionClient minaClient;
 
         try {
-             minaClient = (IoSessionClient) client;
+             minaClient = (IoSessionClient) edgeClient;
         } catch (ClassCastException ex) {
              throw new IllegalArgumentException(ex);
         }
 
-        return new EdgeResponseReceiver() {
+        return new ResponseReceiver() {
 
             @Override
             public void receive(int code, Object payload) {

@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.edge;
 
 /**
  * Represents a currently connected client.  The client also has associated
@@ -6,7 +6,7 @@ package com.namazustudios.socialengine.rt;
  *
  * Created by patricktwohig on 7/29/15.
  */
-public interface Client {
+public interface EdgeClient {
 
     /**
      * Gets the ID of the client.
@@ -16,7 +16,7 @@ public interface Client {
     String getId();
 
     /**
-     * Sets the Client's session variable.
+     * Sets the EdgeClient's session variable.
      *
      * @param key the key
      * @param value the value

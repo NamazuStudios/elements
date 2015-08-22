@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.edge.EdgeResource;
 
@@ -45,6 +46,8 @@ public interface ResourceService<ResourceT extends Resource> {
      * Adds a {@link EdgeResource} to this resource service.
      *
      * @param resource the resource
+     *
+     * @throws {@link DuplicateException} if a resource at the given path already exists
      */
     void addResource(String path, ResourceT resource);
 
@@ -57,20 +60,30 @@ public interface ResourceService<ResourceT extends Resource> {
      * @param source the resource path
      * @param destination the new destination path of the resource.
      *
+     * @throws {@link NotFoundException} if no resource exists at that path
+     * @throws {@link DuplicateException} if a resource at the destination path already exists
+     *
      */
     void moveResource(String source, String destination);
 
     /**
+     *
      * Removes a {@link EdgeResource} instance from this resource service.
      *
-     * @param path
+     * @param path the path
+     *
+     * @throws {@link NotFoundException} if no resource exists at that path
+     *
      */
     ResourceT removeResource(String path);
 
     /**
      * Removes and closes the resource at the given path.
      *
-     * @param path
+     * @param path the path
+     *
+     * @throws {@link NotFoundException} if no resource exists at that path
+     *
      */
     void removeAndCloseResource(String path);
 

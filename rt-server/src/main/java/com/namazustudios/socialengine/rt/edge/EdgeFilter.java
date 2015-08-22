@@ -1,9 +1,7 @@
 package com.namazustudios.socialengine.rt.edge;
 
-import com.namazustudios.socialengine.rt.Client;
 import com.namazustudios.socialengine.rt.Request;
-import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
-import com.namazustudios.socialengine.rt.edge.EdgeResponseReceiver;
+import com.namazustudios.socialengine.rt.ResponseReceiver;
 
 /**
  * Used to filer requests or maniuplate requests before they ultimately arrive
@@ -20,11 +18,11 @@ public interface EdgeFilter {
      * This method implements the actual business logic of the filter.
      *
      * @param chain the chain
-     * @param client the client
+     * @param edgeClient the edgeClient
      * @param request the request
      *
      */
-    void filter(Chain chain, Client client, Request request, EdgeResponseReceiver edgeResponseReceiver);
+    void filter(Chain chain, EdgeClient edgeClient, Request request, ResponseReceiver responseReceiver);
 
     /**
      * Represents the next filter in the chain of filters.
@@ -34,11 +32,11 @@ public interface EdgeFilter {
         /**
          * Hands processing to the next filter in the chain.
          *
-         * @param client the client the client
+         * @param edgeClient the edgeClient the edgeClient
          * @param request the request the request
          *
          */
-        void next(Client client, Request request, EdgeResponseReceiver edgeResponseReceiver);
+        void next(EdgeClient edgeClient, Request request, ResponseReceiver responseReceiver);
 
     }
 

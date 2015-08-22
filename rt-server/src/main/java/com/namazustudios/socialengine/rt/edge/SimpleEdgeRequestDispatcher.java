@@ -44,52 +44,54 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
     private EdgeFilter.Chain rootFilterChain;
 
     @Override
-    public void dispatch(final Client client, final Request request, final EdgeResponseReceiver edgeResponseReceiver) {
-        try (final DelegatingCheckedReceiver receiver = new DelegatingCheckedReceiver(client, request, edgeResponseReceiver)) {
-            executeRootFilterChain(client, request, receiver);
+    public void dispatch(final EdgeClient edgeClient,
+                         final Request request,
+                         final ResponseReceiver responseReceiver) {
+        try (final DelegatingCheckedReceiver receiver = new DelegatingCheckedReceiver(edgeClient, request, responseReceiver)) {
+            executeRootFilterChain(edgeClient, request, receiver);
         } catch (Exception ex) {
             LOG.error("Caught exception processing request {}.", request, ex);
         }
     }
 
-    private void executeRootFilterChain(final Client client,
+    private void executeRootFilterChain(final EdgeClient edgeClient,
                                         final Request request,
-                                        final EdgeResponseReceiver edgeResponseReceiver) {
+                                        final ResponseReceiver responseReceiver) {
         try {
-            rootFilterChain.next(client, request, edgeResponseReceiver);
+            rootFilterChain.next(edgeClient, request, responseReceiver);
         } catch (Exception ex) {
-            mapException(ex, client, request, edgeResponseReceiver);
+            mapException(ex, edgeClient, request, responseReceiver);
         }
     }
 
     private <T extends Exception> void mapException(final T ex,
-                                                    final Client client,
+                                                    final EdgeClient edgeClient,
                                                     final Request request,
-                                                    final EdgeResponseReceiver edgeResponseReceiver) {
+                                                    final ResponseReceiver responseReceiver) {
 
         try {
 
-            LOG.info("Mapping exception for request {} and client {}", request, client, ex);
+            LOG.info("Mapping exception for request {} and edgeClient {}", request, edgeClient, ex);
 
             final ExceptionMapper<T> exceptionMapper = exceptionMapperResolver.getExceptionMapper(ex);
 
             if (exceptionMapper == null) {
-                mapUnhandled(ex, client, request, edgeResponseReceiver);
+                mapUnhandled(ex, edgeClient, request, responseReceiver);
             } else {
-                exceptionMapper.map(ex, client, request, edgeResponseReceiver);
+                exceptionMapper.map(ex, edgeClient, request, responseReceiver);
             }
 
         } catch (Exception _ex) {
-            LOG.error("Caught exception attempting to forumulate exception response from request {} for client {} ", request, client, _ex);
-            mapUnhandled(_ex, client, request, edgeResponseReceiver);
+            LOG.error("Caught exception attempting to forumulate exception response from request {} for edgeClient {} ", request, edgeClient, _ex);
+            mapUnhandled(_ex, edgeClient, request, responseReceiver);
         }
 
     }
 
     private <T extends Exception> void mapUnhandled(final T ex,
-                                                    final Client client,
+                                                    final EdgeClient edgeClient,
                                                     final Request request,
-                                                    final EdgeResponseReceiver edgeResponseReceiver) {
+                                                    final ResponseReceiver responseReceiver) {
 
         final SimpleExceptionResponsePayload simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();
         simpleExceptionResponsePayload.setMessage(ex.getMessage());
@@ -101,13 +103,13 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
         } catch (BaseException bex) {
             code = RESPONSE_STATUS_MAP.get(bex.getCode());
             code = code == null ? ResponseCode.INTERNAL_ERROR_FATAL : code;
-            LOG.warn("Caught exception handling request {} to client {}.", request, client, bex);
+            LOG.warn("Caught exception handling request {} to edgeClient {}.", request, edgeClient, bex);
         } catch (Exception e) {
             code = ResponseCode.INTERNAL_ERROR_FATAL;
-            LOG.error("Caught exception handling request {} to client {}.", request, client, e);
+            LOG.error("Caught exception handling request {} to edgeClient {}.", request, edgeClient, e);
         }
 
-        edgeResponseReceiver.receive(code.getCode(), simpleExceptionResponsePayload);
+        responseReceiver.receive(code.getCode(), simpleExceptionResponsePayload);
 
     }
 
@@ -118,9 +120,9 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
         EdgeFilter.Chain chain = new EdgeFilter.Chain() {
             @Override
-            public void next(final Client client,
+            public void next(final EdgeClient client,
                              final Request request,
-                             final EdgeResponseReceiver receiver) {
+                             final ResponseReceiver receiver) {
                 resolveAndDispatch(client, request, receiver);
             }
         };
@@ -131,10 +133,10 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
             chain = new EdgeFilter.Chain() {
                 @Override
-                public void next(final Client client,
+                public void next(final EdgeClient edgeClient,
                                  final Request request,
-                                 final EdgeResponseReceiver edgeResponseReceiver) {
-                    filter.filter(next, client, request, edgeResponseReceiver);
+                                 final ResponseReceiver responseReceiver) {
+                    filter.filter(next, edgeClient, request, responseReceiver);
                 }
             };
 
@@ -145,18 +147,18 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
     }
 
 
-    private void resolveAndDispatch(final Client client,
+    private void resolveAndDispatch(final EdgeClient edgeClient,
                                     final Request request,
-                                    final EdgeResponseReceiver receiver) {
+                                    final ResponseReceiver receiver) {
 
         final EdgeRequestPathHandler<?> edgeRequestPathHandler =
             resourceService.getResource(request.getHeader().getPath())
                            .getHandler(request.getHeader().getMethod());
 
         if (request.getPayload() == null) {
-            edgeRequestPathHandler.handle(client, request, receiver);
+            edgeRequestPathHandler.handle(edgeClient, request, receiver);
         } else if (edgeRequestPathHandler.getClass().isAssignableFrom(request.getPayload().getClass())) {
-            edgeRequestPathHandler.handle(client, request, receiver);
+            edgeRequestPathHandler.handle(edgeClient, request, receiver);
         } else {
             throw new InvalidParameterException("Method " + request.getHeader().getPath() + " " +
                     "at path " + request.getHeader().getPath() +
@@ -177,17 +179,17 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
      * is generated only once.
      *
      */
-    private class DelegatingCheckedReceiver implements EdgeResponseReceiver, AutoCloseable {
+    private class DelegatingCheckedReceiver implements ResponseReceiver, AutoCloseable {
 
         private final Request request;
 
-        private final EdgeResponseReceiver delegate;
+        private final ResponseReceiver delegate;
 
         private final AtomicBoolean received = new AtomicBoolean();
 
-        public DelegatingCheckedReceiver(final Client client,
+        public DelegatingCheckedReceiver(final EdgeClient edgeClient,
                                          final Request request,
-                                         final EdgeResponseReceiver delegate) {
+                                         final ResponseReceiver delegate) {
             this.request = request;
             this.delegate = delegate;
         }

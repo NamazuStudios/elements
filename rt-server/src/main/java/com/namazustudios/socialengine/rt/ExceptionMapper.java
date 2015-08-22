@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.edge.EdgeResponseReceiver;
+import com.namazustudios.socialengine.rt.edge.EdgeClient;
 
 /**
  * Generates an instance of {@link Response} as the result
@@ -17,10 +17,10 @@ public interface ExceptionMapper<ExceptionT extends Exception> {
      *
      * @param exception the exception
      * @param request the request
-     * @param edgeResponseReceiver the response
+     * @param responseReceiver the response
      *
      */
-    void map(ExceptionT exception, Client client, Request request, EdgeResponseReceiver edgeResponseReceiver);
+    void map(ExceptionT exception, EdgeClient edgeClient, Request request, ResponseReceiver responseReceiver);
 
     /**
      * Resolves an {@link ExceptionMapper} for hte given {@link Exception} type.

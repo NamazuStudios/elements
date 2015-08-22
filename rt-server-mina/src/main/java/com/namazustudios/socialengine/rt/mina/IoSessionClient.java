@@ -1,12 +1,12 @@
 package com.namazustudios.socialengine.rt.mina;
 
-import com.namazustudios.socialengine.rt.Client;
+import com.namazustudios.socialengine.rt.edge.EdgeClient;
 import org.apache.mina.core.session.IoSession;
 
 /**
  * Created by patricktwohig on 8/1/15.
  */
-public class IoSessionClient implements Client {
+public class IoSessionClient implements EdgeClient {
 
     private final IoSession ioSession;
 

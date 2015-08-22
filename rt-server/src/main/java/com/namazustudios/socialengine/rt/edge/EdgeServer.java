@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.rt.*;
 /**
  * This is the interface to the underlying server from the "Outside World", the EdgeServer
  * interface is responsible for accepting instances of {@link Request} and negotiating
- * {@link Response} objects using the the underlying services such as, {@link ConnectedClientService}
+ * {@link Response} objects using the the underlying services such as, {@link ConnectedEdgeClientService}
  * and {@link ResourceService}.
  *
  * Additionally, this is responsible for handling any multi-threading and coordinating/driving
@@ -19,11 +19,14 @@ import com.namazustudios.socialengine.rt.*;
 public interface EdgeServer {
 
     /**
-     * Dispatches the given request from the {@link Client}.
+     * Dispatches the given {@link Request} from the {@link EdgeClient}.  This method passes
+     * the {@link Request} through the various {@link EdgeFilter} instances before
+     * it finally arrives at the destination {@link Resource}, or it is handled
+     * by the {@link EdgeFilter}.
      *
-     * @param client
-     * @param request
+     * @param request the request object itself.
+     * @param edgeClient the edgeClient making the request
      */
-    void dispatch(Client client, Request request);
+    void dispatch(Request request, EdgeClient edgeClient);
 
 }
