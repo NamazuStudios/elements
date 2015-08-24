@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.rt.edge;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.namazustudios.socialengine.exception.BaseException;
-import com.namazustudios.socialengine.exception.ErrorCode;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;
@@ -12,8 +9,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The simple implementation of the {@link EdgeRequestDispatcher} interface.
@@ -23,17 +18,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleEdgeRequestDispatcher.class);
-
-    private static final Map<ErrorCode, ResponseCode> RESPONSE_STATUS_MAP = Maps.immutableEnumMap(
-        new ImmutableMap.Builder<ErrorCode, ResponseCode>()
-            .put(ErrorCode.DUPLICATE, ResponseCode.BAD_REQUEST_FATAL)
-            .put(ErrorCode.FORBIDDEN, ResponseCode.FAILED_AUTH_FATAL)
-            .put(ErrorCode.INVALID_DATA, ResponseCode.BAD_REQUEST_FATAL)
-            .put(ErrorCode.NOT_FOUND, ResponseCode.PATH_NOT_FOUND)
-            .put(ErrorCode.OVERLOAD, ResponseCode.TOO_BUSY_FATAL)
-            .put(ErrorCode.INVALID_PARAMETER, ResponseCode.BAD_REQUEST_FATAL)
-            .put(ErrorCode.UNKNOWN, ResponseCode.INTERNAL_ERROR_FATAL)
-        .build());
 
     @Inject
     private ResourceService<EdgeResource> resourceService;
@@ -47,7 +31,7 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
     public void dispatch(final EdgeClient edgeClient,
                          final Request request,
                          final ResponseReceiver responseReceiver) {
-        try (final DelegatingCheckedReceiver receiver = new DelegatingCheckedReceiver(edgeClient, request, responseReceiver)) {
+        try (final DelegatingCheckedReceiver receiver = new DelegatingCheckedReceiver(request, responseReceiver)) {
             executeRootFilterChain(edgeClient, request, receiver);
         } catch (Exception ex) {
             LOG.error("Caught exception processing request {}.", request, ex);
@@ -78,7 +62,7 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
             if (exceptionMapper == null) {
                 mapUnhandled(ex, edgeClient, request, responseReceiver);
             } else {
-                exceptionMapper.map(ex, edgeClient, request, responseReceiver);
+                exceptionMapper.map(ex, request, responseReceiver);
             }
 
         } catch (Exception _ex) {
@@ -101,7 +85,7 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
         try {
             throw ex;
         } catch (BaseException bex) {
-            code = RESPONSE_STATUS_MAP.get(bex.getCode());
+            code = ExceptionMapper.RESPONSE_STATUS_MAP.get(bex.getCode());
             code = code == null ? ResponseCode.INTERNAL_ERROR_FATAL : code;
             LOG.warn("Caught exception handling request {} to edgeClient {}.", request, edgeClient, bex);
         } catch (Exception e) {
@@ -146,7 +130,6 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
     }
 
-
     private void resolveAndDispatch(final EdgeClient edgeClient,
                                     final Request request,
                                     final ResponseReceiver receiver) {
@@ -164,58 +147,6 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
                     "at path " + request.getHeader().getPath() +
                     "does not handle payload (" + request.getPayload() + ") " +
                     "of type " + request.getPayload().getClass());
-        }
-
-    }
-
-    /**
-     *
-     * Essentially, this checks for two conditions.  First, it ensures that only
-     * a single response is sent to the client.  In the event the request does
-     * not generate a response, a null response is generated with an instance of
-     * {@link ResponseCode#OK}.
-     *
-     * This uses an instance of {@link AtomicBoolean} to ensure that the response
-     * is generated only once.
-     *
-     */
-    private class DelegatingCheckedReceiver implements ResponseReceiver, AutoCloseable {
-
-        private final Request request;
-
-        private final ResponseReceiver delegate;
-
-        private final AtomicBoolean received = new AtomicBoolean();
-
-        public DelegatingCheckedReceiver(final EdgeClient edgeClient,
-                                         final Request request,
-                                         final ResponseReceiver delegate) {
-            this.request = request;
-            this.delegate = delegate;
-        }
-
-        @Override
-        public void receive(int code, Object payload) {
-            if (received.compareAndSet(false, true)) {
-                delegate.receive(code, payload);
-            } else {
-                LOG.error("Attempted to dispatch duplicate responses for request {}", request);
-            }
-        }
-
-        @Override
-        public void close()  {
-            if (received.compareAndSet(false, true)) {
-
-                final String msg = "EdgeRequestDispatcher failed to generate response.";
-
-                final SimpleExceptionResponsePayload simpleExceptionResponsePayload;
-                simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();
-                simpleExceptionResponsePayload.setMessage(msg);
-
-                delegate.receive(ResponseCode.INTERNAL_ERROR_FATAL.getCode(), simpleExceptionResponsePayload);
-
-            }
         }
 
     }

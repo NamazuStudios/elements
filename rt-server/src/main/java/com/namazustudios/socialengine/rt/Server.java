@@ -6,11 +6,16 @@ package com.namazustudios.socialengine.rt;
 public interface Server {
 
     /**
-     * Dispatches the given {@link Request} to the {@link }
+     * Subscribes the event receiver to the given path.
      *
-     * @param request the request object itself.
+     * @param path the path
+     * @param name the name of the event
+     * @param eventReceiver the receiver
+     * @param <PayloadT>
+     *
+     * @return an instance of {@link Subscription}, which can be used to unsubscribe from the event pool
      *
      */
-    void dispatch(Request request, ResponseReceiver responseReceiver);
+    <PayloadT> Subscription subscribe(String path, String name, EventReceiver<PayloadT> eventReceiver);
 
 }

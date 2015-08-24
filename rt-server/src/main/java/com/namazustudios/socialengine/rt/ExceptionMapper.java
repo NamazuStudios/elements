@@ -1,6 +1,11 @@
 package com.namazustudios.socialengine.rt;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import com.namazustudios.socialengine.exception.ErrorCode;
 import com.namazustudios.socialengine.rt.edge.EdgeClient;
+
+import java.util.Map;
 
 /**
  * Generates an instance of {@link Response} as the result
@@ -14,13 +19,12 @@ public interface ExceptionMapper<ExceptionT extends Exception> {
 
     /**
      * Maps the given {@link Exception} to a custom payload.
-     *
-     * @param exception the exception
+     *  @param exception the exception
      * @param request the request
      * @param responseReceiver the response
      *
      */
-    void map(ExceptionT exception, EdgeClient edgeClient, Request request, ResponseReceiver responseReceiver);
+    void map(ExceptionT exception, Request request, ResponseReceiver responseReceiver);
 
     /**
      * Resolves an {@link ExceptionMapper} for hte given {@link Exception} type.
@@ -39,5 +43,19 @@ public interface ExceptionMapper<ExceptionT extends Exception> {
         ExceptionMapper<ExceptionT> getExceptionMapper(ExceptionT ex);
 
     }
+
+    /**
+     * Maps the {@link ErrorCode} enum to the {@link ResponseCode} type.
+     */
+    Map<ErrorCode, ResponseCode> RESPONSE_STATUS_MAP = Maps.immutableEnumMap(
+        new ImmutableMap.Builder<ErrorCode, ResponseCode>()
+                .put(ErrorCode.DUPLICATE, ResponseCode.BAD_REQUEST_FATAL)
+                .put(ErrorCode.FORBIDDEN, ResponseCode.FAILED_AUTH_FATAL)
+                .put(ErrorCode.INVALID_DATA, ResponseCode.BAD_REQUEST_FATAL)
+                .put(ErrorCode.NOT_FOUND, ResponseCode.PATH_NOT_FOUND)
+                .put(ErrorCode.OVERLOAD, ResponseCode.TOO_BUSY_FATAL)
+                .put(ErrorCode.INVALID_PARAMETER, ResponseCode.BAD_REQUEST_FATAL)
+                .put(ErrorCode.UNKNOWN, ResponseCode.INTERNAL_ERROR_FATAL)
+            .build());
 
 }
