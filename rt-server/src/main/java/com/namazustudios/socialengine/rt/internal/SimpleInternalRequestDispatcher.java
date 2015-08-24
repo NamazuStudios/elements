@@ -18,9 +18,6 @@ public class SimpleInternalRequestDispatcher implements InternalRequestDispatche
     private static final Logger LOG = LoggerFactory.getLogger(SimpleInternalRequestDispatcher.class);
 
     @Inject
-    private InternalRequestDispatcher internalRequestDispatcher;
-
-    @Inject
     private ExceptionMapper.Resolver exceptionMapperResolver;
 
     @Inject
