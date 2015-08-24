@@ -9,14 +9,29 @@ import com.namazustudios.socialengine.rt.*;
  * and {@link ResourceService}.
  *
  * Additionally, this is responsible for handling any multi-threading and coordinating/driving
- * the calls to {@link EdgeResource#onUpdate(double)} calls.
+ * the calls to {@link Resource#onUpdate()} calls.
  *
  * The EdgeServer is responsible for ensuring connections are secure from the outside world.  It may
  * implement a {@link EdgeFilter}, for example, to deny requests from unauthorized users.
  *
+ * Note that the EdgeResourceServer is provided a set of boostratp resources.
+ *
  * Created by patricktwohig on 8/11/15.
  */
-public interface EdgeServer {
+public interface EdgeServer extends Runnable {
+
+    /**
+     * Subscribes the event receiver to the given path.
+     *
+     * @param path the path
+     * @param name the name of the event
+     * @param eventReceiver the receiver
+     * @param <PayloadT>
+     *
+     * @return an instance of {@link Subscription}, which can be used to unsubscribe from the event pool
+     *
+     */
+    <PayloadT> Subscription subscribe(String path, String name, EventReceiver<PayloadT> eventReceiver);
 
     /**
      * Dispatches the given {@link Request} from the {@link EdgeClient}.  This method passes
@@ -26,7 +41,8 @@ public interface EdgeServer {
      *
      * @param request the request object itself.
      * @param edgeClient the edgeClient making the request
+     * @param responseReceiver the {@link ResponseReceiver} instance
      */
-    void dispatch(Request request, EdgeClient edgeClient);
+    void dispatch(EdgeClient edgeClient, Request request, ResponseReceiver responseReceiver);
 
 }

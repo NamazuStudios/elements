@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
+import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.edge.EdgeResource;
@@ -9,6 +11,7 @@ import javax.inject.Inject;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -50,6 +53,79 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
     @Inject
     private ResourceLockFactory<ResourceT> lockFactory;
+
+    @Override
+    public Iterable<ResourceT> getResources() {
+
+        final Iterable<Map.Entry<List<String>, ResourceT>> entrySet = pathResourceMap.entrySet();
+
+        final Iterable<Map.Entry<List<String>, ResourceT>> resourceIterable =
+            Iterables.filter(entrySet, new Predicate<Map.Entry<List<String>, ResourceT>>() {
+                @Override
+                public boolean apply(final Map.Entry<List<String>, ResourceT> input) {
+                    return !lockFactory.isLock(input.getValue());
+                }
+            });
+
+        return new Iterable<ResourceT>() {
+            @Override
+            public Iterator<ResourceT> iterator() {
+
+                return new Iterator<ResourceT>() {
+
+                    final Iterator<Map.Entry<List<String>, ResourceT>> wrappedIterator = resourceIterable.iterator();
+
+                    Map.Entry<List<String>, ResourceT> current = wrappedIterator.hasNext() ?
+                                                                 wrappedIterator.next() : null;
+
+                    @Override
+                    public boolean hasNext() {
+                        return current != null;
+                    }
+
+                    @Override
+                    public ResourceT next() {
+
+                        if (!hasNext()) {
+                            throw new IllegalStateException();
+                        }
+
+                        try {
+                            return current.getValue();
+                        } finally {
+                            advance();
+                        }
+
+                    }
+
+                    @Override
+                    public void remove() {
+
+                        if (!hasNext()) {
+                            throw new IllegalStateException();
+                        }
+
+                        final List<String> path = current.getKey();
+                        final ResourceT resource = current.getValue();
+
+                        if (pathResourceMap.remove(path, resource)) {
+                            resource.onRemove(Resource.Util.pathFromComponents(path));
+                        }
+
+                        advance();
+
+                    }
+
+                    private void advance() {
+                        current = wrappedIterator.hasNext() ?
+                                  wrappedIterator.next() : null;
+                    }
+
+                };
+            }
+        };
+
+    }
 
     @Override
     public ResourceT getResource(final String path) {
@@ -130,6 +206,17 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
     }
 
     @Override
+    public void removeAllResources() {
+
+        final Iterator<ResourceT> resourceIterator = getResources().iterator();
+
+        while (resourceIterator.hasNext()) {
+            resourceIterator.remove();
+        }
+
+    }
+
+    @Override
     public ResourceT removeResource(String path) {
 
         final List<String> components = EdgeResource.Util.componentsFromPath(path);
@@ -139,14 +226,10 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
             throw new NotFoundException("Resource at path not found: " + path);
         }
 
+        resource.onRemove(Resource.Util.pathFromComponents(components));
+
         return resource;
 
-    }
-
-    @Override
-    public void removeAndCloseResource(String path) {
-        final Resource resource = removeResource(path);
-        resource.close();
     }
 
 }

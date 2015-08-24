@@ -4,21 +4,14 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.*;
 
 /**
- * A Resource is essentially a type that is capable primarly of both
- * receiving {@link Request} instances to produce {@link Response}
- * instances.
  *
- * Additionally, a Resource can be the source of {@link EventHeader} objects
- * which can be transmitted from the server to the client.
+ * An instance of {@link EdgeResource} exists to talk to the outside world.  That is,
+ * it is responsible for handling {@link Request} instances from {@link EdgeClient}s.
  *
- * Typically instances of Resource have their own scope, and
- * communicate primarily with other Resources through either events
- * or requests.
+ * {@link EdgeResource} instances should live the life of the server, and should not
+ * be moved.  Rather the ege resources shoudl be responsible for manipulating the
+ * state of internal resources.
  *
- * Once a resource is no longer needed, it is necessary to destroy the
- * resource using the {@link AutoCloseable#close()} method.
- *
- * Created by patricktwohig on 8/8/15.
  */
 public interface EdgeResource extends Resource {
 

@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rt.mina;
 
 import com.namazustudios.socialengine.rt.Request;
+import com.namazustudios.socialengine.rt.Response;
+import com.namazustudios.socialengine.rt.ResponseReceiver;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestDispatcher;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import org.apache.mina.core.service.IoHandler;
@@ -20,11 +22,19 @@ public class RequestIOHandler extends IoHandlerAdapter {
     @Inject
     private EdgeServer edgeServer;
 
+    @Inject
+    private MinaConnectedEdgeClientService minaConnectedEdgeClientService;
+
     @Override
     public void messageReceived(IoSession session, Object message) throws Exception {
+
         final Request request = (Request)message;
         final IoSessionClient ioSessionClient = new IoSessionClient(session);
-        edgeServer.dispatch(request, ioSessionClient);
+        final ResponseReceiver responseReceiver = minaConnectedEdgeClientService
+            .getResponseReceiver(ioSessionClient, request);
+
+        edgeServer.dispatch(ioSessionClient, request, responseReceiver);
+
     }
 
 }

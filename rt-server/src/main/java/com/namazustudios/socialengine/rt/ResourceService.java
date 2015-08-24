@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.edge.EdgeResource;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -19,6 +20,15 @@ import java.util.List;
  * Created by patricktwohig on 7/24/15.
  */
 public interface ResourceService<ResourceT extends Resource> {
+
+    /**
+     * Gets all resources in this service.  Note that the {@link Iterator} returned
+     * by this {@link Iterable} must support the {@link Iterator#remove()} operation
+     * and will properly call {@link Resource#onRemove(String)} appropraitely.
+     *
+     * @return all of the resources.
+     */
+    Iterable<ResourceT> getResources();
 
     /**
      * Gets a resource at the given path.
@@ -67,24 +77,19 @@ public interface ResourceService<ResourceT extends Resource> {
     void moveResource(String source, String destination);
 
     /**
+     * Removes all resources from the service.
+     */
+    void removeAllResources();
+
+    /**
      *
      * Removes a {@link EdgeResource} instance from this resource service.
      *
-     * @param path the path
+     * @param path the path to the resource
      *
      * @throws {@link NotFoundException} if no resource exists at that path
      *
      */
     ResourceT removeResource(String path);
-
-    /**
-     * Removes and closes the resource at the given path.
-     *
-     * @param path the path
-     *
-     * @throws {@link NotFoundException} if no resource exists at that path
-     *
-     */
-    void removeAndCloseResource(String path);
 
 }

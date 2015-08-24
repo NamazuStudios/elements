@@ -2,15 +2,33 @@ package com.namazustudios.socialengine.rt;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.rt.edge.EdgeServer;
 
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
- * Created by patricktwohig on 8/12/15.
+ * A Resource is essentially a type that is capable primarly of both
+ * receiving {@link Request} instances to produce {@link Response}
+ * instances.
+ *
+ * Additionally, a Resource can be the source of {@link Event} objects
+ * which can be transmitted from the server to the client, or can be transmitted
+ * to other {@link Resource} instances via the {@link EventReceiver} inteface.
+ *
+ * Typically instances of Resource have their own scope, and communicate with other Resources onlyt
+ * through either events or requests.  This allows the {@link Server} or {@link EdgeServer} to parallelize
+ * and distribute the resources across threads, or even physical machines.
+ *
+ * Once a resource is no longer needed, it is necessary to destroy the
+ * resource using the {@link AutoCloseable#close()} method.
+ *
+ * Created by patricktwohig on 8/8/15.
  */
 public interface Resource extends AutoCloseable {
 
@@ -42,35 +60,30 @@ public interface Resource extends AutoCloseable {
      * event is not a supported even, as returned bye {@link #getEventNames()}, then
      * this must throw an instance of {@link NotFoundException}
      *
+     * This method should not be used directly, but rather should be managed by
+     * the server instance.
+     *
      * @praam name the name of the event
      * @param eventReceiver the event receiver instance
      * @param <EventT>
-     */
-    <EventT> void subscribe(String name, EventReceiver<EventT> eventReceiver);
-
-    /**
-     * Unsubscribes from {@link Event}s using the given {@link EventReceiver}.  Note
-     * that the given {@link EventReceiver} must provide a type.
      *
-     * @param eventReceiver the event receiver instance
-     * @param <EventT>
-     */
-    <EventT> void unsubscribe(EventReceiver<EventT> eventReceiver);
-
-    /**
-     * Called by the container to onUpdate the {@link Resource}.  The value passed
-     * in is the time difference between the last onUpdate.
+     * @throws {@link NotFoundException} if the event name does not exist in {@link #getEventNames()}.
      *
-     * @param deltaTime the delta time
      */
-    void onUpdate(double deltaTime);
+    <EventT> Subscription subscribe(String name, EventReceiver<EventT> eventReceiver);
 
     /**
      * Called when he resource has been added to the {@link ResourceService}.
      *
-     * @param path
+     * @param path the path
      */
     void onAdd(String path);
+
+    /**
+     * Called by the container to upate the {@link Resource}.  The resource is responsible
+     * for keeping track of its own time internally and updating the resource accordingly.
+     */
+    void onUpdate();
 
     /**
      * Called when the resource has been moved to a new path.  In the event
@@ -84,6 +97,13 @@ public interface Resource extends AutoCloseable {
     void onMove(String oldPath, String newPath);
 
     /**
+     * Called when the resource has been removed by the {@lnk ResourceService}.
+     *
+     * @param path the path
+     */
+    void onRemove(String path);
+
+    /**
      * Closes and destroys this Resource.  A resource, once destroyed, cannot
      * be used again.
      */
@@ -94,6 +114,8 @@ public interface Resource extends AutoCloseable {
      */
     final class Util {
 
+        private static Pattern SPLIT_PATTERN = Pattern.compile("/+");
+
         /**
          * Gets the path components from the given path.
          *
@@ -101,7 +123,7 @@ public interface Resource extends AutoCloseable {
          * @return the components
          */
         public static List<String> componentsFromPath(final String path) {
-            return ImmutableList.copyOf(path.split("/+"));
+            return Splitter.on(SPLIT_PATTERN).trimResults().splitToList(path);
         }
 
         /**
@@ -112,15 +134,21 @@ public interface Resource extends AutoCloseable {
          * @return the string
          */
         public static String pathFromComponents(final List<String> pathComponents) {
-            final StringBuilder stringBuilder = new StringBuilder();
-            return Joiner.on(PATH_SEPARATOR).appendTo(stringBuilder, pathComponents).toString();
+
+            final StringBuilder stringBuilder = new StringBuilder("/");
+
+            return Joiner.on(PATH_SEPARATOR)
+                         .skipNulls()
+                         .appendTo(stringBuilder, pathComponents).toString();
+
         }
 
         /**
-         * Normalizes the path.
+         * Normalizes the path by removing duplicate seprators, trimming whitespace, and then
+         * rejoining into a single path wiht a leading separator.
          *
-         * @param path
-         * @return
+         * @param path the path to normailze
+         * @return the normalized path
          */
         public String normalize(final String path) {
             final List<String> pathComponents = componentsFromPath(path);

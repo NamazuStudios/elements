@@ -21,6 +21,12 @@ public class MinaConnectedEdgeClientService implements ConnectedEdgeClientServic
              throw new IllegalArgumentException(ex);
         }
 
+        return getResponseReceiver(minaClient, request);
+
+    }
+
+    public ResponseReceiver getResponseReceiver(final IoSessionClient minaClient, final Request request) {
+
         return new ResponseReceiver() {
 
             @Override
