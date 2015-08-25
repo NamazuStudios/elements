@@ -114,6 +114,8 @@ public interface Resource extends AutoCloseable {
      */
     final class Util {
 
+        private Util() {}
+
         private static Pattern SPLIT_PATTERN = Pattern.compile("/+");
 
         /**

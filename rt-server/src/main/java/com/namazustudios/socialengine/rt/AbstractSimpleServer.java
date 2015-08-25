@@ -1,8 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
 import com.google.common.base.Stopwatch;
-import com.namazustudios.socialengine.rt.edge.EdgeResource;
-import com.namazustudios.socialengine.rt.edge.SimpleEdgeServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,13 +81,13 @@ public abstract class AbstractSimpleServer implements Runnable {
             }
 
             @Override
-            public void receive(final PayloadT event) {
+            public void receive(String path, String name, final PayloadT event) {
                 getEventQueue().add(new Callable<Void>() {
 
                     @Override
                     public Void call() {
                         try {
-                            eventReceiver.receive(event);
+                            eventReceiver.receive(, event);
                         } catch (Exception ex) {
                             LOG.error("Caught exception for receiver {} at path {}", eventReceiver, path);
                         }
@@ -99,7 +97,7 @@ public abstract class AbstractSimpleServer implements Runnable {
 
                     @Override
                     public String toString() {
-                        return "Event receiver " + eventReceiver + "for event " + event + " at path" + path;
+                        return "EventType receiver " + eventReceiver + "for event " + event + " at path" + path;
                     }
 
                 });
