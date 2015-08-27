@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.namazustudios.socialengine.exception.NotFoundException;
@@ -13,7 +13,7 @@ import com.namazustudios.socialengine.rt.event.ResourceRemovedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -34,10 +34,10 @@ public abstract class AbstractResource implements Resource {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractResource.class);
 
-    public static final Set<String> EVENT_NAMES = new ImmutableSet.Builder<String>()
-            .add(ResourceAddedEvent.class.getSimpleName())
-            .add(ResourceMovedEvent.class.getSimpleName())
-            .add(ResourceRemovedEvent.class.getSimpleName())
+    public static final Map<String, Class<?>> EVENT_TYPES_BY_NAME = new ImmutableMap.Builder<String, Class<?>>()
+            .put(ResourceAddedEvent.class.getSimpleName(), ResourceAddedEvent.class)
+            .put(ResourceMovedEvent.class.getSimpleName(), ResourceMovedEvent.class)
+            .put(ResourceRemovedEvent.class.getSimpleName(), ResourceRemovedEvent.class)
         .build();
 
     private final Stopwatch stopwatch = Stopwatch.createUnstarted();
@@ -46,6 +46,13 @@ public abstract class AbstractResource implements Resource {
 
     private String currentPath;
 
+    /**
+     * This posts an instance of {@link ResourceRemovedEvent} and sets the current path.
+     *
+     * @see {@link Resource#onRemove(String)}
+     *
+     * @param path the path
+     */
     @Override
     public void onRemove(String path) {
         final ResourceRemovedEvent resourceRemovedEvent = new ResourceRemovedEvent();
@@ -54,6 +61,14 @@ public abstract class AbstractResource implements Resource {
         setCurrentPath(null);
     }
 
+    /**
+     * This posts and instance of {@link ResourceMovedEvent} and sets the current path.
+     *
+     * @see {@link Resource#onMove(String, String)}
+     *
+     * @param oldPath the old path
+     * @param newPath the new path
+     */
     @Override
     public void onMove(String oldPath, String newPath) {
 
@@ -66,6 +81,13 @@ public abstract class AbstractResource implements Resource {
 
     }
 
+    /**
+     * This posts and instance of {@link ResourceAddedEvent} and sets the current path.
+     *
+     * @see {@link Resource#onAdd(String)}
+     *
+     * @param path the path
+     */
     @Override
     public void onAdd(String path) {
 
@@ -77,16 +99,25 @@ public abstract class AbstractResource implements Resource {
 
     }
 
+    /**
+     *
+     * @see {@link Resource#subscribe(String, EventReceiver)}.
+     *
+     * @param name the name
+     * @param eventReceiver the event receiver instance
+     *
+     * @param <EventT>
+     *
+     * @return the {@link Subscription} object
+     */
     @Override
-    public Set<String> getEventNames() {
-        return EVENT_NAMES;
-    }
+    public <EventT> Subscription subscribe(final String desiredName, final EventReceiver<EventT> eventReceiver) {
 
-    @Override
-    public <EventT> Subscription subscribe(final String name, final EventReceiver<EventT> eventReceiver) {
-
-        if (!getEventNames().contains(name)) {
-            throw new NotFoundException("Resource does not source events named " + name);
+        if(!checkEvents(desiredName, eventReceiver.getEventType())) {
+            throw new NotFoundException(
+                    "event \"" + desiredName  + "\"" +
+                    "of type \"" + eventReceiver.getEventType() + "\"" +
+                    "is not sourced from: " + this);
         }
 
         final EventReceiver<EventT> wrapper = new EventReceiverWrapper<>(eventReceiver);
@@ -97,7 +128,7 @@ public abstract class AbstractResource implements Resource {
             @Override
             public void release() {
                 LOG.debug("Unregistered event receiver {}", eventReceiver);
-                eventReceivers.remove(name, wrapper);
+                eventReceivers.remove(desiredName, wrapper);
             }
 
         };
@@ -106,15 +137,16 @@ public abstract class AbstractResource implements Resource {
 
     /**
      * The basic implementation of this method tracks the time between frames using
-     * an instance of {@link Stopwatch} and calling {@link #doUpdate()} at the opportune
-     * time.
+     * an instance of {@link Stopwatch} and calling {@link #doUpdate(double deltaTme)}
+     * at the opportune time.
      *
      * @see {@link Resource#onUpdate()}
      */
     @Override
     public void onUpdate() {
         stopwatch.stop();
-        doUpdate();
+        final double deltaTime = getElapsedTime();
+        doUpdate(deltaTime);
         stopwatch.reset();
         stopwatch.start();
     }
@@ -158,6 +190,21 @@ public abstract class AbstractResource implements Resource {
     }
 
     /**
+     * Checks if both the event name and type are compatible with this {@link Resource}.  If not,
+     * this must return false.  Subclasses may override this as needed, and the default implementation
+     * checks for {@link #EVENT_TYPES_BY_NAME}.
+     *
+     * @param name the name of the event
+     * @param desiredType the desired type of the event, as obtained from {@link EventReceiver#getEventType()}.
+     *
+     * @return true if the types are compatible, false otherwise
+     */
+    public boolean checkEvents(final String name, final Class<?> desiredType) {
+        final Class<?> eventType = EVENT_TYPES_BY_NAME.get(name);
+        return desiredType.isAssignableFrom(eventType);
+    }
+
+    /**
      * Posts the given event to all of this objects' {@link EventReceiver} instances.  This ensures
      * that the event is checked and delivered to the appropriate handlers.
      *
@@ -179,11 +226,6 @@ public abstract class AbstractResource implements Resource {
      * @param name the name of the event
      */
     public <EventT> void post(final EventT event, final String name) {
-
-        if (!getEventNames().contains(name)) {
-            throw new IllegalArgumentException("Event named " + name + " is not sourced by " + this);
-        }
-
         for (EventReceiver<?> eventReceiver : eventReceivers.get(name)) {
             try {
                 final Object eventObject = eventReceiver.getEventType().cast(event);
@@ -193,7 +235,6 @@ public abstract class AbstractResource implements Resource {
                 LOG.warn("Incompatible event type.", ex);
             }
         }
-
     }
 
     /**
@@ -203,14 +244,15 @@ public abstract class AbstractResource implements Resource {
      *
      * Override this method to do useful work.
      *
+     * @param deltaTime the time since the last update
+     *
      */
-    protected void doUpdate() {}
+    protected void doUpdate(final double deltaTime) {}
 
     @Override
     public String toString() {
-        return "AbstractResource{" +
-                "type='" + getClass()  + '\'' +
-                ",currentPath='" + currentPath + '\'' +
+        return getClass().getSimpleName() + "{" +
+                "currentPath='" + currentPath + '\'' +
                 '}';
     }
 

@@ -38,27 +38,9 @@ public interface Resource extends AutoCloseable {
     String PATH_SEPARATOR = "/";
 
     /**
-     * Gets the methods that are supported by this Resource.  Implementations of this
-     * interface may return immutable sets.  Take care when mutating the returned instances
-     * such that mutability is not guaranteed.
-     *
-     * @return the list of methods, or an empty set if no methods are supported.
-     */
-    Set<String> getMethods();
-
-    /**
-     * Gets the event names sourced by this Resource.  Implementations of this
-     * interface may return immutable sets.  Take care when mutating the returned instances
-     * such that mutability is not guaranteed.
-     *
-     * @return the event names, or an empty set if not methods are supported.
-     */
-    Set<String> getEventNames();
-
-    /**
      * Subscribes to {@link Event}s using the given {@link EventReceiver}.  If the
-     * event is not a supported even, as returned bye {@link #getEventNames()}, then
-     * this must throw an instance of {@link NotFoundException}
+     * event is not a supported event, or the event name is not sourced by this resource,
+     * then this must throw an instance of {@link NotFoundException}
      *
      * This method should not be used directly, but rather should be managed by
      * the server instance.
@@ -67,7 +49,7 @@ public interface Resource extends AutoCloseable {
      * @param eventReceiver the event receiver instance
      * @param <EventT>
      *
-     * @throws {@link NotFoundException} if the event name does not exist in {@link #getEventNames()}.
+     * @throws {@link NotFoundException} if the resource does not source the event name, type.
      *
      */
     <EventT> Subscription subscribe(String name, EventReceiver<EventT> eventReceiver);

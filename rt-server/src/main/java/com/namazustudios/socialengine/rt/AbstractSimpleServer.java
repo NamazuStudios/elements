@@ -81,13 +81,13 @@ public abstract class AbstractSimpleServer implements Runnable {
             }
 
             @Override
-            public void receive(String path, String name, final PayloadT event) {
+            public void receive(final String path, final String name, final PayloadT event) {
                 getEventQueue().add(new Callable<Void>() {
 
                     @Override
                     public Void call() {
                         try {
-                            eventReceiver.receive(, event);
+                            eventReceiver.receive(path, name, event);
                         } catch (Exception ex) {
                             LOG.error("Caught exception for receiver {} at path {}", eventReceiver, path);
                         }
