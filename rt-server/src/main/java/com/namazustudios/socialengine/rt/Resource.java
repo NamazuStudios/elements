@@ -38,9 +38,7 @@ public interface Resource extends AutoCloseable {
     String PATH_SEPARATOR = "/";
 
     /**
-     * Subscribes to {@link Event}s using the given {@link EventReceiver}.  If the
-     * event is not a supported event, or the event name is not sourced by this resource,
-     * then this must throw an instance of {@link NotFoundException}
+     * Subscribes to {@link Event}s using the given {@link EventReceiver}.
      *
      * This method should not be used directly, but rather should be managed by
      * the server instance.

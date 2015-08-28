@@ -44,7 +44,7 @@ public class SimpleInternalRequestDispatcher implements InternalRequestDispatche
     private void resolveAndDispatch(final Request request,
                                     final ResponseReceiver receiver) {
 
-        final InternalRequestPathHandler<?> edgeRequestPathHandler =
+        final InternalRequestPathHandler edgeRequestPathHandler =
                 resourceService.getResource(request.getHeader().getPath())
                                .getHandler(request.getHeader().getMethod());
 

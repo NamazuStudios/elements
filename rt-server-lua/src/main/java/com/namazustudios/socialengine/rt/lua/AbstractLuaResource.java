@@ -4,9 +4,7 @@ import com.naef.jnlua.Converter;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.rt.AbstractResource;
-import com.namazustudios.socialengine.rt.Request;
-import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import com.namazustudios.socialengine.rt.internal.InternalServer;
@@ -53,13 +51,6 @@ public class AbstractLuaResource extends AbstractResource {
     public static final String NAMAZU_TABLE = "namazu_rt";
 
     /**
-     * The table underneath the namazu_rt table which specifies which events this script
-     * will source.  Typically this is assigned to nil or the {@link #WILDCARD_TYPE_TOKEN} constant
-     * to indicate that the event will match any type.
-     */
-    public static final String EVENT_TABLE = "event";
-
-    /**
      * Constant to designate the server.coroutine table.  This is a set of coroutinee
      * functions managed by the server.
      */
@@ -89,52 +80,66 @@ public class AbstractLuaResource extends AbstractResource {
     public static final String REQUEST_HANDLER_KEY = "handler";
 
     /**
-     * Constant to designate the "type" key for the response.  If set to a string other than {@link #WILDCARD_TYPE_TOKEN}
-     * this will attempt to force type conversion to that particular type.  Leaving blank will fall back onto
-     * the behavior of {@link Converter#convertJavaObject(LuaState, Object)}.  Specifying type should rarely
-     * be needed.
+     * Constant to designate the {@link Class} of the the request.  If set to a string other than
+     * {@link #WILDCARD_TYPE_TOKEN} this will attempt to force type conversion to that particular type.
+     * Leaving blank will fall back onto the behavior of {@link Converter#convertJavaObject(LuaState, Object)}.
+     * Specifying type should rarely be needed.
      *
-     * More specifically this controls the return value of {@link EdgeRequestPathHandler#getPayloadType()} and
-     * similar functions.
+     * More specifically this controls the return value of {@link EdgeRequestPathHandler#getPayloadType()} to
+     * tell upstream code how to deserialize objects transmitted over the network.
      */
     public static final String REQUEST_PAYLOAD_JAVA_TYPE = "request_payload_type";
 
     /**
-     * The wildcard type.
+     * The wildcard type.  This is {@link Map}, which translates to a lua table.
      */
     public static final Class<?> WILDCARD_TYPE = Map.class;
-
-    /**
-     * A key on the namazu_rt table to expose  an instance of this type to the underlying Lua script.  This allows
-     * the underlying script to perform functions such as getting the current path, or posting events to subscribers.
-     */
-    public static final String THIS_INSTANCE = "resource";
-
-    /**
-     * Exposes the instance of {@link IocResolver} which the underlying script can use to resolve depdendencies
-     * such as other instances of {@link Resource}, {@link EdgeServer}, and {@link InternalServer}.
-     */
-    public static final String IOC_INSTNCE = "ioc";
 
     /**
      * Used by the type functions to indicate a type wildcard.
      */
     public static final String WILDCARD_TYPE_TOKEN = "*";
 
+    /**
+     * The wildcard type.  This is {@link List}, which translates to a lua table with
+     * numeric indices.
+     */
+    public static final Class<?> WILDCARD_ARRAY_TYPE = List.class;
 
     /**
-     * The lua state used by this and subclasses.  This is injected by the IoC container
-     * configured with the possible options such as an application-specific {@link Converter} instance.
+     * Used by the type functions to indicate a type wildcard.
      */
-    private final LuaState luaState;
+    public static final String WILDCARD_ARRAY_TYPE_TOKEN = "{*}";
 
-    private final IocResolver iocResolver;
+    /**
+     * A table which contains java objects that can be used to communicate with the
+     * rest of the server.
+     */
+    public static final String SERVICES_TABLE = "services";
+
+    /**
+     * A key on the services table to expose  an instance of this type to the underlying Lua script.  This allows
+     * the underlying script to perform functions such as getting the current path, or posting events to subscribers.
+     */
+    public static final String THIS_INSTANCE = "resource";
+
+    /**
+     * Exposes the instance of {@link IocResolver} which the underlying script can use to resolve dependencies
+     * such as other instances of {@link Resource}, {@link EdgeServer}, and {@link InternalServer}.
+     */
+    public static final String IOC_INSTANCE = "ioc";
+
+    private final LuaState luaState;
 
     private final TypeRegistry typeRegistry;
 
     /**
      * Creates an instance of {@link AbstractLuaResource} with the given {@link LuaState}
      * type.
+     *
+     * If instantion fails, it is the responsilbity of the caller to deallocate the {@link LuaState}
+     * object.  If the constructor completes without error, then the caller does not need to close
+     * the state as it will be handled by this object's {@link #close()} method.
      *
      * @param luaState the luaState
      */
@@ -143,7 +148,6 @@ public class AbstractLuaResource extends AbstractResource {
                                final TypeRegistry typeRegistry) {
 
         this.luaState = luaState;
-        this.iocResolver = iocResolver;
         this.typeRegistry = typeRegistry;
 
         // Places a table in the registry to hold the currently running threads.
@@ -158,10 +162,6 @@ public class AbstractLuaResource extends AbstractResource {
         luaState.newTable();
         luaState.setField(-2, REQUEST_TABLE);
 
-        // Creates a place for server.event
-        luaState.newTable();
-        luaState.setField(-2, EVENT_TABLE);
-
         // Creates a table for server.coroutine.  This houses code for
         // server-managed coroutines that will automatically be activated
         // on every update.
@@ -170,6 +170,16 @@ public class AbstractLuaResource extends AbstractResource {
         luaState.pushJavaFunction(SERVER_START_COROUTINE);
         luaState.setField(-2, COROUTINE_CREATE_FUNCTION);
         luaState.setField(-2, COROUTINE_TABLE);
+
+        // Sets up the services table which references htis and the IOC resolver
+        // instance.
+
+        luaState.newTable();
+        luaState.pushJavaObject(this);
+        luaState.setField(-2, THIS_INSTANCE);
+        luaState.pushJavaObject(iocResolver);
+        luaState.setField(-2, IOC_INSTANCE);
+        luaState.setField(-2, SERVICES_TABLE);
 
         // Finally sets the server table to be in the global space
         luaState.setGlobal(NAMAZU_TABLE);
@@ -248,15 +258,21 @@ public class AbstractLuaResource extends AbstractResource {
             pushRequestHandlerTable(methodName);
 
             // Before pushing the handler, we have to finally check the payload and
-            // the response type.  Note that the script can leave these blank
+            // the response type.  Note that the script can leave these blank and
+            // it will fall back onto the default wildcard type.
 
             luaState.getField(-1, REQUEST_PAYLOAD_JAVA_TYPE);
             final String requestPayloadTypeName = luaState.checkString(-1, WILDCARD_TYPE_TOKEN);
             luaState.pop(1);
 
-            return WILDCARD_TYPE_TOKEN.equals(requestPayloadTypeName) ?
-                WILDCARD_TYPE :
-                typeRegistry.getRequestPayloadTypeNamed(requestPayloadTypeName);
+            switch (requestPayloadTypeName) {
+                case WILDCARD_TYPE_TOKEN:
+                    return WILDCARD_TYPE;
+                case WILDCARD_ARRAY_TYPE_TOKEN:
+                    return WILDCARD_ARRAY_TYPE;
+                default:
+                    return typeRegistry.getRequestPayloadTypeNamed(requestPayloadTypeName);
+            }
 
         }
 
@@ -310,11 +326,11 @@ public class AbstractLuaResource extends AbstractResource {
 
             luaState.getGlobal(NAMAZU_TABLE);
 
-            // The first two checks shouldn't fail, unless soembody has seriously
+            // The first two checks shouldn't fail, unless somebody has seriously
             // hosed the lua script backing this resource.
 
             if (!luaState.isTable(-1)) {
-                LOG.error("Unable to find table {}.{}", REQUEST_TABLE, NAMAZU_TABLE);
+                LOG.error("Unable to find table {}", NAMAZU_TABLE);
                 throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 
@@ -322,7 +338,7 @@ public class AbstractLuaResource extends AbstractResource {
             luaState.remove(-2);  // pops namazu_rt
 
             if (!luaState.isTable(-1)) {
-                LOG.error("Unable to find table {}.{}", REQUEST_TABLE, NAMAZU_TABLE);
+                LOG.error("Unable to find table {}.{}", NAMAZU_TABLE, REQUEST_TABLE);
                 throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 
@@ -333,7 +349,7 @@ public class AbstractLuaResource extends AbstractResource {
             luaState.remove(-2); // pops request
 
             if (!luaState.isTable(-1)) {
-                LOG.warn("Unable to find {} in {}.{}", methodName, NAMAZU_TABLE, REQUEST_TABLE);
+                LOG.warn("Unable to find table {}.{}.{}", NAMAZU_TABLE, REQUEST_TABLE, methodName);
                 throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 

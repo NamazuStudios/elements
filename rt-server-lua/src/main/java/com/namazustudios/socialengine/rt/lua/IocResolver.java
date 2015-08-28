@@ -1,13 +1,11 @@
 package com.namazustudios.socialengine.rt.lua;
 
-import com.namazustudios.socialengine.rt.ResourceService;
-
-import javax.inject.Qualifier;
-import java.lang.annotation.Annotation;
-
 /**
  * Used by Lua resources to access member that would otherwise be provided using
  * the javax.inject annotations {@link javax.inject.Inject} and {@link javax.inject.Named}.
+ *
+ * This module does not have an explicit dependency upon any specific IoC container so
+ * this provides a layer of abstraction.
  *
  * Created by patricktwohig on 8/27/15.
  */

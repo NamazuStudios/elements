@@ -134,7 +134,7 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
                                     final Request request,
                                     final ResponseReceiver receiver) {
 
-        final EdgeRequestPathHandler<?> edgeRequestPathHandler =
+        final EdgeRequestPathHandler edgeRequestPathHandler =
             resourceService.getResource(request.getHeader().getPath())
                            .getHandler(request.getHeader().getMethod());
 

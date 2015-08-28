@@ -14,11 +14,14 @@ import javax.inject.Inject;
  */
 public class LuaInternalResource extends AbstractLuaResource implements InternalResource {
 
+    private final LuaState luaState;
+
     @Inject
     public LuaInternalResource(final LuaState luaState,
                                final IocResolver iocResolver,
                                final TypeRegistry typeRegistry) {
         super(luaState, iocResolver, typeRegistry);
+        this.luaState = luaState;
     }
 
     @Override
@@ -32,6 +35,16 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
 
             @Override
             public void handle(final Request request, final ResponseReceiver responseReceiver) {
+
+                pushRequestHandlerFunction(method);
+
+                luaState.pushJavaObject(request);
+                luaState.call(3, 2);
+
+                final int code = (int) luaState.checkNumber(-2);
+                final Object response = luaState.checkJavaObject(-1, Object.class);
+
+                responseReceiver.receive(code, response);
 
             }
 

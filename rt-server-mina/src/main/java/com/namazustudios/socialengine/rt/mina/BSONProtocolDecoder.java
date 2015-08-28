@@ -113,7 +113,7 @@ public class BSONProtocolDecoder extends CumulativeProtocolDecoder {
 
             final RequestHeader requestHeader = getRequestHeader(ioSession);
 
-            final EdgeRequestPathHandler<?> edgeRequestPathHandler = edgeResourceService
+            final EdgeRequestPathHandler edgeRequestPathHandler = edgeResourceService
                     .getResource(requestHeader.getPath())
                     .getHandler(requestHeader.getMethod());
 
