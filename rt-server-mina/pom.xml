@@ -14,7 +14,6 @@
         <mina.version>2.0.9</mina.version>
         <bson.version>3.0.3</bson.version>
         <bson4jackson.version>2.4.0</bson4jackson.version>
-        <jackson.version>2.5.2</jackson.version>
     </properties>
 
     <groupId>com.namazustudios.socialengine</groupId>
@@ -51,7 +50,7 @@
         <dependency>
             <groupId>de.undercouch</groupId>
             <artifactId>bson4jackson</artifactId>
-            <version>2.4.0</version>
+            <version>${bson4jackson.version}</version>
         </dependency>
     </dependencies>
 

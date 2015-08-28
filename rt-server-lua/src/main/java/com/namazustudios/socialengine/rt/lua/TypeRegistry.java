@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 
 /**
  * Various scripts in the server may need to access type metadata through various means.  This provides
- * an interface through which types can be accessed by simple names to avoid having to references
+ * an interface through which types can be accessed by simple names to avoid having to reference
  * types by fully-qualified Java class name.
  *
  * Created by patricktwohig on 8/26/15.
@@ -29,7 +29,7 @@ public interface TypeRegistry {
      *
      * @throws {@link NotFoundException} if the type cannot be found
      */
-    Class<?> getRequestTypeNamed(final String name);
+    Class<?> getRequestPayloadTypeNamed(final String name);
 
     /**
      * Gets the request type with the given name.
@@ -39,7 +39,7 @@ public interface TypeRegistry {
      *
      * @throws {@link NotFoundException} if the type cannot be found
      */
-    Class<?> getResponseTypeNamed(final String name);
+    Class<?> getResponsePayloadTypeNamed(final String name);
 
     /**
      * Gets the types by fully-qualified class name.
