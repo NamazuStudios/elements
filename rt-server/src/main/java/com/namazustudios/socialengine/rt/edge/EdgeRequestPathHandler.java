@@ -12,7 +12,7 @@ import com.namazustudios.socialengine.rt.ResponseReceiver;
  *
  * Created by patricktwohig on 7/24/15.
  */
-public interface EdgeRequestPathHandler<PayloadT> {
+public interface EdgeRequestPathHandler {
 
     /**
      * Gets the {@link Class} which can be passed as the payload
@@ -20,7 +20,7 @@ public interface EdgeRequestPathHandler<PayloadT> {
      *
      * @return the type
      */
-    Class<PayloadT> getPayloadType();
+    Class<?> getPayloadType();
 
     /**
      * Handles the given request from a edgeClient.

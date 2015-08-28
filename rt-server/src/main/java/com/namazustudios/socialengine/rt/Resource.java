@@ -49,8 +49,6 @@ public interface Resource extends AutoCloseable {
      * @param eventReceiver the event receiver instance
      * @param <EventT>
      *
-     * @throws {@link NotFoundException} if the resource does not source the event name, type.
-     *
      */
     <EventT> Subscription subscribe(String name, EventReceiver<EventT> eventReceiver);
 
@@ -79,7 +77,7 @@ public interface Resource extends AutoCloseable {
     void onMove(String oldPath, String newPath);
 
     /**
-     * Called when the resource has been removed by the {@lnk ResourceService}.
+     * Called when the resource has been removed by the {@link ResourceService}.
      *
      * @param path the path
      */

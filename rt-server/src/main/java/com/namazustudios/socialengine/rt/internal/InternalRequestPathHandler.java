@@ -9,7 +9,7 @@ import com.namazustudios.socialengine.rt.ResponseReceiver;
  *
  * Created by patricktwohig on 8/23/15.
  */
-public interface InternalRequestPathHandler<PayloadT> {
+public interface InternalRequestPathHandler {
 
     /**
      * Gets the {@link Class} which can be passed as the payload
@@ -17,7 +17,7 @@ public interface InternalRequestPathHandler<PayloadT> {
      *
      * @return the type
      */
-    Class<PayloadT> getPayloadType();
+    Class<?> getPayloadType();
 
     /**
      * Handles the given request from a edgeClient.

@@ -23,6 +23,6 @@ public interface EdgeResource extends Resource {
      *
      * @throws {@link NotFoundException} if the method cannot be found.
      */
-    EdgeRequestPathHandler<?> getHandler(final String method);
+    EdgeRequestPathHandler getHandler(final String method);
 
 }

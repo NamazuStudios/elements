@@ -97,7 +97,7 @@ public abstract class AbstractSimpleServer implements Runnable {
 
                     @Override
                     public String toString() {
-                        return "EventType receiver " + eventReceiver + "for event " + event + " at path" + path;
+                        return "EventModel receiver " + eventReceiver + "for event " + event + " at path" + path;
                     }
 
                 });

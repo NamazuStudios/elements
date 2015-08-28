@@ -4,9 +4,8 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
-import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
-import com.namazustudios.socialengine.rt.event.EventType;
+import com.namazustudios.socialengine.rt.event.EventModel;
 import com.namazustudios.socialengine.rt.event.ResourceAddedEvent;
 import com.namazustudios.socialengine.rt.event.ResourceMovedEvent;
 import com.namazustudios.socialengine.rt.event.ResourceRemovedEvent;
@@ -33,12 +32,6 @@ import java.util.concurrent.TimeUnit;
 public abstract class AbstractResource implements Resource {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractResource.class);
-
-    public static final Map<String, Class<?>> EVENT_TYPES_BY_NAME = new ImmutableMap.Builder<String, Class<?>>()
-            .put(ResourceAddedEvent.class.getSimpleName(), ResourceAddedEvent.class)
-            .put(ResourceMovedEvent.class.getSimpleName(), ResourceMovedEvent.class)
-            .put(ResourceRemovedEvent.class.getSimpleName(), ResourceRemovedEvent.class)
-        .build();
 
     private final Stopwatch stopwatch = Stopwatch.createUnstarted();
 
@@ -103,7 +96,7 @@ public abstract class AbstractResource implements Resource {
      *
      * @see {@link Resource#subscribe(String, EventReceiver)}.
      *
-     * @param name the name
+     * @param desiredName the name
      * @param eventReceiver the event receiver instance
      *
      * @param <EventT>
@@ -112,13 +105,6 @@ public abstract class AbstractResource implements Resource {
      */
     @Override
     public <EventT> Subscription subscribe(final String desiredName, final EventReceiver<EventT> eventReceiver) {
-
-        if(!checkEvents(desiredName, eventReceiver.getEventType())) {
-            throw new NotFoundException(
-                    "event \"" + desiredName  + "\"" +
-                    "of type \"" + eventReceiver.getEventType() + "\"" +
-                    "is not sourced from: " + this);
-        }
 
         final EventReceiver<EventT> wrapper = new EventReceiverWrapper<>(eventReceiver);
         LOG.debug("Registered event receiver {}", eventReceiver);
@@ -190,25 +176,10 @@ public abstract class AbstractResource implements Resource {
     }
 
     /**
-     * Checks if both the event name and type are compatible with this {@link Resource}.  If not,
-     * this must return false.  Subclasses may override this as needed, and the default implementation
-     * checks for {@link #EVENT_TYPES_BY_NAME}.
-     *
-     * @param name the name of the event
-     * @param desiredType the desired type of the event, as obtained from {@link EventReceiver#getEventType()}.
-     *
-     * @return true if the types are compatible, false otherwise
-     */
-    public boolean checkEvents(final String name, final Class<?> desiredType) {
-        final Class<?> eventType = EVENT_TYPES_BY_NAME.get(name);
-        return desiredType.isAssignableFrom(eventType);
-    }
-
-    /**
      * Posts the given event to all of this objects' {@link EventReceiver} instances.  This ensures
      * that the event is checked and delivered to the appropriate handlers.
      *
-     * The name is inferred using the {@link EventType} annotation.
+     * The name is inferred using the {@link EventModel} annotation.
      *
      * @param <EventT>
      * @param event the event itself
@@ -220,6 +191,8 @@ public abstract class AbstractResource implements Resource {
     /**
      * Posts the given event to all of this objects' {@link EventReceiver} instances.  This ensures
      * that the event is checked and delivered to the appropriate handlers.
+     *
+     * This method will throw an execpetion if the type is not annotated with {@link EventModel}
      *
      * @param <EventT>
      * @param event the event itself

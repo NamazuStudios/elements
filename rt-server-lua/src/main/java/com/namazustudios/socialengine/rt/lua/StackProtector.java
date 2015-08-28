@@ -23,9 +23,12 @@ public class StackProtector implements AutoCloseable {
     public StackProtector(LuaState luaState) {
         this.luaState = luaState;
         absoluteIndex = luaState.getTop();
+        LOG.debug("Stack top {}", absoluteIndex);
     }
 
     public int ret(final int returnCount) {
+
+        LOG.debug("Setting return count to {}.  New final absolute stack top {}", returnCount + returnCount);
 
         if (returnCount <= 0) {
             throw new IllegalArgumentException("return count must be positive.");
@@ -39,14 +42,14 @@ public class StackProtector implements AutoCloseable {
 
     }
 
-    void clearReturnCount() {
-        returnCount = -1;
-    }
-
     @Override
     public void close() {
 
         final int newStackTop = Math.min(luaState.getTop(), returnCount + absoluteIndex);
+
+        if (luaState.getTop() < (returnCount + absoluteIndex)) {
+            LOG.debug("Stack top {}.  Expected new top {}.  Did you forget to push the return value?", newStackTop);
+        }
 
         if (luaState.getTop() == newStackTop) {
             LOG.debug("Stack consistent.");

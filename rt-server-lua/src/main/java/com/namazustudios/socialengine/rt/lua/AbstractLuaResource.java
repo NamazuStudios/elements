@@ -1,16 +1,21 @@
 package com.namazustudios.socialengine.rt.lua;
 
-import com.google.common.base.Strings;
+import com.naef.jnlua.Converter;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.AbstractResource;
+import com.namazustudios.socialengine.rt.Request;
+import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
+import com.namazustudios.socialengine.rt.edge.EdgeServer;
+import com.namazustudios.socialengine.rt.internal.InternalServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -48,7 +53,9 @@ public class AbstractLuaResource extends AbstractResource {
     public static final String NAMAZU_TABLE = "namazu_rt";
 
     /**
-     * The table underneath the Server table which handles requets.
+     * The table underneath the namazu_rt table which specifies which events this script
+     * will source.  Typically this is assigned to nil or the {@link #WILDCARD_TYPE_TOKEN} constant
+     * to indicate that the event will match any type.
      */
     public static final String EVENT_TABLE = "event";
 
@@ -70,47 +77,60 @@ public class AbstractLuaResource extends AbstractResource {
     public static final String SERVER_THREADS_TABLE = "NAMAZU_RT_SERVER_THREADS";
 
     /**
-     * The table underneath the namazu table which handles requests.
+     * The table underneath the namazu_rt table which handles requests.
      */
     public static final String REQUEST_TABLE = "request";
 
     /**
-     * Constant to designate the "Handler" key.  This is used as the
-     * key for a lua function which can be called to handle a {@link Request}
-     * for a type.
+     * Constant to designate the "Handler" key.  This is used as the key for a lua function which can be called to
+     * handle a {@link Request}.  This is necessary, or else no functionality in Lua will exist to handle
+     * the request and must be assigned to a function type.
      */
     public static final String REQUEST_HANDLER_KEY = "handler";
 
     /**
-     * Constant to designate the "type" key for the response. This is optional in many cases,
-     * but can be used to resolve ambiguities.  If left nil, then type conversion will be
-     * performed through the {@link com.naef.jnlua.Converter} interface.
+     * Constant to designate the "type" key for the response.  If set to a string other than {@link #WILDCARD_TYPE_TOKEN}
+     * this will attempt to force type conversion to that particular type.  Leaving blank will fall back onto
+     * the behavior of {@link Converter#convertJavaObject(LuaState, Object)}.  Specifying type should rarely
+     * be needed.
+     *
+     * More specifically this controls the return value of {@link EdgeRequestPathHandler#getPayloadType()} and
+     * similar functions.
      */
     public static final String REQUEST_PAYLOAD_JAVA_TYPE = "request_payload_type";
 
     /**
-     * Constant to designate the "type" key for the response. This is optional in many cases,
-     * but can be used to resolve ambiguities.  If left nil, then type conversion will be
-     * performed through the {@link com.naef.jnlua.Converter} interface.
+     * The wildcard type.
      */
-    public static final String RESPONSE_PAYLOAD_JAVA_TYPE = "response_payload_type";
+    public static final Class<?> WILDCARD_TYPE = Map.class;
+
+    /**
+     * A key on the namazu_rt table to expose  an instance of this type to the underlying Lua script.  This allows
+     * the underlying script to perform functions such as getting the current path, or posting events to subscribers.
+     */
+    public static final String THIS_INSTANCE = "resource";
+
+    /**
+     * Exposes the instance of {@link IocResolver} which the underlying script can use to resolve depdendencies
+     * such as other instances of {@link Resource}, {@link EdgeServer}, and {@link InternalServer}.
+     */
+    public static final String IOC_INSTNCE = "ioc";
 
     /**
      * Used by the type functions to indicate a type wildcard.
      */
-    public static final String TYPE_WILDCARD = "*";
+    public static final String WILDCARD_TYPE_TOKEN = "*";
+
 
     /**
      * The lua state used by this and subclasses.  This is injected by the IoC container
-     * int the
+     * configured with the possible options such as an application-specific {@link Converter} instance.
      */
-    protected final LuaState luaState;
+    private final LuaState luaState;
 
-    @Inject
-    IocResolver iocResolver;
+    private final IocResolver iocResolver;
 
-    @Inject
-    private TypeRegistry typeRegistry;
+    private final TypeRegistry typeRegistry;
 
     /**
      * Creates an instance of {@link AbstractLuaResource} with the given {@link LuaState}
@@ -118,11 +138,13 @@ public class AbstractLuaResource extends AbstractResource {
      *
      * @param luaState the luaState
      */
-    @Inject
     public AbstractLuaResource(final LuaState luaState,
-                               final IocResolver iocResolver) {
+                               final IocResolver iocResolver,
+                               final TypeRegistry typeRegistry) {
 
         this.luaState = luaState;
+        this.iocResolver = iocResolver;
+        this.typeRegistry = typeRegistry;
 
         // Places a table in the registry to hold the currently running threads.
         luaState.newTable();
@@ -209,78 +231,81 @@ public class AbstractLuaResource extends AbstractResource {
     }
 
     /**
-     * In addition to checking the base type, this will check the Lua event table
-     * for both the type and the value.
-     *
-     * @see {@link TypeRegistry#getEventTypeNamed(String)}
-     * @see {@link AbstractLuaResource#checkEvents(String, Class)}
-     *
-     * @param desiredName the name of the event
-     * @param desiredType the desired type of the event, as obtained from {@link EventReceiver#getEventType()}.
-     *
-     * @return true if the underlying lua script supports the event
-     */
-    @Override
-    public boolean checkEvents(final String desiredName, final Class<?> desiredType) {
-
-        try (final StackProtector stackProtector = new StackProtector(luaState)) {
-
-            boolean found = false;
-
-            luaState.getGlobal(NAMAZU_TABLE);
-            luaState.getField(-1, EVENT_TABLE);
-
-            final int eventTable = luaState.absIndex(-1);
-
-            luaState.pushNil();
-            while (luaState.next(eventTable)) {
-
-                final String eventName = Strings.nullToEmpty(luaState.checkString(-2)).trim();
-                final String eventType = luaState.checkString(-1, TYPE_WILDCARD);
-
-                // Skip the check if somebody sets to the wildcard type
-
-                if (!TYPE_WILDCARD.equals(eventType) && eventName.equals(desiredName)) {
-
-                    if (eventType != null) {
-
-                        final Class<?> eventClass = typeRegistry.getEventTypeNamed(luaState.checkString(-1));
-
-                        if (!desiredType.isAssignableFrom(eventClass)) {
-                            throw new NotFoundException("event handler for type " + desiredType + " not found.");
-                        }
-
-                    }
-
-                    found = true;
-
-                }
-
-                luaState.pop(1);
-
-            }
-
-            luaState.pop(1);
-
-            return found || super.checkEvents(desiredName, desiredType);
-
-        }
-    }
-
-    /**
      *
      * Pushes the given request handler on the stack for the given name and type.  If the type is not
      * found, then this will throw a {@link NotFoundException} and restore the stack to the original
      * state.
      *
-     * @param desiredRequestName desired request name
-     * @param desiredRequestPayloadType the desired request type
-     * @param desiredResponsePayloadType the desired payload type
+     * @param methodName desired method name
+     *
+     * @return the request handler's desired type, which may be the default type ({@link Map})
      *
      */
-    public void pushRequestHandler(final String desiredRequestName,
-                                   final Class<?> desiredRequestPayloadType,
-                                   final Class<?> desiredResponsePayloadType) {
+    protected Class<?> getRequestType(final String methodName) {
+
+        try (final StackProtector stackProtector = new StackProtector(luaState)) {
+
+            pushRequestHandlerTable(methodName);
+
+            // Before pushing the handler, we have to finally check the payload and
+            // the response type.  Note that the script can leave these blank
+
+            luaState.getField(-1, REQUEST_PAYLOAD_JAVA_TYPE);
+            final String requestPayloadTypeName = luaState.checkString(-1, WILDCARD_TYPE_TOKEN);
+            luaState.pop(1);
+
+            return WILDCARD_TYPE_TOKEN.equals(requestPayloadTypeName) ?
+                WILDCARD_TYPE :
+                typeRegistry.getRequestPayloadTypeNamed(requestPayloadTypeName);
+
+        }
+
+    }
+
+    /**
+     * Pushes the handler request function on the top of the stack.
+     *
+     * Any other intermediate variables are popped on the stack.  The end result of this
+     * call should result in only the requets handler table being pushed.
+     *
+     * @param methodName the method name
+     */
+    protected void pushRequestHandlerFunction(final String methodName) {
+
+        try (final StackProtector stackProtector = new StackProtector(luaState)) {
+
+            pushRequestHandlerTable(methodName);
+
+            luaState.getField(-1, REQUEST_HANDLER_KEY);
+
+            if (!luaState.isFunction(-1)) {
+                LOG.error("No handler function found at {}.{}.{}.{}",
+                        NAMAZU_TABLE, REQUEST_TABLE, methodName, REQUEST_HANDLER_KEY);
+                throw new NotFoundException("request handler not found for method " + methodName);
+            }
+
+            luaState.pop(-2);
+            stackProtector.ret(1);
+
+        }
+
+    }
+
+    /**
+     * Pushes the request handler table for the given method name.  The request handler
+     * table can contain two keys of use.  The handler function itself, and the method
+     * type expected for the request.
+     *
+     * Any other intermediate variables are popped on the stack.  The end result of this
+     * call should result in only the requets handler table being pushed.
+     *
+     * @param methodName the method name
+     *
+     * @throws {@link NotFoundException} if methodName name is not found
+     *
+     */
+    protected void pushRequestHandlerTable(final String methodName) {
+
         try (final StackProtector stackProtector = new StackProtector(luaState)) {
 
             luaState.getGlobal(NAMAZU_TABLE);
@@ -290,71 +315,32 @@ public class AbstractLuaResource extends AbstractResource {
 
             if (!luaState.isTable(-1)) {
                 LOG.error("Unable to find table {}.{}", REQUEST_TABLE, NAMAZU_TABLE);
-                throw new NotFoundException(desiredRequestName + " doest not exist for " + this);
+                throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 
             luaState.getField(-1, REQUEST_TABLE);
+            luaState.remove(-2);  // pops namazu_rt
 
             if (!luaState.isTable(-1)) {
                 LOG.error("Unable to find table {}.{}", REQUEST_TABLE, NAMAZU_TABLE);
-                throw new NotFoundException(desiredRequestName + " doest not exist for " + this);
+                throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 
             // Here's where the failures can be considered "normal" in that somebody could
             // have just forgotten to define a handler.
 
-            luaState.getField(-1, desiredRequestName);
+            luaState.getField(-1, methodName);
+            luaState.remove(-2); // pops request
 
             if (!luaState.isTable(-1)) {
-                LOG.warn("Unable to find {} in {}.{}", desiredRequestName, NAMAZU_TABLE, REQUEST_TABLE);
-                throw new NotFoundException(desiredRequestName + " doest not exist for " + this);
-            }
-
-            // Before pushing the handler, we have to finally check the payload and
-            // the response type.  Note that the script can leave these blank
-
-            luaState.getField(-1, REQUEST_PAYLOAD_JAVA_TYPE);
-            final String requestPayloadTypeName = luaState.checkString(-1, TYPE_WILDCARD);
-            luaState.pop(1);
-
-            if (!TYPE_WILDCARD.equals(requestPayloadTypeName)) {
-
-                final Class<?> requestPayloadType = typeRegistry.getRequestPayloadTypeNamed(requestPayloadTypeName);
-
-                if (!desiredRequestPayloadType.isAssignableFrom(requestPayloadType)) {
-                    throw new NotFoundException("Handler types incompatible  " + requestPayloadType + " " +
-                                                "and " + desiredRequestPayloadType);
-                }
-
-            }
-
-            luaState.getField(-1, RESPONSE_PAYLOAD_JAVA_TYPE);
-            final String responsePayloadTypeName = luaState.checkString(-1, TYPE_WILDCARD);
-            luaState.pop(1);
-
-            if (!TYPE_WILDCARD.equals(responsePayloadTypeName)) {
-
-                final Class<?> responsePayloadType = typeRegistry.getResponsePayloadTypeNamed(responsePayloadTypeName);
-
-                if (!desiredResponsePayloadType.isAssignableFrom(responsePayloadType)) {
-                    throw new NotFoundException("Handler types incompatible " + responsePayloadType + " " +
-                                                "and " + desiredResponsePayloadType);
-                }
-
-            }
-
-            // Last step is to actually push the handler function.
-
-            luaState.getField(-1, REQUEST_HANDLER_KEY);
-
-            if (!luaState.isFunction(-1)) {
-                LOG.error("No handler function found at {}.{}.{}.{}",
-                          NAMAZU_TABLE, REQUEST_TABLE, desiredRequestName, REQUEST_HANDLER_KEY);
+                LOG.warn("Unable to find {} in {}.{}", methodName, NAMAZU_TABLE, REQUEST_TABLE);
+                throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 
             stackProtector.ret(1);
 
         }
+
     }
 
     /**

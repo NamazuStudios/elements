@@ -17,6 +17,6 @@ public interface InternalResource extends Resource {
      *
      * @throws {@link NotFoundException} if the method cannot be found.
      */
-    InternalRequestPathHandler<?> getHandler(final String method);
+    InternalRequestPathHandler getHandler(final String method);
 
 }

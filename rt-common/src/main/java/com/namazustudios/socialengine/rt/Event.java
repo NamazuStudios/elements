@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.event.EventType;
+import com.namazustudios.socialengine.rt.event.EventModel;
 
 /**
  * Represents a one-way message produced by a Resource, and dispatched to various
@@ -46,7 +46,7 @@ public interface Event {
          */
         public static String getEventName(Class<?> cls) {
 
-            final EventType eventType = cls.getAnnotation(EventType.class);
+            final EventModel eventType = cls.getAnnotation(EventModel.class);
 
             if (eventType == null) {
                 throw new IllegalArgumentException(cls + " is not an event.");

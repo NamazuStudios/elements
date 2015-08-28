@@ -5,7 +5,7 @@ package com.namazustudios.socialengine.rt.event;
  * 
  * Created by patricktwohig on 8/25/15.
  */
-@EventType
+@EventModel
 public class ResourceAddedEvent {
 
     private String path;
