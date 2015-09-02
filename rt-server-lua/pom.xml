@@ -63,6 +63,7 @@
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
             <version>${reflections.version}</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
@@ -70,6 +71,12 @@
             <version>${guice.version}</version>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>com.google.inject.extensions</groupId>
+            <artifactId>guice-multibindings</artifactId>
+            <version>${guice.version}</version>
+        </dependency>
+
     </dependencies>
 
 </project>
