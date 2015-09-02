@@ -30,4 +30,9 @@ public interface Constants {
      */
     double SECONDS_PER_MILLISECOND = 1d / 1000d;
 
+    /**
+     * The default port for communication.
+     */
+    int DEFAULT_PORT = 28883;
+
 }

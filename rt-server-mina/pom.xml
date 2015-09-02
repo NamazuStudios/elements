@@ -52,6 +52,12 @@
             <artifactId>bson4jackson</artifactId>
             <version>${bson4jackson.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>${guice.version}</version>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
 </project>
