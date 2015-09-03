@@ -2,6 +2,18 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.binder.ScopedBindingBuilder;
+import com.google.inject.name.Names;
+import com.google.inject.util.Providers;
+import com.namazustudios.socialengine.rt.edge.EdgeResource;
+import com.namazustudios.socialengine.rt.internal.InternalResource;
+import com.namazustudios.socialengine.rt.lua.LuaEdgeResource;
+import com.namazustudios.socialengine.rt.lua.EdgeResourceProviders;
+import com.namazustudios.socialengine.rt.lua.LuaInternalResource;
+import com.namazustudios.socialengine.rt.lua.InternalResourceProviders;
+
+import javax.inject.Provider;
+import java.io.File;
+
 
 /**
  * Allows for client code to manually bind Lua scripts with names.  Once bound, they can
@@ -27,7 +39,7 @@ public abstract class LuaResourceModule extends AbstractModule {
 
             @Override
             public NamedScriptBindingBuilder onLocalFilesystem() {
-                return edgeFilesystemScriptFile(scriptFile);
+                return edgeFilesystemScriptFile(new File(scriptFile));
             }
         };
     }
@@ -36,17 +48,30 @@ public abstract class LuaResourceModule extends AbstractModule {
         return new NamedScriptBindingBuilder() {
             @Override
             public ScopedBindingBuilder named(final String scriptName) {
-                return null;
+
+                final Provider<LuaEdgeResource> provider = EdgeResourceProviders
+                        .classpathProviderForScript(scriptFile);
+
+                return bind(EdgeResource.class)
+                        .annotatedWith(Names.named(scriptName))
+                        .toProvider(Providers.guicify(provider));
 
             }
         };
     }
 
-    private NamedScriptBindingBuilder edgeFilesystemScriptFile(final String scriptFile) {
+    private NamedScriptBindingBuilder edgeFilesystemScriptFile(final File scriptFile) {
         return new NamedScriptBindingBuilder() {
             @Override
-            public ScopedBindingBuilder named(String scriptName) {
-                return null;
+            public ScopedBindingBuilder named(final String scriptName) {
+
+                final Provider<LuaEdgeResource> provider = EdgeResourceProviders
+                        .filesystemProviderForScript(scriptFile);
+
+                return bind(EdgeResource.class)
+                        .annotatedWith(Names.named(scriptName))
+                        .toProvider(Providers.guicify(provider));
+
             }
         };
     }
@@ -67,7 +92,7 @@ public abstract class LuaResourceModule extends AbstractModule {
 
             @Override
             public NamedScriptBindingBuilder onLocalFilesystem() {
-                return internalFilesystemScriptFile(scriptFile);
+                return internalFilesystemScriptFile(new File(scriptFile));
             }
         };
     }
@@ -76,19 +101,33 @@ public abstract class LuaResourceModule extends AbstractModule {
         return new NamedScriptBindingBuilder() {
             @Override
             public ScopedBindingBuilder named(final String scriptName) {
-                return null;
+
+                final Provider<LuaInternalResource> provider = InternalResourceProviders
+                        .classpathProviderForScript(scriptFile);
+
+                return bind(InternalResource.class)
+                        .annotatedWith(Names.named(scriptName))
+                        .toProvider(Providers.guicify(provider));
 
             }
         };
     }
 
-    private NamedScriptBindingBuilder internalFilesystemScriptFile(final String scriptFile) {
+    private NamedScriptBindingBuilder internalFilesystemScriptFile(final File scriptFile) {
         return new NamedScriptBindingBuilder() {
             @Override
             public ScopedBindingBuilder named(String scriptName) {
-                return null;
+
+                final Provider<LuaInternalResource> provider = InternalResourceProviders
+                        .filesystemProviderForScript(scriptFile);
+
+                return bind(InternalResource.class)
+                        .annotatedWith(Names.named(scriptName))
+                        .toProvider(Providers.guicify(provider));
+
             }
         };
     }
+
 
 }

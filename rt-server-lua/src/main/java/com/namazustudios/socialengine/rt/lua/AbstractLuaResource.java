@@ -11,6 +11,8 @@ import com.namazustudios.socialengine.rt.internal.InternalServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -133,6 +135,8 @@ public class AbstractLuaResource extends AbstractResource {
 
     private final TypeRegistry typeRegistry;
 
+    private final IocResolver iocResolver;
+
     /**
      * Creates an instance of {@link AbstractLuaResource} with the given {@link LuaState}
      * type.
@@ -146,9 +150,25 @@ public class AbstractLuaResource extends AbstractResource {
     public AbstractLuaResource(final LuaState luaState,
                                final IocResolver iocResolver,
                                final TypeRegistry typeRegistry) {
-
         this.luaState = luaState;
+        this.iocResolver = iocResolver;
         this.typeRegistry = typeRegistry;
+    }
+
+    /**
+     * Executes a Lua script from the given {@link InputStream} instance.  The returned
+     * instance.
+     *
+     * @param inputStream the input stream
+     * @param name the name of the script (useful for debugging)
+     * @throws IOException
+     */
+    public void load(final InputStream inputStream, final String name) throws IOException {
+        setupScriptGlobals();
+        luaState.load(inputStream, name, "bt");
+    }
+
+    private void setupScriptGlobals() {
 
         // Places a table in the registry to hold the currently running threads.
         luaState.newTable();
