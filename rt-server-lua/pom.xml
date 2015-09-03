@@ -18,7 +18,6 @@
 
     <properties>
         <jnlua.version>1.0.4</jnlua.version>
-        <reflections.version>0.9.10</reflections.version>
     </properties>
 
     <dependencies>

@@ -55,6 +55,7 @@
         <testng.version>6.8.21</testng.version>
         <jackson.version>2.5.2</jackson.version>
         <bson4jackson.version>2.4.0</bson4jackson.version>
+        <reflections.version>0.9.10</reflections.version>
     </properties>
 
     <dependencies>
