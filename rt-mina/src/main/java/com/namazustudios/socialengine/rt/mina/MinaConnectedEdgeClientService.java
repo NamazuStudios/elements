@@ -40,6 +40,10 @@ public class MinaConnectedEdgeClientService implements ConnectedEdgeClientServic
                         .from(response)
                     .build();
 
+                if (request.getHeader().getSequence() != simpleResponse.getResponseHeader().getSequence()) {
+                    LOG.warn("Out of sequence response {} {}", request, response);
+                }
+
                 minaClient.getIoSession().write(simpleResponse);
 
             }
