@@ -31,7 +31,7 @@
         <module>rt-server</module>
         <module>rt-mina</module>
         <module>rt-server-lua</module>
-        <module>rt-server-guice-example</module>
+        <module>rt-guice-example</module>
     </modules>
 
     <properties>
