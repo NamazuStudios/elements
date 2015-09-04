@@ -25,7 +25,7 @@ public class SimpleInternalRequestDispatcher implements InternalRequestDispatche
 
     @Override
     public void dispatch(final Request request, final ResponseReceiver responseReceiver) {
-        try (final DelegatingCheckedReceiver receiver = new DelegatingCheckedReceiver(request, responseReceiver)) {
+        try (final DelegatingCheckedResponseReceiver receiver = new DelegatingCheckedResponseReceiver(request, responseReceiver)) {
             doDispatch(request, responseReceiver);
         }  catch (Exception ex) {
             LOG.error("Caught exception processing request {}.", request, ex);
@@ -105,7 +105,13 @@ public class SimpleInternalRequestDispatcher implements InternalRequestDispatche
             LOG.error("Caught exception handling request {} to edgeClient {}.", request, e);
         }
 
-        responseReceiver.receive(code.getCode(), simpleExceptionResponsePayload);
+        final SimpleResponse simpleResponse = SimpleResponse.builder()
+                .from(request)
+                .code(code)
+                .payload(simpleExceptionResponsePayload)
+            .build();
+
+        responseReceiver.receive(simpleResponse);
 
     }
 

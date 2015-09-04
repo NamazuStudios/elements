@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.edge.SimpleEdgeRequestDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,9 +16,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * is generated only once.
  *
  */
-public class DelegatingCheckedReceiver implements ResponseReceiver, AutoCloseable {
+public class DelegatingCheckedResponseReceiver implements ResponseReceiver, AutoCloseable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DelegatingCheckedReceiver.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DelegatingCheckedResponseReceiver.class);
 
     private final Request request;
 
@@ -27,16 +26,16 @@ public class DelegatingCheckedReceiver implements ResponseReceiver, AutoCloseabl
 
     private final AtomicBoolean received = new AtomicBoolean();
 
-    public DelegatingCheckedReceiver(final Request request,
-                                     final ResponseReceiver delegate) {
+    public DelegatingCheckedResponseReceiver(final Request request,
+                                             final ResponseReceiver delegate) {
         this.request = request;
         this.delegate = delegate;
     }
 
     @Override
-    public void receive(int code, Object payload) {
+    public void receive(final Response response) {
         if (received.compareAndSet(false, true)) {
-            delegate.receive(code, payload);
+            delegate.receive(response);
         } else {
             LOG.error("Attempted to dispatch duplicate responses for request {}", request);
         }
@@ -52,7 +51,12 @@ public class DelegatingCheckedReceiver implements ResponseReceiver, AutoCloseabl
             simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();
             simpleExceptionResponsePayload.setMessage(msg);
 
-            delegate.receive(ResponseCode.INTERNAL_ERROR_FATAL.getCode(), simpleExceptionResponsePayload);
+            final SimpleResponse simpleResponse = SimpleResponse.builder()
+                    .from(request)
+                    .payload(simpleExceptionResponsePayload)
+                .build();
+
+            delegate.receive(simpleResponse);
 
         }
     }

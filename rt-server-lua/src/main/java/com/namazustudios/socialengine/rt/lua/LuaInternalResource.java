@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.rt.lua;
 
-import com.google.common.reflect.TypeResolver;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.ResponseReceiver;
+import com.namazustudios.socialengine.rt.SimpleResponse;
 import com.namazustudios.socialengine.rt.internal.InternalRequestPathHandler;
 import com.namazustudios.socialengine.rt.internal.InternalResource;
 
@@ -42,9 +42,15 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
                 luaState.call(3, 2);
 
                 final int code = (int) luaState.checkNumber(-2);
-                final Object response = luaState.checkJavaObject(-1, Object.class);
+                final Object payload = luaState.checkJavaObject(-1, Object.class);
 
-                responseReceiver.receive(code, response);
+                final SimpleResponse simpleResponse = SimpleResponse.builder()
+                        .from(request)
+                        .code(code)
+                        .payload(payload)
+                    .build();
+
+                responseReceiver.receive(simpleResponse);
 
             }
 

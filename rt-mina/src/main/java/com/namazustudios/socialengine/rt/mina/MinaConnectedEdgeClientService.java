@@ -4,11 +4,15 @@ import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.edge.EdgeClient;
 import com.namazustudios.socialengine.rt.edge.ConnectedEdgeClientService;
 import com.namazustudios.socialengine.rt.ResponseReceiver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by patricktwohig on 7/27/15.
  */
 public class MinaConnectedEdgeClientService implements ConnectedEdgeClientService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MinaConnectedEdgeClientService.class);
 
     @Override
     public ResponseReceiver getResponseReceiver(final EdgeClient edgeClient, final Request request) {
@@ -30,15 +34,11 @@ public class MinaConnectedEdgeClientService implements ConnectedEdgeClientServic
         return new ResponseReceiver() {
 
             @Override
-            public void receive(int code, Object payload) {
+            public void receive(Response response) {
 
-                final SimpleResponseHeader simpleResponseHeader = new SimpleResponseHeader();
-                simpleResponseHeader.setCode(code);
-                simpleResponseHeader.setSequence(request.getHeader().getSequence());
-
-                final SimpleResponse simpleResponse = new SimpleResponse();
-                simpleResponse.setResponseHeader(simpleResponseHeader);
-                simpleResponse.setPayload(payload);
+                final SimpleResponse simpleResponse = SimpleResponse.builder()
+                        .from(response)
+                    .build();
 
                 minaClient.getIoSession().write(simpleResponse);
 

@@ -31,7 +31,7 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
     public void dispatch(final EdgeClient edgeClient,
                          final Request request,
                          final ResponseReceiver responseReceiver) {
-        try (final DelegatingCheckedReceiver receiver = new DelegatingCheckedReceiver(request, responseReceiver)) {
+        try (final DelegatingCheckedResponseReceiver receiver = new DelegatingCheckedResponseReceiver(request, responseReceiver)) {
             executeRootFilterChain(edgeClient, request, receiver);
         } catch (Exception ex) {
             LOG.error("Caught exception processing request {}.", request, ex);
@@ -93,7 +93,13 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
             LOG.error("Caught exception handling request {} to edgeClient {}.", request, edgeClient, e);
         }
 
-        responseReceiver.receive(code.getCode(), simpleExceptionResponsePayload);
+        final SimpleResponse simpleResponse = SimpleResponse.builder()
+                .from(request)
+                .code(code)
+                .payload(simpleExceptionResponsePayload)
+            .build();
+
+        responseReceiver.receive(simpleResponse);
 
     }
 

@@ -1,15 +1,10 @@
 package com.namazustudios.socialengine.rt;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
