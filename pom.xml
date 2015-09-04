@@ -32,6 +32,7 @@
         <module>rt-mina</module>
         <module>rt-server-lua</module>
         <module>rt-guice-example</module>
+        <module>rt-client</module>
     </modules>
 
     <properties>
