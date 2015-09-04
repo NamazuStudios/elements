@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.mina;
 
 import com.namazustudios.socialengine.rt.Request;
-import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.ResponseReceiver;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestDispatcher;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
@@ -17,7 +16,7 @@ import javax.inject.Inject;
  *
  * Created by patricktwohig on 7/27/15.
  */
-public class RequestIOHandler extends IoHandlerAdapter {
+public class ServerIOHandler extends IoHandlerAdapter {
 
     @Inject
     private EdgeServer edgeServer;

@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.rt.mina.guice;
 
 import com.google.inject.Provider;
-import com.namazustudios.socialengine.rt.mina.BSONProtocolDecoder;
-import com.namazustudios.socialengine.rt.mina.BSONProtocolEncoder;
+import com.namazustudios.socialengine.rt.mina.ServerBSONProtocolDecoder;
+import com.namazustudios.socialengine.rt.mina.ServerBSONProtocolEncoder;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolEncoder;
@@ -36,8 +36,8 @@ public class MinaServerModule extends MinaModule {
 
         bindFilterChainBuilder();
         bindProtocolCodecFactory();
-        bind(ProtocolEncoder.class).to(BSONProtocolEncoder.class);
-        bind(ProtocolDecoder.class).to(BSONProtocolDecoder.class);
+        bind(ProtocolEncoder.class).to(ServerBSONProtocolEncoder.class);
+        bind(ProtocolDecoder.class).to(ServerBSONProtocolDecoder.class);
 
     }
 

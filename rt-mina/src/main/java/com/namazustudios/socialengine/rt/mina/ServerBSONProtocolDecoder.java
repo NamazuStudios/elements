@@ -20,15 +20,15 @@ import java.io.IOException;
  *
  * Created by patricktwohig on 7/26/15.
  */
-public class BSONProtocolDecoder extends CumulativeProtocolDecoder {
+public class ServerBSONProtocolDecoder extends CumulativeProtocolDecoder {
 
     public static final int BSON_DOCUMENT_LENGTH = 4;
 
-    private static final AttributeKey BUFFER_STATE = new AttributeKey(BSONProtocolDecoder.class, "BufferState");
+    private static final AttributeKey BUFFER_STATE = new AttributeKey(ServerBSONProtocolDecoder.class, "BufferState");
 
-    private static final AttributeKey DOCUMENT_SIZE = new AttributeKey(BSONProtocolDecoder.class, "DocumentSize");
+    private static final AttributeKey DOCUMENT_SIZE = new AttributeKey(ServerBSONProtocolDecoder.class, "DocumentSize");
 
-    private static final AttributeKey HEADER_DOCUMENT = new AttributeKey(BSONProtocolDecoder.class, "HeaderDocument");
+    private static final AttributeKey HEADER_DOCUMENT = new AttributeKey(ServerBSONProtocolDecoder.class, "HeaderDocument");
 
     @Inject
     private ObjectMapper objectMapper;

@@ -14,7 +14,7 @@ import java.io.ByteArrayOutputStream;
 /**
  * Created by patricktwohig on 7/26/15.
  */
-public class BSONProtocolEncoder implements ProtocolEncoder {
+public class ServerBSONProtocolEncoder implements ProtocolEncoder {
 
     @Inject
     private ObjectMapper objectMapper;

@@ -29,7 +29,7 @@
         <module>servlet-support</module>
         <module>rt-common</module>
         <module>rt-server</module>
-        <module>rt-server-mina</module>
+        <module>rt-mina</module>
         <module>rt-server-lua</module>
         <module>rt-server-guice-example</module>
     </modules>

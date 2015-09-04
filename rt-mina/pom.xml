@@ -19,7 +19,7 @@
     <groupId>com.namazustudios.socialengine</groupId>
     <artifactId>rt-server-mina</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>rt-server-mina</name>
+    <name>rt-mina</name>
 
     <dependencies>
         <dependency>
