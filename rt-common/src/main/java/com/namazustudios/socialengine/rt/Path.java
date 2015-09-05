@@ -4,9 +4,9 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
  *
  * Created by patricktwohig on 9/4/15.
  */
-public class Path implements Comparable<Path> {
+public final class Path implements Comparable<Path> {
 
     /**
      * The path separator.  Literal value "/"
@@ -31,7 +31,10 @@ public class Path implements Comparable<Path> {
 
     private final List<String> components;
 
-    private final boolean wildcard;
+    // Kind of confusing, but this indicates the maximum index at which the
+    // compareTo method should compare.  This is also used to determine whether
+    // or not this path is a wildcard path.
+    private final int maxCompareIndex;
 
     /**
      * Parses the path into components and checks for hte wildcard character.
@@ -45,20 +48,12 @@ public class Path implements Comparable<Path> {
     /**
      * Creates a path with components and the wildcard flag.
      *
-     * @param components
+     * @param components the path components
      */
     public Path(List<String> components) {
+        final int idx = components.indexOf(WILDCARD);
+        maxCompareIndex = idx >= 0 ? idx : components.size();
         this.components = new ImmutableList.Builder<String>().addAll(components).build();
-        wildcard = !components.isEmpty() && WILDCARD.equals(components.subList(0, components.size() - 1));
-    }
-
-    /**
-     * Returns this path as a string.
-     *
-     * @return the path
-     */
-    public String toString() {
-        return Util.pathFromComponents(components);
     }
 
     /**
@@ -73,17 +68,60 @@ public class Path implements Comparable<Path> {
     /**
      * True if the path is a wildcard.
      *
-     * @return
+     * @return true
      */
     public boolean isWildcard() {
-        return wildcard;
+        return maxCompareIndex == getComponents().size();
     }
 
+    /**
+     * Checks if this path matches the other path.  Note taht this considers wildcards
+     * whereas the {@link #hashCode()} and {@link #equals(Object)} methods determine
+     * absolute equality.
+     *
+     * @param other the other path
+     *
+     * @return true if this path matches the other
+     */
+    public boolean matches(final Path other) {
+        return compareTo(other) == 0;
+    }
+
+    /**
+     * Returns this path as a string.
+     *
+     * @return the path
+     */
+    @Override
+    public String toString() {
+        return Util.pathFromComponents(components);
+    }
+
+    /**
+     * This implementation of {@link #compareTo(Path)} compares the path to the other path
+     * considering wild card matching and can beused to find paths in a sorted collection.
+     *
+     * @param other the other path
+     * @return @see {@link Comparable#compareTo(Object)}
+     */
     @Override
     public int compareTo(final Path other) {
 
-        final Iterator<String> o1StringIterator = getComponents().iterator();
-        final Iterator<String> o2StringIterator = other.getComponents().iterator();
+        if (getComponents().size() != other.getComponents().size()) {
+            return getComponents().size() - other.getComponents().size();
+        }
+
+        final Iterator<String> o1StringIterator;
+        final Iterator<String> o2StringIterator;
+
+        if (isWildcard() || other.isWildcard()) {
+            final int min = Math.min(maxCompareIndex, other.maxCompareIndex);
+            o1StringIterator = Iterators.limit(getComponents().iterator(), min);
+            o2StringIterator = Iterators.limit(other.getComponents().iterator(), min);
+        } else {
+            o1StringIterator = getComponents().iterator();
+            o2StringIterator = other.getComponents().iterator();
+        }
 
         int value = 0;
 
@@ -104,7 +142,7 @@ public class Path implements Comparable<Path> {
 
         Path path = (Path) o;
 
-        if (wildcard != path.wildcard) return false;
+        if (isWildcard() != path.isWildcard()) return false;
         return components.equals(path.components);
 
     }
@@ -112,7 +150,7 @@ public class Path implements Comparable<Path> {
     @Override
     public int hashCode() {
         int result = components.hashCode();
-        result = 31 * result + (wildcard ? 1 : 0);
+        result = 31 * result + (isWildcard() ? 1 : 0);
         return result;
     }
 
@@ -154,7 +192,7 @@ public class Path implements Comparable<Path> {
         }
 
         /**
-         * Normalizes the path by removing duplicate seprators, trimming whitespace, and then
+         * Normalizes the path by removing duplicate separators, trimming whitespace, and then
          * rejoining into a single path wiht a leading separator.
          *
          * @param path the path to normailze

@@ -1,22 +1,20 @@
 package com.namazustudios.socialengine.rt;
 
 import com.google.common.base.Stopwatch;
+import com.namazustudios.socialengine.rt.edge.EdgeResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by patricktwohig on 8/23/15.
  */
-public abstract class AbstractSimpleServer implements Runnable {
+public abstract class AbstractSimpleServer implements Server, Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractSimpleServer.class);
 
@@ -105,8 +103,57 @@ public abstract class AbstractSimpleServer implements Runnable {
 
         };
 
-        final Resource edgeResource = getResourceService().getResource(path);
-        return edgeResource.subscribe(name, eventReceiverWrapper);
+        final Resource resource = getResourceService().getResource(path);
+        return resource.subscribe(name, eventReceiverWrapper);
+
+    }
+
+    @Override
+    public <PayloadT> SortedMap<Path, Subscription> subscribeRecursive(final Path path,
+                                                                       final String name,
+                                                                       final EventReceiver<PayloadT> eventReceiver) {
+        final EventReceiver<PayloadT> eventReceiverWrapper = new EventReceiver<PayloadT>() {
+
+            @Override
+            public Class<PayloadT> getEventType() {
+                return eventReceiver.getEventType();
+            }
+
+            @Override
+            public void receive(final Path path, final String name, final PayloadT event) {
+                getEventQueue().add(new Callable<Void>() {
+
+                    @Override
+                    public Void call() {
+                        try {
+                            eventReceiver.receive(path, name, event);
+                        } catch (Exception ex) {
+                            LOG.error("Caught exception for receiver {} at path {}", eventReceiver, path);
+                        }
+
+                        return null;
+                    }
+
+                    @Override
+                    public String toString() {
+                        return "EventModel receiver " + eventReceiver + "for event " + event + " at path" + path;
+                    }
+
+                });
+            }
+
+        };
+
+        final SortedMap<Path, Subscription> pathSubscriptionSortedMap = new TreeMap<>();
+
+        if (path.isWildcard()) {
+            for (final Resource resource : getResourceService().getResources(path)) {
+                final Subscription subscription = resource.subscribe(name, eventReceiverWrapper);
+                pathSubscriptionSortedMap.put(resource.getCurrentPath(), subscription);
+            }
+        }
+
+        return pathSubscriptionSortedMap;
 
     }
 

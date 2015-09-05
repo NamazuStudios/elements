@@ -147,6 +147,7 @@ public abstract class AbstractResource implements Resource {
      *
      * @return the current path.
      */
+    @Override
     public Path getCurrentPath() {
         return currentPath;
     }

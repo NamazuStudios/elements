@@ -37,9 +37,18 @@ public interface ResourceService<ResourceT extends Resource> {
      * @return the resource
      *
      * @throws {@link NotFoundException} if no resource exists at that path
-     *
+     * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     ResourceT getResource(Path path);
+
+    /**
+     * Gets all resources matching the given path.  This may be a single resource, or
+     * if a wildcard path is specified, this will return all paths matching the given path.
+     *
+     * @param path the path
+     * @return all of the resources matching the path
+     */
+    Iterable<ResourceT> getResources(Path path);
 
     /**
      * Adds a {@link EdgeResource} to this resource service.
@@ -47,6 +56,7 @@ public interface ResourceService<ResourceT extends Resource> {
      * @param resource the resource
      *
      * @throws {@link DuplicateException} if a resource at the given path already exists
+     * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     void addResource(Path path, ResourceT resource);
 
@@ -61,7 +71,7 @@ public interface ResourceService<ResourceT extends Resource> {
      *
      * @throws {@link NotFoundException} if no resource exists at that path
      * @throws {@link DuplicateException} if a resource at the destination path already exists
-     *
+     * @throws {@link IllegalArgumentException} if either path is a wildcard path
      */
     void moveResource(Path source, Path destination);
 
@@ -77,7 +87,7 @@ public interface ResourceService<ResourceT extends Resource> {
      * @param path the path to the resource
      *
      * @throws {@link NotFoundException} if no resource exists at that path
-     *
+     * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     ResourceT removeResource(Path path);
 

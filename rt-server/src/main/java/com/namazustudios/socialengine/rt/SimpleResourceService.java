@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
@@ -23,7 +24,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
  */
 public class SimpleResourceService<ResourceT extends Resource> implements ResourceService<ResourceT> {
 
-    private final ConcurrentMap<Path, ResourceT> pathResourceMap = new ConcurrentSkipListMap<>();
+    private final ConcurrentNavigableMap<Path, ResourceT> pathResourceMap = new ConcurrentSkipListMap<>();
 
     @Inject
     private ResourceLockFactory<ResourceT> lockFactory;
@@ -49,12 +50,12 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
                     final Iterator<Map.Entry<Path, ResourceT>> wrappedIterator = resourceIterable.iterator();
 
-                    Map.Entry<Path, ResourceT> current = wrappedIterator.hasNext() ?
-                                                                 wrappedIterator.next() : null;
+                    Map.Entry<Path, ResourceT> currentValue = wrappedIterator.hasNext() ?
+                                                              wrappedIterator.next() : null;
 
                     @Override
                     public boolean hasNext() {
-                        return current != null;
+                        return currentValue != null;
                     }
 
                     @Override
@@ -65,7 +66,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                         }
 
                         try {
-                            return current.getValue();
+                            return currentValue.getValue();
                         } finally {
                             advance();
                         }
@@ -79,8 +80,8 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                             throw new IllegalStateException();
                         }
 
-                        final Path path = current.getKey();
-                        final ResourceT resource = current.getValue();
+                        final Path path = currentValue.getKey();
+                        final ResourceT resource = currentValue.getValue();
 
                         if (pathResourceMap.remove(path, resource)) {
                             resource.onRemove(path);
@@ -91,8 +92,8 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                     }
 
                     private void advance() {
-                        current = wrappedIterator.hasNext() ?
-                                  wrappedIterator.next() : null;
+                        currentValue = wrappedIterator.hasNext() ?
+                                       wrappedIterator.next() : null;
                     }
 
                 };
@@ -100,12 +101,6 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
         };
 
     }
-
-//    @Override
-//    public ResourceT getResource(final String path) {
-//        final List<String> components = Path.Util.componentsFromPath(path);
-//        return getResource(components);
-//    }
 
     @Override
     public ResourceT getResource(final Path path) {
@@ -127,7 +122,69 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
     }
 
     @Override
+    public Iterable<ResourceT> getResources(final Path path) {
+        return new Iterable<ResourceT>() {
+
+            final ConcurrentNavigableMap<Path, ResourceT> tailMap = pathResourceMap.tailMap(path);
+
+            @Override
+            public Iterator<ResourceT> iterator() {
+                return new Iterator<ResourceT>() {
+
+                    final Iterator<Map.Entry<Path, ResourceT>> wrappedIterator = pathResourceMap.entrySet().iterator();
+
+                    Map.Entry<Path, ResourceT> currentValue = wrappedIterator.hasNext() ?
+                                                              wrappedIterator.next() : null;
+
+                    @Override
+                    public boolean hasNext() {
+                        return currentValue != null && path.matches(currentValue.getKey());
+                    }
+
+                    @Override
+                    public ResourceT next() {
+
+                        if (currentValue == null) {
+                            throw new IllegalStateException();
+                        }
+
+                        return null;
+                    }
+
+                    @Override
+                    public void remove() {
+
+                        if (!hasNext()) {
+                            throw new IllegalStateException();
+                        }
+
+                        final Path path = currentValue.getKey();
+                        final ResourceT resource = currentValue.getValue();
+
+                        if (pathResourceMap.remove(path, resource)) {
+                            resource.onRemove(path);
+                        }
+
+                        advance();
+
+                    }
+
+                    private void advance() {
+                        currentValue = wrappedIterator.hasNext() ?
+                                       wrappedIterator.next() : null;
+                    }
+
+                };
+            }
+        };
+    }
+
+    @Override
     public void addResource(final Path path, final ResourceT resource) {
+
+        if (path.isWildcard()) {
+            throw new IllegalArgumentException("Cannot add resources with wildcard path.");
+        }
 
         final Resource existing = pathResourceMap.putIfAbsent(path, resource);
 
@@ -141,6 +198,10 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
     @Override
     public void moveResource(final Path source, final Path destination) {
+
+        if (source.isWildcard() || destination.isWildcard()) {
+            throw new IllegalArgumentException("Neither source nor destination may be a wildcard path.");
+        }
 
         // First finds the resource to onMove.  If this does not exist then we
         // just skip over this operation.
@@ -189,6 +250,10 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
     @Override
     public ResourceT removeResource(final Path path) {
+
+        if (path.isWildcard()) {
+            throw new IllegalArgumentException("Cannot add resources with wildcard path.");
+        }
 
         final ResourceT resource = pathResourceMap.remove(path);
 

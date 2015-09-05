@@ -77,4 +77,11 @@ public interface Resource extends AutoCloseable {
      */
     void close();
 
+    /**
+     * Returns this resource's current path.
+     *
+     * @return the current path.
+     */
+    Path getCurrentPath();
+
 }
