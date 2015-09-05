@@ -6,7 +6,9 @@ package com.namazustudios.socialengine.rt;
 public interface Server {
 
     /**
-     * Subscribes the event receiver to the given path.
+     * Subscribes the event receiver to the given path.  Note that if the given path is
+     * a wildcard path, this will recursively subscribe to all resources matching that
+     * particular path.
      *
      * @param path the path
      * @param name the name of the event
@@ -16,6 +18,6 @@ public interface Server {
      * @return an instance of {@link Subscription}, which can be used to unsubscribe from the event pool
      *
      */
-    <PayloadT> Subscription subscribe(String path, String name, EventReceiver<PayloadT> eventReceiver);
+    <PayloadT> Subscription subscribe(Path path, String name, EventReceiver<PayloadT> eventReceiver);
 
 }

@@ -69,7 +69,7 @@ public abstract class AbstractSimpleServer implements Runnable {
     @Named(EXECUTOR_SERVICE)
     private ExecutorService executorService;
 
-    public <PayloadT> Subscription subscribe(final String path,
+    public <PayloadT> Subscription subscribe(final Path path,
                                              final String name,
                                              final EventReceiver<PayloadT> eventReceiver) {
 
@@ -81,7 +81,7 @@ public abstract class AbstractSimpleServer implements Runnable {
             }
 
             @Override
-            public void receive(final String path, final String name, final PayloadT event) {
+            public void receive(final Path path, final String name, final PayloadT event) {
                 getEventQueue().add(new Callable<Void>() {
 
                     @Override

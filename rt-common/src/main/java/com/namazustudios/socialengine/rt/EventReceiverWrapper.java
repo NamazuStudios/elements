@@ -28,7 +28,7 @@ public class EventReceiverWrapper<EventT> implements EventReceiver<EventT> {
     }
 
     @Override
-    public void receive(String path, String name, EventT event) {
+    public void receive(Path path, String name, EventT event) {
         wrapped.receive(path, name, event);
     }
 

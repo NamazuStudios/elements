@@ -45,7 +45,7 @@ public interface Resource extends AutoCloseable {
      *
      * @param path the path
      */
-    void onAdd(String path);
+    void onAdd(Path path);
 
     /**
      * Called by the container to upate the {@link Resource}.  The resource is responsible
@@ -62,14 +62,14 @@ public interface Resource extends AutoCloseable {
      * @param newPath the new path
      *
      */
-    void onMove(String oldPath, String newPath);
+    void onMove(Path oldPath, Path newPath);
 
     /**
      * Called when the resource has been removed by the {@link ResourceService}.
      *
      * @param path the path
      */
-    void onRemove(String path);
+    void onRemove(Path path);
 
     /**
      * Closes and destroys this Resource.  A resource, once destroyed, cannot

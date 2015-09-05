@@ -24,7 +24,7 @@ public interface ResourceService<ResourceT extends Resource> {
     /**
      * Gets all resources in this service.  Note that the {@link Iterator} returned
      * by this {@link Iterable} must support the {@link Iterator#remove()} operation
-     * and will properly call {@link Resource#onRemove(String)} appropraitely.
+     * and will properly call {@link Resource#onRemove(Path)} appropraitely.
      *
      * @return all of the resources.
      */
@@ -39,18 +39,7 @@ public interface ResourceService<ResourceT extends Resource> {
      * @throws {@link NotFoundException} if no resource exists at that path
      *
      */
-    ResourceT getResource(String path);
-
-    /**
-     * Gets a single resource at the given path.
-     *
-     * @param pathComponents the path components
-     * @return the resource
-     *
-     * @throws {@link NotFoundException} if no resource exists at that path
-     *
-     */
-    ResourceT getResource(List<String> pathComponents);
+    ResourceT getResource(Path path);
 
     /**
      * Adds a {@link EdgeResource} to this resource service.
@@ -59,7 +48,7 @@ public interface ResourceService<ResourceT extends Resource> {
      *
      * @throws {@link DuplicateException} if a resource at the given path already exists
      */
-    void addResource(String path, ResourceT resource);
+    void addResource(Path path, ResourceT resource);
 
     /**
      * Moves the given resource to the given new destination.
@@ -74,7 +63,7 @@ public interface ResourceService<ResourceT extends Resource> {
      * @throws {@link DuplicateException} if a resource at the destination path already exists
      *
      */
-    void moveResource(String source, String destination);
+    void moveResource(Path source, Path destination);
 
     /**
      * Removes all resources from the service.
@@ -90,6 +79,6 @@ public interface ResourceService<ResourceT extends Resource> {
      * @throws {@link NotFoundException} if no resource exists at that path
      *
      */
-    ResourceT removeResource(String path);
+    ResourceT removeResource(Path path);
 
 }

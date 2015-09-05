@@ -31,7 +31,7 @@ public class SimpleEdgeServer extends AbstractSimpleServer implements EdgeServer
 
     @Inject
     @Named(BOOTSTRAP_RESOURCES)
-    private Map<String, EdgeResource> bootstrapResources;
+    private Map<Path, EdgeResource> bootstrapResources;
 
     private final Queue<Callable<Void>> eventQueue = new ConcurrentLinkedQueue<>();
 
@@ -89,7 +89,7 @@ public class SimpleEdgeServer extends AbstractSimpleServer implements EdgeServer
 
             SimpleEdgeServer.LOG.info("Bootstrapping server.");
 
-            for (final Map.Entry<String, EdgeResource> entry : bootstrapResources.entrySet()) {
+            for (final Map.Entry<Path, EdgeResource> entry : bootstrapResources.entrySet()) {
                 edgeResourceService.addResource(entry.getKey(), entry.getValue());
                 LOG.info("Bootstrapped resource {} at path {}", entry.getValue(), entry.getKey());
             }

@@ -23,32 +23,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
  */
 public class SimpleResourceService<ResourceT extends Resource> implements ResourceService<ResourceT> {
 
-    private final ConcurrentMap<List<String>, ResourceT> pathResourceMap =
-            new ConcurrentSkipListMap<>(new Comparator<List<String>>() {
-
-                @Override
-                public int compare(final List<String> o1, final List<String> o2) {
-                    return o1.size() == o2.size() ? compareEqualLength(o1, o2) : (o1.size() - o2.size());
-                }
-
-                private int compareEqualLength(final List<String> o1, final List<String> o2) {
-
-                    final Iterator<String> o1StringIterator = o1.iterator();
-                    final Iterator<String> o2StringIterator = o2.iterator();
-
-                    int value = 0;
-
-                    while (o1StringIterator.hasNext() && o2StringIterator.hasNext() && value == 0) {
-                        final String s1 = Strings.nullToEmpty(o1StringIterator.next());
-                        final String s2 = Strings.nullToEmpty(o2StringIterator.next());
-                        value = s1.compareTo(s2);
-                    }
-
-                    return value;
-
-                }
-
-            });
+    private final ConcurrentMap<Path, ResourceT> pathResourceMap = new ConcurrentSkipListMap<>();
 
     @Inject
     private ResourceLockFactory<ResourceT> lockFactory;
@@ -56,12 +31,12 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
     @Override
     public Iterable<ResourceT> getResources() {
 
-        final Iterable<Map.Entry<List<String>, ResourceT>> entrySet = pathResourceMap.entrySet();
+        final Iterable<Map.Entry<Path, ResourceT>> entrySet = pathResourceMap.entrySet();
 
-        final Iterable<Map.Entry<List<String>, ResourceT>> resourceIterable =
-            Iterables.filter(entrySet, new Predicate<Map.Entry<List<String>, ResourceT>>() {
+        final Iterable<Map.Entry<Path, ResourceT>> resourceIterable =
+            Iterables.filter(entrySet, new Predicate<Map.Entry<Path, ResourceT>>() {
                 @Override
-                public boolean apply(final Map.Entry<List<String>, ResourceT> input) {
+                public boolean apply(final Map.Entry<Path, ResourceT> input) {
                     return !lockFactory.isLock(input.getValue());
                 }
             });
@@ -72,9 +47,9 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
                 return new Iterator<ResourceT>() {
 
-                    final Iterator<Map.Entry<List<String>, ResourceT>> wrappedIterator = resourceIterable.iterator();
+                    final Iterator<Map.Entry<Path, ResourceT>> wrappedIterator = resourceIterable.iterator();
 
-                    Map.Entry<List<String>, ResourceT> current = wrappedIterator.hasNext() ?
+                    Map.Entry<Path, ResourceT> current = wrappedIterator.hasNext() ?
                                                                  wrappedIterator.next() : null;
 
                     @Override
@@ -104,11 +79,11 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                             throw new IllegalStateException();
                         }
 
-                        final List<String> path = current.getKey();
+                        final Path path = current.getKey();
                         final ResourceT resource = current.getValue();
 
                         if (pathResourceMap.remove(path, resource)) {
-                            resource.onRemove(Path.Util.pathFromComponents(path));
+                            resource.onRemove(path);
                         }
 
                         advance();
@@ -126,22 +101,24 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
     }
 
-    @Override
-    public ResourceT getResource(final String path) {
-        final List<String> components = Path.Util.componentsFromPath(path);
-        return getResource(components);
-    }
+//    @Override
+//    public ResourceT getResource(final String path) {
+//        final List<String> components = Path.Util.componentsFromPath(path);
+//        return getResource(components);
+//    }
 
     @Override
-    public ResourceT getResource(final List<String> pathComponents) {
+    public ResourceT getResource(final Path path) {
 
-        final ResourceT resource = pathResourceMap.get(pathComponents);
+        if (path.isWildcard()) {
+            throw new IllegalArgumentException("Cannot fetch single resource with wildcard path " + path);
+        }
+
+        final ResourceT resource = pathResourceMap.get(path);
 
         if (resource == null) {
-            final String path = Path.Util.pathFromComponents(pathComponents);
             throw new NotFoundException("Resource at path not found: " + path);
         } else if (lockFactory.isLock(resource)) {
-            final String path = Path.Util.pathFromComponents(pathComponents);
             throw new NotFoundException("Resource at path not found: " + path);
         }
 
@@ -150,38 +127,34 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
     }
 
     @Override
-    public void addResource(final String path, final ResourceT resource) {
+    public void addResource(final Path path, final ResourceT resource) {
 
-        final List<String> components = Path.Util.componentsFromPath(path);
-        final Resource existing = pathResourceMap.putIfAbsent(components, resource);
+        final Resource existing = pathResourceMap.putIfAbsent(path, resource);
 
         if (existing != null) {
             throw new DuplicateException("Resource at path already exists " + path);
         }
 
-        resource.onAdd(Path.Util.pathFromComponents(components));
+        resource.onAdd(path);
 
     }
 
     @Override
-    public void moveResource(final String source, final String destination) {
-
-        final List<String> sourceComponents = Path.Util.componentsFromPath(source);
-        final List<String> destinationComponents = Path.Util.componentsFromPath(source);
+    public void moveResource(final Path source, final Path destination) {
 
         // First finds the resource to onMove.  If this does not exist then we
         // just skip over this operation.
 
-        final ResourceT toMove = getResource(sourceComponents);
+        final ResourceT toMove = getResource(source);
 
         try (final ResourceT lock = lockFactory.createLock()) {
             try {
 
-                if (pathResourceMap.put(destinationComponents, lock) != null) {
+                if (pathResourceMap.put(destination, lock) != null) {
                     throw new DuplicateException("Resource at path already exists " + destination);
                 }
 
-                if (!pathResourceMap.replace(sourceComponents, toMove, lock)) {
+                if (!pathResourceMap.replace(destination, toMove, lock)) {
                     throw new NotFoundException("Resource at path not found " + source);
                 }
 
@@ -189,16 +162,15 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                 // onMove operation.  The onMove call should perform any internal operations
                 // to onMove the resource, such as pumping events to listeners.
 
-                toMove.onMove(Path.Util.pathFromComponents(sourceComponents),
-                              Path.Util.pathFromComponents(destinationComponents));
+                toMove.onMove(source, destination);
 
             } catch (RuntimeException ex) {
                 throw ex;
             } finally {
                 // No matter what happens, this will ensure that the locks are released, but
                 // only if we locked in the first place.
-                pathResourceMap.remove(destinationComponents, lock);
-                pathResourceMap.replace(sourceComponents, lock, toMove);
+                pathResourceMap.remove(destination, lock);
+                pathResourceMap.replace(source, lock, toMove);
             }
         }
 
@@ -216,16 +188,15 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
     }
 
     @Override
-    public ResourceT removeResource(String path) {
+    public ResourceT removeResource(final Path path) {
 
-        final List<String> components = Path.Util.componentsFromPath(path);
-        final ResourceT resource = pathResourceMap.remove(components);
+        final ResourceT resource = pathResourceMap.remove(path);
 
         if (resource == null || lockFactory.isLock(resource)) {
             throw new NotFoundException("Resource at path not found: " + path);
         }
 
-        resource.onRemove(Path.Util.pathFromComponents(components));
+        resource.onRemove(path);
 
         return resource;
 

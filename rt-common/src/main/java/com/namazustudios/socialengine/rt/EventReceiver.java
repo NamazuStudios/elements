@@ -24,11 +24,10 @@ public interface EventReceiver<PayloadT> {
     /**
      * Receives the event.  When the event is raised, the instance of
      * event is passed in to this method.
-     *
-     * @param path
+     *  @param path
      * @param name
      * @param event the event that was raised.
      */
-    void receive(String path, String name, final PayloadT event);
+    void receive(Path path, String name, final PayloadT event);
 
 }

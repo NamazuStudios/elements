@@ -35,19 +35,19 @@ public abstract class AbstractResource implements Resource {
 
     private final DefaultEventReceiverMap<String> defaultEventReceiverMap = new DefaultEventReceiverMap<>();
 
-    private String currentPath;
+    private Path currentPath;
 
     /**
      * This posts an instance of {@link ResourceRemovedEvent} and sets the current path.
      *
-     * @see {@link Resource#onRemove(String)}
+     * @see {@link Resource#onRemove(Path)}
      *
      * @param path the path
      */
     @Override
-    public void onRemove(String path) {
+    public void onRemove(Path path) {
         final ResourceRemovedEvent resourceRemovedEvent = new ResourceRemovedEvent();
-        resourceRemovedEvent.setPath(path);
+        resourceRemovedEvent.setPath(path.toString());
         post(resourceRemovedEvent, Event.Util.getEventNameFromObject(resourceRemovedEvent));
         setCurrentPath(null);
     }
@@ -55,19 +55,19 @@ public abstract class AbstractResource implements Resource {
     /**
      * This posts and instance of {@link ResourceMovedEvent} and sets the current path.
      *
-     * @see {@link Resource#onMove(String, String)}
+     * @see {@link Resource#onMove(Path, Path)}
      *
      * @param oldPath the old path
      * @param newPath the new path
      */
     @Override
-    public void onMove(String oldPath, String newPath) {
+    public void onMove(final Path oldPath, final Path newPath) {
 
         setCurrentPath(newPath);
 
         final ResourceMovedEvent resourceMovedEvent = new ResourceMovedEvent();
-        resourceMovedEvent.setOldPath(oldPath);
-        resourceMovedEvent.setNewPath(newPath);
+        resourceMovedEvent.setOldPath(oldPath.toString());
+        resourceMovedEvent.setNewPath(newPath.toString());
         post(resourceMovedEvent, Event.Util.getEventNameFromObject(resourceMovedEvent));
 
     }
@@ -75,17 +75,17 @@ public abstract class AbstractResource implements Resource {
     /**
      * This posts and instance of {@link ResourceAddedEvent} and sets the current path.
      *
-     * @see {@link Resource#onAdd(String)}
+     * @see {@link Resource#onAdd(Path)}
      *
      * @param path the path
      */
     @Override
-    public void onAdd(String path) {
+    public void onAdd(Path path) {
 
         setCurrentPath(path);
 
         final ResourceAddedEvent resourceAddedEvent = new ResourceAddedEvent();
-        resourceAddedEvent.setPath(path);
+        resourceAddedEvent.setPath(path.toString());
         post(resourceAddedEvent, Event.Util.getEventNameFromObject(resourceAddedEvent));
 
     }
@@ -147,7 +147,7 @@ public abstract class AbstractResource implements Resource {
      *
      * @return the current path.
      */
-    public String getCurrentPath() {
+    public Path getCurrentPath() {
         return currentPath;
     }
 
@@ -156,7 +156,7 @@ public abstract class AbstractResource implements Resource {
      *
      * @param currentPath the current path
      */
-    public void setCurrentPath(String currentPath) {
+    public void setCurrentPath(Path currentPath) {
         this.currentPath = currentPath;
     }
 
