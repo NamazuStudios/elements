@@ -1,42 +1,34 @@
 package com.namazustudios.socialengine.rt;
 
+import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.SortedSetMultimap;
 
 /**
- * Created by patricktwohig on 9/4/15.
+ * Created by patricktwohig on 9/5/15.
  */
-public interface EventReceiverMap<KeyT> {
-    /**
-     * Subscribes to {@link Event}s using the given {@link EventReceiver}.
-     *
-     * @praam key the key of the event
-     * @param eventReceiver the event receiver instance
-     *
-     * @param <EventT>
-     *
-     */
-    <EventT> Subscription subscribe(KeyT key, EventReceiver<EventT> eventReceiver);
+public interface ReadWriteProtectedMultimap<KeyT, ValueT, MultimapT extends Multimap<KeyT, ValueT>> {
 
     /**
      * Exposes the underlying map for reading.
      *
      * @param criticalSection the {@link CriticalSection} used to read the map.
      */
-    <ReturnT> ReturnT read(CriticalSection<KeyT, ReturnT> criticalSection);
+    <ReturnT> ReturnT read(CriticalSection<ReturnT, KeyT, ValueT, MultimapT> criticalSection);
 
     /**
      * Exposes the underlying map for writing.
      *
      * @param criticalSection the {@link CriticalSection} used to read the map.
      */
-    <ReturnT> ReturnT write(CriticalSection<KeyT, ReturnT> criticalSection);
+    <ReturnT> ReturnT write(CriticalSection<ReturnT, KeyT, ValueT, MultimapT> criticalSection);
 
     /**
      * Simple callback for manipulating the underlying collection.
      *
-     * @param <KeyT>
+     * @param <ReturnT> the return type.
      */
-    interface CriticalSection<KeyT, ReturnT> {
+    interface CriticalSection<ReturnT, KeyT, ValueT, MultimapT extends Multimap<KeyT, ValueT>> {
 
         /**
          * Called to perform the critical operation.
@@ -45,7 +37,8 @@ public interface EventReceiverMap<KeyT> {
          *
          * @return the custom return type
          */
-        ReturnT perform(SetMultimap<KeyT, EventReceiver<?>> eventReceivers);
+        ReturnT perform(MultimapT eventReceivers);
 
     }
+
 }

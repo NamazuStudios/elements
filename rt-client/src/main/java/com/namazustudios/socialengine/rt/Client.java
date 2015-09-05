@@ -52,7 +52,7 @@ public interface Client {
      * @param <EventT> the event type
      * @return an instance ov {@link Subscription}
      */
-    <EventT> Subscription subscribe(String path, String name, EventReceiver<EventT> eventReceiver);
+    <EventT> Subscription subscribe(Path path, String name, EventReceiver<EventT> eventReceiver);
 
     /**
      * Handles the underlying mechanisms by which data is shuffled across the network.  This underlying

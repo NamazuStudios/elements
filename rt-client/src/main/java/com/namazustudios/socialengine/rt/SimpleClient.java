@@ -4,6 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.SetMultimap;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.TooBusyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,9 +38,6 @@ public class SimpleClient implements Client, Client.NetworkOperations {
 
     private final ConcurrentNavigableMap<Integer, SimpleClientPendingRequest> pendingRequests = new ConcurrentSkipListMap<>();
 
-    @Inject
-    private EventReceiverMap<EventSubscriptionTuple> defaultEventReceiverMap;
-
     private final ClientRequestDispatcher clientRequestDispatcher;
 
     @Inject
@@ -54,6 +52,12 @@ public class SimpleClient implements Client, Client.NetworkOperations {
     public PendingRequest sendRequest(final Request request,
                                       final Class<?> responseType,
                                       final ResponseReceiver receiver) {
+
+        if (pendingRequests.size() >= maxPendingRequests) {
+            throw new TooBusyException(
+                    "Pending requests >=" + maxPendingRequests + " " +
+                    "(You are trying to make too many concurrent parallel requests.)");
+        }
 
         final int sequence = requestSequence.getAndIncrement();
 
@@ -94,26 +98,11 @@ public class SimpleClient implements Client, Client.NetworkOperations {
 
     }
 
-    private void cullPendingRequests() {
-
-        final int toCull = pendingRequests.size() - maxPendingRequests;
-        final int upperSequence = pendingRequests.firstKey() + toCull;
-
-        final List<SimpleClientPendingRequest> requestsToCancel;
-        requestsToCancel = new ArrayList<>(pendingRequests.subMap(0, upperSequence).values());
-
-        for (final SimpleClientPendingRequest requestToCancel : requestsToCancel) {
-            requestToCancel.timeout();
-        }
-
-    }
-
     @Override
-    public <EventT> Subscription subscribe(final String path,
+    public <EventT> Subscription subscribe(final Path path,
                                            final String name,
                                            final EventReceiver<EventT> eventReceiver) {
-        final EventSubscriptionTuple eventSubscriptionKey = new EventSubscriptionTuple(path, name);
-        return defaultEventReceiverMap.subscribe(eventSubscriptionKey, eventReceiver);
+        return null;
     }
 
     @Override
@@ -152,32 +141,12 @@ public class SimpleClient implements Client, Client.NetworkOperations {
     }
 
     @Override
-    public Iterable<Class<?>> getEventTypes(EventHeader eventHeader) {
-
-        final EventSubscriptionTuple eventSubscriptionTuple;
-        eventSubscriptionTuple = new EventSubscriptionTuple(eventHeader.getPath(), eventHeader.getName());
-
-        return defaultEventReceiverMap.read(new DefaultEventReceiverMap.CriticalSection<EventSubscriptionTuple, Iterable<Class<?>>>() {
-            @Override
-            public Iterable<Class<?>> perform(SetMultimap<EventSubscriptionTuple, EventReceiver<?>> eventReceivers) {
-
-                final Set<EventReceiver<?>> eventReceiverSet = eventReceivers.get(eventSubscriptionTuple);
-
-                return new ArrayList<Class<?>>(Collections2.transform(eventReceiverSet,
-                        new Function<EventReceiver<?>, Class<?>>() {
-                            @Override
-                            public Class<?> apply(EventReceiver<?> input) {
-                                return input.getEventType();
-                            }
-                        }));
-
-            }
-        });
-
+    public Iterable<Class<?>> getEventTypes(final EventHeader eventHeader) {
+        return null;
     }
 
     @Override
-    public void receive(Event event, Class<?> eventType) {
+    public void receive(final Event event, final Class<?> eventType) {
 
     }
 
@@ -224,12 +193,12 @@ public class SimpleClient implements Client, Client.NetworkOperations {
 
     private static class EventSubscriptionTuple {
 
-        final String path;
         final String name;
+        final Path path;
 
-        public EventSubscriptionTuple(String path, String name) {
-            this.path = path;
+        public EventSubscriptionTuple(final String name, final Path path) {
             this.name = name;
+            this.path = path;
         }
 
         @Override

@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.SetMultimap;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import com.namazustudios.socialengine.rt.event.EventModel;
 import com.namazustudios.socialengine.rt.event.ResourceAddedEvent;
@@ -10,8 +9,6 @@ import com.namazustudios.socialengine.rt.event.ResourceRemovedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -33,7 +30,7 @@ public abstract class AbstractResource implements Resource {
 
     private final Stopwatch stopwatch = Stopwatch.createUnstarted();
 
-    private final DefaultEventReceiverMap<String> defaultEventReceiverMap = new DefaultEventReceiverMap<>();
+    private final ResourceEventSubscriberMap defaultResourceEventReceiverMap = new DefaultResourceEventReceiverMap();
 
     private Path currentPath;
 
@@ -50,6 +47,7 @@ public abstract class AbstractResource implements Resource {
         resourceRemovedEvent.setPath(path.toString());
         post(resourceRemovedEvent, Event.Util.getEventNameFromObject(resourceRemovedEvent));
         setCurrentPath(null);
+        LOG.debug("Removed resource at path " + getCurrentPath());
     }
 
     /**
@@ -69,6 +67,7 @@ public abstract class AbstractResource implements Resource {
         resourceMovedEvent.setOldPath(oldPath.toString());
         resourceMovedEvent.setNewPath(newPath.toString());
         post(resourceMovedEvent, Event.Util.getEventNameFromObject(resourceMovedEvent));
+        LOG.debug("Moved resource at path " + oldPath + " to path " + newPath);
 
     }
 
@@ -87,6 +86,7 @@ public abstract class AbstractResource implements Resource {
         final ResourceAddedEvent resourceAddedEvent = new ResourceAddedEvent();
         resourceAddedEvent.setPath(path.toString());
         post(resourceAddedEvent, Event.Util.getEventNameFromObject(resourceAddedEvent));
+        LOG.debug("Added resource to path " + path);
 
     }
 
@@ -103,7 +103,7 @@ public abstract class AbstractResource implements Resource {
      */
     @Override
     public <EventT> Subscription subscribe(final String desiredName, final EventReceiver<EventT> eventReceiver) {
-        return defaultEventReceiverMap.subscribe(desiredName, eventReceiver);
+        return defaultResourceEventReceiverMap.subscribe(desiredName, eventReceiver);
     }
 
     /**
@@ -185,26 +185,7 @@ public abstract class AbstractResource implements Resource {
      * @param name the name of the event
      */
     public <EventT> void post(final EventT event, final String name) {
-        defaultEventReceiverMap.read(new DefaultEventReceiverMap.CriticalSection<String, Void>() {
-            @Override
-            public Void perform(SetMultimap<String, EventReceiver<?>> eventReceivers) {
-
-                final List<EventReceiver<?>> eventReceiverList = new ArrayList<>(eventReceivers.get(name));
-
-                for (EventReceiver<?> eventReceiver : eventReceiverList) {
-                    try {
-                        final Object eventObject = eventReceiver.getEventType().cast(event);
-                        final EventReceiver<Object> objectEventReceiver = (EventReceiver<Object>)eventReceiver;
-                        objectEventReceiver.receive(getCurrentPath(), name, eventObject);
-                    } catch (ClassCastException ex) {
-                        LOG.warn("Incompatible event type.", ex);
-                    }
-                }
-
-                return null;
-
-            }
-        });
+        defaultResourceEventReceiverMap.post(getCurrentPath(), event, name);
     }
 
     /**

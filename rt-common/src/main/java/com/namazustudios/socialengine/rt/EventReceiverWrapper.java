@@ -10,9 +10,12 @@ import java.util.UUID;
  * to the same event name, and secondly that the {@link EventReceiver} can
  * be reliably removed from the pool.
  *
+ * This implements both the {@link EventReceiver} type as well as {@link Comparable}
+ * such that it may be indexed in sorted collections.
+ *
  * @param <EventT>
  */
-public class EventReceiverWrapper<EventT> implements EventReceiver<EventT> {
+public class EventReceiverWrapper<EventT> implements EventReceiver<EventT>, Comparable<EventReceiverWrapper<?>> {
 
     final EventReceiver<EventT> wrapped;
 
@@ -38,6 +41,11 @@ public class EventReceiverWrapper<EventT> implements EventReceiver<EventT> {
     }
 
     @Override
+    public int compareTo(EventReceiverWrapper<?> o) {
+        return uuid.compareTo(o.uuid);
+    }
+
+    @Override
     public boolean equals(Object obj) {
 
         if (!(obj instanceof EventReceiverWrapper)) {
@@ -45,7 +53,7 @@ public class EventReceiverWrapper<EventT> implements EventReceiver<EventT> {
         }
 
         final EventReceiverWrapper<?> other = (EventReceiverWrapper<?>)obj;
-        return wrapped == other.wrapped;
+        return uuid.equals(other.uuid);
 
     }
 

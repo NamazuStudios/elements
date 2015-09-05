@@ -4,7 +4,9 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 import java.util.Iterator;
 import java.util.List;
@@ -41,8 +43,19 @@ public final class Path implements Comparable<Path> {
      *
      * @param path
      */
-    public Path(String path) {
+    public Path(final String path) {
         this(Util.componentsFromPath(path));
+    }
+
+    /**
+     * Creates a {@link Path} with the path relative to the given path.
+     *
+     * @param parent the parent path
+     * @param path the path
+     *
+     */
+    public Path(final Path parent, final Path path) {
+        this(Lists.newArrayList(Iterables.concat(parent.getComponents(), path.getComponents())));
     }
 
     /**
@@ -50,7 +63,7 @@ public final class Path implements Comparable<Path> {
      *
      * @param components the path components
      */
-    public Path(List<String> components) {
+    public Path(final List<String> components) {
         final int idx = components.indexOf(WILDCARD);
         maxCompareIndex = idx >= 0 ? idx : components.size();
         this.components = new ImmutableList.Builder<String>().addAll(components).build();
@@ -202,6 +215,6 @@ public final class Path implements Comparable<Path> {
             final List<String> pathComponents = componentsFromPath(path);
             return pathFromComponents(pathComponents);
         }
-
     }
+
 }
