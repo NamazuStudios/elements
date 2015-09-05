@@ -8,11 +8,11 @@ package com.namazustudios.socialengine.rt;
 public interface EventReceiver<PayloadT> {
 
     /**
-     * Returns the event type for this receiver.  {@link Resource} instances of this type
+     * Returns the event type for this receiver.  Resource instances of this type
      * will only deliver the event if both the name and the object are compatible.
      *
      * If the return value from this method is not compatible with the event sourced, then
-     * the {@link Resource} must skip over this receiver (and possibly log a warning).
+     * the Resource must skip over this receiver (and possibly log a warning).
      *
      * In order to receive all events, implementors of this interface must make the type
      * as generic as possible to ensure they will receive the event sourced.

@@ -1,8 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import com.namazustudios.socialengine.rt.event.EventModel;
@@ -12,8 +10,8 @@ import com.namazustudios.socialengine.rt.event.ResourceRemovedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -35,7 +33,7 @@ public abstract class AbstractResource implements Resource {
 
     private final Stopwatch stopwatch = Stopwatch.createUnstarted();
 
-    private final SetMultimap<String, EventReceiver<?>> eventReceivers = LinkedHashMultimap.create();
+    private final DefaultEventReceiverMap<String> defaultEventReceiverMap = new DefaultEventReceiverMap<>();
 
     private String currentPath;
 
@@ -105,20 +103,7 @@ public abstract class AbstractResource implements Resource {
      */
     @Override
     public <EventT> Subscription subscribe(final String desiredName, final EventReceiver<EventT> eventReceiver) {
-
-        final EventReceiver<EventT> wrapper = new EventReceiverWrapper<>(eventReceiver);
-        LOG.debug("Registered event receiver {}", eventReceiver);
-
-        return new Subscription() {
-
-            @Override
-            public void release() {
-                LOG.debug("Unregistered event receiver {}", eventReceiver);
-                eventReceivers.remove(desiredName, wrapper);
-            }
-
-        };
-
+        return defaultEventReceiverMap.subscribe(desiredName, eventReceiver);
     }
 
     /**
@@ -199,15 +184,26 @@ public abstract class AbstractResource implements Resource {
      * @param name the name of the event
      */
     public <EventT> void post(final EventT event, final String name) {
-        for (EventReceiver<?> eventReceiver : eventReceivers.get(name)) {
-            try {
-                final Object eventObject = eventReceiver.getEventType().cast(event);
-                final EventReceiver<Object> objectEventReceiver = (EventReceiver<Object>)eventReceiver;
-                objectEventReceiver.receive(getCurrentPath(), name, eventObject);
-            } catch (ClassCastException ex) {
-                LOG.warn("Incompatible event type.", ex);
+        defaultEventReceiverMap.read(new DefaultEventReceiverMap.CriticalSection<String, Void>() {
+            @Override
+            public Void perform(SetMultimap<String, EventReceiver<?>> eventReceivers) {
+
+                final List<EventReceiver<?>> eventReceiverList = new ArrayList<>(eventReceivers.get(name));
+
+                for (EventReceiver<?> eventReceiver : eventReceiverList) {
+                    try {
+                        final Object eventObject = eventReceiver.getEventType().cast(event);
+                        final EventReceiver<Object> objectEventReceiver = (EventReceiver<Object>)eventReceiver;
+                        objectEventReceiver.receive(getCurrentPath(), name, eventObject);
+                    } catch (ClassCastException ex) {
+                        LOG.warn("Incompatible event type.", ex);
+                    }
+                }
+
+                return null;
+
             }
-        }
+        });
     }
 
     /**
@@ -227,63 +223,6 @@ public abstract class AbstractResource implements Resource {
         return getClass().getSimpleName() + "{" +
                 "currentPath='" + currentPath + '\'' +
                 '}';
-    }
-
-    /**
-     * Wraps an instance of {@link EventReceiver} such that it always compares
-     * equality using operator == and {@link System#identityHashCode(Object)}.
-     *
-     * This ensures that the wrap {@link EventReceiver} can only subscribe once
-     * to the same event name, and secondly that the {@link EventReceiver} can
-     * be reliably removed from the pool.
-     *
-     * @param <EventT>
-     */
-    private static class EventReceiverWrapper<EventT> implements EventReceiver<EventT> {
-
-        final EventReceiver<EventT> wrapped;
-
-        final UUID uuid = UUID.randomUUID();
-
-        public EventReceiverWrapper(EventReceiver<EventT> wrapped) {
-            this.wrapped = wrapped;
-        }
-
-        @Override
-        public Class<EventT> getEventType() {
-            return wrapped.getEventType();
-        }
-
-        @Override
-        public void receive(String path, String name, EventT event) {
-            wrapped.receive(path, name, event);
-        }
-
-        @Override
-        public int hashCode() {
-            return System.identityHashCode(wrapped);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-
-            if (!(obj instanceof EventReceiverWrapper)) {
-                return false;
-            }
-
-            final EventReceiverWrapper<?> other = (EventReceiverWrapper<?>)obj;
-            return wrapped == other.wrapped;
-
-        }
-
-        @Override
-        public String toString() {
-            return "EventReceiverWrapper{" +
-                    "wrapped=" + wrapped +
-                    ", uuid=" + uuid +
-                    '}';
-        }
-
     }
 
 }

@@ -28,6 +28,14 @@ public class SimpleResponseHeader implements ResponseHeader {
     }
 
     @Override
+    public String toString() {
+        return "SimpleResponseHeader{" +
+                "code=" + code + "(" + ResponseCode.getDescriptionFromCode(code) +")" +
+                ", sequence=" + sequence +
+                '}';
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof SimpleResponseHeader)) return false;

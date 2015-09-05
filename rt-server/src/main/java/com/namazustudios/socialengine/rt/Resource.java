@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * A Resource is essentially a type that is capable primarly of both
+ * A Resource is essentially a type that is capable primarily of both
  * receiving {@link Request} instances to produce {@link Response}
  * instances.
  *

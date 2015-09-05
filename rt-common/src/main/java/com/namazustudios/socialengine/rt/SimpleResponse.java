@@ -27,6 +27,14 @@ public class SimpleResponse implements Response {
         this.payload = payload;
     }
 
+    @Override
+    public String toString() {
+        return "SimpleResponse{" +
+                "responseHeader=" + responseHeader +
+                ", payload=" + payload +
+                '}';
+    }
+
     /**
      * Shorthand to ussing {@link Builder#Builder()}.
      *

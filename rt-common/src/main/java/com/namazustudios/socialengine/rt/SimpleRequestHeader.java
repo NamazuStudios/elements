@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -51,6 +52,16 @@ public class SimpleRequestHeader implements RequestHeader {
 
     public void setHeaders(Map<String, String> headers) {
         this.headers = headers;
+    }
+
+    @Override
+    public String toString() {
+        return "SimpleRequestHeader{" +
+                "sequence=" + sequence +
+                ", method='" + method + '\'' +
+                ", path='" + path + '\'' +
+                ", headers=" + headers +
+                '}';
     }
 
     @Override

@@ -38,6 +38,18 @@ public enum ResponseCode {
     FAILED_AUTH_RETRY,
 
     /**
+     * The request timed out.  THis is not actually sent by the server
+     * but may be supplied by the client to indicate that the request
+     * timed out.
+     */
+    TIMEOUT_FATAL,
+
+    /**
+     * The request was canceled by the user.
+     */
+    USER_CANCELED_FATAL,
+
+    /**
      * Auth failed, the request should be abandoned.
      */
     FAILED_AUTH_FATAL,
@@ -59,6 +71,17 @@ public enum ResponseCode {
      */
     public int getCode() {
         return ordinal();
+    }
+
+    /**
+     * Returns a human readable description of the code.
+     *
+     * @param code the code.
+     * @return the description of the code
+     */
+    public static String getDescriptionFromCode(final int code) {
+        final ResponseCode[] values = values();
+        return (values.length < code) ? (values[code].toString()) : String.format("CUSTOM(%d)", code);
     }
 
 }
