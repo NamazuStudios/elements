@@ -28,11 +28,6 @@ import java.util.regex.Pattern;
 public interface Resource extends AutoCloseable {
 
     /**
-     * The path separator.  Literal value "/"
-     */
-    String PATH_SEPARATOR = "/";
-
-    /**
      * Subscribes to {@link Event}s using the given {@link EventReceiver}.
      *
      * This method should not be used directly, but rather should be managed by
@@ -81,55 +76,5 @@ public interface Resource extends AutoCloseable {
      * be used again.
      */
     void close();
-
-    /**
-     * Some utility methods used by all Resource and related instances.
-     */
-    final class Util {
-
-        private Util() {}
-
-        private static Pattern SPLIT_PATTERN = Pattern.compile("/+");
-
-        /**
-         * Gets the path components from the given path.
-         *
-         * @param path the path
-         * @return the components
-         */
-        public static List<String> componentsFromPath(final String path) {
-            return Splitter.on(SPLIT_PATTERN).trimResults().splitToList(path);
-        }
-
-        /**
-         * Joins the given string components together to build a path string from
-         * the given componenets.
-         *
-         * @param pathComponents
-         * @return the string
-         */
-        public static String pathFromComponents(final List<String> pathComponents) {
-
-            final StringBuilder stringBuilder = new StringBuilder("/");
-
-            return Joiner.on(PATH_SEPARATOR)
-                         .skipNulls()
-                         .appendTo(stringBuilder, pathComponents).toString();
-
-        }
-
-        /**
-         * Normalizes the path by removing duplicate seprators, trimming whitespace, and then
-         * rejoining into a single path wiht a leading separator.
-         *
-         * @param path the path to normailze
-         * @return the normalized path
-         */
-        public String normalize(final String path) {
-            final List<String> pathComponents = componentsFromPath(path);
-            return pathFromComponents(pathComponents);
-        }
-
-    }
 
 }
