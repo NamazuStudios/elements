@@ -8,14 +8,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Default implementation of the {@link ResourceEventReceiverMap}.
+ *
  * Created by patricktwohig on 9/4/15.
  */
-public class DefaultResourceEventReceiverMap implements ResourceEventSubscriberMap {
+public class DefaultResourceEventReceiverMap implements ResourceEventReceiverMap {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultResourceEventReceiverMap.class);
 
     private final ReadWriteProtectedTreeMultimap<String, EventReceiverWrapper<?>> eventSubscribers =
-            new ReadWriteProtectedTreeMultimap<>();
+              new ReadWriteProtectedTreeMultimap<>();
 
     @Override
     public <EventT> Subscription subscribe(final String key, final EventReceiver<EventT> eventReceiver) {

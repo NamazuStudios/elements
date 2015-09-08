@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.rt.event.EventModel;
 /**
  * Created by patricktwohig on 9/4/15.
  */
-public interface ResourceEventSubscriberMap {
+public interface ResourceEventReceiverMap {
 
     /**
      * Subscribes to {@link Event}s using the given {@link EventReceiver}.

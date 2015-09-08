@@ -30,7 +30,7 @@ public abstract class AbstractResource implements Resource {
 
     private final Stopwatch stopwatch = Stopwatch.createUnstarted();
 
-    private final ResourceEventSubscriberMap defaultResourceEventReceiverMap = new DefaultResourceEventReceiverMap();
+    private final ResourceEventReceiverMap defaultResourceEventReceiverMap = new DefaultResourceEventReceiverMap();
 
     private Path currentPath;
 

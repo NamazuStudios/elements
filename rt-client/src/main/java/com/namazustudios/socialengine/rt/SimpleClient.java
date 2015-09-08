@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
@@ -30,7 +31,8 @@ public class SimpleClient implements Client, Client.NetworkOperations {
      * The number of pending requests that are allowed to be happening at the same time before
      * this client will automatically assume the request will not be handled and it will be culled.
      */
-    public static final String MAX_PENDING_REQUESTS = "com.namazustudios.socialengine.rt.SimpleClient.MAX_PENDING_REQUESTS";
+    public static final String MAX_PENDING_REQUESTS =
+        "com.namazustudios.socialengine.rt.SimpleClient.MAX_PENDING_REQUESTS";
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleClient.class);
 
@@ -39,6 +41,9 @@ public class SimpleClient implements Client, Client.NetworkOperations {
     private final ConcurrentNavigableMap<Integer, SimpleClientPendingRequest> pendingRequests = new ConcurrentSkipListMap<>();
 
     private final ClientRequestDispatcher clientRequestDispatcher;
+
+    @Inject
+    private ClientEventReceiverMap clientEventReceiverMap;
 
     @Inject
     @Named(MAX_PENDING_REQUESTS)
@@ -67,7 +72,7 @@ public class SimpleClient implements Client, Client.NetworkOperations {
             .build();
 
         final SimpleClientPendingRequest simpleClientPendingRequest =
-                new SimpleClientPendingRequest(sequence, responseType, receiver);
+            new SimpleClientPendingRequest(responseType, receiver);
 
         pendingRequests.put(sequence, simpleClientPendingRequest);
         clientRequestDispatcher.dispatch(simpleRequest);
@@ -142,24 +147,43 @@ public class SimpleClient implements Client, Client.NetworkOperations {
 
     @Override
     public Iterable<Class<?>> getEventTypes(final EventHeader eventHeader) {
-        return null;
+        final Path path = new Path(eventHeader.getPath());
+        final String name = eventHeader.getName();
+        final Iterable<? extends  EventReceiver<?>> eventReceivers = clientEventReceiverMap.getEventReceivers(path, name);
+        return Iterables.transform(eventReceivers, new Function<EventReceiver<?>, Class<?>>() {
+            @Override
+            public Class<?> apply(EventReceiver<?> input) {
+                return input.getEventType();
+            }
+
+        });
     }
 
     @Override
     public void receive(final Event event, final Class<?> eventType) {
 
+        final Path path = new Path(event.getEventHeader().getPath());
+        final String name = event.getEventHeader().getName();
+
+        for(EventReceiver<?> eventReceiver : clientEventReceiverMap.getEventReceivers(path, name)) {
+            try {
+                final Object payload = eventReceiver.getEventType().cast(event.getPayload());
+                final EventReceiver<Object> objectEventReceiver = (EventReceiver<Object>)eventReceiver;
+                objectEventReceiver.receive(path, name, event.getPayload());
+            } catch (ClassCastException ex) {
+                LOG.error("Caught exception trying to process event {} with receiver {}.", event, eventReceiver);
+            }
+        }
+
     }
 
     private class SimpleClientPendingRequest {
-
-        private final int sequence;
 
         private final Class<?> responseType;
 
         private final ResponseReceiver responseReceiver;
 
-        public SimpleClientPendingRequest(final int sequence,
-                                          final Class<?> responseType,
+        public SimpleClientPendingRequest(final Class<?> responseType,
                                           final ResponseReceiver responseReceiver) {
 
             if (responseType == null) {
@@ -168,56 +192,9 @@ public class SimpleClient implements Client, Client.NetworkOperations {
                 throw new IllegalArgumentException("responseReceiver must be non-null");
             }
 
-            this.sequence = sequence;
             this.responseType = responseType;
             this.responseReceiver = responseReceiver;
 
-        }
-
-        public void timeout() {
-
-            final SimpleClientPendingRequest tuple = pendingRequests.remove(sequence);
-
-            LOG.warn("Timing out request with sequence {}", sequence);
-
-            if (tuple != null) {
-                final SimpleResponse simpleResponse = SimpleResponse.builder()
-                        .code(ResponseCode.TIMEOUT_FATAL)
-                    .build();
-                tuple.responseReceiver.receive(simpleResponse);
-            }
-
-        }
-
-    }
-
-    private static class EventSubscriptionTuple {
-
-        final String name;
-        final Path path;
-
-        public EventSubscriptionTuple(final String name, final Path path) {
-            this.name = name;
-            this.path = path;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof EventSubscriptionTuple)) return false;
-
-            EventSubscriptionTuple that = (EventSubscriptionTuple) o;
-
-            if (!name.equals(that.name)) return false;
-            return path.equals(that.path);
-
-        }
-
-        @Override
-        public int hashCode() {
-            int result = name.hashCode();
-            result = 31 * result + path.hashCode();
-            return result;
         }
 
     }
