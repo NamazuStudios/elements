@@ -13,7 +13,7 @@ import java.net.InetSocketAddress;
 /**
  * Created by patricktwohig on 9/1/15.
  */
-public class Main {
+public class ServerMain {
 
     public static void main(final String[] args) throws Exception {
         final Injector injector = Guice.createInjector(

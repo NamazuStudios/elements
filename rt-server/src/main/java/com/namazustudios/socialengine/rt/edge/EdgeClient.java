@@ -48,4 +48,9 @@ public interface EdgeClient {
      */
     void removeSessionVariable(Object key);
 
+    /**
+     * Disconnects the remote client.
+     */
+    void disconnect();
+
 }

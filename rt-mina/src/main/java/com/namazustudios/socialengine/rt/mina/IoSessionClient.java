@@ -71,4 +71,9 @@ public class IoSessionClient implements EdgeClient {
 
     }
 
+    @Override
+    public void disconnect() {
+        ioSession.close(false);
+    }
+
 }
