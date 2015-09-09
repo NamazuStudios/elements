@@ -3,12 +3,15 @@ package com.namazustudios.socialengine.rt.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
-import com.namazustudios.socialengine.rt.ResourceService;
-import com.namazustudios.socialengine.rt.SimpleResourceService;
+import com.google.inject.name.Names;
+import com.google.inject.util.Providers;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.edge.*;
-import com.namazustudios.socialengine.rt.internal.InternalResource;
-import com.namazustudios.socialengine.rt.internal.InternalServer;
-import com.namazustudios.socialengine.rt.internal.SimpleInternalServer;
+import com.namazustudios.socialengine.rt.internal.*;
+
+import javax.inject.Provider;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by patricktwohig on 9/2/15.
@@ -34,10 +37,110 @@ public class SimpleServerModule extends AbstractModule {
                 .to(SimpleInternalServer.class)
                 .in(Scopes.SINGLETON);
 
-        binder().bind(new TypeLiteral<ResourceService<InternalResource>>(){})
-                .to(new TypeLiteral<SimpleResourceService<InternalResource>>(){})
+        binder().bind(new TypeLiteral<ResourceService<InternalResource>>() {})
+                .to(new TypeLiteral<SimpleResourceService<InternalResource>>() {})
                 .in(Scopes.SINGLETON);
 
+        binder().bind(ExecutorService.class)
+                .annotatedWith(Names.named(AbstractSimpleServer.EXECUTOR_SERVICE))
+                .toProvider(Providers.guicify(executorServiceProvider()))
+                .in(Scopes.SINGLETON);
+
+        binder().bindConstant()
+                .annotatedWith(Names.named(AbstractSimpleServer.MAX_REQUESTS))
+                .to(maxRequests());
+
+        binder().bindConstant()
+                .annotatedWith(Names.named(AbstractSimpleServer.RESOURCE_TIMEOUT))
+                .to(resourceTimeout());
+
+        binder().bind(new TypeLiteral<ResourceLockFactory<EdgeResource>>() {})
+                .toProvider(Providers.guicify(edgeResourceLockFactoryProvider()))
+                .in(Scopes.SINGLETON);
+
+        binder().bind(new TypeLiteral<ResourceLockFactory<InternalResource>>(){})
+                .toProvider(Providers.guicify(interResourceLockFactoryProvider()))
+                .in(Scopes.SINGLETON);
+
+        binder().bind(InternalRequestDispatcher.class)
+                .to(SimpleInternalRequestDispatcher.class);
+
+    }
+
+    /**
+     * Override to include something other than the default settings for {@link ExecutorService}.  The
+     * instance is shared.
+     *
+     * This defaults to a fixed thread pool with a number of threads one greater than the number of availale
+     * CPU cores.
+     *
+     * @return a {@link javax.inject.Provider} for the {@link SimpleEdgeServer} and the {@link SimpleInternalServer}
+     */
+    protected Provider<ExecutorService> executorServiceProvider() {
+
+        final int availableProcessors = Runtime.getRuntime().availableProcessors();
+
+        return new Provider<ExecutorService>() {
+            @Override
+            public ExecutorService get() {
+                return Executors.newFixedThreadPool(availableProcessors + 1);
+            }
+        };
+
+    }
+
+    /**
+     * Override to include something other than the default {@link ResourceLockFactory} instance.
+     *
+     * This uses the {@link ProxyLockFactory} to accomplish the task.
+     *
+     * @return a {@link ResourceLockFactory} for {@link EdgeResource} instances
+     */
+    protected Provider<ResourceLockFactory<EdgeResource>> edgeResourceLockFactoryProvider() {
+        return new Provider<ResourceLockFactory<EdgeResource>>() {
+            @Override
+            public ResourceLockFactory<EdgeResource> get() {
+                return ProxyLockFactory.edgeResourceProxyLockFactory();
+            }
+        };
+    }
+
+    /**
+     * Override to include something other than the default {@link ResourceLockFactory} instance.
+     *
+     * This uses the {@link ProxyLockFactory} to accomplish the task.
+     *
+     * @return a {@link ResourceLockFactory} for {@link InternalResource} instances
+     */
+    protected Provider<ResourceLockFactory<InternalResource>> interResourceLockFactoryProvider() {
+        return new Provider<ResourceLockFactory<InternalResource>>() {
+            @Override
+            public ResourceLockFactory<InternalResource> get() {
+                return ProxyLockFactory.internalResourceProxyLockFactory();
+            }
+        };
+    }
+
+    /**
+     * Override to change the maximum number of requests that the server will accept per loop.
+     *
+     * @see {@link AbstractSimpleServer#MAX_REQUESTS}
+     *
+     * @return the maximum number of requets.
+     */
+    private int maxRequests() {
+        return 1000;
+    }
+
+    /**
+     * Override to change the resource timeout value.
+     *
+     * @see {@link AbstractSimpleServer#RESOURCE_TIMEOUT}
+     *
+     * @return the resource timeout value
+     */
+    private double resourceTimeout() {
+        return 0.25;
     }
 
 }

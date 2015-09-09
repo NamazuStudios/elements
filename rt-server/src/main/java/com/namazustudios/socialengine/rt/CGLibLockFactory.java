@@ -19,6 +19,7 @@ public class CGLibLockFactory<ResourceT extends  Resource> implements ResourceLo
     private static final MethodInterceptor LOCK_METHOD_INTERCEPTOR = new MethodInterceptor() {
 
         final Class<?>[] hashCodeParameterTypes = new Class<?>[]{};
+
         final Class<?>[] closeParameterTypes = new Class<?>[]{};
 
         final Class<?>[] equalsParameterTypes = new Class<?>[]{ Object.class };
@@ -29,10 +30,10 @@ public class CGLibLockFactory<ResourceT extends  Resource> implements ResourceLo
                                 final Object[] arguments,
                                 final MethodProxy methodProxy) throws Throwable {
 
-            if ("equals".equals(method.getName()) &&
+            if ("hashCode".equals(method.getName()) &&
                     Arrays.equals(method.getParameterTypes(), equalsParameterTypes)) {
                 return System.identityHashCode(object);
-            } else if ("hashCode".equals(method.getName()) &&
+            } else if ("equals".equals(method.getName()) &&
                     Arrays.equals(method.getParameterTypes(), hashCodeParameterTypes)) {
                 return this == object;
             } else if ("close".equals(method.getName()) &&

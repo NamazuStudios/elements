@@ -1,12 +1,19 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.ClassPath;
+import com.namazustudios.socialengine.rt.Resource;
 import org.reflections.Reflections;
+import org.reflections.scanners.ResourcesScanner;
+import org.reflections.util.ConfigurationBuilder;
+import org.reflections.util.FilterBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.Ref;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -21,7 +28,7 @@ public abstract class ClasspathScanningLuaResourceModule extends LuaResourceModu
 
     private static final Logger LOG = LoggerFactory.getLogger(ClasspathScanningLuaResourceModule.class);
 
-    private static final Pattern LUA_FILE_PATTERN = Pattern.compile(".*\\\\.lua", Pattern.CASE_INSENSITIVE |
+    private static final Pattern LUA_FILE_PATTERN = Pattern.compile(".*\\.lua", Pattern.CASE_INSENSITIVE |
                                                                                   Pattern.UNICODE_CASE);
 
     /**
@@ -32,12 +39,16 @@ public abstract class ClasspathScanningLuaResourceModule extends LuaResourceModu
      */
     protected void scanForEdgeResources(final String pkg) {
 
-        final Reflections  reflections = new Reflections(pkg);
+        final Reflections reflections = new Reflections(
+            new ConfigurationBuilder()
+                .forPackages(pkg)
+                .filterInputsBy(new FilterBuilder().includePackage(pkg))
+                .setScanners(new ResourcesScanner()));
 
         LOG.info("Scanning package \"{}\" for edge resource Lua scripts.", pkg);
 
         for (final String resource : reflections.getResources(LUA_FILE_PATTERN)) {
-            LOG.info("Adding script \"{}\"", pkg);
+            LOG.info("Adding edge resource script \"{}\" from package {}", resource, pkg);
             bindEdgeScriptFile(resource).onClasspath().named(resource);
         }
 
@@ -51,12 +62,16 @@ public abstract class ClasspathScanningLuaResourceModule extends LuaResourceModu
      */
     protected void scanForInternalResources(final String pkg) {
 
-        final Reflections  reflections = new Reflections(pkg);
+        final Reflections reflections = new Reflections(
+                new ConfigurationBuilder()
+                        .forPackages(pkg)
+                        .filterInputsBy(new FilterBuilder().includePackage(pkg))
+                        .setScanners(new ResourcesScanner()));
 
         LOG.info("Scanning package \"{}\" for internal resource Lua scripts.", pkg);
 
         for (final String resource : reflections.getResources(LUA_FILE_PATTERN)) {
-            LOG.info("Adding script \"{}\"", pkg);
+            LOG.info("Adding internal resource script \"{}\" from package {}", resource, pkg);
             bindInternalScriptFile(resource).onClasspath().named(resource);
         }
 
