@@ -17,13 +17,6 @@ import java.io.InputStream;
  */
 public class LuaEdgeResource extends AbstractLuaResource implements EdgeResource {
 
-    /**
-     * Edge resources must be installed to a specific path when the server starts up.  The
-     * script is responsible for knowing where it will be bootstrapped.  This must be specified
-     * under the {@link #NAMAZU_TABLE}.
-     */
-    public static final String BOOTSTRAP_PATH = "bootstrap_path";
-
     private final LuaState luaState;
 
     @Inject
@@ -71,15 +64,6 @@ public class LuaEdgeResource extends AbstractLuaResource implements EdgeResource
             }
 
         };
-    }
-
-    @Override
-    public String getBootstrapPath() {
-        try (final StackProtector stackProtector = new StackProtector(luaState)) {
-            luaState.getGlobal(NAMAZU_TABLE);
-            luaState.getField(-1, BOOTSTRAP_PATH);
-            return luaState.checkString(-1);
-        }
     }
 
 }

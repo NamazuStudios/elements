@@ -34,9 +34,10 @@ public final class Path implements Comparable<Path> {
     private final List<String> components;
 
     // Kind of confusing, but this indicates the maximum index at which the
-    // compareTo method should compare.  This is also used to determine whether
-    // or not this path is a wildcard path.
+    // compareTo method should compare.
     private final int maxCompareIndex;
+
+    private final boolean wildcard;
 
     /**
      * Parses the path into components and checks for hte wildcard character.
@@ -65,7 +66,8 @@ public final class Path implements Comparable<Path> {
      */
     public Path(final List<String> components) {
         final int idx = components.indexOf(WILDCARD);
-        maxCompareIndex = idx >= 0 ? idx : components.size();
+        wildcard = idx >= 0;
+        maxCompareIndex = wildcard ? idx : components.size();
         this.components = new ImmutableList.Builder<String>().addAll(components).build();
     }
 
@@ -84,7 +86,7 @@ public final class Path implements Comparable<Path> {
      * @return true
      */
     public boolean isWildcard() {
-        return maxCompareIndex == getComponents().size();
+        return wildcard;
     }
 
     /**
@@ -101,13 +103,24 @@ public final class Path implements Comparable<Path> {
     }
 
     /**
-     * Returns this path as a string.
+     * Returns the normalized path string.  NOte that {@link #toString()} does not return
+     * a properly formatted path.  But rather a path useful for debugging and logging information.
+     * To get the normalzied path, this method must be used.
      *
-     * @return the path
+     * @return the normalized path as a string
      */
+    public String toNormalizedPathString() {
+        return Util.pathFromComponents(components);
+    }
+
     @Override
     public String toString() {
-        return Util.pathFromComponents(components);
+        return "Path{" +
+                "components=" + components +
+                ", maxCompareIndex=" + maxCompareIndex +
+                ", wildcard=" + wildcard +
+                ", normalizedPath=" + toNormalizedPathString() +
+                '}';
     }
 
     /**
@@ -183,7 +196,10 @@ public final class Path implements Comparable<Path> {
          * @return the components
          */
         public static List<String> componentsFromPath(final String path) {
-            return Splitter.on(SPLIT_PATTERN).trimResults().splitToList(path);
+            return Splitter.on(SPLIT_PATTERN)
+                .omitEmptyStrings()
+                .trimResults()
+                .splitToList(path);
         }
 
 
@@ -215,6 +231,7 @@ public final class Path implements Comparable<Path> {
             final List<String> pathComponents = componentsFromPath(path);
             return pathFromComponents(pathComponents);
         }
+
     }
 
 }

@@ -16,11 +16,6 @@ import com.namazustudios.socialengine.rt.*;
 public interface EdgeResource extends Resource {
 
     /**
-     * Gets the path at which the script is to be boostrapped.
-     */
-    String getBootstrapPath();
-
-    /**
      * Gets the RequestHandler for the method.
      *
      * @param method the method name

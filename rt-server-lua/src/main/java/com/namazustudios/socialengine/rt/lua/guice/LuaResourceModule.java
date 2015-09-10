@@ -1,15 +1,17 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 import com.google.inject.binder.ScopedBindingBuilder;
+import com.google.inject.multibindings.MapBinder;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import com.google.inject.util.Providers;
+import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.edge.EdgeResource;
+import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import com.namazustudios.socialengine.rt.internal.InternalResource;
-import com.namazustudios.socialengine.rt.lua.LuaEdgeResource;
-import com.namazustudios.socialengine.rt.lua.EdgeResourceProviders;
-import com.namazustudios.socialengine.rt.lua.LuaInternalResource;
-import com.namazustudios.socialengine.rt.lua.InternalResourceProviders;
+import com.namazustudios.socialengine.rt.lua.*;
 
 import javax.inject.Provider;
 import java.io.File;
@@ -23,6 +25,27 @@ import java.io.File;
  */
 public abstract class LuaResourceModule extends AbstractModule {
 
+    private MapBinder<Path, EdgeResource> bootstrapEdgeResources;
+
+    @Override
+    protected final void configure() {
+
+        bootstrapEdgeResources = MapBinder.newMapBinder(binder(),
+                                                        Path.class,
+                                                        EdgeResource.class,
+                                                        Names.named(EdgeServer.BOOTSTRAP_RESOURCES));
+
+        binder().bind(IocResolver.class).to(GuiceIoCResolver.class).in(Scopes.SINGLETON);
+
+        configureResources();
+
+    }
+
+    /**
+     * Configures the resources for this {@link LuaResourceModule}.
+     */
+    protected abstract void configureResources();
+
     /**
      * Binds the given script file, returning a {@link ScriptFileBindingBuilder} which allows
      * for the specification of further options.
@@ -30,21 +53,35 @@ public abstract class LuaResourceModule extends AbstractModule {
      * @param scriptFile the script file
      * @return the {@link ScriptFileBindingBuilder}
      */
-    protected ScriptFileBindingBuilder bindEdgeScriptFile(final String scriptFile) {
-        return new ScriptFileBindingBuilder() {
+    protected BootstrapPathBindingBuilder bindEdgeScriptFile(final String scriptFile) {
+        return new BootstrapPathBindingBuilder() {
             @Override
-            public NamedScriptBindingBuilder onClasspath() {
-                return edgeClasspathScriptFile(scriptFile);
+            public ScriptFileBindingBuilder onBootstrapPath(final Path path) {
+                return scriptFileBindingBuilder(path, scriptFile);
             }
 
             @Override
-            public NamedScriptBindingBuilder onLocalFilesystem() {
-                return edgeFilesystemScriptFile(new File(scriptFile));
+            public ScriptFileBindingBuilder onBootstrapPath(final String path) {
+                return onBootstrapPath(new Path(path));
             }
         };
     }
 
-    private NamedScriptBindingBuilder edgeClasspathScriptFile(final String scriptFile) {
+    private ScriptFileBindingBuilder scriptFileBindingBuilder(final Path bootstrapPath, final String scriptFile) {
+        return new ScriptFileBindingBuilder() {
+            @Override
+            public NamedScriptBindingBuilder onClasspath() {
+                return edgeClasspathScriptFile(bootstrapPath, scriptFile);
+            }
+
+            @Override
+            public NamedScriptBindingBuilder onLocalFilesystem() {
+                return edgeFilesystemScriptFile(bootstrapPath, new File(scriptFile));
+            }
+        };
+    }
+
+    private NamedScriptBindingBuilder edgeClasspathScriptFile(final Path bootstrapPath, final String scriptFile) {
         return new NamedScriptBindingBuilder() {
             @Override
             public ScopedBindingBuilder named(final String scriptName) {
@@ -52,15 +89,14 @@ public abstract class LuaResourceModule extends AbstractModule {
                 final Provider<LuaEdgeResource> provider = EdgeResourceProviders
                         .classpathProviderForScript(scriptFile);
 
-                return bind(EdgeResource.class)
-                        .annotatedWith(Names.named(scriptName))
-                        .toProvider(Providers.guicify(provider));
+                return bootstrapEdgeResources.addBinding(bootstrapPath)
+                                             .toProvider(Providers.guicify(provider));
 
             }
         };
     }
 
-    private NamedScriptBindingBuilder edgeFilesystemScriptFile(final File scriptFile) {
+    private NamedScriptBindingBuilder edgeFilesystemScriptFile(final Path bootstrapPath, final File scriptFile) {
         return new NamedScriptBindingBuilder() {
             @Override
             public ScopedBindingBuilder named(final String scriptName) {
@@ -68,9 +104,8 @@ public abstract class LuaResourceModule extends AbstractModule {
                 final Provider<LuaEdgeResource> provider = EdgeResourceProviders
                         .filesystemProviderForScript(scriptFile);
 
-                return bind(EdgeResource.class)
-                        .annotatedWith(Names.named(scriptName))
-                        .toProvider(Providers.guicify(provider));
+                return bootstrapEdgeResources.addBinding(bootstrapPath)
+                                             .toProvider(Providers.guicify(provider));
 
             }
         };

@@ -2,8 +2,14 @@ package com.namazustudios.socialengine.rt.guice.example;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.Constants;
+import com.namazustudios.socialengine.rt.ExceptionMapper;
+import com.namazustudios.socialengine.rt.Request;
+import com.namazustudios.socialengine.rt.ResponseReceiver;
 import com.namazustudios.socialengine.rt.guice.EdgeFilterListModule;
+import com.namazustudios.socialengine.rt.guice.ExceptionMapperModule;
 import com.namazustudios.socialengine.rt.guice.SimpleServerModule;
 import com.namazustudios.socialengine.rt.lua.guice.ClasspathScanningLuaResourceModule;
 import com.namazustudios.socialengine.rt.mina.guice.MinaServerModule;
@@ -22,7 +28,7 @@ public class ServerMain {
                 new MinaServerModule(),
                 new ClasspathScanningLuaResourceModule() {
                     @Override
-                    protected void configure() {
+                    protected void configureResources() {
                         scanForEdgeResources("server.edge");
                         scanForInternalResources("server.internal");
                     }
@@ -30,11 +36,14 @@ public class ServerMain {
                 new EdgeFilterListModule() {
                     @Override
                     protected void configureFilters() {}
-                }
+                },
+                new ExceptionMapperModule()
         );
 
-        final SocketAcceptor socketAcceptor = injector.getInstance(SocketAcceptor.class);
-        socketAcceptor.bind(new InetSocketAddress(Constants.DEFAULT_PORT));
+        injector.getInstance(Key.get(new TypeLiteral<ExceptionMapper<IllegalArgumentException>>(){}));
+
+//        final SocketAcceptor socketAcceptor = injector.getInstance(SocketAcceptor.class);
+//        socketAcceptor.bind(new InetSocketAddress(Constants.DEFAULT_PORT));
 
     }
 

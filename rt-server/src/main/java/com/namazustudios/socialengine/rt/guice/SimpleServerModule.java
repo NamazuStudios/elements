@@ -51,6 +51,10 @@ public class SimpleServerModule extends AbstractModule {
                 .to(maxRequests());
 
         binder().bindConstant()
+                .annotatedWith(Names.named(AbstractSimpleServer.MAX_EVENTS))
+                .to(maxEvents());
+
+        binder().bindConstant()
                 .annotatedWith(Names.named(AbstractSimpleServer.RESOURCE_TIMEOUT))
                 .to(resourceTimeout());
 
@@ -129,6 +133,17 @@ public class SimpleServerModule extends AbstractModule {
      * @return the maximum number of requets.
      */
     private int maxRequests() {
+        return 1000;
+    }
+
+    /**
+     * Override to change the maximum number of requests that the server will accept per loop.
+     *
+     * @see {@link AbstractSimpleServer#MAX_REQUESTS}
+     *
+     * @return the maximum number of requets.
+     */
+    private int maxEvents() {
         return 1000;
     }
 

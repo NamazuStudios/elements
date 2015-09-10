@@ -30,7 +30,7 @@ public class SimpleEdgeServer extends AbstractSimpleServer implements EdgeServer
     private ResourceService<EdgeResource> edgeResourceService;
 
     @Inject
-    @Named(BOOTSTRAP_RESOURCES)
+    @Named(EdgeServer.BOOTSTRAP_RESOURCES)
     private Map<Path, EdgeResource> bootstrapResources;
 
     private final Queue<Callable<Void>> eventQueue = new ConcurrentLinkedQueue<>();

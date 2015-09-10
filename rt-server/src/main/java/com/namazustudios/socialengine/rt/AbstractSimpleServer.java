@@ -21,12 +21,12 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
     /**
      * This is the maximum number of requests that the server will accept before giving up and processing the next frame.
      */
-    public static final String MAX_REQUESTS = "com.namazustudios.socialengine.rt.edge.SimpleEdgeServer.maxRequests";
+    public static final String MAX_REQUESTS = "com.namazustudios.socialengine.rt.edge.AbstractSimpleServer.maxRequests";
 
     /**
      * This is the maximum number of requests that server will process before giving up and processing the next frame.
      */
-    public static final String MAX_EVENTS = "com.namazustudios.socialengine.rt.edge.SimpleEdgeServer.maxRequests";
+    public static final String MAX_EVENTS = "com.namazustudios.socialengine.rt.edge.AbstractSimpleServer.maxEvents";
 
     /**
      * This is the amount of time (in seconds) that all {@link Resource}s should take to process events,
@@ -34,20 +34,13 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
      * time will be logged as problematic.  It is a good idea to set this to a low number, such as 0.5 seconds
      * to encourage resource developers to write responsive code.
      */
-    public static final String RESOURCE_TIMEOUT = "com.namazustudios.socialengine.rt.edge.SimpleEdgeServer.resourceTimeout";
+    public static final String RESOURCE_TIMEOUT = "com.namazustudios.socialengine.rt.edge.AbstractSimpleServer.resourceTimeout";
 
     /**
      * The SimpleEdgeServer uses an {@link ExecutorService} to process requests and dispath
      * events to the various {@link Resource}s.
      */
-    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.edge.SimpleEdgeServer.executorService";
-
-    /**
-     * The SimpleEdgeServer must have some {@link Resource}s it will add when the server first starts up.  This
-     * must be specified as a {@link Map} of stings to {@link Resource} values with the key as the path and the
-     * value as the resource at the path.
-     */
-    public static final String BOOTSTRAP_RESOURCES = "com.namazustudios.socialengine.rt.edge.SimpleEdgeServer.maxRequests";
+    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.edge.AbstractSimpleServer.executorService";
 
     private final AtomicReference<Thread> runnerThreadAtomicReference = new AtomicReference<>();
 

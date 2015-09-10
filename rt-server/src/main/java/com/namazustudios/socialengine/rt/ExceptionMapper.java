@@ -39,8 +39,7 @@ public interface ExceptionMapper<ExceptionT extends Exception> {
          *
          * @return the {@link ExceptionMapper}
          */
-        <ExceptionT extends Exception>
-        ExceptionMapper<ExceptionT> getExceptionMapper(ExceptionT ex);
+        <ExceptionT extends Exception> ExceptionMapper<ExceptionT> getExceptionMapper(ExceptionT ex);
 
     }
 
