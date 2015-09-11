@@ -1,9 +1,13 @@
 package com.namazustudios.socialengine.rt.mina.guice;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Provider;
+import com.google.inject.name.Names;
+import com.namazustudios.socialengine.rt.mina.Constants;
 import com.namazustudios.socialengine.rt.mina.ServerBSONProtocolDecoder;
 import com.namazustudios.socialengine.rt.mina.ServerBSONProtocolEncoder;
 import com.namazustudios.socialengine.rt.mina.ServerIOHandler;
+import de.undercouch.bson4jackson.BsonFactory;
 import org.apache.mina.core.filterchain.IoFilterChainBuilder;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.service.IoHandler;
@@ -53,6 +57,16 @@ public class MinaServerModule extends MinaModule {
         bind(ProtocolDecoder.class).to(ServerBSONProtocolDecoder.class);
 
         bind(IoHandler.class).to(ServerIOHandler.class);
+
+        bind(ObjectMapper.class)
+            .annotatedWith(Names.named(Constants.BSON_OBJECT_MAPPER))
+            .toProvider(new Provider<ObjectMapper>() {
+                @Override
+                public ObjectMapper get() {
+                    final ObjectMapper objectMapper = new ObjectMapper(new BsonFactory());
+                    return objectMapper;
+                }
+            });
 
     }
 
