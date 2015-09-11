@@ -10,45 +10,32 @@ import java.util.SortedSet;
  */
 public class DefaultClientEventReceiverMap implements ClientEventReceiverMap {
 
-    private ReadWriteProtectedTreeMultimap<EventSubscriptionTuple, EventReceiverWrapper<?>> receiverMap =
-            new ReadWriteProtectedTreeMultimap<>();
+    private ReadWriteProtectedSortedSetMultimap<EventSubscriptionTuple, EventReceiverWrapper<?>> receiverMap =
+            new ReadWriteProtectedSortedSetMultimap<>();
 
     @Override
     public <EventT> Subscription subscribe(Path path, String name, final EventReceiver<EventT> eventReceiver) {
 
         final EventSubscriptionTuple eventSubscriptionTuple = new EventSubscriptionTuple(name, path);
-        final EventReceiverWrapper<EventT> eventReceiverWrapper = new EventReceiverWrapper<EventT>(eventReceiver);
+        final EventReceiverWrapper<EventT> eventReceiverWrapper = new EventReceiverWrapper<>(eventReceiver);
 
-        receiverMap.write(new ReadWriteProtectedMultimap.CriticalSection<
-                Void,
-                EventSubscriptionTuple,
-                EventReceiverWrapper<?>,
-                SortedSetMultimap<EventSubscriptionTuple,EventReceiverWrapper<?>>>() {
-
+        receiverMap.write(new ReadWriteProtectedObject.CriticalSection<Void, SortedSetMultimap<EventSubscriptionTuple,EventReceiverWrapper<?>>>() {
             @Override
-            public Void perform(SortedSetMultimap<EventSubscriptionTuple, EventReceiverWrapper<?>> eventReceivers) {
-                eventReceivers.put(eventSubscriptionTuple, eventReceiverWrapper);
+            public Void perform(SortedSetMultimap<EventSubscriptionTuple, EventReceiverWrapper<?>> protectedObject) {
+                protectedObject.put(eventSubscriptionTuple, eventReceiverWrapper);
                 return null;
             }
-
         });
 
         return new Subscription() {
             @Override
             public void release() {
-                receiverMap.write(new ReadWriteProtectedMultimap.CriticalSection<
-                        Void,
-                        EventSubscriptionTuple,
-                        EventReceiverWrapper<?>,
-                        SortedSetMultimap<EventSubscriptionTuple,EventReceiverWrapper<?>>>() {
-
+                receiverMap.write(new ReadWriteProtectedObject.CriticalSection<Void, SortedSetMultimap<EventSubscriptionTuple,EventReceiverWrapper<?>>>() {
                     @Override
-                    public Void perform(
-                            final SortedSetMultimap<EventSubscriptionTuple, EventReceiverWrapper<?>> eventReceivers) {
+                    public Void perform(final SortedSetMultimap<EventSubscriptionTuple, EventReceiverWrapper<?>> eventReceivers) {
                         eventReceivers.remove(eventSubscriptionTuple, eventReceiverWrapper);
                         return null;
                     }
-
                 });
             }
         };
@@ -59,16 +46,10 @@ public class DefaultClientEventReceiverMap implements ClientEventReceiverMap {
     public Iterable<? extends EventReceiver<?>> getEventReceivers(final Path path, final String name) {
         final Iterable<EventReceiverWrapper<?>> eventReceiverWrappers;
 
-        eventReceiverWrappers = receiverMap.read(new ReadWriteProtectedMultimap.CriticalSection<
-                Iterable<EventReceiverWrapper<?>>,
-                EventSubscriptionTuple,
-                EventReceiverWrapper<?>,
-                SortedSetMultimap<EventSubscriptionTuple, EventReceiverWrapper<?>>>() {
+        eventReceiverWrappers = receiverMap.read(new ReadWriteProtectedObject.CriticalSection<Iterable<EventReceiverWrapper<?>>, SortedSetMultimap<EventSubscriptionTuple, EventReceiverWrapper<?>>>() {
             @Override
-            public Iterable<EventReceiverWrapper<?>> perform(
-                    final SortedSetMultimap<EventSubscriptionTuple, EventReceiverWrapper<?>> eventReceivers) {
-                final SortedSet<EventReceiverWrapper<?>> eventReceiverWrappers =
-                        eventReceivers.get(new EventSubscriptionTuple(name, path));
+            public Iterable<EventReceiverWrapper<?>> perform(SortedSetMultimap<EventSubscriptionTuple, EventReceiverWrapper<?>> protectedObject) {
+                final SortedSet<EventReceiverWrapper<?>> eventReceiverWrappers = protectedObject.get(new EventSubscriptionTuple(name, path));
                 return Lists.newArrayList(eventReceiverWrappers);
             }
         });

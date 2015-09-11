@@ -31,7 +31,7 @@ public interface Resource extends AutoCloseable {
      * Subscribes to {@link Event}s using the given {@link EventReceiver}.
      *
      * This method should not be used directly, but rather should be managed by
-     * the server instance.
+     * the {@link Server} instance containing this resource.
      *
      * @praam name the name of the event
      * @param eventReceiver the event receiver instance

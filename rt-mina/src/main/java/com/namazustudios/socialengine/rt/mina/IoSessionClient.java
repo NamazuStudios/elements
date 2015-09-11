@@ -10,7 +10,7 @@ public class IoSessionClient implements EdgeClient {
 
     private final IoSession ioSession;
 
-    public IoSessionClient(IoSession ioSession) {
+    public IoSessionClient(final IoSession ioSession) {
         this.ioSession = ioSession;
     }
 
@@ -41,8 +41,9 @@ public class IoSessionClient implements EdgeClient {
     }
 
     /**
-     * Gets
-     * @return
+     * Gets the underlying {@link IoSession} instance.
+     *
+     * @return the underlying {@link IoSession} instance.
      */
     public IoSession getIoSession() {
         return ioSession;

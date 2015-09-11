@@ -16,19 +16,18 @@ public class DefaultResourceEventReceiverMap implements ResourceEventReceiverMap
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultResourceEventReceiverMap.class);
 
-    private final ReadWriteProtectedTreeMultimap<String, EventReceiverWrapper<?>> eventSubscribers =
-              new ReadWriteProtectedTreeMultimap<>();
+    private final ReadWriteProtectedSortedSetMultimap<String, EventReceiverWrapper<?>> eventSubscribers =
+              new ReadWriteProtectedSortedSetMultimap<>();
 
     @Override
     public <EventT> Subscription subscribe(final String key, final EventReceiver<EventT> eventReceiver) {
 
         final EventReceiverWrapper<EventT> wrapper = new EventReceiverWrapper<>(eventReceiver);
 
-        eventSubscribers.write(new ReadWriteProtectedMultimap.CriticalSection<Void,
-                String, EventReceiverWrapper<?>, SortedSetMultimap<String,EventReceiverWrapper<?>>>() {
+        eventSubscribers.write(new ReadWriteProtectedObject.CriticalSection<Void, SortedSetMultimap<String,EventReceiverWrapper<?>>>() {
             @Override
-            public Void perform(SortedSetMultimap<String, EventReceiverWrapper<?>> eventReceivers) {
-                eventReceivers.put(key, wrapper);
+            public Void perform(SortedSetMultimap<String, EventReceiverWrapper<?>> protectedObject) {
+                protectedObject.put(key, wrapper);
                 LOG.debug("Registered event receiver {}", eventReceiver);
                 return null;
             }
@@ -38,8 +37,7 @@ public class DefaultResourceEventReceiverMap implements ResourceEventReceiverMap
 
             @Override
             public void release() {
-                eventSubscribers.write(new ReadWriteProtectedMultimap.CriticalSection<Void, String,
-                        EventReceiverWrapper<?>, SortedSetMultimap<String,EventReceiverWrapper<?>>>() {
+                eventSubscribers.write(new ReadWriteProtectedObject.CriticalSection<Void, SortedSetMultimap<String,EventReceiverWrapper<?>>>() {
                     @Override
                     public Void perform(SortedSetMultimap<String, EventReceiverWrapper<?>> eventReceivers) {
                         LOG.debug("Unregistered event receiver {}", eventReceiver);
@@ -55,8 +53,7 @@ public class DefaultResourceEventReceiverMap implements ResourceEventReceiverMap
     }
 
     public <EventT> void post(final Path path, final EventT event, final String name) {
-        eventSubscribers.read(new ReadWriteProtectedMultimap.CriticalSection<Void, String,
-                EventReceiverWrapper<?>, SortedSetMultimap<String,EventReceiverWrapper<?>>>() {
+        eventSubscribers.read(new ReadWriteProtectedObject.CriticalSection<Void, SortedSetMultimap<String,EventReceiverWrapper<?>>>() {
 
             @Override
             public Void perform(SortedSetMultimap<String, EventReceiverWrapper<?>> eventReceivers) {

@@ -21,8 +21,6 @@ public interface ResourceEventReceiverMap {
      * Posts the given event to all of this objects' {@link EventReceiver} instances.  This ensures
      * that the event is checked and delivered to the appropriate handlers.
      *
-     * This method will throw an execpetion if the type is not annotated with {@link EventModel}
-     *
      * @param <EventT>
      * @param event the event itself
      * @param name the name of the event
