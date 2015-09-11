@@ -1,15 +1,14 @@
 package com.namazustudios.socialengine.rt.mina;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.namazustudios.socialengine.rt.Response;
-import com.namazustudios.socialengine.rt.ResponseHeader;
+import com.namazustudios.socialengine.rt.*;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolEncoder;
 import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 
 import javax.inject.Inject;
-import java.io.ByteArrayOutputStream;
+import javax.inject.Named;
 
 /**
  * Created by patricktwohig on 7/26/15.
@@ -17,6 +16,7 @@ import java.io.ByteArrayOutputStream;
 public class ServerBSONProtocolEncoder implements ProtocolEncoder {
 
     @Inject
+    @Named(Constants.BSON_OBJECT_MAPPER)
     private ObjectMapper objectMapper;
 
     @Override
@@ -25,23 +25,38 @@ public class ServerBSONProtocolEncoder implements ProtocolEncoder {
                        final ProtocolEncoderOutput out) throws Exception {
 
         if (message instanceof Response) {
-            encodeRespones((Response)message, out);
+            encode((Response)message, out);
+        } else if (message instanceof Event) {
+            encode((Event) message, out);
         } else {
             throw new IllegalArgumentException("Unexpected message " + message);
         }
 
     }
 
-    private void encodeRespones(final Response response, final ProtocolEncoderOutput out) throws Exception {
+    private void encode(final Response response, final ProtocolEncoderOutput out) throws Exception {
 
         final IoBuffer ioBuffer;
-
-        final ResponseHeader responseHeader = response.getResponseHeader();
-        final Object payload = response.getPayload();
+        final SimpleResponse simpleResponse = SimpleResponse.builder().from(response).build();
 
         try (final IoBufferByteArrayOutputStream byteArrayOutputStream = new IoBufferByteArrayOutputStream()) {
-            objectMapper.writeValue(byteArrayOutputStream, responseHeader);
-            objectMapper.writeValue(byteArrayOutputStream, payload);
+            byteArrayOutputStream.write(BSONMessageType.RESPONSE.getCode());
+            objectMapper.writeValue(byteArrayOutputStream, simpleResponse);
+            ioBuffer = byteArrayOutputStream.toIoBuffer();
+        }
+
+        out.write(ioBuffer);
+
+    }
+
+    private void encode(final Event event, final ProtocolEncoderOutput out) throws Exception {
+
+        final IoBuffer ioBuffer;
+        final SimpleEvent simpleEvent = SimpleEvent.builder().event(event).build();
+
+        try (final IoBufferByteArrayOutputStream byteArrayOutputStream = new IoBufferByteArrayOutputStream()) {
+            byteArrayOutputStream.write(BSONMessageType.EVENT.getCode());
+            objectMapper.writeValue(byteArrayOutputStream, event);
             ioBuffer = byteArrayOutputStream.toIoBuffer();
         }
 
@@ -51,16 +66,5 @@ public class ServerBSONProtocolEncoder implements ProtocolEncoder {
 
     @Override
     public void dispose(IoSession session) throws Exception {}
-
-    private static class IoBufferByteArrayOutputStream extends ByteArrayOutputStream {
-
-        public IoBuffer toIoBuffer() {
-            final IoBuffer ioBuffer = IoBuffer.allocate(count, false);
-            ioBuffer.put(buf, 0, count);
-            ioBuffer.flip();
-            return ioBuffer;
-        }
-
-    }
 
 }

@@ -2,16 +2,23 @@ package com.namazustudios.socialengine.rt.mina;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
+import com.google.common.collect.ImmutableMap;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
 import com.namazustudios.socialengine.rt.edge.EdgeResource;
+import de.undercouch.bson4jackson.BsonFactory;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.AttributeKey;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.CumulativeProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
@@ -22,15 +29,16 @@ import java.io.IOException;
  */
 public class ServerBSONProtocolDecoder extends CumulativeProtocolDecoder {
 
-    public static final int BSON_DOCUMENT_LENGTH = 4;
+    private static final Logger LOG = LoggerFactory.getLogger(ServerBSONProtocolDecoder.class);
+
+    public static final int BSON_DOCUMENT_LENGTH_LENGTH = 4;
 
     private static final AttributeKey BUFFER_STATE = new AttributeKey(ServerBSONProtocolDecoder.class, "BufferState");
 
     private static final AttributeKey DOCUMENT_SIZE = new AttributeKey(ServerBSONProtocolDecoder.class, "DocumentSize");
 
-    private static final AttributeKey HEADER_DOCUMENT = new AttributeKey(ServerBSONProtocolDecoder.class, "HeaderDocument");
-
     @Inject
+    @Named(Constants.BSON_OBJECT_MAPPER)
     private ObjectMapper objectMapper;
 
     @Inject
@@ -45,20 +53,12 @@ public class ServerBSONProtocolDecoder extends CumulativeProtocolDecoder {
 
         switch (bufferState) {
 
-            case HEADER_LENGTH_READ:
-                checkAndReadHeaderLength(session, in);
+            case DOCUMENT_LENGTH:
+                checkAndReadDocumentLength(session, in);
                 return false;
 
-            case HEADER_DOCUMENT_READ:
-                checkAndReadHeaderDocument(session, in);
-                return false;
-
-            case PAYLOAD_LENGTH_READ:
-                checkAndReadPayloadLength(session, in);
-                return false;
-
-            case PAYLOAD_DOCUMENT_READ:
-                return checkAndReadPayloadDocument(session, in, out);
+            case DOCUMENT:
+                return checkAndReadDocument(session, in, out);
 
             default:
                 throw new IllegalStateException("Invalid state " + bufferState);
@@ -67,113 +67,97 @@ public class ServerBSONProtocolDecoder extends CumulativeProtocolDecoder {
 
     }
 
-    private void checkAndReadHeaderLength(final IoSession ioSession, final IoBuffer in) {
+    private void checkAndReadDocumentLength(final IoSession ioSession, final IoBuffer in) {
 
-        if (in.remaining() >= BSON_DOCUMENT_LENGTH) {
-            final int documentSize = in.getInt(in.position());
-            setDocumentSize(ioSession, documentSize);
-            setBufferState(ioSession, BufferState.HEADER_DOCUMENT_READ);
+        if (in.remaining() >= BSON_DOCUMENT_LENGTH_LENGTH) {
+            final int documentLength = in.getInt(in.position());
+            setDocumentLength(ioSession, documentLength);
+            setBufferState(ioSession, BufferState.DOCUMENT);
         }
 
     }
 
-    private void checkAndReadHeaderDocument(final IoSession ioSession, final IoBuffer in) throws IOException {
+    private boolean checkAndReadDocument(final IoSession ioSession,
+                                         final IoBuffer in,
+                                         final ProtocolDecoderOutput out) throws IOException {
 
-        final int documentSize = getDocumentSize(ioSession);
+        final int documentLength = getDocumentLength(ioSession);
 
-        if (in.remaining() >= (BSON_DOCUMENT_LENGTH + documentSize)) {
+        if (in.remaining() >= (BSON_DOCUMENT_LENGTH_LENGTH + documentLength)) {
 
-            try (final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(in.buf())){
-                final RequestHeader requestHeader = objectMapper.readValue(inputStream, SimpleRequestHeader.class);
-                ioSession.setAttribute(HEADER_DOCUMENT, requestHeader);
-                setBufferState(ioSession, BufferState.PAYLOAD_LENGTH_READ);
+            final byte[] buffer = new byte[BSON_DOCUMENT_LENGTH_LENGTH + documentLength];
+            in.get(buffer);
+
+            try {
+
+                final SimpleRequest simpleRequest = objectMapper.readValue(buffer, SimpleRequest.class);
+                final Path path = new Path(simpleRequest.getHeader().getPath());
+
+                final EdgeRequestPathHandler edgeRequestPathHandler = edgeResourceService
+                        .getResource(path)
+                        .getHandler(simpleRequest.getHeader().getMethod());
+
+                final Class<?> payloadType = edgeRequestPathHandler.getPayloadType();
+
+                final Object payload = objectMapper.convertValue(simpleRequest.getPayload(), payloadType);
+                simpleRequest.setPayload(payload);
+
+                out.write(simpleRequest);
+
+            } catch (Exception ex) {
+                closeWithBadRequest(ex, ioSession);
+                LOG.error("Received bad request.  Closing session {}.", ioSession, ex);
+            } finally {
+                ioSession.removeAttribute(BUFFER_STATE);
+                ioSession.removeAttribute(DOCUMENT_SIZE);
             }
-
-        }
-
-    }
-
-    private void checkAndReadPayloadLength(final IoSession ioSession, final IoBuffer in) {
-
-        if (in.remaining() >= BSON_DOCUMENT_LENGTH) {
-            final int documentSize = in.getInt(in.position());
-            setDocumentSize(ioSession, documentSize);
-            setBufferState(ioSession, BufferState.PAYLOAD_DOCUMENT_READ);
-        }
-
-    }
-
-    private boolean checkAndReadPayloadDocument(final IoSession ioSession,
-                                                final IoBuffer in,
-                                                final ProtocolDecoderOutput out) throws IOException {
-
-        final int documentSize = getDocumentSize(ioSession);
-
-        if (in.remaining() >= (BSON_DOCUMENT_LENGTH + documentSize)) {
-
-            final RequestHeader requestHeader = getRequestHeader(ioSession);
-
-            final Path path = new Path(requestHeader.getPath());
-            final EdgeRequestPathHandler edgeRequestPathHandler = edgeResourceService
-                    .getResource(path)
-                    .getHandler(requestHeader.getMethod());
-
-            final Class<?> payloadType = edgeRequestPathHandler.getPayloadType();
-            final SimpleRequest<Object> request = new SimpleRequest();
-
-            try (final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(in.buf())) {
-
-                final Object payload = objectMapper.readValue(inputStream, payloadType);
-
-                request.setHeader(requestHeader);
-                request.setPayload(payload);
-
-            }
-
-            //Remove all attributes from the session
-            ioSession.removeAttribute(BUFFER_STATE);
-            ioSession.removeAttribute(DOCUMENT_SIZE);
-            ioSession.removeAttribute(HEADER_DOCUMENT);
-
-            // Write the message to be handed downstream to the filters as
-            // they see fit.
-            out.write(request);
 
             return true;
-
         } else {
             return false;
         }
 
     }
 
-    public BufferState getBufferState(final IoSession ioSession) {
-        return (BufferState) ioSession.getAttribute(BUFFER_STATE, BufferState.HEADER_LENGTH_READ);
+    private BufferState getBufferState(final IoSession ioSession) {
+        return (BufferState) ioSession.getAttribute(BUFFER_STATE, BufferState.DOCUMENT_LENGTH);
     }
 
-    public void setBufferState(final IoSession ioSession, final BufferState bufferState) {
+    private void setBufferState(final IoSession ioSession, final BufferState bufferState) {
         ioSession.setAttribute(BUFFER_STATE, bufferState);
     }
 
-    public Integer getDocumentSize(final IoSession ioSession) {
+    private Integer getDocumentLength(final IoSession ioSession) {
         return (Integer) ioSession.getAttribute(DOCUMENT_SIZE, 0);
     }
 
-    public void setDocumentSize(final IoSession ioSession, int documentSize) {
+    private void setDocumentLength(final IoSession ioSession, int documentSize) {
         ioSession.setAttribute(DOCUMENT_SIZE, documentSize);
     }
 
-    public RequestHeader getRequestHeader(final IoSession ioSession) {
-        return (RequestHeader) ioSession.getAttribute(HEADER_DOCUMENT);
+    private void closeWithBadRequest(final Exception ex, final IoSession ioSession) {
+
+        final SimpleResponse simpleResponse = SimpleResponse.builder()
+                .code(ResponseCode.BAD_REQUEST_FATAL)
+                .payload(ex.getMessage())
+            .build();
+
+        ioSession.write(simpleResponse);
+        ioSession.close(false);
+
     }
 
-    enum BufferState {
+    private enum BufferState {
 
-        HEADER_LENGTH_READ,
-        HEADER_DOCUMENT_READ,
+        /**
+         * Indicates that the decoder is reading the document length.
+         */
+        DOCUMENT_LENGTH,
 
-        PAYLOAD_LENGTH_READ,
-        PAYLOAD_DOCUMENT_READ,
+        /**
+         * Indicates that hte decoder is reading the document itself.
+         */
+        DOCUMENT
 
     }
 

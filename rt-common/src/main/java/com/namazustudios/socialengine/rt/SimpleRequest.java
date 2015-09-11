@@ -7,27 +7,27 @@ import java.util.Map;
 /**
  * Created by patricktwohig on 7/26/15.
  */
-public class SimpleRequest<PayloadT> implements Request {
+public class SimpleRequest implements Request {
 
-    private RequestHeader header;
+    private SimpleRequestHeader header;
 
-    private PayloadT payload;
+    private Object payload;
 
     @Override
-    public RequestHeader getHeader() {
+    public SimpleRequestHeader getHeader() {
         return header;
     }
 
-    public void setHeader(RequestHeader header) {
+    public void setHeader(final SimpleRequestHeader header) {
         this.header = header;
     }
 
     @Override
-    public PayloadT getPayload() {
+    public Object getPayload() {
         return payload;
     }
 
-    public void setPayload(PayloadT payload) {
+    public void setPayload(final Object payload) {
         this.payload = payload;
     }
 

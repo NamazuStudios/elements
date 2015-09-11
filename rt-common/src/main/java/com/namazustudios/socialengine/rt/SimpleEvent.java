@@ -5,16 +5,16 @@ package com.namazustudios.socialengine.rt;
  */
 public class SimpleEvent implements Event {
 
-    private EventHeader eventHeader;
+    private SimpleEventHeader eventHeader;
 
     private Object payload;
 
     @Override
-    public EventHeader getEventHeader() {
+    public SimpleEventHeader getEventHeader() {
         return eventHeader;
     }
 
-    public void setEventHeader(EventHeader eventHeader) {
+    public void setEventHeader(final SimpleEventHeader eventHeader) {
         this.eventHeader = eventHeader;
     }
 
@@ -25,6 +25,55 @@ public class SimpleEvent implements Event {
 
     public void setPayload(Object payload) {
         this.payload = payload;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+
+        private final SimpleEvent simpleEvent = new SimpleEvent();
+
+        private final SimpleEventHeader simpleEventHeader = new SimpleEventHeader();
+
+        public Builder() {
+            simpleEvent.setEventHeader(simpleEventHeader);
+        }
+
+        public Builder payload(final Object payload) {
+            simpleEvent.setPayload(payload);
+            return this;
+        }
+
+        public Builder header(final EventHeader eventHeader) {
+
+            if (eventHeader != null) {
+                simpleEventHeader.setName(eventHeader.getName());
+                simpleEventHeader.setPath(eventHeader.getPath());
+            }
+
+            return this;
+        }
+
+        public Builder event(final Event event) {
+
+            if (event.getEventHeader() != null) {
+                header(event.getEventHeader());
+            }
+
+            if (event.getPayload() != null) {
+                payload(event.getPayload());
+            }
+
+            return this;
+
+        }
+
+        public SimpleEvent build() {
+            return simpleEvent;
+        }
+
     }
 
 }
