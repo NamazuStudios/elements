@@ -11,8 +11,11 @@ import com.namazustudios.socialengine.rt.ResponseReceiver;
 import com.namazustudios.socialengine.rt.guice.EdgeFilterListModule;
 import com.namazustudios.socialengine.rt.guice.ExceptionMapperModule;
 import com.namazustudios.socialengine.rt.guice.SimpleServerModule;
+import com.namazustudios.socialengine.rt.lua.FQNTypeRegistry;
+import com.namazustudios.socialengine.rt.lua.TypeRegistry;
 import com.namazustudios.socialengine.rt.lua.guice.ClasspathScanningLuaResourceModule;
 import com.namazustudios.socialengine.rt.mina.guice.MinaServerModule;
+import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.transport.socket.SocketAcceptor;
 
 import java.net.InetSocketAddress;
@@ -29,8 +32,14 @@ public class ServerMain {
                 new ClasspathScanningLuaResourceModule() {
                     @Override
                     protected void configureResources() {
+
                         scanForEdgeResources("server.edge");
                         scanForInternalResources("server.internal");
+
+                        // We use fully-qualified type names, in this example, but this
+                        // is heavily dependent upon how the backing scripts handle things
+                        binder().bind(TypeRegistry.class).to(FQNTypeRegistry.class);
+
                     }
                 },
                 new EdgeFilterListModule() {
@@ -40,10 +49,8 @@ public class ServerMain {
                 new ExceptionMapperModule()
         );
 
-        injector.getInstance(Key.get(new TypeLiteral<ExceptionMapper<IllegalArgumentException>>(){}));
-
-//        final SocketAcceptor socketAcceptor = injector.getInstance(SocketAcceptor.class);
-//        socketAcceptor.bind(new InetSocketAddress(Constants.DEFAULT_PORT));
+        final IoAcceptor socketAcceptor = injector.getInstance(IoAcceptor.class);
+        socketAcceptor.bind(new InetSocketAddress(Constants.DEFAULT_PORT));
 
     }
 
