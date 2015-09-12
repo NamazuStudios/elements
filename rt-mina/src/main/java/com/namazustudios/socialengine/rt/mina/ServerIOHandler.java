@@ -1,14 +1,19 @@
 package com.namazustudios.socialengine.rt.mina;
 
-import com.namazustudios.socialengine.rt.Request;
-import com.namazustudios.socialengine.rt.ResponseReceiver;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestDispatcher;
+import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
+import com.namazustudios.socialengine.rt.edge.EdgeResource;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IoSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * An implementation of {@link IoHandler} which dispatches messages
@@ -18,21 +23,49 @@ import javax.inject.Inject;
  */
 public class ServerIOHandler extends IoHandlerAdapter {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ServerIOHandler.class);
+
     @Inject
     private EdgeServer edgeServer;
 
     @Inject
     private MinaConnectedEdgeClientService minaConnectedEdgeClientService;
 
-    @Override
-    public void messageReceived(IoSession session, Object message) throws Exception {
+    @Inject
+    private ResourceService<EdgeResource> edgeResourceService;
 
-        final Request request = (Request)message;
+    @Inject
+    private ObjectMapper objectMapper;
+
+    @Override
+    public void messageReceived(final IoSession session, final Object message) throws Exception {
+
+        if (message instanceof Request) {
+            handle(session, (Request) message);
+        } else {
+            LOG.error("Received unexpected message from server: {} ", message);
+        }
+
+    }
+
+    private void handle(final IoSession session, final Request request) {
+
         final IoSessionClient ioSessionClient = new IoSessionClient(session);
         final ResponseReceiver responseReceiver = minaConnectedEdgeClientService
-            .getResponseReceiver(ioSessionClient, request);
+                .getResponseReceiver(ioSessionClient, request);
 
-        edgeServer.dispatch(ioSessionClient, request, responseReceiver);
+        final Path path = new Path(request.getHeader().getPath());
+
+        final EdgeRequestPathHandler edgeRequestPathHandler = edgeResourceService
+                .getResource(path)
+                .getHandler(request.getHeader().getMethod());
+
+        final Class<?> payloadType = edgeRequestPathHandler.getPayloadType();
+
+        final SimpleRequest simpleRequest = SimpleRequest.builder().from(request).build();
+        final Object payload = objectMapper.convertValue(request.getPayload(), payloadType);
+        simpleRequest.setPayload(payload);
+        edgeServer.dispatch(ioSessionClient, simpleRequest, responseReceiver);
 
     }
 

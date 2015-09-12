@@ -49,9 +49,6 @@ public class ServerMain {
                 new ExceptionMapperModule()
         );
 
-        final IoAcceptor socketAcceptor = injector.getInstance(IoAcceptor.class);
-        socketAcceptor.bind(new InetSocketAddress(Constants.DEFAULT_PORT));
-
     }
 
 }

@@ -9,29 +9,49 @@ import com.namazustudios.socialengine.rt.mina.ServerBSONProtocolEncoder;
 import com.namazustudios.socialengine.rt.mina.ServerIOHandler;
 import de.undercouch.bson4jackson.BsonFactory;
 import org.apache.mina.core.filterchain.IoFilterChainBuilder;
-import org.apache.mina.core.service.IoAcceptor;
+import org.apache.mina.core.service.IoConnector;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolEncoder;
 import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.guice.MinaModule;
 import org.apache.mina.guice.filter.InjectProtocolCodecFilter;
-import org.apache.mina.transport.socket.nio.NioDatagramAcceptor;
-import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
+import org.apache.mina.transport.socket.DatagramConnector;
+import org.apache.mina.transport.socket.nio.NioDatagramConnector;
+import org.apache.mina.transport.socket.nio.NioSocketConnector;
 
 import javax.inject.Inject;
 
-
 /**
- * Created by patricktwohig on 9/3/15.
+ * Created by patricktwohig on 9/11/15.
  */
-public class MinaServerModule extends MinaModule {
+public class MinaClientModule extends MinaModule {
 
     @Override
     protected void configureMINA() {
 
-        bind(IoAcceptor.class).annotatedWith(Names.named(Constants.TRANSPORT_RELIABLE))
-            .toProvider(new Provider<NioSocketAcceptor>() {
+        bind(IoConnector.class).annotatedWith(Names.named(Constants.TRANSPORT_RELIABLE))
+           .toProvider(new Provider<IoConnector>() {
+
+               @Inject
+               private Provider<IoHandler> ioHandlerProvider;
+
+               @Inject
+               private Provider<IoFilterChainBuilder> ioFilterChainBuilderProvider;
+
+               @Override
+               public IoConnector get() {
+                   final NioSocketConnector nioSocketConnector = new NioSocketConnector();
+                   nioSocketConnector.getSessionConfig().setTcpNoDelay(true);
+                   nioSocketConnector.setHandler(ioHandlerProvider.get());
+                   nioSocketConnector.setFilterChainBuilder(ioFilterChainBuilderProvider.get());
+                   return nioSocketConnector;
+               }
+
+           });
+
+        bind(IoConnector.class).annotatedWith(Names.named(Constants.TRANSPORT_BEST_EFFORT))
+            .toProvider(new Provider<IoConnector>() {
 
                 @Inject
                 private Provider<IoHandler> ioHandlerProvider;
@@ -40,31 +60,11 @@ public class MinaServerModule extends MinaModule {
                 private Provider<IoFilterChainBuilder> ioFilterChainBuilderProvider;
 
                 @Override
-                public NioSocketAcceptor get() {
-                    final NioSocketAcceptor nioSocketAcceptor = new NioSocketAcceptor();
-                    nioSocketAcceptor.getSessionConfig().setTcpNoDelay(true);
-                    nioSocketAcceptor.setHandler(ioHandlerProvider.get());
-                    nioSocketAcceptor.setFilterChainBuilder(ioFilterChainBuilderProvider.get());
-                    return nioSocketAcceptor;
-                }
-
-            });
-
-        bind(IoAcceptor.class).annotatedWith(Names.named(Constants.TRANSPORT_BEST_EFFORT))
-            .toProvider(new Provider<NioDatagramAcceptor>() {
-
-                @Inject
-                private Provider<IoHandler> ioHandlerProvider;
-
-                @Inject
-                private Provider<IoFilterChainBuilder> ioFilterChainBuilderProvider;
-
-                @Override
-                public NioDatagramAcceptor get() {
-                    final NioDatagramAcceptor nioDatagramAcceptor = new NioDatagramAcceptor();
-                    nioDatagramAcceptor.setHandler(ioHandlerProvider.get());
-                    nioDatagramAcceptor.setFilterChainBuilder(ioFilterChainBuilderProvider.get());
-                    return nioDatagramAcceptor;
+                public IoConnector get() {
+                    final NioDatagramConnector nioSocketConnector = new NioDatagramConnector();
+                    nioSocketConnector.setHandler(ioHandlerProvider.get());
+                    nioSocketConnector.setFilterChainBuilder(ioFilterChainBuilderProvider.get());
+                    return nioSocketConnector;
                 }
 
             });

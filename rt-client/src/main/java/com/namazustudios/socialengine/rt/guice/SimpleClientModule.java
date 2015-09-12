@@ -5,6 +5,7 @@ import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 import com.google.inject.util.Providers;
 import com.namazustudios.socialengine.rt.Client;
+import com.namazustudios.socialengine.rt.Constants;
 import com.namazustudios.socialengine.rt.SimpleClient;
 import com.namazustudios.socialengine.rt.SimpleClientProviders;
 
@@ -25,46 +26,46 @@ public class SimpleClientModule extends AbstractModule {
         // for each of the types.
 
         binder().bind(SimpleClient.class)
-                .annotatedWith(Names.named(Client.TRANSPORT_INTERNAL))
+                .annotatedWith(Names.named(Constants.TRANSPORT_INTERNAL))
                 .toProvider(Providers.guicify(SimpleClientProviders.getInternalClientProvider()))
                 .in(Scopes.SINGLETON);
 
         binder().bind(SimpleClient.class)
-                .annotatedWith(Names.named(Client.TRANSPORT_BEST_EFFORT))
+                .annotatedWith(Names.named(Constants.TRANSPORT_BEST_EFFORT))
                 .toProvider(Providers.guicify(SimpleClientProviders.getBestEffortTransportClientProvider()))
                 .in(Scopes.SINGLETON);
 
         binder().bind(SimpleClient.class)
-                .annotatedWith(Names.named(Client.TRANSPORT_RELIABLE))
+                .annotatedWith(Names.named(Constants.TRANSPORT_RELIABLE))
                 .toProvider(Providers.guicify(SimpleClientProviders.getReliableTransportClientProvider()))
                 .in(Scopes.SINGLETON);
 
         // Binds the Client interface to the simple client
 
         binder().bind(Client.class)
-                .annotatedWith(Names.named(Client.TRANSPORT_INTERNAL))
+                .annotatedWith(Names.named(Constants.TRANSPORT_INTERNAL))
                 .to(SimpleClient.class);
 
         binder().bind(Client.class)
-                .annotatedWith(Names.named(Client.TRANSPORT_BEST_EFFORT))
+                .annotatedWith(Names.named(Constants.TRANSPORT_BEST_EFFORT))
                 .to(SimpleClient.class);
 
         binder().bind(Client.class)
-                .annotatedWith(Names.named(Client.TRANSPORT_RELIABLE))
+                .annotatedWith(Names.named(Constants.TRANSPORT_RELIABLE))
                 .to(SimpleClient.class);
 
         // Binds the network operations interface to the simple client
 
         binder().bind(Client.NetworkOperations.class)
-                .annotatedWith(Names.named(Client.TRANSPORT_INTERNAL))
+                .annotatedWith(Names.named(Constants.TRANSPORT_INTERNAL))
                 .to(SimpleClient.class);
 
         binder().bind(Client.NetworkOperations.class)
-                .annotatedWith(Names.named(Client.TRANSPORT_BEST_EFFORT))
+                .annotatedWith(Names.named(Constants.TRANSPORT_BEST_EFFORT))
                 .to(SimpleClient.class);
 
         binder().bind(Client.NetworkOperations.class)
-                .annotatedWith(Names.named(Client.TRANSPORT_RELIABLE))
+                .annotatedWith(Names.named(Constants.TRANSPORT_RELIABLE))
                 .to(SimpleClient.class);
 
     }

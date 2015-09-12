@@ -1,12 +1,10 @@
 package com.namazustudios.socialengine.rt.mina;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
-import com.google.common.collect.ImmutableMap;
-import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
-import com.namazustudios.socialengine.rt.edge.EdgeResource;
-import de.undercouch.bson4jackson.BsonFactory;
+import com.namazustudios.socialengine.rt.Constants;
+import com.namazustudios.socialengine.rt.ResponseCode;
+import com.namazustudios.socialengine.rt.SimpleRequest;
+import com.namazustudios.socialengine.rt.SimpleResponse;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.AttributeKey;
 import org.apache.mina.core.session.IoSession;
@@ -17,8 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
@@ -40,9 +36,6 @@ public class ServerBSONProtocolDecoder extends CumulativeProtocolDecoder {
     @Inject
     @Named(Constants.BSON_OBJECT_MAPPER)
     private ObjectMapper objectMapper;
-
-    @Inject
-    private ResourceService<EdgeResource> edgeResourceService;
 
     @Override
     protected boolean doDecode(final IoSession session,
@@ -89,21 +82,8 @@ public class ServerBSONProtocolDecoder extends CumulativeProtocolDecoder {
             in.get(buffer);
 
             try {
-
                 final SimpleRequest simpleRequest = objectMapper.readValue(buffer, SimpleRequest.class);
-                final Path path = new Path(simpleRequest.getHeader().getPath());
-
-                final EdgeRequestPathHandler edgeRequestPathHandler = edgeResourceService
-                        .getResource(path)
-                        .getHandler(simpleRequest.getHeader().getMethod());
-
-                final Class<?> payloadType = edgeRequestPathHandler.getPayloadType();
-
-                final Object payload = objectMapper.convertValue(simpleRequest.getPayload(), payloadType);
-                simpleRequest.setPayload(payload);
-
                 out.write(simpleRequest);
-
             } catch (Exception ex) {
                 closeWithBadRequest(ex, ioSession);
                 LOG.error("Received bad request.  Closing session {}.", ioSession, ex);

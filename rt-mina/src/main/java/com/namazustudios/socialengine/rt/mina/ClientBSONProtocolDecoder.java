@@ -36,12 +36,6 @@ public class ClientBSONProtocolDecoder extends CumulativeProtocolDecoder {
     @Named(Constants.BSON_OBJECT_MAPPER)
     private ObjectMapper objectMapper;
 
-    private final Client.NetworkOperations networkOperations;
-
-    public ClientBSONProtocolDecoder(Client.NetworkOperations networkOperations) {
-        this.networkOperations = networkOperations;
-    }
-
     @Override
     protected boolean doDecode(final IoSession session,
                                final IoBuffer in,
@@ -119,13 +113,7 @@ public class ClientBSONProtocolDecoder extends CumulativeProtocolDecoder {
         in.get(buffer);
 
         final SimpleEvent simpleEvent = objectMapper.readValue(buffer, SimpleEvent.class);
-
-        for (final Class<?> eventClass : networkOperations.getEventTypes(simpleEvent.getEventHeader())) {
-            final SimpleEvent eventToSend = SimpleEvent.builder().event(simpleEvent).build();
-            final Object payload = objectMapper.convertValue(simpleEvent.getPayload(), eventClass);
-            eventToSend.setPayload(payload);
-            networkOperations.receive(eventToSend, eventClass);
-        }
+        out.write(simpleEvent);
 
     }
 
@@ -138,10 +126,7 @@ public class ClientBSONProtocolDecoder extends CumulativeProtocolDecoder {
         in.get(buffer);
 
         final SimpleResponse simpleResponse = objectMapper.readValue(buffer, SimpleResponse.class);
-        final Class<?> payloadType = networkOperations.getPayloadType(simpleResponse.getResponseHeader());
-        final Object payload = objectMapper.convertValue(simpleResponse, payloadType);
-        simpleResponse.setPayload(payload);
-        networkOperations.receive(simpleResponse);
+        out.write(simpleResponse);
 
     }
 

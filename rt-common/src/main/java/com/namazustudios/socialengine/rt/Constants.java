@@ -35,4 +35,24 @@ public interface Constants {
      */
     int DEFAULT_PORT = 28883;
 
+    /**
+     * Names a component instance that will use reliable transport, eg TCP
+     */
+    String TRANSPORT_RELIABLE = "com.namazustudios.socialengine.rt.TRANSPORT_RELIABLE";
+
+    /**
+     * Names a component instance that will use best effort transport, eg UDP
+     */
+    String TRANSPORT_BEST_EFFORT = "com.namazustudios.socialengine.rt.TRANSPORT_BEST_EFFORT";
+
+    /**
+     * Names a component instance that will internal (in memory) tranport.
+     */
+    String TRANSPORT_INTERNAL = "com.namazustudios.socialengine.rt.TRANSPORT_INTERNAL";
+
+    /**
+     * The name of the object mapper used by instances of the encoder/decoders.
+     */
+    String BSON_OBJECT_MAPPER = "com.namazustudios.socialengine.rt.BSON_OBJECT_MAPPER";
+
 }

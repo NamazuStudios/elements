@@ -10,24 +10,6 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 public interface Client {
 
     /**
-     * Names a {@link Client}, {@link NetworkOperations} and {@link ClientRequestDispatcher} instance that will
-     * use reliable transport, eg TCP
-     */
-    String TRANSPORT_RELIABLE = "com.namazustudios.socialengine.rt.Client.TRANSPORT_RELIABLE";
-
-    /**
-     * Names a {@link Client}, {@link NetworkOperations} and {@link ClientRequestDispatcher} instance that will
-     * use best effort transport, eg UDP
-     */
-    String TRANSPORT_BEST_EFFORT = "com.namazustudios.socialengine.rt.Client.TRANSPORT_BEST_EFFORT";
-
-    /**
-     * Names a {@link Client}, {@link NetworkOperations} and {@link ClientRequestDispatcher} instance that will
-     * use best effort transport, eg UDP
-     */
-    String TRANSPORT_INTERNAL = "com.namazustudios.socialengine.rt.Client.TRANSPORT_BEST_EFFORT";
-
-    /**
      * Sends the request to the server.  The response will be handed to the give
      * {@link ResponseReceiver} some time later.  If the request times out, then
      * a special response will be generated client side indicating the error.

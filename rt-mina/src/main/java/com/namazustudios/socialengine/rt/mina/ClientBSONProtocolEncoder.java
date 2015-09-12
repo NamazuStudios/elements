@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.mina;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.namazustudios.socialengine.rt.Constants;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.SimpleResponse;
 import org.apache.mina.core.buffer.IoBuffer;

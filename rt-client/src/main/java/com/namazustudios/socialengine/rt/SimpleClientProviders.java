@@ -17,7 +17,7 @@ public class SimpleClientProviders {
         return new Provider<SimpleClient>() {
 
             @Inject
-            @Named(Client.TRANSPORT_INTERNAL)
+            @Named(Constants.TRANSPORT_INTERNAL)
             Provider<ClientRequestDispatcher> clientRequestDispatcherProvider;
 
             @Override
@@ -33,7 +33,7 @@ public class SimpleClientProviders {
         return new Provider<SimpleClient>() {
 
             @Inject
-            @Named(Client.TRANSPORT_RELIABLE)
+            @Named(Constants.TRANSPORT_RELIABLE)
             Provider<ClientRequestDispatcher> clientRequestDispatcherProvider;
 
             @Override
@@ -49,7 +49,7 @@ public class SimpleClientProviders {
         return new Provider<SimpleClient>() {
 
             @Inject
-            @Named(Client.TRANSPORT_BEST_EFFORT)
+            @Named(Constants.TRANSPORT_BEST_EFFORT)
             Provider<ClientRequestDispatcher> clientRequestDispatcherProvider;
 
             @Override
