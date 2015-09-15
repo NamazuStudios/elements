@@ -12,11 +12,11 @@ public interface ScriptFileBindingBuilder {
     /**
      * Uses the classpath to locate the actual script file.
      */
-    NamedScriptBindingBuilder onClasspath();
+    NamedScriptBindingBuilder fromClasspath();
 
     /**
      * Uses the local filesystem to locate the actual script file.
      */
-    NamedScriptBindingBuilder onLocalFilesystem();
+    NamedScriptBindingBuilder fromLocalFilesystem();
 
 }

@@ -19,7 +19,7 @@ public interface BootstrapPathBindingBuilder {
      * @param path the path
      * @return the {@link ScopedBindingBuilder}
      */
-    ScriptFileBindingBuilder onBootstrapPath(final Path path);
+    ScriptFileBindingBuilder toBootstrapPath(final Path path);
 
     /**
      * Binds the {@link EdgeResource} to the link {@link Path}, represented
@@ -28,6 +28,6 @@ public interface BootstrapPathBindingBuilder {
      * @param path the path
      * @return the {@link ScopedBindingBuilder}
      */
-    ScriptFileBindingBuilder onBootstrapPath(final String path);
+    ScriptFileBindingBuilder toBootstrapPath(final String path);
 
 }

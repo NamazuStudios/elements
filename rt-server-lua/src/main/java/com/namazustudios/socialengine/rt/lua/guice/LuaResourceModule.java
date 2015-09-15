@@ -4,7 +4,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.binder.ScopedBindingBuilder;
 import com.google.inject.multibindings.MapBinder;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import com.google.inject.util.Providers;
 import com.namazustudios.socialengine.rt.Path;
@@ -34,11 +33,8 @@ public abstract class LuaResourceModule extends AbstractModule {
                                                         Path.class,
                                                         EdgeResource.class,
                                                         Names.named(EdgeServer.BOOTSTRAP_RESOURCES));
-
         binder().bind(IocResolver.class).to(GuiceIoCResolver.class).in(Scopes.SINGLETON);
-
         configureResources();
-
     }
 
     /**
@@ -56,13 +52,13 @@ public abstract class LuaResourceModule extends AbstractModule {
     protected BootstrapPathBindingBuilder bindEdgeScriptFile(final String scriptFile) {
         return new BootstrapPathBindingBuilder() {
             @Override
-            public ScriptFileBindingBuilder onBootstrapPath(final Path path) {
+            public ScriptFileBindingBuilder toBootstrapPath(final Path path) {
                 return scriptFileBindingBuilder(path, scriptFile);
             }
 
             @Override
-            public ScriptFileBindingBuilder onBootstrapPath(final String path) {
-                return onBootstrapPath(new Path(path));
+            public ScriptFileBindingBuilder toBootstrapPath(final String path) {
+                return toBootstrapPath(new Path(path));
             }
         };
     }
@@ -70,12 +66,12 @@ public abstract class LuaResourceModule extends AbstractModule {
     private ScriptFileBindingBuilder scriptFileBindingBuilder(final Path bootstrapPath, final String scriptFile) {
         return new ScriptFileBindingBuilder() {
             @Override
-            public NamedScriptBindingBuilder onClasspath() {
+            public NamedScriptBindingBuilder fromClasspath() {
                 return edgeClasspathScriptFile(bootstrapPath, scriptFile);
             }
 
             @Override
-            public NamedScriptBindingBuilder onLocalFilesystem() {
+            public NamedScriptBindingBuilder fromLocalFilesystem() {
                 return edgeFilesystemScriptFile(bootstrapPath, new File(scriptFile));
             }
         };
@@ -121,12 +117,12 @@ public abstract class LuaResourceModule extends AbstractModule {
     protected ScriptFileBindingBuilder bindInternalScriptFile(final String scriptFile) {
         return new ScriptFileBindingBuilder() {
             @Override
-            public NamedScriptBindingBuilder onClasspath() {
+            public NamedScriptBindingBuilder fromClasspath() {
                 return internalClasspathScriptFile(scriptFile);
             }
 
             @Override
-            public NamedScriptBindingBuilder onLocalFilesystem() {
+            public NamedScriptBindingBuilder fromLocalFilesystem() {
                 return internalFilesystemScriptFile(new File(scriptFile));
             }
         };

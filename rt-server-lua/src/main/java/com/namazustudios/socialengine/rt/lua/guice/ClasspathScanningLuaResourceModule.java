@@ -1,11 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.reflect.ClassPath;
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.Resource;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.reflections.util.ConfigurationBuilder;
@@ -14,10 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.sql.Ref;
-import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -74,7 +66,10 @@ public abstract class ClasspathScanningLuaResourceModule extends LuaResourceModu
         for (final String resource : reflections.getResources(filePattern)) {
             LOG.info("Adding edge resource script \"{}\" from package {}", resource, pkg);
             final Path bootstrapBath = bootstrapPathGenerator.apply(resource);
-            bindEdgeScriptFile(resource).onBootstrapPath(bootstrapBath).onClasspath();
+            bindEdgeScriptFile(resource)
+                .toBootstrapPath(bootstrapBath)
+                .fromClasspath()
+                .named(resource);
         }
 
     }
@@ -97,7 +92,7 @@ public abstract class ClasspathScanningLuaResourceModule extends LuaResourceModu
 
         for (final String resource : reflections.getResources(LUA_FILE_PATTERN)) {
             LOG.info("Adding internal resource script \"{}\" from package {}", resource, pkg);
-            bindInternalScriptFile(resource).onClasspath().named(resource);
+            bindInternalScriptFile(resource).fromClasspath().named(resource);
         }
 
     }
