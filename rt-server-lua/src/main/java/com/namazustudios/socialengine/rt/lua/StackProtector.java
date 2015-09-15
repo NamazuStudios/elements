@@ -23,7 +23,7 @@ public class StackProtector implements AutoCloseable {
     public StackProtector(LuaState luaState) {
         this.luaState = luaState;
         absoluteIndex = luaState.getTop();
-        LOG.debug("Stack top {}", absoluteIndex);
+        LOG.trace("Stack top {}", absoluteIndex);
     }
 
     public int ret(final int returnCount) {
@@ -52,9 +52,9 @@ public class StackProtector implements AutoCloseable {
         }
 
         if (luaState.getTop() == newStackTop) {
-            LOG.debug("Stack consistent.");
+            LOG.trace("Stack consistent.");
         } else {
-            LOG.debug("Lua stack inconsistent Expected {}.  Actual {}", newStackTop, luaState.getTop());
+            LOG.trace("Lua stack inconsistent Expected {}.  Actual {}", newStackTop, luaState.getTop());
             luaState.setTop(newStackTop);
         }
 

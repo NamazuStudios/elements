@@ -28,7 +28,7 @@ public abstract class AbstractResource implements Resource {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractResource.class);
 
-    private final Stopwatch stopwatch = Stopwatch.createUnstarted();
+    private final Stopwatch stopwatch = Stopwatch.createStarted();
 
     private final ResourceEventReceiverMap defaultResourceEventReceiverMap = new DefaultResourceEventReceiverMap();
 
@@ -88,6 +88,8 @@ public abstract class AbstractResource implements Resource {
         post(resourceAddedEvent, Event.Util.getEventNameFromObject(resourceAddedEvent));
         LOG.debug("Added resource to path " + path);
 
+        stopwatch.reset();
+
     }
 
     /**
@@ -115,7 +117,6 @@ public abstract class AbstractResource implements Resource {
      */
     @Override
     public void onUpdate() {
-        stopwatch.stop();
         final double deltaTime = getElapsedTime();
         doUpdate(deltaTime);
         stopwatch.reset();

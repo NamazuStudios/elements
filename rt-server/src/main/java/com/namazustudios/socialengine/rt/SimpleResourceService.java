@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.rt;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.PeekingIterator;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 
@@ -43,61 +45,12 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
             });
 
         return new Iterable<ResourceT>() {
+
             @Override
             public Iterator<ResourceT> iterator() {
-
-                return new Iterator<ResourceT>() {
-
-                    final Iterator<Map.Entry<Path, ResourceT>> wrappedIterator = resourceIterable.iterator();
-
-                    Map.Entry<Path, ResourceT> currentValue = wrappedIterator.hasNext() ?
-                                                              wrappedIterator.next() : null;
-
-                    @Override
-                    public boolean hasNext() {
-                        return currentValue != null;
-                    }
-
-                    @Override
-                    public ResourceT next() {
-
-                        if (!hasNext()) {
-                            throw new IllegalStateException();
-                        }
-
-                        try {
-                            return currentValue.getValue();
-                        } finally {
-                            advance();
-                        }
-
-                    }
-
-                    @Override
-                    public void remove() {
-
-                        if (!hasNext()) {
-                            throw new IllegalStateException();
-                        }
-
-                        final Path path = currentValue.getKey();
-                        final ResourceT resource = currentValue.getValue();
-
-                        if (pathResourceMap.remove(path, resource)) {
-                            resource.onRemove(path);
-                        }
-
-                        advance();
-
-                    }
-
-                    private void advance() {
-                        currentValue = wrappedIterator.hasNext() ?
-                                       wrappedIterator.next() : null;
-                    }
-
-                };
+                return new ResourceIterator<>(resourceIterable.iterator());
             }
+
         };
 
     }
@@ -129,52 +82,16 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
             @Override
             public Iterator<ResourceT> iterator() {
-                return new Iterator<ResourceT>() {
+                final PeekingIterator<Map.Entry<Path, ResourceT>> peekingIterator =
+                    Iterators.peekingIterator(tailMap.entrySet().iterator());
 
-                    final Iterator<Map.Entry<Path, ResourceT>> wrappedIterator = pathResourceMap.entrySet().iterator();
-
-                    Map.Entry<Path, ResourceT> currentValue = wrappedIterator.hasNext() ?
-                                                              wrappedIterator.next() : null;
-
+                return new ResourceIterator<ResourceT>(peekingIterator) {
                     @Override
                     public boolean hasNext() {
-                        return currentValue != null && path.matches(currentValue.getKey());
+                        return super.hasNext() && path.matches(peekingIterator.peek().getKey());
                     }
-
-                    @Override
-                    public ResourceT next() {
-
-                        if (currentValue == null) {
-                            throw new IllegalStateException();
-                        }
-
-                        return null;
-                    }
-
-                    @Override
-                    public void remove() {
-
-                        if (!hasNext()) {
-                            throw new IllegalStateException();
-                        }
-
-                        final Path path = currentValue.getKey();
-                        final ResourceT resource = currentValue.getValue();
-
-                        if (pathResourceMap.remove(path, resource)) {
-                            resource.onRemove(path);
-                        }
-
-                        advance();
-
-                    }
-
-                    private void advance() {
-                        currentValue = wrappedIterator.hasNext() ?
-                                       wrappedIterator.next() : null;
-                    }
-
                 };
+
             }
         };
     }
@@ -264,6 +181,44 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
         resource.onRemove(path);
 
         return resource;
+
+    }
+
+    private class ResourceIterator<ResourceT extends Resource> implements Iterator<ResourceT> {
+
+        final Iterator<Map.Entry<Path, ResourceT>> wrappedIterator;
+
+        private Map.Entry<Path, ResourceT> last = null;
+
+        public ResourceIterator(Iterator<Map.Entry<Path, ResourceT>> wrappedIterator) {
+            this.wrappedIterator = wrappedIterator;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return wrappedIterator.hasNext();
+        }
+
+        @Override
+        public ResourceT next() {
+            return (last = wrappedIterator.next()).getValue();
+        }
+
+        @Override
+        public void remove() {
+
+            if (last == null) {
+                throw new IllegalStateException();
+            }
+
+            final Path key = last.getKey();
+            final ResourceT value = last.getValue();
+
+            if (pathResourceMap.remove(key, value)) {
+                value.onRemove(key);
+            }
+
+        }
 
     }
 

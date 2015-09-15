@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.mina;
 
 import com.google.common.base.Stopwatch;
+import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.rt.Constants;
 import com.namazustudios.socialengine.rt.ServerContainer;
 import com.namazustudios.socialengine.rt.edge.SimpleEdgeServer;
@@ -24,7 +25,7 @@ public class MinaSimpleServerContainer implements ServerContainer {
 
     public static final Logger LOG = LoggerFactory.getLogger(MinaSimpleServerContainer.class);
 
-    private static final int N_THREADS = 4;
+    private static final int N_THREADS = 5;
 
     @Inject
     private SimpleEdgeServer simpleEdgeServer;
@@ -73,7 +74,7 @@ public class MinaSimpleServerContainer implements ServerContainer {
         }));
 
         futures.add(completionService.submit(simpleEdgeServer, null));
-        futures.add(completionService.submit(simpleInternalServer, null));
+//        futures.add(completionService.submit(simpleInternalServer, null));
 
         return new RunningInstance() {
 
@@ -83,7 +84,16 @@ public class MinaSimpleServerContainer implements ServerContainer {
                 Future<Void> future;
 
                 while ((future = completionService.take()) != null) {
+
+                    try {
+                        future.get();
+                    } catch (ExecutionException ex) {
+                        LOG.error("Caught exception.", ex);
+                        throw new InternalException(ex);
+                    }
+
                     futures.remove(future);
+
                 }
 
             }
@@ -97,7 +107,14 @@ public class MinaSimpleServerContainer implements ServerContainer {
                 long remaining = TimeUnit.NANOSECONDS.convert(timeout, timeUnit);
 
                 while ((future = completionService.poll(remaining, TimeUnit.NANOSECONDS)) != null) {
-                    futures.remove(future);
+
+                    try {
+                        future.get();
+                    } catch (ExecutionException ex) {
+                        LOG.error("Caught exception.", ex);
+                        throw new InternalException(ex);
+                    }
+
                     remaining -= Math.max(0, stopwatch.elapsed(TimeUnit.NANOSECONDS));
                 }
 
@@ -108,18 +125,28 @@ public class MinaSimpleServerContainer implements ServerContainer {
 
                 try {
                     reliableIoAcceptor.unbind();
-                } catch (RuntimeException ex) {
-                    LOG.error("Caught exception attempting to unbind reliable IO Acceptor.");
+                } catch (Exception ex) {
+                    LOG.error("Caught exception attempting to unbind reliable IO Acceptor.", ex);
                 }
 
                 try {
                     bestEffortIoAcceptor.unbind();
-                } catch (RuntimeException ex) {
-                    LOG.error("Caught exception attempting to unbind best effort IO Acceptor.");
+                } catch (Exception ex) {
+                    LOG.error("Caught exception attempting to unbind best effort IO Acceptor.", ex);
                 }
 
-                simpleEdgeServer.shutdown();
-                simpleInternalServer.shutdown();
+                try {
+                    simpleEdgeServer.shutdown();
+                } catch (Exception ex) {
+                    LOG.error("Caught exception shutting down the edge server.", ex);
+                }
+
+                try {
+                    simpleInternalServer.shutdown();
+                } catch (Exception ex) {
+                    LOG.error("Caught exception shutting down the internal server.", ex);
+                }
+
 
             }
 

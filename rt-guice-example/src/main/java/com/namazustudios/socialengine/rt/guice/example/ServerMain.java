@@ -52,7 +52,11 @@ public class ServerMain {
         final ServerContainer serverContainer = injector.getInstance(ServerContainer.class);
         final ServerContainer.RunningInstance runningInstance = serverContainer.run(new InetSocketAddress(Constants.DEFAULT_PORT));
 
-        runningInstance.waitForShutdown();
+        try {
+            runningInstance.waitForShutdown();
+        } finally {
+            runningInstance.shutdown();
+        }
 
     }
 

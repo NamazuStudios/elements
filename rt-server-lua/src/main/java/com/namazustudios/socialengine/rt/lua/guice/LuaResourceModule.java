@@ -11,6 +11,8 @@ import com.namazustudios.socialengine.rt.edge.EdgeResource;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import com.namazustudios.socialengine.rt.internal.InternalResource;
 import com.namazustudios.socialengine.rt.lua.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Provider;
 import java.io.File;
@@ -24,10 +26,14 @@ import java.io.File;
  */
 public abstract class LuaResourceModule extends AbstractModule {
 
+    private static final Logger LOG = LoggerFactory.getLogger(LuaResourceModule.class);
+
     private MapBinder<Path, EdgeResource> bootstrapEdgeResources;
 
     @Override
     protected final void configure() {
+
+        LOG.info("Loading Lua modules.  java.library.path is {}", System.getProperty("java.library.path"));
 
         bootstrapEdgeResources = MapBinder.newMapBinder(binder(),
                                                         Path.class,

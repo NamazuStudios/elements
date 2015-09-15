@@ -11,8 +11,8 @@ import com.namazustudios.socialengine.rt.internal.InternalServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -137,6 +137,8 @@ public class AbstractLuaResource extends AbstractResource {
 
     private final IocResolver iocResolver;
 
+    private Logger scriptLog = LOG;
+
     /**
      * Creates an instance of {@link AbstractLuaResource} with the given {@link LuaState}
      * type.
@@ -164,8 +166,10 @@ public class AbstractLuaResource extends AbstractResource {
      * @throws IOException
      */
     public void load(final InputStream inputStream, final String name) throws IOException {
+        scriptLog = LoggerFactory.getLogger(getClass().getName() + "." + name);
         setupScriptGlobals();
         luaState.load(inputStream, name, "bt");
+        scriptLog.debug("Loaded lua script.  State: {}", luaState);
     }
 
     private void setupScriptGlobals() {
@@ -377,6 +381,19 @@ public class AbstractLuaResource extends AbstractResource {
 
         }
 
+    }
+
+    /**
+     * Gets a special instance of {@link Logger} which the script can use for script logging.
+     *
+     * @return the {@link Logger} instance
+     */
+    public Logger getScriptLog() {
+        return scriptLog;
+    }
+
+    public void setScriptLog(Logger scriptLog) {
+        this.scriptLog = scriptLog;
     }
 
     /**

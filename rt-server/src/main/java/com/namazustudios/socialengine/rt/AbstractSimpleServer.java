@@ -168,14 +168,33 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
 
         try (final ServerContext context = openServerContext()) {
 
+            LOG.info("Starting server main loop for server {}", this);
 
+            double movingAverageMillis = 0;
+            final Stopwatch logTimer = Stopwatch.createStarted();
+            final Stopwatch averageTimer = Stopwatch.createStarted();
 
             do {
+
                 dispatchQueue(getRequestQueue(), maxRequests);
                 dispatchQueue(getEventQueue(), maxEvents);
                 doUpdate();
                 Thread.yield();
+
+                movingAverageMillis += Math.round(averageTimer.elapsed(TimeUnit.MILLISECONDS));
+                movingAverageMillis /= 2;
+                averageTimer.reset();
+                averageTimer.start();
+
+                if (logTimer.elapsed(TimeUnit.SECONDS) >= 5) {
+                    LOG.info("Average server tick time {}ms", movingAverageMillis);
+                    logTimer.reset();
+                    logTimer.start();
+                }
+
             } while (running.get() && !runnerThread.isInterrupted());
+
+            LOG.info("Main server loop stopping for server {}", this);
 
         } catch (InterruptedException ex) {
             LOG.info("Server thread interrupted.  Stopping.", ex);
@@ -201,26 +220,17 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
             operation = queue.poll();
         }
 
-        final Stopwatch timeoutStopwatch = Stopwatch.createStarted();
-        final long resourceTimeoutInMilliseconds = Math.round(Constants.MILLISECONDS_PER_SECOND * resourceTimeout);
-
-        do {
-
-            final long toWait = Math.max(0, resourceTimeoutInMilliseconds -
-                                            timeoutStopwatch.elapsed(TimeUnit.MILLISECONDS));
-
-            final Future<Void> completed = completionService.poll(toWait, TimeUnit.MILLISECONDS);
-            futureSet.remove(completed);
-
-        } while (timeoutStopwatch.elapsed(TimeUnit.MILLISECONDS) <= resourceTimeoutInMilliseconds);
-
-        for (final Future<Void> future : futureSet) {
-            LOG.warn("Canceling future due to timeout {}." + future);
-            future.cancel(false);
-        }
-
         while (!futureSet.isEmpty()) {
-            completionService.take();
+
+            final Future<Void> completed = completionService.take();
+
+            if (completed != null) {
+                getAndLogResult(completed);
+                futureSet.remove(completed);
+            } else {
+                break;
+            }
+
         }
 
     }
@@ -251,29 +261,28 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
 
         }
 
-        final Stopwatch timeoutStopwatch = Stopwatch.createStarted();
-        final long resourceTimeoutInMilliseconds = Math.round(Constants.MILLISECONDS_PER_SECOND * resourceTimeout);
-
-        do {
-
-            final long toWait = Math.max(0, resourceTimeoutInMilliseconds -
-                    timeoutStopwatch.elapsed(TimeUnit.MILLISECONDS));
-
-            final Future<Void> completed = completionService.poll(toWait, TimeUnit.MILLISECONDS);
-            futureSet.remove(completed);
-
-        } while (timeoutStopwatch.elapsed(TimeUnit.MILLISECONDS) <= resourceTimeoutInMilliseconds);
-
-        for (final Future<Void> future : futureSet) {
-            LOG.warn("Canceling future due to timeout {}." + future);
-            future.cancel(true);
-        }
-
         while (!futureSet.isEmpty()) {
-            final Future<Void> future = completionService.take();
-            futureSet.remove(future);
+
+            final Future<Void> completed = completionService.take();
+
+            if (completed != null) {
+                getAndLogResult(completed);
+                futureSet.remove(completed);
+            } else {
+                break;
+            }
+
         }
 
+    }
+
+    private <T> void getAndLogResult(final Future<T> future) throws InterruptedException {
+        try {
+            final T t = future.get();
+            LOG.trace("Future exited with value {}", t);
+        } catch (ExecutionException ex) {
+            LOG.error("Caught execution exception for future.", ex);
+        }
     }
 
     /**
