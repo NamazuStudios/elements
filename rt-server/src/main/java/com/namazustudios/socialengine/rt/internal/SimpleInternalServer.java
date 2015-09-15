@@ -1,14 +1,12 @@
 package com.namazustudios.socialengine.rt.internal;
 
-import com.namazustudios.socialengine.rt.AbstractSimpleServer;
-import com.namazustudios.socialengine.rt.Request;
-import com.namazustudios.socialengine.rt.ResourceService;
-import com.namazustudios.socialengine.rt.ResponseReceiver;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.edge.EdgeResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -32,7 +30,7 @@ public class SimpleInternalServer extends AbstractSimpleServer implements Intern
 
     @Override
     protected ServerContext openServerContext() {
-        return null;
+        return new InternalServerContext();
     }
 
     @Override
@@ -66,6 +64,19 @@ public class SimpleInternalServer extends AbstractSimpleServer implements Intern
 
             }
         });
+
+    }
+
+    private class InternalServerContext implements ServerContext {
+
+        public InternalServerContext() {
+            LOG.info("Bootstrapping Internal server {} ", SimpleInternalServer.this);
+        }
+
+        @Override
+        public void close() {
+            resourceService.removeAllResources();
+        }
 
     }
 

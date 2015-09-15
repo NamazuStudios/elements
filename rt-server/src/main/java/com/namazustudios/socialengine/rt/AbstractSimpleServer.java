@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -59,6 +60,8 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
     @Inject
     @Named(EXECUTOR_SERVICE)
     private ExecutorService executorService;
+
+    private final AtomicBoolean running = new AtomicBoolean();
 
     public <PayloadT> Subscription subscribe(final Path path,
                                              final String name,
@@ -153,6 +156,10 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
     @Override
     public void run() {
 
+        if (!running.compareAndSet(false, true)) {
+            throw new IllegalStateException("Server already running.");
+        }
+
         final Thread runnerThread = Thread.currentThread();
 
         if (!runnerThreadAtomicReference.compareAndSet(null, Thread.currentThread())) {
@@ -161,11 +168,14 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
 
         try (final ServerContext context = openServerContext()) {
 
+
+
             do {
                 dispatchQueue(getRequestQueue(), maxRequests);
                 dispatchQueue(getEventQueue(), maxEvents);
                 doUpdate();
-            } while (!runnerThread.isInterrupted());
+                Thread.yield();
+            } while (running.get() && !runnerThread.isInterrupted());
 
         } catch (InterruptedException ex) {
             LOG.info("Server thread interrupted.  Stopping.", ex);
@@ -209,10 +219,9 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
             future.cancel(false);
         }
 
-        do {
-            final Future<Void> future = completionService.take();
-            futureSet.remove(future);
-        } while (!futureSet.isEmpty());
+        while (!futureSet.isEmpty()) {
+            completionService.take();
+        }
 
     }
 
@@ -260,11 +269,19 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
             future.cancel(true);
         }
 
-        do {
+        while (!futureSet.isEmpty()) {
             final Future<Void> future = completionService.take();
             futureSet.remove(future);
-        } while (!futureSet.isEmpty());
+        }
 
+    }
+
+    /**
+     * Signals the currently running server to complete work and gracefully shut down.  The server
+     * will complete work for the current tick and then shut down.
+     */
+    public void shutdown() {
+        running.set(false);
     }
 
     /**

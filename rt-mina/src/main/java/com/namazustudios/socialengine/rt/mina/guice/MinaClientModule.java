@@ -16,7 +16,6 @@ import org.apache.mina.filter.codec.ProtocolEncoder;
 import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.guice.MinaModule;
 import org.apache.mina.guice.filter.InjectProtocolCodecFilter;
-import org.apache.mina.transport.socket.DatagramConnector;
 import org.apache.mina.transport.socket.nio.NioDatagramConnector;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
 

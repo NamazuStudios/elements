@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.edge;
 
 import com.namazustudios.socialengine.rt.*;
+import com.sun.javafx.geom.Edge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +88,7 @@ public class SimpleEdgeServer extends AbstractSimpleServer implements EdgeServer
 
         public EdgeServerContext() {
 
-            SimpleEdgeServer.LOG.info("Bootstrapping server.");
+            SimpleEdgeServer.LOG.info("Bootstrapping Edge server {} ", SimpleEdgeServer.this);
 
             for (final Map.Entry<Path, EdgeResource> entry : bootstrapResources.entrySet()) {
                 edgeResourceService.addResource(entry.getKey(), entry.getValue());
