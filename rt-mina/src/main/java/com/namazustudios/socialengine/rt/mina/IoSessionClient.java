@@ -1,18 +1,22 @@
 package com.namazustudios.socialengine.rt.mina;
 
 import com.namazustudios.socialengine.rt.edge.EdgeClient;
+import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import org.apache.mina.core.session.IoSession;
+
+import javax.inject.Inject;
+import java.util.concurrent.Callable;
 
 /**
  * Created by patricktwohig on 8/1/15.
  */
 public class IoSessionClient implements EdgeClient {
 
-    private final IoSession ioSession;
+    @Inject
+    private IoSession ioSession;
 
-    public IoSessionClient(final IoSession ioSession) {
-        this.ioSession = ioSession;
-    }
+    @Inject
+    private EdgeServer edgeServer;
 
     @Override
     public String getId() {
@@ -74,7 +78,13 @@ public class IoSessionClient implements EdgeClient {
 
     @Override
     public void disconnect() {
-        ioSession.close(false);
+        edgeServer.post(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                ioSession.close(false);
+                return null;
+            }
+        });
     }
 
 }

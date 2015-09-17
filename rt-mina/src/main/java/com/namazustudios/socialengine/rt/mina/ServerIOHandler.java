@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 
 /**
  * An implementation of {@link IoHandler} which dispatches messages
@@ -35,6 +36,9 @@ public class ServerIOHandler extends IoHandlerAdapter {
     private ResourceService<EdgeResource> edgeResourceService;
 
     @Inject
+    private Provider<IoSessionClient> ioSessionClientProvider;
+
+    @Inject
     private ObjectMapper objectMapper;
 
     @Override
@@ -50,7 +54,7 @@ public class ServerIOHandler extends IoHandlerAdapter {
 
     private void handle(final IoSession session, final Request request) {
 
-        final IoSessionClient ioSessionClient = new IoSessionClient(session);
+        final IoSessionClient ioSessionClient = ioSessionClientProvider.get();
         final ResponseReceiver responseReceiver = minaConnectedEdgeClientService
                 .getResponseReceiver(ioSessionClient, request);
 

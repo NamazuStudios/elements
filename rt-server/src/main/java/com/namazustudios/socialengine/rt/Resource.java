@@ -23,6 +23,9 @@ import java.util.regex.Pattern;
  * Once a resource is no longer needed, it is necessary to destroy the
  * resource using the {@link AutoCloseable#close()} method.
  *
+ * The Server may employ a thread pooling system to drive the resources.  However, the {@link Server} must
+ * guarantee that only one thread may access a single resource at a time.
+ *
  * Created by patricktwohig on 8/8/15.
  */
 public interface Resource extends AutoCloseable {

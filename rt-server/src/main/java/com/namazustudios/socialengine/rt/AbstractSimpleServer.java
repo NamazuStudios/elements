@@ -207,12 +207,10 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
         final Set<Future<Void>> futureSet = new HashSet<>();
         final CompletionService<Void> completionService = new ExecutorCompletionService<Void>(executorService);
 
-        Callable<Void> operation = queue.poll();
-
-        for (int i = 0; i < max && operation != null; ++i) {
+        final List<Callable<Void>> operationList = getOperationsForUpdate(queue, max);
+        for (final Callable<Void> operation : operationList) {
             final Future<Void> future = completionService.submit(operation);
             futureSet.add(future);
-            operation = queue.poll();
         }
 
         while (!futureSet.isEmpty()) {
@@ -230,15 +228,28 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
 
     }
 
+    private List<Callable<Void>> getOperationsForUpdate(final Queue<Callable<Void>> queue, final int max) {
+
+        final List<Callable<Void>> operationList = new ArrayList<>();
+
+        Callable<Void> operation = queue.poll();
+        for (int i = 0; i < max && operation != null; ++i) {
+            operationList.add(operation);
+            operation = queue.poll();
+        }
+
+        return operationList;
+    }
+
     private void doUpdate() throws InterruptedException {
 
         final Set<Future<Void>> futureSet = new HashSet<>();
-
-        final CompletionService<Void> completionService = new ExecutorCompletionService<Void>(executorService);
+        final CompletionService<Void> completionService = new ExecutorCompletionService<>(executorService);
 
         for (final Resource edgeResource : getResourceService().getResources()) {
 
             final Future<Void> future = completionService.submit(new Callable<Void>() {
+
                 @Override
                 public Void call() throws Exception {
                     edgeResource.onUpdate();
