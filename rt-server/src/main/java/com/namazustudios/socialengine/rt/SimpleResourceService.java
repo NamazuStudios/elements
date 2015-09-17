@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -30,6 +31,12 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
     @Inject
     private ResourceLockFactory<ResourceT> lockFactory;
+
+    private final Server server;
+
+    public SimpleResourceService(final Server server) {
+        this.server = server;
+    }
 
     @Override
     public Iterable<ResourceT> getResources() {
@@ -109,7 +116,13 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
             throw new DuplicateException("Resource at path already exists " + path);
         }
 
-        resource.onAdd(path);
+        server.post(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                resource.onAdd(path);
+                return null;
+            }
+        });
 
     }
 
@@ -140,7 +153,13 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                 // onMove operation.  The onMove call should perform any internal operations
                 // to onMove the resource, such as pumping events to listeners.
 
-                toMove.onMove(source, destination);
+                server.post(new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        toMove.onMove(source, destination);
+                        return null;
+                    }
+                });
 
             } catch (RuntimeException ex) {
                 throw ex;
@@ -178,7 +197,13 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
             throw new NotFoundException("Resource at path not found: " + path);
         }
 
-        resource.onRemove(path);
+        server.post(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                resource.onRemove(path);
+                return null;
+            }
+        });
 
         return resource;
 

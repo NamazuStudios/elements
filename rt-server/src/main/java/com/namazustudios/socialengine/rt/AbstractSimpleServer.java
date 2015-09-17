@@ -43,8 +43,6 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
      */
     public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.edge.AbstractSimpleServer.executorService";
 
-    private final AtomicReference<Thread> runnerThreadAtomicReference = new AtomicReference<>();
-
     @Inject
     @Named(MAX_REQUESTS)
     private int maxRequests;
@@ -62,6 +60,11 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
     private ExecutorService executorService;
 
     private final AtomicBoolean running = new AtomicBoolean();
+
+    @Override
+    public void post(final Callable<Void> operation) {
+        getEventQueue().add(operation);
+    }
 
     public <PayloadT> Subscription subscribe(final Path path,
                                              final String name,
@@ -162,10 +165,6 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
 
         final Thread runnerThread = Thread.currentThread();
 
-        if (!runnerThreadAtomicReference.compareAndSet(null, Thread.currentThread())) {
-            throw new IllegalStateException("Server already running thread.");
-        }
-
         try (final ServerContext context = openServerContext()) {
 
             LOG.info("Starting server main loop for server {}", this);
@@ -199,10 +198,6 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
         } catch (InterruptedException ex) {
             LOG.info("Server thread interrupted.  Stopping.", ex);
             return;
-        } finally {
-            if (!runnerThreadAtomicReference.compareAndSet(runnerThread, null)) {
-                throw new IllegalStateException("Server abandoned running thread.");
-            }
         }
 
     }

@@ -34,7 +34,8 @@ namazu_rt.request.hello = function(client, request)
 
 end
 
-namazu_rt.resource.getScriptLog().info("Hello World!")
+
+-- namazu_rt.resource.getScriptLog().info("Hello World!")
 
 --namazu_rt.server.coroutine.start(function(deltaTime)
 --    coroutine.yield()

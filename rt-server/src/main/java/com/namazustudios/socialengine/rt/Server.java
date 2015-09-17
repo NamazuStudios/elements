@@ -3,11 +3,21 @@ package com.namazustudios.socialengine.rt;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 /**
  * Created by patricktwohig on 8/22/15.
  */
 public interface Server {
+
+    /**
+     * Posts a {@link Callable} which will be executed later on the server thread pool.
+     *
+     * @param callable
+     * @return
+     */
+    void post(Callable<Void> callable);
 
     /**
      * Subscribes the event receiver to the given path.

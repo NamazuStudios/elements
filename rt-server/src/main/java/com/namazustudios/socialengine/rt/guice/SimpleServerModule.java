@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
@@ -30,7 +31,18 @@ public class SimpleServerModule extends AbstractModule {
                 .in(Scopes.SINGLETON);
 
         binder().bind(new TypeLiteral<ResourceService<EdgeResource>>(){})
-                .to(new TypeLiteral<SimpleResourceService<EdgeResource>>(){})
+                .toProvider(new com.google.inject.Provider<SimpleResourceService<EdgeResource>>() {
+
+                    @Inject
+                    Provider<EdgeServer> edgeServerProvider;
+
+                    @Override
+                    public SimpleResourceService<EdgeResource> get() {
+                        final EdgeServer edgeServer = edgeServerProvider.get();
+                        return new SimpleResourceService<>(edgeServer);
+                    }
+
+                })
                 .in(Scopes.SINGLETON);
 
         binder().bind(InternalServer.class)
@@ -38,8 +50,18 @@ public class SimpleServerModule extends AbstractModule {
                 .in(Scopes.SINGLETON);
 
         binder().bind(new TypeLiteral<ResourceService<InternalResource>>() {})
-                .to(new TypeLiteral<SimpleResourceService<InternalResource>>() {})
-                .in(Scopes.SINGLETON);
+                .toProvider(new com.google.inject.Provider<SimpleResourceService<InternalResource>>() {
+
+                    @Inject
+                    Provider<InternalServer> internalServerProvider;
+
+                    @Override
+                    public SimpleResourceService<InternalResource> get() {
+                        final InternalServer internalServer = internalServerProvider.get();
+                        return new SimpleResourceService<>(internalServer);
+                    }
+
+                }).in(Scopes.SINGLETON);
 
         binder().bind(ExecutorService.class)
                 .annotatedWith(Names.named(AbstractSimpleServer.EXECUTOR_SERVICE))
