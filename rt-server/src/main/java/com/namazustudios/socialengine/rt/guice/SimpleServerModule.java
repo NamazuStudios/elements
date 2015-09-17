@@ -36,10 +36,14 @@ public class SimpleServerModule extends AbstractModule {
                     @Inject
                     Provider<EdgeServer> edgeServerProvider;
 
+                    @Inject
+                    Provider<ResourceLockFactory<EdgeResource>> edgeResourceLockFactoryProvider;
+
                     @Override
                     public SimpleResourceService<EdgeResource> get() {
                         final EdgeServer edgeServer = edgeServerProvider.get();
-                        return new SimpleResourceService<>(edgeServer);
+                        final ResourceLockFactory<EdgeResource> edgeResourceResourceLockFactory = edgeResourceLockFactoryProvider.get();
+                        return new SimpleResourceService<>(edgeServer, edgeResourceResourceLockFactory);
                     }
 
                 })
@@ -55,10 +59,14 @@ public class SimpleServerModule extends AbstractModule {
                     @Inject
                     Provider<InternalServer> internalServerProvider;
 
+                    @Inject
+                    Provider<ResourceLockFactory<InternalResource>> interResourceLockFactoryProvider;
+
                     @Override
                     public SimpleResourceService<InternalResource> get() {
                         final InternalServer internalServer = internalServerProvider.get();
-                        return new SimpleResourceService<>(internalServer);
+                        final ResourceLockFactory<InternalResource> internalResourceResourceLockFactory = interResourceLockFactoryProvider.get();
+                        return new SimpleResourceService<>(internalServer, internalResourceResourceLockFactory);
                     }
 
                 }).in(Scopes.SINGLETON);

@@ -69,6 +69,8 @@ public class MinaServerModule extends MinaModule {
 
             });
 
+        bindIoSession();
+
         bindFilter().named("logging").atAndOfFilterChain().to(LoggingFilter.class);
         bindFilter().named("codec").atAndOfFilterChain().to(InjectProtocolCodecFilter.class);
 

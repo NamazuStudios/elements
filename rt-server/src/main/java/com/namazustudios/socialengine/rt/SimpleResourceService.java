@@ -29,13 +29,13 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
     private final ConcurrentNavigableMap<Path, ResourceT> pathResourceMap = new ConcurrentSkipListMap<>();
 
-    @Inject
-    private ResourceLockFactory<ResourceT> lockFactory;
-
     private final Server server;
 
-    public SimpleResourceService(final Server server) {
+    private ResourceLockFactory<ResourceT> lockFactory;
+
+    public SimpleResourceService(final Server server, final ResourceLockFactory<ResourceT> lockFactory) {
         this.server = server;
+        this.lockFactory = lockFactory;
     }
 
     @Override
