@@ -12,39 +12,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 /**
+ * The abstract {@link Resource} type backed by a Lua script.  This uses the JNLua implentation
+ * to drive the script.
+ *
+ * Note that this eschews the traditional static {@link Logger} instance, and creates an individual
+ * instance named for the script itself.
+ *
  * Created by patricktwohig on 8/25/15.
  */
 public class AbstractLuaResource extends AbstractResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractLuaResource.class);
-
-    private static final JavaFunction SERVER_START_COROUTINE = new JavaFunction() {
-        @Override
-        public int invoke(LuaState luaState) {
-            try (final StackProtector stackProtector = new StackProtector(luaState)) {
-
-                if (luaState.isFunction(-1)) {
-                    throw new IllegalArgumentException("server.coroutine.create() must be passed a function");
-                }
-
-                final UUID uuid = UUID.randomUUID();
-                LOG.info("Starting coroutine {}", uuid);
-                luaState.newThread();
-                luaState.pushValue(-1);
-                luaState.setField(LuaState.REGISTRYINDEX, uuid.toString());
-
-                return stackProtector.ret(1);
-
-            }
-        }
-    };
 
     /**
      * The name of a global table where the Lua code interacts with the
@@ -117,7 +101,7 @@ public class AbstractLuaResource extends AbstractResource {
      * A table which contains java objects that can be used to communicate with the
      * rest of the server.
      */
-    public static final String SERVICES_TABLE = "services";
+    public static final String BRIDGE_TABLE = "bridge";
 
     /**
      * A key on the services table to expose  an instance of this type to the underlying Lua script.  This allows
@@ -139,6 +123,32 @@ public class AbstractLuaResource extends AbstractResource {
 
     private Logger scriptLog = LOG;
 
+    private final JavaFunction serverStartCoroutine = new JavaFunction() {
+        @Override
+        public int invoke(final LuaState luaState) {
+            try (final StackProtector stackProtector = new StackProtector(luaState)) {
+
+                if (!luaState.isFunction(-1)) {
+                    dumpStack();
+                    throw new IllegalArgumentException("server.coroutine.create() must be passed a function");
+                }
+
+                final UUID uuid = UUID.randomUUID();
+
+                luaState.newThread();
+                luaState.getField(LuaState.REGISTRYINDEX, SERVER_THREADS_TABLE);
+                luaState.pushValue(-2);
+                luaState.setField(-2, uuid.toString());
+                luaState.pop(1);
+
+                getScriptLog().info("Created coroutine {}", uuid);
+                return stackProtector.ret(1);
+
+
+            }
+        }
+    };
+
     /**
      * Creates an instance of {@link AbstractLuaResource} with the given {@link LuaState}
      * type.
@@ -158,18 +168,27 @@ public class AbstractLuaResource extends AbstractResource {
     }
 
     /**
-     * Executes a Lua script from the given {@link InputStream} instance.  The returned
-     * instance.
+     * Loads and runs a Lua script from the given {@link InputStream} instance.  The name
+     * supplied is useful for debugging and should match the name of the file from which
+     * the script was loaded.
+     *
+     *
      *
      * @param inputStream the input stream
      * @param name the name of the script (useful for debugging)
      * @throws IOException
      */
-    public void load(final InputStream inputStream, final String name) throws IOException {
-        scriptLog = LoggerFactory.getLogger(getClass().getName() + "." + name);
+    public void loadAndRun(final InputStream inputStream, final String name) throws IOException {
+
+        scriptLog = LoggerFactory.getLogger(name);
         setupScriptGlobals();
+
         luaState.load(inputStream, name, "bt");
-        scriptLog.debug("Loaded lua script.  State: {}", luaState);
+        getScriptLog().debug("Loaded lua script.", luaState);
+
+        luaState.call(0, 0);
+        getScriptLog().debug("Executed lua script.", luaState);
+
     }
 
     private void setupScriptGlobals() {
@@ -191,7 +210,7 @@ public class AbstractLuaResource extends AbstractResource {
         // on every update.
 
         luaState.newTable();
-        luaState.pushJavaFunction(SERVER_START_COROUTINE);
+        luaState.pushJavaFunction(serverStartCoroutine);
         luaState.setField(-2, COROUTINE_CREATE_FUNCTION);
         luaState.setField(-2, COROUTINE_TABLE);
 
@@ -199,11 +218,14 @@ public class AbstractLuaResource extends AbstractResource {
         // instance.
 
         luaState.newTable();
+
         luaState.pushJavaObject(this);
         luaState.setField(-2, THIS_INSTANCE);
+
         luaState.pushJavaObject(iocResolver);
         luaState.setField(-2, IOC_INSTANCE);
-        luaState.setField(-2, SERVICES_TABLE);
+
+        luaState.setField(-2, BRIDGE_TABLE);
 
         // Finally sets the server table to be in the global space
         luaState.setGlobal(NAMAZU_TABLE);
@@ -231,7 +253,6 @@ public class AbstractLuaResource extends AbstractResource {
 
                 if (!luaState.isThread(-1)) {
                     luaState.pop(1);
-                    threadsToReap.add(luaState.checkString(-2));
                     continue;
                 }
 
@@ -254,6 +275,7 @@ public class AbstractLuaResource extends AbstractResource {
             }
 
             for (final String uuid : threadsToReap) {
+                getScriptLog().info("Reaping thread {}.", uuid);
                 luaState.pushNil();
                 luaState.setField(threadTableIndex, uuid);
             }
@@ -319,8 +341,8 @@ public class AbstractLuaResource extends AbstractResource {
             luaState.getField(-1, REQUEST_HANDLER_KEY);
 
             if (!luaState.isFunction(-1)) {
-                LOG.error("No handler function found at {}.{}.{}.{}",
-                        NAMAZU_TABLE, REQUEST_TABLE, methodName, REQUEST_HANDLER_KEY);
+                getScriptLog().error("No handler function found at {}.{}.{}.{}",
+                                     NAMAZU_TABLE, REQUEST_TABLE, methodName, REQUEST_HANDLER_KEY);
                 throw new NotFoundException("request handler not found for method " + methodName);
             }
 
@@ -354,7 +376,7 @@ public class AbstractLuaResource extends AbstractResource {
             // hosed the lua script backing this resource.
 
             if (!luaState.isTable(-1)) {
-                LOG.error("Unable to find table {}", NAMAZU_TABLE);
+                getScriptLog().error("Unable to find table {}", NAMAZU_TABLE);
                 throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 
@@ -362,7 +384,7 @@ public class AbstractLuaResource extends AbstractResource {
             luaState.remove(-2);  // pops namazu_rt
 
             if (!luaState.isTable(-1)) {
-                LOG.error("Unable to find table {}.{}", NAMAZU_TABLE, REQUEST_TABLE);
+                getScriptLog().error("Unable to find table {}.{}", NAMAZU_TABLE, REQUEST_TABLE);
                 throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 
@@ -373,7 +395,7 @@ public class AbstractLuaResource extends AbstractResource {
             luaState.remove(-2); // pops request
 
             if (!luaState.isTable(-1)) {
-                LOG.warn("Unable to find table {}.{}.{}", NAMAZU_TABLE, REQUEST_TABLE, methodName);
+                getScriptLog().warn("Unable to find table {}.{}.{}", NAMAZU_TABLE, REQUEST_TABLE, methodName);
                 throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 
@@ -392,8 +414,28 @@ public class AbstractLuaResource extends AbstractResource {
         return scriptLog;
     }
 
-    public void setScriptLog(Logger scriptLog) {
-        this.scriptLog = scriptLog;
+    /**
+     * Dumps the Lua stack to the log.
+     */
+    public void dumpStack() {
+
+        if (getScriptLog().isErrorEnabled()) {
+
+            final StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("Lua Stack: \n");
+
+            for (int i = 1; i <= luaState.getTop(); ++i) {
+                stringBuilder.append("  Element ")
+                             .append(i).append(" ")
+                             .append(luaState.type(i)).append(" ")
+                             .append(luaState.toJavaObjectRaw(i))
+                             .append('\n');
+            }
+
+            getScriptLog().error("{}", stringBuilder);
+
+        }
+
     }
 
     /**
