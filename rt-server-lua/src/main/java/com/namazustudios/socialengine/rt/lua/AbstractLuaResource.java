@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.lua;
 
 import com.naef.jnlua.Converter;
 import com.naef.jnlua.JavaFunction;
+import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.*;
@@ -29,6 +30,11 @@ import java.util.UUID;
 public class AbstractLuaResource extends AbstractResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractLuaResource.class);
+
+    /**
+     * The print function name.
+     */
+    public static final String PRINT_FUNCTION = "print";
 
     /**
      * The name of a global table where the Lua code interacts with the
@@ -123,6 +129,10 @@ public class AbstractLuaResource extends AbstractResource {
 
     private Logger scriptLog = LOG;
 
+    /**
+     * Creates a new thread managed by the server.  This returns to the calling code
+     * the thread that was created.
+     */
     private final JavaFunction serverStartCoroutine = new JavaFunction() {
         @Override
         public int invoke(final LuaState luaState) {
@@ -142,16 +152,34 @@ public class AbstractLuaResource extends AbstractResource {
                 luaState.pop(1);
 
                 getScriptLog().info("Created coroutine {}", uuid);
-                return stackProtector.ret(1);
-
+                return stackProtector.setAbsoluteIndex(1);
 
             }
         }
     };
 
     /**
+     * Redirects the print function to the logger returned by {@link #getScriptLog()}.
+     */
+    private final JavaFunction printToScriptLog = new JavaFunction() {
+        @Override
+        public int invoke(LuaState luaState) {
+            try (final StackProtector stackProtector = new StackProtector(luaState)) {
+                final StringBuffer stringBuffer = new StringBuffer();
+
+                for (int i = 1; i <= luaState.getTop(); ++i) {
+                    stringBuffer.append(luaState.toJavaObject(i, String.class));
+                }
+
+                getScriptLog().info("{}", stringBuffer.toString());
+                return stackProtector.setAbsoluteIndex(0);
+            }
+        }
+    };
+
+    /**
      * Creates an instance of {@link AbstractLuaResource} with the given {@link LuaState}
-     * type.
+     * type.j
      *
      * If instantion fails, it is the responsilbity of the caller to deallocate the {@link LuaState}
      * object.  If the constructor completes without error, then the caller does not need to close
@@ -179,67 +207,77 @@ public class AbstractLuaResource extends AbstractResource {
      * @throws IOException
      */
     public void loadAndRun(final InputStream inputStream, final String name) throws IOException {
+        try (final StackProtector stackProtector = new StackProtector(luaState, 0)) {
 
-        scriptLog = LoggerFactory.getLogger(name);
-        setupScriptGlobals();
+            luaState.openLibs();
 
-        luaState.load(inputStream, name, "bt");
-        getScriptLog().debug("Loaded lua script.", luaState);
+            scriptLog = LoggerFactory.getLogger(name);
+            setupScriptGlobals();
 
-        luaState.call(0, 0);
-        getScriptLog().debug("Executed lua script.", luaState);
+            luaState.load(inputStream, name, "bt");
+            getScriptLog().debug("Loaded lua script.", luaState);
 
+            luaState.call(0, 0);
+            getScriptLog().debug("Executed lua script.", luaState);
+
+        }
     }
 
     private void setupScriptGlobals() {
+        try (final StackProtector stackProtector = new StackProtector(luaState, 0)) {
 
-        // Places a table in the registry to hold the currently running threads.
-        luaState.newTable();
-        luaState.pushValue(-1);
-        luaState.setField(LuaState.REGISTRYINDEX, SERVER_THREADS_TABLE);
+            // Places a table in the registry to hold the currently running threads.
+            luaState.newTable();
+            luaState.setField(LuaState.REGISTRYINDEX, SERVER_THREADS_TABLE);
 
-        // Creates a new table to hold the server table functions
-        luaState.newTable();
+            // Creates a new table to hold the server table functions
+            luaState.newTable();
 
-        // Creates a place for server.request
-        luaState.newTable();
-        luaState.setField(-2, REQUEST_TABLE);
+            // Creates a place for server.request
+            luaState.newTable();
+            luaState.setField(-2, REQUEST_TABLE);
 
-        // Creates a table for server.coroutine.  This houses code for
-        // server-managed coroutines that will automatically be activated
-        // on every update.
+            // Creates a table for server.coroutine.  This houses code for
+            // server-managed coroutines that will automatically be activated
+            // on every update.
 
-        luaState.newTable();
-        luaState.pushJavaFunction(serverStartCoroutine);
-        luaState.setField(-2, COROUTINE_CREATE_FUNCTION);
-        luaState.setField(-2, COROUTINE_TABLE);
+            luaState.newTable();
+            luaState.pushJavaFunction(serverStartCoroutine);
+            luaState.setField(-2, COROUTINE_CREATE_FUNCTION);
+            luaState.setField(-2, COROUTINE_TABLE);
 
-        // Sets up the services table which references htis and the IOC resolver
-        // instance.
+            // Sets up the services table which references htis and the IOC resolver
+            // instance.
 
-        luaState.newTable();
+            luaState.newTable();
 
-        luaState.pushJavaObject(this);
-        luaState.setField(-2, THIS_INSTANCE);
+            luaState.pushJavaObject(this);
+            luaState.setField(-2, THIS_INSTANCE);
 
-        luaState.pushJavaObject(iocResolver);
-        luaState.setField(-2, IOC_INSTANCE);
+            luaState.pushJavaObject(iocResolver);
+            luaState.setField(-2, IOC_INSTANCE);
 
-        luaState.setField(-2, BRIDGE_TABLE);
+            luaState.setField(-2, BRIDGE_TABLE);
 
-        // Finally sets the server table to be in the global space
-        luaState.setGlobal(NAMAZU_TABLE);
+            // Finally sets the server table to be in the global space
+            luaState.setGlobal(NAMAZU_TABLE);
 
+            // Lastly we hijack the standard lua print function to redirect
+            // to the underlying logging system
+            luaState.pushJavaFunction(printToScriptLog);
+            luaState.setGlobal(PRINT_FUNCTION);
+
+        }
     }
 
     @Override
     protected void doUpdate(double deltaTime) {
         try (final StackProtector stackProtector = new StackProtector(luaState)) {
-            runServerCoroutines(deltaTime);
+            runManagedCoroutines(deltaTime);
         }
     }
 
-    private void runServerCoroutines(double deltaTime) {
+    private void runManagedCoroutines(double deltaTime) {
 
         try (final StackProtector stackProtector = new StackProtector(luaState)) {
 
@@ -258,16 +296,18 @@ public class AbstractLuaResource extends AbstractResource {
 
                 final int threadStatus = luaState.status(-1);
 
-                if ((threadStatus != LuaState.YIELD) || (threadStatus != luaState.OK)) {
-                    luaState.pop(1);
-                    threadsToReap.add(luaState.checkString(-2));
-                    continue;
-                }
-
-                try (final StackProtector threadStackProtector = new StackProtector(luaState)){
+                if ((threadStatus == LuaState.YIELD) || (threadStatus == luaState.OK)) {
                     luaState.pushNumber(deltaTime);
-                    final int returnCount = luaState.resume(-2, 1);
-                    luaState.pop(returnCount);
+                    dumpStack("Running coroutine.");
+                    try {
+                        final int returnCount = luaState.resume(-2, 1);
+                        luaState.pop(returnCount);
+                    } catch (LuaRuntimeException ex) {
+                        dumpStack();
+                        dumpStack(ex);
+                    }
+                } else {
+                    threadsToReap.add(luaState.checkString(-2));
                 }
 
                 luaState.pop(1);
@@ -342,12 +382,12 @@ public class AbstractLuaResource extends AbstractResource {
 
             if (!luaState.isFunction(-1)) {
                 getScriptLog().error("No handler function found at {}.{}.{}.{}",
-                                     NAMAZU_TABLE, REQUEST_TABLE, methodName, REQUEST_HANDLER_KEY);
+                        NAMAZU_TABLE, REQUEST_TABLE, methodName, REQUEST_HANDLER_KEY);
                 throw new NotFoundException("request handler not found for method " + methodName);
             }
 
             luaState.pop(-2);
-            stackProtector.ret(1);
+            stackProtector.adjustAbsoluteIndex(1);
 
         }
 
@@ -368,7 +408,7 @@ public class AbstractLuaResource extends AbstractResource {
      */
     protected void pushRequestHandlerTable(final String methodName) {
 
-        try (final StackProtector stackProtector = new StackProtector(luaState)) {
+        try (final StackProtector stackProtector = new StackProtector(luaState, 1)) {
 
             luaState.getGlobal(NAMAZU_TABLE);
 
@@ -399,8 +439,6 @@ public class AbstractLuaResource extends AbstractResource {
                 throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 
-            stackProtector.ret(1);
-
         }
 
     }
@@ -418,22 +456,70 @@ public class AbstractLuaResource extends AbstractResource {
      * Dumps the Lua stack to the log.
      */
     public void dumpStack() {
+        dumpStack("Lua Stack:");
+    }
+
+    /**
+     * Dumps the Lua stack to the log.  The provided message is prepended to the stack trace.
+     */
+    public void dumpStack(final String msg) {
 
         if (getScriptLog().isErrorEnabled()) {
 
             final StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("Lua Stack: \n");
+            stringBuilder.append(msg).append("\n");
 
             for (int i = 1; i <= luaState.getTop(); ++i) {
                 stringBuilder.append("  Element ")
-                             .append(i).append(" ")
-                             .append(luaState.type(i)).append(" ")
-                             .append(luaState.toJavaObjectRaw(i))
-                             .append('\n');
+                        .append(i).append(" ")
+                        .append(luaState.type(i)).append(" ")
+                        .append(luaState.toString(i))
+                        .append('\n');
             }
 
             getScriptLog().error("{}", stringBuilder);
 
+        }
+
+    }
+
+    public void dumpStack(final LuaState luaState, final String msg) {
+
+        if (getScriptLog().isErrorEnabled()) {
+
+            final StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(msg).append("\n");
+
+            for (int i = 1; i <= luaState.getTop(); ++i) {
+                stringBuilder.append("  Element ")
+                        .append(i).append(" ")
+                        .append(luaState.type(i)).append(" ")
+                        .append(luaState.toString(i))
+                        .append('\n');
+            }
+
+            getScriptLog().error("{}", stringBuilder);
+
+        }
+
+    }
+
+
+    /**
+     * Dumps the stack from an instance of {@link LuaRuntimeException}
+     *
+     * @param lre the exception
+     */
+    public void dumpStack(final LuaRuntimeException lre) {
+
+        getScriptLog().error("Exception running script.", lre);
+
+        try (final StringWriter stringWriter = new StringWriter();
+             final PrintWriter printWriter = new PrintWriter(stringWriter) ) {
+            lre.printLuaStackTrace(printWriter);
+            getScriptLog().error("Lua Stack Trace {} ", stringWriter.getBuffer().toString());
+        } catch (IOException ex) {
+            getScriptLog().error("Caught exception writing Lua stack trace", lre);
         }
 
     }

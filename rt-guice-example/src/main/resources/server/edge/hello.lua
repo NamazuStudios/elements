@@ -34,7 +34,16 @@ namazu_rt.request.hello = function(client, request)
 
 end
 
+-- Container is a table set by the containing appplication.  Basically it
+-- provides some automatically managed coroutines.
 namazu_rt.coroutine.create(function(deltaTime)
-    namazu_rt.bridge.resource:getScriptLog():info("Hello World!")
-    coroutine.yield()
+    while true do
+
+--         Each frame we want to do something, right now I just want to
+--         print something out to see it working.
+        namazu_rt.bridge.resource:getScriptLog():info("Hello World {}", deltaTime)
+        deltaTime = coroutine.yield()
+        print("Hai hai hai")
+
+    end
 end)

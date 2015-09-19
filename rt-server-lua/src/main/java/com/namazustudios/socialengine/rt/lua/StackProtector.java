@@ -16,48 +16,32 @@ public class StackProtector implements AutoCloseable {
 
     private final LuaState luaState;
 
-    private final int absoluteIndex;
+    private int absoluteIndex;
 
-    private int returnCount = 0;
-
-    public StackProtector(LuaState luaState) {
-        this.luaState = luaState;
-        absoluteIndex = luaState.getTop();
-        LOG.trace("Stack top {}", absoluteIndex);
+    public StackProtector(final LuaState luaState) {
+        this(luaState, luaState.getTop());
     }
 
-    public int ret(final int returnCount) {
+    public StackProtector(final LuaState luaState, final int absoluteIndex) {
+        this.luaState = luaState;
+        this.absoluteIndex = absoluteIndex;
+        LOG.trace("Stack top {} -> {}", luaState.getTop(), absoluteIndex);
+    }
 
-        LOG.debug("Setting return count to {}.  New final absolute stack top {}", returnCount + returnCount);
+    public int adjustAbsoluteIndex(final int delta) {
+        LOG.trace("Setting stack top {} -> {}", absoluteIndex, delta + absoluteIndex);
+        return absoluteIndex = Math.max(0, delta + absoluteIndex);
+    }
 
-        if (returnCount <= 0) {
-            throw new IllegalArgumentException("return count must be positive.");
-        } else if (this.returnCount == 0) {
-            this.returnCount = returnCount;
-        } else {
-            throw new IllegalStateException("return count already set: " + returnCount);
-        }
-
-        return returnCount;
-
+    public int setAbsoluteIndex(final int absoluteIndex) {
+        LOG.trace("Setting stack top {} -> {}", this.absoluteIndex, absoluteIndex);
+        return this.absoluteIndex = Math.max(0, absoluteIndex);
     }
 
     @Override
     public void close() {
-
-        final int newStackTop = Math.min(luaState.getTop(), returnCount + absoluteIndex);
-
-        if (luaState.getTop() < (returnCount + absoluteIndex)) {
-            LOG.debug("Stack top {}.  Expected new top {}.  Did you forget to push the return value?", newStackTop);
-        }
-
-        if (luaState.getTop() == newStackTop) {
-            LOG.trace("Stack consistent.");
-        } else {
-            LOG.trace("Lua stack inconsistent Expected {}.  Actual {}", newStackTop, luaState.getTop());
-            luaState.setTop(newStackTop);
-        }
-
+        LOG.trace("Restoring Lua stack {} -> {}", luaState.getTop(), absoluteIndex);
+        luaState.setTop(absoluteIndex);
     }
 
 }
