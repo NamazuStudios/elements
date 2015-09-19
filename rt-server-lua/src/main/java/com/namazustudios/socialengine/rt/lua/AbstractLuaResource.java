@@ -298,7 +298,6 @@ public class AbstractLuaResource extends AbstractResource {
 
                 if ((threadStatus == LuaState.YIELD) || (threadStatus == luaState.OK)) {
                     luaState.pushNumber(deltaTime);
-                    dumpStack("Running coroutine.");
                     try {
                         final int returnCount = luaState.resume(-2, 1);
                         luaState.pop(returnCount);

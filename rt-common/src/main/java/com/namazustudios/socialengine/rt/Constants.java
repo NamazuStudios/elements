@@ -13,22 +13,22 @@ public interface Constants {
     /**
      * It should be obvious what this is.
      */
-    double NANOSECONDS_PER_SECOND = 1000000000d;
+    double NANOSECONDS_PER_SECOND = 1000000000.0;
 
     /**
      * It should be obvious what this is.
      */
-    double SECONDS_PER_NANOSECOND = 1.0d / 1000000000d;
+    double SECONDS_PER_NANOSECOND = 1.0 / NANOSECONDS_PER_SECOND;
 
     /**
      * It should be obvious what this is.
      */
-    double MILLISECONDS_PER_SECOND = 1000d;
+    double MILLISECONDS_PER_SECOND = 1000.0;
 
     /**
      * It should be obvious what this is.
      */
-    double SECONDS_PER_MILLISECOND = 1d / 1000d;
+    double SECONDS_PER_MILLISECOND = 1.0 / MILLISECONDS_PER_SECOND;
 
     /**
      * The default port for communication.

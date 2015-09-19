@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.base.Ticker;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import com.namazustudios.socialengine.rt.event.EventModel;
 import com.namazustudios.socialengine.rt.event.ResourceAddedEvent;
@@ -129,7 +130,8 @@ public abstract class AbstractResource implements Resource {
      * @return the elapsed time.
      */
     public double getElapsedTime() {
-        return Math.round(getStopwatch().elapsed(TimeUnit.NANOSECONDS) * Constants.SECONDS_PER_NANOSECOND);
+        final double elapsed = getStopwatch().elapsed(TimeUnit.NANOSECONDS);
+        return elapsed * Constants.SECONDS_PER_NANOSECOND;
     }
 
     /**

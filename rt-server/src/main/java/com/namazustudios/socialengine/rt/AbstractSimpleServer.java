@@ -20,28 +20,28 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractSimpleServer.class);
 
     /**
+     * Specifies the max number of updates per second the server will attempt to make.  Setting to zero
+     * will not throttle the update rate at all.  This may not be desirable, especially when the server
+     * is not under load updates will be processed so quickly that Resources may receive zero values
+     * for time deltas.
+     */
+    public static final String MAX_UPDATES_PER_SECOND = "com.namazustudios.socialengine.rt.AbstractSimpleServer.maxUpdatesPerSecond";
+
+    /**
      * This is the maximum number of requests that the server will accept before giving up and processing the next frame.
      */
-    public static final String MAX_REQUESTS = "com.namazustudios.socialengine.rt.edge.AbstractSimpleServer.maxRequests";
+    public static final String MAX_REQUESTS = "com.namazustudios.socialengine.rt.AbstractSimpleServer.maxRequests";
 
     /**
      * This is the maximum number of requests that server will process before giving up and processing the next frame.
      */
-    public static final String MAX_EVENTS = "com.namazustudios.socialengine.rt.edge.AbstractSimpleServer.maxEvents";
-
-    /**
-     * This is the amount of time (in seconds) that all {@link Resource}s should take to process events,
-     * request handlers, or the call to {@link Resource#onUpdate()} method.  Resources that are hogging system
-     * time will be logged as problematic.  It is a good idea to set this to a low number, such as 0.5 seconds
-     * to encourage resource developers to write responsive code.
-     */
-    public static final String RESOURCE_TIMEOUT = "com.namazustudios.socialengine.rt.edge.AbstractSimpleServer.resourceTimeout";
+    public static final String MAX_EVENTS = "com.namazustudios.socialengine.rt.AbstractSimpleServer.maxEvents";
 
     /**
      * The SimpleEdgeServer uses an {@link ExecutorService} to process requests and dispath
      * events to the various {@link Resource}s.
      */
-    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.edge.AbstractSimpleServer.executorService";
+    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.AbstractSimpleServer.executorService";
 
     @Inject
     @Named(MAX_REQUESTS)
@@ -52,8 +52,8 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
     private int maxEvents;
 
     @Inject
-    @Named(RESOURCE_TIMEOUT)
-    private double resourceTimeout;
+    @Named(MAX_UPDATES_PER_SECOND)
+    private int maxUpdatesPerSecond;
 
     @Inject
     @Named(EXECUTOR_SERVICE)
@@ -171,19 +171,25 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
 
             double movingAverageMillis = 0;
             final Stopwatch logTimer = Stopwatch.createStarted();
-            final Stopwatch averageTimer = Stopwatch.createStarted();
+            final Stopwatch updateTimer = Stopwatch.createStarted();
+            final long maxSleepTime = maxUpdatesPerSecond == 0 ? 0 : Math.round(1000.0 / (double)maxUpdatesPerSecond);
 
             do {
 
                 dispatchQueue(getRequestQueue(), maxRequests);
                 dispatchQueue(getEventQueue(), maxEvents);
                 doUpdate();
-                Thread.yield();
 
-                movingAverageMillis += Math.round(averageTimer.elapsed(TimeUnit.MILLISECONDS));
+                final long elapsed = Math.round(updateTimer.elapsed(TimeUnit.MILLISECONDS));
+                movingAverageMillis += elapsed;
                 movingAverageMillis /= 2;
-                averageTimer.reset();
-                averageTimer.start();
+
+                if (elapsed < maxSleepTime) {
+                    Thread.sleep(maxSleepTime - elapsed);
+                }
+
+                updateTimer.reset();
+                updateTimer.start();
 
                 if (logTimer.elapsed(TimeUnit.SECONDS) >= 5) {
                     LOG.info("Average server tick time {}ms", movingAverageMillis);
@@ -233,6 +239,7 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
         final List<Callable<Void>> operationList = new ArrayList<>();
 
         Callable<Void> operation = queue.poll();
+
         for (int i = 0; i < max && operation != null; ++i) {
             operationList.add(operation);
             operation = queue.poll();

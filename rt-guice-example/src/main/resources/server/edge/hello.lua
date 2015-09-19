@@ -37,13 +37,19 @@ end
 -- Container is a table set by the containing appplication.  Basically it
 -- provides some automatically managed coroutines.
 namazu_rt.coroutine.create(function(deltaTime)
+
+    timer = deltaTime;
+    cycles = 1
+
     while true do
 
---         Each frame we want to do something, right now I just want to
---         print something out to see it working.
-        namazu_rt.bridge.resource:getScriptLog():info("Hello World {}", deltaTime)
-        deltaTime = coroutine.yield()
-        print("Hai hai hai")
+        timer = timer + coroutine.yield()
+
+        if (timer >= 10.0) then
+            timer = 0
+            cycles = cycles + 1
+            namazu_rt.bridge.resource:getScriptLog():info("Hello World {}! ", cycles)
+        end
 
     end
 end)

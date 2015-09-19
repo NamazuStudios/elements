@@ -85,8 +85,8 @@ public class SimpleServerModule extends AbstractModule {
                 .to(maxEvents());
 
         binder().bindConstant()
-                .annotatedWith(Names.named(AbstractSimpleServer.RESOURCE_TIMEOUT))
-                .to(resourceTimeout());
+                .annotatedWith(Names.named(AbstractSimpleServer.MAX_UPDATES_PER_SECOND))
+                .to(maxUpdatesPerSecond());
 
         binder().bind(new TypeLiteral<ResourceLockFactory<EdgeResource>>() {})
                 .toProvider(Providers.guicify(edgeResourceLockFactoryProvider()))
@@ -178,14 +178,12 @@ public class SimpleServerModule extends AbstractModule {
     }
 
     /**
-     * Override to change the resource timeout value.
+     * Override to change the maximum number of updates per second.
      *
-     * @see {@link AbstractSimpleServer#RESOURCE_TIMEOUT}
-     *
-     * @return the resource timeout value
+     * @return the max updates per second
      */
-    private double resourceTimeout() {
-        return 0.25;
+    private int maxUpdatesPerSecond() {
+        return 120;
     }
 
 }
