@@ -40,6 +40,8 @@ public interface ClientContainer {
          */
         Client getBestEffort();
 
+        void disconnect();
+
     }
 
     /**
