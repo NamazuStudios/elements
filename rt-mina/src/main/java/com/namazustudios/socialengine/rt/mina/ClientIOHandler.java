@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * Created by patricktwohig on 9/11/15.
@@ -17,14 +16,11 @@ public class ClientIOHandler extends IoHandlerAdapter {
 
     private static final Logger LOG = LoggerFactory.getLogger(ClientIOHandler.class);
 
-    private final Client.NetworkOperations networkOperations;
+    @Inject
+    private IncomingNetworkOperations incomingNetworkOperations;
 
     @Inject
     private ObjectMapper objectMapper;
-
-    public ClientIOHandler(Client.NetworkOperations networkOperations) {
-        this.networkOperations = networkOperations;
-    }
 
     @Override
     public void messageReceived(final IoSession session, final Object message) throws Exception {
@@ -39,17 +35,17 @@ public class ClientIOHandler extends IoHandlerAdapter {
 
     private void handle(final Response response) {
         final SimpleResponse simpleResponse = SimpleResponse.builder().from(response).build();
-        final Class<?> payloadType = networkOperations.getPayloadType(simpleResponse.getResponseHeader());
+        final Class<?> payloadType = incomingNetworkOperations.getPayloadType(simpleResponse.getResponseHeader());
         final Object payload = objectMapper.convertValue(simpleResponse, payloadType);
         simpleResponse.setPayload(payload);
     }
 
     private void handle(final Event event) {
-        for (final Class<?> eventClass : networkOperations.getEventTypes(event.getEventHeader())) {
+        for (final Class<?> eventClass : incomingNetworkOperations.getEventTypes(event.getEventHeader())) {
             final SimpleEvent eventToSend = SimpleEvent.builder().event(event).build();
             final Object payload = objectMapper.convertValue(event.getPayload(), eventClass);
             eventToSend.setPayload(payload);
-            networkOperations.receive(event, eventClass);
+            incomingNetworkOperations.receive(event, eventClass);
         }
     }
 

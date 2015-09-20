@@ -155,7 +155,7 @@ public class ClientBSONProtocolDecoder extends CumulativeProtocolDecoder {
     }
 
     private void closeWithBadMessage(final Exception ex, final IoSession ioSession) {
-        LOG.error("Caught excpetion decoding document.", ex);
+        LOG.error("Caught exception decoding document.", ex);
         ioSession.close(false);
     }
 

@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.guice.example;
+package com.namazustudios.socialengine.rt.guice.example.Client;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -13,6 +13,7 @@ import com.namazustudios.socialengine.rt.lua.guice.ClasspathScanningLuaResourceM
 import com.namazustudios.socialengine.rt.mina.guice.MinaServerModule;
 import org.apache.mina.core.service.IoAcceptor;
 
+import java.io.Console;
 import java.net.InetSocketAddress;
 
 /**

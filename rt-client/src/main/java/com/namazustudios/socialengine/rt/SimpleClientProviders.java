@@ -5,7 +5,7 @@ import javax.inject.Named;
 import javax.inject.Provider;
 
 /**
- * Implements various {@link Provider} instances for {@link SimpleClient}
+ * Implements various {@link Provider} instances for {@link DefaultClient}
  *
  * Created by patricktwohig on 9/11/15.
  */
@@ -13,49 +13,51 @@ public class SimpleClientProviders {
 
     private SimpleClientProviders() {}
 
-    public static Provider<SimpleClient> getInternalClientProvider() {
-        return new Provider<SimpleClient>() {
-
-            @Inject
-            @Named(Constants.TRANSPORT_INTERNAL)
-            Provider<ClientRequestDispatcher> clientRequestDispatcherProvider;
-
-            @Override
-            public SimpleClient get() {
-                final ClientRequestDispatcher clientRequestDispatcher = clientRequestDispatcherProvider.get();
-                return new SimpleClient(clientRequestDispatcher);
-            }
-
-        };
-    }
-
-    public static Provider<SimpleClient> getReliableTransportClientProvider() {
-        return new Provider<SimpleClient>() {
+    public static Provider<DefaultClient> getReliableTransportClientProvider() {
+        return new Provider<DefaultClient>() {
 
             @Inject
             @Named(Constants.TRANSPORT_RELIABLE)
-            Provider<ClientRequestDispatcher> clientRequestDispatcherProvider;
+            Provider<OutgoingNetworkOperations> clientRequestDispatcherProvider;
+
+            @Inject
+            @Named(DefaultClient.MAX_PENDING_REQUESTS)
+            Provider<Integer> maxPendingRequestsProvider;
+
+            @Inject
+            Provider<ClientEventReceiverMap> clientEventReceiverMapProvider;
 
             @Override
-            public SimpleClient get() {
-                final ClientRequestDispatcher clientRequestDispatcher = clientRequestDispatcherProvider.get();
-                return new SimpleClient(clientRequestDispatcher);
+            public DefaultClient get() {
+                final int maxPendingRequests = maxPendingRequestsProvider.get();
+                final OutgoingNetworkOperations outgoingNetworkOperations = clientRequestDispatcherProvider.get();
+                final ClientEventReceiverMap clientEventReceiverMap = clientEventReceiverMapProvider.get();
+                return new DefaultClient(maxPendingRequests, clientEventReceiverMap, outgoingNetworkOperations);
             }
 
         };
     }
 
-    public static Provider<SimpleClient> getBestEffortTransportClientProvider() {
-        return new Provider<SimpleClient>() {
+    public static Provider<DefaultClient> getBestEffortTransportClientProvider() {
+        return new Provider<DefaultClient>() {
 
             @Inject
             @Named(Constants.TRANSPORT_BEST_EFFORT)
-            Provider<ClientRequestDispatcher> clientRequestDispatcherProvider;
+            Provider<OutgoingNetworkOperations> clientRequestDispatcherProvider;
+
+            @Inject
+            @Named(DefaultClient.MAX_PENDING_REQUESTS)
+            Provider<Integer> maxPendingRequestsProvider;
+
+            @Inject
+            Provider<ClientEventReceiverMap> clientEventReceiverMapProvider;
 
             @Override
-            public SimpleClient get() {
-                final ClientRequestDispatcher clientRequestDispatcher = clientRequestDispatcherProvider.get();
-                return new SimpleClient(clientRequestDispatcher);
+            public DefaultClient get() {
+                final int maxPendingRequests = maxPendingRequestsProvider.get();
+                final OutgoingNetworkOperations outgoingNetworkOperations = clientRequestDispatcherProvider.get();
+                final ClientEventReceiverMap clientEventReceiverMap = clientEventReceiverMapProvider.get();
+                return new DefaultClient(maxPendingRequests, clientEventReceiverMap, outgoingNetworkOperations);
             }
 
         };

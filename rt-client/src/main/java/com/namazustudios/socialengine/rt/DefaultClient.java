@@ -1,9 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.SetMultimap;
+import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
 import org.slf4j.Logger;
@@ -11,12 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * This is the simple client implementation.  This client actually has no knowledge of
@@ -25,32 +22,58 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * Created by patricktwohig on 9/4/15.
  */
-public class SimpleClient implements Client, Client.NetworkOperations {
+public class DefaultClient implements Client, IncomingNetworkOperations  {
 
     /**
      * The number of pending requests that are allowed to be happening at the same time before
      * this client will automatically assume the request will not be handled and it will be culled.
      */
-    public static final String MAX_PENDING_REQUESTS =
-        "com.namazustudios.socialengine.rt.SimpleClient.MAX_PENDING_REQUESTS";
+    public static final String MAX_PENDING_REQUESTS = "com.namazustudios.socialengine.rt.DefaultClient.MAX_PENDING_REQUESTS";
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultClient.class);
 
     private final AtomicInteger requestSequence = new AtomicInteger();
 
     private final ConcurrentNavigableMap<Integer, SimpleClientPendingRequest> pendingRequests = new ConcurrentSkipListMap<>();
 
-    private final ClientRequestDispatcher clientRequestDispatcher;
+    private final int maxPendingRequests;
 
-    @Inject
-    private ClientEventReceiverMap clientEventReceiverMap;
+    private final ClientEventReceiverMap clientEventReceiverMap;
 
-    @Inject
-    @Named(MAX_PENDING_REQUESTS)
-    private int maxPendingRequests;
+    private final OutgoingNetworkOperations outgoingNetworkOperations;
 
-    public SimpleClient(ClientRequestDispatcher clientRequestDispatcher) {
-        this.clientRequestDispatcher = clientRequestDispatcher;
+    public DefaultClient(final int maxPendingRequests,
+                         final ClientEventReceiverMap clientEventReceiverMap,
+                         final OutgoingNetworkOperations outgoingNetworkOperations) {
+        this.maxPendingRequests = maxPendingRequests;
+        this.clientEventReceiverMap = clientEventReceiverMap;
+        this.outgoingNetworkOperations = outgoingNetworkOperations;
+    }
+
+    @Override
+    public Response sendRequest(Request request, Class<?> expectedType) {
+
+        final AtomicReference<Response> responseAtomicReference = new AtomicReference<>();
+
+        sendRequest(request, expectedType, new ResponseReceiver() {
+            @Override
+            public void receive(final Response response) {
+                responseAtomicReference.set(response);
+            }
+        });
+
+        synchronized (responseAtomicReference) {
+            try {
+                while (responseAtomicReference.get() == null) {
+                    responseAtomicReference.wait();
+                }
+            } catch (InterruptedException ex) {
+                throw new InternalException(ex);
+            }
+        }
+
+        return responseAtomicReference.get();
+
     }
 
     @Override
@@ -75,7 +98,7 @@ public class SimpleClient implements Client, Client.NetworkOperations {
             new SimpleClientPendingRequest(responseType, receiver);
 
         pendingRequests.put(sequence, simpleClientPendingRequest);
-        clientRequestDispatcher.dispatch(simpleRequest);
+        outgoingNetworkOperations.dispatch(simpleRequest);
         LOG.trace("Sending request {} with sequence {}", request, sequence);
 
         return new PendingRequest() {
@@ -107,7 +130,7 @@ public class SimpleClient implements Client, Client.NetworkOperations {
     public <EventT> Subscription subscribe(final Path path,
                                            final String name,
                                            final EventReceiver<EventT> eventReceiver) {
-        return null;
+        return clientEventReceiverMap.subscribe(path, name, eventReceiver);
     }
 
     @Override
@@ -169,7 +192,7 @@ public class SimpleClient implements Client, Client.NetworkOperations {
             try {
                 final Object payload = eventReceiver.getEventType().cast(event.getPayload());
                 final EventReceiver<Object> objectEventReceiver = (EventReceiver<Object>)eventReceiver;
-                objectEventReceiver.receive(path, name, event.getPayload());
+                objectEventReceiver.receive(path, name, payload);
             } catch (ClassCastException ex) {
                 LOG.error("Caught exception trying to process event {} with receiver {}.", event, eventReceiver);
             }

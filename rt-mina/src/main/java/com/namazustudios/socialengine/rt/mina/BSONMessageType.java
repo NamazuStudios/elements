@@ -11,7 +11,7 @@ public enum BSONMessageType {
 
     private final byte code;
 
-    private BSONMessageType(byte code) {
+    BSONMessageType(byte code) {
         this.code = code;
     }
 

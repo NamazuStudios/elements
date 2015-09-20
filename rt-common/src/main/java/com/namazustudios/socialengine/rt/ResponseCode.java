@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 /**
  * Enumeration of the various response codes.  Each code is essentially the
  * ordinal of the enum, which should be fetched using {@link #getCode()}.
+ *
  */
 public enum ResponseCode {
 
@@ -38,11 +39,11 @@ public enum ResponseCode {
     FAILED_AUTH_RETRY,
 
     /**
-     * The request timed out.  THis is not actually sent by the server
+     * The request timed out.  This may not actually sent by the server
      * but may be supplied by the client to indicate that the request
      * timed out.
      */
-    TIMEOUT_FATAL,
+    TIMEOUT_RETRY,
 
     /**
      * The request was canceled by the user.
