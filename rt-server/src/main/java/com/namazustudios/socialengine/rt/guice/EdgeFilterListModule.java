@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.guice;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.inject.*;
+import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.binder.ScopedBindingBuilder;
 import com.google.inject.name.Names;
 import com.namazustudios.socialengine.rt.edge.EdgeFilter;
@@ -40,7 +41,7 @@ public abstract class EdgeFilterListModule extends AbstractModule {
 
             });
 
-        configureFilters();;
+        configureFilters();
     }
 
     /**
@@ -66,7 +67,7 @@ public abstract class EdgeFilterListModule extends AbstractModule {
         return new FilterSequenceBindingBuilder() {
 
             @Override
-            public ScopedBindingBuilder atBeginningOfFilterChain() {
+            public LinkedBindingBuilder<EdgeFilter> atBeginningOfFilterChain() {
 
                 final int index = filterNames.indexOf(name);
 
@@ -80,7 +81,7 @@ public abstract class EdgeFilterListModule extends AbstractModule {
             }
 
             @Override
-            public ScopedBindingBuilder beforeFilterNamed(final String existingFilterName) {
+            public LinkedBindingBuilder<EdgeFilter> beforeFilterNamed(final String existingFilterName) {
 
                 final ListIterator<String> listIterator = filterNames.listIterator();
 
@@ -102,7 +103,7 @@ public abstract class EdgeFilterListModule extends AbstractModule {
             }
 
             @Override
-            public ScopedBindingBuilder afterFilterNamed(final String existingFilterName) {
+            public LinkedBindingBuilder<EdgeFilter> afterFilterNamed(final String existingFilterName) {
 
                 final ListIterator<String> listIterator = filterNames.listIterator();
 
@@ -127,7 +128,7 @@ public abstract class EdgeFilterListModule extends AbstractModule {
             }
 
             @Override
-            public ScopedBindingBuilder atEndOfFilterChain() {
+            public LinkedBindingBuilder<EdgeFilter> atEndOfFilterChain() {
 
                 final int index = filterNames.indexOf(name);
 

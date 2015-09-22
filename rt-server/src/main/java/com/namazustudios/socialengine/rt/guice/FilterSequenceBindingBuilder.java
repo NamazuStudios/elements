@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rt.guice;
 
+import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.binder.ScopedBindingBuilder;
+import com.namazustudios.socialengine.rt.edge.EdgeFilter;
 
 /**
  * Created by patricktwohig on 9/2/15.
@@ -12,7 +14,7 @@ public interface FilterSequenceBindingBuilder {
      *
      * @return a {@link ScopedBindingBuilder}
      */
-    ScopedBindingBuilder atBeginningOfFilterChain();
+    LinkedBindingBuilder<EdgeFilter> atBeginningOfFilterChain();
 
     /**
      * Appends the filter before the filter with the given name.
@@ -21,7 +23,7 @@ public interface FilterSequenceBindingBuilder {
      *
      * @return a {@link ScopedBindingBuilder}
      */
-    ScopedBindingBuilder beforeFilterNamed(String filterName);
+    LinkedBindingBuilder<EdgeFilter> beforeFilterNamed(String filterName);
 
     /**
      * Appends the filter after the filter with the given name.
@@ -30,13 +32,13 @@ public interface FilterSequenceBindingBuilder {
      *
      * @return a {@link ScopedBindingBuilder}
      */
-    ScopedBindingBuilder afterFilterNamed(String filterName);
+    LinkedBindingBuilder<EdgeFilter> afterFilterNamed(String filterName);
 
     /**
      * Appends the filter to the end of the filter chain.
      *
      * @return a {@link ScopedBindingBuilder}
      */
-    ScopedBindingBuilder atEndOfFilterChain();
+    LinkedBindingBuilder<EdgeFilter> atEndOfFilterChain();
 
 }

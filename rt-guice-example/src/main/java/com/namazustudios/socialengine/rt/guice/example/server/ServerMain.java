@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.rt.guice.example.server;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.TypeLiteral;
+import com.google.inject.*;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.EdgeFilterListModule;
 import com.namazustudios.socialengine.rt.guice.ExceptionMapperModule;
@@ -44,6 +41,10 @@ public class ServerMain {
                 new EdgeFilterListModule() {
                     @Override
                     protected void configureFilters() {
+                        bindEdgeFilter().named("logging")
+                                        .atBeginningOfFilterChain()
+                                        .to(ServerLogFilter.class)
+                                        .in(Scopes.SINGLETON);
                     }
                 },
                 new ExceptionMapperModule()

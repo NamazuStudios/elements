@@ -35,7 +35,7 @@ namazu_rt.request.hello = function(client, request)
 end
 
 -- Container is a table set by the containing appplication.  Basically it
--- provides some automatically managed coroutines.
+-- provides some automtically managed coroutines.
 namazu_rt.coroutine.create(function(deltaTime)
 
     timer = deltaTime;
