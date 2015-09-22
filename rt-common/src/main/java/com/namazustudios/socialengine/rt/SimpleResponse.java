@@ -23,6 +23,11 @@ public class SimpleResponse implements Response {
         return payload;
     }
 
+    @Override
+    public <T> T getPayload(Class<T> cls) {
+        return cls.cast(getPayload());
+    }
+
     public void setPayload(Object payload) {
         this.payload = payload;
     }

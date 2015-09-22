@@ -19,4 +19,12 @@ public interface Response {
      */
     Object getPayload();
 
+    /**
+     * Gets the payoad, cast to the given type.
+     *
+     * @param cls the type
+     * @param <T>
+     */
+    <T> T getPayload(Class<T> cls);
+
 }

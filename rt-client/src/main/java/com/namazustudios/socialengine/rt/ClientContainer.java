@@ -24,7 +24,7 @@ public interface ClientContainer {
     /**
      * Represents the connected client instance.
      */
-    interface ConnectedInstance {
+    interface ConnectedInstance extends AutoCloseable {
 
         /**
          * Gets the reliable {@link Client} instance.
@@ -40,8 +40,16 @@ public interface ClientContainer {
          */
         Client getBestEffort();
 
+        /**
+         * Disconnects from the server.
+         */
         void disconnect();
 
+        /**
+         * Equivalent to calling {@link #disconnect()}
+         */
+        @Override
+        void close();
     }
 
     /**

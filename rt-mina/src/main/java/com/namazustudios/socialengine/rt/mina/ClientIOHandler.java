@@ -16,11 +16,15 @@ public class ClientIOHandler extends IoHandlerAdapter {
 
     private static final Logger LOG = LoggerFactory.getLogger(ClientIOHandler.class);
 
-    @Inject
     private IncomingNetworkOperations incomingNetworkOperations;
 
-    @Inject
     private ObjectMapper objectMapper;
+
+    @Inject
+    public ClientIOHandler(IncomingNetworkOperations incomingNetworkOperations, ObjectMapper objectMapper) {
+        this.incomingNetworkOperations = incomingNetworkOperations;
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public void messageReceived(final IoSession session, final Object message) throws Exception {

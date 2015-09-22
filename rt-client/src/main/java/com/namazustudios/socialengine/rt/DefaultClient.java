@@ -42,7 +42,8 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
 
     private final OutgoingNetworkOperations outgoingNetworkOperations;
 
-    public DefaultClient(final int maxPendingRequests,
+    @Inject
+    public DefaultClient(@Named(MAX_PENDING_REQUESTS) final int maxPendingRequests,
                          final ClientEventReceiverMap clientEventReceiverMap,
                          final OutgoingNetworkOperations outgoingNetworkOperations) {
         this.maxPendingRequests = maxPendingRequests;
