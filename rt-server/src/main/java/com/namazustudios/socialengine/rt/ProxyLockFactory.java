@@ -19,7 +19,7 @@ public class ProxyLockFactory<ResourceT extends Resource> implements ResourceLoc
 
     private final Class<ResourceT> resourceTClass;
 
-    public ProxyLockFactory(final Class<ResourceT> resourceTClass) {
+    private ProxyLockFactory(final Class<ResourceT> resourceTClass) {
 
         if (!resourceTClass.isInterface()) {
             throw new IllegalArgumentException(resourceTClass + " is not an interface type.");

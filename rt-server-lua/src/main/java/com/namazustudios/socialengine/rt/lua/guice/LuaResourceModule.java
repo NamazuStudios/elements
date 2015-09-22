@@ -39,8 +39,12 @@ public abstract class LuaResourceModule extends AbstractModule {
                                                         Path.class,
                                                         EdgeResource.class,
                                                         Names.named(EdgeServer.BOOTSTRAP_RESOURCES));
-        binder().bind(IocResolver.class).to(GuiceIoCResolver.class).in(Scopes.SINGLETON);
+
+        binder().bind(IocResolver.class)
+                .to(GuiceIoCResolver.class);
+
         configureResources();
+
     }
 
     /**

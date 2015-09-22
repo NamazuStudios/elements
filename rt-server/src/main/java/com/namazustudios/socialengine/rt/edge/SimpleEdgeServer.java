@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.edge;
 
 import com.namazustudios.socialengine.rt.*;
-import com.sun.javafx.geom.Edge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

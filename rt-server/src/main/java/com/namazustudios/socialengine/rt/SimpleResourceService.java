@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.PeekingIterator;
@@ -9,12 +8,9 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 
 import javax.inject.Inject;
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -33,7 +29,9 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
     private ResourceLockFactory<ResourceT> lockFactory;
 
-    public SimpleResourceService(final Server server, final ResourceLockFactory<ResourceT> lockFactory) {
+    @Inject
+    public SimpleResourceService(final Server server,
+                                 final ResourceLockFactory<ResourceT> lockFactory) {
         this.server = server;
         this.lockFactory = lockFactory;
     }

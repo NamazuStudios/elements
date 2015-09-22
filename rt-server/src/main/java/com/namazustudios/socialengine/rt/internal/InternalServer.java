@@ -4,8 +4,6 @@ import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResponseReceiver;
 import com.namazustudios.socialengine.rt.Server;
-import com.namazustudios.socialengine.rt.edge.EdgeResource;
-import com.namazustudios.socialengine.rt.edge.EdgeServer;
 
 /**
  * Used to manage instances of {@link InternalResource}.  In addition to
@@ -20,7 +18,7 @@ public interface InternalServer extends Server {
      * directly to the {@link Resource} for the sake of performance.
      *
      * No filtering is performed, as we assume internal {@link Request}s have been secured
-     * through the {@link EdgeResource} business logic.
+     * through the {@link InternalResource} business logic.
      *
      * @param request the request object itself.
      *

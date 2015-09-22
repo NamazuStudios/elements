@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.rt.guice;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Scopes;
-import com.google.inject.TypeLiteral;
+import com.google.inject.*;
 import com.google.inject.name.Names;
 import com.google.inject.util.Providers;
 import com.namazustudios.socialengine.rt.*;
@@ -22,59 +19,30 @@ public class SimpleServerModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        binder().bind(EdgeServer.class)
-                .to(SimpleEdgeServer.class)
-                .in(Scopes.SINGLETON);
+        final PrivateBinder edgeServerPrivateBinder = binder().newPrivateBinder();
 
-        binder().bind(EdgeRequestDispatcher.class)
-                .to(SimpleEdgeRequestDispatcher.class)
-                .in(Scopes.SINGLETON);
+        edgeServerPrivateBinder.install(new SimpleEdgeServerModule());
 
-        binder().bind(new TypeLiteral<ResourceService<EdgeResource>>(){})
-                .toProvider(new com.google.inject.Provider<SimpleResourceService<EdgeResource>>() {
+        edgeServerPrivateBinder.bind(new TypeLiteral<ResourceLockFactory<EdgeResource>>() {})
+                               .toProvider(Providers.guicify(edgeResourceLockFactoryProvider()));
 
-                    @Inject
-                    Provider<EdgeServer> edgeServerProvider;
+        edgeServerPrivateBinder.expose(EdgeServer.class);
+        edgeServerPrivateBinder.expose(SimpleEdgeServer.class);
+        edgeServerPrivateBinder.expose(new TypeLiteral<ResourceService<EdgeResource>>(){});
 
-                    @Inject
-                    Provider<ResourceLockFactory<EdgeResource>> edgeResourceLockFactoryProvider;
+        final PrivateBinder internalServerBinder = binder().newPrivateBinder();
 
-                    @Override
-                    public SimpleResourceService<EdgeResource> get() {
-                        final EdgeServer edgeServer = edgeServerProvider.get();
-                        final ResourceLockFactory<EdgeResource> edgeResourceResourceLockFactory = edgeResourceLockFactoryProvider.get();
-                        return new SimpleResourceService<>(edgeServer, edgeResourceResourceLockFactory);
-                    }
+        internalServerBinder.install(new SimpleInternalServerModule());
 
-                })
-                .in(Scopes.SINGLETON);
+        internalServerBinder.bind(new TypeLiteral<ResourceLockFactory<InternalResource>>() {})
+                            .toProvider(Providers.guicify(internalResourceLockFactoryProvider()));
 
-        binder().bind(InternalServer.class)
-                .to(SimpleInternalServer.class)
-                .in(Scopes.SINGLETON);
-
-        binder().bind(new TypeLiteral<ResourceService<InternalResource>>() {})
-                .toProvider(new com.google.inject.Provider<SimpleResourceService<InternalResource>>() {
-
-                    @Inject
-                    Provider<InternalServer> internalServerProvider;
-
-                    @Inject
-                    Provider<ResourceLockFactory<InternalResource>> interResourceLockFactoryProvider;
-
-                    @Override
-                    public SimpleResourceService<InternalResource> get() {
-                        final InternalServer internalServer = internalServerProvider.get();
-                        final ResourceLockFactory<InternalResource> internalResourceResourceLockFactory = interResourceLockFactoryProvider.get();
-                        return new SimpleResourceService<>(internalServer, internalResourceResourceLockFactory);
-                    }
-
-                }).in(Scopes.SINGLETON);
+        internalServerBinder.expose(InternalServer.class);
+        internalServerBinder.expose(SimpleInternalServer.class);
 
         binder().bind(ExecutorService.class)
                 .annotatedWith(Names.named(AbstractSimpleServer.EXECUTOR_SERVICE))
-                .toProvider(Providers.guicify(executorServiceProvider()))
-                .in(Scopes.SINGLETON);
+                .toProvider(Providers.guicify(executorServiceProvider()));
 
         binder().bindConstant()
                 .annotatedWith(Names.named(AbstractSimpleServer.MAX_REQUESTS))
@@ -87,17 +55,6 @@ public class SimpleServerModule extends AbstractModule {
         binder().bindConstant()
                 .annotatedWith(Names.named(AbstractSimpleServer.MAX_UPDATES_PER_SECOND))
                 .to(maxUpdatesPerSecond());
-
-        binder().bind(new TypeLiteral<ResourceLockFactory<EdgeResource>>() {})
-                .toProvider(Providers.guicify(edgeResourceLockFactoryProvider()))
-                .in(Scopes.SINGLETON);
-
-        binder().bind(new TypeLiteral<ResourceLockFactory<InternalResource>>(){})
-                .toProvider(Providers.guicify(interResourceLockFactoryProvider()))
-                .in(Scopes.SINGLETON);
-
-        binder().bind(InternalRequestDispatcher.class)
-                .to(SimpleInternalRequestDispatcher.class);
 
     }
 
@@ -146,7 +103,7 @@ public class SimpleServerModule extends AbstractModule {
      *
      * @return a {@link ResourceLockFactory} for {@link InternalResource} instances
      */
-    protected Provider<ResourceLockFactory<InternalResource>> interResourceLockFactoryProvider() {
+    protected Provider<ResourceLockFactory<InternalResource>> internalResourceLockFactoryProvider() {
         return new Provider<ResourceLockFactory<InternalResource>>() {
             @Override
             public ResourceLockFactory<InternalResource> get() {
