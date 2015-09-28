@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * Created by patricktwohig on 9/11/15.
@@ -16,14 +17,15 @@ public class ClientIOHandler extends IoHandlerAdapter {
 
     private static final Logger LOG = LoggerFactory.getLogger(ClientIOHandler.class);
 
-    private IncomingNetworkOperations incomingNetworkOperations;
+    private final ObjectMapper objectMapper;
 
-    private ObjectMapper objectMapper;
+    private final Provider<IncomingNetworkOperations> incomingNetworkOperationsProvider;
 
     @Inject
-    public ClientIOHandler(IncomingNetworkOperations incomingNetworkOperations, ObjectMapper objectMapper) {
-        this.incomingNetworkOperations = incomingNetworkOperations;
+    public ClientIOHandler(final ObjectMapper objectMapper,
+                           final Provider<IncomingNetworkOperations> incomingNetworkOperationsProvider) {
         this.objectMapper = objectMapper;
+        this.incomingNetworkOperationsProvider = incomingNetworkOperationsProvider;
     }
 
     @Override
@@ -38,6 +40,7 @@ public class ClientIOHandler extends IoHandlerAdapter {
     }
 
     private void handle(final Response response) {
+        final IncomingNetworkOperations incomingNetworkOperations = incomingNetworkOperationsProvider.get();
         final SimpleResponse simpleResponse = SimpleResponse.builder().from(response).build();
         final Class<?> payloadType = incomingNetworkOperations.getPayloadType(simpleResponse.getResponseHeader());
         final Object payload = objectMapper.convertValue(simpleResponse, payloadType);
@@ -45,12 +48,16 @@ public class ClientIOHandler extends IoHandlerAdapter {
     }
 
     private void handle(final Event event) {
+
+        final IncomingNetworkOperations incomingNetworkOperations = incomingNetworkOperationsProvider.get();
+
         for (final Class<?> eventClass : incomingNetworkOperations.getEventTypes(event.getEventHeader())) {
             final SimpleEvent eventToSend = SimpleEvent.builder().event(event).build();
             final Object payload = objectMapper.convertValue(event.getPayload(), eventClass);
             eventToSend.setPayload(payload);
             incomingNetworkOperations.receive(event, eventClass);
         }
+
     }
 
 }
