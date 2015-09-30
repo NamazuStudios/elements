@@ -1,0 +1,83 @@
+package com.namazustudios.socialengine.rt;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import com.namazustudios.socialengine.exception.BaseException;
+import com.namazustudios.socialengine.exception.ErrorCode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+
+/**
+ * A singleton instance of {@link ExceptionMapper} which defines the default
+ * behavior for exception mapping when no other exception mapper can be resolved.
+ *
+ * The behavior encapsulated here should be a reference for the standard exception mapping
+ * behavior and should be used when an {@link ExceptionMapper.Resolver} can't provide
+ * an {@link ExceptionMapper} for the desired type.
+ *
+ * Created by patricktwohig on 9/30/15.
+ */
+public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultExceptionMapper.class);
+
+    private static final DefaultExceptionMapper INSTANCE = new DefaultExceptionMapper();
+
+    /**
+     * Maps the {@link ErrorCode} enum to the {@link ResponseCode} type.
+     */
+    public static final Map<ErrorCode, ResponseCode> RESPONSE_STATUS_MAP = Maps.immutableEnumMap(
+        new ImmutableMap.Builder<ErrorCode, ResponseCode>()
+                .put(ErrorCode.DUPLICATE, ResponseCode.BAD_REQUEST_FATAL)
+                .put(ErrorCode.FORBIDDEN, ResponseCode.FAILED_AUTH_FATAL)
+                .put(ErrorCode.INVALID_DATA, ResponseCode.BAD_REQUEST_FATAL)
+                .put(ErrorCode.NOT_FOUND, ResponseCode.PATH_NOT_FOUND)
+                .put(ErrorCode.OVERLOAD, ResponseCode.TOO_BUSY_FATAL)
+                .put(ErrorCode.INVALID_PARAMETER, ResponseCode.BAD_REQUEST_FATAL)
+                .put(ErrorCode.UNKNOWN, ResponseCode.INTERNAL_ERROR_FATAL)
+        .build());
+
+    private DefaultExceptionMapper() {}
+
+    @Override
+    public void map(final Throwable throwable,
+                    final Request request,
+                    final ResponseReceiver responseReceiver) {
+
+        final SimpleExceptionResponsePayload simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();
+        simpleExceptionResponsePayload.setMessage(throwable.getMessage());
+
+        ResponseCode code;
+
+        try {
+            throw throwable;
+        } catch (BaseException bex) {
+            code = RESPONSE_STATUS_MAP.get(bex.getCode());
+            code = code == null ? ResponseCode.INTERNAL_ERROR_FATAL : code;
+            LOG.warn("Caught exception handling request {}.", request, bex);
+        } catch (Throwable th) {
+            code = ResponseCode.INTERNAL_ERROR_FATAL;
+            LOG.error("Caught exception handling request {}.", request, th);
+        }
+
+        final SimpleResponse simpleResponse = SimpleResponse.builder()
+                .from(request)
+                .code(code)
+                .payload(simpleExceptionResponsePayload)
+            .build();
+
+        try {
+            responseReceiver.receive(simpleResponse);
+        } catch (Exception ex) {
+            LOG.error("Caught exception mapping exception to response.", ex);
+        }
+
+    }
+
+    public static DefaultExceptionMapper getInstance() {
+        return INSTANCE;
+    }
+
+}

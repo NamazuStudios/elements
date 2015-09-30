@@ -5,6 +5,7 @@ import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
+import com.namazustudios.socialengine.rt.DefaultExceptionMapper;
 import com.namazustudios.socialengine.rt.ExceptionMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +75,7 @@ public class ExceptionMapperModule extends AbstractModule {
         binder().bind(ExceptionMapper.Resolver.class).toInstance(new ExceptionMapper.Resolver() {
 
             @Override
-            public <ExceptionT extends Exception> ExceptionMapper<ExceptionT> getExceptionMapper(ExceptionT ex) {
+            public <ExceptionT extends Throwable> ExceptionMapper<ExceptionT> getExceptionMapper(final ExceptionT ex) {
 
                 Class<?> cls = ex.getClass();
 
@@ -88,7 +89,7 @@ public class ExceptionMapperModule extends AbstractModule {
 
                 } while (!Throwable.class.equals(cls));
 
-                return null;
+                return (ExceptionMapper<ExceptionT>) DefaultExceptionMapper.getInstance();
 
             }
         });

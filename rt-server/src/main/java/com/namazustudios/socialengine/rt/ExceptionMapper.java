@@ -15,13 +15,16 @@ import java.util.Map;
  *
  * Created by patricktwohig on 7/29/15.
  */
-public interface ExceptionMapper<ExceptionT extends Exception> {
+public interface ExceptionMapper<ExceptionT extends Throwable> {
 
     /**
-     * Maps the given {@link Exception} to a custom payload.
-     *  @param exception the exception
-     * @param request the request
-     * @param responseReceiver the response
+     * Maps the given {@link Exception} to a custom {@link Response} and then supplies
+     * the response to the given {@link ResponseReceiver}.  This method must not throw
+     * an exception, even if delivering the response failed.
+     *
+     * @param exception the exception the exception
+     * @param request the request the request
+     * @param responseReceiver the response the response
      *
      */
     void map(ExceptionT exception, Request request, ResponseReceiver responseReceiver);
@@ -32,29 +35,19 @@ public interface ExceptionMapper<ExceptionT extends Exception> {
     interface Resolver {
 
         /**
-         * Returns and {@link ExceptionMapper} for the given {@link Exception} type.
+         * Returns and {@link ExceptionMapper} for the given {@link Exception} type.  If the type
+         * cannot be mapped by a user-defined {@link ExceptionMapper}, then this must return the
+         * {@link DefaultExceptionMapper} instance as obtained by {@link DefaultExceptionMapper#getInstance()}.
+         *
+         * Under no circumstances is it appropriate to return null.
          *
          * @param ex the exception itself
          * @param <ExceptionT> the type of exception
          *
-         * @return the {@link ExceptionMapper}
+         * @return the {@link ExceptionMapper}, never null
          */
-        <ExceptionT extends Exception> ExceptionMapper<ExceptionT> getExceptionMapper(ExceptionT ex);
+        <ExceptionT extends Throwable> ExceptionMapper<ExceptionT> getExceptionMapper(ExceptionT ex);
 
     }
-
-    /**
-     * Maps the {@link ErrorCode} enum to the {@link ResponseCode} type.
-     */
-    Map<ErrorCode, ResponseCode> RESPONSE_STATUS_MAP = Maps.immutableEnumMap(
-        new ImmutableMap.Builder<ErrorCode, ResponseCode>()
-                .put(ErrorCode.DUPLICATE, ResponseCode.BAD_REQUEST_FATAL)
-                .put(ErrorCode.FORBIDDEN, ResponseCode.FAILED_AUTH_FATAL)
-                .put(ErrorCode.INVALID_DATA, ResponseCode.BAD_REQUEST_FATAL)
-                .put(ErrorCode.NOT_FOUND, ResponseCode.PATH_NOT_FOUND)
-                .put(ErrorCode.OVERLOAD, ResponseCode.TOO_BUSY_FATAL)
-                .put(ErrorCode.INVALID_PARAMETER, ResponseCode.BAD_REQUEST_FATAL)
-                .put(ErrorCode.UNKNOWN, ResponseCode.INTERNAL_ERROR_FATAL)
-            .build());
 
 }

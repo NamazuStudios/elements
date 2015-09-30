@@ -64,12 +64,17 @@ public class ServerIOHandler extends IoHandlerAdapter {
                 .getHandler(request.getHeader().getMethod());
 
         final Class<?> payloadType = edgeRequestPathHandler.getPayloadType();
-
         final SimpleRequest simpleRequest = SimpleRequest.builder().from(request).build();
         final Object payload = objectMapper.convertValue(request.getPayload(), payloadType);
+
         simpleRequest.setPayload(payload);
         edgeServer.dispatch(ioSessionClient, simpleRequest, responseReceiver);
 
+    }
+
+    @Override
+    public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
+        super.exceptionCaught(session, cause);
     }
 
 }

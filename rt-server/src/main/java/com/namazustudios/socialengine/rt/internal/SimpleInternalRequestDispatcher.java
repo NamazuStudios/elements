@@ -63,58 +63,12 @@ public class SimpleInternalRequestDispatcher implements InternalRequestDispatche
 
     }
 
-
     private <T extends Exception> void mapException(final T ex,
                                                     final Request request,
                                                     final ResponseReceiver responseReceiver) {
-
-        try {
-
-            LOG.info("Mapping exception for request {} and edgeClient {}", request, ex);
-
-            final ExceptionMapper<T> exceptionMapper = exceptionMapperResolver.getExceptionMapper(ex);
-
-            if (exceptionMapper == null) {
-                mapUnhandled(ex, request, responseReceiver);
-            } else {
-                exceptionMapper.map(ex, request, responseReceiver);
-            }
-
-        } catch (Exception _ex) {
-            LOG.error("Caught exception attempting to forumulate exception response from request {} for edgeClient {} ", request, _ex);
-            mapUnhandled(_ex, request, responseReceiver);
-        }
-
-    }
-
-    private <T extends Exception> void mapUnhandled(final T ex,
-                                                    final Request request,
-                                                    final ResponseReceiver responseReceiver) {
-
-        final SimpleExceptionResponsePayload simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();
-        simpleExceptionResponsePayload.setMessage(ex.getMessage());
-
-        ResponseCode code;
-
-        try {
-            throw ex;
-        } catch (BaseException bex) {
-            code = ExceptionMapper.RESPONSE_STATUS_MAP.get(bex.getCode());
-            code = code == null ? ResponseCode.INTERNAL_ERROR_FATAL : code;
-            LOG.warn("Caught exception handling request {} to edgeClient {}.", request, bex);
-        } catch (Exception e) {
-            code = ResponseCode.INTERNAL_ERROR_FATAL;
-            LOG.error("Caught exception handling request {} to edgeClient {}.", request, e);
-        }
-
-        final SimpleResponse simpleResponse = SimpleResponse.builder()
-                .from(request)
-                .code(code)
-                .payload(simpleExceptionResponsePayload)
-            .build();
-
-        responseReceiver.receive(simpleResponse);
-
+        LOG.info("Mapping exception for request {} and edgeClient {}", request, ex);
+        final ExceptionMapper<T> exceptionMapper = exceptionMapperResolver.getExceptionMapper(ex);
+        exceptionMapper.map(ex, request, responseReceiver);
     }
 
 }
