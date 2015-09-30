@@ -3,9 +3,12 @@ package com.namazustudios.socialengine.rt.mina.guice;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Provider;
 import com.google.inject.name.Names;
+import com.google.inject.util.Providers;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.mina.*;
 import de.undercouch.bson4jackson.BsonFactory;
+import de.undercouch.bson4jackson.BsonGenerator;
+import de.undercouch.bson4jackson.BsonParser;
 import org.apache.mina.core.filterchain.IoFilterChainBuilder;
 import org.apache.mina.core.service.IoConnector;
 import org.apache.mina.core.service.IoHandler;
@@ -53,20 +56,14 @@ public class MinaBestEffortClientModule extends MinaModule {
         bindIoSession();
         bindFilterChainBuilder();
         bindProtocolCodecFactory();
-        bind(ProtocolEncoder.class).to(ClientBSONProtocolEncoder.class);
-        bind(ProtocolDecoder.class).to(ClientBSONProtocolDecoder.class);
+        bind(ProtocolEncoder.class).to(BSONProtocolEncoder.class);
+        bind(ProtocolDecoder.class).to(BSONProtocolDecoder.class);
 
         bind(IoHandler.class).to(ClientIOHandler.class);
 
         bind(ObjectMapper.class)
                 .annotatedWith(Names.named(Constants.BSON_OBJECT_MAPPER))
-                .toProvider(new Provider<ObjectMapper>() {
-                    @Override
-                    public ObjectMapper get() {
-                        final ObjectMapper objectMapper = new ObjectMapper(new BsonFactory());
-                        return objectMapper;
-                    }
-                });
+                .toProvider(Providers.guicify(BSONObjectMapperProvider.getInstance()));
 
         binder().bind(DefaultClient.class).in(MinaScopes.SESSION);
 

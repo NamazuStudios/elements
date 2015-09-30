@@ -55,4 +55,9 @@ public interface Constants {
      */
     String BSON_OBJECT_MAPPER = "com.namazustudios.socialengine.rt.BSON_OBJECT_MAPPER";
 
+    /**
+     * Constant to name the integer bound tot he max envelope size
+     */
+    String MAX_ENVELOPE_SIZE = "com.namazustudios.socialengine.rt.MAX_ENVELOPE_SIZE";
+
 }

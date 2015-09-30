@@ -3,11 +3,12 @@ package com.namazustudios.socialengine.rt.mina.guice;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Provider;
 import com.google.inject.name.Names;
+import com.google.inject.util.Providers;
 import com.namazustudios.socialengine.rt.Constants;
-import com.namazustudios.socialengine.rt.mina.ServerBSONProtocolDecoder;
-import com.namazustudios.socialengine.rt.mina.ServerBSONProtocolEncoder;
+import com.namazustudios.socialengine.rt.mina.BSONObjectMapperProvider;
+import com.namazustudios.socialengine.rt.mina.BSONProtocolDecoder;
+import com.namazustudios.socialengine.rt.mina.BSONProtocolEncoder;
 import com.namazustudios.socialengine.rt.mina.ServerIOHandler;
-import de.undercouch.bson4jackson.BsonFactory;
 import org.apache.mina.core.filterchain.IoFilterChainBuilder;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.service.IoHandler;
@@ -20,6 +21,8 @@ import org.apache.mina.transport.socket.nio.NioDatagramAcceptor;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 
 import javax.inject.Inject;
+import java.util.zip.Adler32;
+import java.util.zip.Checksum;
 
 
 /**
@@ -76,21 +79,32 @@ public class MinaServerModule extends MinaModule {
 
         bindFilterChainBuilder();
         bindProtocolCodecFactory();
-        bind(ProtocolEncoder.class).to(ServerBSONProtocolEncoder.class);
-        bind(ProtocolDecoder.class).to(ServerBSONProtocolDecoder.class);
+        bind(ProtocolEncoder.class).to(BSONProtocolEncoder.class);
+        bind(ProtocolDecoder.class).to(BSONProtocolDecoder.class);
 
         bind(IoHandler.class).to(ServerIOHandler.class);
 
         bind(ObjectMapper.class)
             .annotatedWith(Names.named(Constants.BSON_OBJECT_MAPPER))
-            .toProvider(new Provider<ObjectMapper>() {
-                @Override
-                public ObjectMapper get() {
-                    final ObjectMapper objectMapper = new ObjectMapper(new BsonFactory());
-                    return objectMapper;
-                }
-            });
+            .toProvider(Providers.guicify(BSONObjectMapperProvider.getInstance()));
 
+        binder().bindConstant()
+                .annotatedWith(Names.named(Constants.MAX_ENVELOPE_SIZE))
+                .to(maxEnvelopeSize());
+
+        binder().bind(Checksum.class).to(Adler32.class);
+
+    }
+
+    /**
+     * Override to adjust the max envelope size.  For maximum performance and reliability
+     * applications should target for maximum envelope sizes around the size of the
+     * MTU.
+     *
+     * @return the max envelope size
+     */
+    public int maxEnvelopeSize() {
+        return 4096;
     }
 
 }
