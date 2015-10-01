@@ -106,6 +106,28 @@ public class SimpleRequest implements Request {
         }
 
         /**
+         * Sets the path of the request.
+         *
+         * @param path
+         * @return
+         */
+        public Builder path(final String path) {
+            simpleRequestHeader.setPath(path);
+            return this;
+        }
+
+        /**
+         * Sets the method of this request.
+         *
+         * @param method the method
+         * @return this object
+         */
+        public Builder method(final String method) {
+            simpleRequestHeader.setMethod(method);
+            return this;
+        }
+
+        /**
          * Sets the value of {@link Response#getPayload()}.
          *
          * @param payload the payload instance
@@ -116,8 +138,16 @@ public class SimpleRequest implements Request {
             return this;
         }
 
-        public String addHeader(final String key, final String value) {
-            return simpleRequestHeaderMap.put(key, value);
+        /**
+         * Sets a header for the request
+         *
+         * @param key the key
+         * @param value the value
+         * @return this object
+         */
+        public Builder header(final String key, final String value) {
+            simpleRequestHeaderMap.put(key, value);
+            return this;
         }
 
         /**

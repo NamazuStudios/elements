@@ -1,19 +1,15 @@
 
--- Tells the container that the file needs to be  bootstrapped at
--- tthe given location.  It is important to note that this is only
--- necessary for edge resources as edge resources are automatically
--- installed by the container.  Internal resources, on the other hand
--- are installed manually by the client scripts.
+-- The handler for the "hello" method.  This will accept the client and the request
+-- as paramters and generate a response.  The method must return the response immediately
+-- in response to the request.
 
-namazu_rt.bootstrap_path = "/hello"
-
-namazu_rt.request.hello = function(client, request)
+function namazu_rt.request.hello(client, request)
 
     -- By default all payloads are deserialized as a java map, which
     -- translates to a simple lua table.  This should be sufficient
     -- for almost any type of object received from the client.
 
-    name = request.getPayload().name;
+    name = request:getPayload().name;
 
     -- Construct the details for the response.  In this case, we send a
     -- simple message that includes the name of the user as well as a
@@ -21,7 +17,7 @@ namazu_rt.request.hello = function(client, request)
     -- is up to the client to figure out the response.
 
     message = string.format("Hello %s.  Nice to meet you.", name)
-    details = string.format("You are conneced as %q", client.getId())
+    details = string.format("You are conneced as %q", client:getId())
 
     -- Finally we must return both the response code as well as the
     -- object payload.  The response code must be before the response
@@ -52,4 +48,5 @@ namazu_rt.coroutine.create(function(deltaTime)
         end
 
     end
+
 end)

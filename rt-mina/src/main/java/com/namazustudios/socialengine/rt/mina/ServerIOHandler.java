@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.mina;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.namazustudios.socialengine.exception.BaseException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestDispatcher;
@@ -62,25 +63,26 @@ public class ServerIOHandler extends IoHandlerAdapter {
 
         try {
             Request.Validator.validate(request);
-        } catch (InvalidDataException ex) {
-            final ExceptionMapper<InvalidDataException> invalidDataExceptionExceptionMapper;
+
+            final Path path = new Path(request.getHeader().getPath());
+
+            final EdgeRequestPathHandler edgeRequestPathHandler = edgeResourceService
+                    .getResource(path)
+                    .getHandler(request.getHeader().getMethod());
+
+            final Class<?> payloadType = edgeRequestPathHandler.getPayloadType();
+            final SimpleRequest simpleRequest = SimpleRequest.builder().from(request).build();
+            final Object payload = objectMapper.convertValue(request.getPayload(), payloadType);
+
+            simpleRequest.setPayload(payload);
+            edgeServer.dispatch(ioSessionClient, simpleRequest, responseReceiver);
+
+        } catch (BaseException ex) {
+            final ExceptionMapper<BaseException> invalidDataExceptionExceptionMapper;
             invalidDataExceptionExceptionMapper = resolver.getExceptionMapper(ex);
             invalidDataExceptionExceptionMapper.map(ex, request, responseReceiver);
             return;
         }
-
-        final Path path = new Path(request.getHeader().getPath());
-
-        final EdgeRequestPathHandler edgeRequestPathHandler = edgeResourceService
-            .getResource(path)
-            .getHandler(request.getHeader().getMethod());
-
-        final Class<?> payloadType = edgeRequestPathHandler.getPayloadType();
-        final SimpleRequest simpleRequest = SimpleRequest.builder().from(request).build();
-        final Object payload = objectMapper.convertValue(request.getPayload(), payloadType);
-
-        simpleRequest.setPayload(payload);
-        edgeServer.dispatch(ioSessionClient, simpleRequest, responseReceiver);
 
     }
 

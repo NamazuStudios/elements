@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.guice.example.Client;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.mina.guice.MinaReliableClientModule;
 import com.namazustudios.socialengine.rt.mina.guice.MinaDefaultClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +57,8 @@ public class ClientMain {
         helloRequestPayload.setName("Johnny!");
 
         final SimpleRequest helloRequest = SimpleRequest.builder()
+                .path("/hello")
+                .method("hello")
                 .payload(helloRequestPayload)
             .build();
 
@@ -68,7 +69,6 @@ public class ClientMain {
         }
 
         final HelloResponse helloResponsePayload = helloResponse.getPayload(HelloResponse.class);
-
         LOG.info("Got response {} {}", helloResponsePayload.getMessage(), helloResponsePayload.getDetails());
 
     }
