@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.rt.internal.InternalRequestPathHandler;
 import com.namazustudios.socialengine.rt.internal.InternalResource;
 
 import javax.inject.Inject;
+import java.util.Map;
 
 /**
  * Created by patricktwohig on 8/27/15.
@@ -18,9 +19,8 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
 
     @Inject
     public LuaInternalResource(final LuaState luaState,
-                               final IocResolver iocResolver,
-                               final TypeRegistry typeRegistry) {
-        super(luaState, iocResolver, typeRegistry);
+                               final IocResolver iocResolver) {
+        super(luaState, iocResolver);
         this.luaState = luaState;
     }
 
@@ -30,7 +30,7 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
 
             @Override
             public Class<?> getPayloadType() {
-                return getRequestType(method);
+                return Map.class;
             }
 
             @Override
@@ -38,8 +38,9 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
 
                 pushRequestHandlerFunction(method);
 
-                luaState.pushJavaObject(request);
-                luaState.call(3, 2);
+                luaState.pushJavaObject(request.getHeader());
+                luaState.pushJavaObject(request.getPayload());
+                luaState.call(2, 2);
 
                 final int code = (int) luaState.checkNumber(-2);
                 final Object payload = luaState.checkJavaObject(-1, Object.class);

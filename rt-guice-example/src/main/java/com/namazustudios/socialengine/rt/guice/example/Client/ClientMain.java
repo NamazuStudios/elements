@@ -58,7 +58,7 @@ public class ClientMain {
 
         final SimpleRequest helloRequest = SimpleRequest.builder()
                 .path("/hello")
-                .method("hello")
+                .method("introduce_yourself")
                 .payload(helloRequestPayload)
             .build();
 

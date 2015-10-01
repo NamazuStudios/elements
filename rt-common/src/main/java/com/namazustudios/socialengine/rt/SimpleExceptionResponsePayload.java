@@ -31,6 +31,14 @@ public class SimpleExceptionResponsePayload implements ExceptionResponsePayload 
         this.uuid = uuid;
     }
 
+    @Override
+    public String toString() {
+        return "SimpleExceptionResponsePayload{" +
+                "message='" + message + '\'' +
+                ", uuid='" + uuid + '\'' +
+                '}';
+    }
+
     public static Builder builder() {
         return new Builder();
     }

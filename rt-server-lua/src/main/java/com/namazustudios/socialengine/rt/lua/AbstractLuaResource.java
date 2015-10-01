@@ -32,7 +32,8 @@ public class AbstractLuaResource extends AbstractResource {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractLuaResource.class);
 
     /**
-     * The print function name.
+     * The print function name.  This hijacks the "regular" print function and diverts its output
+     * to the script's log.  The script's Log is actually backed by slf4j
      */
     public static final String PRINT_FUNCTION = "print";
 
@@ -40,7 +41,7 @@ public class AbstractLuaResource extends AbstractResource {
      * The name of a global table where the Lua code interacts with the
      * underlying server APIs.
      */
-    public static final String NAMAZU_TABLE = "namazu_rt";
+    public static final String NAMAZU_RT_TABLE = "namazu_rt";
 
     /**
      * Constant to designate the server.coroutine table.  This is a set of coroutinee
@@ -65,45 +66,6 @@ public class AbstractLuaResource extends AbstractResource {
     public static final String REQUEST_TABLE = "request";
 
     /**
-     * Constant to designate the "Handler" key.  This is used as the key for a lua function which can be called to
-     * handle a {@link Request}.  This is necessary, or else no functionality in Lua will exist to handle
-     * the request and must be assigned to a function type.
-     */
-    public static final String REQUEST_HANDLER_KEY = "handler";
-
-    /**
-     * Constant to designate the {@link Class} of the the request.  If set to a string other than
-     * {@link #WILDCARD_TYPE_TOKEN} this will attempt to force type conversion to that particular type.
-     * Leaving blank will fall back onto the behavior of {@link Converter#convertJavaObject(LuaState, Object)}.
-     * Specifying type should rarely be needed.
-     *
-     * More specifically this controls the return value of {@link EdgeRequestPathHandler#getPayloadType()} to
-     * tell upstream code how to deserialize objects transmitted over the network.
-     */
-    public static final String REQUEST_PAYLOAD_JAVA_TYPE = "request_payload_type";
-
-    /**
-     * The wildcard type.  This is {@link Map}, which translates to a lua table.
-     */
-    public static final Class<?> WILDCARD_TYPE = Map.class;
-
-    /**
-     * Used by the type functions to indicate a type wildcard.
-     */
-    public static final String WILDCARD_TYPE_TOKEN = "*";
-
-    /**
-     * The wildcard type.  This is {@link List}, which translates to a lua table with
-     * numeric indices.
-     */
-    public static final Class<?> WILDCARD_ARRAY_TYPE = List.class;
-
-    /**
-     * Used by the type functions to indicate a type wildcard.
-     */
-    public static final String WILDCARD_ARRAY_TYPE_TOKEN = "{*}";
-
-    /**
      * A table which contains java objects that can be used to communicate with the
      * rest of the server.
      */
@@ -122,8 +84,6 @@ public class AbstractLuaResource extends AbstractResource {
     public static final String IOC_INSTANCE = "ioc";
 
     private final LuaState luaState;
-
-    private final TypeRegistry typeRegistry;
 
     private final IocResolver iocResolver;
 
@@ -188,11 +148,9 @@ public class AbstractLuaResource extends AbstractResource {
      * @param luaState the luaState
      */
     public AbstractLuaResource(final LuaState luaState,
-                               final IocResolver iocResolver,
-                               final TypeRegistry typeRegistry) {
+                               final IocResolver iocResolver) {
         this.luaState = luaState;
         this.iocResolver = iocResolver;
-        this.typeRegistry = typeRegistry;
     }
 
     /**
@@ -260,7 +218,7 @@ public class AbstractLuaResource extends AbstractResource {
             luaState.setField(-2, BRIDGE_TABLE);
 
             // Finally sets the server table to be in the global space
-            luaState.setGlobal(NAMAZU_TABLE);
+            luaState.setGlobal(NAMAZU_RT_TABLE);
 
             // Lastly we hijack the standard lua print function to redirect
             // to the underlying logging system
@@ -326,76 +284,7 @@ public class AbstractLuaResource extends AbstractResource {
     }
 
     /**
-     *
-     * Pushes the given request handler on the stack for the given name and type.  If the type is not
-     * found, then this will throw a {@link NotFoundException} and restore the stack to the original
-     * state.
-     *
-     * @param methodName desired method name
-     *
-     * @return the request handler's desired type, which may be the default type ({@link Map})
-     *
-     */
-    protected Class<?> getRequestType(final String methodName) {
-
-        try (final StackProtector stackProtector = new StackProtector(luaState)) {
-
-            pushRequestHandlerTable(methodName);
-
-            // Before pushing the handler, we have to finally check the payload and
-            // the response type.  Note that the script can leave these blank and
-            // it will fall back onto the default wildcard type.
-
-            luaState.getField(-1, REQUEST_PAYLOAD_JAVA_TYPE);
-            final String requestPayloadTypeName = luaState.checkString(-1, WILDCARD_TYPE_TOKEN);
-            luaState.pop(1);
-
-            switch (requestPayloadTypeName) {
-                case WILDCARD_TYPE_TOKEN:
-                    return WILDCARD_TYPE;
-                case WILDCARD_ARRAY_TYPE_TOKEN:
-                    return WILDCARD_ARRAY_TYPE;
-                default:
-                    return typeRegistry.getRequestPayloadTypeNamed(requestPayloadTypeName);
-            }
-
-        }
-
-    }
-
-    /**
-     * Pushes the handler request function on the top of the stack.
-     *
-     * Any other intermediate variables are popped on the stack.  The end result of this
-     * call should result in only the requets handler table being pushed.
-     *
-     * @param methodName the method name
-     */
-    protected void pushRequestHandlerFunction(final String methodName) {
-
-        try (final StackProtector stackProtector = new StackProtector(luaState)) {
-
-            pushRequestHandlerTable(methodName);
-
-            luaState.getField(-1, REQUEST_HANDLER_KEY);
-
-            if (!luaState.isFunction(-1)) {
-                getScriptLog().error("No handler function found at {}.{}.{}.{}",
-                        NAMAZU_TABLE, REQUEST_TABLE, methodName, REQUEST_HANDLER_KEY);
-                throw new NotFoundException("request handler not found for method " + methodName);
-            }
-
-            luaState.pop(-2);
-            stackProtector.adjustAbsoluteIndex(1);
-
-        }
-
-    }
-
-    /**
-     * Pushes the request handler table for the given method name.  The request handler
-     * table can contain two keys of use.  The handler function itself, and the method
-     * type expected for the request.
+     * Pushes the request handler function for the given method name.
      *
      * Any other intermediate variables are popped on the stack.  The end result of this
      * call should result in only the requets handler table being pushed.
@@ -405,17 +294,17 @@ public class AbstractLuaResource extends AbstractResource {
      * @throws {@link NotFoundException} if methodName name is not found
      *
      */
-    protected void pushRequestHandlerTable(final String methodName) {
+    protected void pushRequestHandlerFunction(final String methodName) {
 
         try (final StackProtector stackProtector = new StackProtector(luaState, 1)) {
 
-            luaState.getGlobal(NAMAZU_TABLE);
+            luaState.getGlobal(NAMAZU_RT_TABLE);
 
             // The first two checks shouldn't fail, unless somebody has seriously
             // hosed the lua script backing this resource.
 
             if (!luaState.isTable(-1)) {
-                getScriptLog().error("Unable to find table {}", NAMAZU_TABLE);
+                getScriptLog().error("Unable to find table {}", NAMAZU_RT_TABLE);
                 throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 
@@ -423,7 +312,7 @@ public class AbstractLuaResource extends AbstractResource {
             luaState.remove(-2);  // pops namazu_rt
 
             if (!luaState.isTable(-1)) {
-                getScriptLog().error("Unable to find table {}.{}", NAMAZU_TABLE, REQUEST_TABLE);
+                getScriptLog().error("Unable to find table {}.{}", NAMAZU_RT_TABLE, REQUEST_TABLE);
                 throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 
@@ -433,8 +322,8 @@ public class AbstractLuaResource extends AbstractResource {
             luaState.getField(-1, methodName);
             luaState.remove(-2); // pops request
 
-            if (!luaState.isTable(-1)) {
-                getScriptLog().warn("Unable to find table {}.{}.{}", NAMAZU_TABLE, REQUEST_TABLE, methodName);
+            if (!luaState.isFunction(-1)) {
+                getScriptLog().warn("Unable to find function {}.{}.{}", NAMAZU_RT_TABLE, REQUEST_TABLE, methodName);
                 throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 

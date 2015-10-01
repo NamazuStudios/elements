@@ -1,15 +1,17 @@
 
--- The handler for the "hello" method.  This will accept the client and the request
+-- The handler for the "introduce_yourself" method.  This will accept the client and the request
 -- as paramters and generate a response.  The method must return the response immediately
 -- in response to the request.
 
-function namazu_rt.request.hello(client, request)
+function namazu_rt.request.introduce_yourself(client, header, payload)
 
     -- By default all payloads are deserialized as a java map, which
     -- translates to a simple lua table.  This should be sufficient
     -- for almost any type of object received from the client.
 
-    name = request:getPayload().name;
+    print("Handling request for path " .. header:getPath() .. " method " .. header:getMethod())
+
+    name = payload:get("name")
 
     -- Construct the details for the response.  In this case, we send a
     -- simple message that includes the name of the user as well as a

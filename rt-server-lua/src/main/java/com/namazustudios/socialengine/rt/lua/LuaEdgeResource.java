@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.rt.edge.EdgeResource;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
 /**
  * Created by patricktwohig on 8/27/15.
@@ -21,9 +22,8 @@ public class LuaEdgeResource extends AbstractLuaResource implements EdgeResource
 
     @Inject
     public LuaEdgeResource(final LuaState luaState,
-                           final IocResolver iocResolver,
-                           final TypeRegistry typeRegistry) {
-        super(luaState, iocResolver, typeRegistry);
+                           final IocResolver iocResolver) {
+        super(luaState, iocResolver);
         this.luaState = luaState;
     }
 
@@ -33,7 +33,7 @@ public class LuaEdgeResource extends AbstractLuaResource implements EdgeResource
 
             @Override
             public Class<?> getPayloadType() {
-                return getRequestType(method);
+                return Map.class;
             }
 
             @Override
@@ -45,7 +45,8 @@ public class LuaEdgeResource extends AbstractLuaResource implements EdgeResource
                     pushRequestHandlerFunction(method);
 
                     luaState.pushJavaObject(edgeClient);
-                    luaState.pushJavaObject(request);
+                    luaState.pushJavaObject(request.getHeader());
+                    luaState.pushJavaObject(request.getPayload());
 
                     luaState.call(3, 2);
 

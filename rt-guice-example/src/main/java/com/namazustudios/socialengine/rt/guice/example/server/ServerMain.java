@@ -1,17 +1,16 @@
 package com.namazustudios.socialengine.rt.guice.example.server;
 
-import com.google.inject.*;
-import com.namazustudios.socialengine.rt.*;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Scopes;
+import com.namazustudios.socialengine.rt.Constants;
+import com.namazustudios.socialengine.rt.ServerContainer;
 import com.namazustudios.socialengine.rt.guice.EdgeFilterListModule;
 import com.namazustudios.socialengine.rt.guice.ExceptionMapperModule;
 import com.namazustudios.socialengine.rt.guice.SimpleServerModule;
-import com.namazustudios.socialengine.rt.lua.FQNTypeRegistry;
-import com.namazustudios.socialengine.rt.lua.TypeRegistry;
 import com.namazustudios.socialengine.rt.lua.guice.ClasspathScanningLuaResourceModule;
 import com.namazustudios.socialengine.rt.mina.guice.MinaServerModule;
 import com.namazustudios.socialengine.rt.mina.guice.MinaSimpleServerContainerModule;
-import org.apache.mina.core.service.IoAcceptor;
-import org.apache.mina.transport.socket.SocketAcceptor;
 
 import java.net.InetSocketAddress;
 
@@ -28,14 +27,8 @@ public class ServerMain {
                 new ClasspathScanningLuaResourceModule() {
                     @Override
                     protected void configureResources() {
-
                         scanForEdgeResources("server.edge");
                         scanForInternalResources("server.internal");
-
-                        // We use fully-qualified type names, in this example, but this
-                        // is heavily dependent upon how the backing scripts handle things
-                        binder().bind(TypeRegistry.class).to(FQNTypeRegistry.class);
-
                     }
                 },
                 new EdgeFilterListModule() {

@@ -102,11 +102,11 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
         if (request.getPayload() == null) {
             edgeRequestPathHandler.handle(edgeClient, request, receiver);
-        } else if (edgeRequestPathHandler.getClass().isAssignableFrom(request.getPayload().getClass())) {
+        } else if (edgeRequestPathHandler.getPayloadType().isAssignableFrom(request.getPayload().getClass())) {
             edgeRequestPathHandler.handle(edgeClient, request, receiver);
         } else {
-            throw new InvalidParameterException("Method " + request.getHeader().getPath() + " " +
-                    "at path " + request.getHeader().getPath() +
+            throw new InvalidParameterException("Method " + request.getHeader().getMethod() + " " +
+                    "at path " + request.getHeader().getPath()  + " " +
                     "does not handle payload (" + request.getPayload() + ") " +
                     "of type " + request.getPayload().getClass());
         }
