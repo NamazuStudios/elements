@@ -40,11 +40,27 @@ public class ClientIOHandler extends IoHandlerAdapter {
     }
 
     private void handle(final Response response) {
+
         final IncomingNetworkOperations incomingNetworkOperations = incomingNetworkOperationsProvider.get();
-        final SimpleResponse simpleResponse = SimpleResponse.builder().from(response).build();
-        final Class<?> payloadType = incomingNetworkOperations.getPayloadType(simpleResponse.getResponseHeader());
-        final Object payload = objectMapper.convertValue(simpleResponse, payloadType);
-        simpleResponse.setPayload(payload);
+
+        final Class<?> payloadType;
+
+        if (response.getResponseHeader().getCode() == ResponseCode.OK.getCode()) {
+            // If the response is okay, then we forward it to the incoming network operations.
+            payloadType = incomingNetworkOperations.getPayloadType(response.getResponseHeader());
+        } else {
+            payloadType = SimpleExceptionResponsePayload.class;
+        }
+
+        final Object payload = objectMapper.convertValue(response.getPayload(), payloadType);
+
+        final SimpleResponse simpleResponse = SimpleResponse.builder()
+                .from(response)
+                .payload(payload)
+            .build();
+
+        incomingNetworkOperations.receive(simpleResponse);
+
     }
 
     private void handle(final Event event) {

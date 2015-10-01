@@ -59,7 +59,10 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
         sendRequest(request, expectedType, new ResponseReceiver() {
             @Override
             public void receive(final Response response) {
-                responseAtomicReference.set(response);
+                synchronized (responseAtomicReference) {
+                    responseAtomicReference.set(response);
+                    responseAtomicReference.notifyAll();
+                }
             }
         });
 
