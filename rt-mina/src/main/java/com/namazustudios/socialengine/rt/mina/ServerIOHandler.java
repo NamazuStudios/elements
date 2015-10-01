@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.mina;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestDispatcher;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
@@ -40,6 +41,9 @@ public class ServerIOHandler extends IoHandlerAdapter {
     @Inject
     private ObjectMapper objectMapper;
 
+    @Inject
+    private ExceptionMapper.Resolver resolver;
+
     @Override
     public void messageReceived(final IoSession session, final Object message) throws Exception {
 
@@ -54,14 +58,22 @@ public class ServerIOHandler extends IoHandlerAdapter {
     private void handle(final IoSession session, final Request request) {
 
         final IoSessionClient ioSessionClient = ioSessionClientProvider.get();
-        final ResponseReceiver responseReceiver = minaConnectedEdgeClientService
-                .getResponseReceiver(ioSessionClient, request);
+        final ResponseReceiver responseReceiver = minaConnectedEdgeClientService.getResponseReceiver(ioSessionClient, request);
+
+        try {
+            Request.Validator.validate(request);
+        } catch (InvalidDataException ex) {
+            final ExceptionMapper<InvalidDataException> invalidDataExceptionExceptionMapper;
+            invalidDataExceptionExceptionMapper = resolver.getExceptionMapper(ex);
+            invalidDataExceptionExceptionMapper.map(ex, request, responseReceiver);
+            return;
+        }
 
         final Path path = new Path(request.getHeader().getPath());
 
         final EdgeRequestPathHandler edgeRequestPathHandler = edgeResourceService
-                .getResource(path)
-                .getHandler(request.getHeader().getMethod());
+            .getResource(path)
+            .getHandler(request.getHeader().getMethod());
 
         final Class<?> payloadType = edgeRequestPathHandler.getPayloadType();
         final SimpleRequest simpleRequest = SimpleRequest.builder().from(request).build();
@@ -74,7 +86,8 @@ public class ServerIOHandler extends IoHandlerAdapter {
 
     @Override
     public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
-        super.exceptionCaught(session, cause);
+        LOG.error("Caught exception from session.  Closing.");
+        session.close(true);
     }
 
 }

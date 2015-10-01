@@ -181,7 +181,7 @@ public class BSONProtocolDecoder extends CumulativeProtocolDecoder {
         try (final InputStream payloadInputStream = payloadSlice.asInputStream()) {
             return objectMapper.readValue(payloadInputStream, messageType);
         } catch (Exception ex) {
-            throw new InvalidDataException("could not parse envelope payload.");
+            throw new InvalidDataException("could not parse envelope payload", ex);
         }
 
     }

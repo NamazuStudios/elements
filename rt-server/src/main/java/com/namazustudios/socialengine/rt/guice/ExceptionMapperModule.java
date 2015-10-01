@@ -87,6 +87,8 @@ public class ExceptionMapperModule extends AbstractModule {
                         return (ExceptionMapper<ExceptionT>) exceptionMapperProvider.get();
                     }
 
+                    cls = cls.getSuperclass();
+
                 } while (!Throwable.class.equals(cls));
 
                 return (ExceptionMapper<ExceptionT>) DefaultExceptionMapper.getInstance();

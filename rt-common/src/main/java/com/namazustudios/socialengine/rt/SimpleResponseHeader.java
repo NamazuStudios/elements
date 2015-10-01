@@ -11,7 +11,7 @@ public class SimpleResponseHeader implements ResponseHeader {
 
     @Override
     public int getCode() {
-        return 0;
+        return code;
     }
 
     public void setCode(int code) {
@@ -20,7 +20,7 @@ public class SimpleResponseHeader implements ResponseHeader {
 
     @Override
     public int getSequence() {
-        return 0;
+        return sequence;
     }
 
     public void setSequence(int sequence) {

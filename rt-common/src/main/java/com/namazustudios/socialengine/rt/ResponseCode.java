@@ -82,7 +82,7 @@ public enum ResponseCode {
      */
     public static String getDescriptionFromCode(final int code) {
         final ResponseCode[] values = values();
-        return (values.length < code) ? (values[code].toString()) : String.format("CUSTOM(%d)", code);
+        return (code < values.length) ? (values[code].toString()) : String.format("CUSTOM(%d)", code);
     }
 
 }

@@ -5,16 +5,16 @@ package com.namazustudios.socialengine.rt;
  */
 public class SimpleResponse implements Response {
 
-    private ResponseHeader responseHeader;
+    private SimpleResponseHeader responseHeader;
 
     private Object payload;
 
     @Override
-    public ResponseHeader getResponseHeader() {
+    public SimpleResponseHeader getResponseHeader() {
         return responseHeader;
     }
 
-    public void setResponseHeader(ResponseHeader responseHeader) {
+    public void setResponseHeader(SimpleResponseHeader responseHeader) {
         this.responseHeader = responseHeader;
     }
 

@@ -29,7 +29,7 @@ public interface InternalRequestPathHandler {
      * @param request the {@link Request} object
      * @param responseReceiver the request object
      *
-     * @throws {@link InvalidDataException} if the return of the {@link Request#getPayload()} method is not suitab.e
+     * @throws {@link InvalidDataException} if the return of the {@link Request#getPayload()} method is not suitable.
      *
      */
     void handle(Request request, ResponseReceiver responseReceiver);
