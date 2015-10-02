@@ -18,11 +18,11 @@ public interface EdgeFilter {
      * This method implements the actual business logic of the filter.
      *
      * @param chain the chain
-     * @param edgeClient the edgeClient
+     * @param edgeClientSession the edgeClientSession
      * @param request the request
      *
      */
-    void filter(Chain chain, EdgeClient edgeClient, Request request, ResponseReceiver responseReceiver);
+    void filter(Chain chain, EdgeClientSession edgeClientSession, Request request, ResponseReceiver responseReceiver);
 
     /**
      * Represents the next filter in the chain of filters.
@@ -32,11 +32,11 @@ public interface EdgeFilter {
         /**
          * Hands processing to the next filter in the chain.
          *
-         * @param edgeClient the edgeClient the edgeClient
+         * @param edgeClientSession the edgeClientSession the edgeClientSession
          * @param request the request the request
          *
          */
-        void next(EdgeClient edgeClient, Request request, ResponseReceiver responseReceiver);
+        void next(EdgeClientSession edgeClientSession, Request request, ResponseReceiver responseReceiver);
 
     }
 

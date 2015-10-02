@@ -207,6 +207,12 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
     }
 
+    @Override
+    public void removeAndCloseResource(final Path path) {
+        final ResourceT resource = removeResource(path);
+        resource.close();
+    }
+
     private class ResourceIterator<ResourceT extends Resource> implements Iterator<ResourceT> {
 
         final Iterator<Map.Entry<Path, ResourceT>> wrappedIterator;

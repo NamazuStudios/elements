@@ -4,7 +4,7 @@ import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.ResponseReceiver;
 import com.namazustudios.socialengine.rt.SimpleResponse;
-import com.namazustudios.socialengine.rt.edge.EdgeClient;
+import com.namazustudios.socialengine.rt.edge.EdgeClientSession;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
 import com.namazustudios.socialengine.rt.edge.EdgeResource;
 
@@ -37,14 +37,14 @@ public class LuaEdgeResource extends AbstractLuaResource implements EdgeResource
             }
 
             @Override
-            public void handle(final EdgeClient edgeClient,
+            public void handle(final EdgeClientSession edgeClientSession,
                                final Request request,
                                final ResponseReceiver responseReceiver) {
                 try (final StackProtector stackProtector = new StackProtector(luaState)){
 
                     pushRequestHandlerFunction(method);
 
-                    luaState.pushJavaObject(edgeClient);
+                    luaState.pushJavaObject(edgeClientSession);
                     luaState.pushJavaObject(request.getHeader());
 
                     final Map requestPayload = request.getPayload(Map.class);

@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.internal;
 
-import com.namazustudios.socialengine.exception.BaseException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;

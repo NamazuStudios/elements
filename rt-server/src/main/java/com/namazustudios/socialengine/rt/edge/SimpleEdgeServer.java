@@ -38,7 +38,7 @@ public class SimpleEdgeServer extends AbstractSimpleServer implements EdgeServer
     private final Queue<Callable<Void>> requestQueue = new ConcurrentLinkedQueue<>();
 
     @Override
-    public void dispatch(final EdgeClient edgeClient,
+    public void dispatch(final EdgeClientSession edgeClientSession,
                          final Request request,
                          final ResponseReceiver responseReceiver) {
         requestQueue.add(new Callable<Void>() {
@@ -47,9 +47,9 @@ public class SimpleEdgeServer extends AbstractSimpleServer implements EdgeServer
             public Void call() {
 
                 try {
-                    edgeRequestDispatcher.dispatch(edgeClient, request, responseReceiver);
+                    edgeRequestDispatcher.dispatch(edgeClientSession, request, responseReceiver);
                 } catch (Exception ex) {
-                    LOG.error("Caught exception handling request {} for client {} ", request, edgeClient);
+                    LOG.error("Caught exception handling request {} for client {} ", request, edgeClientSession);
                 }
 
                 return null;

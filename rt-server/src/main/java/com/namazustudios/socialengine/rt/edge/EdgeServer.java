@@ -30,15 +30,15 @@ public interface EdgeServer extends Server {
     String BOOTSTRAP_RESOURCES = "com.namazustudios.socialengine.rt.edge.EdgeServer.BOOTSTRAP_RESOURCES";
 
     /**
-     * Dispatches the given {@link Request} from the {@link EdgeClient}.  This method passes
+     * Dispatches the given {@link Request} from the {@link EdgeClientSession}.  This method passes
      * the {@link Request} through the various {@link EdgeFilter} instances before
      * it finally arrives at the destination {@link Resource}, or it is handled
      * by the {@link EdgeFilter}.
      *
      * @param request the request object itself.
-     * @param edgeClient the edgeClient making the request
+     * @param edgeClientSession the edgeClientSession making the request
      * @param responseReceiver the {@link ResponseReceiver} instance
      */
-    void dispatch(EdgeClient edgeClient, Request request, ResponseReceiver responseReceiver);
+    void dispatch(EdgeClientSession edgeClientSession, Request request, ResponseReceiver responseReceiver);
 
 }

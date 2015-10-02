@@ -6,7 +6,7 @@ package com.namazustudios.socialengine.rt.edge;
  *
  * Created by patricktwohig on 7/29/15.
  */
-public interface EdgeClient {
+public interface EdgeClientSession {
 
     /**
      * Gets the ID of the client.
@@ -16,7 +16,7 @@ public interface EdgeClient {
     String getId();
 
     /**
-     * Sets the EdgeClient's session variable.
+     * Sets the EdgeClientSession's session variable.
      *
      * @param key the key
      * @param value the value

@@ -23,19 +23,19 @@ public interface EdgeRequestPathHandler {
     Class<?> getPayloadType();
 
     /**
-     * Handles the given request from a edgeClient.
+     * Handles the given request from a edgeClientSession.
      *
      * In the event the {@link Request#getPayload()} method returns an object that is not compatible
      * with this instance and exception can be raised.  Acceptability can be determined by
      * the usage of {@link Class#isAssignableFrom(Class)}.
      *
-     * @param edgeClient the {@link EdgeClient} making the request.
+     * @param edgeClientSession the {@link EdgeClientSession} making the request.
      * @param request the {@link Request} object
      * @param responseReceiver the request object
      *
      * @throws {@link InvalidDataException} if the return of the {@link Request#getPayload()} method is not suitable.
      *
      */
-    void handle(EdgeClient edgeClient, Request request, ResponseReceiver responseReceiver);
+    void handle(EdgeClientSession edgeClientSession, Request request, ResponseReceiver responseReceiver);
 
 }

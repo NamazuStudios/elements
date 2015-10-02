@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.rt.*;
 /**
  *
  * An instance of {@link EdgeResource} exists to talk to the outside world.  That is,
- * it is responsible for handling {@link Request} instances from {@link EdgeClient}s.
+ * it is responsible for handling {@link Request} instances from {@link EdgeClientSession}s.
  *
  * {@link EdgeResource} instances should live the life of the server, and should not
  * be moved.  Rather the ege resources shoudl be responsible for manipulating the

@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.edge;
 
-import com.namazustudios.socialengine.exception.BaseException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;
@@ -28,31 +27,31 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
     private EdgeFilter.Chain rootFilterChain;
 
     @Override
-    public void dispatch(final EdgeClient edgeClient,
+    public void dispatch(final EdgeClientSession edgeClientSession,
                          final Request request,
                          final ResponseReceiver responseReceiver) {
         try (final DelegatingCheckedResponseReceiver receiver = new DelegatingCheckedResponseReceiver(request, responseReceiver)) {
-            executeRootFilterChain(edgeClient, request, receiver);
+            executeRootFilterChain(edgeClientSession, request, receiver);
         } catch (Exception ex) {
             LOG.error("Caught exception processing request {}.", request, ex);
         }
     }
 
-    private void executeRootFilterChain(final EdgeClient edgeClient,
+    private void executeRootFilterChain(final EdgeClientSession edgeClientSession,
                                         final Request request,
                                         final ResponseReceiver responseReceiver) {
         try {
-            rootFilterChain.next(edgeClient, request, responseReceiver);
+            rootFilterChain.next(edgeClientSession, request, responseReceiver);
         } catch (Exception ex) {
-            mapException(ex, edgeClient, request, responseReceiver);
+            mapException(ex, edgeClientSession, request, responseReceiver);
         }
     }
 
     private <T extends Exception> void mapException(final T ex,
-                                                    final EdgeClient edgeClient,
+                                                    final EdgeClientSession edgeClientSession,
                                                     final Request request,
                                                     final ResponseReceiver responseReceiver) {
-        LOG.info("Mapping exception for request {} and edgeClient {}", request, edgeClient, ex);
+        LOG.info("Mapping exception for request {} and edgeClientSession {}", request, edgeClientSession, ex);
         final ExceptionMapper<T> exceptionMapper = exceptionMapperResolver.getExceptionMapper(ex);
         exceptionMapper.map(ex, request, responseReceiver);
     }
@@ -64,7 +63,7 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
         EdgeFilter.Chain chain = new EdgeFilter.Chain() {
             @Override
-            public void next(final EdgeClient client,
+            public void next(final EdgeClientSession client,
                              final Request request,
                              final ResponseReceiver receiver) {
                 resolveAndDispatch(client, request, receiver);
@@ -77,10 +76,10 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
             chain = new EdgeFilter.Chain() {
                 @Override
-                public void next(final EdgeClient edgeClient,
+                public void next(final EdgeClientSession edgeClientSession,
                                  final Request request,
                                  final ResponseReceiver responseReceiver) {
-                    filter.filter(next, edgeClient, request, responseReceiver);
+                    filter.filter(next, edgeClientSession, request, responseReceiver);
                 }
             };
 
@@ -90,7 +89,7 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
     }
 
-    private void resolveAndDispatch(final EdgeClient edgeClient,
+    private void resolveAndDispatch(final EdgeClientSession edgeClientSession,
                                     final Request request,
                                     final ResponseReceiver receiver) {
 
@@ -101,9 +100,9 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
                            .getHandler(request.getHeader().getMethod());
 
         if (request.getPayload() == null) {
-            edgeRequestPathHandler.handle(edgeClient, request, receiver);
+            edgeRequestPathHandler.handle(edgeClientSession, request, receiver);
         } else if (edgeRequestPathHandler.getPayloadType().isAssignableFrom(request.getPayload().getClass())) {
-            edgeRequestPathHandler.handle(edgeClient, request, receiver);
+            edgeRequestPathHandler.handle(edgeClientSession, request, receiver);
         } else {
             throw new InvalidParameterException("Method " + request.getHeader().getMethod() + " " +
                     "at path " + request.getHeader().getPath()  + " " +

@@ -1,12 +1,10 @@
 package com.namazustudios.socialengine.rt.internal;
 
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.edge.EdgeResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -67,6 +65,26 @@ public class SimpleInternalServer extends AbstractSimpleServer implements Intern
 
     }
 
+    @Override
+    public void addResource(Path path, InternalResource resource) {
+        resourceService.addResource(path, resource);
+    }
+
+    @Override
+    public void moveResource(Path source, Path destination) {
+        resourceService.moveResource(source, destination);
+    }
+
+    @Override
+    public void removeAllResources() {
+        resourceService.removeAllResources();
+    }
+
+    @Override
+    public InternalResource removeResource(Path path) {
+        return resourceService.removeResource(path);
+    }
+    
     private class InternalServerContext implements ServerContext {
 
         public InternalServerContext() {

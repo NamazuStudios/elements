@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.mina;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.exception.BaseException;
-import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestDispatcher;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
@@ -37,7 +36,7 @@ public class ServerIOHandler extends IoHandlerAdapter {
     private ResourceService<EdgeResource> edgeResourceService;
 
     @Inject
-    private Provider<IoSessionClient> ioSessionClientProvider;
+    private Provider<IoSessionClientSession> ioSessionClientProvider;
 
     @Inject
     private ObjectMapper objectMapper;
@@ -58,7 +57,7 @@ public class ServerIOHandler extends IoHandlerAdapter {
 
     private void handle(final IoSession session, final Request request) {
 
-        final IoSessionClient ioSessionClient = ioSessionClientProvider.get();
+        final IoSessionClientSession ioSessionClient = ioSessionClientProvider.get();
         final ResponseReceiver responseReceiver = minaConnectedEdgeClientService.getResponseReceiver(ioSessionClient, request);
 
         try {

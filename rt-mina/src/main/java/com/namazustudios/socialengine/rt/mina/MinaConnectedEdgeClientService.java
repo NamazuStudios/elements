@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.mina;
 
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.edge.EdgeClient;
+import com.namazustudios.socialengine.rt.edge.EdgeClientSession;
 import com.namazustudios.socialengine.rt.edge.ConnectedEdgeClientService;
 import com.namazustudios.socialengine.rt.ResponseReceiver;
 import org.slf4j.Logger;
@@ -15,12 +15,12 @@ public class MinaConnectedEdgeClientService implements ConnectedEdgeClientServic
     private static final Logger LOG = LoggerFactory.getLogger(MinaConnectedEdgeClientService.class);
 
     @Override
-    public ResponseReceiver getResponseReceiver(final EdgeClient edgeClient, final Request request) {
+    public ResponseReceiver getResponseReceiver(final EdgeClientSession edgeClientSession, final Request request) {
 
-        final IoSessionClient minaClient;
+        final IoSessionClientSession minaClient;
 
         try {
-             minaClient = (IoSessionClient) edgeClient;
+             minaClient = (IoSessionClientSession) edgeClientSession;
         } catch (ClassCastException ex) {
              throw new IllegalArgumentException(ex);
         }
@@ -29,7 +29,7 @@ public class MinaConnectedEdgeClientService implements ConnectedEdgeClientServic
 
     }
 
-    public ResponseReceiver getResponseReceiver(final IoSessionClient minaClient, final Request request) {
+    public ResponseReceiver getResponseReceiver(final IoSessionClientSession minaClient, final Request request) {
 
         return new ResponseReceiver() {
 

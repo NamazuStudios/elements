@@ -23,10 +23,10 @@ public interface EdgeRequestDispatcher {
      * ends up in the correct {@link EdgeRequestPathHandler} supplied by the configurd
      * {@link ResourceService}.
      *
-     * @param edgeClient the edgeClient the edgeClient making the request
+     * @param edgeClientSession the edgeClientSession the edgeClientSession making the request
      * @param request the request the request itself
      * @param responseReceiver
      */
-    void dispatch(EdgeClient edgeClient, Request request, ResponseReceiver responseReceiver);
+    void dispatch(EdgeClientSession edgeClientSession, Request request, ResponseReceiver responseReceiver);
 
 }

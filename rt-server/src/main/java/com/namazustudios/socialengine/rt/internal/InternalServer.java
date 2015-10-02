@@ -1,9 +1,7 @@
 package com.namazustudios.socialengine.rt.internal;
 
-import com.namazustudios.socialengine.rt.Request;
-import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.ResponseReceiver;
-import com.namazustudios.socialengine.rt.Server;
+import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.edge.EdgeServer;
 
 /**
  * Used to manage instances of {@link InternalResource}.  In addition to
@@ -24,5 +22,13 @@ public interface InternalServer extends Server {
      *
      */
     void dispatch(Request request, ResponseReceiver responseReceiver);
+
+    void addResource(Path path, InternalResource resource);
+
+    void moveResource(Path source, Path destination);
+
+    void removeAllResources();
+
+    InternalResource removeResource(Path path);
 
 }

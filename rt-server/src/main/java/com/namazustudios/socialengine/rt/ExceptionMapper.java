@@ -1,12 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.namazustudios.socialengine.exception.ErrorCode;
-import com.namazustudios.socialengine.rt.edge.EdgeClient;
-
-import java.util.Map;
-
 /**
  * Generates an instance of {@link Response} as the result
  * of any user code throwing an exception.  If no exception

@@ -16,12 +16,12 @@ public interface ConnectedEdgeClientService {
      * Gets the {@link ResponseReceiver} instance which can be used to receive messages
      * of the given type.
      *
-     * @param edgeClient the edgeClient
+     * @param edgeClientSession the edgeClientSession
      * @param request the request
      * @return the {@link ResponseReceiver} which will receive the response
      *
-     * @throws {@link NotFoundException} if no active connection for the edgeClient can be found
+     * @throws {@link NotFoundException} if no active connection for the edgeClientSession can be found
      */
-    ResponseReceiver getResponseReceiver(EdgeClient edgeClient, Request request);
+    ResponseReceiver getResponseReceiver(EdgeClientSession edgeClientSession, Request request);
 
 }

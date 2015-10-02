@@ -2,10 +2,8 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.rt.edge.EdgeResource;
 
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * This is the service responsible for maintaining a set of {@link Resource} instances.  This
@@ -51,7 +49,7 @@ public interface ResourceService<ResourceT extends Resource> {
     Iterable<ResourceT> getResources(Path path);
 
     /**
-     * Adds a {@link EdgeResource} to this resource service.
+     * Adds a {@link ResourceT} to this resource service.
      *
      * @param resource the resource
      *
@@ -82,7 +80,7 @@ public interface ResourceService<ResourceT extends Resource> {
 
     /**
      *
-     * Removes a {@link EdgeResource} instance from this resource service.
+     * Removes a {@link ResourceT} instance from this resource service.
      *
      * @param path the path to the resource
      *
@@ -90,5 +88,14 @@ public interface ResourceService<ResourceT extends Resource> {
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     ResourceT removeResource(Path path);
+
+    /**
+     * Removes a {@link ResourceT} and then immediately closes it.
+     *
+     * @param path
+     * @throws {@link NotFoundException} if no resource exists at that path
+     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     */
+    void removeAndCloseResource(Path path);
 
 }
