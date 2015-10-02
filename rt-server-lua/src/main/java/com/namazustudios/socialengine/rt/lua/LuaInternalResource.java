@@ -17,11 +17,14 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
 
     private final LuaState luaState;
 
+    private final Tabler tabler;
+
     @Inject
     public LuaInternalResource(final LuaState luaState,
                                final IocResolver iocResolver) {
         super(luaState, iocResolver);
         this.luaState = luaState;
+        this.tabler = new DefaultTabler();
     }
 
     @Override
@@ -39,16 +42,21 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
                 pushRequestHandlerFunction(method);
 
                 luaState.pushJavaObject(request.getHeader());
-                luaState.pushJavaObject(request.getPayload());
-                luaState.call(2, 2);
 
-                final int code = (int) luaState.checkNumber(-2);
-                final Object payload = luaState.checkJavaObject(-1, Object.class);
+                final Map requestPayload = request.getPayload(Map.class);
+
+                if (requestPayload == null) {
+                    luaState.pushNil();
+                } else {
+                    tabler.push(luaState, request.getPayload(Map.class));
+                }
+
+                luaState.call(2, 2);
 
                 final SimpleResponse simpleResponse = SimpleResponse.builder()
                         .from(request)
-                        .code(code)
-                        .payload(payload)
+                        .code((int) luaState.checkNumber(-2))
+                        .payload(luaState.checkJavaObject(-1, Object.class))
                     .build();
 
                 responseReceiver.receive(simpleResponse);

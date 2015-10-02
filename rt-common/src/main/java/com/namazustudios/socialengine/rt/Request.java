@@ -28,6 +28,14 @@ public interface Request {
     Object getPayload();
 
     /**
+     * Gets the payoad, cast to the given type.
+     *
+     * @param cls the type
+     * @param <T>
+     */
+    <T> T getPayload(Class<T> cls);
+
+    /**
      * A type whih validates any instance of {@link Request}.
      */
     class Validator {

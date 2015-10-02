@@ -32,6 +32,11 @@ public class SimpleRequest implements Request {
     }
 
     @Override
+    public <T> T getPayload(Class<T> cls) {
+        return cls.cast(getPayload());
+    }
+
+    @Override
     public String toString() {
         return "SimpleRequest{" +
                 "header=" + header +

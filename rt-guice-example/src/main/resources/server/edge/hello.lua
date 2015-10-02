@@ -11,7 +11,7 @@ function namazu_rt.request.introduce_yourself(client, header, payload)
 
     print("Handling request for path " .. header:getPath() .. " method " .. header:getMethod())
 
-    name = payload:get("name")
+    name = payload.name
 
     -- Construct the details for the response.  In this case, we send a
     -- simple message that includes the name of the user as well as a
