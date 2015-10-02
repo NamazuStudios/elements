@@ -71,7 +71,7 @@ public class ClientIOHandler extends IoHandlerAdapter {
             final SimpleEvent eventToSend = SimpleEvent.builder().event(event).build();
             final Object payload = objectMapper.convertValue(event.getPayload(), eventClass);
             eventToSend.setPayload(payload);
-            incomingNetworkOperations.receive(event, eventClass);
+            incomingNetworkOperations.receive(event);
         }
 
     }

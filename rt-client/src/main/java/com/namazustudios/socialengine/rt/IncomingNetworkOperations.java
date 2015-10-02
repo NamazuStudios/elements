@@ -51,10 +51,9 @@ public interface IncomingNetworkOperations {
     /**
      * For each instance of {@link Class} retured by {@link #getEventTypes(EventHeader)}, this will
      * return be called exactly once with the given {@link Event}.
+     *  @param event the event
      *
-     * @param event the event
-     * @param eventType the type which will match {@link Event#getPayload()}
      */
-    void receive(final Event event, final Class<?> eventType);
+    void receive(final Event event);
 
 }

@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
 import com.google.common.base.Stopwatch;
-import com.namazustudios.socialengine.rt.edge.EdgeResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,12 +9,11 @@ import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by patricktwohig on 8/23/15.
  */
-public abstract class AbstractSimpleServer implements Server, Runnable {
+public abstract class AbstractSimpleServer<ResourceT extends Resource> implements Server<ResourceT>, Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractSimpleServer.class);
 
@@ -59,6 +57,12 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
     @Named(EXECUTOR_SERVICE)
     private ExecutorService executorService;
 
+    @Inject
+    private ObservationEventReceiverMap observationEventReceiverMap;
+
+    @Inject
+    private ResourceService<ResourceT> resourceService;
+
     private final AtomicBoolean running = new AtomicBoolean();
 
     @Override
@@ -67,11 +71,38 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
     }
 
     @Override
-    public <PayloadT> SortedMap<Path, Subscription> subscribe(final Path path,
-                                                              final String name,
-                                                              final EventReceiver<PayloadT> eventReceiver) {
+    public <PayloadT> Observation observe(final Path path,
+                                          final String name,
+                                          final EventReceiver<PayloadT> eventReceiver) {
+        final EventReceiver<PayloadT> eventReceiverWrapper = wrap(eventReceiver, path);
+        return observationEventReceiverMap.subscribe(path, name, eventReceiverWrapper);
+    }
 
-        final EventReceiver<PayloadT> eventReceiverWrapper = new EventReceiver<PayloadT>() {
+    @Override
+    public <PayloadT> List<Subscription> subscribe(final Path path,
+                                                   final String name,
+                                                   final EventReceiver<PayloadT> eventReceiver) {
+
+        final List<Subscription> subscriptionList = new ArrayList<>();
+        final EventReceiver<PayloadT> eventReceiverWrapper = wrap(eventReceiver, path);
+
+        if (path.isWildcard()) {
+            for (final Resource resource : getResourceService().getResources(path)) {
+                final Subscription subscription = resource.subscribe(name, eventReceiverWrapper);
+                subscriptionList.add(subscription);
+            }
+        } else {
+            final Resource resource = getResourceService().getResource(path);
+            final Subscription subscription =  resource.subscribe(name, eventReceiverWrapper);
+            subscriptionList.add(subscription);
+        }
+
+        return subscriptionList;
+
+    }
+
+    private <PayloadT> EventReceiver<PayloadT> wrap(final EventReceiver<PayloadT> eventReceiver, final Path path) {
+        return new EventReceiver<PayloadT>() {
 
             @Override
             public Class<PayloadT> getEventType() {
@@ -79,15 +110,15 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
             }
 
             @Override
-            public void receive(final Path path, final String name, final PayloadT event) {
+            public void receive(final Event event) {
                 getEventQueue().add(new Callable<Void>() {
 
                     @Override
                     public Void call() {
                         try {
-                            eventReceiver.receive(path, name, event);
+                            eventReceiver.receive(event);
                         } catch (Exception ex) {
-                            LOG.error("Caught exception for receiver {} at path {}", eventReceiver, path);
+                            LOG.error("Caught exception for receiver {} event {}", eventReceiver, event);
                         }
 
                         return null;
@@ -95,29 +126,13 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
 
                     @Override
                     public String toString() {
-                        return "EventModel receiver " + eventReceiver + "for event " + event + " at path" + path;
+                        return "EventModel receiver " + eventReceiver + "for event " + getEventType() + " at path" + path;
                     }
 
                 });
             }
 
         };
-
-        final SortedMap<Path, Subscription> pathSubscriptionSortedMap = new TreeMap<>();
-
-        if (path.isWildcard()) {
-            for (final Resource resource : getResourceService().getResources(path)) {
-                final Subscription subscription = resource.subscribe(name, eventReceiverWrapper);
-                pathSubscriptionSortedMap.put(resource.getCurrentPath(), subscription);
-            }
-        } else {
-            final Resource resource = getResourceService().getResource(path);
-            final Subscription subscription =  resource.subscribe(name, eventReceiverWrapper);
-            pathSubscriptionSortedMap.put(resource.getCurrentPath(), subscription);
-        }
-
-        return pathSubscriptionSortedMap;
-
     }
 
     @Override
@@ -260,6 +275,22 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
         } catch (ExecutionException ex) {
             LOG.error("Caught execution exception for future.", ex);
         }
+    }
+
+    /**
+     * Hands the {@link Event} to the server's {@link ObservationEventReceiverMap}.
+     *
+     * @param event
+     * @param eventType
+     */
+    public void postToObservers(final Event event) {
+        post(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                observationEventReceiverMap.dispatch(event);
+                return null;
+            }
+        });
     }
 
     /**

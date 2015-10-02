@@ -24,17 +24,31 @@ import java.util.regex.Pattern;
  * resource using the {@link AutoCloseable#close()} method.
  *
  * The Server may employ a thread pooling system to drive the resources.  However, the {@link Server} must
- * guarantee that only one thread may access a single resource at a time.
+ * guarantee that only one thread may access a single resource at a time.  Unless otherwise specified
+ * it is assumed tht an instance of {@link Resource} is not thread safe.
  *
  * Created by patricktwohig on 8/8/15.
  */
 public interface Resource extends AutoCloseable {
 
     /**
+     * Subscribes a wildcard receiver to the {@link Resource}.  This will receive events with
+     * any name.
+     *
+     * This method must be thread safe.
+     *
+     * @param objectEventReceiver
+     * @return the {@link Observation} instance
+     */
+    Observation observe(EventReceiver<Object> objectEventReceiver);
+
+    /**
      * Subscribes to {@link Event}s using the given {@link EventReceiver}.
      *
      * This method should not be used directly, but rather should be managed by
      * the {@link Server} instance containing this resource.
+     *
+     * This method must be thread safe.
      *
      * @praam name the name of the event
      * @param eventReceiver the event receiver instance
@@ -45,6 +59,8 @@ public interface Resource extends AutoCloseable {
 
     /**
      * Called when he resource has been added to the {@link ResourceService}.
+     *
+     * This method must be thread safe.
      *
      * @param path the path
      */
@@ -61,6 +77,8 @@ public interface Resource extends AutoCloseable {
      * of an exception the {@link ResourceService} guarantees that the state
      * of the program remains consistent.
      *
+     * This method must be thread safe.
+     *
      * @param oldPath the old path
      * @param newPath the new path
      *
@@ -69,6 +87,8 @@ public interface Resource extends AutoCloseable {
 
     /**
      * Called when the resource has been removed by the {@link ResourceService}.
+     *
+     * This method must be thread safe.
      *
      * @param path the path
      */

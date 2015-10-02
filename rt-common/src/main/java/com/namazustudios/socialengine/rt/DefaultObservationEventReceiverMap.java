@@ -64,16 +64,16 @@ public class DefaultObservationEventReceiverMap implements ObservationEventRecei
     }
 
     @Override
-    public void dispatch(final Event event, final Class<?> eventType) {
+    public void dispatch(final Event event) {
 
         final Path path = new Path(event.getEventHeader().getPath());
         final String name = event.getEventHeader().getName();
 
         for(EventReceiver<?> eventReceiver : getEventReceivers(path, name)) {
             try {
-                final Object payload = eventReceiver.getEventType().cast(event.getPayload());
                 final EventReceiver<Object> objectEventReceiver = (EventReceiver<Object>)eventReceiver;
-                objectEventReceiver.receive(path, name, payload);
+                eventReceiver.getEventType().cast(event.getPayload());
+                objectEventReceiver.receive(event);
             } catch (ClassCastException ex) {
                 LOG.error("Caught exception trying to process event {} with receiver {}.", event, eventReceiver);
             }

@@ -19,7 +19,7 @@ import java.util.Map;
  *
  * Created by patricktwohig on 8/11/15.
  */
-public interface EdgeServer extends Server {
+public interface EdgeServer extends Server<EdgeResource> {
 
     /**
      * The EdgeSErver must have some {@link Resource}s it will add when the server first starts up.  This

@@ -46,7 +46,7 @@ public class IoSessionClientSession extends AbstractEdgeClientSession implements
     }
 
     @Override
-    public EventSubscriptionTypeBuilder subscribeToInternalEvent(String name) {
+    public EventObservationTypeBuilder subscribeToInternalEvent(String name) {
         return null;
     }
 

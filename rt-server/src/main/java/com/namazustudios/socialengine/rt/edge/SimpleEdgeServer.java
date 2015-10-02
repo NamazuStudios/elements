@@ -19,7 +19,7 @@ import java.util.concurrent.*;
  *
  * Created by patricktwohig on 8/22/15.
  */
-public class SimpleEdgeServer extends AbstractSimpleServer implements EdgeServer {
+public class SimpleEdgeServer extends AbstractSimpleServer<EdgeResource> implements EdgeServer {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleEdgeServer.class);
 
@@ -64,6 +64,21 @@ public class SimpleEdgeServer extends AbstractSimpleServer implements EdgeServer
     }
 
     @Override
+    public Iterable<EdgeResource> getResources(Path path) {
+        return edgeResourceService.getResources(path);
+    }
+
+    @Override
+    public EdgeResource getResource(Path path) {
+        return edgeResourceService.getResource(path);
+    }
+
+    @Override
+    public Iterable<EdgeResource> getResources() {
+        return edgeResourceService.getResources();
+    }
+
+    @Override
     protected ServerContext openServerContext() {
         return new EdgeServerContext();
     }
@@ -90,7 +105,21 @@ public class SimpleEdgeServer extends AbstractSimpleServer implements EdgeServer
             SimpleEdgeServer.LOG.info("Bootstrapping Edge server {} ", SimpleEdgeServer.this);
 
             for (final Map.Entry<Path, EdgeResource> entry : bootstrapResources.entrySet()) {
-                edgeResourceService.addResource(entry.getKey(), entry.getValue());
+                final EdgeResource edgeResource = entry.getValue();
+                edgeResourceService.addResource(entry.getKey(), edgeResource);
+                edgeResource.observe(new EventReceiver<Object>() {
+
+                    @Override
+                    public Class<Object> getEventType() {
+                        return Object.class;
+                    }
+
+                    @Override
+                    public void receive(Event event) {
+                        postToObservers(event);
+                    }
+
+                });
                 LOG.info("Bootstrapped resource {} at path {}", entry.getValue(), entry.getKey());
             }
 

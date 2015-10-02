@@ -16,4 +16,5 @@ public interface Observation {
      * events from the Resource.
      */
     void release();
+
 }

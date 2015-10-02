@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.base.Ticker;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import com.namazustudios.socialengine.rt.event.EventModel;
 import com.namazustudios.socialengine.rt.event.ResourceAddedEvent;
@@ -11,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The abstract implementation of the {@link Resource} class.  This includes the basic
@@ -31,9 +31,9 @@ public abstract class AbstractResource implements Resource {
 
     private final Stopwatch stopwatch = Stopwatch.createStarted();
 
-    private final ResourceEventReceiverMap defaultResourceEventReceiverMap = new DefaultResourceEventReceiverMap();
+    private final AtomicReference<Path> currentPath = new AtomicReference<>();
 
-    private Path currentPath;
+    private final ResourceEventReceiverMap resourceEventReceiverMap = new DefaultResourceEventReceiverMap();
 
     /**
      * This posts an instance of {@link ResourceRemovedEvent} and sets the current path.
@@ -93,6 +93,11 @@ public abstract class AbstractResource implements Resource {
 
     }
 
+    @Override
+    public Observation observe(EventReceiver objectEventReceiver) {
+        return resourceEventReceiverMap.observe(objectEventReceiver);
+    }
+
     /**
      *
      * @see {@link Resource#subscribe(String, EventReceiver)}.
@@ -106,7 +111,7 @@ public abstract class AbstractResource implements Resource {
      */
     @Override
     public <EventT> Subscription subscribe(final String desiredName, final EventReceiver<EventT> eventReceiver) {
-        final Observation observation = defaultResourceEventReceiverMap.subscribe(desiredName, eventReceiver);
+        final Observation observation = resourceEventReceiverMap.subscribe(desiredName, eventReceiver);
 
         return new Subscription() {
             @Override
@@ -164,7 +169,7 @@ public abstract class AbstractResource implements Resource {
      */
     @Override
     public Path getCurrentPath() {
-        return currentPath;
+        return currentPath.get();
     }
 
     /**
@@ -173,7 +178,7 @@ public abstract class AbstractResource implements Resource {
      * @param currentPath the current path
      */
     public void setCurrentPath(Path currentPath) {
-        this.currentPath = currentPath;
+        this.currentPath.set(currentPath);
     }
 
     /**
@@ -182,10 +187,10 @@ public abstract class AbstractResource implements Resource {
      *
      * The name is inferred using the {@link EventModel} annotation.
      *
-     * @param <EventT>
-     * @param event the event itself
+     * @param <PayloadT>
+     * @param event the event payloaditself
      */
-    public <EventT> void post(final EventT event) {
+    public <PayloadT> void post(final PayloadT event) {
         post(event, Event.Util.getEventNameFromObject(event));
     }
 
@@ -195,12 +200,31 @@ public abstract class AbstractResource implements Resource {
      *
      * This method will throw an execpetion if the type is not annotated with {@link EventModel}
      *
-     * @param <EventT>
-     * @param event the event itself
+     * @param <PayloadT>
+     * @param payload the event payload itself
      * @param name the name of the event
      */
-    public <EventT> void post(final EventT event, final String name) {
-        defaultResourceEventReceiverMap.post(getCurrentPath(), event, name);
+    public <PayloadT> void post(final PayloadT payload, final String name) {
+
+        final SimpleEvent simpleEvent = SimpleEvent.builder()
+                .payload(payload)
+                .path(getCurrentPath())
+                .name(name)
+            .build();
+
+        resourceEventReceiverMap.post(simpleEvent);
+
+    }
+
+    public void post(final Event event) {
+
+        final SimpleEvent simpleEvent = SimpleEvent.builder()
+                .event(event)
+                .path(getCurrentPath())
+            .build();
+
+        resourceEventReceiverMap.post(simpleEvent);
+
     }
 
     /**

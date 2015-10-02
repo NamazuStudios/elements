@@ -36,8 +36,7 @@ public interface ObservationEventReceiverMap {
      * Dispatches the given {@link Event} of the given type.
      *
      * @param event the {@link Event}
-     * @param eventType the {@link Class} for the event's payload
      */
-    void dispatch(final Event event, final Class<?> eventType);
+    void dispatch(Event event);
 
 }

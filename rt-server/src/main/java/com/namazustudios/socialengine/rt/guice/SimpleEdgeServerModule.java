@@ -3,9 +3,7 @@ package com.namazustudios.socialengine.rt.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
-import com.namazustudios.socialengine.rt.ResourceService;
-import com.namazustudios.socialengine.rt.Server;
-import com.namazustudios.socialengine.rt.SimpleResourceService;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.edge.*;
 
 /**
@@ -31,6 +29,10 @@ public class SimpleEdgeServerModule extends AbstractModule {
 
         binder().bind(new TypeLiteral<ResourceService<EdgeResource>>() {})
                 .to(new TypeLiteral<SimpleResourceService<EdgeResource>>() {})
+                .in(Scopes.SINGLETON);
+
+        binder().bind(ObservationEventReceiverMap.class)
+                .to(DefaultObservationEventReceiverMap.class)
                 .in(Scopes.SINGLETON);
 
     }

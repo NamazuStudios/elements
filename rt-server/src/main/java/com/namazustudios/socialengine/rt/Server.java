@@ -9,7 +9,7 @@ import java.util.concurrent.Future;
 /**
  * Created by patricktwohig on 8/22/15.
  */
-public interface Server {
+public interface Server<ResourceT extends Resource> {
 
     /**
      * Posts a {@link Callable} which will be executed later on the server thread pool.
@@ -18,6 +18,21 @@ public interface Server {
      * @return
      */
     void post(Callable<Void> callable);
+
+    /**
+     * Observes the events at the given path.  Any events on the server's bus matching the
+     * path will receive the payload.  A single {@link Observation} is generated.
+     *
+     * subscription will follow.
+     * @param path the path
+     * @param name the name of the event
+     * @param eventReceiver the receiver
+     * @param <PayloadT>
+     *
+     * @return mapping of {@link Path} to {@link Subscription instances , which can be used to unsubscribe from the event pool
+     *
+     */
+    <PayloadT> Observation observe(Path path, String name, EventReceiver<PayloadT> eventReceiver);
 
     /**
      * Subscribes the event receiver to the given paths, recursively if necessary.
@@ -35,8 +50,11 @@ public interface Server {
      * @return mapping of {@link Path} to {@link Subscription instances , which can be used to unsubscribe from the event pool
      *
      */
-    <PayloadT> SortedMap<Path, Subscription> subscribe(Path path,
-                                                       String name,
-                                                       EventReceiver<PayloadT> eventReceiver);
+    <PayloadT> List<Subscription> subscribe(Path path, String name, EventReceiver<PayloadT> eventReceiver);
 
+    Iterable<ResourceT> getResources(Path path);
+
+    ResourceT getResource(Path path);
+
+    Iterable<ResourceT> getResources();
 }

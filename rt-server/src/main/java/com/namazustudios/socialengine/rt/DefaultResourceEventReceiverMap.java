@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * Default implementation of the {@link ResourceEventReceiverMap}.
@@ -16,8 +17,25 @@ public class DefaultResourceEventReceiverMap implements ResourceEventReceiverMap
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultResourceEventReceiverMap.class);
 
+    private final ConcurrentSkipListSet<EventReceiver<Object>> observers = new ConcurrentSkipListSet<>();
+
     private final ReadWriteProtectedSortedSetMultimap<String, EventReceiverWrapper<?>> eventSubscribers =
               new ReadWriteProtectedSortedSetMultimap<>();
+
+    @Override
+    public Observation observe(final EventReceiver<Object> objectEventReceiver) {
+
+        final EventReceiverWrapper<Object> eventReceiverWrapper = new EventReceiverWrapper<>(objectEventReceiver);
+        observers.add(eventReceiverWrapper);
+
+        return new Observation() {
+            @Override
+            public void release() {
+                observers.remove(eventReceiverWrapper);
+            }
+        };
+
+    }
 
     @Override
     public <EventT> Observation subscribe(final String name, final EventReceiver<EventT> eventReceiver) {
@@ -52,7 +70,12 @@ public class DefaultResourceEventReceiverMap implements ResourceEventReceiverMap
 
     }
 
-    public <EventT> void post(final Path path, final EventT event, final String name) {
+    public <PayloadT> void post(final Event event) {
+
+        final String name = event.getEventHeader().getName();
+        final Path path = new Path(event.getEventHeader().getPath());
+        final Object payload = event.getPayload();
+
         eventSubscribers.read(new ReadWriteProtectedObject.CriticalSection<Void, SortedSetMultimap<String,EventReceiverWrapper<?>>>() {
 
             @Override
@@ -61,9 +84,9 @@ public class DefaultResourceEventReceiverMap implements ResourceEventReceiverMap
 
                 for (EventReceiver<?> eventReceiver : eventReceiverList) {
                     try {
-                        final Object eventObject = eventReceiver.getEventType().cast(event);
+                        final Object eventObject = eventReceiver.getEventType().cast(payload);
                         final EventReceiver<Object> objectEventReceiver = (EventReceiver<Object>) eventReceiver;
-                        objectEventReceiver.receive(path, name, eventObject);
+                        objectEventReceiver.receive(event);
                     } catch (ClassCastException ex) {
                         LOG.warn("Incompatible event type.", ex);
                     }
@@ -73,6 +96,11 @@ public class DefaultResourceEventReceiverMap implements ResourceEventReceiverMap
 
             }
         });
+
+        for (final EventReceiver<Object> observerEventReceiver : Lists.newArrayList(observers)) {
+            observerEventReceiver.receive(event);
+        }
+
     }
 
 }

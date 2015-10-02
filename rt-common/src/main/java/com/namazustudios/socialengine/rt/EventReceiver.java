@@ -15,7 +15,7 @@ public interface EventReceiver<PayloadT> {
      * the Resource must skip over this receiver (and possibly log a warning).
      *
      * In order to dispatch all events, implementors of this interface must make the type
-     * as generic as possible to ensure they will dispatch the event sourced.
+     * as generic as possible to ensure they will receive the event sourced.
      *
      * @return the event type.
      */
@@ -24,10 +24,9 @@ public interface EventReceiver<PayloadT> {
     /**
      * Receives the event.  When the event is raised, the instance of
      * event is passed in to this method.
-     *  @param path
-     * @param name
-     * @param event the event that was raised.
+     *
+     * @param event
      */
-    void receive(Path path, String name, final PayloadT event);
+    void receive(Event event);
 
 }

@@ -70,6 +70,20 @@ public class SimpleEvent implements Event {
 
         }
 
+        public Builder name(final String name) {
+            simpleEventHeader.setName(name);
+            return this;
+        }
+
+        public Builder path(final String path) {
+            simpleEventHeader.setPath(path);
+            return this;
+        }
+
+        public Builder path(final Path path) {
+            return path(path.toNormalizedPathString());
+        }
+
         public SimpleEvent build() {
             return simpleEvent;
         }

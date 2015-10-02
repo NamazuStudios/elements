@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.edge;
 
+import com.namazustudios.socialengine.rt.Observation;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.Subscription;
@@ -66,15 +67,36 @@ public interface EdgeClientSession {
     void addDisconnectListener(EdgeClientSessionListener edgeClientSessionListener);
 
     /**
+     * Observes the the event with the given name, for the {@link EdgeServer} instance.  The {@link Subscription}
+     * is registered in this {@link EdgeClientSession} with a disconnection listener.  Upon termination
+     * of this session, the container will automatically clean-up the session.
+     *
+     * @param name the name of the event
+     *
+     * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
+     */
+    EventObservationTypeBuilder<Observation> observeEdgeEvent(String name);
+
+    /**
+     * Observes to the the event with the given name, for the {@link InternalServer} instance.  The
+     * {@link Subscription} is registered in this {@link EdgeClientSession} with a disconnection
+     * listener.  Upon termination of this session, the container will automatically clean-up the session.
+     *
+     * @param name the name of the event
+     * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
+     */
+    EventObservationTypeBuilder<Observation> observeInternalEvent(String name);
+
+    /**
      * Subscribes to the the event with the given name, for the {@link EdgeServer} instance.  The {@link Subscription}
      * is registered in this {@link EdgeClientSession} with a disconnection listener.  Upon termination
      * of this session, the container will automatically clean-up the session.
      *
      * @param name the name of the event
      *
-     * @return a {@link EventSubscriptionTypeBuilder} instance, used to build the rest of the subscription
+     * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
      */
-    EventSubscriptionTypeBuilder subscribeToEdgeEvent(String name);
+    EventObservationTypeBuilder<Subscription> subscribeToEdgeEvent(String name);
 
     /**
      * Subscribes to the the event with the given name, for the {@link InternalServer} instance.  The
@@ -82,9 +104,9 @@ public interface EdgeClientSession {
      * listener.  Upon termination of this session, the container will automatically clean-up the session.
      *
      * @param name the name of the event
-     * @return a {@link EventSubscriptionTypeBuilder} instance, used to build the rest of the subscription
+     * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
      */
-    EventSubscriptionTypeBuilder subscribeToInternalEvent(String name);
+    EventObservationTypeBuilder<Subscription> subscribeToInternalEvent(String name);
 
     /**
      * Disconnects the remote client.
@@ -94,42 +116,42 @@ public interface EdgeClientSession {
     /**
      * Used to specify the type of the event.
      */
-    interface EventSubscriptionTypeBuilder {
+    interface EventObservationTypeBuilder<ObservationT extends Observation> {
 
         /**
          * Sets the type of the subscription to {@link Object}.
          *
-         * @return an instance of {@link EventSubscriptionPathBuilder}
+         * @return an instance of {@link EventObservationBuilder}
          */
-        EventSubscriptionPathBuilder ofAnyType();
+        EventObservationBuilder<ObservationT> ofAnyType();
 
         /**
          * Sets the type of the subscription to the given type.
          *
-         * @return an instance of {@link EventSubscriptionPathBuilder}
+         * @return an instance of {@link EventObservationBuilder}
          * @param type the name of the type.  Resolved using {@link Class#forName(String)}
          *
-         * @return an instance of {@link EventSubscriptionPathBuilder}
+         * @return an instance of {@link EventObservationBuilder}
          */
-        EventSubscriptionPathBuilder ofType(String type);
+        EventObservationBuilder<ObservationT> ofType(String type);
 
         /**
          * Sets the type of the subscription to the given type.
          *
-         * @return an instance of {@link EventSubscriptionPathBuilder}
+         * @return an instance of {@link EventObservationBuilder}
          * @param type the {@link Class} type for the event.
          * @param <T> the type of the event
          *
-         * @return an instance of {@link EventSubscriptionPathBuilder}
+         * @return an instance of {@link EventObservationBuilder}
          */
-        <T> EventSubscriptionPathBuilder ofType(Class<T> type);
+        <T> EventObservationBuilder<ObservationT> ofType(Class<T> type);
 
     }
 
     /**
      * Used to specify the location of the event as a path.
      */
-    interface EventSubscriptionPathBuilder {
+    interface EventObservationBuilder<ObservationT extends Observation> {
 
         /**
          * Completes the subscription process with the path.  Events from the {@link Resource} will
@@ -138,7 +160,7 @@ public interface EdgeClientSession {
          * @param path the path (as a string)
          * @return
          */
-        Subscription atPath(String path);
+        ObservationT atPath(String path);
 
         /**
          * Completes the subscription process with the path.  Events from the {@link Resource} will
@@ -147,7 +169,7 @@ public interface EdgeClientSession {
          * @param path the path as an object
          * @return the {@link Subscription} instance
          */
-        Subscription atPath(Path path);
+        ObservationT atPath(Path path);
 
     }
 

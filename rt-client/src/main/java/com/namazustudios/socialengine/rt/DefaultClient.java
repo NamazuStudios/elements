@@ -178,6 +178,7 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
         final String name = eventHeader.getName();
         final Iterable<? extends  EventReceiver<?>> eventReceivers = observationEventReceiverMap.getEventReceivers(path, name);
         return Iterables.transform(eventReceivers, new Function<EventReceiver<?>, Class<?>>() {
+
             @Override
             public Class<?> apply(EventReceiver<?> input) {
                 return input.getEventType();
@@ -187,8 +188,8 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
     }
 
     @Override
-    public void receive(final Event event, final Class<?> eventType) {
-        observationEventReceiverMap.dispatch(event, eventType);
+    public void receive(final Event event) {
+        observationEventReceiverMap.dispatch(event);
     }
 
     private class SimpleClientPendingRequest {
