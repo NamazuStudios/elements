@@ -14,8 +14,8 @@ public interface EventReceiver<PayloadT> {
      * If the return value from this method is not compatible with the event sourced, then
      * the Resource must skip over this receiver (and possibly log a warning).
      *
-     * In order to receive all events, implementors of this interface must make the type
-     * as generic as possible to ensure they will receive the event sourced.
+     * In order to dispatch all events, implementors of this interface must make the type
+     * as generic as possible to ensure they will dispatch the event sourced.
      *
      * @return the event type.
      */

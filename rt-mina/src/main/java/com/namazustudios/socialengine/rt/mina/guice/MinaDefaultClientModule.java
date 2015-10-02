@@ -2,13 +2,10 @@ package com.namazustudios.socialengine.rt.mina.guice;
 
 import com.google.inject.*;
 import com.google.inject.name.Names;
-import com.google.inject.util.Providers;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.mina.BestEffortIOSessionOutgoingNetworkOperations;
 import com.namazustudios.socialengine.rt.mina.MinaClientContainer;
-import com.namazustudios.socialengine.rt.mina.ReliableIOSessionOutgoingNetworkOperations;
 import org.apache.mina.core.service.IoConnector;
-import org.apache.mina.guice.MinaScopes;
 
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
@@ -59,8 +56,8 @@ public class MinaDefaultClientModule extends AbstractModule {
 
         binder().bind(ClientContainer.class).to(MinaClientContainer.class);
 
-        binder().bind(ClientEventReceiverMap.class)
-                .to(DefaultClientEventReceiverMap.class)
+        binder().bind(ObservationEventReceiverMap.class)
+                .to(DefaultObservationEventReceiverMap.class)
                 .in(Scopes.SINGLETON);
 
     }

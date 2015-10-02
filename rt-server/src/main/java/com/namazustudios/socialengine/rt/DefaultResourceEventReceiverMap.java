@@ -20,20 +20,20 @@ public class DefaultResourceEventReceiverMap implements ResourceEventReceiverMap
               new ReadWriteProtectedSortedSetMultimap<>();
 
     @Override
-    public <EventT> Subscription subscribe(final String key, final EventReceiver<EventT> eventReceiver) {
+    public <EventT> Observation subscribe(final String name, final EventReceiver<EventT> eventReceiver) {
 
         final EventReceiverWrapper<EventT> wrapper = new EventReceiverWrapper<>(eventReceiver);
 
         eventSubscribers.write(new ReadWriteProtectedObject.CriticalSection<Void, SortedSetMultimap<String,EventReceiverWrapper<?>>>() {
             @Override
             public Void perform(SortedSetMultimap<String, EventReceiverWrapper<?>> protectedObject) {
-                protectedObject.put(key, wrapper);
+                protectedObject.put(name, wrapper);
                 LOG.debug("Registered event receiver {}", eventReceiver);
                 return null;
             }
         });
 
-        return new Subscription() {
+        return new Observation() {
 
             @Override
             public void release() {
@@ -41,7 +41,7 @@ public class DefaultResourceEventReceiverMap implements ResourceEventReceiverMap
                     @Override
                     public Void perform(SortedSetMultimap<String, EventReceiverWrapper<?>> eventReceivers) {
                         LOG.debug("Unregistered event receiver {}", eventReceiver);
-                        eventReceivers.remove(key, wrapper);
+                        eventReceivers.remove(name, wrapper);
                         return null;
 
                     }

@@ -72,6 +72,19 @@ public final class Path implements Comparable<Path> {
     }
 
     /**
+     * Appends the following path to this path such that the final path is
+     * expressed as follows:
+     *
+     * newPath = this/otherPath
+     *
+     * @param otherPath
+     * @return
+     */
+    public Path append(final Path otherPath) {
+        return new Path(this, otherPath);
+    }
+
+    /**
      * Gets the components of this path.
      *
      * @return the components of this path

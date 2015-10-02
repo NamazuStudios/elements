@@ -22,7 +22,7 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
     /**
      * Specifies the max number of updates per second the server will attempt to make.  Setting to zero
      * will not throttle the update rate at all.  This may not be desirable, especially when the server
-     * is not under load updates will be processed so quickly that Resources may receive zero values
+     * is not under load updates will be processed so quickly that Resources may dispatch zero values
      * for time deltas.
      */
     public static final String MAX_UPDATES_PER_SECOND = "com.namazustudios.socialengine.rt.AbstractSimpleServer.maxUpdatesPerSecond";

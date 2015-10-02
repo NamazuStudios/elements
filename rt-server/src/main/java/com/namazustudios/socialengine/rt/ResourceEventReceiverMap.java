@@ -4,6 +4,8 @@ import com.google.common.collect.SortedSetMultimap;
 import com.namazustudios.socialengine.rt.event.EventModel;
 
 /**
+ * Tracks {@link EventReceiver} instances for the specific local {@link Resource} instance.
+ *
  * Created by patricktwohig on 9/4/15.
  */
 public interface ResourceEventReceiverMap {
@@ -15,7 +17,7 @@ public interface ResourceEventReceiverMap {
      * @param eventReceiver the event receiver instance
      *
      */
-    <EventT> Subscription subscribe(String name, EventReceiver<EventT> eventReceiver);
+    <EventT> Observation subscribe(String name, EventReceiver<EventT> eventReceiver);
 
     /**
      * Posts the given event to all of this objects' {@link EventReceiver} instances.  This ensures

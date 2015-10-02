@@ -44,8 +44,8 @@ public interface Client {
      * @param name the name
      * @param eventReceiver the even treceiver
      * @param <EventT> the event type
-     * @return an instance ov {@link Subscription}
+     * @return an instance ov {@link Observation}
      */
-    <EventT> Subscription subscribe(Path path, String name, EventReceiver<EventT> eventReceiver);
+    <EventT> Observation observe(Path path, String name, EventReceiver<EventT> eventReceiver);
 
 }

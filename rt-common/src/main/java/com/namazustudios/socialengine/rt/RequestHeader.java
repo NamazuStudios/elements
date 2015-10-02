@@ -32,7 +32,7 @@ public interface RequestHeader {
     String getMethod();
 
     /**
-     * The path of the resource to receive the request.
+     * The path of the resource to dispatch the request.
      *
      * @return the path, never null
      */

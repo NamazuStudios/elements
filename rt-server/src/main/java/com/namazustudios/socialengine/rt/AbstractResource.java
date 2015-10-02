@@ -106,7 +106,19 @@ public abstract class AbstractResource implements Resource {
      */
     @Override
     public <EventT> Subscription subscribe(final String desiredName, final EventReceiver<EventT> eventReceiver) {
-        return defaultResourceEventReceiverMap.subscribe(desiredName, eventReceiver);
+        final Observation observation = defaultResourceEventReceiverMap.subscribe(desiredName, eventReceiver);
+
+        return new Subscription() {
+            @Override
+            public Path getPath() {
+                return getCurrentPath();
+            }
+
+            @Override
+            public void release() {
+                observation.release();
+            }
+        };
     }
 
     /**

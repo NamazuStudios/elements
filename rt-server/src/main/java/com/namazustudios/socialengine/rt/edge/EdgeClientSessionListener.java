@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.edge;
 
 /**
- * Used to receive events from the {@link EdgeClientSession}.  This
+ * Used to dispatch events from the {@link EdgeClientSession}.  This
  */
 public interface EdgeClientSessionListener {
 

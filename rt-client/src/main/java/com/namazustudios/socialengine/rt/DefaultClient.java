@@ -38,16 +38,16 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
 
     private final int maxPendingRequests;
 
-    private final ClientEventReceiverMap clientEventReceiverMap;
+    private final ObservationEventReceiverMap observationEventReceiverMap;
 
     private final OutgoingNetworkOperations outgoingNetworkOperations;
 
     @Inject
     public DefaultClient(@Named(MAX_PENDING_REQUESTS) final int maxPendingRequests,
-                         final ClientEventReceiverMap clientEventReceiverMap,
+                         final ObservationEventReceiverMap observationEventReceiverMap,
                          final OutgoingNetworkOperations outgoingNetworkOperations) {
         this.maxPendingRequests = maxPendingRequests;
-        this.clientEventReceiverMap = clientEventReceiverMap;
+        this.observationEventReceiverMap = observationEventReceiverMap;
         this.outgoingNetworkOperations = outgoingNetworkOperations;
     }
 
@@ -131,10 +131,10 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
     }
 
     @Override
-    public <EventT> Subscription subscribe(final Path path,
-                                           final String name,
-                                           final EventReceiver<EventT> eventReceiver) {
-        return clientEventReceiverMap.subscribe(path, name, eventReceiver);
+    public <EventT> Observation observe(final Path path,
+                                        final String name,
+                                        final EventReceiver<EventT> eventReceiver) {
+        return observationEventReceiverMap.subscribe(path, name, eventReceiver);
     }
 
     @Override
@@ -176,7 +176,7 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
     public Iterable<Class<?>> getEventTypes(final EventHeader eventHeader) {
         final Path path = new Path(eventHeader.getPath());
         final String name = eventHeader.getName();
-        final Iterable<? extends  EventReceiver<?>> eventReceivers = clientEventReceiverMap.getEventReceivers(path, name);
+        final Iterable<? extends  EventReceiver<?>> eventReceivers = observationEventReceiverMap.getEventReceivers(path, name);
         return Iterables.transform(eventReceivers, new Function<EventReceiver<?>, Class<?>>() {
             @Override
             public Class<?> apply(EventReceiver<?> input) {
@@ -188,20 +188,7 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
 
     @Override
     public void receive(final Event event, final Class<?> eventType) {
-
-        final Path path = new Path(event.getEventHeader().getPath());
-        final String name = event.getEventHeader().getName();
-
-        for(EventReceiver<?> eventReceiver : clientEventReceiverMap.getEventReceivers(path, name)) {
-            try {
-                final Object payload = eventReceiver.getEventType().cast(event.getPayload());
-                final EventReceiver<Object> objectEventReceiver = (EventReceiver<Object>)eventReceiver;
-                objectEventReceiver.receive(path, name, payload);
-            } catch (ClassCastException ex) {
-                LOG.error("Caught exception trying to process event {} with receiver {}.", event, eventReceiver);
-            }
-        }
-
+        observationEventReceiverMap.dispatch(event, eventType);
     }
 
     private class SimpleClientPendingRequest {
