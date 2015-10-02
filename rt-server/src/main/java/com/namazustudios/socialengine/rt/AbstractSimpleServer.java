@@ -66,51 +66,11 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
         getEventQueue().add(operation);
     }
 
-    public <PayloadT> Subscription subscribe(final Path path,
-                                             final String name,
-                                             final EventReceiver<PayloadT> eventReceiver) {
-
-        final EventReceiver<PayloadT> eventReceiverWrapper = new EventReceiver<PayloadT>() {
-
-            @Override
-            public Class<PayloadT> getEventType() {
-                return eventReceiver.getEventType();
-            }
-
-            @Override
-            public void receive(final Path path, final String name, final PayloadT event) {
-                getEventQueue().add(new Callable<Void>() {
-
-                    @Override
-                    public Void call() {
-                        try {
-                            eventReceiver.receive(path, name, event);
-                        } catch (Exception ex) {
-                            LOG.error("Caught exception for receiver {} at path {}", eventReceiver, path);
-                        }
-
-                        return null;
-                    }
-
-                    @Override
-                    public String toString() {
-                        return "EventModel receiver " + eventReceiver + "for event " + event + " at path" + path;
-                    }
-
-                });
-            }
-
-        };
-
-        final Resource resource = getResourceService().getResource(path);
-        return resource.subscribe(name, eventReceiverWrapper);
-
-    }
-
     @Override
-    public <PayloadT> SortedMap<Path, Subscription> subscribeRecursive(final Path path,
-                                                                       final String name,
-                                                                       final EventReceiver<PayloadT> eventReceiver) {
+    public <PayloadT> SortedMap<Path, Subscription> subscribe(final Path path,
+                                                              final String name,
+                                                              final EventReceiver<PayloadT> eventReceiver) {
+
         final EventReceiver<PayloadT> eventReceiverWrapper = new EventReceiver<PayloadT>() {
 
             @Override
@@ -150,6 +110,10 @@ public abstract class AbstractSimpleServer implements Server, Runnable {
                 final Subscription subscription = resource.subscribe(name, eventReceiverWrapper);
                 pathSubscriptionSortedMap.put(resource.getCurrentPath(), subscription);
             }
+        } else {
+            final Resource resource = getResourceService().getResource(path);
+            final Subscription subscription =  resource.subscribe(name, eventReceiverWrapper);
+            pathSubscriptionSortedMap.put(resource.getCurrentPath(), subscription);
         }
 
         return pathSubscriptionSortedMap;

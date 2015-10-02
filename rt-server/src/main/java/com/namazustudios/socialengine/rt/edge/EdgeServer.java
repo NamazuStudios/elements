@@ -7,8 +7,7 @@ import java.util.Map;
 /**
  * This is the interface to the underlying server from the "Outside World", the EdgeServer
  * interface is responsible for accepting instances of {@link Request} and negotiating
- * {@link Response} objects using the the underlying services such as, {@link ConnectedEdgeClientService}
- * and {@link ResourceService}.
+ * {@link Response} objects.
  *
  * Additionally, this is responsible for handling any multi-threading and coordinating/driving
  * the calls to {@link Resource#onUpdate()} calls.

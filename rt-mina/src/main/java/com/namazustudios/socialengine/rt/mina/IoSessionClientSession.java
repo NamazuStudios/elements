@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.mina;
 
+import com.namazustudios.socialengine.rt.edge.AbstractEdgeClientSession;
 import com.namazustudios.socialengine.rt.edge.EdgeClientSession;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import org.apache.mina.core.session.IoSession;
@@ -10,7 +11,7 @@ import java.util.concurrent.Callable;
 /**
  * Created by patricktwohig on 8/1/15.
  */
-public class IoSessionClientSession implements EdgeClientSession {
+public class IoSessionClientSession extends AbstractEdgeClientSession implements EdgeClientSession {
 
     @Inject
     private IoSession ioSession;
@@ -42,6 +43,11 @@ public class IoSessionClientSession implements EdgeClientSession {
     @Override
     public void removeSessionVariable(Object key) {
         ioSession.removeAttribute(new SessionKey(key));
+    }
+
+    @Override
+    public EventSubscriptionTypeBuilder subscribeToInternalEvent(String name) {
+        return null;
     }
 
     /**

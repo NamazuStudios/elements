@@ -20,23 +20,12 @@ public interface Server {
     void post(Callable<Void> callable);
 
     /**
-     * Subscribes the event receiver to the given path.
+     * Subscribes the event receiver to the given paths, recursively if necessary.
      *
-     * @param path the path
-     * @param name the name of the event
-     * @param eventReceiver the receiver
-     * @param <PayloadT>
-     *
-     * @return an instance of {@link Subscription}, which can be used to unsubscribe from the event pool
-     * @throws {@link IllegalArgumentException} if the given path is a wildcard path
-     *
-     */
-    <PayloadT> Subscription subscribe(Path path, String name, EventReceiver<PayloadT> eventReceiver);
-
-    /**
-     * Subscribes the event receiver to the given paths, recursively.  Note that if the given path is
-     * a wildcard path, this will recursively subscribe to all resources matching that
-     * particular path.
+     * If the given path is a wildcard path, this will recursively subscribe to
+     * all resources matching that particular path.  This means that a single subscription
+     * will actually subscribe to the actual resource.  If the resource is moved, then the
+     * subscription will follow.
      *
      * @param path the path
      * @param name the name of the event
@@ -46,8 +35,8 @@ public interface Server {
      * @return mapping of {@link Path} to {@link Subscription instances , which can be used to unsubscribe from the event pool
      *
      */
-    <PayloadT> SortedMap<Path, Subscription> subscribeRecursive(Path path,
-                                                                String name,
-                                                                EventReceiver<PayloadT> eventReceiver);
+    <PayloadT> SortedMap<Path, Subscription> subscribe(Path path,
+                                                       String name,
+                                                       EventReceiver<PayloadT> eventReceiver);
 
 }

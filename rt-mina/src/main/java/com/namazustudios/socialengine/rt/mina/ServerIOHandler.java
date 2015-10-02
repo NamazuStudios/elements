@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.edge.EdgeResource;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.service.IoHandlerAdapter;
+import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,6 +90,16 @@ public class ServerIOHandler extends IoHandlerAdapter {
     public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
         LOG.error("Caught exception from session.  Closing.");
         session.close(true);
+    }
+
+    @Override
+    public void sessionIdle(IoSession session, IdleStatus status) throws Exception {
+        super.sessionIdle(session, status);
+    }
+
+    @Override
+    public void sessionClosed(IoSession session) throws Exception {
+        super.sessionClosed(session);
     }
 
 }
