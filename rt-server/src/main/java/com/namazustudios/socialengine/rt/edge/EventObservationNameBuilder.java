@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.edge;
 
 /**
  * Created by patricktwohig on 10/5/15.

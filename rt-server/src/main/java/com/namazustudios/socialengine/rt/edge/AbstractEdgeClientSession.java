@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.edge;
 
-import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.internal.InternalServer;
 

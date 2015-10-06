@@ -1,4 +1,8 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.edge;
+
+import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.Subscription;
 
 /**
  * Used to specify the location of the event as a path.

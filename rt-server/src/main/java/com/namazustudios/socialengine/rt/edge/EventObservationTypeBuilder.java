@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.edge;
 
 /**
  * Used to specify the type of the event.

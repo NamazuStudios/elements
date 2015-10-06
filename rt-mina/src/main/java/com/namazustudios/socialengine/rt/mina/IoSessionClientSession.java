@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.mina;
 
 import com.namazustudios.socialengine.rt.Event;
-import com.namazustudios.socialengine.rt.EventObservationTypeBuilder;
 import com.namazustudios.socialengine.rt.EventReceiver;
 import com.namazustudios.socialengine.rt.SimpleEvent;
 import com.namazustudios.socialengine.rt.edge.AbstractEdgeClientSession;
