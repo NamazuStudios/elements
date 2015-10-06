@@ -1,5 +1,9 @@
 package com.namazustudios.socialengine.rt.mina;
 
+import com.namazustudios.socialengine.rt.Event;
+import com.namazustudios.socialengine.rt.EventObservationTypeBuilder;
+import com.namazustudios.socialengine.rt.EventReceiver;
+import com.namazustudios.socialengine.rt.SimpleEvent;
 import com.namazustudios.socialengine.rt.edge.AbstractEdgeClientSession;
 import com.namazustudios.socialengine.rt.edge.EdgeClientSession;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
@@ -30,6 +34,11 @@ public class IoSessionClientSession extends AbstractEdgeClientSession implements
     }
 
     @Override
+    public Object setSessionVariableIfAbsent(Object key, Object value) {
+        return ioSession.setAttributeIfAbsent(new SessionKey(key), value);
+    }
+
+    @Override
     public <T> T getSessionVariable(Object key, Class<T> type) {
         return getSessionVariable(key, type, null);
     }
@@ -46,8 +55,24 @@ public class IoSessionClientSession extends AbstractEdgeClientSession implements
     }
 
     @Override
-    public EventObservationTypeBuilder subscribeToInternalEvent(String name) {
-        return null;
+    public <T> EventReceiver<T> getEventReceiver(final Class<T> type) {
+        return new EventReceiver<T>() {
+            @Override
+            public Class<T> getEventType() {
+                return type;
+            }
+
+            @Override
+            public void receive(Event event) {
+
+                final SimpleEvent simpleEvent = SimpleEvent.builder()
+                        .event(event)
+                    .build();
+
+                ioSession.write(simpleEvent);
+
+            }
+        };
     }
 
     /**

@@ -281,7 +281,6 @@ public abstract class AbstractSimpleServer<ResourceT extends Resource> implement
      * Hands the {@link Event} to the server's {@link ObservationEventReceiverMap}.
      *
      * @param event
-     * @param eventType
      */
     public void postToObservers(final Event event) {
         post(new Callable<Void>() {

@@ -8,9 +8,9 @@
 
     <display-name>Namazu Promotions REST API</display-name>
 
-    <edgeClientSessionListener>
-        <edgeClientSessionListener-class>com.namazustudios.socialengine.rest.guice.GuiceMain</edgeClientSessionListener-class>
-    </edgeClientSessionListener>
+    <edgeClientSessionObserver>
+        <edgeClientSessionObserver-class>com.namazustudios.socialengine.rest.guice.GuiceMain</edgeClientSessionObserver-class>
+    </edgeClientSessionObserver>
 
     <filter>
         <filter-name>guiceFilter</filter-name>

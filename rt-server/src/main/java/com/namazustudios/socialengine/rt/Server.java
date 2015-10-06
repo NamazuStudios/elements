@@ -21,7 +21,7 @@ public interface Server<ResourceT extends Resource> {
 
     /**
      * Observes the events at the given path.  Any events on the server's bus matching the
-     * path will receive the payload.  A single {@link Observation} is generated.
+     * path will observe the payload.  A single {@link Observation} is generated.
      *
      * subscription will follow.
      * @param path the path

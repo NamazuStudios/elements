@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 public interface Resource extends AutoCloseable {
 
     /**
-     * Subscribes a wildcard receiver to the {@link Resource}.  This will receive events with
+     * Subscribes a wildcard receiver to the {@link Resource}.  This will observe events with
      * any name.
      *
      * This method must be thread safe.
