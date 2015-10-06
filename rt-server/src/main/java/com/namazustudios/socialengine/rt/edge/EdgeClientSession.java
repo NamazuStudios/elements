@@ -114,4 +114,77 @@ public interface EdgeClientSession {
      */
     void disconnect();
 
+    /**
+     * Created by patricktwohig on 10/5/15.
+     */
+    interface EventObservationNameBuilder<ObservationT> {
+
+        /**
+         * Returns an instance of {@link EventObservationPathBuilder} for an event with the given name.
+         *
+         * @return the {@link EventObservationPathBuilder}
+         */
+        EventObservationTypeBuilder<ObservationT> named(final String name);
+
+    }
+
+    /**
+     * Used to specify the location of the event as a path.
+     */
+    interface EventObservationPathBuilder<ObservationT> {
+
+        /**
+         * Completes the subscription process with the path.  Events from the {@link Resource} will
+         * begin receiving the events.
+         *
+         * @param path the path (as a string)
+         * @return
+         */
+        ObservationT atPath(String path);
+
+        /**
+         * Completes the subscription process with the path.  Events from the {@link Resource} will
+         * begin receiving the events.
+         *
+         * @param path the path as an object
+         * @return the {@link Subscription} instance
+         */
+        ObservationT atPath(Path path);
+
+    }
+
+    /**
+     * Used to specify the type of the event.
+     */
+    interface EventObservationTypeBuilder<ObservationT> {
+
+        /**
+         * Sets the type of the subscription to {@link Object}.
+         *
+         * @return an instance of {@link EventObservationPathBuilder}
+         */
+        EventObservationPathBuilder<ObservationT> ofAnyType();
+
+        /**
+         * Sets the type of the subscription to the given type.
+         *
+         * @return an instance of {@link EventObservationPathBuilder}
+         * @param type the name of the type.  Resolved using {@link Class#forName(String)}
+         *
+         * @return an instance of {@link EventObservationPathBuilder}
+         */
+        EventObservationPathBuilder<ObservationT> ofType(String type);
+
+        /**
+         * Sets the type of the subscription to the given type.
+         *
+         * @return an instance of {@link EventObservationPathBuilder}
+         * @param type the {@link Class} type for the event.
+         * @param <T> the type of the event
+         *
+         * @return an instance of {@link EventObservationPathBuilder}
+         */
+        <T> EventObservationPathBuilder<ObservationT> ofType(Class<T> type);
+
+    }
 }
