@@ -80,7 +80,7 @@ public interface EdgeClientSession {
      *
      * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
      */
-    EventObservationNameBuilder<Observation> observeEdgeEvent();
+    EventObservationPathBuilder<Observation> observeEdgeEvent();
 
     /**
      * Observes to the the event with the given name, for the {@link InternalServer} instance.  The
@@ -89,7 +89,7 @@ public interface EdgeClientSession {
      *
      * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
      */
-    EventObservationNameBuilder<Observation> observeInternalEvent();
+    EventObservationPathBuilder<Observation> observeInternalEvent();
 
     /**
      * Subscribes to the the event with the given name, for the {@link EdgeServer} instance.  The {@link Subscription}
@@ -98,7 +98,7 @@ public interface EdgeClientSession {
      *
      * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
      */
-    EventObservationNameBuilder<List<Subscription>> subscribeToEdgeEvent();
+    EventObservationPathBuilder<List<Subscription>> subscribeToEdgeEvent();
 
     /**
      * Subscribes to the the event with the given name, for the {@link InternalServer} instance.  The
@@ -107,7 +107,7 @@ public interface EdgeClientSession {
      *
      * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
      */
-    EventObservationNameBuilder<List<Subscription>> subscribeToInternalEvent();
+    EventObservationPathBuilder<List<Subscription>> subscribeToInternalEvent();
 
     /**
      * Disconnects the remote client.
@@ -140,7 +140,7 @@ public interface EdgeClientSession {
          * @param path the path (as a string)
          * @return
          */
-        ObservationT atPath(String path);
+        EventObservationNameBuilder<ObservationT>  atPath(String path);
 
         /**
          * Completes the subscription process with the path.  Events from the {@link Resource} will
@@ -149,7 +149,7 @@ public interface EdgeClientSession {
          * @param path the path as an object
          * @return the {@link Subscription} instance
          */
-        ObservationT atPath(Path path);
+        EventObservationNameBuilder<ObservationT>  atPath(Path path);
 
     }
 
@@ -161,9 +161,9 @@ public interface EdgeClientSession {
         /**
          * Sets the type of the subscription to {@link Object}.
          *
-         * @return an instance of {@link EventObservationPathBuilder}
+         * @return an instance of the {@link Observation}
          */
-        EventObservationPathBuilder<ObservationT> ofAnyType();
+        ObservationT ofAnyType();
 
         /**
          * Sets the type of the subscription to the given type.
@@ -171,9 +171,9 @@ public interface EdgeClientSession {
          * @return an instance of {@link EventObservationPathBuilder}
          * @param type the name of the type.  Resolved using {@link Class#forName(String)}
          *
-         * @return an instance of {@link EventObservationPathBuilder}
+         * @return an instance of the {@link Observation}
          */
-        EventObservationPathBuilder<ObservationT> ofType(String type);
+        ObservationT ofType(String type);
 
         /**
          * Sets the type of the subscription to the given type.
@@ -182,9 +182,10 @@ public interface EdgeClientSession {
          * @param type the {@link Class} type for the event.
          * @param <T> the type of the event
          *
-         * @return an instance of {@link EventObservationPathBuilder}
+         * @return an instance of the {@link Observation}
          */
-        <T> EventObservationPathBuilder<ObservationT> ofType(Class<T> type);
+        <T> ObservationT ofType(Class<T> type);
 
     }
+
 }

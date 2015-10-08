@@ -26,24 +26,22 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
     private InternalServer internalServer;
 
     @Override
-    public EventObservationNameBuilder<Observation> observeEdgeEvent() {
-        return new AbstractObservationNameBuilder<Observation>() {
+    public EventObservationPathBuilder<Observation> observeEdgeEvent() {
+        return new AbstractEventObservationPathBuilder<Observation>() {
             @Override
-            protected Observation doCreateObservation(final String named,
-                                                      final Class<?> type,
-                                                      final Path path) {
+            protected Observation doCreateObservation(final Path path, final String named,
+                                                      final Class<?> type) {
                 return createObservation(edgeServer, named, type, path);
             }
         };
     }
 
     @Override
-    public EventObservationNameBuilder<Observation> observeInternalEvent() {
-        return new AbstractObservationNameBuilder<Observation>() {
+    public EventObservationPathBuilder<Observation> observeInternalEvent() {
+        return new AbstractEventObservationPathBuilder<Observation>() {
             @Override
-            protected Observation doCreateObservation(final String named,
-                                                      final Class<?> type,
-                                                      final Path path) {
+            protected Observation doCreateObservation(final Path path, final String named,
+                                                      final Class<?> type) {
                 return createObservation(internalServer, named, type, path);
             }
         };
@@ -73,26 +71,24 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
     }
 
     @Override
-    public EventObservationNameBuilder<List<Subscription>> subscribeToEdgeEvent() {
-        return new AbstractObservationNameBuilder<List<Subscription>>() {
+    public EventObservationPathBuilder<List<Subscription>> subscribeToEdgeEvent() {
+        return new AbstractEventObservationPathBuilder<List<Subscription>>() {
 
             @Override
-            protected List<Subscription> doCreateObservation(final String named,
-                                                             final Class<?> type,
-                                                             final Path path) {
+            protected List<Subscription> doCreateObservation(final Path path, final String named,
+                                                             final Class<?> type) {
                 return createSubscriptions(edgeServer, named, type, path);
             }
         };
     }
 
     @Override
-    public EventObservationNameBuilder<List<Subscription>> subscribeToInternalEvent() {
-        return new AbstractObservationNameBuilder<List<Subscription>>() {
+    public EventObservationPathBuilder<List<Subscription>> subscribeToInternalEvent() {
+        return new AbstractEventObservationPathBuilder<List<Subscription>>() {
 
             @Override
-            protected List<Subscription> doCreateObservation(final String named,
-                                                             final Class<?> type,
-                                                             final Path path) {
+            protected List<Subscription> doCreateObservation(final Path path, final String named,
+                                                             final Class<?> type) {
                 return createSubscriptions(internalServer, named, type, path);
             }
         };
@@ -215,7 +211,6 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
     private void dispatch(final String key) {
 
         final ConcurrentNavigableMap<UUID, EdgeClientSessionObserver> observers = getObservers(key);
-
         final Iterator<Map.Entry<UUID, EdgeClientSessionObserver>> entryIterator = observers.entrySet().iterator();
 
         while (entryIterator.hasNext()) {
@@ -233,19 +228,38 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
     /**
      * Created by patricktwohig on 10/5/15.
      */
-    public abstract static class AbstractObservationNameBuilder<ObservationT>
-            implements EventObservationNameBuilder<ObservationT> {
+    private abstract static class AbstractEventObservationPathBuilder<ObservationT>
+            implements EventObservationPathBuilder<ObservationT> {
 
         @Override
-        public EventObservationTypeBuilder<ObservationT> named(final String name) {
+        public EventObservationNameBuilder<ObservationT> atPath(final String path) {
+            return atPath(new Path(path));
+        }
+
+        @Override
+        public EventObservationNameBuilder<ObservationT> atPath(final Path path) {
+            return null;
+        }
+
+        private EventObservationNameBuilder<ObservationT> eventObservationNameBuilder(final Path path) {
+            return new EventObservationNameBuilder<ObservationT>() {
+                @Override
+                public EventObservationTypeBuilder<ObservationT> named(String name) {
+                    return null;
+                }
+            };
+        }
+
+        private EventObservationTypeBuilder<ObservationT> eventObservationTypeBuilder(final Path path,
+                                                                                      final String named) {
             return new EventObservationTypeBuilder<ObservationT>() {
                 @Override
-                public EventObservationPathBuilder<ObservationT> ofAnyType() {
+                public ObservationT ofAnyType() {
                     return ofType(Object.class);
                 }
 
                 @Override
-                public EventObservationPathBuilder<ObservationT> ofType(final String type) {
+                public ObservationT ofType(String type) {
                     try {
                         return ofType(Class.forName(type));
                     } catch (ClassNotFoundException e) {
@@ -254,28 +268,14 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
                 }
 
                 @Override
-                public <T> EventObservationPathBuilder<ObservationT> ofType(final Class<T> type) {
-                    return eventObservationPathBuilder(name, type);
+                public <T> ObservationT ofType(Class<T> type) {
+                    return doCreateObservation(path, named, type);
                 }
             };
         }
 
-        private EventObservationPathBuilder<ObservationT> eventObservationPathBuilder(final String named,
-                                                                                      final Class<?> type) {
-            return new EventObservationPathBuilder<ObservationT>() {
-                @Override
-                public ObservationT atPath(String path) {
-                    return atPath(new Path(path));
-                }
-
-                @Override
-                public ObservationT atPath(Path path) {
-                    return doCreateObservation(named, type, path);
-                }
-            };
-        }
-
-        protected abstract ObservationT doCreateObservation(final String named, final Class<?> type, final Path path);
+        protected abstract ObservationT doCreateObservation(final Path path, final String named, final Class<?> type);
 
     }
+
 }
