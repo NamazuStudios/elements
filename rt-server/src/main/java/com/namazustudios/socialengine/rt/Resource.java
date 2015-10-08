@@ -5,6 +5,7 @@ import com.google.common.base.Splitter;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -30,6 +31,14 @@ import java.util.regex.Pattern;
  * Created by patricktwohig on 8/8/15.
  */
 public interface Resource extends AutoCloseable {
+
+    /**
+     * Immediately following creation, code using this can pass these parameters to initialize the
+     * resource.  This is completely defined by the resource.
+     *
+     * @param parameters the parameters
+     */
+    void init(final Map<String, Object> parameters);
 
     /**
      * Subscribes a wildcard receiver to the {@link Resource}.  This will observe events with

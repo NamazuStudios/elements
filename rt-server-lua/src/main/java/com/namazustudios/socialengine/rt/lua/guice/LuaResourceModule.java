@@ -40,6 +40,9 @@ public abstract class LuaResourceModule extends AbstractModule {
                                                         EdgeResource.class,
                                                         Names.named(EdgeServer.BOOTSTRAP_RESOURCES));
 
+        binder().bind(Tabler.class)
+                .to(DefaultTabler.class);
+
         binder().bind(IocResolver.class)
                 .to(GuiceIoCResolver.class);
 

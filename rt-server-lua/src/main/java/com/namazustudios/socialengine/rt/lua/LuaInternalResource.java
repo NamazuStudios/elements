@@ -21,10 +21,11 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
 
     @Inject
     public LuaInternalResource(final LuaState luaState,
-                               final IocResolver iocResolver) {
-        super(luaState, iocResolver);
+                               final IocResolver iocResolver,
+                               final Tabler tabler) {
+        super(luaState, iocResolver, tabler);
         this.luaState = luaState;
-        this.tabler = new DefaultTabler();
+        this.tabler = tabler;
     }
 
     @Override

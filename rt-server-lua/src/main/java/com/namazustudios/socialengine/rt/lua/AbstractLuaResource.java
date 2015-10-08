@@ -27,7 +27,7 @@ import java.util.UUID;
  *
  * Created by patricktwohig on 8/25/15.
  */
-public class AbstractLuaResource extends AbstractResource {
+public abstract class AbstractLuaResource extends AbstractResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractLuaResource.class);
 
@@ -42,6 +42,16 @@ public class AbstractLuaResource extends AbstractResource {
      * underlying server APIs.
      */
     public static final String NAMAZU_RT_TABLE = "namazu_rt";
+
+    /**
+     * A table housing the response codes as defined by {@link ResponseCode#getCode()}
+     */
+    public static final String RESPONSE_CODE = "response_code";
+
+    /**
+     * This is the table name under namazu_rt that defines the init parameters for the script.
+     */
+    public static final String INIT_PARAMS = "init_params";
 
     /**
      * Constant to designate the server.coroutine table.  This is a set of coroutinee
@@ -86,6 +96,8 @@ public class AbstractLuaResource extends AbstractResource {
     private final LuaState luaState;
 
     private final IocResolver iocResolver;
+
+    private final Tabler tabler;
 
     private Logger scriptLog = LOG;
 
@@ -148,9 +160,11 @@ public class AbstractLuaResource extends AbstractResource {
      * @param luaState the luaState
      */
     public AbstractLuaResource(final LuaState luaState,
-                               final IocResolver iocResolver) {
+                               final IocResolver iocResolver,
+                               final Tabler tabler) {
         this.luaState = luaState;
         this.iocResolver = iocResolver;
+        this.tabler = tabler;
     }
 
     /**
@@ -195,6 +209,21 @@ public class AbstractLuaResource extends AbstractResource {
             luaState.newTable();
             luaState.setField(-2, REQUEST_TABLE);
 
+            // Creates a place for the init_params.  By default this is just an empty table and
+            // will be overidden by a call to this.init()
+            luaState.newTable();
+            luaState.setField(-2, INIT_PARAMS);
+
+            // Creates a place for hte response_code constants.  By default this is just an empty table.
+            luaState.newTable();
+
+            for (final ResponseCode responseCode : ResponseCode.values()) {
+                luaState.pushInteger(responseCode.getCode());
+                luaState.setField(-2, responseCode.toString());
+            }
+
+            luaState.setField(-2, RESPONSE_CODE);
+
             // Creates a table for server.coroutine.  This houses code for
             // server-managed coroutines that will automatically be activated
             // on every update.
@@ -204,7 +233,7 @@ public class AbstractLuaResource extends AbstractResource {
             luaState.setField(-2, COROUTINE_CREATE_FUNCTION);
             luaState.setField(-2, COROUTINE_TABLE);
 
-            // Sets up the services table which references htis and the IOC resolver
+            // Sets up the services table which references this and the IOC resolver
             // instance.
 
             luaState.newTable();
@@ -225,6 +254,15 @@ public class AbstractLuaResource extends AbstractResource {
             luaState.pushJavaFunction(printToScriptLog);
             luaState.setGlobal(PRINT_FUNCTION);
 
+        }
+    }
+
+    @Override
+    public void init(final Map<String, Object> parameters) {
+        try (final StackProtector stackProtector = new StackProtector(luaState)) {
+            luaState.getGlobal(NAMAZU_RT_TABLE);
+            tabler.push(luaState, parameters);
+            luaState.setField(-2, INIT_PARAMS);
         }
     }
 

@@ -18,13 +18,15 @@ public class LuaEdgeResource extends AbstractLuaResource implements EdgeResource
 
     private final LuaState luaState;
 
-    private final Tabler tabler = new DefaultTabler();
+    private final Tabler tabler;
 
     @Inject
     public LuaEdgeResource(final LuaState luaState,
-                           final IocResolver iocResolver) {
-        super(luaState, iocResolver);
+                           final IocResolver iocResolver,
+                           final Tabler tabler) {
+        super(luaState, iocResolver, tabler);
         this.luaState = luaState;
+        this.tabler = tabler;
     }
 
     @Override

@@ -25,7 +25,7 @@ function namazu_rt.request.introduce_yourself(client, header, payload)
     -- object payload.  The response code must be before the response
     -- payload.
 
-    return 0, {
+    return namazu_rt.response_code.OK, {
         message = message,
         details = details
     }
