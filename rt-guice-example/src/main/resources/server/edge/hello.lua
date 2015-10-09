@@ -31,24 +31,3 @@ function namazu_rt.request.introduce_yourself(client, header, payload)
     }
 
 end
-
--- Container is a table set by the containing appplication.  Basically it
--- provides some automtically managed coroutines.
-namazu_rt.coroutine.create(function(deltaTime)
-
-    timer = deltaTime;
-    cycles = 1
-
-    while true do
-
-        timer = timer + coroutine.yield()
-
-        if (timer >= 10.0) then
-            timer = 0
-            cycles = cycles + 1
-            namazu_rt.bridge.resource:getScriptLog():info("Hello World {}! ", cycles)
-        end
-
-    end
-
-end)

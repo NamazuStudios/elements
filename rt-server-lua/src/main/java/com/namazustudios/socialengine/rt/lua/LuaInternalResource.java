@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.internal.InternalResource;
 
 import javax.inject.Inject;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by patricktwohig on 8/27/15.
@@ -19,6 +20,8 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
 
     private final Tabler tabler;
 
+    private final AtomicInteger retainCount = new AtomicInteger(1);
+
     @Inject
     public LuaInternalResource(final LuaState luaState,
                                final IocResolver iocResolver,
@@ -26,6 +29,28 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
         super(luaState, iocResolver, tabler);
         this.luaState = luaState;
         this.tabler = tabler;
+    }
+
+    @Override
+    public int retain() {
+
+        if (retainCount.get() <= 0) {
+            throw new IllegalStateException("Retain count: " + retainCount.get());
+        }
+
+        return retainCount.incrementAndGet();
+
+    }
+
+    @Override
+    public int release() {
+
+        if (retainCount.get() <= 0) {
+            throw new IllegalStateException("Retain count: " + retainCount.get());
+        }
+
+        return retainCount.decrementAndGet();
+
     }
 
     @Override

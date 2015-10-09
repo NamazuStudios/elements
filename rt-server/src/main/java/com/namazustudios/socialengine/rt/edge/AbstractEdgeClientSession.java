@@ -26,8 +26,8 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
     private InternalServer internalServer;
 
     @Override
-    public EventObservationPathBuilder<Observation> observeEdgeEvent() {
-        return new AbstractEventObservationPathBuilder<Observation>() {
+    public PathBuilder<EventObservationNameBuilder<Observation>> observeEdgeEvent() {
+        return new AbstractEventPathBuilder<Observation>() {
             @Override
             protected Observation doCreateObservation(final Path path, final String named,
                                                       final Class<?> type) {
@@ -37,8 +37,8 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
     }
 
     @Override
-    public EventObservationPathBuilder<Observation> observeInternalEvent() {
-        return new AbstractEventObservationPathBuilder<Observation>() {
+    public PathBuilder<EventObservationNameBuilder<Observation>> observeInternalEvent() {
+        return new AbstractEventPathBuilder<Observation>() {
             @Override
             protected Observation doCreateObservation(final Path path, final String named,
                                                       final Class<?> type) {
@@ -71,8 +71,8 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
     }
 
     @Override
-    public EventObservationPathBuilder<List<Subscription>> subscribeToEdgeEvent() {
-        return new AbstractEventObservationPathBuilder<List<Subscription>>() {
+    public PathBuilder<EventObservationNameBuilder<List<Subscription>>> subscribeToEdgeEvent() {
+        return new AbstractEventPathBuilder<List<Subscription>>() {
 
             @Override
             protected List<Subscription> doCreateObservation(final Path path, final String named,
@@ -83,8 +83,8 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
     }
 
     @Override
-    public EventObservationPathBuilder<List<Subscription>> subscribeToInternalEvent() {
-        return new AbstractEventObservationPathBuilder<List<Subscription>>() {
+    public PathBuilder<EventObservationNameBuilder<List<Subscription>>> subscribeToInternalEvent() {
+        return new AbstractEventPathBuilder<List<Subscription>>() {
 
             @Override
             protected List<Subscription> doCreateObservation(final Path path, final String named,
@@ -94,6 +94,25 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
         };
     }
 
+    @Override
+    public PathBuilder<Observation> retainInternalResource() {
+        return new AbstractPathBuilder<Observation>() {
+            @Override
+            public Observation atPath(final Path path) {
+
+                internalServer.retain(path);
+
+                return observeDisconnect(new EdgeClientSessionObserver() {
+                    @Override
+                    public boolean observe() {
+                        internalServer.release(path);
+                        return false;
+                    }
+                });
+
+            }
+        };
+    }
 
     private <T> List<Subscription> createSubscriptions(final Server server, final String named,
                                                        final Class<T> type, final Path path) {
@@ -228,8 +247,8 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
     /**
      * Created by patricktwohig on 10/5/15.
      */
-    private abstract static class AbstractEventObservationPathBuilder<ObservationT>
-            implements EventObservationPathBuilder<ObservationT> {
+    private abstract static class AbstractEventPathBuilder<ObservationT>
+            implements PathBuilder<EventObservationNameBuilder<ObservationT>> {
 
         @Override
         public EventObservationNameBuilder<ObservationT> atPath(final String path) {

@@ -11,6 +11,24 @@ import com.namazustudios.socialengine.rt.edge.EdgeServer;
 public interface InternalServer extends Server<InternalResource> {
 
     /**
+     * Retains the {@link Resource} at the given {@link Path}.
+     *
+     * {@link {@see InternalResource#retain()}}
+     *
+     * @param path the path
+     */
+    void retain(final Path path);
+
+    /**
+     * Retains the {@link Resource} at the given {@link Path}.
+     *
+     * {@link {@see InternalResource#release()}}
+     *
+     * @param path the path
+     */
+    void release(final Path path);
+
+    /**
      * Dispatches the given {@link Request} to the {@link Resource} instances contained
      * in this server.  Unlike the {@link EdgeServer}, the {@link Request} is delivered
      * directly to the {@link Resource} for the sake of performance.

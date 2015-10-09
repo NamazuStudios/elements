@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.edge;
 
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.internal.InternalResource;
 import com.namazustudios.socialengine.rt.internal.InternalServer;
 
 import java.util.List;
@@ -80,7 +81,7 @@ public interface EdgeClientSession {
      *
      * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
      */
-    EventObservationPathBuilder<Observation> observeEdgeEvent();
+    PathBuilder<EventObservationNameBuilder<Observation>> observeEdgeEvent();
 
     /**
      * Observes to the the event with the given name, for the {@link InternalServer} instance.  The
@@ -89,7 +90,7 @@ public interface EdgeClientSession {
      *
      * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
      */
-    EventObservationPathBuilder<Observation> observeInternalEvent();
+    PathBuilder<EventObservationNameBuilder<Observation>> observeInternalEvent();
 
     /**
      * Subscribes to the the event with the given name, for the {@link EdgeServer} instance.  The {@link Subscription}
@@ -98,7 +99,7 @@ public interface EdgeClientSession {
      *
      * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
      */
-    EventObservationPathBuilder<List<Subscription>> subscribeToEdgeEvent();
+    PathBuilder<EventObservationNameBuilder<List<Subscription>>> subscribeToEdgeEvent();
 
     /**
      * Subscribes to the the event with the given name, for the {@link InternalServer} instance.  The
@@ -107,7 +108,18 @@ public interface EdgeClientSession {
      *
      * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
      */
-    EventObservationPathBuilder<List<Subscription>> subscribeToInternalEvent();
+    PathBuilder<EventObservationNameBuilder<List<Subscription>>> subscribeToInternalEvent();
+
+    /**
+     * Returns an instance of {@link PathBuilder} which can be used to {@link InternalResource#retain()} a
+     * resource.
+     *
+     * Additionally, this registers a {@link EdgeClientSessionObserver} which will automatically
+     * {@link InternalResource#release} the resource upon disconnect.
+     *
+     * @return the {@link Observation}
+     */
+    PathBuilder<Observation> retainInternalResource();
 
     /**
      * Disconnects the remote client.
@@ -120,36 +132,11 @@ public interface EdgeClientSession {
     interface EventObservationNameBuilder<ObservationT> {
 
         /**
-         * Returns an instance of {@link EventObservationPathBuilder} for an event with the given name.
+         * Returns an instance of {@link PathBuilder} for an event with the given name.
          *
-         * @return the {@link EventObservationPathBuilder}
+         * @return the {@link PathBuilder}
          */
         EventObservationTypeBuilder<ObservationT> named(final String name);
-
-    }
-
-    /**
-     * Used to specify the location of the event as a path.
-     */
-    interface EventObservationPathBuilder<ObservationT> {
-
-        /**
-         * Completes the subscription process with the path.  Events from the {@link Resource} will
-         * begin receiving the events.
-         *
-         * @param path the path (as a string)
-         * @return
-         */
-        EventObservationNameBuilder<ObservationT>  atPath(String path);
-
-        /**
-         * Completes the subscription process with the path.  Events from the {@link Resource} will
-         * begin receiving the events.
-         *
-         * @param path the path as an object
-         * @return the {@link Subscription} instance
-         */
-        EventObservationNameBuilder<ObservationT>  atPath(Path path);
 
     }
 
@@ -168,7 +155,7 @@ public interface EdgeClientSession {
         /**
          * Sets the type of the subscription to the given type.
          *
-         * @return an instance of {@link EventObservationPathBuilder}
+         * @return an instance of {@link PathBuilder}
          * @param type the name of the type.  Resolved using {@link Class#forName(String)}
          *
          * @return an instance of the {@link Observation}
@@ -178,7 +165,7 @@ public interface EdgeClientSession {
         /**
          * Sets the type of the subscription to the given type.
          *
-         * @return an instance of {@link EventObservationPathBuilder}
+         * @return an instance of {@link PathBuilder}
          * @param type the {@link Class} type for the event.
          * @param <T> the type of the event
          *
