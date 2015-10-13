@@ -13,6 +13,9 @@ public interface InternalResource extends Resource {
      * count and then return the result.  A freshly instantiated object must have a reference count of
      * one.
      *
+     * Note, this is to be used by the {@link InternalServer} isntance and should not be invoked
+     * directly.
+     *
      * @return the retain count
      */
     int retain();
@@ -21,6 +24,9 @@ public interface InternalResource extends Resource {
      * Used to implement a reference counting scheme.  This should atomically decrement the reference
      * count and return the result.  Once at zero, the resource should be scheduled for garbage
      * collection.
+     *
+     * Note, this is to be used by the {@link InternalServer} isntance and should not be invoked
+     * directly.
      *
      * @return the release count.
      * @throws {@link IllegalStateException} if the retain count is zero

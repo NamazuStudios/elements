@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.internal;
 
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,9 +48,18 @@ public class SimpleInternalServer extends AbstractSimpleServer<InternalResource>
     }
 
     @Override
-    public void retain(Path path) {
+    public InternalResource retain(Path path) {
+
         final InternalResource internalResource = resourceService.getResource(path);
-        internalResource.retain();
+
+        try {
+            internalResource.retain();
+        } catch (IllegalStateException ex) {
+            throw new NotFoundException(ex);
+        }
+
+        return internalResource;
+
     }
 
     @Override

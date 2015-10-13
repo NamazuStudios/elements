@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.internal;
 
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 
@@ -16,8 +17,10 @@ public interface InternalServer extends Server<InternalResource> {
      * {@link {@see InternalResource#retain()}}
      *
      * @param path the path
+     * @return the {@link InternalResource} at the given {@link Path}
+     * @throws {@link NotFoundException} if the resource can't be found
      */
-    void retain(final Path path);
+    InternalResource retain(final Path path);
 
     /**
      * Retains the {@link Resource} at the given {@link Path}.
@@ -25,6 +28,7 @@ public interface InternalServer extends Server<InternalResource> {
      * {@link {@see InternalResource#release()}}
      *
      * @param path the path
+     * @throws {@link NotFoundException} if the resource can't be found
      */
     void release(final Path path);
 

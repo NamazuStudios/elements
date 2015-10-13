@@ -4,6 +4,7 @@ import com.naef.jnlua.Converter;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
+import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
@@ -42,6 +43,13 @@ public abstract class AbstractLuaResource extends AbstractResource {
      * underlying server APIs.
      */
     public static final String NAMAZU_RT_TABLE = "namazu_rt";
+
+    /**
+     * The name of the namazu_rt close() function which will be called just before the resource
+     * is closed.  This is useful in case the underlying lua script needs to release or free
+     * any resources before it is destroyed.
+     */
+    public static final String CLOSE_FUNCTION = "close";
 
     /**
      * A table housing the response codes as defined by {@link ResponseCode#getCode()}
@@ -459,7 +467,27 @@ public abstract class AbstractLuaResource extends AbstractResource {
      */
     @Override
     public void close() {
-        luaState.close();
+
+        try (final StackProtector stackProtector = new StackProtector(luaState)) {
+
+            luaState.getGlobal(NAMAZU_RT_TABLE);   // Pushes namazu_rt
+            luaState.getField(-1, CLOSE_FUNCTION); // pushes close() (if it exists)
+            luaState.remove(-2);                   // pops namazu_rt
+
+            if (!luaState.isNil(-1) && !luaState.isFunction(-1)) {
+                getScriptLog().warn("{}.{} is not a function.", NAMAZU_RT_TABLE, CLOSE_FUNCTION);
+            } else if (luaState.isFunction(-1)) {
+                luaState.call(0,0);
+            }
+
+        } catch (final Exception ex) {
+            dumpStack();
+            getScriptLog().error("Caught exception invoking script {}() function", CLOSE_FUNCTION, ex);
+            throw new InternalException(ex);
+        } finally {
+            luaState.close();
+        }
+
     }
 
 }
