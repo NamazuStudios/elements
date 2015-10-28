@@ -13,7 +13,8 @@ import java.util.Iterator;
  *
  * Note that implementations of this interface should be considered thread
  * safe.  Each call must return or throw exceptions leaving the object in a consistent
- * state.  This may be accomplished using locking.
+ * state.  This may be accomplished using locking.  All operations are to be considered
+ * atomic unless otherwise specified.
  *
  * Created by patricktwohig on 7/24/15.
  */
@@ -59,7 +60,23 @@ public interface ResourceService<ResourceT extends Resource> {
     void addResource(Path path, ResourceT resource);
 
     /**
-     * Moves the given resource to the given new destination.
+     * Adds a {@link ResourceT} to this resource service.  Rather than throwing an exception
+     * if the resource already exists, this will return the existing instance instead.
+     *
+     * This returns either the newly added instance, or the instance that had already existed.
+     *
+     * @param path the path for the {@link Resource} instance
+     * @param resourceInitializer the resource initializer to use if the path is absent
+     *
+     * @return the actual {@link Resource} instance that was added
+     *
+     * @throws {@link DuplicateException} if a resource at the given path already exists
+     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     */
+    AtomicOperationTuple<ResourceT> addResourceIfAbsent(Path path, ResourceInitializer<ResourceT> resourceInitializer);
+
+    /**
+     * Moves the {@link Resource} at the given source path to the destination path.
      *
      * This throws an instance of {@link NotFoundException} if the resource path
      * is not found.
@@ -84,7 +101,7 @@ public interface ResourceService<ResourceT extends Resource> {
      *
      * @param path the path to the resource
      *
-     * @throws {@link NotFoundException} if no resource exists at that path
+     * @throws {@l  ink NotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     ResourceT removeResource(Path path);
@@ -97,5 +114,29 @@ public interface ResourceService<ResourceT extends Resource> {
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     void removeAndCloseResource(Path path);
+
+    /**
+     * Returend from the call to {@link #addResourceIfAbsent(Path, ResourceInitializer)} to indicate
+     * the status of the addition.
+     *
+     * @param <ResourceT> the resource type
+     */
+    interface AtomicOperationTuple<ResourceT> {
+
+        /**
+         * Returns true if th eresource was newly added.   False if the resource was existing.
+         *
+         * @return true, if newly added, false otherwise.
+         */
+        boolean isNewlyAdded();
+
+        /**
+         * Gets the resource that was either added, or the existing resource.
+         *
+         * @return the resource, never null
+         */
+        ResourceT getResource();
+
+    }
 
 }

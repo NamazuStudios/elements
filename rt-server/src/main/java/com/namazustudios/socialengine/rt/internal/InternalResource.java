@@ -17,6 +17,7 @@ public interface InternalResource extends Resource {
      * directly.
      *
      * @return the retain count
+     * @throws {@link IllegalStateException} if the retain count is zero or less
      */
     int retain();
 
@@ -29,7 +30,7 @@ public interface InternalResource extends Resource {
      * directly.
      *
      * @return the release count.
-     * @throws {@link IllegalStateException} if the retain count is zero
+     * @throws {@link ZeroReferenceCountException} if the retain count is zero or less
      */
     int release();
 
@@ -40,8 +41,29 @@ public interface InternalResource extends Resource {
      * @return the handler for the given method, never null
      *
      * @throws {@link NotFoundException} if the method cannot be found.
-     * @throws {@link IllegalStateException} if the retain count is zero
+     * @throws {@link ZeroReferenceCountException} if the retain count is zero
      */
     InternalRequestPathHandler getHandler(final String method);
+
+    /**
+     * Used to indicate that the reference count has hit zero.
+     */
+    class ZeroReferenceCountException extends IllegalStateException {
+
+        public ZeroReferenceCountException() {}
+
+        public ZeroReferenceCountException(String s) {
+            super(s);
+        }
+
+        public ZeroReferenceCountException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public ZeroReferenceCountException(Throwable cause) {
+            super(cause);
+        }
+
+    }
 
 }

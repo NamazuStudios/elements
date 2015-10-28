@@ -57,4 +57,5 @@ public interface Server<ResourceT extends Resource> {
     ResourceT getResource(Path path);
 
     Iterable<ResourceT> getResources();
+
 }

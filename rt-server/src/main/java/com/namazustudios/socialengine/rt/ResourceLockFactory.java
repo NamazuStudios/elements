@@ -26,6 +26,10 @@ public interface ResourceLockFactory<ResourceT extends Resource> {
      * {@link #equals(Object)} will proceed as normal but will log a warning if they
      * are called as this should never happen.
      *
+     * When using the {@link Resource} obtained through this method, the {@link ResourceService}
+     * implementation must invoke {@link Resource#close()} as it would any other
+     * resource.
+     *
      * @return the lock resource
      */
     ResourceT createLock();

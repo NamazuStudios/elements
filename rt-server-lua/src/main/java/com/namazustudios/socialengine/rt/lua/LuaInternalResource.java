@@ -35,7 +35,7 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
     public int retain() {
 
         if (retainCount.get() <= 0) {
-            throw new IllegalStateException("Retain count: " + retainCount.get());
+            throw new ZeroReferenceCountException("Retain count: " + retainCount.get());
         }
 
         return retainCount.incrementAndGet();
@@ -46,7 +46,7 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
     public int release() {
 
         if (retainCount.get() <= 0) {
-            throw new IllegalStateException("Retain count: " + retainCount.get());
+            throw new ZeroReferenceCountException("Retain count: " + retainCount.get());
         }
 
         return retainCount.decrementAndGet();

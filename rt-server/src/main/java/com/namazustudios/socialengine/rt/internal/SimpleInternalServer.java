@@ -54,11 +54,39 @@ public class SimpleInternalServer extends AbstractSimpleServer<InternalResource>
 
         try {
             internalResource.retain();
-        } catch (IllegalStateException ex) {
+        } catch (InternalResource.ZeroReferenceCountException ex) {
+            // We do nothing here because this resource is essentially slated for removal
+            // and we just happen to have gotten it while it was in the state of being
+            // removed.
             throw new NotFoundException(ex);
         }
 
         return internalResource;
+
+    }
+
+    @Override
+    public InternalResource retainOrAddResourceIfAbsent(final Path path,
+                                                        final ResourceInitializer<InternalResource> resourceInitializer) {
+
+        do {
+
+            final ResourceService.AtomicOperationTuple<InternalResource> atomicOperationTuple;
+            atomicOperationTuple = resourceService.addResourceIfAbsent(path, resourceInitializer);
+
+            if (!atomicOperationTuple.isNewlyAdded()) {
+                try {
+                    atomicOperationTuple.getResource().retain();
+                } catch (InternalResource.ZeroReferenceCountException ex) {
+                    // This is probably rare, but if there is add/remove contention over the resource
+                    // then we will have to attempt the operation again.
+                    continue;
+                }
+            }
+
+            return atomicOperationTuple.getResource();
+
+        } while (true);
 
     }
 

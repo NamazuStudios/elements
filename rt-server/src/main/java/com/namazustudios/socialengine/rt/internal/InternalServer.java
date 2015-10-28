@@ -12,15 +12,32 @@ import com.namazustudios.socialengine.rt.edge.EdgeServer;
 public interface InternalServer extends Server<InternalResource> {
 
     /**
-     * Retains the {@link Resource} at the given {@link Path}.
+     * Retains the {@link Resource} at the given {@link Path}, and returns the instance.
      *
      * {@link {@see InternalResource#retain()}}
      *
      * @param path the path
      * @return the {@link InternalResource} at the given {@link Path}
-     * @throws {@link NotFoundException} if the resource can't be found
+     * @throws {@link NotFoundException} if the resource can't be found, or the resource has been slated for destruction
      */
     InternalResource retain(final Path path);
+
+    /**
+     * Retains the {@link InternalResource} at the given {@link Path}.  If the {@link InternalResource} does not
+     * exist, then the given {@link ResourceInitializer} will be used to obtain the fully initialized
+     * instance.
+     *
+     * This operation is completed atomically.  Upon return this guarantees taht the existing resource will have
+     * its reference count incremented by one, or it will insert the new resource using the given resource
+     * initializer.
+     *
+     * {@see {@link ResourceService#addResource(Path, Resource)}}
+     *
+     * @param path the path
+     * @param resourceInitializer a {@link ResourceInitializer} instnace which will provide the instance if necessary
+     * @return the existing {@link InternalServer} (with its refcount incremented)
+     */
+    InternalResource retainOrAddResourceIfAbsent(Path path, ResourceInitializer<InternalResource> resourceInitializer);
 
     /**
      * Retains the {@link Resource} at the given {@link Path}.
