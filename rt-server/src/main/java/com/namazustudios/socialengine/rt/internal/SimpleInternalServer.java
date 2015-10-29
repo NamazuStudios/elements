@@ -91,24 +91,6 @@ public class SimpleInternalServer extends AbstractSimpleServer<InternalResource>
     }
 
     @Override
-    public void release(final Path path) {
-
-        final InternalResource internalResource = resourceService.getResource(path);
-
-        if (internalResource.release() == 0) {
-            resourceService.removeResource(path);
-            post(new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    internalResource.close();
-                    return null;
-                }
-            });
-        }
-
-    }
-
-    @Override
     public void dispatch(final Request request, final ResponseReceiver responseReceiver) {
         requestQueue.add(new Callable<Void>() {
             @Override

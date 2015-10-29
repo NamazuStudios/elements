@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.exception.NotFoundException;
+
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -52,10 +55,30 @@ public interface Server<ResourceT extends Resource> {
      */
     <PayloadT> List<Subscription> subscribe(Path path, String name, EventReceiver<PayloadT> eventReceiver);
 
+    /**
+     * Gets all resources matching the given path.  The supplied path may be a wildcard path.  If none are
+     * found, then this will return an empty {@link Iterable}.  That is, any {@link Iterator} instances
+     * returned will immediately return false for {@link Iterator#hasNext()}.
+     *
+     * @param path the path
+     * @return an {@link Iterable} over the internal listing of {@link Resource} objects
+     */
     Iterable<ResourceT> getResources(Path path);
 
+    /**
+     * Gets a {@link Resource} at the given path.  If a single resource isn't found, then this will throw
+     * and instance of {@link NotFoundException}.  The supplied path must not be a wildcard path.
+     *
+     * @param path the path
+     * @return the {@link Resource}
+     */
     ResourceT getResource(Path path);
 
+    /**
+     * Gets all resources in the server.
+     *
+     * @return the listing of all resources.
+     */
     Iterable<ResourceT> getResources();
 
 }

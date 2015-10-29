@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.edge;
 
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.internal.InternalResource;
 import com.namazustudios.socialengine.rt.internal.InternalServer;
 
 import javax.inject.Inject;
@@ -95,20 +96,44 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
     }
 
     @Override
-    public PathBuilder<Observation> retainInternalResource() {
-        return new AbstractPathBuilder<Observation>() {
+    public PathBuilder<InternalResource> retainInternalResource() {
+        return new AbstractPathBuilder<InternalResource>() {
             @Override
-            public Observation atPath(final Path path) {
+            public InternalResource atPath(final Path path) {
 
-                internalServer.retain(path);
+                final InternalResource internalResource = internalServer.retain(path);
 
-                return observeDisconnect(new EdgeClientSessionObserver() {
+                observeDisconnect(new EdgeClientSessionObserver() {
                     @Override
                     public boolean observe() {
-                        internalServer.release(path);
+                        internalResource.release();
                         return false;
                     }
                 });
+
+                return internalResource;
+
+            }
+        };
+    }
+
+    @Override
+    public PathBuilder<InternalResource> retainOrAddResourceIfAbsent(final ResourceInitializer<InternalResource> resourceInitializer) {
+        return new AbstractPathBuilder<InternalResource>() {
+            @Override
+            public InternalResource atPath(Path path) {
+
+                final InternalResource internalResource = internalServer.retainOrAddResourceIfAbsent(path, resourceInitializer);
+
+                observeDisconnect(new EdgeClientSessionObserver() {
+                    @Override
+                    public boolean observe() {
+                        internalResource.release();
+                        return false;
+                    }
+                });
+
+                return internalResource;
 
             }
         };
@@ -187,7 +212,7 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
     private ConcurrentNavigableMap<UUID, EdgeClientSessionObserver> getObservers(final String key) {
 
         ConcurrentNavigableMap<UUID, EdgeClientSessionObserver> observers;
-        observers = getSessionVariable(key, ConcurrentNavigableMap.class);
+        observers = getSessionVariableTyped(key, ConcurrentNavigableMap.class);
 
         if (observers == null) {
 

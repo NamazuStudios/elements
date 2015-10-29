@@ -40,13 +40,32 @@ public interface EdgeClientSession {
     Object setSessionVariableIfAbsent(Object key, Object value);
 
     /**
+     * Gets the session variable with the given key.  If the key is not found,
+     * then this returns null.
+     *
+     * @param key the key
+     * @return the session variable
+     */
+    Object getSessionVariable(Object key);
+
+    /**
+     * Gets a session varible with the given key.  If the key is not found, then
+     * this returns the specified default value.
+     *
+     * @param key the key
+     * @param defaultValue they default value
+     * @return the session variable
+     */
+    Object getSessionVariable(Object key, Object defaultValue);
+
+    /**
      * Gets a session variable of the given key, type, and default value.
      * @param key
      * @param type
      *
      * @param <T>
      */
-    <T> T getSessionVariable(Object key, Class<T> type);
+    <T> T getSessionVariableTyped(Object key, Class<T> type);
 
     /**
      * Gets a session variable of the given key, type, and default value.
@@ -55,7 +74,7 @@ public interface EdgeClientSession {
      * @param defaultValue the default value, if no session variable is found
      * @param <T>
      */
-    <T> T getSessionVariable(Object key, Class<T> type, T defaultValue);
+    <T> T getSessionVariableTyped(Object key, Class<T> type, T defaultValue);
 
     /**
      * Removes the session variable with the given key.
@@ -111,18 +130,34 @@ public interface EdgeClientSession {
     PathBuilder<EventObservationNameBuilder<List<Subscription>>> subscribeToInternalEvent();
 
     /**
-     * Returns an instance of {@link PathBuilder} which can be used to {@link InternalResource#retain()} a
-     * resource.
+     * Returns an instance of {@link PathBuilder} which can be used to obtain an instance of {@link InternalResource}
+     * at the specified {@link Path}.  The returned {@link InternalResource} is retained automatically and
+     * will automatically be released when the client disconnects.
      *
-     * Additionally, this registers a {@link EdgeClientSessionObserver} which will automatically
-     * {@link InternalResource#release} the resource upon disconnect.
+     * @see {@link InternalServer#getResource(Path)}
+     * @see {@link InternalResource#retain()}
+     * @see {@link InternalResource#release()}
      *
-     * @return the {@link Observation}
+     * @return the {@link PathBuilder} for {@link InternalResource}
      */
-    PathBuilder<Observation> retainInternalResource();
+    PathBuilder<InternalResource> retainInternalResource();
 
     /**
-     * Disconnects the remote client.
+     * Returns an instance of {@link PathBuilder} which can be used to obtain an instance of {@link InternalResource}
+     * at the specified {@link Path}.  The returned {@link InternalResource} is retained automatically and
+     * will automatically be released when the client disconnects.
+     *
+     * @see {@link InternalServer#retainOrAddResourceIfAbsent(Path, ResourceInitializer)}
+     * @see {@link InternalResource#retain()}
+     * @see {@link InternalResource#release()}
+     *
+     * @return the {@link PathBuilder} for {@link InternalResource}
+     */
+    PathBuilder<InternalResource> retainOrAddResourceIfAbsent(ResourceInitializer<InternalResource> resourceInitializer);
+
+    /**
+     * Disconnects the remote client.  This may not happen immediately.  This may allow the current session to
+     * finish up work before actually closing the underlying transport.
      */
     void disconnect();
 

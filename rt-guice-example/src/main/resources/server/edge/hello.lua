@@ -3,7 +3,7 @@
 -- as paramters and generate a response.  The method must return the response immediately
 -- in response to the request.
 
-function namazu_rt.request.introduce_yourself(client, header, payload)
+function namazu_rt.request.introduce_yourself(session, header, payload)
 
     -- By default all payloads are deserialized as a java map, which
     -- translates to a simple lua table.  This should be sufficient
@@ -19,7 +19,7 @@ function namazu_rt.request.introduce_yourself(client, header, payload)
     -- is up to the client to figure out the response.
 
     message = string.format("Hello %s.  Nice to meet you.", name)
-    details = string.format("You are conneced as %q", client:getId())
+    details = string.format("You are conneced as %q", session:getId())
 
     -- Finally we must return both the response code as well as the
     -- object payload.  The response code must be before the response

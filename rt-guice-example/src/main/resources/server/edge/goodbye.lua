@@ -9,10 +9,9 @@ namazu_rt.bootstrap_path = "/goodbye"
 
 namazu_rt.request.goodbye = function(client, request)
 
-    -- Disconnects the client and returns a simple message
-    -- indicating so.
+    -- Disconnects the client and returns a simple message indicating so.
 
-    client.disconnect();
+    client:disconnect();
 
     return 0, {
         message = "Thanks for playing!",

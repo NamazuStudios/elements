@@ -6,9 +6,11 @@ import com.namazustudios.socialengine.rt.ResponseReceiver;
 import com.namazustudios.socialengine.rt.SimpleResponse;
 import com.namazustudios.socialengine.rt.internal.InternalRequestPathHandler;
 import com.namazustudios.socialengine.rt.internal.InternalResource;
+import com.namazustudios.socialengine.rt.internal.InternalServer;
 
 import javax.inject.Inject;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -16,19 +18,23 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class LuaInternalResource extends AbstractLuaResource implements InternalResource {
 
+    private final AtomicInteger retainCount = new AtomicInteger(1);
+
     private final LuaState luaState;
 
     private final Tabler tabler;
 
-    private final AtomicInteger retainCount = new AtomicInteger(1);
+    private final InternalServer internalServer;
 
     @Inject
     public LuaInternalResource(final LuaState luaState,
                                final IocResolver iocResolver,
-                               final Tabler tabler) {
+                               final Tabler tabler,
+                               final InternalServer internalServer) {
         super(luaState, iocResolver, tabler);
         this.luaState = luaState;
         this.tabler = tabler;
+        this.internalServer = internalServer;
     }
 
     @Override
@@ -49,7 +55,21 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
             throw new ZeroReferenceCountException("Retain count: " + retainCount.get());
         }
 
-        return retainCount.decrementAndGet();
+        final int count =  retainCount.decrementAndGet();
+
+        if (count == 0) {
+            internalServer.post(new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    internalServer.removeResource(getCurrentPath());
+                    close();
+                    return null;
+                }
+            });
+
+        }
+
+        return count;
 
     }
 

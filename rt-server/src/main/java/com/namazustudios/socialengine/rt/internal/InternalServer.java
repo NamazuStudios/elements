@@ -20,7 +20,7 @@ public interface InternalServer extends Server<InternalResource> {
      * @return the {@link InternalResource} at the given {@link Path}
      * @throws {@link NotFoundException} if the resource can't be found, or the resource has been slated for destruction
      */
-    InternalResource retain(final Path path);
+    InternalResource retain(Path path);
 
     /**
      * Retains the {@link InternalResource} at the given {@link Path}.  If the {@link InternalResource} does not
@@ -38,16 +38,6 @@ public interface InternalServer extends Server<InternalResource> {
      * @return the existing {@link InternalServer} (with its refcount incremented)
      */
     InternalResource retainOrAddResourceIfAbsent(Path path, ResourceInitializer<InternalResource> resourceInitializer);
-
-    /**
-     * Retains the {@link Resource} at the given {@link Path}.
-     *
-     * {@link {@see InternalResource#release()}}
-     *
-     * @param path the path
-     * @throws {@link NotFoundException} if the resource can't be found
-     */
-    void release(final Path path);
 
     /**
      * Dispatches the given {@link Request} to the {@link Resource} instances contained

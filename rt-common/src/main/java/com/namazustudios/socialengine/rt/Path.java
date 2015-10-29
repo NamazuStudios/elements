@@ -225,6 +225,12 @@ public final class Path implements Comparable<Path> {
          */
         public static String pathFromComponents(final List<String> pathComponents) {
 
+            for (final String pathComponent : pathComponents) {
+                if (pathComponent.contains(PATH_SEPARATOR)) {
+                    throw new IllegalArgumentException("Path components must not contain " + PATH_SEPARATOR);
+                }
+            }
+
             final StringBuilder stringBuilder = Joiner.on(PATH_SEPARATOR)
                     .skipNulls()
                     .appendTo(new StringBuilder("/"), pathComponents);

@@ -38,12 +38,22 @@ public class IoSessionClientSession extends AbstractEdgeClientSession implements
     }
 
     @Override
-    public <T> T getSessionVariable(Object key, Class<T> type) {
-        return getSessionVariable(key, type, null);
+    public Object getSessionVariable(Object key) {
+        return getSessionVariable(key, null);
     }
 
     @Override
-    public <T> T getSessionVariable(Object key, Class<T> type, T defaultValue) {
+    public Object getSessionVariable(Object key, Object defaultValue) {
+        return ioSession.getAttribute(new SessionKey(key), defaultValue);
+    }
+
+    @Override
+    public <T> T getSessionVariableTyped(Object key, Class<T> type) {
+        return getSessionVariableTyped(key, type, null);
+    }
+
+    @Override
+    public <T> T getSessionVariableTyped(Object key, Class<T> type, T defaultValue) {
         final Object object = ioSession.getAttribute(new SessionKey(key), defaultValue);
         return type.cast(object);
     }
