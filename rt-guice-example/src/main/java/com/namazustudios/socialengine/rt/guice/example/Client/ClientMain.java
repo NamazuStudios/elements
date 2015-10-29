@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.guice.example.Client;
+package com.namazustudios.socialengine.rt.guice.example.client;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;

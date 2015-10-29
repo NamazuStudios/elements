@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.guice.example.Client;
+package com.namazustudios.socialengine.rt.guice.example.client;
 
 /**
  * Created by patricktwohig on 9/21/15.

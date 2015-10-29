@@ -9,7 +9,7 @@ import org.fusesource.restygwt.client.RestService;
 import javax.ws.rs.*;
 
 /**
- * Client code to manipulate instances of {@link ShortLink}.
+ * client code to manipulate instances of {@link ShortLink}.
  *
  * Created by patricktwohig on 6/17/15.
  */

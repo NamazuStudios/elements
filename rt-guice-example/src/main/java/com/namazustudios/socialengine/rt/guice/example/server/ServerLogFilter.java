@@ -16,7 +16,7 @@ public class ServerLogFilter implements EdgeFilter {
 
     @Override
     public void filter(Chain chain, EdgeClientSession edgeClientSession, Request request, ResponseReceiver responseReceiver) {
-        LOG.debug("Chain: {}.  Client: {}. Request: {}.", chain, edgeClientSession, request);
+        LOG.debug("Chain: {}.  client: {}. Request: {}.", chain, edgeClientSession, request);
         chain.next(edgeClientSession, request, responseReceiver);
     }
 

@@ -41,7 +41,7 @@ public class PSNApplicationProfile extends ApplicationProfile {
     /**
      * Gets the ClientSecret, which is used to interact with the Sony WebAPI.
      *
-     * @return the Client SEcret
+     * @return the client SEcret
      */
     public String getClientSecret() {
         return clientSecret;
@@ -50,7 +50,7 @@ public class PSNApplicationProfile extends ApplicationProfile {
     /**
      * Sets the ClientSecret, which is used to interact with the Sony WebAPI.
      *
-     * @return the Client SEcret
+     * @return the client SEcret
      */
     public void setClientSecret(String clientSecret) {
         this.clientSecret = clientSecret;

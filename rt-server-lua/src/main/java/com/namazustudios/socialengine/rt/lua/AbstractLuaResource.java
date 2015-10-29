@@ -1,19 +1,18 @@
 package com.namazustudios.socialengine.rt.lua;
 
-import com.naef.jnlua.Converter;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import com.namazustudios.socialengine.rt.internal.InternalServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -96,6 +95,16 @@ public abstract class AbstractLuaResource extends AbstractResource {
     public static final String THIS_INSTANCE = "resource";
 
     /**
+     * The "package" table.  See the Lua manual for what this is used for.
+     */
+    public static final String PACKAGE_TABLE = "package";
+
+    /**
+     * The "package.searchers" table.  See the Lua manual for what this is used for.
+     */
+    public static final String PACKAGE_SEARCHERS_TABLE = "searchers";
+
+    /**
      * Exposes the instance of {@link IocResolver} which the underlying script can use to resolve dependencies
      * such as other instances of {@link Resource}, {@link EdgeServer}, and {@link InternalServer}.
      */
@@ -153,6 +162,54 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
                 getScriptLog().info("{}", stringBuffer.toString());
                 return stackProtector.setAbsoluteIndex(0);
+            }
+        }
+    };
+
+    private final JavaFunction classpathSearcher = new JavaFunction() {
+        @Override
+        public int invoke(final  LuaState luaState) {
+            try (final StackProtector stackProtector = new StackProtector(luaState)) {
+
+                if (!luaState.isString(-1)) {
+                    luaState.pushString("module name must be a string");
+                    return 1;
+                }
+
+                final String moduleName = luaState.checkString(-1);
+                final ClassLoader classLoader = AbstractLuaResource.class.getClassLoader();
+                final URL resourceURL = classLoader.getResource(moduleName + ".lua");
+
+                luaState.setTop(0);
+
+                if (resourceURL == null) {
+                    luaState.pushString(moduleName + " not found on classpath");
+                } else {
+                    luaState.pushJavaFunction(classpathLoader);
+                    luaState.pushJavaObject(resourceURL);
+                }
+
+                return stackProtector.setAbsoluteIndex(2);
+
+            }
+        }
+    };
+
+    private final JavaFunction classpathLoader = new JavaFunction() {
+        @Override
+        public int invoke(final LuaState luaState) {
+            try (final StackProtector stackProtector = new StackProtector(luaState)) {
+
+                final URL resourceURL = luaState.checkJavaObject(-1, URL.class);
+
+                try (final InputStream inputStream = resourceURL.openStream())  {
+                    luaState.load(inputStream, resourceURL.toString(), "bt");
+                } catch (IOException ex) {
+                    throw new InternalException(ex);
+                }
+
+                return 0;
+
             }
         }
     };
@@ -257,10 +314,20 @@ public abstract class AbstractLuaResource extends AbstractResource {
             // Finally sets the server table to be in the global space
             luaState.setGlobal(NAMAZU_RT_TABLE);
 
+            // Set up a searcher to search for modules on the classpath.
+
+            luaState.getGlobal(PACKAGE_TABLE);
+            luaState.getField(-1, PACKAGE_SEARCHERS_TABLE);
+            luaState.pushJavaFunction(classpathSearcher);
+            luaState.rawSet(-2, luaState.rawLen(-1) + 1);
+            luaState.pop(2);
+
             // Lastly we hijack the standard lua print function to redirect
             // to the underlying logging system
             luaState.pushJavaFunction(printToScriptLog);
             luaState.setGlobal(PRINT_FUNCTION);
+
+
 
         }
     }
