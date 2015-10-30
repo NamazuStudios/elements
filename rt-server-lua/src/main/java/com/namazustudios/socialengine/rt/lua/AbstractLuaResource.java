@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.lua;
 
+import com.google.common.base.Splitter;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
@@ -83,12 +84,6 @@ public abstract class AbstractLuaResource extends AbstractResource {
     public static final String REQUEST_TABLE = "request";
 
     /**
-     * A table which contains java objects that can be used to communicate with the
-     * rest of the server.
-     */
-    public static final String BRIDGE_TABLE = "bridge";
-
-    /**
      * A key on the services table to expose  an instance of this type to the underlying Lua script.  This allows
      * the underlying script to perform functions such as getting the current path, or posting events to subscribers.
      */
@@ -109,6 +104,24 @@ public abstract class AbstractLuaResource extends AbstractResource {
      * such as other instances of {@link Resource}, {@link EdgeServer}, and {@link InternalServer}.
      */
     public static final String IOC_INSTANCE = "ioc";
+
+    /**
+     * Simplifies the file name for the sake of better error reporting.
+     *
+     * @param fileName the fileName
+     * @return the simplified file name.
+     */
+    public static String simlifyFileName(final String fileName) {
+
+        final List<String> pathComponents = Splitter.on(File.separator)
+                                                    .trimResults()
+                                                    .omitEmptyStrings()
+                                                    .splitToList(fileName);
+
+        final int listSize = pathComponents.size();
+        return listSize == 0 ? fileName : pathComponents.get(listSize - 1);
+
+    }
 
     private final LuaState luaState;
 
@@ -201,9 +214,10 @@ public abstract class AbstractLuaResource extends AbstractResource {
             try (final StackProtector stackProtector = new StackProtector(luaState)) {
 
                 final URL resourceURL = luaState.checkJavaObject(-1, URL.class);
+                final String simpleFileName = simlifyFileName(resourceURL.getFile());
 
                 try (final InputStream inputStream = resourceURL.openStream())  {
-                    luaState.load(inputStream, resourceURL.toString(), "bt");
+                    luaState.load(inputStream, simpleFileName, "bt");
                 } catch (IOException ex) {
                     throw new InternalException(ex);
                 }
@@ -237,8 +251,6 @@ public abstract class AbstractLuaResource extends AbstractResource {
      * supplied is useful for debugging and should match the name of the file from which
      * the script was loaded.
      *
-     *
-     *
      * @param inputStream the input stream
      * @param name the name of the script (useful for debugging)
      * @throws IOException
@@ -262,74 +274,81 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
     private void setupScriptGlobals() {
         try (final StackProtector stackProtector = new StackProtector(luaState, 0)) {
-
-            // Places a table in the registry to hold the currently running threads.
-            luaState.newTable();
-            luaState.setField(LuaState.REGISTRYINDEX, SERVER_THREADS_TABLE);
-
-            // Creates a new table to hold the server table functions
-            luaState.newTable();
-
-            // Creates a place for server.request
-            luaState.newTable();
-            luaState.setField(-2, REQUEST_TABLE);
-
-            // Creates a place for the init_params.  By default this is just an empty table and
-            // will be overidden by a call to this.init()
-            luaState.newTable();
-            luaState.setField(-2, INIT_PARAMS);
-
-            // Creates a place for hte response_code constants.  By default this is just an empty table.
-            luaState.newTable();
-
-            for (final ResponseCode responseCode : ResponseCode.values()) {
-                luaState.pushInteger(responseCode.getCode());
-                luaState.setField(-2, responseCode.toString());
-            }
-
-            luaState.setField(-2, RESPONSE_CODE);
-
-            // Creates a table for server.coroutine.  This houses code for
-            // server-managed coroutines that will automatically be activated
-            // on every update.
-
-            luaState.newTable();
-            luaState.pushJavaFunction(serverStartCoroutine);
-            luaState.setField(-2, COROUTINE_CREATE_FUNCTION);
-            luaState.setField(-2, COROUTINE_TABLE);
-
-            // Sets up the services table which references this and the IOC resolver
-            // instance.
-
-            luaState.newTable();
-
-            luaState.pushJavaObject(this);
-            luaState.setField(-2, THIS_INSTANCE);
-
-            luaState.pushJavaObject(iocResolver);
-            luaState.setField(-2, IOC_INSTANCE);
-
-            luaState.setField(-2, BRIDGE_TABLE);
-
-            // Finally sets the server table to be in the global space
-            luaState.setGlobal(NAMAZU_RT_TABLE);
-
-            // Set up a searcher to search for modules on the classpath.
-
-            luaState.getGlobal(PACKAGE_TABLE);
-            luaState.getField(-1, PACKAGE_SEARCHERS_TABLE);
-            luaState.pushJavaFunction(classpathSearcher);
-            luaState.rawSet(-2, luaState.rawLen(-1) + 1);
-            luaState.pop(2);
-
-            // Lastly we hijack the standard lua print function to redirect
-            // to the underlying logging system
-            luaState.pushJavaFunction(printToScriptLog);
-            luaState.setGlobal(PRINT_FUNCTION);
-
-
-
+            setupServerCoroutineTable();
+            setupNamazuRTTable();
+            setupModuleSearchers();
+            setupFunctionOverrides();
         }
+    }
+
+    private void setupServerCoroutineTable() {
+        // Places a table in the registry to hold the currently running threads.
+        luaState.newTable();
+        luaState.setField(LuaState.REGISTRYINDEX, SERVER_THREADS_TABLE);
+    }
+
+    private void setupNamazuRTTable() {
+
+        // Creates a new table to hold the server table functions.  This will ultimately
+        // be the namauz_rt table.
+        luaState.newTable();
+
+        // Creates a place for server.request.  This is an empty table which is used to house
+        // request handler functions.
+        luaState.newTable();
+        luaState.setField(-2, REQUEST_TABLE);
+
+        // Creates a place for the init_params.  By default this is just an empty table and
+        // will be overridden by a call to this.init()
+        luaState.newTable();
+        luaState.setField(-2, INIT_PARAMS);
+
+        // Creates a place for hte response_code constants.
+        luaState.newTable();
+
+        for (final ResponseCode responseCode : ResponseCode.values()) {
+            luaState.pushInteger(responseCode.getCode());
+            luaState.setField(-2, responseCode.toString());
+        }
+
+        luaState.setField(-2, RESPONSE_CODE);
+
+        // Creates a table for server.coroutine.  This houses code for
+        // server-managed coroutines that will automatically be activated
+        // on every update.
+
+        luaState.newTable();
+        luaState.pushJavaFunction(serverStartCoroutine);
+        luaState.setField(-2, COROUTINE_CREATE_FUNCTION);
+        luaState.setField(-2, COROUTINE_TABLE);
+
+        // Sets up the services table which references this and the IOC resolver
+        // instance.
+
+        luaState.pushJavaObject(this);
+        luaState.setField(-2, THIS_INSTANCE);
+
+        luaState.pushJavaObject(iocResolver);
+        luaState.setField(-2, IOC_INSTANCE);
+
+        // Finally sets the server table to be in the global space
+        luaState.setGlobal(NAMAZU_RT_TABLE);
+
+    }
+
+    private void setupModuleSearchers() {
+        luaState.getGlobal(PACKAGE_TABLE);
+        luaState.getField(-1, PACKAGE_SEARCHERS_TABLE);
+        luaState.pushJavaFunction(classpathSearcher);
+        luaState.rawSet(-2, luaState.rawLen(-1) + 1);
+        luaState.pop(2);
+    }
+
+    private void setupFunctionOverrides() {
+        // Lastly we hijack the standard lua print function to redirect
+        // to the underlying logging system
+        luaState.pushJavaFunction(printToScriptLog);
+        luaState.setGlobal(PRINT_FUNCTION);
     }
 
     @Override

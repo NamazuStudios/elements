@@ -43,7 +43,8 @@ public class EdgeResourceProviders {
                 final LuaEdgeResource luaEdgeResource = luaEdgeResourceProvider.get();
 
                 try (final InputStream inputStream = resoureURL.openStream()){
-                    luaEdgeResource.loadAndRun(inputStream, resoureURL.toString());
+                    final String simplifiedFileName = AbstractLuaResource.simlifyFileName(resoureURL.getFile());
+                    luaEdgeResource.loadAndRun(inputStream, simplifiedFileName);
                 } catch (IOException ex) {
                     throw new InternalException(ex);
                 }
@@ -84,7 +85,8 @@ public class EdgeResourceProviders {
                 final LuaEdgeResource luaEdgeResource = luaEdgeResourceProvider.get();
 
                 try (final InputStream inputStream = new FileInputStream(file)) {
-                    luaEdgeResource.loadAndRun(inputStream, file.getAbsolutePath());
+                    final String simplifiedFileName = AbstractLuaResource.simlifyFileName(file.getAbsolutePath());
+                    luaEdgeResource.loadAndRun(inputStream, simplifiedFileName);
                 } catch (IOException ex) {
                     throw new NotFoundException(ex);
                 }

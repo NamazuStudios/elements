@@ -19,6 +19,7 @@ local Path = java.require("com.namazustudios.socialengine.rt.Path")
 
 -- Sets up the table to house the logic
 local namazu_rt_ext = {}
+
 namazu_rt_ext["session"] = {}
 namazu_rt_ext["internal"] = {}
 namazu_rt_ext["internal"]["providers"] = {}
