@@ -1,17 +1,12 @@
 
--- Tells the container that the file needs to be  bootstrapped at
--- tthe given location.  It is important to note that this is only
--- necessary for edge resources as edge resources are automatically
--- installed by the container.  Internal resources, on the other hand
--- are installed manually by the client scripts.
+-- This is a simple function that is used to disconnect from the remote server.  The
+-- the session is disconnected and then the
 
-namazu_rt.bootstrap_path = "/goodbye"
-
-namazu_rt.request.goodbye = function(client, request)
+namazu_rt.request.goodbye = function(session, request)
 
     -- Disconnects the client and returns a simple message indicating so.
 
-    client:disconnect();
+    session:disconnect();
 
     return 0, {
         message = "Thanks for playing!",

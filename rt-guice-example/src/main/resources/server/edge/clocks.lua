@@ -1,7 +1,8 @@
 
 -- Used by the scrpt to handle some boilerplate
 
-require "namazu_rt_ext"
+namazu_internal = require "namazu_internal"
+namazu_internal.require "clock"
 
 -- A script global which contains the clocks we want to support in our clock example.  This is pre-loaded with
 -- some basic data about clocks aroudnt he world.  This will make a virtual clock and subscribe the client to it
@@ -17,8 +18,6 @@ internalServer = namazu_rt.ioc:inject("com.namazustudios.socialengine.rt.interna
 -- This gets a Provider<?> which can be used to obtain the instance using the get.  Remember that since
 -- the container configures internal resources without scope (typically) then each call to get() involves
 -- creation of another Java object.  This should be used only as much as needed.
-
-namazu_rt_ext.internal.resource_provider_named("clock.lua")
 
 -- A global table of the clocks we know about
 
@@ -43,7 +42,7 @@ clocks = {
 function get_clock(name, clockTable)
     -- the new clock will live at /clocks/<clock_name>
     path = { "clocks", name }
-    return namzu_rt_ext.internal.initialize_if_needed(path, "clock.lua", clockTable)
+    return namazu_internal.initialize_if_needed(path, "clock.lua", clockTable)
 end
 
 -- The handler for the "list_clocks" method.  This includes the ability to list the clocks
@@ -105,7 +104,7 @@ function namazu_rt.request.subscribe(session, header, payload)
     -- from the server.
 
     path = "/clocks/" .. name
-    namazu_rt_ext.internal.initialize_to_session_if_needed(session, "clock.lua", "/clocks", metadata)
+    namazu_internal.initialize_to_session_if_needed(session, "clock.lua", "/clocks", metadata)
 
     -- We wil subscribe the client to the "tick tock" and the "ding dong" event.  We specify any
     -- type to indicate  that any object will be serialized to the client.  After this call the

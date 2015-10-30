@@ -215,6 +215,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
                 final URL resourceURL = luaState.checkJavaObject(-1, URL.class);
                 final String simpleFileName = simlifyFileName(resourceURL.getFile());
+                getScriptLog().debug("Loading module from {}", resourceURL);
 
                 try (final InputStream inputStream = resourceURL.openStream())  {
                     luaState.load(inputStream, simpleFileName, "bt");
@@ -222,7 +223,11 @@ public abstract class AbstractLuaResource extends AbstractResource {
                     throw new InternalException(ex);
                 }
 
-                return 0;
+                luaState.remove(-2);
+                luaState.remove(-2);
+                luaState.call(0, 1);
+
+                return stackProtector.setAbsoluteIndex(1);
 
             }
         }
