@@ -33,6 +33,11 @@ public enum ResponseCode {
     METHOD_NOT_FOUND,
 
     /**
+     * Used to relay a not found condition, other than method or path.
+     */
+    OTHER_NOT_FOUND,
+
+    /**
      * Auth failed, the request should be re-attempted with
      * new authentication credentails
      */

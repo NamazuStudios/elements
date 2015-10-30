@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.common.base.Function;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.namazustudios.socialengine.rt.Path;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
@@ -10,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.File;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -30,6 +34,12 @@ public abstract class ClasspathScanningLuaResourceModule extends LuaResourceModu
      * Scans the given package as a java FQN name, searching for "*lua" files
      * and binding them to the resource.
      *
+     * This uses the default naming strategy whereby the package name is trimmed from
+     * the path and he lua extension is dropped.  For example, if "foo/bar.lua"
+     * exists on the classpath, the script will serve requests out of "/bar".
+     *
+     * This also means that no two edge resource scripts be named the same.
+     *
      * @param pkg the package, e.g. com.foo.bar
      */
     protected void scanForEdgeResources(final String pkg) {
@@ -43,13 +53,14 @@ public abstract class ClasspathScanningLuaResourceModule extends LuaResourceModu
             }
         });
     }
+
     /**
      * Scans the given package as a java FQN name, searching for lua files matching the given
      * patterrn, and binding them to the resource.
      *
      * @param pkg the package, e.g. com.foo.bar
      * @param filePattern the file pattern eg ".*\.lua"
-     * @param bootstrapPathGenerator a {@link Function} used to determine the boostrap path from the name
+     * @param bootstrapPathGenerator a {@link Function} used to determine the bootstrap path from the name
      */
     protected void scanForEdgeResources(final String pkg,
                                         final Pattern filePattern,
@@ -64,8 +75,11 @@ public abstract class ClasspathScanningLuaResourceModule extends LuaResourceModu
         LOG.info("Scanning package \"{}\" for edge resource Lua scripts.", pkg);
 
         for (final String resource : reflections.getResources(filePattern)) {
-            LOG.info("Adding edge resource script \"{}\" from package {}", resource, pkg);
             final Path bootstrapBath = bootstrapPathGenerator.apply(resource);
+
+            LOG.info("Adding edge resource script \"{}\" from package {} at bootstrap path {} ",
+                    resource, pkg, bootstrapBath.toNormalizedPathString());
+
             bindEdgeScriptFile(resource)
                 .toBootstrapPath(bootstrapBath)
                 .fromClasspath()
@@ -78,9 +92,29 @@ public abstract class ClasspathScanningLuaResourceModule extends LuaResourceModu
      * Scans the given package as a java FQN name, searching for "*lua" files
      * and binding them to the resource.
      *
+     * The script is {@link javax.inject.Named} for the script file.
+     *
      * @param pkg the package, e.g. com.foo.bar
      */
     protected void scanForInternalResources(final String pkg) {
+        scanForInternalResources(pkg, LUA_FILE_PATTERN, new Function<String, String>() {
+            @Nullable
+            @Override
+            public String apply(@Nullable final String input) {
+                return input.substring(pkg.length()).replaceFirst("/", "");
+            }
+        });
+    }
+
+    /**
+     * Scans the given package as a java FQN name, searching for "*lua" files
+     * and binding them to the resource.
+     *
+     * @param pkg the package, e.g. com.foo.bar
+     */
+    protected void scanForInternalResources(final String pkg,
+                                            final Pattern filePattern,
+                                            final Function<String, String> nameGenerator) {
 
         final Reflections reflections = new Reflections(
                 new ConfigurationBuilder()
@@ -90,9 +124,10 @@ public abstract class ClasspathScanningLuaResourceModule extends LuaResourceModu
 
         LOG.info("Scanning package \"{}\" for internal resource Lua scripts.", pkg);
 
-        for (final String resource : reflections.getResources(LUA_FILE_PATTERN)) {
-            LOG.info("Adding internal resource script \"{}\" from package {}", resource, pkg);
-            bindInternalScriptFile(resource).fromClasspath().named(resource);
+        for (final String resource : reflections.getResources(filePattern)) {
+            final String name = nameGenerator.apply(resource);
+            LOG.info("Adding internal resource script \"{}\" from package {} named {} ", resource, pkg, name);
+            bindInternalScriptFile(resource).fromClasspath().named(name);
         }
 
     }
