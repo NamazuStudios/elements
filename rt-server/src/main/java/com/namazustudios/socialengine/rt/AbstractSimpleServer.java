@@ -156,6 +156,7 @@ public abstract class AbstractSimpleServer<ResourceT extends Resource> implement
             LOG.info("Starting server main loop for server {}", this);
 
             double movingAverageMillis = 0;
+            serverTimer.reset().start();
             final Stopwatch logTimer = Stopwatch.createStarted();
             final Stopwatch updateTimer = Stopwatch.createStarted();
             final long maxSleepTime = maxUpdatesPerSecond == 0 ? 0 : Math.round(1000.0 / (double)maxUpdatesPerSecond);
@@ -190,6 +191,8 @@ public abstract class AbstractSimpleServer<ResourceT extends Resource> implement
         } catch (InterruptedException ex) {
             LOG.info("Server thread interrupted.  Stopping.", ex);
             return;
+        } finally {
+            serverTimer.stop();
         }
 
     }
