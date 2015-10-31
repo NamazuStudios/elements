@@ -1,4 +1,7 @@
 --
+-- A set of utlitity fucnctions wrapping the Java API.  This mostly deals with common tasks
+-- that other modules will require.
+--
 -- Created by IntelliJ IDEA.
 -- User: patricktwohig
 -- Date: 10/30/15
@@ -15,7 +18,7 @@ local namazu_util = {}
 -- this accepts variadic arguments which will specify the individual components of the Path.  See the constructor
 -- for Path for more information.
 function namazu_util.path(...)
-    if (table.getn(arg) == 1) then
+    if (#arg == 1) then
         return Path:new(table[1])
     else
         return Path:new(arg)

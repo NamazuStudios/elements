@@ -41,6 +41,8 @@ public abstract class AbstractSimpleServer<ResourceT extends Resource> implement
      */
     public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.AbstractSimpleServer.executorService";
 
+    private final Stopwatch serverTimer = Stopwatch.createUnstarted();
+
     @Inject
     @Named(MAX_REQUESTS)
     private int maxRequests;
@@ -133,6 +135,11 @@ public abstract class AbstractSimpleServer<ResourceT extends Resource> implement
             }
 
         };
+    }
+
+    @Override
+    public double getServerTime() {
+        return serverTimer.elapsed(TimeUnit.NANOSECONDS) * Constants.SECONDS_PER_NANOSECOND;
     }
 
     @Override

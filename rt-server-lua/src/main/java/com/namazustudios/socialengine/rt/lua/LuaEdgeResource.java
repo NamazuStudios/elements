@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.rt.SimpleResponse;
 import com.namazustudios.socialengine.rt.edge.EdgeClientSession;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
 import com.namazustudios.socialengine.rt.edge.EdgeResource;
+import com.namazustudios.socialengine.rt.edge.EdgeServer;
 
 import javax.inject.Inject;
 import java.util.Map;
@@ -23,8 +24,9 @@ public class LuaEdgeResource extends AbstractLuaResource implements EdgeResource
     @Inject
     public LuaEdgeResource(final LuaState luaState,
                            final IocResolver iocResolver,
-                           final Tabler tabler) {
-        super(luaState, iocResolver, tabler);
+                           final Tabler tabler,
+                           final EdgeServer edgeServer) {
+        super(luaState, iocResolver, tabler, edgeServer);
         this.luaState = luaState;
         this.tabler = tabler;
     }
