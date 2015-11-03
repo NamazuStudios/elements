@@ -32,7 +32,7 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
                                final IocResolver iocResolver,
                                final Tabler tabler,
                                final InternalServer internalServer) {
-        super(luaState, iocResolver, tabler, internalServer);
+        super(luaState, iocResolver, tabler);
         this.luaState = luaState;
         this.tabler = tabler;
         this.internalServer = internalServer;

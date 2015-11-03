@@ -82,14 +82,18 @@ public interface Server<ResourceT extends Resource> {
     Iterable<ResourceT> getResources();
 
     /**
-     * Gets the server time.  This is an absolute running total.  Typically it is the time since the
-     * server started.  The actual relation to wall-clock time is an implementation detail.
-     *
-     * Code depending on this should only be using this for things such as triggering events, and should
-     * not rely on this call having any relation to wall-clock time.
+     * Gets the server time, typically it is the wall-clock time since the server started.  The actual
+     * implementation is a detail.
      *
      * @return the server time
      */
     double getServerTime();
+
+    /**
+     * Gets the number of seconds (and fractional seconds) since the UNIX epoch, January 1, 1970.
+     *
+     * @return the time since the UNIX epoch
+     */
+    double getTimeSinceEpoch();
 
 }

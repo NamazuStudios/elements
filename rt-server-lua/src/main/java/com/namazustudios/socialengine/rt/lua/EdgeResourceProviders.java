@@ -46,6 +46,7 @@ public class EdgeResourceProviders {
                     final String simplifiedFileName = AbstractLuaResource.simlifyFileName(resoureURL.getFile());
                     luaEdgeResource.loadAndRun(inputStream, simplifiedFileName);
                 } catch (IOException ex) {
+                    luaEdgeResource.close();
                     throw new InternalException(ex);
                 }
 
@@ -88,6 +89,7 @@ public class EdgeResourceProviders {
                     final String simplifiedFileName = AbstractLuaResource.simlifyFileName(file.getAbsolutePath());
                     luaEdgeResource.loadAndRun(inputStream, simplifiedFileName);
                 } catch (IOException ex) {
+                    luaEdgeResource.close();
                     throw new NotFoundException(ex);
                 }
 

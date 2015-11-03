@@ -143,6 +143,11 @@ public abstract class AbstractSimpleServer<ResourceT extends Resource> implement
     }
 
     @Override
+    public double getTimeSinceEpoch() {
+        return System.currentTimeMillis() * Constants.SECONDS_PER_MILLISECOND;
+    }
+
+    @Override
     public void run() {
 
         if (!running.compareAndSet(false, true)) {

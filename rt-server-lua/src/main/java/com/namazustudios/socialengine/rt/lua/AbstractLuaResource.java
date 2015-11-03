@@ -7,8 +7,6 @@ import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.edge.EdgeServer;
-import com.namazustudios.socialengine.rt.internal.InternalServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,79 +29,6 @@ import java.util.UUID;
 public abstract class AbstractLuaResource extends AbstractResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractLuaResource.class);
-
-    /**
-     * The print function name.  This hijacks the "regular" print function and diverts its output
-     * to the script's log.  The script's Log is actually backed by slf4j
-     */
-    public static final String PRINT_FUNCTION = "print";
-
-    /**
-     * The name of a global table where the Lua code interacts with the
-     * underlying server APIs.
-     */
-    public static final String NAMAZU_RT_TABLE = "namazu_rt";
-
-    /**
-     * The name of the namazu_rt close() function which will be called just before the resource
-     * is closed.  This is useful in case the underlying lua script needs to release or free
-     * any resources before it is destroyed.
-     */
-    public static final String CLOSE_FUNCTION = "close";
-
-    /**
-     * A table housing the response codes as defined by {@link ResponseCode#getCode()}
-     */
-    public static final String RESPONSE_CODE = "response_code";
-
-    /**
-     * This is the table name under namazu_rt that defines the init parameters for the script.
-     */
-    public static final String INIT_PARAMS = "init_params";
-
-    /**
-     * Constant to designate the server.coroutine table.  This is a set of coroutinee
-     * functions managed by the server.
-     */
-    public static final String COROUTINE_TABLE = "coroutine";
-
-    /**
-     * The name of the server.coroutine.create() function.
-     */
-    public static final String COROUTINE_CREATE_FUNCTION = "create";
-
-    /**
-     * A registry table for server threads.  This is stored in the lua registry and is not
-     * visible to the Lua source code at all.
-     */
-    public static final String SERVER_THREADS_TABLE = "NAMAZU_RT_SERVER_THREADS";
-
-    /**
-     * The table underneath the namazu_rt table which handles requests.
-     */
-    public static final String REQUEST_TABLE = "request";
-
-    /**
-     * A key on the services table to expose  an instance of this type to the underlying Lua script.  This allows
-     * the underlying script to perform functions such as getting the current path, or posting events to subscribers.
-     */
-    public static final String THIS_INSTANCE = "resource";
-
-    /**
-     * The "package" table.  See the Lua manual for what this is used for.
-     */
-    public static final String PACKAGE_TABLE = "package";
-
-    /**
-     * The "package.searchers" table.  See the Lua manual for what this is used for.
-     */
-    public static final String PACKAGE_SEARCHERS_TABLE = "searchers";
-
-    /**
-     * Exposes the instance of {@link IocResolver} which the underlying script can use to resolve dependencies
-     * such as other instances of {@link Resource}, {@link EdgeServer}, and {@link InternalServer}.
-     */
-    public static final String IOC_INSTANCE = "ioc";
 
     /**
      * Simplifies the file name for the sake of better error reporting.
@@ -129,8 +54,6 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
     private final Tabler tabler;
 
-    private final Server server;
-
     private Logger scriptLog = LOG;
 
     /**
@@ -150,7 +73,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
                 final UUID uuid = UUID.randomUUID();
 
                 luaState.newThread();
-                luaState.getField(LuaState.REGISTRYINDEX, SERVER_THREADS_TABLE);
+                luaState.getField(LuaState.REGISTRYINDEX, Constants.SERVER_THREADS_TABLE);
                 luaState.pushValue(-2);
                 luaState.setField(-2, uuid.toString());
                 luaState.pop(1);
@@ -239,7 +162,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
      * Creates an instance of {@link AbstractLuaResource} with the given {@link LuaState}
      * type.j
      *
-     * If instantion fails, it is the responsilbity of the caller to deallocate the {@link LuaState}
+     * If instantiation fails, it is the responsiblity of the caller to deallocate the {@link LuaState}
      * object.  If the constructor completes without error, then the caller does not need to close
      * the state as it will be handled by this object's {@link #close()} method.
      *
@@ -247,12 +170,10 @@ public abstract class AbstractLuaResource extends AbstractResource {
      */
     public AbstractLuaResource(final LuaState luaState,
                                final IocResolver iocResolver,
-                               final Tabler tabler,
-                               final Server server) {
+                               final Tabler tabler) {
         this.luaState = luaState;
         this.iocResolver = iocResolver;
         this.tabler = tabler;
-        this.server = server;
     }
 
     /**
@@ -293,7 +214,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
     private void setupServerCoroutineTable() {
         // Places a table in the registry to hold the currently running threads.
         luaState.newTable();
-        luaState.setField(LuaState.REGISTRYINDEX, SERVER_THREADS_TABLE);
+        luaState.setField(LuaState.REGISTRYINDEX, Constants.SERVER_THREADS_TABLE);
     }
 
     private void setupNamazuRTTable() {
@@ -305,12 +226,12 @@ public abstract class AbstractLuaResource extends AbstractResource {
         // Creates a place for server.request.  This is an empty table which is used to house
         // request handler functions.
         luaState.newTable();
-        luaState.setField(-2, REQUEST_TABLE);
+        luaState.setField(-2, Constants.REQUEST_TABLE);
 
         // Creates a place for the init_params.  By default this is just an empty table and
         // will be overridden by a call to this.init()
         luaState.newTable();
-        luaState.setField(-2, INIT_PARAMS);
+        luaState.setField(-2, Constants.INIT_PARAMS);
 
         // Creates a place for hte response_code constants.
         luaState.newTable();
@@ -320,7 +241,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
             luaState.setField(-2, responseCode.toString());
         }
 
-        luaState.setField(-2, RESPONSE_CODE);
+        luaState.setField(-2, Constants.RESPONSE_CODE);
 
         // Creates a table for server.coroutine.  This houses code for
         // server-managed coroutines that will automatically be activated
@@ -328,26 +249,26 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
         luaState.newTable();
         luaState.pushJavaFunction(serverStartCoroutine);
-        luaState.setField(-2, COROUTINE_CREATE_FUNCTION);
-        luaState.setField(-2, COROUTINE_TABLE);
+        luaState.setField(-2, Constants.COROUTINE_CREATE_FUNCTION);
+        luaState.setField(-2, Constants.COROUTINE_TABLE);
 
         // Sets up the services table which references this and the IOC resolver
         // instance.
 
         luaState.pushJavaObject(this);
-        luaState.setField(-2, THIS_INSTANCE);
+        luaState.setField(-2, Constants.THIS_INSTANCE);
 
         luaState.pushJavaObject(iocResolver);
-        luaState.setField(-2, IOC_INSTANCE);
+        luaState.setField(-2, Constants.IOC_INSTANCE);
 
         // Finally sets the server table to be in the global space
-        luaState.setGlobal(NAMAZU_RT_TABLE);
+        luaState.setGlobal(Constants.NAMAZU_RT_TABLE);
 
     }
 
     private void setupModuleSearchers() {
-        luaState.getGlobal(PACKAGE_TABLE);
-        luaState.getField(-1, PACKAGE_SEARCHERS_TABLE);
+        luaState.getGlobal(Constants.PACKAGE_TABLE);
+        luaState.getField(-1, Constants.PACKAGE_SEARCHERS_TABLE);
         luaState.pushJavaFunction(classpathSearcher);
         luaState.rawSet(-2, luaState.rawLen(-1) + 1);
         luaState.pop(2);
@@ -357,15 +278,15 @@ public abstract class AbstractLuaResource extends AbstractResource {
         // Lastly we hijack the standard lua print function to redirect
         // to the underlying logging system
         luaState.pushJavaFunction(printToScriptLog);
-        luaState.setGlobal(PRINT_FUNCTION);
+        luaState.setGlobal(Constants.PRINT_FUNCTION);
     }
 
     @Override
     public void init(final Map<String, Object> parameters) {
         try (final StackProtector stackProtector = new StackProtector(luaState)) {
-            luaState.getGlobal(NAMAZU_RT_TABLE);
+            luaState.getGlobal(Constants.NAMAZU_RT_TABLE);
             tabler.push(luaState, parameters);
-            luaState.setField(-2, INIT_PARAMS);
+            luaState.setField(-2, Constants.INIT_PARAMS);
         }
     }
 
@@ -380,7 +301,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
         try (final StackProtector stackProtector = new StackProtector(luaState)) {
 
-            luaState.getField(LuaState.REGISTRYINDEX, SERVER_THREADS_TABLE);
+            luaState.getField(LuaState.REGISTRYINDEX, Constants.SERVER_THREADS_TABLE);
 
             final int threadTableIndex = luaState.absIndex(-1);
             final List<String> threadsToReap = new ArrayList<>();
@@ -439,21 +360,21 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
         try (final StackProtector stackProtector = new StackProtector(luaState, 1)) {
 
-            luaState.getGlobal(NAMAZU_RT_TABLE);
+            luaState.getGlobal(Constants.NAMAZU_RT_TABLE);
 
             // The first two checks shouldn't fail, unless somebody has seriously
             // hosed the lua script backing this resource.
 
             if (!luaState.isTable(-1)) {
-                getScriptLog().error("Unable to find table {}", NAMAZU_RT_TABLE);
+                getScriptLog().error("Unable to find table {}", Constants.NAMAZU_RT_TABLE);
                 throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 
-            luaState.getField(-1, REQUEST_TABLE);
+            luaState.getField(-1, Constants.REQUEST_TABLE);
             luaState.remove(-2);  // pops namazu_rt
 
             if (!luaState.isTable(-1)) {
-                getScriptLog().error("Unable to find table {}.{}", NAMAZU_RT_TABLE, REQUEST_TABLE);
+                getScriptLog().error("Unable to find table {}.{}", Constants.NAMAZU_RT_TABLE, Constants.REQUEST_TABLE);
                 throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 
@@ -464,7 +385,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
             luaState.remove(-2); // pops request
 
             if (!luaState.isFunction(-1)) {
-                getScriptLog().warn("Unable to find function {}.{}.{}", NAMAZU_RT_TABLE, REQUEST_TABLE, methodName);
+                getScriptLog().warn("Unable to find function {}.{}.{}", Constants.NAMAZU_RT_TABLE, Constants.REQUEST_TABLE, methodName);
                 throw new NotFoundException(methodName + " doest not exist for " + this);
             }
 
@@ -565,19 +486,19 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
         try (final StackProtector stackProtector = new StackProtector(luaState)) {
 
-            luaState.getGlobal(NAMAZU_RT_TABLE);   // Pushes namazu_rt
-            luaState.getField(-1, CLOSE_FUNCTION); // pushes close() (if it exists)
-            luaState.remove(-2);                   // pops namazu_rt
+            luaState.getGlobal(Constants.NAMAZU_RT_TABLE);   // Pushes namazu_rt
+            luaState.getField(-1, Constants.CLOSE_FUNCTION); // pushes close() (if it exists)
+            luaState.remove(-2);                             // pops namazu_rt
 
             if (!luaState.isNil(-1) && !luaState.isFunction(-1)) {
-                getScriptLog().warn("{}.{} is not a function.", NAMAZU_RT_TABLE, CLOSE_FUNCTION);
+                getScriptLog().warn("{}.{} is not a function.", Constants.NAMAZU_RT_TABLE, Constants.CLOSE_FUNCTION);
             } else if (luaState.isFunction(-1)) {
                 luaState.call(0,0);
             }
 
         } catch (final Exception ex) {
             dumpStack();
-            getScriptLog().error("Caught exception invoking script {}() function", CLOSE_FUNCTION, ex);
+            getScriptLog().error("Caught exception invoking script {}() function", Constants.CLOSE_FUNCTION, ex);
             throw new InternalException(ex);
         } finally {
             luaState.close();

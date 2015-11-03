@@ -46,6 +46,7 @@ public class InternalResourceProviders {
                 try (final InputStream inputStream = resoureURL.openStream()){
                     luaInternalResource.loadAndRun(inputStream, resoureURL.toString());
                 } catch (IOException ex) {
+                    luaInternalResource.close();
                     throw new InternalException(ex);
                 }
 
@@ -82,15 +83,16 @@ public class InternalResourceProviders {
             @Override
             public LuaInternalResource get() {
 
-                final LuaInternalResource luaEdgeResource = luaInternalResourceProvider.get();
+                final LuaInternalResource luaInternalResource = luaInternalResourceProvider.get();
 
                 try (final InputStream inputStream = new FileInputStream(file)) {
-                    luaEdgeResource.loadAndRun(inputStream, file.getAbsolutePath());
+                    luaInternalResource.loadAndRun(inputStream, file.getAbsolutePath());
                 } catch (IOException ex) {
-                    throw new NotFoundException(ex);
+                    luaInternalResource.close();
+                    throw new InternalException(ex);
                 }
 
-                return luaEdgeResource;
+                return luaInternalResource;
 
             }
 
