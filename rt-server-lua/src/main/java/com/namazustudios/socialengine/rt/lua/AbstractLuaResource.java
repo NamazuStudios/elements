@@ -6,16 +6,16 @@ import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.AbstractResource;
+import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.ResponseCode;
+import com.namazustudios.socialengine.rt.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * The abstract {@link Resource} type backed by a Lua script.  This uses the JNLua implentation
@@ -54,36 +54,11 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
     private final Tabler tabler;
 
+    private final CoroutineManager coroutineManager;
+
+    private final ClasspathModuleLoader classpathModuleLoader;
+
     private Logger scriptLog = LOG;
-
-    /**
-     * Creates a new thread managed by the server.  This returns to the calling code
-     * the thread that was created.
-     */
-    private final JavaFunction serverStartCoroutine = new JavaFunction() {
-        @Override
-        public int invoke(final LuaState luaState) {
-            try (final StackProtector stackProtector = new StackProtector(luaState)) {
-
-                if (!luaState.isFunction(-1)) {
-                    dumpStack();
-                    throw new IllegalArgumentException("server.coroutine.create() must be passed a function");
-                }
-
-                final UUID uuid = UUID.randomUUID();
-
-                luaState.newThread();
-                luaState.getField(LuaState.REGISTRYINDEX, Constants.SERVER_THREADS_TABLE);
-                luaState.pushValue(-2);
-                luaState.setField(-2, uuid.toString());
-                luaState.pop(1);
-
-                getScriptLog().info("Created coroutine {}", uuid);
-                return stackProtector.setAbsoluteIndex(1);
-
-            }
-        }
-    };
 
     /**
      * Redirects the print function to the logger returned by {@link #getScriptLog()}.
@@ -104,60 +79,6 @@ public abstract class AbstractLuaResource extends AbstractResource {
         }
     };
 
-    private final JavaFunction classpathSearcher = new JavaFunction() {
-        @Override
-        public int invoke(final  LuaState luaState) {
-            try (final StackProtector stackProtector = new StackProtector(luaState)) {
-
-                if (!luaState.isString(-1)) {
-                    luaState.pushString("module name must be a string");
-                    return 1;
-                }
-
-                final String moduleName = luaState.checkString(-1);
-                final ClassLoader classLoader = AbstractLuaResource.class.getClassLoader();
-                final URL resourceURL = classLoader.getResource(moduleName + ".lua");
-
-                luaState.setTop(0);
-
-                if (resourceURL == null) {
-                    luaState.pushString(moduleName + " not found on classpath");
-                } else {
-                    luaState.pushJavaFunction(classpathLoader);
-                    luaState.pushJavaObject(resourceURL);
-                }
-
-                return stackProtector.setAbsoluteIndex(2);
-
-            }
-        }
-    };
-
-    private final JavaFunction classpathLoader = new JavaFunction() {
-        @Override
-        public int invoke(final LuaState luaState) {
-            try (final StackProtector stackProtector = new StackProtector(luaState)) {
-
-                final URL resourceURL = luaState.checkJavaObject(-1, URL.class);
-                final String simpleFileName = simlifyFileName(resourceURL.getFile());
-                getScriptLog().debug("Loading module from {}", resourceURL);
-
-                try (final InputStream inputStream = resourceURL.openStream())  {
-                    luaState.load(inputStream, simpleFileName, "bt");
-                } catch (IOException ex) {
-                    throw new InternalException(ex);
-                }
-
-                luaState.remove(-2);
-                luaState.remove(-2);
-                luaState.call(0, 1);
-
-                return stackProtector.setAbsoluteIndex(1);
-
-            }
-        }
-    };
-
     /**
      * Creates an instance of {@link AbstractLuaResource} with the given {@link LuaState}
      * type.j
@@ -170,10 +91,13 @@ public abstract class AbstractLuaResource extends AbstractResource {
      */
     public AbstractLuaResource(final LuaState luaState,
                                final IocResolver iocResolver,
-                               final Tabler tabler) {
+                               final Tabler tabler,
+                               final Server server) {
         this.luaState = luaState;
         this.iocResolver = iocResolver;
         this.tabler = tabler;
+        coroutineManager = new CoroutineManager(this, server);
+        classpathModuleLoader = new ClasspathModuleLoader(this);
     }
 
     /**
@@ -191,7 +115,10 @@ public abstract class AbstractLuaResource extends AbstractResource {
             luaState.openLibs();
 
             scriptLog = LoggerFactory.getLogger(name);
+
             setupScriptGlobals();
+            coroutineManager.setup();
+            classpathModuleLoader.setup();
 
             luaState.load(inputStream, name, "bt");
             getScriptLog().debug("Loaded lua script.", luaState);
@@ -206,7 +133,6 @@ public abstract class AbstractLuaResource extends AbstractResource {
         try (final StackProtector stackProtector = new StackProtector(luaState, 0)) {
             setupServerCoroutineTable();
             setupNamazuRTTable();
-            setupModuleSearchers();
             setupFunctionOverrides();
         }
     }
@@ -243,15 +169,6 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
         luaState.setField(-2, Constants.RESPONSE_CODE);
 
-        // Creates a table for server.coroutine.  This houses code for
-        // server-managed coroutines that will automatically be activated
-        // on every update.
-
-        luaState.newTable();
-        luaState.pushJavaFunction(serverStartCoroutine);
-        luaState.setField(-2, Constants.COROUTINE_CREATE_FUNCTION);
-        luaState.setField(-2, Constants.COROUTINE_TABLE);
-
         // Sets up the services table which references this and the IOC resolver
         // instance.
 
@@ -264,14 +181,6 @@ public abstract class AbstractLuaResource extends AbstractResource {
         // Finally sets the server table to be in the global space
         luaState.setGlobal(Constants.NAMAZU_RT_TABLE);
 
-    }
-
-    private void setupModuleSearchers() {
-        luaState.getGlobal(Constants.PACKAGE_TABLE);
-        luaState.getField(-1, Constants.PACKAGE_SEARCHERS_TABLE);
-        luaState.pushJavaFunction(classpathSearcher);
-        luaState.rawSet(-2, luaState.rawLen(-1) + 1);
-        luaState.pop(2);
     }
 
     private void setupFunctionOverrides() {
@@ -293,56 +202,8 @@ public abstract class AbstractLuaResource extends AbstractResource {
     @Override
     protected void doUpdate(double deltaTime) {
         try (final StackProtector stackProtector = new StackProtector(luaState)) {
-            runManagedCoroutines(deltaTime);
+            coroutineManager.runManagedCoroutines(deltaTime);
         }
-    }
-
-    private void runManagedCoroutines(double deltaTime) {
-
-        try (final StackProtector stackProtector = new StackProtector(luaState)) {
-
-            luaState.getField(LuaState.REGISTRYINDEX, Constants.SERVER_THREADS_TABLE);
-
-            final int threadTableIndex = luaState.absIndex(-1);
-            final List<String> threadsToReap = new ArrayList<>();
-
-            luaState.pushNil();
-            while (luaState.next(threadTableIndex)) {
-
-                if (!luaState.isThread(-1)) {
-                    luaState.pop(1);
-                    continue;
-                }
-
-                final int threadStatus = luaState.status(-1);
-
-                if ((threadStatus == LuaState.YIELD) || (threadStatus == luaState.OK)) {
-                    luaState.pushNumber(deltaTime);
-                    try {
-                        final int returnCount = luaState.resume(-2, 1);
-                        luaState.pop(returnCount);
-                    } catch (LuaRuntimeException ex) {
-                        dumpStack();
-                        dumpStack(ex);
-                    }
-                } else {
-                    threadsToReap.add(luaState.checkString(-2));
-                }
-
-                luaState.pop(1);
-
-            }
-
-            for (final String uuid : threadsToReap) {
-                getScriptLog().info("Reaping thread {}.", uuid);
-                luaState.pushNil();
-                luaState.setField(threadTableIndex, uuid);
-            }
-
-            luaState.pop(1);
-
-        }
-
     }
 
     /**
@@ -472,6 +333,15 @@ public abstract class AbstractLuaResource extends AbstractResource {
             getScriptLog().error("Caught exception writing Lua stack trace", lre);
         }
 
+    }
+
+    /**
+     * Gets the {@link LuaState} backing this {@link AbstractLuaResource}.
+     *
+     * @return the {@link LuaState} instance
+     */
+    public LuaState getLuaState() {
+        return luaState;
     }
 
     /**
