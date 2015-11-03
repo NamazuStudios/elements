@@ -18,7 +18,7 @@ public class CoroutineManager {
 
     private final Server server;
 
-    private final SortedMap<Double, String> timerMap = new TreeMap<>();
+    private final SortedMap<Double, UUID> timerMap = new TreeMap<>();
 
     /**
      * Creates a new thread managed by the server.  This returns to the calling code
@@ -41,6 +41,7 @@ public class CoroutineManager {
                 luaState.pushValue(-2);
                 luaState.setField(-2, uuid.toString());
                 luaState.pop(1);
+                timerMap.put(0.0, uuid);
 
                 abstractLuaResource.getScriptLog().info("Created coroutine {}", uuid);
                 return stackProtector.setAbsoluteIndex(1);
@@ -74,52 +75,86 @@ public class CoroutineManager {
 
     public void runManagedCoroutines(double deltaTime) {
 
-        try (final StackProtector stackProtector = new StackProtector(abstractLuaResource.getLuaState())) {
+        // Slices the map for coroutines which actually need to be run.  That is, all which
+        // are due to resume within the given time.
 
-            final LuaState luaState = abstractLuaResource.getLuaState();
+        final double serverTime = server.getServerTime();
+
+        // Takes a copy of the UUIDs we want ot run
+        final SortedMap<Double, UUID> toRun = timerMap.headMap(serverTime);
+        final List<UUID> toRunUUIDList = new ArrayList<>(toRun.values());
+
+        final LuaState luaState = abstractLuaResource.getLuaState();
+        try (final StackProtector stackProtector = new StackProtector(luaState)) {
 
             luaState.getField(LuaState.REGISTRYINDEX, Constants.SERVER_THREADS_TABLE);
 
-            final int threadTableIndex = luaState.absIndex(-1);
-            final List<String> threadsToReap = new ArrayList<>();
+            // Iterates each coroutine that is due to run, and resumes it.  If the coroutine
+            // returns a value, then the value is used to determine when to resume it.
 
-            luaState.pushNil();
-            while (luaState.next(threadTableIndex)) {
+            for (final UUID uuid : toRunUUIDList) {
 
-                if (!luaState.isThread(-1)) {
-                    luaState.pop(1);
-                    continue;
-                }
+                boolean reap = true;
+                luaState.getField(-1, uuid.toString());
 
-                final int threadStatus = luaState.status(-1);
+                if (luaState.isThread(-1)) {
 
-                if ((threadStatus == LuaState.YIELD) || (threadStatus == luaState.OK)) {
-                    luaState.pushNumber(deltaTime);
-                    try {
-                        final int returnCount = luaState.resume(-2, 1);
-                        luaState.pop(returnCount);
-                    } catch (LuaRuntimeException ex) {
-                        abstractLuaResource.dumpStack();
-                        abstractLuaResource.dumpStack(ex);
+                    if ((luaState.status(-1) == LuaState.YIELD) || (luaState.status(-1) == luaState.OK)) {
+
+                        // Runs the coroutine, and then schedules it to run again later.
+                        final double sleepTime = runCoroutine(deltaTime);
+
+                        if (luaState.status(-1) == LuaState.YIELD) {
+                            reap = false;
+                            timerMap.put(serverTime + sleepTime, uuid);
+                        }
+
                     }
-                } else {
-                    threadsToReap.add(luaState.checkString(-2));
                 }
 
+                // Pops the coroutine itself, leaving the table on the stack
                 luaState.pop(1);
 
-            }
+                if (reap) {
+                    abstractLuaResource.getScriptLog().info("Reaping thread {}.", uuid);
+                    luaState.pushNil();
+                    luaState.setField(-2, uuid.toString());
+                }
 
-            for (final String uuid : threadsToReap) {
-                abstractLuaResource.getScriptLog().info("Reaping thread {}.", uuid);
-                luaState.pushNil();
-                luaState.setField(threadTableIndex, uuid);
             }
 
             luaState.pop(1);
 
         }
 
+        toRun.clear();
+
     }
+
+    private double runCoroutine(final double deltaTime) {
+
+        double sleepTime = 0.0;
+        final LuaState luaState = abstractLuaResource.getLuaState();
+
+        luaState.pushNumber(deltaTime);
+
+        try {
+
+            final int returnCount = luaState.resume(-2, 1);
+
+            if (returnCount > 0 && luaState.isNumber(-1)) {
+                sleepTime = luaState.checkNumber(-1);
+            }
+
+            luaState.pop(returnCount);
+
+        } catch (LuaRuntimeException ex) {
+            abstractLuaResource.dumpStack(ex);
+        }
+
+        return sleepTime;
+
+    }
+
 
 }
