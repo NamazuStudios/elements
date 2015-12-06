@@ -104,7 +104,7 @@ function namazu_rt.request.subscribe(session, header, payload)
     -- bound to the session so the last client to disconnect will actually remove it
     -- from the server.
 
-    path = "/clocks/" .. name
+    path = "/clocks/" .. path
     namazu_internal.initialize_to_session_if_needed(session, "clock.lua", "/clocks", metadata)
 
     -- We wil subscribe the client to the "tick tock" and the "ding dong" event.  We specify any

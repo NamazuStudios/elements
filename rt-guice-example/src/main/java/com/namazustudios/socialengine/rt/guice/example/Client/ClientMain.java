@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.guice.example.client;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.rt.*;
@@ -13,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.util.List;
 
 /**
  * Created by patricktwohig on 9/11/15.
@@ -43,7 +45,17 @@ public class ClientMain {
 
             // We must first say hello to the server.
             sayHello(input, connectedInstance);
-            listClocks(input, connectedInstance);
+
+            // Obtain the clock we want to subscribe
+            final ClockMetadata clockMetadata = listClocks(input, connectedInstance);
+
+            // And finally subscribe, then wait for the user to enter "bye" into the terminal
+            final List<Observation> observationList = subscribe(clockMetadata, connectedInstance);
+            waitForTermination(input);
+
+            for (final Observation observation : observationList) {
+                observation.release();
+            }
 
         }
 
@@ -134,6 +146,48 @@ public class ClientMain {
         } while (metadata == null);
 
         return metadata;
+
+    }
+
+    private static List<Observation> subscribe(final ClockMetadata clockMetadata,
+                                               final ClientContainer.ConnectedInstance connectedInstance) {
+
+        final Path path = new Path(clockMetadata.getPath());
+        LOG.info("Adding observer for events at path {}", path);
+
+        final EventReceiver<ClockTimeEvent> eventReceiver = new EventReceiver<ClockTimeEvent>() {
+
+            @Override
+            public Class<ClockTimeEvent> getEventType() {
+                return ClockTimeEvent.class;
+            }
+
+            @Override
+            public void receive(Event event) {
+
+                final ClockTimeEvent clockTimeEvent = event.getPayload(ClockTimeEvent.class);
+
+                LOG.info("Event: {} Path: {} Time: {}", event.getEventHeader().getName(),
+                        event.getEventHeader().getPath(),
+                        clockTimeEvent.getTime());
+
+            }
+
+        };
+
+        return Lists.newArrayList(
+            connectedInstance.getRealiable().observe(path, "tick tock", eventReceiver),
+            connectedInstance.getRealiable().observe(path, "ding dong", eventReceiver));
+
+    }
+
+    private static void waitForTermination(final BufferedReader input) {
+
+        String line;
+
+        do {
+            line = readLine(input);
+        } while (!"bye".equals(line));
 
     }
 

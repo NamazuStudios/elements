@@ -27,6 +27,11 @@ public class SimpleEvent implements Event {
         this.payload = payload;
     }
 
+    @Override
+    public <T> T getPayload(Class<T> cls) {
+        return cls.cast(getPayload());
+    }
+
     public static Builder builder() {
         return new Builder();
     }

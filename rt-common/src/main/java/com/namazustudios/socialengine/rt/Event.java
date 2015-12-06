@@ -24,6 +24,13 @@ public interface Event {
      */
     Object getPayload();
 
+    /**
+     * Gets the payload for the event.
+     *
+     * @return the payload
+     */
+    <T> T getPayload(Class<T> cls);
+
     class Util {
 
         private Util() {}
