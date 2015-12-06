@@ -49,10 +49,14 @@ public class ClientMain {
             // Obtain the clock we want to subscribe
             final ClockMetadata clockMetadata = listClocks(input, connectedInstance);
 
+            // Send the request to actually subscribe
+            subscribe(clockMetadata, connectedInstance);
+
             // And finally subscribe, then wait for the user to enter "bye" into the terminal
-            final List<Observation> observationList = subscribe(clockMetadata, connectedInstance);
+            final List<Observation> observationList = setupLocalObservers(clockMetadata, connectedInstance);
             waitForTermination(input);
 
+            // Remove all observations fromt he server.
             for (final Observation observation : observationList) {
                 observation.release();
             }
@@ -149,8 +153,24 @@ public class ClientMain {
 
     }
 
-    private static List<Observation> subscribe(final ClockMetadata clockMetadata,
-                                               final ClientContainer.ConnectedInstance connectedInstance) {
+    private static void subscribe(final ClockMetadata clockMetadata,
+                                  final ClientContainer.ConnectedInstance connectedInstance) {
+
+        final ClockSubscriptionRequest clockSubscriptionRequest = new ClockSubscriptionRequest();
+        clockSubscriptionRequest.setName(clockMetadata.getName());
+
+        final SimpleRequest helloRequest = SimpleRequest.builder()
+                .path("/clocks")
+                .method("subscribe")
+                .payload(clockSubscriptionRequest)
+            .build();
+
+        connectedInstance.getRealiable().sendRequest(helloRequest, Void.class);
+
+    }
+
+    private static List<Observation> setupLocalObservers(final ClockMetadata clockMetadata,
+                                                         final ClientContainer.ConnectedInstance connectedInstance) {
 
         final Path path = new Path(clockMetadata.getPath());
         LOG.info("Adding observer for events at path {}", path);
