@@ -70,32 +70,37 @@ public class DefaultResourceEventReceiverMap implements ResourceEventReceiverMap
 
     }
 
-    public <PayloadT> void post(final Event event) {
+    public void post(final Event event) {
 
         final String name = event.getEventHeader().getName();
-        final Path path = new Path(event.getEventHeader().getPath());
         final Object payload = event.getPayload();
 
-        eventSubscribers.read(new ReadWriteProtectedObject.CriticalSection<Void, SortedSetMultimap<String,EventReceiverWrapper<?>>>() {
-
+        final List<EventReceiverWrapper<?>> eventReceiverList =
+                eventSubscribers.read(new ReadWriteProtectedObject.CriticalSection<
+                        List<EventReceiverWrapper<?>>,
+                        SortedSetMultimap<String,EventReceiverWrapper<?>>>() {
             @Override
-            public Void perform(SortedSetMultimap<String, EventReceiverWrapper<?>> eventReceivers) {
-                final List<EventReceiverWrapper<?>> eventReceiverList = new ArrayList<>(eventReceivers.get(name));
-
-                for (EventReceiver<?> eventReceiver : eventReceiverList) {
-                    try {
-                        final Object eventObject = eventReceiver.getEventType().cast(payload);
-                        final EventReceiver<Object> objectEventReceiver = (EventReceiver<Object>) eventReceiver;
-                        objectEventReceiver.receive(event);
-                    } catch (ClassCastException ex) {
-                        LOG.warn("Incompatible event type.", ex);
-                    }
-                }
-
-                return null;
-
+            public List<EventReceiverWrapper<?>> perform(SortedSetMultimap<String, EventReceiverWrapper<?>> eventReceivers) {
+                return new ArrayList<>(eventReceivers.get(name));
             }
         });
+
+        for (EventReceiver<?> eventReceiver : eventReceiverList) {
+
+            try {
+                eventReceiver.getEventType().cast(payload);
+            } catch (ClassCastException ex) {
+                LOG.warn("Incompatible event type.", ex);
+            }
+
+            try {
+                final EventReceiver<Object> objectEventReceiver = (EventReceiver<Object>) eventReceiver;
+                objectEventReceiver.receive(event);
+            } catch (Exception ex) {
+                LOG.error("Caught exception dispatching event.", ex);
+            }
+
+        }
 
         for (final EventReceiver<Object> observerEventReceiver : Lists.newArrayList(observers)) {
             observerEventReceiver.receive(event);

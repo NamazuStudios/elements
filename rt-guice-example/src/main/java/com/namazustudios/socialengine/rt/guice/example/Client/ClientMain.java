@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.guice.example.client;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.rt.*;
@@ -7,6 +9,9 @@ import com.namazustudios.socialengine.rt.mina.guice.MinaDefaultClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 
 /**
@@ -33,31 +38,43 @@ public class ClientMain {
 
         // Next we must connect to the server and start making requests.
 
-        try (final ClientContainer.ConnectedInstance connectedInstance = clientContainer.connect(inetSocketAddress)) {
+        try (final ClientContainer.ConnectedInstance connectedInstance = clientContainer.connect(inetSocketAddress);
+             final BufferedReader input = new BufferedReader(new InputStreamReader(System.in))) {
 
-            // Before we make the request, we must first ensure there are event listeners added for
-            // the events we expect.  This shoudl be doen before we make the request expecting
-            // the events or else we may miss events.
-            setupEventListeners(connectedInstance);
-
-            // We must next say hello
-            sayHello(connectedInstance);
+            // We must first say hello to the server.
+            sayHello(input, connectedInstance);
+            listClocks(input, connectedInstance);
 
         }
 
     }
 
-    private static void setupEventListeners(final ClientContainer.ConnectedInstance connectedInstance) {
-        //TODO Set up
+    private static final String readLine(final BufferedReader input) {
+        do {
+            try {
+
+                final String line = input.readLine().trim();
+
+                if (line.length() > 0) {
+                    return line;
+                }
+
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        } while (true);
     }
 
-    private static void sayHello(final ClientContainer.ConnectedInstance connectedInstance) {
+    private static void sayHello(final BufferedReader input,
+                                 final ClientContainer.ConnectedInstance connectedInstance) {
+
+        LOG.info("Enter your name.");
 
         final HelloRequest helloRequestPayload = new HelloRequest();
-        helloRequestPayload.setName("Johnny!");
+        helloRequestPayload.setName(readLine(input));
 
         final SimpleRequest helloRequest = SimpleRequest.builder()
-                .path("/hello")
+                .path("/clocks")
                 .method("introduce_yourself")
                 .payload(helloRequestPayload)
             .build();
@@ -70,6 +87,53 @@ public class ClientMain {
 
         final HelloResponse helloResponsePayload = helloResponse.getPayload(HelloResponse.class);
         LOG.info("Got response {} {}", helloResponsePayload.getMessage(), helloResponsePayload.getDetails());
+
+    }
+
+    private static ClockMetadata listClocks(final BufferedReader input,
+                                            final ClientContainer.ConnectedInstance connectedInstance) {
+
+        LOG.info("Enter your name.");
+
+        final SimpleRequest helloRequest = SimpleRequest.builder()
+                .path("/clocks")
+                .method("list_clocks")
+            .build();
+
+        final Response helloResponse = connectedInstance.getRealiable().sendRequest(helloRequest, HelloResponse.class);
+
+        if (helloResponse.getResponseHeader().getCode() != ResponseCode.OK.getCode()) {
+            throw new RuntimeException("Got bad response " + helloResponse);
+        }
+
+        final ListClocksResponse listClocksResponse = helloResponse.getPayload(ListClocksResponse.class);
+
+        ClockMetadata metadata;
+
+        do {
+
+            for (final ClockMetadata clockMetadata : listClocksResponse.getClocks()) {
+                LOG.info("Clock {} with timezone {} at location {} ", clockMetadata.getName(),
+                                                                      clockMetadata.getTimeZone(),
+                                                                      clockMetadata.getLocation());
+            }
+
+            LOG.info("Enter the clock's ID");
+
+            final String clockId = readLine(input);
+
+            metadata = Iterables.find(listClocksResponse.getClocks(), new Predicate<ClockMetadata>() {
+
+                @Override
+                public boolean apply(ClockMetadata input) {
+                    return clockId.equals(input.getName());
+                }
+
+            });
+
+        } while (metadata == null);
+
+        return metadata;
 
     }
 

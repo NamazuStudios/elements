@@ -32,11 +32,11 @@ namazu_rt.coroutine.create(function (deltaTime)
 
     while (true) do
 
-        coroutine.yield(1)
-
         namazu_event.post("tick tock", {
             time = simpleDateFormat:format(Date:new())
         })
+
+        coroutine.yield(1)
 
     end
 

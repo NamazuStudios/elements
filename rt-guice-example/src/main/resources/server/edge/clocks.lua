@@ -22,15 +22,16 @@ internalServer = namazu_rt.ioc:inject("com.namazustudios.socialengine.rt.interna
 -- A global table of the clocks we know about
 
 clocks = {
-    big_ben = {
+    {
         name = "Big Ben",
         location = "London, England",
-        time_zone = "Europe/London",
+        timeZone = "Europe/London",
+        path = "big_ben"
     },
-    eastern_columbia = {
+    {
         name = "Eastern Columbia Building",
         location = "Los Angeles, California",
-        time_zone = "America/Los_Angeles"
+        timeZone = "America/Los_Angeles"
     }
 }
 

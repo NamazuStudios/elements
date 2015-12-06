@@ -32,6 +32,6 @@ public interface ResourceEventReceiverMap {
      * that the event is checked and delivered to the appropriate handlers.
      *
      */
-    <PayloadT> void post(final Event event);
+    void post(final Event event);
 
 }
