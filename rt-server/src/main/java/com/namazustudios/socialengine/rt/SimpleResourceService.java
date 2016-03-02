@@ -7,7 +7,6 @@ import com.google.common.collect.PeekingIterator;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.sun.tools.corba.se.idl.constExpr.Not;
 
 import javax.inject.Inject;
 import java.util.Iterator;

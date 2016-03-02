@@ -5,7 +5,6 @@ import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.internal.*;
-import sun.java2d.pipe.SpanShapeRenderer;
 
 /**
  * Created by patricktwohig on 9/22/15.
