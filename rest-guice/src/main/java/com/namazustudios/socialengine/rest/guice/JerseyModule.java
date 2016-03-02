@@ -25,15 +25,7 @@ public class JerseyModule extends ServletModule {
 
         // Setup JAX-RS resources
 
-        bind(UserResource.class);
-        bind(EntrantResource.class);
-        bind(SessionResource.class);
-        bind(ShortLinkResource.class);
-        bind(SocialCampaignResource.class);
         bind(DefaultExceptionMapper.class);
-        bind(ApplicationResource.class);
-        bind(ApplicationProfileResource.class);
-        bind(PSNApplicationProfileResource.class);
 
         // Setup servlets
 
@@ -45,6 +37,94 @@ public class JerseyModule extends ServletModule {
 
         serve(apiRoot).with(ServletContainer.class, params);
 
+    }
+
+    /**
+     * Enables the {@link UserResource}.
+     *
+     * @return this
+     */
+    public JerseyModule enableUserResource() {
+        bind(UserResource.class);
+        return this;
+    }
+
+    /**
+     * Enables the {@link EntrantResource}.
+     *
+     * @return this
+     */
+    public JerseyModule enableEntrantResource() {
+        bind(EntrantResource.class);
+        return this;
+    }
+
+    /**
+     * Enables the {@link SessionResource}.
+     *
+     * @return this
+     */
+    public JerseyModule enableSessionResource() {
+        bind(SessionResource.class);
+        return this;
+    }
+
+    /**
+     * Enables the {@link ShortLinkResource}.
+     *
+     * @return this
+     */
+    public JerseyModule enableShortLinkResource() {
+        bind(ShortLinkResource.class);
+        return this;
+    }
+
+    /**
+     * Enables the {@link SocialCampaignResource}.
+     *
+     * @return this
+     */
+    public JerseyModule enableSocialCampaignResource() {
+        bind(SocialCampaignResource.class);
+        return this;
+    }
+
+    /**
+     * Enables the {@link ApplicationResource}
+     *
+     * @return this
+     */
+    public JerseyModule enableApplicationResource() {
+        bind(ApplicationResource.class);
+        bind(ApplicationProfileResource.class);
+        return this;
+    }
+
+    /**
+     * Enables the {@link PSNApplicationProfileResource}
+     *
+     * @return this
+     */
+    public JerseyModule enablePSNApplicationProfileResource() {
+        bind(PSNApplicationProfileResource.class);
+        return this;
+    }
+
+    /**
+     * Enables all resources provided by the rest-api package.
+     *
+     * @return this
+     */
+    public JerseyModule enableAllResources() {
+        bind(UserResource.class);
+        bind(EntrantResource.class);
+        bind(SessionResource.class);
+        bind(ShortLinkResource.class);
+        bind(SocialCampaignResource.class);
+        bind(ApplicationResource.class);
+        bind(ApplicationProfileResource.class);
+        bind(PSNApplicationProfileResource.class);
+        return this;
     }
 
 }
