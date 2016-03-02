@@ -103,6 +103,11 @@
             <artifactId>bval-guice</artifactId>
             <version>${bval.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-jersey2-jaxrs</artifactId>
+            <version>${swagger.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

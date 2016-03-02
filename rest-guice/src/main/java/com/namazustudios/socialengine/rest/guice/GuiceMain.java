@@ -42,7 +42,12 @@ public class GuiceMain extends GuiceServletContextListener {
 
         return injector = Guice.createInjector(
                 new ConfigurationModule(),
-                new JerseyModule(apiRoot).enableAllResources(),
+                new JerseyModule(apiRoot) {
+                    @Override
+                    protected void configureResoures() {
+                        enableAllResources();
+                    }
+                },
                 new ShortLinkFilterModule(apiRoot),
                 new ServicesModule(),
                 new MongoDaoModule(),

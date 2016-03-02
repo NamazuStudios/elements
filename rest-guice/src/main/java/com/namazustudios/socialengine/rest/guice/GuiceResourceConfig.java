@@ -24,6 +24,7 @@ public class GuiceResourceConfig extends ResourceConfig {
     @Inject
     public GuiceResourceConfig(ServiceLocator serviceLocator, ServletContext context) {
 
+        packages(true, "io.swagger.jaxrs.listing");
         packages(true, "com.namazustudios.socialengine.rest");
         packages(true, "com.namazustudios.socialengine.model");
 

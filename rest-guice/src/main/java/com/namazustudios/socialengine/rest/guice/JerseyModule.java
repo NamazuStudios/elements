@@ -5,6 +5,7 @@ import com.google.inject.servlet.ServletModule;
 import com.namazustudios.socialengine.rest.*;
 import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
 import org.glassfish.jersey.servlet.ServletContainer;
+import org.reflections.Reflections;
 
 import javax.inject.Singleton;
 import java.util.Map;
@@ -12,19 +13,20 @@ import java.util.Map;
 /**
  * Created by patricktwohig on 3/19/15.
  */
-public class JerseyModule extends ServletModule {
+public abstract class JerseyModule extends ServletModule {
 
     private final String apiRoot;
 
-    public JerseyModule(String apiRoot) {
+    public JerseyModule(final String apiRoot) {
         this.apiRoot = apiRoot.replace("/.$","") + "/*";
     }
 
     @Override
-    protected void configureServlets() {
+    protected final void configureServlets() {
 
         // Setup JAX-RS resources
 
+        configureResoures();
         bind(DefaultExceptionMapper.class);
 
         // Setup servlets
@@ -38,6 +40,12 @@ public class JerseyModule extends ServletModule {
         serve(apiRoot).with(ServletContainer.class, params);
 
     }
+
+    /**
+     * Configures any of the resources individually.
+     *
+     */
+    protected abstract void configureResoures();
 
     /**
      * Enables the {@link UserResource}.

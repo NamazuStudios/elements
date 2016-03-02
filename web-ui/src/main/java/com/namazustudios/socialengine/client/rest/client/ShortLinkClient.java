@@ -24,8 +24,9 @@ public interface ShortLinkClient extends RestService {
      * @param paginationMethodCallback
      */
     @GET
-    void getShortLinks(@QueryParam("offset")int offset,
-                       @QueryParam("count") int count,
+    @Path("{offset}/{count}")
+    void getShortLinks(@PathParam("offset") int offset,
+                       @PathParam("count") int count,
                        final MethodCallback<Pagination<ShortLink>> paginationMethodCallback);
 
     /**
