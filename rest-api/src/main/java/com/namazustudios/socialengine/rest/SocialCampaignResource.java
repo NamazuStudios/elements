@@ -31,9 +31,11 @@ public class SocialCampaignResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @Path("{offset}/{count}/{search}")
     public Pagination<SocialCampaign> getSocialCampaigns(
-            @QueryParam("offset") @DefaultValue("0") int offset,
-            @QueryParam("count") @DefaultValue("20") int count) {
+            @PathParam("offset") int offset,
+            @PathParam("count") int count,
+            @PathParam("search") String search) {
 
         if (offset < 0) {
             throw new InvalidParameterException("Offset must have positive value.");

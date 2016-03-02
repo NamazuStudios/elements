@@ -5,6 +5,8 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.rest.provider.UserProvider;
 import com.namazustudios.socialengine.service.AuthService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -12,7 +14,6 @@ import javax.servlet.http.HttpSession;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -20,6 +21,8 @@ import javax.ws.rs.core.MediaType;
 /**
  * Created by patricktwohig on 4/2/15.
  */
+@Api(value = "Session and Login",
+     description = "Starts a session by associating a User with the current HTTP session.")
 @Path("session")
 public class SessionResource {
 
@@ -31,6 +34,11 @@ public class SessionResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Gets a Session",
+                  notes = "Begins a session by accepting both the UserID and the Passoword.  Upon successful " +
+                          "completion of this call a cookie is set which can be used to auth future requests.  If " +
+                          "either the cookie or the underlying session expires, the user will have to reestablish " +
+                          "the session by supplying credentials again.")
     public User getSession(@QueryParam("userId") String userId,
                            @QueryParam("password") String password) {
 
@@ -55,6 +63,8 @@ public class SessionResource {
     }
 
     @DELETE
+    @ApiOperation(value = "Destroys the Session",
+                  notes = "Simply invalidates the session and effectively logs the user out.")
     public void destroySession() {
         httpServletRequest.getSession().invalidate();
     }

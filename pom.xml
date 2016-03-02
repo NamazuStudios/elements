@@ -57,6 +57,7 @@
         <jackson.version>2.5.2</jackson.version>
         <bson4jackson.version>2.4.0</bson4jackson.version>
         <reflections.version>0.9.10</reflections.version>
+        <swagger.version>1.5.7</swagger.version>
     </properties>
 
     <dependencies>

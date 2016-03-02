@@ -5,6 +5,8 @@ import com.namazustudios.socialengine.model.SocialCampaignEntry;
 import com.namazustudios.socialengine.model.SteamEntrantProfile;
 import com.namazustudios.socialengine.service.SocialCampaignService;
 import com.namazustudios.socialengine.ValidationHelper;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +20,11 @@ import javax.ws.rs.core.MediaType;
 /**
  * Created by patricktwohig on 3/19/15.
  */
+@Api(value = "Entrants",
+     description = "Allows users to register for entry into social camapaigs.  Social " +
+                   "campaigns are essentially simple promotions which allow a user to " +
+                   "receive some sort of reward or incentive for sharing a specific link " +
+                   "which is tracked through a short linker.")
 @Path("campaign/{name}")
 public class EntrantResource {
 
@@ -32,7 +39,12 @@ public class EntrantResource {
     @POST
     @Path("basic/entrant")
     @Produces(MediaType.APPLICATION_JSON)
-    public SocialCampaignEntry addEntrant(@PathParam("name")final String name, final BasicEntrantProfile basicEntrantProfile) {
+    @ApiOperation(value = "Creates a Basic Entrant",
+                  notes = "A basic entrant is keyed uniquely from email and provides very simple " +
+                          "contact information.  The entrant can be associated with a User later if " +
+                          "necessary.")
+    public SocialCampaignEntry addBasicEntrant(
+            @PathParam("name")final String name, final BasicEntrantProfile basicEntrantProfile) {
         LOGGER.info("Adding entrant for basic campaign: " + name);
         validationService.validateModel(basicEntrantProfile);
         return socialCampaignService.submitEntrant(name, basicEntrantProfile);
@@ -41,7 +53,11 @@ public class EntrantResource {
     @POST
     @Path("steam/entrant")
     @Produces(MediaType.APPLICATION_JSON)
-    public SocialCampaignEntry addEntrant(@PathParam("name")final String name, final SteamEntrantProfile steamEntrant) {
+    @ApiOperation(value = "Creates a Steam Entrant",
+                  notes = "A Steam entrant is simalar to a basic entrant, but captures the user's Steam " +
+                          "ID in addition to the remaining basic info.")
+    public SocialCampaignEntry addSteamEntrant(
+            @PathParam("name")final String name, final SteamEntrantProfile steamEntrant) {
         LOGGER.info("Adding entrant for Steam campaign: " + name);
         validationService.validateModel(steamEntrant);
         return socialCampaignService.submitEntrant(name, steamEntrant);

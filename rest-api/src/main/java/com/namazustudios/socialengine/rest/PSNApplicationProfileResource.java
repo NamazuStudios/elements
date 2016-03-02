@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.model.application.PSNApplicationProfile;
 import com.namazustudios.socialengine.service.ApplicationProfileService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -12,6 +14,8 @@ import javax.ws.rs.core.MediaType;
  *
  * Created by patricktwohig on 7/13/15.
  */
+@Api(value = "PSN Application Profiles",
+    description = "Operations for the management of ApplictionProfiles for the Playstation Network.")
 @Path("application/{applicationNameOrId}/profile/psn")
 public class PSNApplicationProfileResource {
 
@@ -30,7 +34,9 @@ public class PSNApplicationProfileResource {
     @GET
     @Path("{applicationProfileNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public PSNApplicationProfile getApplicationProfile(
+    @ApiOperation(value = "Gets a PSN Application Profile",
+                  notes = "Gets a single PSN application based on unique name or ID.")
+    public PSNApplicationProfile getPSNApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
         return applicationProfileService.getPSNApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
@@ -46,7 +52,9 @@ public class PSNApplicationProfileResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public PSNApplicationProfile createApplicationProfile(
+    @ApiOperation(value = "Creates a new PSN ApplicationProfile",
+                  notes = "Creates a new PSN ApplicationProfile with the specific ID or application.")
+    public PSNApplicationProfile createPSNApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             final PSNApplicationProfile psnApplicationProfile) {
         return applicationProfileService.createApplicationProfile(applicationNameOrId, psnApplicationProfile);
@@ -64,12 +72,16 @@ public class PSNApplicationProfileResource {
     @PUT
     @Path("{applicationProfileNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Updates a PSN ApplicationProfile",
+                  notes = "Updates an existing PSN Application profile if it is known to the server.")
     public PSNApplicationProfile updateApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId,
             final PSNApplicationProfile psnApplicationProfile) {
-        return applicationProfileService.updateApplicationProfile(applicationNameOrId,
-                applicationProfileNameOrId, psnApplicationProfile);
+        return applicationProfileService.updateApplicationProfile(
+                applicationNameOrId,
+                applicationProfileNameOrId,
+                psnApplicationProfile);
     }
 
     /**
@@ -81,10 +93,14 @@ public class PSNApplicationProfileResource {
     @DELETE
     @Path("{applicationProfileNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public void deleteApplicationProfile(
+    @ApiOperation(value = "Deletes a PSN ApplicationProfile",
+                  notes = "Deletes an existing PSN Application profile if it is known to the server.")
+    public void deletePSNApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        applicationProfileService.deleteApplicationProfile(applicationNameOrId, applicationProfileNameOrId,
+        applicationProfileService.deleteApplicationProfile(
+                applicationNameOrId,
+                applicationProfileNameOrId,
                 PSNApplicationProfile.class);
     }
 
