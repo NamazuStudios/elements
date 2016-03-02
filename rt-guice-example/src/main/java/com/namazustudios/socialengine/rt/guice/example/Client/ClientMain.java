@@ -90,7 +90,7 @@ public class ClientMain {
         helloRequestPayload.setName(readLine(input));
 
         final SimpleRequest helloRequest = SimpleRequest.builder()
-                .path("/clocks")
+                .path("/hello")
                 .method("introduce_yourself")
                 .payload(helloRequestPayload)
             .build();
@@ -116,7 +116,7 @@ public class ClientMain {
                 .method("list_clocks")
             .build();
 
-        final Response helloResponse = connectedInstance.getRealiable().sendRequest(helloRequest, HelloResponse.class);
+        final Response helloResponse = connectedInstance.getRealiable().sendRequest(helloRequest, ListClocksResponse.class);
 
         if (helloResponse.getResponseHeader().getCode() != ResponseCode.OK.getCode()) {
             throw new RuntimeException("Got bad response " + helloResponse);

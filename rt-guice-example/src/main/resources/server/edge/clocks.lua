@@ -61,7 +61,7 @@ function namazu_rt.request.list_clocks(session, header, payload)
 
     return namazu_rt.response_code.OK, {
         message = message,
-        objects = clocks
+        clocks = clocks
     }
 
 end

@@ -7,7 +7,17 @@ import java.util.List;
  */
 public class ListClocksResponse {
 
+    private String message;
+
     private List<ClockMetadata> clocks;
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
     public List<ClockMetadata> getClocks() {
         return clocks;
