@@ -107,19 +107,6 @@ public class SimpleEdgeServer extends AbstractSimpleServer<EdgeResource> impleme
             for (final Map.Entry<Path, EdgeResource> entry : bootstrapResources.entrySet()) {
                 final EdgeResource edgeResource = entry.getValue();
                 edgeResourceService.addResource(entry.getKey(), edgeResource);
-                edgeResource.observe(new EventReceiver<Object>() {
-
-                    @Override
-                    public Class<Object> getEventType() {
-                        return Object.class;
-                    }
-
-                    @Override
-                    public void receive(Event event) {
-                        postToObservers(event);
-                    }
-
-                });
                 LOG.info("Bootstrapped resource {} at path {}", entry.getValue(), entry.getKey());
             }
 

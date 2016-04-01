@@ -38,16 +38,16 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
 
     private final int maxPendingRequests;
 
-    private final ObservationEventReceiverMap observationEventReceiverMap;
+    private final EventService eventService;
 
     private final OutgoingNetworkOperations outgoingNetworkOperations;
 
     @Inject
     public DefaultClient(@Named(MAX_PENDING_REQUESTS) final int maxPendingRequests,
-                         final ObservationEventReceiverMap observationEventReceiverMap,
+                         final EventService eventService,
                          final OutgoingNetworkOperations outgoingNetworkOperations) {
         this.maxPendingRequests = maxPendingRequests;
-        this.observationEventReceiverMap = observationEventReceiverMap;
+        this.eventService = eventService;
         this.outgoingNetworkOperations = outgoingNetworkOperations;
     }
 
@@ -134,7 +134,7 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
     public <EventT> Observation observe(final Path path,
                                         final String name,
                                         final EventReceiver<EventT> eventReceiver) {
-        return observationEventReceiverMap.subscribe(path, name, eventReceiver);
+        return eventService.observe(path, name, eventReceiver);
     }
 
     @Override
@@ -174,9 +174,11 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
 
     @Override
     public Iterable<Class<?>> getEventTypes(final EventHeader eventHeader) {
+
         final Path path = new Path(eventHeader.getPath());
         final String name = eventHeader.getName();
-        final Iterable<? extends  EventReceiver<?>> eventReceivers = observationEventReceiverMap.getEventReceivers(path, name);
+        final Iterable<? extends  EventReceiver<?>> eventReceivers = eventService.getEventReceivers(path, name);
+
         return Iterables.transform(eventReceivers, new Function<EventReceiver<?>, Class<?>>() {
 
             @Override
@@ -185,11 +187,12 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
             }
 
         });
+
     }
 
     @Override
     public void receive(final Event event) {
-        observationEventReceiverMap.dispatch(event);
+        eventService.post(event);
     }
 
     private class SimpleClientPendingRequest {

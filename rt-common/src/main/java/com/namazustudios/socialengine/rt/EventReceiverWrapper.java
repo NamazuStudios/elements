@@ -37,7 +37,7 @@ public class EventReceiverWrapper<EventT> implements EventReceiver<EventT>, Comp
 
     @Override
     public int hashCode() {
-        return System.identityHashCode(wrapped);
+        return uuid.hashCode();
     }
 
     @Override

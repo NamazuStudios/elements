@@ -60,7 +60,7 @@ public abstract class AbstractSimpleServer<ResourceT extends Resource> implement
     private ExecutorService executorService;
 
     @Inject
-    private ObservationEventReceiverMap observationEventReceiverMap;
+    private EventService eventService;
 
     @Inject
     private ResourceService<ResourceT> resourceService;
@@ -77,30 +77,7 @@ public abstract class AbstractSimpleServer<ResourceT extends Resource> implement
                                           final String name,
                                           final EventReceiver<PayloadT> eventReceiver) {
         final EventReceiver<PayloadT> eventReceiverWrapper = wrap(eventReceiver, path);
-        return observationEventReceiverMap.subscribe(path, name, eventReceiverWrapper);
-    }
-
-    @Override
-    public <PayloadT> List<Subscription> subscribe(final Path path,
-                                                   final String name,
-                                                   final EventReceiver<PayloadT> eventReceiver) {
-
-        final List<Subscription> subscriptionList = new ArrayList<>();
-        final EventReceiver<PayloadT> eventReceiverWrapper = wrap(eventReceiver, path);
-
-        if (path.isWildcard()) {
-            for (final Resource resource : getResourceService().getResources(path)) {
-                final Subscription subscription = resource.subscribe(name, eventReceiverWrapper);
-                subscriptionList.add(subscription);
-            }
-        } else {
-            final Resource resource = getResourceService().getResource(path);
-            final Subscription subscription =  resource.subscribe(name, eventReceiverWrapper);
-            subscriptionList.add(subscription);
-        }
-
-        return subscriptionList;
-
+        return eventService.observe(path, name, eventReceiverWrapper);
     }
 
     private <PayloadT> EventReceiver<PayloadT> wrap(final EventReceiver<PayloadT> eventReceiver, final Path path) {
@@ -290,21 +267,6 @@ public abstract class AbstractSimpleServer<ResourceT extends Resource> implement
         } catch (ExecutionException ex) {
             LOG.error("Caught execution exception for future.", ex);
         }
-    }
-
-    /**
-     * Hands the {@link Event} to the server's {@link ObservationEventReceiverMap}.
-     *
-     * @param event
-     */
-    public void postToObservers(final Event event) {
-        post(new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                observationEventReceiverMap.dispatch(event);
-                return null;
-            }
-        });
     }
 
     /**

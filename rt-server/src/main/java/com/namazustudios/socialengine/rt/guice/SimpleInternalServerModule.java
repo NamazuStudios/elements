@@ -32,8 +32,8 @@ public class SimpleInternalServerModule extends AbstractModule{
                 .to(new TypeLiteral<SimpleResourceService<InternalResource>>() {})
                 .in(Scopes.SINGLETON);
 
-        binder().bind(ObservationEventReceiverMap.class)
-                .to(DefaultObservationEventReceiverMap.class)
+        binder().bind(EventService.class)
+                .to(SimpleEventService.class)
                 .in(Scopes.SINGLETON);
 
     }

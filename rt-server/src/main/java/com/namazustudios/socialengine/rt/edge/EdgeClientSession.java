@@ -94,7 +94,7 @@ public interface EdgeClientSession {
     Observation observeIdle(EdgeClientSessionObserver edgeClientSessionObserver);
 
     /**
-     * Observes the the event with the given name, for the {@link EdgeServer} instance.  The {@link Subscription}
+     * Observes the the event with the given name, for the {@link EdgeServer} instance.  The {@link Observation}
      * is registered in this {@link EdgeClientSession} with a disconnection listener.  Upon termination
      * of this session, the container will automatically clean-up the session.
      *
@@ -104,30 +104,12 @@ public interface EdgeClientSession {
 
     /**
      * Observes to the the event with the given name, for the {@link InternalServer} instance.  The
-     * {@link Subscription} is registered in this {@link EdgeClientSession} with a disconnection
+     * {@link Observation} is registered in this {@link EdgeClientSession} with a disconnection
      * listener.  Upon termination of this session, the container will automatically clean-up the session.
      *
      * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
      */
     PathBuilder<EventObservationNameBuilder<Observation>> observeInternalEvent();
-
-    /**
-     * Subscribes to the the event with the given name, for the {@link EdgeServer} instance.  The {@link Subscription}
-     * is registered in this {@link EdgeClientSession} with a disconnection listener.  Upon termination
-     * of this session, the container will automatically clean-up the session.
-     *
-     * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
-     */
-    PathBuilder<EventObservationNameBuilder<List<Subscription>>> subscribeToEdgeEvent();
-
-    /**
-     * Subscribes to the the event with the given name, for the {@link InternalServer} instance.  The
-     * {@link Subscription} is registered in this {@link EdgeClientSession} with a disconnection
-     * listener.  Upon termination of this session, the container will automatically clean-up the session.
-     *
-     * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
-     */
-    PathBuilder<EventObservationNameBuilder<List<Subscription>>> subscribeToInternalEvent();
 
     /**
      * Returns an instance of {@link PathBuilder} which can be used to obtain an instance of {@link InternalResource}

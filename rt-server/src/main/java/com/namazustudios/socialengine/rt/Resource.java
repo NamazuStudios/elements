@@ -41,32 +41,6 @@ public interface Resource extends AutoCloseable {
     void init(final Map<String, Object> parameters);
 
     /**
-     * Subscribes a wildcard receiver to the {@link Resource}.  This will observe events with
-     * any name.
-     *
-     * This method must be thread safe.
-     *
-     * @param objectEventReceiver
-     * @return the {@link Observation} instance
-     */
-    Observation observe(EventReceiver<Object> objectEventReceiver);
-
-    /**
-     * Subscribes to {@link Event}s using the given {@link EventReceiver}.
-     *
-     * This method should not be used directly, but rather should be managed by
-     * the {@link Server} instance containing this resource.
-     *
-     * This method must be thread safe.
-     *
-     * @praam name the name of the event
-     * @param eventReceiver the event receiver instance
-     * @param <EventT>
-     *
-     */
-    <EventT> Subscription subscribe(String name, EventReceiver<EventT> eventReceiver);
-
-    /**
      * Called when he resource has been added to the {@link ResourceService}.
      *
      * This method must be thread safe.

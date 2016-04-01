@@ -56,8 +56,8 @@ public class MinaDefaultClientModule extends AbstractModule {
 
         binder().bind(ClientContainer.class).to(MinaClientContainer.class);
 
-        binder().bind(ObservationEventReceiverMap.class)
-                .to(DefaultObservationEventReceiverMap.class)
+        binder().bind(EventService.class)
+                .to(SimpleEventService.class)
                 .in(Scopes.SINGLETON);
 
     }

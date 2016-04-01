@@ -32,28 +32,10 @@ public interface Server<ResourceT extends Resource> {
      * @param eventReceiver the receiver
      * @param <PayloadT>
      *
-     * @return mapping of {@link Path} to {@link Subscription instances , which can be used to unsubscribe from the event pool
+     * @return an {@link Observation} instance
      *
      */
     <PayloadT> Observation observe(Path path, String name, EventReceiver<PayloadT> eventReceiver);
-
-    /**
-     * Subscribes the event receiver to the given paths, recursively if necessary.
-     *
-     * If the given path is a wildcard path, this will recursively subscribe to
-     * all resources matching that particular path.  This means that a single subscription
-     * will actually subscribe to the actual resource.  If the resource is moved, then the
-     * subscription will follow.
-     *
-     * @param path the path
-     * @param name the name of the event
-     * @param eventReceiver the receiver
-     * @param <PayloadT>
-     *
-     * @return mapping of {@link Path} to {@link Subscription instances , which can be used to unsubscribe from the event pool
-     *
-     */
-    <PayloadT> List<Subscription> subscribe(Path path, String name, EventReceiver<PayloadT> eventReceiver);
 
     /**
      * Gets all resources matching the given path.  The supplied path may be a wildcard path.  If none are

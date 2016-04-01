@@ -127,19 +127,6 @@ public class SimpleInternalServer extends AbstractSimpleServer<InternalResource>
     @Override
     public void addResource(Path path, InternalResource resource) {
         resourceService.addResource(path, resource);
-        resource.observe(new EventReceiver<Object>() {
-
-            @Override
-            public Class<Object> getEventType() {
-                return Object.class;
-            }
-
-            @Override
-            public void receive(Event event) {
-                postToObservers(event);
-            }
-
-        });
     }
 
     @Override

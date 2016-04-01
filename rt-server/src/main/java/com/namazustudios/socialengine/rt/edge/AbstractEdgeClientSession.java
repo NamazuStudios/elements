@@ -72,30 +72,6 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
     }
 
     @Override
-    public PathBuilder<EventObservationNameBuilder<List<Subscription>>> subscribeToEdgeEvent() {
-        return new AbstractEventPathBuilder<List<Subscription>>() {
-
-            @Override
-            protected List<Subscription> doCreateObservation(final Path path, final String named,
-                                                             final Class<?> type) {
-                return createSubscriptions(edgeServer, named, type, path);
-            }
-        };
-    }
-
-    @Override
-    public PathBuilder<EventObservationNameBuilder<List<Subscription>>> subscribeToInternalEvent() {
-        return new AbstractEventPathBuilder<List<Subscription>>() {
-
-            @Override
-            protected List<Subscription> doCreateObservation(final Path path, final String named,
-                                                             final Class<?> type) {
-                return createSubscriptions(internalServer, named, type, path);
-            }
-        };
-    }
-
-    @Override
     public PathBuilder<InternalResource> retainInternalResource() {
         return new AbstractPathBuilder<InternalResource>() {
             @Override
@@ -137,50 +113,6 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
 
             }
         };
-    }
-
-    private <T> List<Subscription> createSubscriptions(final Server server, final String named,
-                                                       final Class<T> type, final Path path) {
-
-        final List<Subscription> subscriptions = server.subscribe(path, named, getEventReceiver(type));
-        final AtomicInteger count = new AtomicInteger(subscriptions.size());
-
-        final Observation disconnectObservation = observeDisconnect(new EdgeClientSessionObserver() {
-            @Override
-            public boolean observe() {
-
-                for (final Subscription subscription : subscriptions) {
-                    subscription.release();
-                }
-
-                return false;
-            }
-
-        });
-
-        final List<Subscription> out = new ArrayList<>();
-
-        for (final Subscription underlyingSubscription : subscriptions) {
-            out.add(new Subscription() {
-                @Override
-                public Path getPath() {
-                    return underlyingSubscription.getPath();
-                }
-
-                @Override
-                public void release() {
-
-                    underlyingSubscription.release();
-
-                    if (count.decrementAndGet() <= 0) {
-                        disconnectObservation.release();
-                    }
-
-                }
-            });
-        }
-
-        return out;
     }
 
     @Override
