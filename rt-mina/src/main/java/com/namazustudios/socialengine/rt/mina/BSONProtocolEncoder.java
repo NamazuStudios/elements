@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.protocol.Envelope;
 import com.namazustudios.socialengine.rt.protocol.EnvelopeFormat;
 import com.namazustudios.socialengine.rt.protocol.EnvelopeType;
-import com.sun.tools.javac.comp.Check;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolEncoder;
@@ -16,7 +15,6 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
 /**
