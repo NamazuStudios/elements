@@ -13,6 +13,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by patricktwohig on 4/3/15.
@@ -32,31 +33,26 @@ public class MongoClientProvider implements Provider<MongoClient> {
     @Override
     public MongoClient get() {
 
-        final List<ServerAddress> serverAddressList = Lists.transform(Arrays.asList(mongoDbUrls.split(",")),
+        final List<ServerAddress> serverAddressList = Arrays.asList(mongoDbUrls.split(",")).stream().map(input -> {
 
-                new Function<String, ServerAddress>() {
-                @Override
-                public ServerAddress apply(String input) {
+            final URI uri;
 
-                    final URI uri;
+            try {
+                uri = new URI(input);
+            } catch (URISyntaxException ex) {
+                throw new IllegalArgumentException("Invalid URI", ex);
+            }
 
-                    try {
-                        uri = new URI(input);
-                    } catch (URISyntaxException ex) {
-                        throw new IllegalArgumentException("Invalid URI", ex);
-                    }
+            if (uri.getScheme() != null && !MONGO_SCHEME.equals(uri.getScheme())) {
+                throw new IllegalArgumentException("Invalid scheme" + uri.getScheme());
+            }
 
-                    if (uri.getScheme() != null && !MONGO_SCHEME.equals(uri.getScheme())) {
-                        throw new IllegalArgumentException("Invalid scheme" + uri.getScheme());
-                    }
+            final String host = uri.getHost();
+            final int port = uri.getPort() < 0 ? DEFAULT_MONGO_PORT : uri.getPort();
 
-                    final String host = uri.getHost();
-                    final int port = uri.getPort() < 0 ? DEFAULT_MONGO_PORT : uri.getPort();
+            return new ServerAddress(host, port);
 
-                    return new ServerAddress(host, port);
-
-                }
-            });
+        }).collect(Collectors.toList());
 
         return new MongoClient(serverAddressList);
 
