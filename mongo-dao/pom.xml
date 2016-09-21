@@ -17,7 +17,7 @@
     <name>mongo-dao</name>
 
     <properties>
-        <morphia.version>0.110</morphia.version>
+        <morphia.version>1.2.1</morphia.version>
     </properties>
 
     <dependencies>

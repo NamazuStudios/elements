@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.namazustudios.socialengine.exception.DuplicateException;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
@@ -226,12 +225,12 @@ public class Atomic {
             @Override
             public ReturnT attempt(AdvancedDatastore datastore) throws ContentionException {
 
-                ModelT model = datastore.get(key.getKind(), key.getKindClass(), key.getId());
+                ModelT model = datastore.get(key.getCollection(), key.getType(), key.getId());
 
                 if (model == null) {
 
                     try {
-                        model = key.getKindClass().newInstance();
+                        model = key.getType().newInstance();
                     } catch (InstantiationException ex) {
                         throw new IllegalStateException(ex);
                     } catch (IllegalAccessException ex) {
