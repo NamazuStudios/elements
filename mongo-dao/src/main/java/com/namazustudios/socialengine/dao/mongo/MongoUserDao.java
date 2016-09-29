@@ -105,23 +105,12 @@ public class MongoUserDao implements UserDao {
             throw new BadQueryException(ex);
         }
 
-        return mongoDBUtils.paginationFromSearch(MongoUser.class, booleanQuery, offset, count,
-            new Function<MongoUser, User>() {
-                @Override
-                public User apply(MongoUser input) {
-                    return transform(input);
-                }
-            });
+        return mongoDBUtils.paginationFromSearch(MongoUser.class, booleanQuery, offset, count, this::transform);
 
     }
 
     private Pagination<User> paginationFromQuery(final Query<MongoUser> query, final int offset, final int count) {
-        return mongoDBUtils.paginationFromQuery(query, offset, count, new Function<MongoUser, User>() {
-            @Override
-            public User apply(MongoUser input) {
-                return transform(input);
-            }
-        });
+        return mongoDBUtils.paginationFromQuery(query, offset, count, input -> transform(input));
     }
 
     @Override

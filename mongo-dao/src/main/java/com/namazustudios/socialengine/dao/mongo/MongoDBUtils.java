@@ -41,7 +41,7 @@ public class MongoDBUtils {
         try {
             return new ObjectId(objectId);
         } catch (IllegalArgumentException ex) {
-            throw new NotFoundException("Object wiht ID " + objectId + " not found.");
+            throw new NotFoundException("Object with ID " + objectId + " not found.");
         }
     }
 
@@ -67,8 +67,8 @@ public class MongoDBUtils {
 
         final int limit = Math.min(queryMaxResults, count);
 
-        final Iterable<ModelT> userIterable =
-            Iterables.limit(Iterables.transform(query.offset(offset), function), limit);
+        final Iterable<ModelT> userIterable;
+        userIterable = Iterables.limit(Iterables.transform(query.offset(offset), function), limit);
 
         pagination.setObjects(Lists.newArrayList(userIterable));
         return pagination;
@@ -98,14 +98,8 @@ public class MongoDBUtils {
                 .withTopScores(count + offset)
                 .after(offset, count)) {
 
-            final Iterable<ObjectId> identifiers = Iterables.transform(results,
-                    new Function<ScoredDocumentEntry<MongoModelT>, ObjectId>() {
-                        @Override
-                        public ObjectId apply(ScoredDocumentEntry<MongoModelT> input) {
-                            return input.getIdentity(kind).getIdentity(ObjectId.class);
-                        }
-                    });
-
+            final Iterable<ObjectId> identifiers;
+            identifiers = Iterables.transform(results, input -> input.getIdentity(kind).getIdentity(ObjectId.class));
             mongoQuery.criteria("_id").in(identifiers);
 
         }
