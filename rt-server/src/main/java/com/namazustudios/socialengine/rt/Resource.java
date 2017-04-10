@@ -49,12 +49,6 @@ public interface Resource extends AutoCloseable {
      */
     void onAdd(Path path);
 
-//    /**
-//     * Called by the container to upate the {@link Resource}.  The resource is responsible
-//     * for keeping track of its own time internally and updating the resource accordingly.
-//     */
-//    void onUpdate();
-
     /**
      * Called when the resource has been moved to a new path.  In the event
      * of an exception the {@link ResourceService} guarantees that the state

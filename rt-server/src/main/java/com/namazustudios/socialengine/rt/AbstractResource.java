@@ -193,4 +193,6 @@ public abstract class AbstractResource implements Resource {
                 '}';
     }
 
+
+
 }

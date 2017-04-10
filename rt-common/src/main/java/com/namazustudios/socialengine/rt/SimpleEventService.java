@@ -50,20 +50,16 @@ public class SimpleEventService implements EventService {
         final ObservationKey key = new ObservationKey(path, name);
         final EventReceiverWrapper<PayloadT> receiverWrapper = new EventReceiverWrapper<>(receiver);
 
-        final Observation observation = new Observation() {
+        final Observation observation = () -> {
 
-            @Override
-            public void release() {
+            readWriteLock.writeLock().lock();
 
-                readWriteLock.writeLock().lock();
-
-                try {
-                    internalMapping.remove(key, receiver);
-                } finally {
-                    readWriteLock.writeLock().unlock();
-                }
-
+            try {
+                internalMapping.remove(key, receiver);
+            } finally {
+                readWriteLock.writeLock().unlock();
             }
+
         };
 
         readWriteLock.writeLock().lock();
