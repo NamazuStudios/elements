@@ -58,8 +58,11 @@ public class ServerIOHandler extends IoHandlerAdapter {
 
     private void handle(final IoSession session, final Request request) {
 
-        final IoSessionClientSession ioSessionClient = ioSessionClientProvider.get();
-        final ResponseReceiver responseReceiver = minaConnectedEdgeClientService.getResponseReceiver(ioSessionClient, request);
+        final IoSessionClientSession ioSessionClient;
+        ioSessionClient = ioSessionClientProvider.get();
+
+        final ResponseReceiver responseReceiver;
+        responseReceiver = minaConnectedEdgeClientService.getResponseReceiver(ioSessionClient, request);
 
         try {
             Request.Validator.validate(request);

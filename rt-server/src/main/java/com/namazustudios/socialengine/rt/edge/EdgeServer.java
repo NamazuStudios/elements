@@ -9,9 +9,6 @@ import java.util.Map;
  * interface is responsible for accepting instances of {@link Request} and negotiating
  * {@link Response} objects.
  *
- * Additionally, this is responsible for handling any multi-threading and coordinating/driving
- * the calls to {@link Resource#onUpdate()} calls.
- *
  * The EdgeServer is responsible for ensuring connections are secure from the outside world.  It may
  * implement a {@link EdgeFilter}, for example, to deny requests from unauthorized users.
  *

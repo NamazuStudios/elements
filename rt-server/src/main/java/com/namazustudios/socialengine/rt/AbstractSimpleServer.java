@@ -147,7 +147,6 @@ public abstract class AbstractSimpleServer<ResourceT extends Resource> implement
 
                 dispatchQueue(getRequestQueue(), maxRequests);
                 dispatchQueue(getEventQueue(), maxEvents);
-                doUpdate();
 
                 final long elapsed = Math.round(updateTimer.elapsed(TimeUnit.MILLISECONDS));
                 movingAverageMillis += elapsed;
@@ -217,47 +216,6 @@ public abstract class AbstractSimpleServer<ResourceT extends Resource> implement
         }
 
         return operationList;
-    }
-
-    private void doUpdate() throws InterruptedException {
-
-        final Set<Future<Void>> futureSet = new HashSet<>();
-        final CompletionService<Void> completionService = new ExecutorCompletionService<>(executorService);
-
-        for (final Resource edgeResource : getResourceService().getResources()) {
-
-            final Future<Void> future = completionService.submit(new Callable<Void>() {
-
-                @Override
-                public Void call() throws Exception {
-                    edgeResource.onUpdate();
-                    return null;
-                }
-
-                @Override
-                public String toString() {
-                    return edgeResource.toString();
-                }
-
-            });
-
-            futureSet.add(future);
-
-        }
-
-        while (!futureSet.isEmpty()) {
-
-            final Future<Void> completed = completionService.take();
-
-            if (completed != null) {
-                getAndLogResult(completed);
-                futureSet.remove(completed);
-            } else {
-                break;
-            }
-
-        }
-
     }
 
     private <T> void getAndLogResult(final Future<T> future) throws InterruptedException {

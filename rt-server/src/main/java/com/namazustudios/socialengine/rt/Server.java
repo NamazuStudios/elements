@@ -22,6 +22,14 @@ public interface Server<ResourceT extends Resource> {
      */
     void post(Callable<Void> callable);
 
+
+    default void post(Runnable runnable) {
+        post(() -> {
+            runnable.run();
+            return null;
+        });
+    }
+
     /**
      * Observes the events at the given path.  Any events on the server's bus matching the
      * path will observe the payload.  A single {@link Observation} is generated.

@@ -118,12 +118,9 @@ public class IoSessionClientSession extends AbstractEdgeClientSession implements
 
     @Override
     public void disconnect() {
-        edgeServer.post(new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                ioSession.close(false);
-                return null;
-            }
+        edgeServer.post(() -> {
+            ioSession.close(false);
+            return null;
         });
     }
 

@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * appropriate superclass implementation.
  *
  * Note that becuase the {@link Server} and {@link EdgeServer} are responsible for threading
- * this class is not thread-safe.  Only one thread at a time may be calling objects implenting
+ * this class is not thread-safe.  Only one thread at a time may be calling objects implementing
  * this interface and expect the state of the application to remain consistent.
  *
  * Created by patricktwohig on 8/23/15.
@@ -93,21 +93,6 @@ public abstract class AbstractResource implements Resource {
 
         stopwatch.reset();
 
-    }
-
-    /**
-     * The basic implementation of this method tracks the time between frames using
-     * an instance of {@link Stopwatch} and calling {@link #doUpdate(double deltaTme)}
-     * at the opportune time.
-     *
-     * @see {@link Resource#onUpdate()}
-     */
-    @Override
-    public void onUpdate() {
-        final double deltaTime = getElapsedTime();
-        doUpdate(deltaTime);
-        stopwatch.reset();
-        stopwatch.start();
     }
 
     /**
@@ -200,18 +185,6 @@ public abstract class AbstractResource implements Resource {
         eventService.post(simpleEvent);
 
     }
-
-    /**
-     * Called by {@link #onUpdate()} after calculating the time since the last frame
-     * using the {@link Stopwatch} instance return by this object's {@link #getStopwatch()}
-     * method.
-     *
-     * Override this method to do useful work.
-     *
-     * @param deltaTime the time since the last update
-     *
-     */
-    protected void doUpdate(final double deltaTime) {}
 
     @Override
     public String toString() {

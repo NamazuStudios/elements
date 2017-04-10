@@ -25,8 +25,6 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
 
     private final Tabler tabler;
 
-    private final InternalServer internalServer;
-
     @Inject
     public LuaInternalResource(final LuaState luaState,
                                final IocResolver iocResolver,
@@ -35,43 +33,6 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
         super(luaState, iocResolver, tabler, internalServer);
         this.luaState = luaState;
         this.tabler = tabler;
-        this.internalServer = internalServer;
-    }
-
-    @Override
-    public int retain() {
-
-        if (retainCount.get() <= 0) {
-            throw new ZeroReferenceCountException("Retain count: " + retainCount.get());
-        }
-
-        return retainCount.incrementAndGet();
-
-    }
-
-    @Override
-    public int release() {
-
-        if (retainCount.get() <= 0) {
-            throw new ZeroReferenceCountException("Retain count: " + retainCount.get());
-        }
-
-        final int count =  retainCount.decrementAndGet();
-
-        if (count == 0) {
-            internalServer.post(new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    internalServer.removeResource(getCurrentPath());
-                    close();
-                    return null;
-                }
-            });
-
-        }
-
-        return count;
-
     }
 
     @Override

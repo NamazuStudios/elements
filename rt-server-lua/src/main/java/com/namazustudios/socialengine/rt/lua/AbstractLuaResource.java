@@ -199,13 +199,6 @@ public abstract class AbstractLuaResource extends AbstractResource {
         }
     }
 
-    @Override
-    protected void doUpdate(double deltaTime) {
-        try (final StackProtector stackProtector = new StackProtector(luaState)) {
-            coroutineManager.runManagedCoroutines(deltaTime);
-        }
-    }
-
     /**
      * Pushes the request handler function for the given method name.
      *

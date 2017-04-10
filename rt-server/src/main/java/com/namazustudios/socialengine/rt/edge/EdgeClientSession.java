@@ -15,7 +15,8 @@ import java.util.List;
 public interface EdgeClientSession {
 
     /**
-     * Gets the ID of the client.
+     * Gets the ID of the client.  The ID is determined by the underlying framework and should
+     * be used as an opaque identifier for the session.
      *
      * @return the id
      */
@@ -112,34 +113,10 @@ public interface EdgeClientSession {
     PathBuilder<EventObservationNameBuilder<Observation>> observeInternalEvent();
 
     /**
-     * Returns an instance of {@link PathBuilder} which can be used to obtain an instance of {@link InternalResource}
-     * at the specified {@link Path}.  The returned {@link InternalResource} is retained automatically and
-     * will automatically be released when the client disconnects.
-     *
-     * @see {@link InternalServer#getResource(Path)}
-     * @see {@link InternalResource#retain()}
-     * @see {@link InternalResource#release()}
-     *
-     * @return the {@link PathBuilder} for {@link InternalResource}
-     */
-    PathBuilder<InternalResource> retainInternalResource();
-
-    /**
-     * Returns an instance of {@link PathBuilder} which can be used to obtain an instance of {@link InternalResource}
-     * at the specified {@link Path}.  The returned {@link InternalResource} is retained automatically and
-     * will automatically be released when the client disconnects.
-     *
-     * @see {@link InternalServer#retainOrAddResourceIfAbsent(Path, ResourceInitializer)}
-     * @see {@link InternalResource#retain()}
-     * @see {@link InternalResource#release()}
-     *
-     * @return the {@link PathBuilder} for {@link InternalResource}
-     */
-    PathBuilder<InternalResource> retainOrAddResourceIfAbsent(ResourceInitializer<InternalResource> resourceInitializer);
-
-    /**
      * Disconnects the remote client.  This may not happen immediately.  This may allow the current session to
-     * finish up work before actually closing the underlying transport.
+     * finish up work before actually closing the underlying transport.  However, once called it should
+     * be assumed that the session is no longer in use and should not rely on any methods.
+     *
      */
     void disconnect();
 

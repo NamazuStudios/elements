@@ -1,13 +1,17 @@
 package com.namazustudios.socialengine.rt.edge;
 
-    import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
 
 /**
  * The simple edge server is responsible for dispatching requests and events to all {@link Resource} instances

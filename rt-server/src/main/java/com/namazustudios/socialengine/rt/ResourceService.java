@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 
 import java.util.Iterator;
+import java.util.function.Supplier;
 
 /**
  * This is the service responsible for maintaining a set of {@link Resource} instances.  This
@@ -73,7 +74,7 @@ public interface ResourceService<ResourceT extends Resource> {
      * @throws {@link DuplicateException} if a resource at the given path already exists
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    AtomicOperationTuple<ResourceT> addResourceIfAbsent(Path path, ResourceInitializer<ResourceT> resourceInitializer);
+    AtomicOperationTuple<ResourceT> addResourceIfAbsent(Path path, Supplier<ResourceT> resourceInitializer);
 
     /**
      * Moves the {@link Resource} at the given source path to the destination path.
@@ -116,7 +117,7 @@ public interface ResourceService<ResourceT extends Resource> {
     void removeAndCloseResource(Path path);
 
     /**
-     * Returend from the call to {@link #addResourceIfAbsent(Path, ResourceInitializer)} to indicate
+     * Returend from the call to {@link #addResourceIfAbsent(Path, Supplier<ResourceT>)} to indicate
      * the status of the addition.
      *
      * @param <ResourceT> the resource type

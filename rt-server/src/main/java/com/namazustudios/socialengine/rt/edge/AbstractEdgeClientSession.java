@@ -72,50 +72,6 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
     }
 
     @Override
-    public PathBuilder<InternalResource> retainInternalResource() {
-        return new AbstractPathBuilder<InternalResource>() {
-            @Override
-            public InternalResource atPath(final Path path) {
-
-                final InternalResource internalResource = internalServer.retain(path);
-
-                observeDisconnect(new EdgeClientSessionObserver() {
-                    @Override
-                    public boolean observe() {
-                        internalResource.release();
-                        return false;
-                    }
-                });
-
-                return internalResource;
-
-            }
-        };
-    }
-
-    @Override
-    public PathBuilder<InternalResource> retainOrAddResourceIfAbsent(final ResourceInitializer<InternalResource> resourceInitializer) {
-        return new AbstractPathBuilder<InternalResource>() {
-            @Override
-            public InternalResource atPath(Path path) {
-
-                final InternalResource internalResource = internalServer.retainOrAddResourceIfAbsent(path, resourceInitializer);
-
-                observeDisconnect(new EdgeClientSessionObserver() {
-                    @Override
-                    public boolean observe() {
-                        internalResource.release();
-                        return false;
-                    }
-                });
-
-                return internalResource;
-
-            }
-        };
-    }
-
-    @Override
     public Observation observeIdle(EdgeClientSessionObserver edgeClientSessionObserver) {
         return addObserver(IDLE_OBSERVERS_KEY, edgeClientSessionObserver);
     }

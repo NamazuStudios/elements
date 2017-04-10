@@ -11,9 +11,9 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import javax.inject.Inject;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Supplier;
 
 /**
  * A generic {@link ResourceService} which can take any type of {@link Resource}.
@@ -121,19 +121,17 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
             throw new DuplicateException("Resource at path already exists " + path);
         }
 
-        server.post(new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                resource.onAdd(path);
-                return null;
-            }
+        server.post(() -> {
+            resource.onAdd(path);
+            return null;
         });
 
     }
 
     @Override
     public AtomicOperationTuple<ResourceT> addResourceIfAbsent(
-            final Path path, final ResourceInitializer<ResourceT> resourceInitializer) {
+            final Path path,
+            final Supplier<ResourceT> resourceInitializer) {
 
         // Creates a lock, which will be the substitute for the object until we
         // figure out if we need to create it, or if we need to insert it.  In any
@@ -154,7 +152,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                     // the instance new, and we can easily just replace the lock with the
                     // resource.
 
-                    final ResourceT toPut = resourceInitializer.init();
+                    final ResourceT toPut = resourceInitializer.get();
 
                     if (!pathResourceMap.replace(path, lock, toPut)) {
                         // This shouldn't happen, but if it does something is definitely not
@@ -163,12 +161,9 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                         throw new InternalException("could not unlock resource at path " + path);
                     }
 
-                    server.post(new Callable<Void>() {
-                        @Override
-                        public Void call() throws Exception {
-                            toPut.onAdd(path);
-                            return null;
-                        }
+                    server.post(() -> {
+                        toPut.onAdd(path);
+                        return null;
                     });
 
                     return new AtomicOperationTuple<ResourceT>() {
@@ -259,12 +254,9 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                 // the resource will be living in two places right now, this will be removed
                 // shortly from its source path
 
-                server.post(new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        toMove.onMove(source, destination);
-                        return null;
-                    }
+                server.post(() -> {
+                    toMove.onMove(source, destination);
+                    return null;
                 });
 
             } catch (RuntimeException ex) {
@@ -306,12 +298,9 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
             throw new NotFoundException("Resource at path not found: " + path);
         }
 
-        server.post(new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                resource.onRemove(path);
-                return null;
-            }
+        server.post(() -> {
+            resource.onRemove(path);
+            return null;
         });
 
         return resource;
