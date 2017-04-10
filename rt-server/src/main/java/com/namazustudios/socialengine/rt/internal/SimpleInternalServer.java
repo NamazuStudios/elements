@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * Created by patricktwohig on 8/23/15.
  */
-public class SimpleInternalServer extends AbstractSimpleServer<InternalResource> implements InternalServer {
+public class SimpleInternalServer extends AbstractSimpleServer implements InternalServer {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleInternalServer.class);
 
@@ -42,10 +42,10 @@ public class SimpleInternalServer extends AbstractSimpleServer<InternalResource>
         return requestQueue;
     }
 
-    @Override
-    protected ResourceService<?> getResourceService() {
-        return resourceService;
-    }
+//    @Override
+//    protected ResourceService<?> getResourceService() {
+//        return resourceService;
+//    }
 
     @Override
     public void dispatch(final Request request, final ResponseReceiver responseReceiver) {
@@ -66,20 +66,15 @@ public class SimpleInternalServer extends AbstractSimpleServer<InternalResource>
 
     }
 
-    @Override
-    public Iterable<InternalResource> getResources() {
-        return resourceService.getResources();
-    }
+//    @Override
+//    public InternalResource getResource(Path path) {
+//        return resourceService.getResource(path);
+//    }
 
-    @Override
-    public InternalResource getResource(Path path) {
-        return resourceService.getResource(path);
-    }
-
-    @Override
-    public Iterable<InternalResource> getResources(Path path) {
-        return resourceService.getResources(path);
-    }
+//    @Override
+//    public Iterable<InternalResource> getResources(Path path) {
+//        return resourceService.getResources(path);
+//    }
 
     @Override
     public void addResource(Path path, InternalResource resource) {

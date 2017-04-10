@@ -48,22 +48,10 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
         final Iterable<Map.Entry<Path, ResourceT>> entrySet = pathResourceMap.entrySet();
 
-        final Iterable<Map.Entry<Path, ResourceT>> resourceIterable =
-            Iterables.filter(entrySet, new Predicate<Map.Entry<Path, ResourceT>>() {
-                @Override
-                public boolean apply(final Map.Entry<Path, ResourceT> input) {
-                    return !lockFactory.isLock(input.getValue());
-                }
-            });
+        final Iterable<Map.Entry<Path, ResourceT>> resourceIterable;
+        resourceIterable = Iterables.filter(entrySet, input -> !lockFactory.isLock(input.getValue()));
 
-        return new Iterable<ResourceT>() {
-
-            @Override
-            public Iterator<ResourceT> iterator() {
-                return new ResourceIterator<>(resourceIterable.iterator());
-            }
-
-        };
+        return () -> new ResourceIterator<>(resourceIterable.iterator());
 
     }
 

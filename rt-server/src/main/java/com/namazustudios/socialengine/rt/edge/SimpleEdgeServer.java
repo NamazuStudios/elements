@@ -23,7 +23,7 @@ import java.util.concurrent.ExecutorService;
  *
  * Created by patricktwohig on 8/22/15.
  */
-public class SimpleEdgeServer extends AbstractSimpleServer<EdgeResource> implements EdgeServer {
+public class SimpleEdgeServer extends AbstractSimpleServer implements EdgeServer {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleEdgeServer.class);
 
@@ -68,21 +68,6 @@ public class SimpleEdgeServer extends AbstractSimpleServer<EdgeResource> impleme
     }
 
     @Override
-    public Iterable<EdgeResource> getResources(Path path) {
-        return edgeResourceService.getResources(path);
-    }
-
-    @Override
-    public EdgeResource getResource(Path path) {
-        return edgeResourceService.getResource(path);
-    }
-
-    @Override
-    public Iterable<EdgeResource> getResources() {
-        return edgeResourceService.getResources();
-    }
-
-    @Override
     protected ServerContext openServerContext() {
         return new EdgeServerContext();
     }
@@ -95,11 +80,6 @@ public class SimpleEdgeServer extends AbstractSimpleServer<EdgeResource> impleme
     @Override
     protected Queue<Callable<Void>> getRequestQueue() {
         return requestQueue;
-    }
-
-    @Override
-    protected ResourceService<?> getResourceService() {
-        return edgeResourceService;
     }
 
     private class EdgeServerContext implements ServerContext {

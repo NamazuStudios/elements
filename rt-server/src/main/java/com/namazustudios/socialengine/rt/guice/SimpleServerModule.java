@@ -71,12 +71,7 @@ public class SimpleServerModule extends AbstractModule {
 
         final int availableProcessors = Runtime.getRuntime().availableProcessors();
 
-        return new Provider<ExecutorService>() {
-            @Override
-            public ExecutorService get() {
-                return Executors.newFixedThreadPool(availableProcessors + 1);
-            }
-        };
+        return () -> Executors.newFixedThreadPool(availableProcessors + 1);
 
     }
 
@@ -88,12 +83,7 @@ public class SimpleServerModule extends AbstractModule {
      * @return a {@link ResourceLockFactory} for {@link EdgeResource} instances
      */
     protected Provider<ResourceLockFactory<EdgeResource>> edgeResourceLockFactoryProvider() {
-        return new Provider<ResourceLockFactory<EdgeResource>>() {
-            @Override
-            public ResourceLockFactory<EdgeResource> get() {
-                return ProxyLockFactory.edgeResourceProxyLockFactory();
-            }
-        };
+        return () -> ProxyLockFactory.edgeResourceProxyLockFactory();
     }
 
     /**
@@ -104,12 +94,7 @@ public class SimpleServerModule extends AbstractModule {
      * @return a {@link ResourceLockFactory} for {@link InternalResource} instances
      */
     protected Provider<ResourceLockFactory<InternalResource>> internalResourceLockFactoryProvider() {
-        return new Provider<ResourceLockFactory<InternalResource>>() {
-            @Override
-            public ResourceLockFactory<InternalResource> get() {
-                return ProxyLockFactory.internalResourceProxyLockFactory();
-            }
-        };
+        return () -> ProxyLockFactory.internalResourceProxyLockFactory();
     }
 
     /**

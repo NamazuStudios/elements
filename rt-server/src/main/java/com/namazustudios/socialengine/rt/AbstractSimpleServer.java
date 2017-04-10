@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 import com.google.common.base.Stopwatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.jvm.hotspot.debugger.cdbg.VoidType;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -13,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by patricktwohig on 8/23/15.
  */
-public abstract class AbstractSimpleServer<ResourceT extends Resource> implements Server<ResourceT>, Runnable {
+public abstract class AbstractSimpleServer implements Server, Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractSimpleServer.class);
 
@@ -62,14 +63,13 @@ public abstract class AbstractSimpleServer<ResourceT extends Resource> implement
     @Inject
     private EventService eventService;
 
-    @Inject
-    private ResourceService<ResourceT> resourceService;
-
     private final AtomicBoolean running = new AtomicBoolean();
 
     @Override
-    public void post(final Callable<Void> operation) {
-        getEventQueue().add(operation);
+    public <T> Future<T> post(final Callable<T> operation) {
+//        getEventQueue().add(operation);
+        /// TODO Make this support futures
+        return null;
     }
 
     @Override
@@ -112,16 +112,6 @@ public abstract class AbstractSimpleServer<ResourceT extends Resource> implement
             }
 
         };
-    }
-
-    @Override
-    public double getServerTime() {
-        return serverTimer.elapsed(TimeUnit.NANOSECONDS) * Constants.SECONDS_PER_NANOSECOND;
-    }
-
-    @Override
-    public double getTimeSinceEpoch() {
-        return System.currentTimeMillis() * Constants.SECONDS_PER_MILLISECOND;
     }
 
     @Override
@@ -256,13 +246,6 @@ public abstract class AbstractSimpleServer<ResourceT extends Resource> implement
      * @return the event queue
      */
     protected abstract Queue<Callable<Void>> getRequestQueue();
-
-    /**
-     * Gets the {@link ResourceService<?>} that is managed by this server.
-     *
-     * @return the {@link ResourceService} managed by this server.
-     */
-    protected abstract ResourceService<?> getResourceService();
 
     /**
      * Used to keep track of the server while it is up.  This may do anything required during

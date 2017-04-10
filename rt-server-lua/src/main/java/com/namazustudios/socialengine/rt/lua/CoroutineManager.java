@@ -73,63 +73,63 @@ public class CoroutineManager {
 
     }
 
-    public void runManagedCoroutines(double deltaTime) {
-
-        // Slices the map for coroutines which actually need to be run.  That is, all which
-        // are due to resume within the given time.
-
-        final double serverTime = server.getServerTime();
-
-        // Takes a copy of the UUIDs we want ot run
-        final SortedMap<Double, UUID> toRun = timerMap.headMap(serverTime);
-        final List<UUID> toRunUUIDList = new ArrayList<>(toRun.values());
-
-        final LuaState luaState = abstractLuaResource.getLuaState();
-        try (final StackProtector stackProtector = new StackProtector(luaState)) {
-
-            luaState.getField(LuaState.REGISTRYINDEX, Constants.SERVER_THREADS_TABLE);
-
-            // Iterates each coroutine that is due to run, and resumes it.  If the coroutine
-            // returns a value, then the value is used to determine when to resume it.
-
-            for (final UUID uuid : toRunUUIDList) {
-
-                boolean reap = true;
-                luaState.getField(-1, uuid.toString());
-
-                if (luaState.isThread(-1)) {
-
-                    if ((luaState.status(-1) == LuaState.YIELD) || (luaState.status(-1) == luaState.OK)) {
-
-                        // Runs the coroutine, and then schedules it to run again later.
-                        final double sleepTime = runCoroutine(deltaTime);
-
-                        if (luaState.status(-1) == LuaState.YIELD) {
-                            reap = false;
-                            timerMap.put(serverTime + sleepTime, uuid);
-                        }
-
-                    }
-                }
-
-                // Pops the coroutine itself, leaving the table on the stack
-                luaState.pop(1);
-
-                if (reap) {
-                    abstractLuaResource.getScriptLog().info("Reaping thread {}.", uuid);
-                    luaState.pushNil();
-                    luaState.setField(-2, uuid.toString());
-                }
-
-            }
-
-            luaState.pop(1);
-
-        }
-
-        toRun.clear();
-
-    }
+//    public void runManagedCoroutines(double deltaTime) {
+//
+//        // Slices the map for coroutines which actually need to be run.  That is, all which
+//        // are due to resume within the given time.
+//
+//        final double serverTime = server.getServerTime();
+//
+//        // Takes a copy of the UUIDs we want ot run
+//        final SortedMap<Double, UUID> toRun = timerMap.headMap(serverTime);
+//        final List<UUID> toRunUUIDList = new ArrayList<>(toRun.values());
+//
+//        final LuaState luaState = abstractLuaResource.getLuaState();
+//        try (final StackProtector stackProtector = new StackProtector(luaState)) {
+//
+//            luaState.getField(LuaState.REGISTRYINDEX, Constants.SERVER_THREADS_TABLE);
+//
+//            // Iterates each coroutine that is due to run, and resumes it.  If the coroutine
+//            // returns a value, then the value is used to determine when to resume it.
+//
+//            for (final UUID uuid : toRunUUIDList) {
+//
+//                boolean reap = true;
+//                luaState.getField(-1, uuid.toString());
+//
+//                if (luaState.isThread(-1)) {
+//
+//                    if ((luaState.status(-1) == LuaState.YIELD) || (luaState.status(-1) == luaState.OK)) {
+//
+//                        // Runs the coroutine, and then schedules it to run again later.
+//                        final double sleepTime = runCoroutine(deltaTime);
+//
+//                        if (luaState.status(-1) == LuaState.YIELD) {
+//                            reap = false;
+//                            timerMap.put(serverTime + sleepTime, uuid);
+//                        }
+//
+//                    }
+//                }
+//
+//                // Pops the coroutine itself, leaving the table on the stack
+//                luaState.pop(1);
+//
+//                if (reap) {
+//                    abstractLuaResource.getScriptLog().info("Reaping thread {}.", uuid);
+//                    luaState.pushNil();
+//                    luaState.setField(-2, uuid.toString());
+//                }
+//
+//            }
+//
+//            luaState.pop(1);
+//
+//        }
+//
+//        toRun.clear();
+//
+//    }
 
     private double runCoroutine(final double deltaTime) {
 

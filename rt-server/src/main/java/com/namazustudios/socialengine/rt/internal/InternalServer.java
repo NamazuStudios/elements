@@ -9,7 +9,7 @@ import com.namazustudios.socialengine.rt.edge.EdgeServer;
  *
  * Created by patricktwohig on 8/23/15.
  */
-public interface InternalServer extends Server<InternalResource> {
+public interface InternalServer extends Server {
 
     /**
      * Dispatches the given {@link Request} to the {@link Resource} instances contained

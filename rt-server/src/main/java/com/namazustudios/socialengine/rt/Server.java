@@ -1,30 +1,31 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.exception.NotFoundException;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 
 /**
  * Created by patricktwohig on 8/22/15.
  */
-public interface Server<ResourceT extends Resource> {
+public interface Server {
 
     /**
-     * Posts a {@link Callable} which will be executed later on the server thread pool.
+     * Posts a {@link Callable} which will be executed at some point later
+     * in the server's thread pool.
      *
-     * @param callable
-     * @return
+     * @param callable the callable to run
+     * @return a {@link Future<T>} representing the return.
      */
-    void post(Callable<Void> callable);
+    <T> Future<T> post(Callable<T> callable);
 
-
-    default void post(Runnable runnable) {
-        post(() -> {
+    /**
+     * Posts a {@link Runnable} and returns no result.  This exists to make
+     * the usage of lambda expressions simpler (does not require a return value).
+     *
+     * @param runnable the runnable to run
+     */
+    default Future<Void> postV(final Runnable runnable) {
+        return post(() -> {
             runnable.run();
             return null;
         });
@@ -34,7 +35,6 @@ public interface Server<ResourceT extends Resource> {
      * Observes the events at the given path.  Any events on the server's bus matching the
      * path will observe the payload.  A single {@link Observation} is generated.
      *
-     * subscription will follow.
      * @param path the path
      * @param name the name of the event
      * @param eventReceiver the receiver
@@ -46,44 +46,36 @@ public interface Server<ResourceT extends Resource> {
     <PayloadT> Observation observe(Path path, String name, EventReceiver<PayloadT> eventReceiver);
 
     /**
-     * Gets all resources matching the given path.  The supplied path may be a wildcard path.  If none are
-     * found, then this will return an empty {@link Iterable}.  That is, any {@link Iterator} instances
-     * returned will immediately return false for {@link Iterator#hasNext()}.
+     * Observes the events at the given path.  Any events on the server's bus matching the path
+     * will observe the payload.  A single {@link Observation} is generated.  This is a convienicne
+     * method assist in using {@link #observe(Path, String, EventReceiver)} when used with lambda
+     * expressions
      *
      * @param path the path
-     * @return an {@link Iterable} over the internal listing of {@link Resource} objects
+     * @param name the name of the event
+     * @param payloadTClass the payload type
+     * @param payloadTConsumer the consumer
+     * @param <PayloadT> the payload itself
+     * @return an {@link Observation} instance
      */
-    Iterable<ResourceT> getResources(Path path);
+    default <PayloadT> Observation observe(
+            final Path path, final String name,
+            final Class<PayloadT> payloadTClass,
+            final Consumer<PayloadT> payloadTConsumer) {
+        return observe(path, name, new EventReceiver<PayloadT>() {
 
-    /**
-     * Gets a {@link Resource} at the given path.  If a single resource isn't found, then this will throw
-     * and instance of {@link NotFoundException}.  The supplied path must not be a wildcard path.
-     *
-     * @param path the path
-     * @return the {@link Resource}
-     */
-    ResourceT getResource(Path path);
+            @Override
+            public Class<PayloadT> getEventType() {
+                return payloadTClass;
+            }
 
-    /**
-     * Gets all resources in the server.
-     *
-     * @return the listing of all resources.
-     */
-    Iterable<ResourceT> getResources();
+            @Override
+            public void receive(Event event) {
+                final PayloadT payload = payloadTClass.cast(event.getPayload());
+                payloadTConsumer.accept(payload);
+            }
 
-    /**
-     * Gets the server time, typically it is the wall-clock time since the server started.  The actual
-     * implementation is a detail.
-     *
-     * @return the server time
-     */
-    double getServerTime();
-
-    /**
-     * Gets the number of seconds (and fractional seconds) since the UNIX epoch, January 1, 1970.
-     *
-     * @return the time since the UNIX epoch
-     */
-    double getTimeSinceEpoch();
+        });
+    }
 
 }
