@@ -24,43 +24,4 @@ public interface InternalServer extends Server {
      */
     void dispatch(Request request, ResponseReceiver responseReceiver);
 
-    /**
-     * Adds {@link Resource} to this instance, as well as any additional steps required by the server.
-     *
-     * {@see {@link ResourceService#addResource(Path, Resource)}}
-     *
-     * @param path the path
-     * @param resource the resource
-     */
-    void addResource(Path path, InternalResource resource);
-
-    /**
-     * Moves the {@link Resource} on this server, as well as any additional steps required by the server.
-     *
-     * {@see {@link ResourceService#moveResource(Path, Path)}}
-     *
-     * @param source the source path
-     * @param destination the destination path
-     */
-    void moveResource(Path source, Path destination);
-
-    /**
-     * Moves the {@link Resource} on this server, as well as any additional steps required by the server.
-     *
-     * {@see {@link ResourceService#removeAllResources()}
-     *
-     * @param source the source path
-     * @param destination the destination path
-     */
-    void removeAllResources();
-
-    /**
-     * Adds {@link Resource} from this instance, as well as any additional steps required by the server.
-     *
-     * {@see {@link ResourceService#removeResource(Path)}}
-     *
-     * @param path the path
-     */
-    InternalResource removeResource(Path path);
-
 }

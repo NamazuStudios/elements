@@ -5,8 +5,8 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * This is the service responsible for maintaining a set of {@link Resource} instances.  This
@@ -24,15 +24,6 @@ import java.util.function.Supplier;
 public interface ResourceService<ResourceT extends Resource> {
 
     /**
-     * Gets all resources in this service.  Note that the {@link Iterator} returned
-     * by this {@link Iterable} must support the {@link Iterator#remove()} operation
-     * and will properly call {@link Resource#onRemove(Path)} appropraitely.
-     *
-     * @return all of the resources.
-     */
-    Iterable<ResourceT> getResources();
-
-    /**
      * Gets a resource at the given path.
      *
      * @param path the path
@@ -42,15 +33,6 @@ public interface ResourceService<ResourceT extends Resource> {
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     ResourceT getResource(Path path);
-
-    /**
-     * Gets all resources matching the given path.  This may be a single resource, or
-     * if a wildcard path is specified, this will return all paths matching the given path.
-     *
-     * @param path the path
-     * @return all of the resources matching the path
-     */
-    Iterable<ResourceT> getResources(Path path);
 
     /**
      * Adds a {@link ResourceT} to this resource service.
@@ -68,6 +50,9 @@ public interface ResourceService<ResourceT extends Resource> {
      *
      * This returns either the newly added instance, or the instance that had already existed.
      *
+     * Note that the given {@link Supplier<ResourceT>} should defer creation.  If you wish to
+     * insert an existing resource, then consider using {@link #addResource(Path, ResourceT)}
+     *
      * @param path the path for the {@link Resource} instance
      * @param resourceInitializer the resource initializer to use if the path is absent
      *
@@ -79,46 +64,6 @@ public interface ResourceService<ResourceT extends Resource> {
     AtomicOperationTuple<ResourceT> addResourceIfAbsent(Path path, Supplier<ResourceT> resourceInitializer);
 
     /**
-     * Moves the {@link Resource} at the given source path to the destination path.
-     *
-     * This throws an instance of {@link NotFoundException} if the resource path
-     * is not found.
-     *
-     * @param source the resource path
-     * @param destination the new destination path of the resource.
-     *
-     * @throws {@link NotFoundException} if no resource exists at that path
-     * @throws {@link DuplicateException} if a resource at the destination path already exists
-     * @throws {@link IllegalArgumentException} if either path is a wildcard path
-     */
-    void moveResource(Path source, Path destination);
-
-    /**
-     * Removes all resources from the service.  This will return the removed resources.
-     *
-     * @return and {@link Iterable<ResourceT>} of all resources which were removed as part of the operation
-     */
-    Iterable<ResourceT> removeAllResources();
-
-    /**
-     * Removes all resources from the service.  This will close the returned resources..
-     */
-    default void removeAndCloseAllResources() {
-
-        final Logger logger = LoggerFactory.getLogger(getClass());
-
-        for (final ResourceT resource : removeAllResources()) {
-            try {
-                resource.close();
-            } catch (Exception ex) {
-                logger.error("Caught exception closing resource.", ex);
-            }
-        }
-
-    }
-
-    /**
-     *
      * Removes a {@link ResourceT} instance from this resource service.
      *
      * @param path the path to the resource
@@ -127,6 +72,17 @@ public interface ResourceService<ResourceT extends Resource> {
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     ResourceT removeResource(Path path);
+
+    /**
+     * Removes a {@link ResourceT} instance from this resource service.
+     *
+     * @param path the path as a string
+     * @return the removed {@link Resource}
+     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     */
+    default ResourceT removeResource(String path) {
+        return removeResource(new Path(path));
+    }
 
     /**
      * Removes a {@link ResourceT} and then immediately closes it.
@@ -138,6 +94,39 @@ public interface ResourceService<ResourceT extends Resource> {
     default void removeAndCloseResource(final Path path) {
         final ResourceT resource = removeResource(path);
         resource.close();
+    }
+
+    /**
+     * Removes a {@link ResourceT} and then immediately closes it.
+     *
+     * @param path
+     * @throws {@link NotFoundException} if no resource exists at that path
+     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     */
+    default void removeAndCloseResource(final String path) {
+        final ResourceT resource = removeResource(path);
+        resource.close();
+    }
+
+    /**
+     * Removes all resources from the resource service.  The stream returned
+     * must have already removed all resources.
+     */
+    Stream<ResourceT> removeAllResources();
+
+    /**
+     * Removes all resources from the service and closes them.  ANy exceptions
+     * encountered are logged and all resources are attempted to be closed.
+     */
+    default void removeAndCloseAllResources() {
+        final Logger logger = LoggerFactory.getLogger(getClass());
+        removeAllResources().forEach(resource -> {
+            try {
+                resource.close();
+            } catch (Exception ex) {
+                logger.error("Error closing resource {}.", resource, ex);
+            }
+        });
     }
 
     /**

@@ -15,7 +15,7 @@
                         <b:NavbarCollapseButton dataTarget="#navbar-collapse"/>
                     </b:NavbarHeader>
 
-                    <b:NavbarCollapse b:id="navbar-collapse">
+                    <b:NavbarCollapse b:resourceId="navbar-collapse">
                         <b:NavbarNav>
 
                             <b:ListDropDown>

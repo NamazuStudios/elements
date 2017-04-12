@@ -13,9 +13,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Represents the path scheme for use in the server.  NOte that this class is not intended to be serialized
- * over the network, but is rather intended to be used on the client and the server to assist with matching
- * logic etc.
+ * Represents the path scheme for use in the server.
  *
  * Created by patricktwohig on 9/4/15.
  */

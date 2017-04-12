@@ -23,7 +23,7 @@ public class SimpleServerModule extends AbstractModule {
 
         edgeServerPrivateBinder.install(new SimpleEdgeServerModule());
 
-        edgeServerPrivateBinder.bind(new TypeLiteral<ResourceLockFactory<EdgeResource>>() {})
+        edgeServerPrivateBinder.bind(PathLockFactory.class)
                                .toProvider(Providers.guicify(edgeResourceLockFactoryProvider()));
 
         edgeServerPrivateBinder.expose(EdgeServer.class);
@@ -34,7 +34,7 @@ public class SimpleServerModule extends AbstractModule {
 
         internalServerBinder.install(new SimpleInternalServerModule());
 
-        internalServerBinder.bind(new TypeLiteral<ResourceLockFactory<InternalResource>>() {})
+        internalServerBinder.bind(PathLockFactory.class)
                             .toProvider(Providers.guicify(internalResourceLockFactoryProvider()));
 
         internalServerBinder.expose(InternalServer.class);
@@ -76,25 +76,25 @@ public class SimpleServerModule extends AbstractModule {
     }
 
     /**
-     * Override to include something other than the default {@link ResourceLockFactory} instance.
+     * Override to include something other than the default {@link PathLockFactory} instance.
      *
      * This uses the {@link ProxyLockFactory} to accomplish the task.
      *
-     * @return a {@link ResourceLockFactory} for {@link EdgeResource} instances
+     * @return a {@link PathLockFactory} for {@link EdgeResource} instances
      */
-    protected Provider<ResourceLockFactory<EdgeResource>> edgeResourceLockFactoryProvider() {
-        return () -> ProxyLockFactory.edgeResourceProxyLockFactory();
+    protected Provider<PathLockFactory> edgeResourceLockFactoryProvider() {
+        return () -> new SimplePathLockFactory();
     }
 
     /**
-     * Override to include something other than the default {@link ResourceLockFactory} instance.
+     * Override to include something other than the default {@link PathLockFactory} instance.
      *
      * This uses the {@link ProxyLockFactory} to accomplish the task.
      *
-     * @return a {@link ResourceLockFactory} for {@link InternalResource} instances
+     * @return a {@link PathLockFactory} for {@link InternalResource} instances
      */
-    protected Provider<ResourceLockFactory<InternalResource>> internalResourceLockFactoryProvider() {
-        return () -> ProxyLockFactory.internalResourceProxyLockFactory();
+    protected Provider<PathLockFactory> internalResourceLockFactoryProvider() {
+        return () -> new SimplePathLockFactory();
     }
 
     /**

@@ -58,26 +58,7 @@ public class SimpleInternalServer extends AbstractSimpleServer implements Intern
 
     }
 
-    @Override
-    public void addResource(Path path, InternalResource resource) {
-        resourceService.addResource(path, resource);
-    }
 
-    @Override
-    public void moveResource(Path source, Path destination) {
-        resourceService.moveResource(source, destination);
-    }
-
-    @Override
-    public void removeAllResources() {
-        resourceService.removeAllResources();
-    }
-
-    @Override
-    public InternalResource removeResource(Path path) {
-        return resourceService.removeResource(path);
-    }
-    
     private class InternalServerContext implements ServerContext {
 
         public InternalServerContext() {
@@ -86,7 +67,7 @@ public class SimpleInternalServer extends AbstractSimpleServer implements Intern
 
         @Override
         public void close() {
-            resourceService.removeAllResources();
+            resourceService.removeAndCloseAllResources();
         }
 
     }

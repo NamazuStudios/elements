@@ -69,39 +69,9 @@ function namazu_internal.initializer_for_provider(provider, initializer)
             end
 
             return resource
+
         end
     }
-end
-
--- Initizlizes the given Reosurce with the name, at the designated path, only if it is needed.  If
--- the resource already exists, this returns the existing resource and the initialization never
--- takes place.  Note that the returned value is retained by the system.
-function namazu_internal.initialize_if_needed(name, path, params)
-
-    provider = namazu_internal.provider(name)
-
-    initializer = namazu_internal.initializer_for_provider(provider, function(resource)
-        resource:init(params)
-    end)
-
-    return internalServer:retainOrAddResourceIfAbsent(path, initializer)
-
-end
-
--- Initizlizes the given Reosurce with the name, at the designated path, only if it is needed.  If
--- the resource already exists, this returns the existing resource and the initialization never
--- takes place.  Additionally, this retains the resource to the session such that it will be
--- released when the client disconnects
-function namazu_internal.initialize_to_session_if_needed(session, name, path, params)
-
-    provider = namazu_internal.provider(name)
-
-    initializer = namazu_internal.initializer_for_provider(provider, function(resource)
-        resource:init(params)
-    end)
-
-    return session:retainOrAddResourceIfAbsent():atPath(path);
-
 end
 
 return namazu_internal

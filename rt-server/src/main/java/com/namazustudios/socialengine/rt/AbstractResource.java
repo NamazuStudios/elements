@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import com.google.common.base.Stopwatch;
-import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import com.namazustudios.socialengine.rt.event.EventModel;
 import com.namazustudios.socialengine.rt.event.ResourceAddedEvent;
@@ -10,7 +8,7 @@ import com.namazustudios.socialengine.rt.event.ResourceRemovedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -28,14 +26,18 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public abstract class AbstractResource implements Resource {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractResource.class);
-
-    private final Stopwatch stopwatch = Stopwatch.createStarted();
+    private static final Logger logger = LoggerFactory.getLogger(AbstractResource.class);
 
     private final AtomicReference<Path> currentPath = new AtomicReference<>();
 
-    @Inject
     private EventService eventService;
+
+    private final ResourceId id = new ResourceId();
+
+    @Override
+    public ResourceId getId() {
+        return id;
+    }
 
     /**
      * This posts an instance of {@link ResourceRemovedEvent} and sets the current path.
@@ -50,7 +52,7 @@ public abstract class AbstractResource implements Resource {
         resourceRemovedEvent.setPath(path.toString());
         post(resourceRemovedEvent, Event.Util.getEventNameFromObject(resourceRemovedEvent));
         setCurrentPath(null);
-        LOG.debug("Removed resource at path " + getCurrentPath());
+        logger.debug("Removed resource at path " + getCurrentPath());
     }
 
     /**
@@ -70,7 +72,7 @@ public abstract class AbstractResource implements Resource {
         resourceMovedEvent.setOldPath(oldPath.toString());
         resourceMovedEvent.setNewPath(newPath.toString());
         post(resourceMovedEvent, Event.Util.getEventNameFromObject(resourceMovedEvent));
-        LOG.debug("Moved resource at path " + oldPath + " to path " + newPath);
+        logger.debug("Moved resource at path " + oldPath + " to path " + newPath);
 
     }
 
@@ -89,31 +91,8 @@ public abstract class AbstractResource implements Resource {
         final ResourceAddedEvent resourceAddedEvent = new ResourceAddedEvent();
         resourceAddedEvent.setPath(path.toString());
         post(resourceAddedEvent, Event.Util.getEventNameFromObject(resourceAddedEvent));
-        LOG.debug("Added resource to path " + path);
+        logger.debug("Added resource to path " + path);
 
-        stopwatch.reset();
-
-    }
-
-    /**
-     * Returns the elapsed time since the last update/frame.
-     *
-     * @return the elapsed time.
-     */
-    public double getElapsedTime() {
-        final double elapsed = getStopwatch().elapsed(TimeUnit.NANOSECONDS);
-        return elapsed * Constants.SECONDS_PER_NANOSECOND;
-    }
-
-    /**
-     * Gets the {@link Stopwatch} that is used to track the time for this
-     * particular resource.  Subclases may override this to provide their
-     * own {@link Stopwatch} if desired.
-     *
-     * @return the stopwatch for this resource
-     */
-    public Stopwatch getStopwatch() {
-        return stopwatch;
     }
 
     /**
@@ -182,7 +161,7 @@ public abstract class AbstractResource implements Resource {
                 .path(getCurrentPath())
             .build();
 
-        eventService.post(simpleEvent);
+        getEventService().post(simpleEvent);
 
     }
 
@@ -193,6 +172,13 @@ public abstract class AbstractResource implements Resource {
                 '}';
     }
 
+    public EventService getEventService() {
+        return eventService;
+    }
 
+    @Inject
+    public void setEventService(EventService eventService) {
+        this.eventService = eventService;
+    }
 
 }

@@ -29,6 +29,16 @@ import java.util.Map;
 public interface Resource extends AutoCloseable {
 
     /**
+     * Returns the immutable and globally-unique ID of this resource.  Though a resource
+     * may exist at any path, this is the resource's ID.  All resources are assigned
+     * a unique ID upon creation.  The ID must remain unique for the life of the
+     * resource.
+     *
+     * @return the resource's ID
+     */
+    ResourceId getId();
+
+    /**
      * Immediately following creation, code using this can pass these parameters to initialize the
      * resource.  This is completely defined by the resource.
      *
