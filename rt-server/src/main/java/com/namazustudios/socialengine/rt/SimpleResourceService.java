@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.PeekingIterator;
@@ -9,7 +8,9 @@ import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -263,13 +264,17 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
     }
 
     @Override
-    public void removeAllResources() {
+    public Iterable<ResourceT> removeAllResources() {
 
+        final List<ResourceT> resourceTList = new ArrayList<>();
         final Iterator<ResourceT> resourceIterator = getResources().iterator();
 
         while (resourceIterator.hasNext()) {
+            resourceTList.add(resourceIterator.next());
             resourceIterator.remove();
         }
+
+        return resourceTList;
 
     }
 
@@ -293,12 +298,6 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
         return resource;
 
-    }
-
-    @Override
-    public void removeAndCloseResource(final Path path) {
-        final ResourceT resource = removeResource(path);
-        resource.close();
     }
 
     private class ResourceIterator<ResourceT extends Resource> implements Iterator<ResourceT> {

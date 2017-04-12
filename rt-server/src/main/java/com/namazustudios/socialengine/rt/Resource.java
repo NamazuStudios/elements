@@ -1,12 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 import com.namazustudios.socialengine.rt.edge.EdgeServer;
 
-import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * A Resource is essentially a type that is capable primarily of both

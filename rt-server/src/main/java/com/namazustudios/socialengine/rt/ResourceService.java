@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.function.Supplier;
@@ -92,9 +94,28 @@ public interface ResourceService<ResourceT extends Resource> {
     void moveResource(Path source, Path destination);
 
     /**
-     * Removes all resources from the service.
+     * Removes all resources from the service.  This will return the removed resources.
+     *
+     * @return and {@link Iterable<ResourceT>} of all resources which were removed as part of the operation
      */
-    void removeAllResources();
+    Iterable<ResourceT> removeAllResources();
+
+    /**
+     * Removes all resources from the service.  This will close the returned resources..
+     */
+    default void removeAndCloseAllResources() {
+
+        final Logger logger = LoggerFactory.getLogger(getClass());
+
+        for (final ResourceT resource : removeAllResources()) {
+            try {
+                resource.close();
+            } catch (Exception ex) {
+                logger.error("Caught exception closing resource.", ex);
+            }
+        }
+
+    }
 
     /**
      *
@@ -114,7 +135,10 @@ public interface ResourceService<ResourceT extends Resource> {
      * @throws {@link NotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    void removeAndCloseResource(Path path);
+    default void removeAndCloseResource(final Path path) {
+        final ResourceT resource = removeResource(path);
+        resource.close();
+    }
 
     /**
      * Returend from the call to {@link #addResourceIfAbsent(Path, Supplier<ResourceT>)} to indicate

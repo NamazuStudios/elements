@@ -42,39 +42,21 @@ public class SimpleInternalServer extends AbstractSimpleServer implements Intern
         return requestQueue;
     }
 
-//    @Override
-//    protected ResourceService<?> getResourceService() {
-//        return resourceService;
-//    }
-
     @Override
     public void dispatch(final Request request, final ResponseReceiver responseReceiver) {
-        requestQueue.add(new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
+        requestQueue.add(() -> {
 
-                try {
-                    internalRequestDispatcher.dispatch(request, responseReceiver);
-                } catch (Exception ex) {
-                    LOG.error("Caught exception mapping request {} to response receiver {}", request, responseReceiver);
-                }
-
-                return null;
-
+            try {
+                internalRequestDispatcher.dispatch(request, responseReceiver);
+            } catch (Exception ex) {
+                LOG.error("Caught exception mapping request {} to response receiver {}", request, responseReceiver);
             }
+
+            return null;
+
         });
 
     }
-
-//    @Override
-//    public InternalResource getResource(Path path) {
-//        return resourceService.getResource(path);
-//    }
-
-//    @Override
-//    public Iterable<InternalResource> getResources(Path path) {
-//        return resourceService.getResources(path);
-//    }
 
     @Override
     public void addResource(Path path, InternalResource resource) {

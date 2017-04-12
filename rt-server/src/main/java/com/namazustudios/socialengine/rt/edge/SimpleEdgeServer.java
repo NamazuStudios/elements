@@ -98,7 +98,7 @@ public class SimpleEdgeServer extends AbstractSimpleServer implements EdgeServer
 
         @Override
         public void close() {
-            edgeResourceService.removeAllResources();
+            edgeResourceService.removeAndCloseAllResources();
         }
 
     }
