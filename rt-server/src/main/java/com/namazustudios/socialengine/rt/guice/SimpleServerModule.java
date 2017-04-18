@@ -41,7 +41,7 @@ public class SimpleServerModule extends AbstractModule {
         internalServerBinder.expose(new TypeLiteral<Container<Worker>>(){});
 
         binder().bind(ExecutorService.class)
-                .annotatedWith(Names.named(AbstractSimpleContainer.EXECUTOR_SERVICE))
+                .annotatedWith(Names.named(SimpleHandlerContainer.EXECUTOR_SERVICE))
                 .toProvider(Providers.guicify(executorServiceProvider()));
 
     }

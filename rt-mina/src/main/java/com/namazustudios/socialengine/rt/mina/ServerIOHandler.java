@@ -3,9 +3,9 @@ package com.namazustudios.socialengine.rt.mina;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.exception.BaseException;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.handler.EdgeRequestDispatcher;
-import com.namazustudios.socialengine.rt.handler.EdgeRequestPathHandler;
-import com.namazustudios.socialengine.rt.handler.EdgeResource;
+import com.namazustudios.socialengine.rt.handler.ClientRequestHandler;
+import com.namazustudios.socialengine.rt.handler.Handler;
+import com.namazustudios.socialengine.rt.handler.HandlerRequestDispatcher;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
@@ -18,7 +18,7 @@ import javax.inject.Provider;
 
 /**
  * An implementation of {@link IoHandler} which dispatches messages
- * to the {@link EdgeRequestDispatcher} implementation.
+ * to the {@link HandlerRequestDispatcher} implementation.
  *
  * Created by patricktwohig on 7/27/15.
  */
@@ -26,23 +26,17 @@ public class ServerIOHandler extends IoHandlerAdapter {
 
     private static final Logger LOG = LoggerFactory.getLogger(ServerIOHandler.class);
 
-    @Inject
-    private EdgeRequestDispatcher edgeRequestDispatcher;
+    private HandlerRequestDispatcher handlerRequestDispatcher;
 
-    @Inject
-    private MinaConnectedEdgeClientService minaConnectedEdgeClientService;
+    private MinaConnectedHandlerClientService minaConnectedHandlerClientService;
 
-    @Inject
-    private ResourceService<EdgeResource> edgeResourceService;
-
-    @Inject
     private Provider<IoSessionClientSession> ioSessionClientProvider;
 
-    @Inject
     private ObjectMapper objectMapper;
 
-    @Inject
     private ExceptionMapper.Resolver resolver;
+
+    private Container<Handler> handlerContainer;
 
     @Override
     public void messageReceived(final IoSession session, final Object message) throws Exception {
@@ -58,30 +52,35 @@ public class ServerIOHandler extends IoHandlerAdapter {
     private void handle(final IoSession session, final Request request) {
 
         final IoSessionClientSession ioSessionClient;
-        ioSessionClient = ioSessionClientProvider.get();
+        ioSessionClient = getIoSessionClientProvider().get();
 
         final ResponseReceiver responseReceiver;
-        responseReceiver = minaConnectedEdgeClientService.getResponseReceiver(ioSessionClient, request);
+        responseReceiver = getMinaConnectedHandlerClientService().getResponseReceiver(ioSessionClient, request);
 
         try {
+
             Request.Validator.validate(request);
 
             final Path path = new Path(request.getHeader().getPath());
 
-            final EdgeRequestPathHandler edgeRequestPathHandler = edgeResourceService
-                    .getResourceAtPath(path)
-                    .getHandler(request.getHeader().getMethod());
+            getHandlerContainer().performV(path, resource -> {
 
-            final Class<?> payloadType = edgeRequestPathHandler.getPayloadType();
-            final SimpleRequest simpleRequest = SimpleRequest.builder().from(request).build();
-            final Object payload = objectMapper.convertValue(request.getPayload(), payloadType);
+                final ClientRequestHandler requestHandler;
+                requestHandler = resource.getHandler(request.getHeader().getMethod());
 
-            simpleRequest.setPayload(payload);
-            edgeRequestDispatcher.dispatch(ioSessionClient, simpleRequest, responseReceiver);
+                final Class<?> payloadType = requestHandler.getPayloadType();
+                final SimpleRequest simpleRequest = SimpleRequest.builder().from(request).build();
+                final Object payload = getObjectMapper().convertValue(request.getPayload(), payloadType);
+
+                simpleRequest.setPayload(payload);
+                getHandlerRequestDispatcher().dispatch(ioSessionClient, simpleRequest, responseReceiver);
+
+            });
+
 
         } catch (BaseException ex) {
             final ExceptionMapper<BaseException> invalidDataExceptionExceptionMapper;
-            invalidDataExceptionExceptionMapper = resolver.getExceptionMapper(ex);
+            invalidDataExceptionExceptionMapper = getResolver().getExceptionMapper(ex);
             invalidDataExceptionExceptionMapper.map(ex, request, responseReceiver);
             return;
         }
@@ -102,6 +101,60 @@ public class ServerIOHandler extends IoHandlerAdapter {
     @Override
     public void sessionClosed(IoSession session) throws Exception {
         super.sessionClosed(session);
+    }
+
+    public HandlerRequestDispatcher getHandlerRequestDispatcher() {
+        return handlerRequestDispatcher;
+    }
+
+    @Inject
+    public void setHandlerRequestDispatcher(HandlerRequestDispatcher handlerRequestDispatcher) {
+        this.handlerRequestDispatcher = handlerRequestDispatcher;
+    }
+
+    public MinaConnectedHandlerClientService getMinaConnectedHandlerClientService() {
+        return minaConnectedHandlerClientService;
+    }
+
+    @Inject
+    public void setMinaConnectedHandlerClientService(MinaConnectedHandlerClientService minaConnectedHandlerClientService) {
+        this.minaConnectedHandlerClientService = minaConnectedHandlerClientService;
+    }
+
+    public Provider<IoSessionClientSession> getIoSessionClientProvider() {
+        return ioSessionClientProvider;
+    }
+
+    @Inject
+    public void setIoSessionClientProvider(Provider<IoSessionClientSession> ioSessionClientProvider) {
+        this.ioSessionClientProvider = ioSessionClientProvider;
+    }
+
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
+    }
+
+    @Inject
+    public void setObjectMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
+    public ExceptionMapper.Resolver getResolver() {
+        return resolver;
+    }
+
+    @Inject
+    public void setResolver(ExceptionMapper.Resolver resolver) {
+        this.resolver = resolver;
+    }
+
+    public Container<Handler> getHandlerContainer() {
+        return handlerContainer;
+    }
+
+    @Inject
+    public void setHandlerContainer(Container<Handler> handlerContainer) {
+        this.handlerContainer = handlerContainer;
     }
 
 }

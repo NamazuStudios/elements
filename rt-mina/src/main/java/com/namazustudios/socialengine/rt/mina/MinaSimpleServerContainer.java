@@ -5,8 +5,8 @@ import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.rt.Constants;
 import com.namazustudios.socialengine.rt.Container;
 import com.namazustudios.socialengine.rt.ServerContainer;
-import com.namazustudios.socialengine.rt.handler.EdgeResource;
-import com.namazustudios.socialengine.rt.worker.InternalResource;
+import com.namazustudios.socialengine.rt.handler.Handler;
+import com.namazustudios.socialengine.rt.internal.InternalResource;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.util.IdentityHashSet;
 import org.slf4j.Logger;
@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.*;
 
+
 /**
  * Created by patricktwohig on 9/12/15.
  */
@@ -29,10 +30,10 @@ public class MinaSimpleServerContainer implements ServerContainer {
     private static final int N_THREADS = 5;
 
     @Inject
-    private Container<EdgeResource> simpleEdgeContainer;
+    private Container<Handler> simpleHandlerContainer;
 
     @Inject
-    private Container<InternalResource> simpleInternalContainer;
+    private Container<InternalResource> simpleWorkerContainer;
 
     @Inject
     @Named(Constants.TRANSPORT_RELIABLE)
@@ -125,13 +126,13 @@ public class MinaSimpleServerContainer implements ServerContainer {
                 }
 
                 try {
-                    simpleEdgeContainer.shutdown();
+                    simpleHandlerContainer.shutdown();
                 } catch (Exception ex) {
                     LOG.error("Caught exception shutting down the handler server.", ex);
                 }
 
                 try {
-                    simpleInternalContainer.shutdown();
+                    simpleWorkerContainer.shutdown();
                 } catch (Exception ex) {
                     LOG.error("Caught exception shutting down the worker server.", ex);
                 }

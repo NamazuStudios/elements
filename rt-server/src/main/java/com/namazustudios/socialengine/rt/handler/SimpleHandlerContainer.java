@@ -5,8 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.locks.Lock;
+import java.util.function.Function;
 
 /**
  * The simple handler server is responsible for dispatching requests and events to all {@link Resource} instances
@@ -18,16 +22,24 @@ import java.util.concurrent.ExecutorService;
  *
  * Created by patricktwohig on 8/22/15.
  */
-public class SimpleHandlerContainer extends AbstractSimpleContainer<Handler> {
+public class SimpleHandlerContainer extends AbstractSimpleContainer<Handler> implements Container<Handler> {
 
+    /**
+     * The SimpleHandlerContainer uses an {@link ExecutorService} to process requests and dispatch
+     * events to the various {@link Resource}s.  This names the specific {@link ExecutorService}
+     * to use for injectiong using {@link Named}
+     */
+    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.AbstractSimpleContainer.executorService";
     private static final Logger LOG = LoggerFactory.getLogger(SimpleHandlerContainer.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractSimpleContainer.class);
 
     private ResourceService<Handler> resourceService;
+    private LockService lockService;
+    private ExecutorService executorService;
 
     @Override
     public void shutdown() {}
 
-    @Override
     public ResourceService<Handler> getResourceService() {
         return resourceService;
     }
@@ -37,4 +49,55 @@ public class SimpleHandlerContainer extends AbstractSimpleContainer<Handler> {
         this.resourceService = resourceService;
     }
 
+    @Override
+    public <T> Future<T> perform(ResourceId resourceId, Function<Handler, T> operation) {
+        return getExecutorService().submit(() -> {
+
+            final Handler resource = getResourceService().getResourceWithId(resourceId);
+            final Lock lock = getLockService().getLock(resource.getId());
+
+            try {
+                lock.lock();
+                return operation.apply(resource);
+            } finally {
+                lock.unlock();
+            }
+
+        });
+    }
+
+    @Override
+    public <T> Future<T> perform(Path path, Function<Handler, T> operation) {
+        return getExecutorService().submit(() -> {
+
+            final Handler resource = getResourceService().getResourceAtPath(path);
+            final Lock lock = getLockService().getLock(resource.getId());
+
+            try {
+                lock.lock();
+                return operation.apply(resource);
+            } finally {
+                lock.unlock();
+            }
+
+        });
+    }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
+    }
+
+    @Inject
+    public void setExecutorService(@Named(EXECUTOR_SERVICE) ExecutorService executorService) {
+        this.executorService = executorService;
+    }
+
+    public LockService getLockService() {
+        return lockService;
+    }
+
+    @Inject
+    public void setLockService(@Named LockService lockService) {
+        this.lockService = lockService;
+    }
 }

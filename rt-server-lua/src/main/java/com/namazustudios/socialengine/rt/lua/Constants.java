@@ -2,8 +2,6 @@ package com.namazustudios.socialengine.rt.lua;
 
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResponseCode;
-import com.namazustudios.socialengine.rt.handler.EdgeServer;
-import com.namazustudios.socialengine.rt.worker.InternalServer;
 
 /**
  * A set of constants used by the {@link AbstractLuaResource} and related classes.
