@@ -22,7 +22,7 @@ import java.util.function.Function;
  *
  * Created by patricktwohig on 8/22/15.
  */
-public class SimpleHandlerContainer extends AbstractSimpleContainer<Handler> implements Container<Handler> {
+public class SimpleHandlerContainer implements Container<Handler> {
 
     /**
      * The SimpleHandlerContainer uses an {@link ExecutorService} to process requests and dispatch
@@ -30,8 +30,8 @@ public class SimpleHandlerContainer extends AbstractSimpleContainer<Handler> imp
      * to use for injectiong using {@link Named}
      */
     public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.AbstractSimpleContainer.executorService";
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleHandlerContainer.class);
-    private static final Logger logger = LoggerFactory.getLogger(AbstractSimpleContainer.class);
+    
+    private static final Logger logger = LoggerFactory.getLogger(SimpleHandlerContainer.class);
 
     private ResourceService<Handler> resourceService;
     private LockService lockService;

@@ -17,29 +17,11 @@ import java.util.function.Function;
  */
 public class SimpleInternalContainer implements Container<Worker> {
 
-    /**
-     * The SimpleHandlerContainer uses an {@link ExecutorService} to process requests and dispatch
-     * events to the various {@link Resource}s.  This names the specific {@link ExecutorService}
-     * to use for injectiong using {@link Named}
-     */
-    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.AbstractSimpleContainer.executorService";
-
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleInternalContainer.class);
-    private static final Logger logger = LoggerFactory.getLogger(AbstractSimpleContainer.class);
-
-    @Inject
-    private InternalRequestDispatcher internalRequestDispatcher;
-
     private ResourceService<Worker> resourceService;
 
     private LockService lockService;
 
     private ExecutorService executorService;
-
-    @Override
-    public void shutdown() {
-        getResourceService().removeAndCloseAllResources();
-    }
 
     public ResourceService<Worker> getResourceService() {
         return resourceService;
@@ -82,6 +64,12 @@ public class SimpleInternalContainer implements Container<Worker> {
             }
 
         });
+    }
+
+    @Override
+    public void shutdown() {
+        getExecutorService().shutdown();
+        getResourceService().removeAndCloseAllResources();
     }
 
     public ExecutorService getExecutorService() {
