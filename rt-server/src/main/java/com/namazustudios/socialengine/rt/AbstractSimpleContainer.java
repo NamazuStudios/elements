@@ -12,16 +12,16 @@ import java.util.function.Function;
 /**
  * Created by patricktwohig on 8/23/15.
  */
-public abstract class AbstractSimpleServer<ResourceT extends Resource> implements Server<ResourceT> {
+public abstract class AbstractSimpleContainer<ResourceT extends Resource> implements Container<ResourceT> {
 
-    private static final Logger logger = LoggerFactory.getLogger(AbstractSimpleServer.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractSimpleContainer.class);
 
     /**
-     * The SimpleEdgeServer uses an {@link ExecutorService} to process requests and dispatch
+     * The SimpleEdgeContainer uses an {@link ExecutorService} to process requests and dispatch
      * events to the various {@link Resource}s.  This names the specific {@link ExecutorService}
      * to use for injectiong using {@link Named}
      */
-    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.AbstractSimpleServer.executorService";
+    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.AbstractSimpleContainer.executorService";
 
     private LockService lockService;
 

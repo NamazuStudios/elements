@@ -26,8 +26,8 @@ public class SimpleServerModule extends AbstractModule {
         edgeServerPrivateBinder.bind(PathLockFactory.class)
                                .toProvider(Providers.guicify(edgeResourceLockFactoryProvider()));
 
-        edgeServerPrivateBinder.expose(SimpleEdgeServer.class);
-        edgeServerPrivateBinder.expose(new TypeLiteral<Server<EdgeResource>>(){});
+        edgeServerPrivateBinder.expose(SimpleEdgeContainer.class);
+        edgeServerPrivateBinder.expose(new TypeLiteral<Container<EdgeResource>>(){});
         edgeServerPrivateBinder.expose(new TypeLiteral<ResourceService<EdgeResource>>(){});
 
         final PrivateBinder internalServerBinder = binder().newPrivateBinder();
@@ -37,11 +37,11 @@ public class SimpleServerModule extends AbstractModule {
         internalServerBinder.bind(PathLockFactory.class)
                             .toProvider(Providers.guicify(internalResourceLockFactoryProvider()));
 
-        internalServerBinder.expose(SimpleInternalServer.class);
-        internalServerBinder.expose(new TypeLiteral<Server<InternalResource>>(){});
+        internalServerBinder.expose(SimpleInternalContainer.class);
+        internalServerBinder.expose(new TypeLiteral<Container<InternalResource>>(){});
 
         binder().bind(ExecutorService.class)
-                .annotatedWith(Names.named(AbstractSimpleServer.EXECUTOR_SERVICE))
+                .annotatedWith(Names.named(AbstractSimpleContainer.EXECUTOR_SERVICE))
                 .toProvider(Providers.guicify(executorServiceProvider()));
 
     }
@@ -53,7 +53,7 @@ public class SimpleServerModule extends AbstractModule {
      * This defaults to a fixed thread pool with a number of threads one greater than the number of availale
      * CPU cores.
      *
-     * @return a {@link javax.inject.Provider} for the {@link SimpleEdgeServer} and the {@link SimpleInternalServer}
+     * @return a {@link javax.inject.Provider} for the {@link SimpleEdgeContainer} and the {@link SimpleInternalContainer}
      */
     protected Provider<ExecutorService> executorServiceProvider() {
 

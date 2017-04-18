@@ -22,7 +22,7 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
     private EdgeFilter.Chain rootFilterChain;
 
-    private Server<EdgeResource> edgeResourceServer;
+    private Container<EdgeResource> edgeResourceContainer;
 
     @Override
     public void dispatch(final EdgeClientSession edgeClientSession,
@@ -76,7 +76,7 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
         final Path path = new Path(request.getHeader().getPath());
 
-        getEdgeResourceServer().performV(path, resource -> {
+        getEdgeResourceContainer().performV(path, resource -> {
 
             final EdgeRequestPathHandler edgeRequestPathHandler;
             edgeRequestPathHandler = resource.getHandler(request.getHeader().getMethod());
@@ -96,13 +96,13 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
     }
 
-    public Server<EdgeResource> getEdgeResourceServer() {
-        return edgeResourceServer;
+    public Container<EdgeResource> getEdgeResourceContainer() {
+        return edgeResourceContainer;
     }
 
     @Inject
-    public void setEdgeResourceServer(Server<EdgeResource> edgeResourceServer) {
-        this.edgeResourceServer = edgeResourceServer;
+    public void setEdgeResourceContainer(Container<EdgeResource> edgeResourceContainer) {
+        this.edgeResourceContainer = edgeResourceContainer;
     }
 
     public ExceptionMapper.Resolver getExceptionMapperResolver() {

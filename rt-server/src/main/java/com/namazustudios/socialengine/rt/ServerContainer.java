@@ -5,7 +5,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
- * This is the main class used to manage the lifecycle of the underlying {@link Server} instances.
+ * This is the main class used to manage the lifecycle of the underlying {@link Container} instances.
  *
  * Created by patricktwohig on 9/12/15.
  */

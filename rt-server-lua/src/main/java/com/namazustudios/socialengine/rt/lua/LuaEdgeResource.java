@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.lua;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.ResponseReceiver;
-import com.namazustudios.socialengine.rt.Server;
+import com.namazustudios.socialengine.rt.Container;
 import com.namazustudios.socialengine.rt.SimpleResponse;
 import com.namazustudios.socialengine.rt.edge.EdgeClientSession;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
@@ -25,8 +25,8 @@ public class LuaEdgeResource extends AbstractLuaResource implements EdgeResource
     public LuaEdgeResource(final LuaState luaState,
                            final IocResolver iocResolver,
                            final Tabler tabler,
-                           final Server<EdgeResource> edgeServer) {
-        super(luaState, iocResolver, tabler, edgeServer);
+                           final Container<EdgeResource> edgeContainer) {
+        super(luaState, iocResolver, tabler, edgeContainer);
         this.luaState = luaState;
         this.tabler = tabler;
     }

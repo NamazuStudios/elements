@@ -28,9 +28,9 @@
         <module>mongo-lucene</module>
         <module>servlet-support</module>
         <module>rt-common</module>
-        <module>rt-server</module>
+        <module>rt-container</module>
         <module>rt-mina</module>
-        <module>rt-server-lua</module>
+        <module>rt-container-lua</module>
         <module>rt-guice-example</module>
         <module>rt-client</module>
     </modules>

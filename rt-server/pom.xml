@@ -15,10 +15,10 @@
     </properties>
 
     <groupId>com.namazustudios.socialengine</groupId>
-    <artifactId>rt-server</artifactId>
+    <artifactId>rt-container</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>rt-server-core</name>
+    <name>rt-container-core</name>
 
     <dependencies>
         <dependency>

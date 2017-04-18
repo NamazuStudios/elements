@@ -5,9 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorService;
 
@@ -21,9 +18,9 @@ import java.util.concurrent.ExecutorService;
  *
  * Created by patricktwohig on 8/22/15.
  */
-public class SimpleEdgeServer extends AbstractSimpleServer<EdgeResource> {
+public class SimpleEdgeContainer extends AbstractSimpleContainer<EdgeResource> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleEdgeServer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleEdgeContainer.class);
 
     private ResourceService<EdgeResource> resourceService;
 

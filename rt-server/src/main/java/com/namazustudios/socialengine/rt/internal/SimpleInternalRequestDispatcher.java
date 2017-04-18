@@ -18,7 +18,7 @@ public class SimpleInternalRequestDispatcher implements InternalRequestDispatche
 
     private ExceptionMapper.Resolver exceptionMapperResolver;
 
-    private Server<InternalResource> internalResourceServer;
+    private Container<InternalResource> internalResourceContainer;
 
     @Override
     public void dispatch(final Request request, final ResponseReceiver responseReceiver) {
@@ -43,7 +43,7 @@ public class SimpleInternalRequestDispatcher implements InternalRequestDispatche
 
         final Path path = new Path(request.getHeader().getPath());
 
-        getInternalResourceServer().performV(path, resource -> {
+        getInternalResourceContainer().performV(path, resource -> {
 
             final InternalRequestPathHandler internalRequestPathHandler;
             internalRequestPathHandler = resource.getHandler(request.getHeader().getMethod());
@@ -84,13 +84,13 @@ public class SimpleInternalRequestDispatcher implements InternalRequestDispatche
         this.exceptionMapperResolver = exceptionMapperResolver;
     }
 
-    public Server<InternalResource> getInternalResourceServer() {
-        return internalResourceServer;
+    public Container<InternalResource> getInternalResourceContainer() {
+        return internalResourceContainer;
     }
 
     @Inject
-    public void setInternalResourceServer(Server<InternalResource> internalResourceServer) {
-        this.internalResourceServer = internalResourceServer;
+    public void setInternalResourceContainer(Container<InternalResource> internalResourceContainer) {
+        this.internalResourceContainer = internalResourceContainer;
     }
 
 }

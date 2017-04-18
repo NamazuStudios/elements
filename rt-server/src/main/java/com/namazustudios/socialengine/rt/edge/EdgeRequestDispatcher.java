@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.rt.*;
 
 /**
  *
- * The logical entry point for the Server.  This combines the functionality
+ * The logical entry point for the Container.  This combines the functionality
  * of the {@link ResourceService}, {@link EdgeFilter}, and {@link ExceptionMapper}
  * to process each request exchanged through the RT server.
  *

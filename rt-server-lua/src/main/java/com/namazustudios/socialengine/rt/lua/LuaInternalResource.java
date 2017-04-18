@@ -3,14 +3,13 @@ package com.namazustudios.socialengine.rt.lua;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.ResponseReceiver;
-import com.namazustudios.socialengine.rt.Server;
+import com.namazustudios.socialengine.rt.Container;
 import com.namazustudios.socialengine.rt.SimpleResponse;
 import com.namazustudios.socialengine.rt.internal.InternalRequestPathHandler;
 import com.namazustudios.socialengine.rt.internal.InternalResource;
 
 import javax.inject.Inject;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -28,8 +27,8 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
     public LuaInternalResource(final LuaState luaState,
                                final IocResolver iocResolver,
                                final Tabler tabler,
-                               final Server<InternalResource> internalServer) {
-        super(luaState, iocResolver, tabler, internalServer);
+                               final Container<InternalResource> internalContainer) {
+        super(luaState, iocResolver, tabler, internalContainer);
         this.luaState = luaState;
         this.tabler = tabler;
     }

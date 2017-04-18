@@ -1,21 +1,17 @@
 package com.namazustudios.socialengine.rt.internal;
 
-import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.Queue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Created by patricktwohig on 8/23/15.
  */
-public class SimpleInternalServer extends AbstractSimpleServer<InternalResource> {
+public class SimpleInternalContainer extends AbstractSimpleContainer<InternalResource> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleInternalServer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleInternalContainer.class);
 
     @Inject
     private InternalRequestDispatcher internalRequestDispatcher;

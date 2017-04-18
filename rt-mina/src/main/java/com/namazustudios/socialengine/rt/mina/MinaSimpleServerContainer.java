@@ -3,12 +3,10 @@ package com.namazustudios.socialengine.rt.mina;
 import com.google.common.base.Stopwatch;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.rt.Constants;
-import com.namazustudios.socialengine.rt.Server;
+import com.namazustudios.socialengine.rt.Container;
 import com.namazustudios.socialengine.rt.ServerContainer;
 import com.namazustudios.socialengine.rt.edge.EdgeResource;
-import com.namazustudios.socialengine.rt.edge.SimpleEdgeServer;
 import com.namazustudios.socialengine.rt.internal.InternalResource;
-import com.namazustudios.socialengine.rt.internal.SimpleInternalServer;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.util.IdentityHashSet;
 import org.slf4j.Logger;
@@ -31,10 +29,10 @@ public class MinaSimpleServerContainer implements ServerContainer {
     private static final int N_THREADS = 5;
 
     @Inject
-    private Server<EdgeResource> simpleEdgeServer;
+    private Container<EdgeResource> simpleEdgeContainer;
 
     @Inject
-    private Server<InternalResource> simpleInternalServer;
+    private Container<InternalResource> simpleInternalContainer;
 
     @Inject
     @Named(Constants.TRANSPORT_RELIABLE)
@@ -127,13 +125,13 @@ public class MinaSimpleServerContainer implements ServerContainer {
                 }
 
                 try {
-                    simpleEdgeServer.shutdown();
+                    simpleEdgeContainer.shutdown();
                 } catch (Exception ex) {
                     LOG.error("Caught exception shutting down the edge server.", ex);
                 }
 
                 try {
-                    simpleInternalServer.shutdown();
+                    simpleInternalContainer.shutdown();
                 } catch (Exception ex) {
                     LOG.error("Caught exception shutting down the internal server.", ex);
                 }

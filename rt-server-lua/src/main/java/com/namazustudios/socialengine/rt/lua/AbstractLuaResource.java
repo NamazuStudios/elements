@@ -7,9 +7,9 @@ import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.AbstractResource;
+import com.namazustudios.socialengine.rt.Container;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResponseCode;
-import com.namazustudios.socialengine.rt.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,11 +92,11 @@ public abstract class AbstractLuaResource extends AbstractResource {
     public AbstractLuaResource(final LuaState luaState,
                                final IocResolver iocResolver,
                                final Tabler tabler,
-                               final Server<?> server) {
+                               final Container<?> container) {
         this.luaState = luaState;
         this.iocResolver = iocResolver;
         this.tabler = tabler;
-        coroutineManager = new CoroutineManager(this, server);
+        coroutineManager = new CoroutineManager(this, container);
         classpathModuleLoader = new ClasspathModuleLoader(this);
     }
 
