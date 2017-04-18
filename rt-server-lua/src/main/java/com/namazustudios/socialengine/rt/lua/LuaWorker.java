@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.ResponseReceiver;
 import com.namazustudios.socialengine.rt.Container;
 import com.namazustudios.socialengine.rt.SimpleResponse;
-import com.namazustudios.socialengine.rt.internal.InternalRequestPathHandler;
+import com.namazustudios.socialengine.rt.internal.WorkerRequestHandler;
 import com.namazustudios.socialengine.rt.internal.Worker;
 
 import javax.inject.Inject;
@@ -34,8 +34,8 @@ public class LuaWorker extends AbstractLuaResource implements Worker {
     }
 
     @Override
-    public InternalRequestPathHandler getHandler(final String method) {
-        return new InternalRequestPathHandler() {
+    public WorkerRequestHandler getHandler(final String method) {
+        return new WorkerRequestHandler() {
 
             @Override
             public Class<?> getPayloadType() {

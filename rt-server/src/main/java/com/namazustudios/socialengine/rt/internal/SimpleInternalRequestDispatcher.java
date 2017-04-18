@@ -45,13 +45,13 @@ public class SimpleInternalRequestDispatcher implements InternalRequestDispatche
 
         getInternalResourceContainer().performV(path, resource -> {
 
-            final InternalRequestPathHandler internalRequestPathHandler;
-            internalRequestPathHandler = resource.getHandler(request.getHeader().getMethod());
+            final WorkerRequestHandler workerRequestHandler;
+            workerRequestHandler = resource.getHandler(request.getHeader().getMethod());
 
             if (request.getPayload() == null) {
-                internalRequestPathHandler.handle(request, receiver);
-            } else if (internalRequestPathHandler.getClass().isAssignableFrom(request.getPayload().getClass())) {
-                internalRequestPathHandler.handle(request, receiver);
+                workerRequestHandler.handle(request, receiver);
+            } else if (workerRequestHandler.getClass().isAssignableFrom(request.getPayload().getClass())) {
+                workerRequestHandler.handle(request, receiver);
             } else {
                 throw new InvalidParameterException("Method " + request.getHeader().getPath() + " " +
                         "at path " + request.getHeader().getPath() +

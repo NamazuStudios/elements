@@ -3,16 +3,16 @@ package com.namazustudios.socialengine.rt;
 import java.util.Map;
 
 /**
- * A Resource is essentially a type that is capable primarily of both
- * receiving {@link Request} instances to produce {@link Response}
- * instances.
+ * A {@link Resource} is a logical unit of work, which is represented by an instance of this type.  Though all
+ * {@link Resource} isntances are designed to hold a particular it of logic, and many have functional similarities,
+ * they differ in usage wildy.  The purpose of the {@link Resource} interface is to pool together the similarties
+ * therein.
  *
- * Additionally, a Resource can be the source of {@link Event} objects
- * which can be transmitted from the server to the client, or can be transmitted
- * to other {@link Resource} instances via the {@link EventReceiver} inteface.
+ * A Resource is essentially a type that is capable primarily of both receiving {@link Request} instances
+ * to produce {@link Response} instances.
  *
- * Once a resource is no longer needed, it is necessary to destroy the resource using the
- * {@link AutoCloseable#close()} method.
+ * Once a resource is no longer needed, it is necessary to destroy the resource using the {@link AutoCloseable#close()}
+ * method.
  *
  * Created by patricktwohig on 8/8/15.
  */

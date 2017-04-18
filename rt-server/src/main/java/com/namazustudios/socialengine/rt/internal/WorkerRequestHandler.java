@@ -9,7 +9,7 @@ import com.namazustudios.socialengine.rt.ResponseReceiver;
  *
  * Created by patricktwohig on 8/23/15.
  */
-public interface InternalRequestPathHandler {
+public interface WorkerRequestHandler {
 
     /**
      * Gets the {@link Class} which can be passed as the payload
