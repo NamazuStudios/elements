@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.internal;
+package com.namazustudios.socialengine.rt.worker;
 
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.rt.Request;

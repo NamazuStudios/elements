@@ -6,8 +6,8 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 import com.google.inject.util.Providers;
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.edge.EdgeResource;
-import com.namazustudios.socialengine.rt.internal.Worker;
+import com.namazustudios.socialengine.rt.handler.Handler;
+import com.namazustudios.socialengine.rt.worker.Worker;
 import com.namazustudios.socialengine.rt.lua.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ public abstract class LuaResourceModule extends AbstractModule {
 
     private static final Logger LOG = LoggerFactory.getLogger(LuaResourceModule.class);
 
-    private MapBinder<Path, EdgeResource> bootstrapEdgeResources;
+    private MapBinder<Path, Handler> bootstrapEdgeResources;
 
     @Override
     protected final void configure() {
@@ -38,7 +38,7 @@ public abstract class LuaResourceModule extends AbstractModule {
 
         bootstrapEdgeResources = MapBinder.newMapBinder(binder(),
             new TypeLiteral<Path>(){},
-            new TypeLiteral<EdgeResource>(){});
+            new TypeLiteral<Handler>(){});
 
         binder().bind(Tabler.class)
                 .to(DefaultTabler.class);
@@ -93,7 +93,7 @@ public abstract class LuaResourceModule extends AbstractModule {
     private NamedScriptBindingBuilder edgeClasspathScriptFile(final Path bootstrapPath, final String scriptFile) {
         return scriptName -> {
 
-            final Provider<LuaEdgeResource> provider = EdgeResourceProviders.classpathProviderForScript(scriptFile);
+            final Provider<LuaHandler> provider = EdgeResourceProviders.classpathProviderForScript(scriptFile);
 
             return bootstrapEdgeResources.addBinding(bootstrapPath)
                                          .toProvider(Providers.guicify(provider));
@@ -104,7 +104,7 @@ public abstract class LuaResourceModule extends AbstractModule {
     private NamedScriptBindingBuilder edgeFilesystemScriptFile(final Path bootstrapPath, final File scriptFile) {
         return scriptName -> {
 
-            final Provider<LuaEdgeResource> provider = EdgeResourceProviders
+            final Provider<LuaHandler> provider = EdgeResourceProviders
                     .filesystemProviderForScript(scriptFile);
 
             return bootstrapEdgeResources.addBinding(bootstrapPath)

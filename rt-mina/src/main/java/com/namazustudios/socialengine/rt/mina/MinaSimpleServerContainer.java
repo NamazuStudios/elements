@@ -5,8 +5,8 @@ import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.rt.Constants;
 import com.namazustudios.socialengine.rt.Container;
 import com.namazustudios.socialengine.rt.ServerContainer;
-import com.namazustudios.socialengine.rt.edge.EdgeResource;
-import com.namazustudios.socialengine.rt.internal.InternalResource;
+import com.namazustudios.socialengine.rt.handler.EdgeResource;
+import com.namazustudios.socialengine.rt.worker.InternalResource;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.util.IdentityHashSet;
 import org.slf4j.Logger;
@@ -127,13 +127,13 @@ public class MinaSimpleServerContainer implements ServerContainer {
                 try {
                     simpleEdgeContainer.shutdown();
                 } catch (Exception ex) {
-                    LOG.error("Caught exception shutting down the edge server.", ex);
+                    LOG.error("Caught exception shutting down the handler server.", ex);
                 }
 
                 try {
                     simpleInternalContainer.shutdown();
                 } catch (Exception ex) {
-                    LOG.error("Caught exception shutting down the internal server.", ex);
+                    LOG.error("Caught exception shutting down the worker server.", ex);
                 }
 
 

@@ -4,8 +4,8 @@ import com.google.inject.*;
 import com.google.inject.name.Names;
 import com.google.inject.util.Providers;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.edge.*;
-import com.namazustudios.socialengine.rt.internal.*;
+import com.namazustudios.socialengine.rt.handler.*;
+import com.namazustudios.socialengine.rt.worker.*;
 
 import javax.inject.Provider;
 import java.util.concurrent.ExecutorService;
@@ -26,9 +26,9 @@ public class SimpleServerModule extends AbstractModule {
         edgeServerPrivateBinder.bind(PathLockFactory.class)
                                .toProvider(Providers.guicify(edgeResourceLockFactoryProvider()));
 
-        edgeServerPrivateBinder.expose(SimpleEdgeContainer.class);
-        edgeServerPrivateBinder.expose(new TypeLiteral<Container<EdgeResource>>(){});
-        edgeServerPrivateBinder.expose(new TypeLiteral<ResourceService<EdgeResource>>(){});
+        edgeServerPrivateBinder.expose(SimpleHandlerContainer.class);
+        edgeServerPrivateBinder.expose(new TypeLiteral<Container<Handler>>(){});
+        edgeServerPrivateBinder.expose(new TypeLiteral<ResourceService<Handler>>(){});
 
         final PrivateBinder internalServerBinder = binder().newPrivateBinder();
 
@@ -53,7 +53,7 @@ public class SimpleServerModule extends AbstractModule {
      * This defaults to a fixed thread pool with a number of threads one greater than the number of availale
      * CPU cores.
      *
-     * @return a {@link javax.inject.Provider} for the {@link SimpleEdgeContainer} and the {@link SimpleInternalContainer}
+     * @return a {@link javax.inject.Provider} for the {@link SimpleHandlerContainer} and the {@link SimpleInternalContainer}
      */
     protected Provider<ExecutorService> executorServiceProvider() {
 
@@ -68,7 +68,7 @@ public class SimpleServerModule extends AbstractModule {
      *
      * This uses the {@link SimplePathLockFactory} to accomplish the task.
      *
-     * @return a {@link PathLockFactory} for {@link EdgeResource} instances
+     * @return a {@link PathLockFactory} for {@link Handler} instances
      */
     protected Provider<PathLockFactory> edgeResourceLockFactoryProvider() {
         return () -> new SimplePathLockFactory();

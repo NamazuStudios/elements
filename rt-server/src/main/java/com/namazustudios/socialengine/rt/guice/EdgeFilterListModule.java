@@ -4,9 +4,8 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.inject.*;
 import com.google.inject.binder.LinkedBindingBuilder;
-import com.google.inject.binder.ScopedBindingBuilder;
 import com.google.inject.name.Names;
-import com.namazustudios.socialengine.rt.edge.EdgeFilter;
+import com.namazustudios.socialengine.rt.handler.HandlerFilter;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -22,18 +21,18 @@ public abstract class EdgeFilterListModule extends AbstractModule {
 
     @Override
     protected final void configure() {
-        bind(new TypeLiteral<List<EdgeFilter>>(){})
-            .toProvider(new Provider<List<EdgeFilter>>() {
+        bind(new TypeLiteral<List<HandlerFilter>>(){})
+            .toProvider(new Provider<List<HandlerFilter>>() {
 
                 @Inject
                 private Injector injector;
 
                 @Override
-                public List<EdgeFilter> get() {
-                    return Lists.transform(filterNames, new Function<String, EdgeFilter>() {
+                public List<HandlerFilter> get() {
+                    return Lists.transform(filterNames, new Function<String, HandlerFilter>() {
                         @Override
-                        public EdgeFilter apply(final String input) {
-                            final Key<EdgeFilter> edgeFilterKey = Key.get(EdgeFilter.class, Names.named(input));
+                        public HandlerFilter apply(final String input) {
+                            final Key<HandlerFilter> edgeFilterKey = Key.get(HandlerFilter.class, Names.named(input));
                             return injector.getInstance(edgeFilterKey);
                         }
                     });
@@ -50,7 +49,7 @@ public abstract class EdgeFilterListModule extends AbstractModule {
     protected abstract void configureFilters();
 
     /**
-     * Binds an {@link EdgeFilter} to be added ot the server's filter chain.
+     * Binds an {@link HandlerFilter} to be added ot the server's filter chain.
      *
      * @return an instance of {@link FilterNameBindingBuilder}
      */
@@ -67,7 +66,7 @@ public abstract class EdgeFilterListModule extends AbstractModule {
         return new FilterSequenceBindingBuilder() {
 
             @Override
-            public LinkedBindingBuilder<EdgeFilter> atBeginningOfFilterChain() {
+            public LinkedBindingBuilder<HandlerFilter> atBeginningOfFilterChain() {
 
                 final int index = filterNames.indexOf(name);
 
@@ -75,13 +74,13 @@ public abstract class EdgeFilterListModule extends AbstractModule {
                     throw new IllegalArgumentException("Filter named " + name + " already exists.");
                 }
 
-                return binder().bind(EdgeFilter.class)
+                return binder().bind(HandlerFilter.class)
                                .annotatedWith(Names.named(name));
 
             }
 
             @Override
-            public LinkedBindingBuilder<EdgeFilter> beforeFilterNamed(final String existingFilterName) {
+            public LinkedBindingBuilder<HandlerFilter> beforeFilterNamed(final String existingFilterName) {
 
                 final ListIterator<String> listIterator = filterNames.listIterator();
 
@@ -93,7 +92,7 @@ public abstract class EdgeFilterListModule extends AbstractModule {
 
                     listIterator.add(name);
 
-                    return binder().bind(EdgeFilter.class)
+                    return binder().bind(HandlerFilter.class)
                                    .annotatedWith(Names.named(name));
 
                 }
@@ -103,7 +102,7 @@ public abstract class EdgeFilterListModule extends AbstractModule {
             }
 
             @Override
-            public LinkedBindingBuilder<EdgeFilter> afterFilterNamed(final String existingFilterName) {
+            public LinkedBindingBuilder<HandlerFilter> afterFilterNamed(final String existingFilterName) {
 
                 final ListIterator<String> listIterator = filterNames.listIterator();
 
@@ -118,7 +117,7 @@ public abstract class EdgeFilterListModule extends AbstractModule {
                     listIterator.set(name);
                     listIterator.add(currentFilter);
 
-                    return binder().bind(EdgeFilter.class)
+                    return binder().bind(HandlerFilter.class)
                                    .annotatedWith(Names.named(name));
 
                 }
@@ -128,7 +127,7 @@ public abstract class EdgeFilterListModule extends AbstractModule {
             }
 
             @Override
-            public LinkedBindingBuilder<EdgeFilter> atEndOfFilterChain() {
+            public LinkedBindingBuilder<HandlerFilter> atEndOfFilterChain() {
 
                 final int index = filterNames.indexOf(name);
 
@@ -136,7 +135,7 @@ public abstract class EdgeFilterListModule extends AbstractModule {
                     throw new IllegalArgumentException("Filter named " + name + " already exists.");
                 }
 
-                return binder().bind(EdgeFilter.class)
+                return binder().bind(HandlerFilter.class)
                                .annotatedWith(Names.named(name));
 
             }

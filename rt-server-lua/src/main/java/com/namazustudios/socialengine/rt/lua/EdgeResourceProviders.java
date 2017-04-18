@@ -9,21 +9,21 @@ import java.io.*;
 import java.net.URL;
 
 /**
- * Used to create instances of {@link LuaEdgeResource} from the IoC container.
+ * Used to create instances of {@link LuaHandler} from the IoC container.
  *
  * Created by patricktwohig on 9/2/15.
  */
 public class EdgeResourceProviders {
 
     /**
-     * Returns a {@link Provider} which will return an instance of {@link LuaEdgeResource} for
+     * Returns a {@link Provider} which will return an instance of {@link LuaHandler} for
      * the classpath entry.
      *
      * @param classpathLocation the classpath location
      * @return the Provider instance
      * @throws NotFoundException if the script can't be found at that location
      */
-    public static Provider<LuaEdgeResource> classpathProviderForScript(final String classpathLocation) {
+    public static Provider<LuaHandler> classpathProviderForScript(final String classpathLocation) {
 
         final ClassLoader classLoader = EdgeResourceProviders.class.getClassLoader();
         final URL resoureURL = classLoader.getResource(classpathLocation);
@@ -32,15 +32,15 @@ public class EdgeResourceProviders {
             throw new NotFoundException("Resource at location does not exist: " + classpathLocation);
         }
 
-        return new Provider<LuaEdgeResource>() {
+        return new Provider<LuaHandler>() {
 
             @Inject
-            private Provider<LuaEdgeResource> luaEdgeResourceProvider;
+            private Provider<LuaHandler> luaEdgeResourceProvider;
 
             @Override
-            public LuaEdgeResource get() {
+            public LuaHandler get() {
 
-                final LuaEdgeResource luaEdgeResource = luaEdgeResourceProvider.get();
+                final LuaHandler luaEdgeResource = luaEdgeResourceProvider.get();
 
                 try (final InputStream inputStream = resoureURL.openStream()){
                     final String simplifiedFileName = AbstractLuaResource.simlifyFileName(resoureURL.getFile());
@@ -59,14 +59,14 @@ public class EdgeResourceProviders {
     }
 
     /**
-     * Returns a {@link Provider} which will return an instance of {@link LuaEdgeResource} for
+     * Returns a {@link Provider} which will return an instance of {@link LuaHandler} for
      * the given {@link File}.
      *
      * @param file the file location
      * @return the Provider instance
      * @throws NotFoundException if the script can't be found at that location
      */
-    public static Provider<LuaEdgeResource> filesystemProviderForScript(final File file) {
+    public static Provider<LuaHandler> filesystemProviderForScript(final File file) {
 
         try (final InputStream is = new FileInputStream(file)) {
             // This just opens to check the file.  No actual reading
@@ -75,15 +75,15 @@ public class EdgeResourceProviders {
             throw new NotFoundException(ex);
         }
 
-        return new Provider<LuaEdgeResource>() {
+        return new Provider<LuaHandler>() {
 
             @Inject
-            private Provider<LuaEdgeResource> luaEdgeResourceProvider;
+            private Provider<LuaHandler> luaEdgeResourceProvider;
 
             @Override
-            public LuaEdgeResource get() {
+            public LuaHandler get() {
 
-                final LuaEdgeResource luaEdgeResource = luaEdgeResourceProvider.get();
+                final LuaHandler luaEdgeResource = luaEdgeResourceProvider.get();
 
                 try (final InputStream inputStream = new FileInputStream(file)) {
                     final String simplifiedFileName = AbstractLuaResource.simlifyFileName(file.getAbsolutePath());

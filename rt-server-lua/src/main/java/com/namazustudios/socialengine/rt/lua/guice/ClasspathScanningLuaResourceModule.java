@@ -38,7 +38,7 @@ public abstract class ClasspathScanningLuaResourceModule extends LuaResourceModu
      * the path and he lua extension is dropped.  For example, if "foo/bar.lua"
      * exists on the classpath, the script will serve requests out of "/bar".
      *
-     * This also means that no two edge resource scripts be named the same.
+     * This also means that no two handler resource scripts be named the same.
      *
      * @param pkg the package, e.g. com.foo.bar
      */
@@ -72,12 +72,12 @@ public abstract class ClasspathScanningLuaResourceModule extends LuaResourceModu
                 .filterInputsBy(new FilterBuilder().includePackage(pkg))
                 .setScanners(new ResourcesScanner()));
 
-        LOG.info("Scanning package \"{}\" for edge resource Lua scripts.", pkg);
+        LOG.info("Scanning package \"{}\" for handler resource Lua scripts.", pkg);
 
         for (final String resource : reflections.getResources(filePattern)) {
             final Path bootstrapBath = bootstrapPathGenerator.apply(resource);
 
-            LOG.info("Adding edge resource script \"{}\" from package {} at bootstrap path {} ",
+            LOG.info("Adding handler resource script \"{}\" from package {} at bootstrap path {} ",
                     resource, pkg, bootstrapBath.toNormalizedPathString());
 
             bindEdgeScriptFile(resource)
@@ -122,11 +122,11 @@ public abstract class ClasspathScanningLuaResourceModule extends LuaResourceModu
                         .filterInputsBy(new FilterBuilder().includePackage(pkg))
                         .setScanners(new ResourcesScanner()));
 
-        LOG.info("Scanning package \"{}\" for internal resource Lua scripts.", pkg);
+        LOG.info("Scanning package \"{}\" for worker resource Lua scripts.", pkg);
 
         for (final String resource : reflections.getResources(filePattern)) {
             final String name = nameGenerator.apply(resource);
-            LOG.info("Adding internal resource script \"{}\" from package {} named {} ", resource, pkg, name);
+            LOG.info("Adding worker resource script \"{}\" from package {} named {} ", resource, pkg, name);
             bindInternalScriptFile(resource).fromClasspath().named(name);
         }
 

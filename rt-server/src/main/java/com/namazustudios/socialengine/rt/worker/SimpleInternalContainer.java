@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.internal;
+package com.namazustudios.socialengine.rt.worker;
 
 import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;

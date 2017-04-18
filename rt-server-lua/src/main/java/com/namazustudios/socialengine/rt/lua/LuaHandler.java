@@ -5,9 +5,9 @@ import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.ResponseReceiver;
 import com.namazustudios.socialengine.rt.Container;
 import com.namazustudios.socialengine.rt.SimpleResponse;
-import com.namazustudios.socialengine.rt.edge.EdgeClientSession;
-import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
-import com.namazustudios.socialengine.rt.edge.EdgeResource;
+import com.namazustudios.socialengine.rt.handler.ClientRequestHandler;
+import com.namazustudios.socialengine.rt.handler.HandlerClientSession;
+import com.namazustudios.socialengine.rt.handler.Handler;
 
 import javax.inject.Inject;
 import java.util.Map;
@@ -15,25 +15,25 @@ import java.util.Map;
 /**
  * Created by patricktwohig on 8/27/15.
  */
-public class LuaEdgeResource extends AbstractLuaResource implements EdgeResource {
+public class LuaHandler extends AbstractLuaResource implements Handler {
 
     private final LuaState luaState;
 
     private final Tabler tabler;
 
     @Inject
-    public LuaEdgeResource(final LuaState luaState,
-                           final IocResolver iocResolver,
-                           final Tabler tabler,
-                           final Container<EdgeResource> edgeContainer) {
+    public LuaHandler(final LuaState luaState,
+                      final IocResolver iocResolver,
+                      final Tabler tabler,
+                      final Container<Handler> edgeContainer) {
         super(luaState, iocResolver, tabler, edgeContainer);
         this.luaState = luaState;
         this.tabler = tabler;
     }
 
     @Override
-    public EdgeRequestPathHandler getHandler(final String method) {
-        return new EdgeRequestPathHandler() {
+    public ClientRequestHandler getHandler(final String method) {
+        return new ClientRequestHandler() {
 
             @Override
             public Class<?> getPayloadType() {
@@ -41,14 +41,14 @@ public class LuaEdgeResource extends AbstractLuaResource implements EdgeResource
             }
 
             @Override
-            public void handle(final EdgeClientSession edgeClientSession,
+            public void handle(final HandlerClientSession handlerClientSession,
                                final Request request,
                                final ResponseReceiver responseReceiver) {
                 try (final StackProtector stackProtector = new StackProtector(luaState)){
 
                     pushRequestHandlerFunction(method);
 
-                    luaState.pushJavaObject(edgeClientSession);
+                    luaState.pushJavaObject(handlerClientSession);
                     luaState.pushJavaObject(request.getHeader());
 
                     final Map requestPayload = request.getPayload(Map.class);

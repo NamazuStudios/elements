@@ -2,8 +2,8 @@ package com.namazustudios.socialengine.rt.guice.example.server;
 
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.ResponseReceiver;
-import com.namazustudios.socialengine.rt.edge.EdgeClientSession;
-import com.namazustudios.socialengine.rt.edge.EdgeFilter;
+import com.namazustudios.socialengine.rt.handler.EdgeClientSession;
+import com.namazustudios.socialengine.rt.handler.EdgeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

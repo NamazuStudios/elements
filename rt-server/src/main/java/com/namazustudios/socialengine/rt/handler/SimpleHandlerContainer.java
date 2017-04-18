@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.edge;
+package com.namazustudios.socialengine.rt.handler;
 
 import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;
@@ -9,7 +9,7 @@ import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorService;
 
 /**
- * The simple edge server is responsible for dispatching requests and events to all {@link Resource} instances
+ * The simple handler server is responsible for dispatching requests and events to all {@link Resource} instances
  * contained therein.  It accomplishes its task in parallel by dispatching all requests, events, and then
  * finally updating each {@link Resource} in order.
  *
@@ -18,22 +18,22 @@ import java.util.concurrent.ExecutorService;
  *
  * Created by patricktwohig on 8/22/15.
  */
-public class SimpleEdgeContainer extends AbstractSimpleContainer<EdgeResource> {
+public class SimpleHandlerContainer extends AbstractSimpleContainer<Handler> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleEdgeContainer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleHandlerContainer.class);
 
-    private ResourceService<EdgeResource> resourceService;
+    private ResourceService<Handler> resourceService;
 
     @Override
     public void shutdown() {}
 
     @Override
-    public ResourceService<EdgeResource> getResourceService() {
+    public ResourceService<Handler> getResourceService() {
         return resourceService;
     }
 
     @Inject
-    public void setResourceService(ResourceService<EdgeResource> resourceService) {
+    public void setResourceService(ResourceService<Handler> resourceService) {
         this.resourceService = resourceService;
     }
 

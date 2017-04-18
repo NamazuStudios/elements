@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.rt.event.EventModel;
 
 /**
  * Represents a one-way message produced by a Resource, and dispatched to various
- * clients both internal and external to the system.
+ * clients both worker and external to the system.
  *
  * Created by patricktwohig on 8/8/15.
  */

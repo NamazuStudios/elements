@@ -41,7 +41,7 @@ public interface Constants {
     String TRANSPORT_BEST_EFFORT = "com.namazustudios.socialengine.rt.TRANSPORT_BEST_EFFORT";
 
     /**
-     * Names a component instance that will internal (in memory) tranport.
+     * Names a component instance that will worker (in memory) tranport.
      */
     String TRANSPORT_INTERNAL = "com.namazustudios.socialengine.rt.TRANSPORT_INTERNAL";
 

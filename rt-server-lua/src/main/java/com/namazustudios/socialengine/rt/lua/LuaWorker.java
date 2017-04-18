@@ -5,8 +5,8 @@ import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.ResponseReceiver;
 import com.namazustudios.socialengine.rt.Container;
 import com.namazustudios.socialengine.rt.SimpleResponse;
-import com.namazustudios.socialengine.rt.internal.WorkerRequestHandler;
-import com.namazustudios.socialengine.rt.internal.Worker;
+import com.namazustudios.socialengine.rt.worker.WorkerRequestHandler;
+import com.namazustudios.socialengine.rt.worker.Worker;
 
 import javax.inject.Inject;
 import java.util.Map;

@@ -1,6 +1,5 @@
-package com.namazustudios.socialengine.rt.edge;
+package com.namazustudios.socialengine.rt.handler;
 
-import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.rt.*;
 
 import javax.inject.Inject;
@@ -11,11 +10,11 @@ import java.util.concurrent.ConcurrentSkipListMap;
 /**
  * Created by patricktwohig on 10/2/15.
  */
-public abstract class AbstractEdgeClientSession implements EdgeClientSession {
+public abstract class AbstractHandlerClientSession implements HandlerClientSession {
 
-    private static final String IDLE_OBSERVERS_KEY = AbstractEdgeClientSession.class + "IDLE_OBSERVERS_KEY";
+    private static final String IDLE_OBSERVERS_KEY = AbstractHandlerClientSession.class + "IDLE_OBSERVERS_KEY";
 
-    private static final String DISCONNECT_OBSERVERS_KEY = AbstractEdgeClientSession.class + "IDLE_OBSERVERS_KEY";
+    private static final String DISCONNECT_OBSERVERS_KEY = AbstractHandlerClientSession.class + "IDLE_OBSERVERS_KEY";
 
     private EventService eventService;
 
@@ -36,34 +35,34 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
     }
 
     @Override
-    public Observation observeIdle(EdgeClientSessionObserver edgeClientSessionObserver) {
-        return addObserver(IDLE_OBSERVERS_KEY, edgeClientSessionObserver);
+    public Observation observeIdle(HandlerClientSessionObserver handlerClientSessionObserver) {
+        return addObserver(IDLE_OBSERVERS_KEY, handlerClientSessionObserver);
     }
 
     @Override
-    public Observation observeDisconnect(EdgeClientSessionObserver edgeClientSessionObserver) {
-        return addObserver(DISCONNECT_OBSERVERS_KEY, edgeClientSessionObserver);
+    public Observation observeDisconnect(HandlerClientSessionObserver handlerClientSessionObserver) {
+        return addObserver(DISCONNECT_OBSERVERS_KEY, handlerClientSessionObserver);
     }
 
-    private Observation addObserver(final String key, EdgeClientSessionObserver edgeClientSessionObserver) {
+    private Observation addObserver(final String key, HandlerClientSessionObserver handlerClientSessionObserver) {
 
         final UUID uuid = UUID.randomUUID();
-        final ConcurrentNavigableMap<UUID, EdgeClientSessionObserver> observers = getObservers(key);
+        final ConcurrentNavigableMap<UUID, HandlerClientSessionObserver> observers = getObservers(key);
 
-        observers.put(uuid, edgeClientSessionObserver);
+        observers.put(uuid, handlerClientSessionObserver);
 
         return () -> observers.remove(uuid);
 
     }
 
-    private ConcurrentNavigableMap<UUID, EdgeClientSessionObserver> getObservers(final String key) {
+    private ConcurrentNavigableMap<UUID, HandlerClientSessionObserver> getObservers(final String key) {
 
-        ConcurrentNavigableMap<UUID, EdgeClientSessionObserver> observers;
+        ConcurrentNavigableMap<UUID, HandlerClientSessionObserver> observers;
         observers = getSessionVariableTyped(key, ConcurrentNavigableMap.class);
 
         if (observers == null) {
 
-            final ConcurrentNavigableMap<UUID, EdgeClientSessionObserver> tmp = new ConcurrentSkipListMap<>();
+            final ConcurrentNavigableMap<UUID, HandlerClientSessionObserver> tmp = new ConcurrentSkipListMap<>();
             observers = (ConcurrentSkipListMap) setSessionVariableIfAbsent(key, tmp);
 
             if (observers == null) {
@@ -101,12 +100,12 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
 
     private void dispatch(final String key) {
 
-        final ConcurrentNavigableMap<UUID, EdgeClientSessionObserver> observers = getObservers(key);
-        final Iterator<Map.Entry<UUID, EdgeClientSessionObserver>> entryIterator = observers.entrySet().iterator();
+        final ConcurrentNavigableMap<UUID, HandlerClientSessionObserver> observers = getObservers(key);
+        final Iterator<Map.Entry<UUID, HandlerClientSessionObserver>> entryIterator = observers.entrySet().iterator();
 
         while (entryIterator.hasNext()) {
 
-            final Map.Entry<UUID, EdgeClientSessionObserver> entry = entryIterator.next();
+            final Map.Entry<UUID, HandlerClientSessionObserver> entry = entryIterator.next();
 
             if (!entry.getValue().observe()) {
                 entryIterator.remove();

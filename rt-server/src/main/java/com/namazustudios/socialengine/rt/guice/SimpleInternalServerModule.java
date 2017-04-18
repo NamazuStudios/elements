@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.internal.*;
+import com.namazustudios.socialengine.rt.worker.*;
 
 /**
  * Created by patricktwohig on 9/22/15.

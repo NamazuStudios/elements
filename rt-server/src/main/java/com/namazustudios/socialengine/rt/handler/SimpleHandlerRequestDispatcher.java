@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.edge;
+package com.namazustudios.socialengine.rt.handler;
 
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.rt.*;
@@ -10,59 +10,59 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * The simple implementation of the {@link EdgeRequestDispatcher} interface.
+ * The simple implementation of the {@link HandlerRequestDispatcher} interface.
  *
  * Created by patricktwohig on 7/27/15.
  */
-public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
+public class SimpleHandlerRequestDispatcher implements HandlerRequestDispatcher {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleEdgeRequestDispatcher.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleHandlerRequestDispatcher.class);
 
     private ExceptionMapper.Resolver exceptionMapperResolver;
 
-    private EdgeFilter.Chain rootFilterChain;
+    private HandlerFilter.Chain rootFilterChain;
 
-    private Container<EdgeResource> edgeResourceContainer;
+    private Container<Handler> edgeResourceContainer;
 
     @Override
-    public void dispatch(final EdgeClientSession edgeClientSession,
+    public void dispatch(final HandlerClientSession handlerClientSession,
                          final Request request,
                          final ResponseReceiver responseReceiver) {
         try (final DelegatingCheckedResponseReceiver receiver = new DelegatingCheckedResponseReceiver(request, responseReceiver)) {
-            executeRootFilterChain(edgeClientSession, request, receiver);
+            executeRootFilterChain(handlerClientSession, request, receiver);
         } catch (Exception ex) {
             LOG.error("Caught exception processing request {}.", request, ex);
         }
     }
 
-    private void executeRootFilterChain(final EdgeClientSession edgeClientSession,
+    private void executeRootFilterChain(final HandlerClientSession handlerClientSession,
                                         final Request request,
                                         final ResponseReceiver responseReceiver) {
         try {
-            rootFilterChain.next(edgeClientSession, request, responseReceiver);
+            rootFilterChain.next(handlerClientSession, request, responseReceiver);
         } catch (Exception ex) {
-            mapException(ex, edgeClientSession, request, responseReceiver);
+            mapException(ex, handlerClientSession, request, responseReceiver);
         }
     }
 
     private <T extends Exception> void mapException(final T ex,
-                                                    final EdgeClientSession edgeClientSession,
+                                                    final HandlerClientSession handlerClientSession,
                                                     final Request request,
                                                     final ResponseReceiver responseReceiver) {
-        LOG.info("Mapping exception for request {} and edgeClientSession {}", request, edgeClientSession, ex);
+        LOG.info("Mapping exception for request {} and handlerClientSession {}", request, handlerClientSession, ex);
         final ExceptionMapper<T> exceptionMapper = getExceptionMapperResolver().getExceptionMapper(ex);
         exceptionMapper.map(ex, request, responseReceiver);
     }
 
     @Inject
-    public void buildRootFilterChain(final List<EdgeFilter> edgeFilterList) {
+    public void buildRootFilterChain(final List<HandlerFilter> handlerFilterList) {
 
-        Collections.reverse(edgeFilterList);
+        Collections.reverse(handlerFilterList);
 
-        EdgeFilter.Chain chain = (client, request, receiver) -> resolveAndDispatch(client, request, receiver);
+        HandlerFilter.Chain chain = (client, request, receiver) -> resolveAndDispatch(client, request, receiver);
 
-        for (final EdgeFilter filter : edgeFilterList) {
-            final EdgeFilter.Chain next = chain;
+        for (final HandlerFilter filter : handlerFilterList) {
+            final HandlerFilter.Chain next = chain;
             chain = (edgeClientSession, request, responseReceiver) -> filter.filter(next, edgeClientSession, request, responseReceiver);
         }
 
@@ -70,7 +70,7 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
     }
 
-    private void resolveAndDispatch(final EdgeClientSession edgeClientSession,
+    private void resolveAndDispatch(final HandlerClientSession handlerClientSession,
                                     final Request request,
                                     final ResponseReceiver receiver) {
 
@@ -78,13 +78,13 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
         getEdgeResourceContainer().performV(path, resource -> {
 
-            final EdgeRequestPathHandler edgeRequestPathHandler;
-            edgeRequestPathHandler = resource.getHandler(request.getHeader().getMethod());
+            final ClientRequestHandler clientRequestHandler;
+            clientRequestHandler = resource.getHandler(request.getHeader().getMethod());
 
             if (request.getPayload() == null) {
-                edgeRequestPathHandler.handle(edgeClientSession, request, receiver);
-            } else if (edgeRequestPathHandler.getPayloadType().isAssignableFrom(request.getPayload().getClass())) {
-                edgeRequestPathHandler.handle(edgeClientSession, request, receiver);
+                clientRequestHandler.handle(handlerClientSession, request, receiver);
+            } else if (clientRequestHandler.getPayloadType().isAssignableFrom(request.getPayload().getClass())) {
+                clientRequestHandler.handle(handlerClientSession, request, receiver);
             } else {
                 throw new InvalidParameterException("Method " + request.getHeader().getMethod() + " " +
                         "at path " + request.getHeader().getPath()  + " " +
@@ -96,12 +96,12 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
     }
 
-    public Container<EdgeResource> getEdgeResourceContainer() {
+    public Container<Handler> getEdgeResourceContainer() {
         return edgeResourceContainer;
     }
 
     @Inject
-    public void setEdgeResourceContainer(Container<EdgeResource> edgeResourceContainer) {
+    public void setEdgeResourceContainer(Container<Handler> edgeResourceContainer) {
         this.edgeResourceContainer = edgeResourceContainer;
     }
 

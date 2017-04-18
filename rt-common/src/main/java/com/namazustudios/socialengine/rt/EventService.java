@@ -7,14 +7,14 @@ import java.util.function.Consumer;
  * A service type object which is used as a place to both post and receive events.  This
  * is used by both clients and servers.
  *
- * Typically, on a server, this is used to pipe events among internal resources and
+ * Typically, on a server, this is used to pipe events among worker resources and
  * the actual transport may be transparent.
  *
  * Typically, on a client, an in-memory service is used by the client to handle
  * incoming events posted by the server.
  *
  * The methods on this class shall be thread safe in the sense that multiple threads may
- * both read and write to this instance while maintaining internal consistency.  Implementations
+ * both read and write to this instance while maintaining worker consistency.  Implementations
  * of this class may implement a locking strategy to this end.
  *
  * Created by patricktwohig on 3/31/16.

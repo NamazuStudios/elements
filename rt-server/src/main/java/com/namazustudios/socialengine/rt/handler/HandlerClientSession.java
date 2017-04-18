@@ -1,8 +1,6 @@
-package com.namazustudios.socialengine.rt.edge;
+package com.namazustudios.socialengine.rt.handler;
 
 import com.namazustudios.socialengine.rt.*;
-
-import java.util.List;
 
 /**
  * Represents a currently connected client.  The client also has associated
@@ -10,7 +8,7 @@ import java.util.List;
  *
  * Created by patricktwohig on 7/29/15.
  */
-public interface EdgeClientSession {
+public interface HandlerClientSession {
 
     /**
      * Gets the ID of the client.  The ID is determined by the underlying framework and should
@@ -21,7 +19,7 @@ public interface EdgeClientSession {
     String getId();
 
     /**
-     * Sets the EdgeClientSession's session variable.
+     * Sets the HandlerClientSession's session variable.
      *
      * @param key the key
      * @param value the value
@@ -29,7 +27,7 @@ public interface EdgeClientSession {
     void setSessionVariable(Object key, Object value);
 
     /**
-     * Sets the EdgeClientSession's session variable if it is absent.  This will return
+     * Sets the HandlerClientSession's session variable if it is absent.  This will return
      * the value if it already exists.  Otehrwise will return a null and accept the
      * change into the session.
      *
@@ -83,14 +81,14 @@ public interface EdgeClientSession {
     void removeSessionVariable(Object key);
 
     /**
-     * Adds a {@link EdgeClientSessionObserver} which will be called when the session is disconnected.
+     * Adds a {@link HandlerClientSessionObserver} which will be called when the session is disconnected.
      */
-    Observation observeDisconnect(EdgeClientSessionObserver edgeClientSessionObserver);
+    Observation observeDisconnect(HandlerClientSessionObserver handlerClientSessionObserver);
 
     /**
-     * Adds a {@link EdgeClientSessionObserver} which will be called when the session goes idle.
+     * Adds a {@link HandlerClientSessionObserver} which will be called when the session goes idle.
      */
-    Observation observeIdle(EdgeClientSessionObserver edgeClientSessionObserver);
+    Observation observeIdle(HandlerClientSessionObserver handlerClientSessionObserver);
 
     /**
      * Disconnects the remote client.  This may not happen immediately.  This may allow the current session to

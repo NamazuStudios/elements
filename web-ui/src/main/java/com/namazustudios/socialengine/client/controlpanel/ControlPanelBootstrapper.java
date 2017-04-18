@@ -25,7 +25,7 @@ public class ControlPanelBootstrapper implements Bootstrapper {
     public void onBootstrap() {
 
         // This should be done in a module, however it's not because of some
-        // internal problems with Resty-GWT.  This probably shoudl be moved
+        // worker problems with Resty-GWT.  This probably shoudl be moved
         // to a configuration or @Named field but alas this is what we've got.
 
         Defaults.setServiceRoot("/api");

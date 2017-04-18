@@ -17,7 +17,7 @@ public abstract class AbstractSimpleContainer<ResourceT extends Resource> implem
     private static final Logger logger = LoggerFactory.getLogger(AbstractSimpleContainer.class);
 
     /**
-     * The SimpleEdgeContainer uses an {@link ExecutorService} to process requests and dispatch
+     * The SimpleHandlerContainer uses an {@link ExecutorService} to process requests and dispatch
      * events to the various {@link Resource}s.  This names the specific {@link ExecutorService}
      * to use for injectiong using {@link Named}
      */

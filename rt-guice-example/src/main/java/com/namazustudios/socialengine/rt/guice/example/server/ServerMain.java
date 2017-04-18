@@ -27,8 +27,8 @@ public class ServerMain {
                 new ClasspathScanningLuaResourceModule() {
                     @Override
                     protected void configureResources() {
-                        scanForEdgeResources("server.edge");
-                        scanForInternalResources("server.internal");
+                        scanForEdgeResources("server.handler");
+                        scanForInternalResources("server.worker");
                     }
                 },
                 new EdgeFilterListModule() {

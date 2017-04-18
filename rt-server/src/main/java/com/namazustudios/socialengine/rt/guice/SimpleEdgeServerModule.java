@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.edge.*;
+import com.namazustudios.socialengine.rt.handler.*;
 
 /**
  * Created by patricktwohig on 9/22/15.
@@ -14,16 +14,16 @@ public class SimpleEdgeServerModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        binder().bind(new TypeLiteral<Container<EdgeResource>>(){})
-                .to(SimpleEdgeContainer.class)
+        binder().bind(new TypeLiteral<Container<Handler>>(){})
+                .to(SimpleHandlerContainer.class)
                 .in(Scopes.SINGLETON);
 
-        binder().bind(EdgeRequestDispatcher.class)
-                .to(SimpleEdgeRequestDispatcher.class)
+        binder().bind(HandlerRequestDispatcher.class)
+                .to(SimpleHandlerRequestDispatcher.class)
                 .in(Scopes.SINGLETON);
 
-        binder().bind(new TypeLiteral<ResourceService<EdgeResource>>() {})
-                .to(new TypeLiteral<SimpleResourceService<EdgeResource>>() {})
+        binder().bind(new TypeLiteral<ResourceService<Handler>>() {})
+                .to(new TypeLiteral<SimpleResourceService<Handler>>() {})
                 .in(Scopes.SINGLETON);
 
         binder().bind(EventService.class)

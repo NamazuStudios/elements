@@ -66,7 +66,7 @@ public enum ResponseCode {
     TOO_BUSY_FATAL,
 
     /**
-     * Indicates that the server encountered an unknown or internal error.
+     * Indicates that the server encountered an unknown or worker error.
      */
     INTERNAL_ERROR_FATAL;
 

@@ -70,7 +70,7 @@ public abstract class ObjectQuery<DocumentT> {
     public abstract Query getQuery();
 
     /**
-     * Uses the internal {@link IndexableFieldProcessor.Provider} to generate {@link TermQuery}s
+     * Uses the worker {@link IndexableFieldProcessor.Provider} to generate {@link TermQuery}s
      * to add to the given {@link BooleanQuery}.  Each generated {@link TermQuery} is added
      * with {@link BooleanClause.Occur#FILTER} semantics.
      *

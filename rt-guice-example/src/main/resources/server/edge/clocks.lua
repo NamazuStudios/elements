@@ -13,10 +13,10 @@ namazu_internal.require "clock"
 -- injection errors when the script is loaded.
 
 -- The simply injects the internal_server instance from Java
-internalServer = namazu_rt.ioc:inject("com.namazustudios.socialengine.rt.internal.InternalServer")
+internalServer = namazu_rt.ioc:inject("com.namazustudios.socialengine.rt.worker.InternalServer")
 
 -- This gets a Provider<?> which can be used to obtain the instance using the get.  Remember that since
--- the container configures internal resources without scope (typically) then each call to get() involves
+-- the container configures worker resources without scope (typically) then each call to get() involves
 -- creation of another Java object.  This should be used only as much as needed.
 
 -- A global table of the clocks we know about
@@ -36,8 +36,8 @@ clocks = {
 }
 
 
--- A function to initialize the clock as a reference-counted internal resource.  When calling this funciton,
--- an InternalResource is created with the given clock id, name, and metadata.  This uses the internal server's
+-- A function to initialize the clock as a reference-counted worker resource.  When calling this funciton,
+-- an InternalResource is created with the given clock id, name, and metadata.  This uses the worker server's
 -- atomic API to ensure that the resource is instantiated only once.
 
 function get_clock(name, clockTable)
