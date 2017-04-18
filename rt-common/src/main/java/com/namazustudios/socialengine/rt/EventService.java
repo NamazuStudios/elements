@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import javax.validation.Payload;
+import java.util.function.Consumer;
 
 /**
  * A service type object which is used as a place to both post and receive events.  This
@@ -51,5 +52,38 @@ public interface EventService {
      * @return And instance of {@link} Observation, which can be used to unregister the event.
      */
     <PayloadT>Observation observe(Path path, String name, EventReceiver<PayloadT> receiver);
+
+    /**
+     * Observes the events at the given path.  Any events on the server's bus matching the path
+     * will observe the payload.  A single {@link Observation} is generated.  This is a convenience
+     * method assist in using {@link #observe(Path, String, EventReceiver)} when used with lambda
+     * expressions
+     *
+     * @param path the path
+     * @param name the name of the event
+     * @param payloadTClass the payload type
+     * @param payloadTConsumer the consumer
+     * @param <PayloadT> the payload itself
+     * @return an {@link Observation} instance
+     */
+    default <PayloadT> Observation observe(
+            final Path path, final String name,
+            final Class<PayloadT> payloadTClass,
+            final Consumer<PayloadT> payloadTConsumer) {
+        return observe(path, name, new EventReceiver<PayloadT>() {
+
+            @Override
+            public Class<PayloadT> getEventType() {
+                return payloadTClass;
+            }
+
+            @Override
+            public void receive(Event event) {
+                final PayloadT payload = payloadTClass.cast(event.getPayload());
+                payloadTConsumer.accept(payload);
+            }
+
+        });
+    }
 
 }

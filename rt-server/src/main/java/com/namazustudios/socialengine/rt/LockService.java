@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.exception.DuplicateException;
+import com.namazustudios.socialengine.exception.NotFoundException;
+
 import java.util.concurrent.locks.Lock;
 
 /**
@@ -15,7 +18,22 @@ public interface LockService {
      * @param resourceId the resource ID
      *
      * @return a {@link Lock} used to serialize access to the provided resource
+     * @throws {@link NotFoundException} if no lock could be found for the given {@link ResourceId}
      */
     Lock getLock(final ResourceId resourceId);
+
+//    /**
+//     * Creates and returns the {@link Lock} instance provided the {@link ResourceId}.
+//     *
+//     * @param resourceId the resource ID
+//     * @return the {@link Lock}
+//     * @throws {@link DuplicateException} if a lock alrady exists for hte provide {@link ResourceId}
+//     */
+//    Lock create(final ResourceId resourceId);
+//
+//    /**
+//     * Deletes the lock with the given {@link ResourceId}
+//     */
+//    void delete(final ResourceId);
 
 }

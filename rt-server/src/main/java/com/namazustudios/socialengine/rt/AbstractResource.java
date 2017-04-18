@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import com.namazustudios.socialengine.rt.event.EventModel;
 import com.namazustudios.socialengine.rt.event.ResourceAddedEvent;
 import com.namazustudios.socialengine.rt.event.ResourceMovedEvent;
@@ -12,15 +11,10 @@ import javax.inject.Inject;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * The abstract implementation of the {@link Resource} class.  This includes the basic
- * functionality.
+ * The abstract implementation of the {@link Resource} class.  This includes the basic functionality.
  *
  * Unless otherwise specified the various methods on this class must call their
  * appropriate superclass implementation.
- *
- * Note that becuase the {@link Server} and {@link EdgeServer} are responsible for threading
- * this class is not thread-safe.  Only one thread at a time may be calling objects implementing
- * this interface and expect the state of the application to remain consistent.
  *
  * Created by patricktwohig on 8/23/15.
  */

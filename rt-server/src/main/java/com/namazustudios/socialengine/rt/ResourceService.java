@@ -24,6 +24,15 @@ import java.util.stream.Stream;
 public interface ResourceService<ResourceT extends Resource> {
 
     /**
+     * Gets a {@link Resource} based on the resource ID.
+     *
+     * @param resourceId
+     * @return the Resource, never null
+     * @throws {@link NotFoundException} if no resource exists with that particular ID
+     */
+    ResourceT getResourceWithId(ResourceId resourceId);
+
+    /**
      * Gets a resource at the given path.
      *
      * @param path the path
@@ -32,7 +41,16 @@ public interface ResourceService<ResourceT extends Resource> {
      * @throws {@link NotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    ResourceT getResource(Path path);
+    ResourceT getResourceAtPath(Path path);
+
+    /**
+     * Given the {@link ResourceId} returns the {@link Path} for the {@link Resource}.
+     *
+     * @param resourceId the resource ID
+     * @return the {@link Path}
+     * @throws {@link NotFoundException} if no resource exists at that path
+     */
+    Path getPathForResourceId(ResourceId resourceId);
 
     /**
      * Adds a {@link ResourceT} to this resource service.
@@ -130,7 +148,7 @@ public interface ResourceService<ResourceT extends Resource> {
     }
 
     /**
-     * Returend from the call to {@link #addResourceIfAbsent(Path, Supplier<ResourceT>)} to indicate
+     * Returned from the call to {@link #addResourceIfAbsent(Path, Supplier<ResourceT>)} to indicate
      * the status of the addition.
      *
      * @param <ResourceT> the resource type

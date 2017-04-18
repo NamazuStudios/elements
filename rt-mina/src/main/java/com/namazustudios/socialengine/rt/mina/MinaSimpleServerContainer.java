@@ -3,8 +3,11 @@ package com.namazustudios.socialengine.rt.mina;
 import com.google.common.base.Stopwatch;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.rt.Constants;
+import com.namazustudios.socialengine.rt.Server;
 import com.namazustudios.socialengine.rt.ServerContainer;
+import com.namazustudios.socialengine.rt.edge.EdgeResource;
 import com.namazustudios.socialengine.rt.edge.SimpleEdgeServer;
+import com.namazustudios.socialengine.rt.internal.InternalResource;
 import com.namazustudios.socialengine.rt.internal.SimpleInternalServer;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.util.IdentityHashSet;
@@ -28,10 +31,10 @@ public class MinaSimpleServerContainer implements ServerContainer {
     private static final int N_THREADS = 5;
 
     @Inject
-    private SimpleEdgeServer simpleEdgeServer;
+    private Server<EdgeResource> simpleEdgeServer;
 
     @Inject
-    private SimpleInternalServer simpleInternalServer;
+    private Server<InternalResource> simpleInternalServer;
 
     @Inject
     @Named(Constants.TRANSPORT_RELIABLE)
@@ -41,14 +44,11 @@ public class MinaSimpleServerContainer implements ServerContainer {
     @Named(Constants.TRANSPORT_BEST_EFFORT)
     private IoAcceptor bestEffortIoAcceptor;
 
-    private final ExecutorService containerExecutorService = Executors.newFixedThreadPool(N_THREADS, new ThreadFactory() {
-        @Override
-        public Thread newThread(final Runnable r) {
-            final Thread thread = new Thread(r);
-            thread.setDaemon(true);
-            thread.setName("Container Thread For: " + r);
-            return thread;
-        }
+    private final ExecutorService containerExecutorService = Executors.newFixedThreadPool(N_THREADS, r -> {
+        final Thread thread = new Thread(r);
+        thread.setDaemon(true);
+        thread.setName("Container Thread For: " + r);
+        return thread;
     });
 
     @Override
@@ -57,24 +57,15 @@ public class MinaSimpleServerContainer implements ServerContainer {
         final Set<Future<Void>> futures = Collections.synchronizedSet(new IdentityHashSet<Future<Void>>());
         final CompletionService<Void> completionService = new ExecutorCompletionService<>(containerExecutorService);
 
-        futures.add(completionService.submit(new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                reliableIoAcceptor.bind(socketAddresses);
-                return null;
-            }
+        futures.add(completionService.submit(() -> {
+            reliableIoAcceptor.bind(socketAddresses);
+            return null;
         }));
 
-        futures.add(completionService.submit(new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                bestEffortIoAcceptor.bind(socketAddresses);
-                return null;
-            }
+        futures.add(completionService.submit(() -> {
+            bestEffortIoAcceptor.bind(socketAddresses);
+            return null;
         }));
-
-        futures.add(completionService.submit(simpleEdgeServer, null));
-//        futures.add(completionService.submit(simpleInternalServer, null));
 
         return new RunningInstance() {
 

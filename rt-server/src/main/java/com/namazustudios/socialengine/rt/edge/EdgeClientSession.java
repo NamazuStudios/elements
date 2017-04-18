@@ -1,8 +1,6 @@
 package com.namazustudios.socialengine.rt.edge;
 
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.internal.InternalResource;
-import com.namazustudios.socialengine.rt.internal.InternalServer;
 
 import java.util.List;
 
@@ -95,24 +93,6 @@ public interface EdgeClientSession {
     Observation observeIdle(EdgeClientSessionObserver edgeClientSessionObserver);
 
     /**
-     * Observes the the event with the given name, for the {@link EdgeServer} instance.  The {@link Observation}
-     * is registered in this {@link EdgeClientSession} with a disconnection listener.  Upon termination
-     * of this session, the container will automatically clean-up the session.
-     *
-     * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
-     */
-    PathBuilder<EventObservationNameBuilder<Observation>> observeEdgeEvent();
-
-    /**
-     * Observes to the the event with the given name, for the {@link InternalServer} instance.  The
-     * {@link Observation} is registered in this {@link EdgeClientSession} with a disconnection
-     * listener.  Upon termination of this session, the container will automatically clean-up the session.
-     *
-     * @return a {@link EventObservationTypeBuilder} instance, used to build the rest of the subscription
-     */
-    PathBuilder<EventObservationNameBuilder<Observation>> observeInternalEvent();
-
-    /**
      * Disconnects the remote client.  This may not happen immediately.  This may allow the current session to
      * finish up work before actually closing the underlying transport.  However, once called it should
      * be assumed that the session is no longer in use and should not rely on any methods.
@@ -120,53 +100,5 @@ public interface EdgeClientSession {
      */
     void disconnect();
 
-    /**
-     * Created by patricktwohig on 10/5/15.
-     */
-    interface EventObservationNameBuilder<ObservationT> {
-
-        /**
-         * Returns an instance of {@link PathBuilder} for an event with the given name.
-         *
-         * @return the {@link PathBuilder}
-         */
-        EventObservationTypeBuilder<ObservationT> named(final String name);
-
-    }
-
-    /**
-     * Used to specify the type of the event.
-     */
-    interface EventObservationTypeBuilder<ObservationT> {
-
-        /**
-         * Sets the type of the subscription to {@link Object}.
-         *
-         * @return an instance of the {@link Observation}
-         */
-        ObservationT ofAnyType();
-
-        /**
-         * Sets the type of the subscription to the given type.
-         *
-         * @return an instance of {@link PathBuilder}
-         * @param type the name of the type.  Resolved using {@link Class#forName(String)}
-         *
-         * @return an instance of the {@link Observation}
-         */
-        ObservationT ofType(String type);
-
-        /**
-         * Sets the type of the subscription to the given type.
-         *
-         * @return an instance of {@link PathBuilder}
-         * @param type the {@link Class} type for the event.
-         * @param <T> the type of the event
-         *
-         * @return an instance of the {@link Observation}
-         */
-        <T> ObservationT ofType(Class<T> type);
-
-    }
 
 }

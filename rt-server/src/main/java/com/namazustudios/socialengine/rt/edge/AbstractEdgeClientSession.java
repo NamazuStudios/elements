@@ -2,14 +2,11 @@ package com.namazustudios.socialengine.rt.edge;
 
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.internal.InternalResource;
-import com.namazustudios.socialengine.rt.internal.InternalServer;
 
 import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by patricktwohig on 10/2/15.
@@ -20,53 +17,20 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
 
     private static final String DISCONNECT_OBSERVERS_KEY = AbstractEdgeClientSession.class + "IDLE_OBSERVERS_KEY";
 
-    @Inject
-    private EdgeServer edgeServer;
+    private EventService eventService;
 
-    @Inject
-    private InternalServer internalServer;
+    private Observation createObservation(final String named, final Class<?> type, final Path path) {
 
-    @Override
-    public PathBuilder<EventObservationNameBuilder<Observation>> observeEdgeEvent() {
-        return new AbstractEventPathBuilder<Observation>() {
-            @Override
-            protected Observation doCreateObservation(final Path path, final String named,
-                                                      final Class<?> type) {
-                return createObservation(edgeServer, named, type, path);
-            }
-        };
-    }
+        final Observation serverObservation = getEventService().observe(path, named, getEventReceiver(type));
 
-    @Override
-    public PathBuilder<EventObservationNameBuilder<Observation>> observeInternalEvent() {
-        return new AbstractEventPathBuilder<Observation>() {
-            @Override
-            protected Observation doCreateObservation(final Path path, final String named,
-                                                      final Class<?> type) {
-                return createObservation(internalServer, named, type, path);
-            }
-        };
-
-    }
-
-    private Observation createObservation(final Server server, final String named,
-                                          final Class<?> type, final Path path) {
-
-        final Observation serverObservation = server.observe(path, named, getEventReceiver(type));
-        final Observation disconnectObservation = observeDisconnect(new EdgeClientSessionObserver() {
-            @Override
-            public boolean observe() {
-                serverObservation.release();
-                return false;
-            }
+        final Observation disconnectObservation = observeDisconnect(() -> {
+            serverObservation.release();
+            return false;
         });
 
-        return new Observation() {
-            @Override
-            public void release() {
-                serverObservation.release();
-                disconnectObservation.release();
-            }
+        return () -> {
+            serverObservation.release();
+            disconnectObservation.release();
         };
 
     }
@@ -88,12 +52,7 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
 
         observers.put(uuid, edgeClientSessionObserver);
 
-        return new Observation() {
-            @Override
-            public void release() {
-                observers.remove(uuid);
-            }
-        };
+        return () -> observers.remove(uuid);
 
     }
 
@@ -157,57 +116,13 @@ public abstract class AbstractEdgeClientSession implements EdgeClientSession {
 
     }
 
-    /**
-     * Created by patricktwohig on 10/5/15.
-     */
-    private abstract static class AbstractEventPathBuilder<ObservationT>
-            implements PathBuilder<EventObservationNameBuilder<ObservationT>> {
+    public EventService getEventService() {
+        return eventService;
+    }
 
-        @Override
-        public EventObservationNameBuilder<ObservationT> atPath(final String path) {
-            return atPath(new Path(path));
-        }
-
-        @Override
-        public EventObservationNameBuilder<ObservationT> atPath(final Path path) {
-            return null;
-        }
-
-        private EventObservationNameBuilder<ObservationT> eventObservationNameBuilder(final Path path) {
-            return new EventObservationNameBuilder<ObservationT>() {
-                @Override
-                public EventObservationTypeBuilder<ObservationT> named(String name) {
-                    return null;
-                }
-            };
-        }
-
-        private EventObservationTypeBuilder<ObservationT> eventObservationTypeBuilder(final Path path,
-                                                                                      final String named) {
-            return new EventObservationTypeBuilder<ObservationT>() {
-                @Override
-                public ObservationT ofAnyType() {
-                    return ofType(Object.class);
-                }
-
-                @Override
-                public ObservationT ofType(String type) {
-                    try {
-                        return ofType(Class.forName(type));
-                    } catch (ClassNotFoundException e) {
-                        throw new InternalException(e);
-                    }
-                }
-
-                @Override
-                public <T> ObservationT ofType(Class<T> type) {
-                    return doCreateObservation(path, named, type);
-                }
-            };
-        }
-
-        protected abstract ObservationT doCreateObservation(final Path path, final String named, final Class<?> type);
-
+    @Inject
+    public void setEventService(EventService eventService) {
+        this.eventService = eventService;
     }
 
 }

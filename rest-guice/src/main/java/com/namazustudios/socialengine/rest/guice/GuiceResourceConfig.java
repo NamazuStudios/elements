@@ -10,14 +10,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
-import javax.ws.rs.core.Feature;
 
 /**
  * Created by patricktwohig on 3/20/15.
+ *
  */
 public class GuiceResourceConfig extends ResourceConfig {
 
-    private static final Logger LOG = LoggerFactory.getLogger(GuiceResourceConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(GuiceResourceConfig.class);
 
     public static final String INJECOR_ATTRIBUTE_NAME = GuiceResourceConfig.class.getName() + ".Injector";
 
@@ -39,7 +39,7 @@ public class GuiceResourceConfig extends ResourceConfig {
             register(cls);
 
         } catch (ClassNotFoundException ex) {
-            LOG.info("NOT loading Jackson support.");
+            logger.info("NOT loading Jackson support.");
         }
 
         GuiceBridge.getGuiceBridge().initializeGuiceBridge(serviceLocator);

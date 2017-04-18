@@ -1,14 +1,12 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.binder.ScopedBindingBuilder;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 import com.google.inject.util.Providers;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.edge.EdgeResource;
-import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import com.namazustudios.socialengine.rt.internal.InternalResource;
 import com.namazustudios.socialengine.rt.lua.*;
 import org.slf4j.Logger;
@@ -16,6 +14,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Provider;
 import java.io.File;
+
+import static com.namazustudios.socialengine.rt.lua.InternalResourceProviders.classpathProviderForScript;
+import static com.namazustudios.socialengine.rt.lua.InternalResourceProviders.filesystemProviderForScript;
 
 
 /**
@@ -36,9 +37,8 @@ public abstract class LuaResourceModule extends AbstractModule {
         LOG.info("Loading Lua modules.  java.library.path is {}", System.getProperty("java.library.path"));
 
         bootstrapEdgeResources = MapBinder.newMapBinder(binder(),
-                                                        Path.class,
-                                                        EdgeResource.class,
-                                                        Names.named(EdgeServer.BOOTSTRAP_RESOURCES));
+            new TypeLiteral<Path>(){},
+            new TypeLiteral<EdgeResource>(){});
 
         binder().bind(Tabler.class)
                 .to(DefaultTabler.class);
@@ -91,32 +91,25 @@ public abstract class LuaResourceModule extends AbstractModule {
     }
 
     private NamedScriptBindingBuilder edgeClasspathScriptFile(final Path bootstrapPath, final String scriptFile) {
-        return new NamedScriptBindingBuilder() {
-            @Override
-            public ScopedBindingBuilder named(final String scriptName) {
+        return scriptName -> {
 
-                final Provider<LuaEdgeResource> provider = EdgeResourceProviders
-                        .classpathProviderForScript(scriptFile);
+            final Provider<LuaEdgeResource> provider = EdgeResourceProviders.classpathProviderForScript(scriptFile);
 
-                return bootstrapEdgeResources.addBinding(bootstrapPath)
-                                             .toProvider(Providers.guicify(provider));
+            return bootstrapEdgeResources.addBinding(bootstrapPath)
+                                         .toProvider(Providers.guicify(provider));
 
-            }
         };
     }
 
     private NamedScriptBindingBuilder edgeFilesystemScriptFile(final Path bootstrapPath, final File scriptFile) {
-        return new NamedScriptBindingBuilder() {
-            @Override
-            public ScopedBindingBuilder named(final String scriptName) {
+        return scriptName -> {
 
-                final Provider<LuaEdgeResource> provider = EdgeResourceProviders
-                        .filesystemProviderForScript(scriptFile);
+            final Provider<LuaEdgeResource> provider = EdgeResourceProviders
+                    .filesystemProviderForScript(scriptFile);
 
-                return bootstrapEdgeResources.addBinding(bootstrapPath)
-                                             .toProvider(Providers.guicify(provider));
+            return bootstrapEdgeResources.addBinding(bootstrapPath)
+                                         .toProvider(Providers.guicify(provider));
 
-            }
         };
     }
 
@@ -142,34 +135,26 @@ public abstract class LuaResourceModule extends AbstractModule {
     }
 
     private NamedScriptBindingBuilder internalClasspathScriptFile(final String scriptFile) {
-        return new NamedScriptBindingBuilder() {
-            @Override
-            public ScopedBindingBuilder named(final String scriptName) {
+        return scriptName -> {
 
-                final Provider<LuaInternalResource> provider = InternalResourceProviders
-                        .classpathProviderForScript(scriptFile);
+            final Provider<LuaInternalResource> provider = classpathProviderForScript(scriptFile);
 
-                return bind(InternalResource.class)
-                        .annotatedWith(Names.named(scriptName))
-                        .toProvider(Providers.guicify(provider));
+            return bind(InternalResource.class)
+                    .annotatedWith(Names.named(scriptName))
+                    .toProvider(Providers.guicify(provider));
 
-            }
         };
     }
 
     private NamedScriptBindingBuilder internalFilesystemScriptFile(final File scriptFile) {
-        return new NamedScriptBindingBuilder() {
-            @Override
-            public ScopedBindingBuilder named(String scriptName) {
+        return scriptName -> {
 
-                final Provider<LuaInternalResource> provider = InternalResourceProviders
-                        .filesystemProviderForScript(scriptFile);
+            final Provider<LuaInternalResource> provider = filesystemProviderForScript(scriptFile);
 
-                return bind(InternalResource.class)
-                        .annotatedWith(Names.named(scriptName))
-                        .toProvider(Providers.guicify(provider));
+            return bind(InternalResource.class)
+                    .annotatedWith(Names.named(scriptName))
+                    .toProvider(Providers.guicify(provider));
 
-            }
         };
     }
 

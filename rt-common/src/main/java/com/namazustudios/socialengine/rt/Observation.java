@@ -2,10 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 /**
  * Instances implementing {@link Observation} are used to provide an association between some observer and an
- * observee.
- *
- * The only operation availble is {@link #release()} which effectively un-does the Observation.  A more specific
- * type of Observation, {@link Subscription}, can give more context such as the current scope of the observation.
+ * observee. The only operation availble is {@link #release()} which effectively un-does the Observation.
  *
  * Created by patricktwohig on 10/2/15.
  */

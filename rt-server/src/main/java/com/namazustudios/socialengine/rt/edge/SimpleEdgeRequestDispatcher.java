@@ -18,13 +18,11 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleEdgeRequestDispatcher.class);
 
-    @Inject
-    private ResourceService<EdgeResource> resourceService;
-
-    @Inject
     private ExceptionMapper.Resolver exceptionMapperResolver;
 
     private EdgeFilter.Chain rootFilterChain;
+
+    private Server<EdgeResource> edgeResourceServer;
 
     @Override
     public void dispatch(final EdgeClientSession edgeClientSession,
@@ -52,7 +50,7 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
                                                     final Request request,
                                                     final ResponseReceiver responseReceiver) {
         LOG.info("Mapping exception for request {} and edgeClientSession {}", request, edgeClientSession, ex);
-        final ExceptionMapper<T> exceptionMapper = exceptionMapperResolver.getExceptionMapper(ex);
+        final ExceptionMapper<T> exceptionMapper = getExceptionMapperResolver().getExceptionMapper(ex);
         exceptionMapper.map(ex, request, responseReceiver);
     }
 
@@ -61,28 +59,11 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
         Collections.reverse(edgeFilterList);
 
-        EdgeFilter.Chain chain = new EdgeFilter.Chain() {
-            @Override
-            public void next(final EdgeClientSession client,
-                             final Request request,
-                             final ResponseReceiver receiver) {
-                resolveAndDispatch(client, request, receiver);
-            }
-        };
+        EdgeFilter.Chain chain = (client, request, receiver) -> resolveAndDispatch(client, request, receiver);
 
         for (final EdgeFilter filter : edgeFilterList) {
-
             final EdgeFilter.Chain next = chain;
-
-            chain = new EdgeFilter.Chain() {
-                @Override
-                public void next(final EdgeClientSession edgeClientSession,
-                                 final Request request,
-                                 final ResponseReceiver responseReceiver) {
-                    filter.filter(next, edgeClientSession, request, responseReceiver);
-                }
-            };
-
+            chain = (edgeClientSession, request, responseReceiver) -> filter.filter(next, edgeClientSession, request, responseReceiver);
         }
 
         rootFilterChain = chain;
@@ -95,21 +76,42 @@ public class SimpleEdgeRequestDispatcher implements EdgeRequestDispatcher {
 
         final Path path = new Path(request.getHeader().getPath());
 
-        final EdgeRequestPathHandler edgeRequestPathHandler =
-            resourceService.getResource(path)
-                           .getHandler(request.getHeader().getMethod());
+        getEdgeResourceServer().performV(path, resource -> {
 
-        if (request.getPayload() == null) {
-            edgeRequestPathHandler.handle(edgeClientSession, request, receiver);
-        } else if (edgeRequestPathHandler.getPayloadType().isAssignableFrom(request.getPayload().getClass())) {
-            edgeRequestPathHandler.handle(edgeClientSession, request, receiver);
-        } else {
-            throw new InvalidParameterException("Method " + request.getHeader().getMethod() + " " +
-                    "at path " + request.getHeader().getPath()  + " " +
-                    "does not handle payload (" + request.getPayload() + ") " +
-                    "of type " + request.getPayload().getClass());
-        }
+            final EdgeRequestPathHandler edgeRequestPathHandler;
+            edgeRequestPathHandler = resource.getHandler(request.getHeader().getMethod());
 
+            if (request.getPayload() == null) {
+                edgeRequestPathHandler.handle(edgeClientSession, request, receiver);
+            } else if (edgeRequestPathHandler.getPayloadType().isAssignableFrom(request.getPayload().getClass())) {
+                edgeRequestPathHandler.handle(edgeClientSession, request, receiver);
+            } else {
+                throw new InvalidParameterException("Method " + request.getHeader().getMethod() + " " +
+                        "at path " + request.getHeader().getPath()  + " " +
+                        "does not handle payload (" + request.getPayload() + ") " +
+                        "of type " + request.getPayload().getClass());
+            }
+
+        });
+
+    }
+
+    public Server<EdgeResource> getEdgeResourceServer() {
+        return edgeResourceServer;
+    }
+
+    @Inject
+    public void setEdgeResourceServer(Server<EdgeResource> edgeResourceServer) {
+        this.edgeResourceServer = edgeResourceServer;
+    }
+
+    public ExceptionMapper.Resolver getExceptionMapperResolver() {
+        return exceptionMapperResolver;
+    }
+
+    @Inject
+    public void setExceptionMapperResolver(ExceptionMapper.Resolver exceptionMapperResolver) {
+        this.exceptionMapperResolver = exceptionMapperResolver;
     }
 
 }

@@ -26,8 +26,8 @@ public class SimpleServerModule extends AbstractModule {
         edgeServerPrivateBinder.bind(PathLockFactory.class)
                                .toProvider(Providers.guicify(edgeResourceLockFactoryProvider()));
 
-        edgeServerPrivateBinder.expose(EdgeServer.class);
         edgeServerPrivateBinder.expose(SimpleEdgeServer.class);
+        edgeServerPrivateBinder.expose(new TypeLiteral<Server<EdgeResource>>(){});
         edgeServerPrivateBinder.expose(new TypeLiteral<ResourceService<EdgeResource>>(){});
 
         final PrivateBinder internalServerBinder = binder().newPrivateBinder();
@@ -37,24 +37,12 @@ public class SimpleServerModule extends AbstractModule {
         internalServerBinder.bind(PathLockFactory.class)
                             .toProvider(Providers.guicify(internalResourceLockFactoryProvider()));
 
-        internalServerBinder.expose(InternalServer.class);
         internalServerBinder.expose(SimpleInternalServer.class);
+        internalServerBinder.expose(new TypeLiteral<Server<InternalResource>>(){});
 
         binder().bind(ExecutorService.class)
                 .annotatedWith(Names.named(AbstractSimpleServer.EXECUTOR_SERVICE))
                 .toProvider(Providers.guicify(executorServiceProvider()));
-
-        binder().bindConstant()
-                .annotatedWith(Names.named(AbstractSimpleServer.MAX_REQUESTS))
-                .to(maxRequests());
-
-        binder().bindConstant()
-                .annotatedWith(Names.named(AbstractSimpleServer.MAX_EVENTS))
-                .to(maxEvents());
-
-        binder().bindConstant()
-                .annotatedWith(Names.named(AbstractSimpleServer.MAX_UPDATES_PER_SECOND))
-                .to(maxUpdatesPerSecond());
 
     }
 
@@ -78,7 +66,7 @@ public class SimpleServerModule extends AbstractModule {
     /**
      * Override to include something other than the default {@link PathLockFactory} instance.
      *
-     * This uses the {@link ProxyLockFactory} to accomplish the task.
+     * This uses the {@link SimplePathLockFactory} to accomplish the task.
      *
      * @return a {@link PathLockFactory} for {@link EdgeResource} instances
      */
@@ -89,43 +77,12 @@ public class SimpleServerModule extends AbstractModule {
     /**
      * Override to include something other than the default {@link PathLockFactory} instance.
      *
-     * This uses the {@link ProxyLockFactory} to accomplish the task.
+     * This uses the {@link SimplePathLockFactory} to accomplish the task.
      *
      * @return a {@link PathLockFactory} for {@link InternalResource} instances
      */
     protected Provider<PathLockFactory> internalResourceLockFactoryProvider() {
         return () -> new SimplePathLockFactory();
-    }
-
-    /**
-     * Override to change the maximum number of requests that the server will accept per loop.
-     *
-     * @see {@link AbstractSimpleServer#MAX_REQUESTS}
-     *
-     * @return the maximum number of requets.
-     */
-    private int maxRequests() {
-        return 1000;
-    }
-
-    /**
-     * Override to change the maximum number of requests that the server will accept per loop.
-     *
-     * @see {@link AbstractSimpleServer#MAX_REQUESTS}
-     *
-     * @return the maximum number of requets.
-     */
-    private int maxEvents() {
-        return 1000;
-    }
-
-    /**
-     * Override to change the maximum number of updates per second.
-     *
-     * @return the max updates per second
-     */
-    private int maxUpdatesPerSecond() {
-        return 120;
     }
 
 }

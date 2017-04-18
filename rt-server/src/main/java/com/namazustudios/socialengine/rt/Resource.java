@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.edge.EdgeServer;
-
 import java.util.Map;
 
 /**
@@ -13,16 +11,8 @@ import java.util.Map;
  * which can be transmitted from the server to the client, or can be transmitted
  * to other {@link Resource} instances via the {@link EventReceiver} inteface.
  *
- * Typically instances of Resource have their own scope, and communicate with other Resources onlyt
- * through either events or requests.  This allows the {@link Server} or {@link EdgeServer} to parallelize
- * and distribute the resources across threads, or even physical machines.
- *
- * Once a resource is no longer needed, it is necessary to destroy the
- * resource using the {@link AutoCloseable#close()} method.
- *
- * The Server may employ a thread pooling system to drive the resources.  However, the {@link Server} must
- * guarantee that only one thread may access a single resource at a time.  Unless otherwise specified
- * it is assumed tht an instance of {@link Resource} is not thread safe.
+ * Once a resource is no longer needed, it is necessary to destroy the resource using the
+ * {@link AutoCloseable#close()} method.
  *
  * Created by patricktwohig on 8/8/15.
  */

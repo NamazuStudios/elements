@@ -5,7 +5,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
- * This is the main class sed to manage the lifecycle of the server, drive the main threads, etc.
+ * This is the main class used to manage the lifecycle of the underlying {@link Server} instances.
  *
  * Created by patricktwohig on 9/12/15.
  */

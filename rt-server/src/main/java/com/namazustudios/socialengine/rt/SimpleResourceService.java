@@ -32,14 +32,25 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleResourceService.class);
 
-    private final AtomicReference<Storage> storageAtomicReference = new AtomicReference<>(new Storage());
-
-    private Server server;
+    private final AtomicReference<Storage<ResourceT>> storageAtomicReference = new AtomicReference<>(new Storage());
 
     private PathLockFactory pathLockFactory;
 
     @Override
-    public ResourceT getResource(final Path path) {
+    public ResourceT getResourceWithId(final ResourceId resourceId) {
+
+        final ResourceT resource = storageAtomicReference.get().getResources().get(resourceId);
+
+        if (resource == null) {
+            throw new NotFoundException("Resource not found: " + resourceId);
+        }
+
+        return resource;
+
+    }
+
+    @Override
+    public ResourceT getResourceAtPath(final Path path) {
 
         if (path.isWildcard()) {
             throw new IllegalArgumentException("Cannot fetch single resource with wildcard path " + path);
@@ -66,6 +77,18 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
         });
 
+    }
+
+    @Override
+    public Path getPathForResourceId(ResourceId resourceId) {
+
+        final Path path = storageAtomicReference.get().getResourceIdPathMap().get(resourceId);
+
+        if (path == null) {
+            throw new NotFoundException("No path for resource with ID: " + resourceId);
+        }
+
+        return path;
     }
 
     @Override
@@ -98,11 +121,18 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                     throw new DuplicateException("Attempting to add already-existing resource to path." + path);
                 }
 
+                if (storage.getResourceIdPathMap().put(resource.getId(), path) != null) {
+                    logger.error("Consistency Error:  {} is already mapped to path {}", resource.getId(), path);
+                }
+
                 // We now know that the resource has been inserted completely into the master resource
                 // catalogue.  Time to complete the job by actually mapping the path properly.
 
-                storage.getPathResourceIdMap().put(path, resource.getId());
-                server.postV(() -> resource.onAdd(path));
+                final ResourceId removed = storage.getPathResourceIdMap().put(path, resource.getId());
+
+                if (!lock.equals(removed)) {
+                    logger.error("Consistency Error:  Expected lock {} but got {}", lock, removed);
+                }
 
             } finally {
                 storage.getPathResourceIdMap().remove(path, lock);
@@ -151,14 +181,21 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                         throw new DuplicateException("Attempting to add already-existing resource to path." + path);
                     }
 
-                    // Lastly make the path proper.
+                    if (storage.getResourceIdPathMap().put(resource.getId(), path) != null) {
+                        logger.error("Consistency Error:  {} is already mapped to path {}", resource.getId(), path);
+                    }
+
+                    // Lastly link the path to the resource ID and vise-versa.  Thus completing the transaction.
+                    storage.getResourceIdPathMap().put(resource.getId(), path);
                     storage.getPathResourceIdMap().put(path, resource.getId());
                     return new SimpleAtomicOperationTuple<>(true, resource);
 
                 } else {
 
                     // Failure.  We are looking at an existing value.  Fetch it and report
-                    // appropriately
+                    // appropriately.  No need to dig further, and no need to invoke the
+                    // supplier (and risk creating heavy resources).
+
                     final ResourceT resource = storage.getResources().get(existing);
 
                     if (resource == null) {
@@ -229,9 +266,8 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
             // we assigned to the path mapping.
 
             storage.getResources().remove(existing);
+            storage.getResourceIdPathMap().remove(resource.getId(), path);
             storage.getPathResourceIdMap().remove(path, lock);
-
-            getServer().postV(() -> resource.onRemove(path));
 
             return resource;
 
@@ -243,18 +279,10 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
     public Stream<ResourceT> removeAllResources() {
         // Removes everything and replaces with completely new structures
         // in one atomic swap.  The Remaining values will dealt with
-        // appropriately.
+        // appropriately through the returned stream.  However, this method
+        // guarantees that the resources are removed atomically.
         final Storage storage = storageAtomicReference.getAndSet(new Storage());
         return storage.getResources().values().parallelStream();
-    }
-
-    public Server getServer() {
-        return server;
-    }
-
-    @Inject
-    public void setServer(Server server) {
-        this.server = server;
     }
 
     public PathLockFactory getPathLockFactory() {
@@ -304,6 +332,8 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
         private final ConcurrentNavigableMap<Path, ResourceId> pathResourceIdMap = new ConcurrentSkipListMap<>();
 
+        private final ConcurrentNavigableMap<ResourceId, Path> resourceIdPathMap = new ConcurrentSkipListMap<>();
+
         public ConcurrentMap<ResourceId, T> getResources() {
             return resources;
         }
@@ -311,6 +341,11 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
         public ConcurrentNavigableMap<Path, ResourceId> getPathResourceIdMap() {
             return pathResourceIdMap;
         }
+
+        public ConcurrentNavigableMap<ResourceId, Path> getResourceIdPathMap() {
+            return resourceIdPathMap;
+        }
+
     }
 
     private static class SimpleAtomicOperationTuple<T extends Resource> implements AtomicOperationTuple<T> {

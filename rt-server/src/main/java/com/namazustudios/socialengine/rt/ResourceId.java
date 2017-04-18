@@ -34,5 +34,11 @@ public class ResourceId {
         return uuid.hashCode();
     }
 
+    @Override
+    public String toString() {
+        return "ResourceId{" +
+                "uuid=" + uuid +
+                '}';
+    }
 }
 

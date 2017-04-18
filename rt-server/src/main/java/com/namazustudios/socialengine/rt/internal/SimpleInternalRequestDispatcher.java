@@ -16,16 +16,14 @@ public class SimpleInternalRequestDispatcher implements InternalRequestDispatche
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleInternalRequestDispatcher.class);
 
-    @Inject
     private ExceptionMapper.Resolver exceptionMapperResolver;
 
-    @Inject
-    private ResourceService<InternalResource> resourceService;
+    private Server<InternalResource> internalResourceServer;
 
     @Override
     public void dispatch(final Request request, final ResponseReceiver responseReceiver) {
         try (final DelegatingCheckedResponseReceiver receiver = new DelegatingCheckedResponseReceiver(request, responseReceiver)) {
-            doDispatch(request, responseReceiver);
+            doDispatch(request, receiver);
         }  catch (Exception ex) {
             LOG.error("Caught exception processing request {}.", request, ex);
         }
@@ -45,29 +43,54 @@ public class SimpleInternalRequestDispatcher implements InternalRequestDispatche
 
         final Path path = new Path(request.getHeader().getPath());
 
-        final InternalRequestPathHandler edgeRequestPathHandler =
-                resourceService.getResource(path)
-                               .getHandler(request.getHeader().getMethod());
+        getInternalResourceServer().performV(path, resource -> {
 
-        if (request.getPayload() == null) {
-            edgeRequestPathHandler.handle(request, receiver);
-        } else if (edgeRequestPathHandler.getClass().isAssignableFrom(request.getPayload().getClass())) {
-            edgeRequestPathHandler.handle(request, receiver);
-        } else {
-            throw new InvalidParameterException("Method " + request.getHeader().getPath() + " " +
-                    "at path " + request.getHeader().getPath() +
-                    "does not handle payload (" + request.getPayload() + ") " +
-                    "of type " + request.getPayload().getClass());
-        }
+            final InternalRequestPathHandler internalRequestPathHandler;
+            internalRequestPathHandler = resource.getHandler(request.getHeader().getMethod());
+
+            if (request.getPayload() == null) {
+                internalRequestPathHandler.handle(request, receiver);
+            } else if (internalRequestPathHandler.getClass().isAssignableFrom(request.getPayload().getClass())) {
+                internalRequestPathHandler.handle(request, receiver);
+            } else {
+                throw new InvalidParameterException("Method " + request.getHeader().getPath() + " " +
+                        "at path " + request.getHeader().getPath() +
+                        "does not handle payload (" + request.getPayload() + ") " +
+                        "of type " + request.getPayload().getClass());
+            }
+
+        });
 
     }
 
     private <T extends Exception> void mapException(final T ex,
                                                     final Request request,
                                                     final ResponseReceiver responseReceiver) {
+
         LOG.info("Mapping exception for request {} and edgeClient {}", request, ex);
-        final ExceptionMapper<T> exceptionMapper = exceptionMapperResolver.getExceptionMapper(ex);
+
+        final ExceptionMapper<T> exceptionMapper;
+        exceptionMapper = getExceptionMapperResolver().getExceptionMapper(ex);
         exceptionMapper.map(ex, request, responseReceiver);
+
+    }
+
+    public ExceptionMapper.Resolver getExceptionMapperResolver() {
+        return exceptionMapperResolver;
+    }
+
+    @Inject
+    public void setExceptionMapperResolver(ExceptionMapper.Resolver exceptionMapperResolver) {
+        this.exceptionMapperResolver = exceptionMapperResolver;
+    }
+
+    public Server<InternalResource> getInternalResourceServer() {
+        return internalResourceServer;
+    }
+
+    @Inject
+    public void setInternalResourceServer(Server<InternalResource> internalResourceServer) {
+        this.internalResourceServer = internalResourceServer;
     }
 
 }

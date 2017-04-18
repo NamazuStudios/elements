@@ -7,10 +7,8 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -23,84 +21,23 @@ import java.util.concurrent.ExecutorService;
  *
  * Created by patricktwohig on 8/22/15.
  */
-public class SimpleEdgeServer extends AbstractSimpleServer implements EdgeServer {
+public class SimpleEdgeServer extends AbstractSimpleServer<EdgeResource> {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleEdgeServer.class);
 
+    private ResourceService<EdgeResource> resourceService;
+
+    @Override
+    public void shutdown() {}
+
+    @Override
+    public ResourceService<EdgeResource> getResourceService() {
+        return resourceService;
+    }
+
     @Inject
-    private EdgeRequestDispatcher edgeRequestDispatcher;
-
-    @Inject
-    private ResourceService<EdgeResource> edgeResourceService;
-
-    @Inject
-    @Named(EdgeServer.BOOTSTRAP_RESOURCES)
-    private Map<Path, EdgeResource> bootstrapResources;
-
-    private final Queue<Callable<Void>> eventQueue = new ConcurrentLinkedQueue<>();
-
-    private final Queue<Callable<Void>> requestQueue = new ConcurrentLinkedQueue<>();
-
-    @Override
-    public void dispatch(final EdgeClientSession edgeClientSession,
-                         final Request request,
-                         final ResponseReceiver responseReceiver) {
-        requestQueue.add(new Callable<Void>() {
-
-            @Override
-            public Void call() {
-
-                try {
-                    edgeRequestDispatcher.dispatch(edgeClientSession, request, responseReceiver);
-                } catch (Exception ex) {
-                    LOG.error("Caught exception handling request {} for client {} ", request, edgeClientSession);
-                }
-
-                return null;
-            }
-
-            @Override
-            public String toString() {
-                return "Request dispatcher for reqquest " + request + " for receiver " + responseReceiver;
-            }
-
-        });
-    }
-
-    @Override
-    protected ServerContext openServerContext() {
-        return new EdgeServerContext();
-    }
-
-    @Override
-    protected Queue<Callable<Void>> getEventQueue() {
-        return eventQueue;
-    }
-
-    @Override
-    protected Queue<Callable<Void>> getRequestQueue() {
-        return requestQueue;
-    }
-
-    private class EdgeServerContext implements ServerContext {
-
-        public EdgeServerContext() {
-
-            SimpleEdgeServer.LOG.info("Bootstrapping Edge server {} ", SimpleEdgeServer.this);
-
-            for (final Map.Entry<Path, EdgeResource> entry : bootstrapResources.entrySet()) {
-                final EdgeResource edgeResource = entry.getValue();
-                edgeResourceService.addResource(entry.getKey(), edgeResource);
-                LOG.info("Bootstrapped resource {} at path {}", entry.getValue(), entry.getKey());
-            }
-
-        }
-
-        @Override
-        public void close() {
-            edgeResourceService.removeAndCloseAllResources();
-        }
-
+    public void setResourceService(ResourceService<EdgeResource> resourceService) {
+        this.resourceService = resourceService;
     }
 
 }

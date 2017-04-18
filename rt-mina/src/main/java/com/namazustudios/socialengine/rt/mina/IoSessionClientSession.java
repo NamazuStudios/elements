@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.rt.EventReceiver;
 import com.namazustudios.socialengine.rt.SimpleEvent;
 import com.namazustudios.socialengine.rt.edge.AbstractEdgeClientSession;
 import com.namazustudios.socialengine.rt.edge.EdgeClientSession;
-import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import org.apache.mina.core.session.IoSession;
 
 import javax.inject.Inject;
@@ -18,9 +17,6 @@ public class IoSessionClientSession extends AbstractEdgeClientSession implements
 
     @Inject
     private IoSession ioSession;
-
-    @Inject
-    private EdgeServer edgeServer;
 
     @Override
     public String getId() {
@@ -84,13 +80,9 @@ public class IoSessionClientSession extends AbstractEdgeClientSession implements
         };
     }
 
-    /**
-     * Gets the underlying {@link IoSession} instance.
-     *
-     * @return the underlying {@link IoSession} instance.
-     */
-    public IoSession getIoSession() {
-        return ioSession;
+    @Override
+    public void disconnect() {
+        ioSession.close(false);
     }
 
     public class SessionKey {
@@ -116,12 +108,14 @@ public class IoSessionClientSession extends AbstractEdgeClientSession implements
 
     }
 
-    @Override
-    public void disconnect() {
-        edgeServer.post(() -> {
-            ioSession.close(false);
-            return null;
-        });
+
+    /**
+     * Gets the underlying {@link IoSession} instance.
+     *
+     * @return the underlying {@link IoSession} instance.
+     */
+    public IoSession getIoSession() {
+        return ioSession;
     }
 
 }

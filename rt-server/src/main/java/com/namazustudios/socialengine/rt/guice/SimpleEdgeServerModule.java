@@ -14,13 +14,8 @@ public class SimpleEdgeServerModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        binder().bind(Server.class)
-                .to(EdgeServer.class);
-
-        binder().bind(EdgeServer.class)
-                .to(SimpleEdgeServer.class);
-
-        binder().bind(SimpleEdgeServer.class)
+        binder().bind(new TypeLiteral<Server<EdgeResource>>(){})
+                .to(SimpleEdgeServer.class)
                 .in(Scopes.SINGLETON);
 
         binder().bind(EdgeRequestDispatcher.class)

@@ -13,10 +13,7 @@ public class SimpleInternalServerModule extends AbstractModule{
     @Override
     protected void configure() {
 
-        binder().bind(Server.class)
-                .to(InternalServer.class);
-
-        binder().bind(InternalServer.class)
+        binder().bind(new TypeLiteral<Server<InternalResource>>(){})
                 .to(SimpleInternalServer.class);
 
         binder().bind(SimpleInternalServer.class)

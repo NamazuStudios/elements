@@ -6,7 +6,6 @@ import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestDispatcher;
 import com.namazustudios.socialengine.rt.edge.EdgeRequestPathHandler;
 import com.namazustudios.socialengine.rt.edge.EdgeResource;
-import com.namazustudios.socialengine.rt.edge.EdgeServer;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
@@ -28,7 +27,7 @@ public class ServerIOHandler extends IoHandlerAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(ServerIOHandler.class);
 
     @Inject
-    private EdgeServer edgeServer;
+    private EdgeRequestDispatcher edgeRequestDispatcher;
 
     @Inject
     private MinaConnectedEdgeClientService minaConnectedEdgeClientService;
@@ -70,7 +69,7 @@ public class ServerIOHandler extends IoHandlerAdapter {
             final Path path = new Path(request.getHeader().getPath());
 
             final EdgeRequestPathHandler edgeRequestPathHandler = edgeResourceService
-                    .getResource(path)
+                    .getResourceAtPath(path)
                     .getHandler(request.getHeader().getMethod());
 
             final Class<?> payloadType = edgeRequestPathHandler.getPayloadType();
@@ -78,7 +77,7 @@ public class ServerIOHandler extends IoHandlerAdapter {
             final Object payload = objectMapper.convertValue(request.getPayload(), payloadType);
 
             simpleRequest.setPayload(payload);
-            edgeServer.dispatch(ioSessionClient, simpleRequest, responseReceiver);
+            edgeRequestDispatcher.dispatch(ioSessionClient, simpleRequest, responseReceiver);
 
         } catch (BaseException ex) {
             final ExceptionMapper<BaseException> invalidDataExceptionExceptionMapper;

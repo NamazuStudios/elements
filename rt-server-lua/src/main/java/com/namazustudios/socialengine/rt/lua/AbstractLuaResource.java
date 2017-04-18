@@ -92,7 +92,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
     public AbstractLuaResource(final LuaState luaState,
                                final IocResolver iocResolver,
                                final Tabler tabler,
-                               final Server server) {
+                               final Server<?> server) {
         this.luaState = luaState;
         this.iocResolver = iocResolver;
         this.tabler = tabler;

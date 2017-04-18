@@ -1,265 +1,85 @@
 package com.namazustudios.socialengine.rt;
 
-import com.google.common.base.Stopwatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.jvm.hotspot.debugger.cdbg.VoidType;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.function.Function;
 
 /**
  * Created by patricktwohig on 8/23/15.
  */
-public abstract class AbstractSimpleServer implements Server, Runnable {
+public abstract class AbstractSimpleServer<ResourceT extends Resource> implements Server<ResourceT> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractSimpleServer.class);
-
-    /**
-     * Specifies the max number of updates per second the server will attempt to make.  Setting to zero
-     * will not throttle the update rate at all.  This may not be desirable, especially when the server
-     * is not under load updates will be processed so quickly that Resources may dispatch zero values
-     * for time deltas.
-     */
-    public static final String MAX_UPDATES_PER_SECOND = "com.namazustudios.socialengine.rt.AbstractSimpleServer.maxUpdatesPerSecond";
+    private static final Logger logger = LoggerFactory.getLogger(AbstractSimpleServer.class);
 
     /**
-     * This is the maximum number of requests that the server will accept before giving up and processing the next frame.
-     */
-    public static final String MAX_REQUESTS = "com.namazustudios.socialengine.rt.AbstractSimpleServer.maxRequests";
-
-    /**
-     * This is the maximum number of requests that server will process before giving up and processing the next frame.
-     */
-    public static final String MAX_EVENTS = "com.namazustudios.socialengine.rt.AbstractSimpleServer.maxEvents";
-
-    /**
-     * The SimpleEdgeServer uses an {@link ExecutorService} to process requests and dispath
-     * events to the various {@link Resource}s.
+     * The SimpleEdgeServer uses an {@link ExecutorService} to process requests and dispatch
+     * events to the various {@link Resource}s.  This names the specific {@link ExecutorService}
+     * to use for injectiong using {@link Named}
      */
     public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.AbstractSimpleServer.executorService";
 
-    private final Stopwatch serverTimer = Stopwatch.createUnstarted();
+    private LockService lockService;
 
-    @Inject
-    @Named(MAX_REQUESTS)
-    private int maxRequests;
-
-    @Inject
-    @Named(MAX_EVENTS)
-    private int maxEvents;
-
-    @Inject
-    @Named(MAX_UPDATES_PER_SECOND)
-    private int maxUpdatesPerSecond;
-
-    @Inject
-    @Named(EXECUTOR_SERVICE)
     private ExecutorService executorService;
 
+    @Override
+    public <T> Future<T> perform(ResourceId resourceId, Function<ResourceT, T> operation) {
+        return getExecutorService().submit(() -> {
+
+            final ResourceT resource = getResourceService().getResourceWithId(resourceId);
+            final Lock lock = getLockService().getLock(resource.getId());
+
+            try {
+                lock.lock();
+                return operation.apply(resource);
+            } finally {
+                lock.unlock();
+            }
+
+        });
+    }
+
+    @Override
+    public <T> Future<T> perform(Path path, Function<ResourceT, T> operation) {
+        return getExecutorService().submit(() -> {
+
+            final ResourceT resource = getResourceService().getResourceAtPath(path);
+            final Lock lock = getLockService().getLock(resource.getId());
+
+            try {
+                lock.lock();
+                return operation.apply(resource);
+            } finally {
+                lock.unlock();
+            }
+
+        });
+    }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
+    }
+
     @Inject
-    private EventService eventService;
-
-    private final AtomicBoolean running = new AtomicBoolean();
-
-    @Override
-    public <T> Future<T> post(final Callable<T> operation) {
-//        getEventQueue().add(operation);
-        /// TODO Make this support futures
-        return null;
+    public void setExecutorService(@Named(EXECUTOR_SERVICE) ExecutorService executorService) {
+        this.executorService = executorService;
     }
 
-    @Override
-    public <PayloadT> Observation observe(final Path path,
-                                          final String name,
-                                          final EventReceiver<PayloadT> eventReceiver) {
-        final EventReceiver<PayloadT> eventReceiverWrapper = wrap(eventReceiver, path);
-        return eventService.observe(path, name, eventReceiverWrapper);
+    protected abstract ResourceService<ResourceT> getResourceService();
+
+
+    public LockService getLockService() {
+        return lockService;
     }
 
-    private <PayloadT> EventReceiver<PayloadT> wrap(final EventReceiver<PayloadT> eventReceiver, final Path path) {
-        return new EventReceiver<PayloadT>() {
-
-            @Override
-            public Class<PayloadT> getEventType() {
-                return eventReceiver.getEventType();
-            }
-
-            @Override
-            public void receive(final Event event) {
-                getEventQueue().add(new Callable<Void>() {
-
-                    @Override
-                    public Void call() {
-                        try {
-                            eventReceiver.receive(event);
-                        } catch (Exception ex) {
-                            LOG.error("Caught exception for receiver {} event {}", eventReceiver, event);
-                        }
-
-                        return null;
-                    }
-
-                    @Override
-                    public String toString() {
-                        return "EventModel receiver " + eventReceiver + "for event " + getEventType() + " at path" + path;
-                    }
-
-                });
-            }
-
-        };
-    }
-
-    @Override
-    public void run() {
-
-        if (!running.compareAndSet(false, true)) {
-            throw new IllegalStateException("Server already running.");
-        }
-
-        final Thread runnerThread = Thread.currentThread();
-
-        try (final ServerContext context = openServerContext()) {
-
-            LOG.info("Starting server main loop for server {}", this);
-
-            double movingAverageMillis = 0;
-            serverTimer.reset().start();
-            final Stopwatch logTimer = Stopwatch.createStarted();
-            final Stopwatch updateTimer = Stopwatch.createStarted();
-            final long maxSleepTime = maxUpdatesPerSecond == 0 ? 0 : Math.round(1000.0 / (double)maxUpdatesPerSecond);
-
-            do {
-
-                dispatchQueue(getRequestQueue(), maxRequests);
-                dispatchQueue(getEventQueue(), maxEvents);
-
-                final long elapsed = Math.round(updateTimer.elapsed(TimeUnit.MILLISECONDS));
-                movingAverageMillis += elapsed;
-                movingAverageMillis /= 2;
-
-                if (elapsed < maxSleepTime) {
-                    Thread.sleep(maxSleepTime - elapsed);
-                }
-
-                updateTimer.reset();
-                updateTimer.start();
-
-                if (logTimer.elapsed(TimeUnit.SECONDS) >= 5) {
-                    LOG.info("Average server tick time {}ms", movingAverageMillis);
-                    logTimer.reset();
-                    logTimer.start();
-                }
-
-            } while (running.get() && !runnerThread.isInterrupted());
-
-            LOG.info("Main server loop stopping for server {}", this);
-
-        } catch (InterruptedException ex) {
-            LOG.info("Server thread interrupted.  Stopping.", ex);
-            return;
-        } finally {
-            serverTimer.stop();
-        }
-
-    }
-
-    private void dispatchQueue(final Queue<Callable<Void>> queue, final int max) throws InterruptedException {
-
-        final Set<Future<Void>> futureSet = new HashSet<>();
-        final CompletionService<Void> completionService = new ExecutorCompletionService<Void>(executorService);
-
-        final List<Callable<Void>> operationList = getOperationsForUpdate(queue, max);
-        for (final Callable<Void> operation : operationList) {
-            final Future<Void> future = completionService.submit(operation);
-            futureSet.add(future);
-        }
-
-        while (!futureSet.isEmpty()) {
-
-            final Future<Void> completed = completionService.take();
-
-            if (completed != null) {
-                getAndLogResult(completed);
-                futureSet.remove(completed);
-            } else {
-                break;
-            }
-
-        }
-
-    }
-
-    private List<Callable<Void>> getOperationsForUpdate(final Queue<Callable<Void>> queue, final int max) {
-
-        final List<Callable<Void>> operationList = new ArrayList<>();
-
-        Callable<Void> operation = queue.poll();
-
-        for (int i = 0; i < max && operation != null; ++i) {
-            operationList.add(operation);
-            operation = queue.poll();
-        }
-
-        return operationList;
-    }
-
-    private <T> void getAndLogResult(final Future<T> future) throws InterruptedException {
-        try {
-            final T t = future.get();
-            LOG.trace("Future exited with value {}", t);
-        } catch (ExecutionException ex) {
-            LOG.error("Caught execution exception for future.", ex);
-        }
-    }
-
-    /**
-     * Signals the currently running server to complete work and gracefully shut down.  The server
-     * will complete work for the current tick and then shut down.
-     */
-    public void shutdown() {
-        running.set(false);
-    }
-
-    /**
-     * Returns a new {@link ServerContext}, which will exist as long as the server
-     * is running.  Upon shutdown, the returned instance is closed
-     *
-     * @return a new {@link ServerContext}
-     */
-    protected abstract ServerContext openServerContext();
-
-    /**
-     * Gets a {@link Queue} used to enqueue  events.  The returned instance must be thread-safe.
-     *
-     * @return the event queue
-     */
-    protected abstract Queue<Callable<Void>> getEventQueue();
-
-    /**
-     * Gets a {@link Queue} used to enqueue  requests.  The returned instance must be thread-safe.
-     *
-     * @return the event queue
-     */
-    protected abstract Queue<Callable<Void>> getRequestQueue();
-
-    /**
-     * Used to keep track of the server while it is up.  This may do anything required during
-     * the server's lifecycle.  Actions such as loading bootstrap resources should be performed
-     * when creating this process and then shut down later.
-     */
-    protected interface ServerContext extends AutoCloseable {
-
-        /**
-         * Releases any long-term resources used by this server.
-         */
-        @Override
-        void close();
-
+    @Inject
+    public void setLockService(@Named LockService lockService) {
+        this.lockService = lockService;
     }
 
 }

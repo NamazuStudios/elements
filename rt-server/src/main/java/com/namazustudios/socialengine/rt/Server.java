@@ -1,81 +1,69 @@
 package com.namazustudios.socialengine.rt;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
+ * The Server is the hub of communications between the outside world and the resources.   It is responsible
+ * for dispatching and serving requests as well as managing flow and access to the resources.  It must ensure
+ * that access to resources are performed with thread-safety and concurrency in mind.
+ *
  * Created by patricktwohig on 8/22/15.
  */
-public interface Server {
+public interface Server<ResourceT extends Resource> {
 
     /**
-     * Posts a {@link Callable} which will be executed at some point later
-     * in the server's thread pool.
+     * Performs an action against the resource with the provided {@link ResourceId}.
      *
-     * @param callable the callable to run
-     * @return a {@link Future<T>} representing the return.
+     * @param resourceId the id of the resource
+     * @param operation the operation to perform
+     *
+     * @param <T>
      */
-    <T> Future<T> post(Callable<T> callable);
+    <T> Future<T> perform(final ResourceId resourceId, Function<ResourceT, T> operation);
 
     /**
-     * Posts a {@link Runnable} and returns no result.  This exists to make
-     * the usage of lambda expressions simpler (does not require a return value).
+     * Performs an action against the resource with the provided ID.
      *
-     * @param runnable the runnable to run
+     * @param resourceId the id of the resource
+     * @param operation the operation to perform
+     *
      */
-    default Future<Void> postV(final Runnable runnable) {
-        return post(() -> {
-            runnable.run();
+    default Future<Void> performV(final ResourceId resourceId, final Consumer<ResourceT> operation) {
+        return perform(resourceId, resource -> {
+            operation.accept(resource);
             return null;
         });
     }
 
     /**
-     * Observes the events at the given path.  Any events on the server's bus matching the
-     * path will observe the payload.  A single {@link Observation} is generated.
+     * Performs an action against the resource with the provided {@link ResourceId}
      *
-     * @param path the path
-     * @param name the name of the event
-     * @param eventReceiver the receiver
-     * @param <PayloadT>
+     * @param path the path of the resource
+     * @param operation the operation to perform
      *
-     * @return an {@link Observation} instance
-     *
+     * @param <T>
      */
-    <PayloadT> Observation observe(Path path, String name, EventReceiver<PayloadT> eventReceiver);
+    <T> Future<T> perform(final Path path, Function<ResourceT, T> operation);
 
     /**
-     * Observes the events at the given path.  Any events on the server's bus matching the path
-     * will observe the payload.  A single {@link Observation} is generated.  This is a convienicne
-     * method assist in using {@link #observe(Path, String, EventReceiver)} when used with lambda
-     * expressions
+     * Performs an action against the resource with the provided {@link Path}.
      *
-     * @param path the path
-     * @param name the name of the event
-     * @param payloadTClass the payload type
-     * @param payloadTConsumer the consumer
-     * @param <PayloadT> the payload itself
-     * @return an {@link Observation} instance
+     * @param path the path of the resource
+     * @param operation the operation to perform
+     *
      */
-    default <PayloadT> Observation observe(
-            final Path path, final String name,
-            final Class<PayloadT> payloadTClass,
-            final Consumer<PayloadT> payloadTConsumer) {
-        return observe(path, name, new EventReceiver<PayloadT>() {
-
-            @Override
-            public Class<PayloadT> getEventType() {
-                return payloadTClass;
-            }
-
-            @Override
-            public void receive(Event event) {
-                final PayloadT payload = payloadTClass.cast(event.getPayload());
-                payloadTConsumer.accept(payload);
-            }
-
+    default Future<Void> performV(final Path path, Consumer<ResourceT> operation) {
+        return perform(path, resource -> {
+            operation.accept(resource);
+            return null;
         });
     }
+
+    /**
+     * Shuts down the server.  All resources are removed and then
+     */
+    void shutdown();
 
 }

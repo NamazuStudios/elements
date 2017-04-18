@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rest.guice;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Guice;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;

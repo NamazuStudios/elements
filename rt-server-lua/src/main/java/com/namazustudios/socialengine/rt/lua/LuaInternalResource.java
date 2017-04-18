@@ -7,7 +7,6 @@ import com.namazustudios.socialengine.rt.Server;
 import com.namazustudios.socialengine.rt.SimpleResponse;
 import com.namazustudios.socialengine.rt.internal.InternalRequestPathHandler;
 import com.namazustudios.socialengine.rt.internal.InternalResource;
-import com.namazustudios.socialengine.rt.internal.InternalServer;
 
 import javax.inject.Inject;
 import java.util.Map;
@@ -29,7 +28,7 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
     public LuaInternalResource(final LuaState luaState,
                                final IocResolver iocResolver,
                                final Tabler tabler,
-                               final InternalServer internalServer) {
+                               final Server<InternalResource> internalServer) {
         super(luaState, iocResolver, tabler, internalServer);
         this.luaState = luaState;
         this.tabler = tabler;
