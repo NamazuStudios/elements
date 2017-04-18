@@ -13,7 +13,7 @@ public class SimpleInternalServerModule extends AbstractModule{
     @Override
     protected void configure() {
 
-        binder().bind(new TypeLiteral<Container<InternalResource>>(){})
+        binder().bind(new TypeLiteral<Container<Worker>>(){})
                 .to(SimpleInternalContainer.class);
 
         binder().bind(SimpleInternalContainer.class)
@@ -25,8 +25,8 @@ public class SimpleInternalServerModule extends AbstractModule{
         binder().bind(SimpleInternalRequestDispatcher.class)
                 .in(Scopes.SINGLETON);
 
-        binder().bind(new TypeLiteral<ResourceService<InternalResource>>() {})
-                .to(new TypeLiteral<SimpleResourceService<InternalResource>>() {})
+        binder().bind(new TypeLiteral<ResourceService<Worker>>() {})
+                .to(new TypeLiteral<SimpleResourceService<Worker>>() {})
                 .in(Scopes.SINGLETON);
 
         binder().bind(EventService.class)

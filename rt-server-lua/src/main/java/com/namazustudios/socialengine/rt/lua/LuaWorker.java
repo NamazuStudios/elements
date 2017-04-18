@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.rt.ResponseReceiver;
 import com.namazustudios.socialengine.rt.Container;
 import com.namazustudios.socialengine.rt.SimpleResponse;
 import com.namazustudios.socialengine.rt.internal.InternalRequestPathHandler;
-import com.namazustudios.socialengine.rt.internal.InternalResource;
+import com.namazustudios.socialengine.rt.internal.Worker;
 
 import javax.inject.Inject;
 import java.util.Map;
@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by patricktwohig on 8/27/15.
  */
-public class LuaInternalResource extends AbstractLuaResource implements InternalResource {
+public class LuaWorker extends AbstractLuaResource implements Worker {
 
     private final AtomicInteger retainCount = new AtomicInteger(1);
 
@@ -24,10 +24,10 @@ public class LuaInternalResource extends AbstractLuaResource implements Internal
     private final Tabler tabler;
 
     @Inject
-    public LuaInternalResource(final LuaState luaState,
-                               final IocResolver iocResolver,
-                               final Tabler tabler,
-                               final Container<InternalResource> internalContainer) {
+    public LuaWorker(final LuaState luaState,
+                     final IocResolver iocResolver,
+                     final Tabler tabler,
+                     final Container<Worker> internalContainer) {
         super(luaState, iocResolver, tabler, internalContainer);
         this.luaState = luaState;
         this.tabler = tabler;

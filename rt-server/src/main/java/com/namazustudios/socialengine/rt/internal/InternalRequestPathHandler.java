@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.ResponseReceiver;
 
 /**
- * Used by {@link InternalResource} instances to handle {@link Request}s.
+ * Used by {@link Worker} instances to handle {@link Request}s.
  *
  * Created by patricktwohig on 8/23/15.
  */

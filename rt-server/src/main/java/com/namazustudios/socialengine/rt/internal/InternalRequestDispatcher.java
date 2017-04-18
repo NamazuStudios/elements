@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.rt.ResponseReceiver;
 
 /**
  * Objects implementing this interface are used to dispatch instances of {@link Request} to
- * instances of {@link InternalResource}.
+ * instances of {@link Worker}.
  *
  *
  * Created by patricktwohig on 8/23/15.

@@ -17,14 +17,14 @@ import java.net.URL;
 public class InternalResourceProviders {
 
     /**
-     * Returns a {@link Provider} which will return an instance of {@link LuaInternalResource} for
+     * Returns a {@link Provider} which will return an instance of {@link LuaWorker} for
      * the classpath entry.
      *
      * @param classpathLocation the classpath location
      * @return the Provider instance
      * @throws NotFoundException if the script can't be found at that location
      */
-    public static Provider<LuaInternalResource> classpathProviderForScript(final String classpathLocation) {
+    public static Provider<LuaWorker> classpathProviderForScript(final String classpathLocation) {
 
         final ClassLoader classLoader = EdgeResourceProviders.class.getClassLoader();
         final URL resoureURL = classLoader.getResource(classpathLocation);
@@ -33,15 +33,15 @@ public class InternalResourceProviders {
             throw new NotFoundException("Resource at location does not exist: " + classpathLocation);
         }
 
-        return new Provider<LuaInternalResource>() {
+        return new Provider<LuaWorker>() {
 
             @Inject
-            private Provider<LuaInternalResource> luaInternalResourceProvider;
+            private Provider<LuaWorker> luaInternalResourceProvider;
 
             @Override
-            public LuaInternalResource get() {
+            public LuaWorker get() {
 
-                final LuaInternalResource luaInternalResource = luaInternalResourceProvider.get();
+                final LuaWorker luaInternalResource = luaInternalResourceProvider.get();
 
                 try (final InputStream inputStream = resoureURL.openStream()){
                     luaInternalResource.loadAndRun(inputStream, resoureURL.toString());
@@ -59,14 +59,14 @@ public class InternalResourceProviders {
     }
 
     /**
-     * Returns a {@link Provider} which will return an instance of {@link LuaInternalResource} for
+     * Returns a {@link Provider} which will return an instance of {@link LuaWorker} for
      * the given {@link File}.
      *
      * @param file the file location
      * @return the Provider instance
      * @throws NotFoundException if the script can't be found at that location
      */
-    public static Provider<LuaInternalResource> filesystemProviderForScript(final File file) {
+    public static Provider<LuaWorker> filesystemProviderForScript(final File file) {
 
         try (final InputStream is = new FileInputStream(file)) {
             // This just opens to check the file.  No actual reading
@@ -75,15 +75,15 @@ public class InternalResourceProviders {
             throw new NotFoundException(ex);
         }
 
-        return new Provider<LuaInternalResource>() {
+        return new Provider<LuaWorker>() {
 
             @Inject
-            private Provider<LuaInternalResource> luaInternalResourceProvider;
+            private Provider<LuaWorker> luaInternalResourceProvider;
 
             @Override
-            public LuaInternalResource get() {
+            public LuaWorker get() {
 
-                final LuaInternalResource luaInternalResource = luaInternalResourceProvider.get();
+                final LuaWorker luaInternalResource = luaInternalResourceProvider.get();
 
                 try (final InputStream inputStream = new FileInputStream(file)) {
                     luaInternalResource.loadAndRun(inputStream, file.getAbsolutePath());

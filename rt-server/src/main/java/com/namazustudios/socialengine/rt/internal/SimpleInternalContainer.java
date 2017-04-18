@@ -9,26 +9,26 @@ import javax.inject.Inject;
 /**
  * Created by patricktwohig on 8/23/15.
  */
-public class SimpleInternalContainer extends AbstractSimpleContainer<InternalResource> {
+public class SimpleInternalContainer extends AbstractSimpleContainer<Worker> {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleInternalContainer.class);
 
     @Inject
     private InternalRequestDispatcher internalRequestDispatcher;
 
-    private ResourceService<InternalResource> resourceService;
+    private ResourceService<Worker> resourceService;
 
     @Override
     public void shutdown() {
         getResourceService().removeAndCloseAllResources();
     }
 
-    public ResourceService<InternalResource> getResourceService() {
+    public ResourceService<Worker> getResourceService() {
         return resourceService;
     }
 
     @Inject
-    public void setResourceService(ResourceService<InternalResource> resourceService) {
+    public void setResourceService(ResourceService<Worker> resourceService) {
         this.resourceService = resourceService;
     }
 

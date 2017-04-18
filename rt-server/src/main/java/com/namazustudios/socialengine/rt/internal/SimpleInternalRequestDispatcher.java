@@ -18,7 +18,7 @@ public class SimpleInternalRequestDispatcher implements InternalRequestDispatche
 
     private ExceptionMapper.Resolver exceptionMapperResolver;
 
-    private Container<InternalResource> internalResourceContainer;
+    private Container<Worker> internalResourceContainer;
 
     @Override
     public void dispatch(final Request request, final ResponseReceiver responseReceiver) {
@@ -84,12 +84,12 @@ public class SimpleInternalRequestDispatcher implements InternalRequestDispatche
         this.exceptionMapperResolver = exceptionMapperResolver;
     }
 
-    public Container<InternalResource> getInternalResourceContainer() {
+    public Container<Worker> getInternalResourceContainer() {
         return internalResourceContainer;
     }
 
     @Inject
-    public void setInternalResourceContainer(Container<InternalResource> internalResourceContainer) {
+    public void setInternalResourceContainer(Container<Worker> internalResourceContainer) {
         this.internalResourceContainer = internalResourceContainer;
     }
 

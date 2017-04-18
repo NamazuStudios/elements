@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.rt.Resource;
 /**
  * Created by patricktwohig on 8/23/15.
  */
-public interface InternalResource extends Resource {
+public interface Worker extends Resource {
 
     /**
      * Gets the RequestHandler for the method.

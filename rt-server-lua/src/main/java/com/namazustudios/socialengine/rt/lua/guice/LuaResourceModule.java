@@ -7,7 +7,7 @@ import com.google.inject.name.Names;
 import com.google.inject.util.Providers;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.edge.EdgeResource;
-import com.namazustudios.socialengine.rt.internal.InternalResource;
+import com.namazustudios.socialengine.rt.internal.Worker;
 import com.namazustudios.socialengine.rt.lua.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,9 +137,9 @@ public abstract class LuaResourceModule extends AbstractModule {
     private NamedScriptBindingBuilder internalClasspathScriptFile(final String scriptFile) {
         return scriptName -> {
 
-            final Provider<LuaInternalResource> provider = classpathProviderForScript(scriptFile);
+            final Provider<LuaWorker> provider = classpathProviderForScript(scriptFile);
 
-            return bind(InternalResource.class)
+            return bind(Worker.class)
                     .annotatedWith(Names.named(scriptName))
                     .toProvider(Providers.guicify(provider));
 
@@ -149,9 +149,9 @@ public abstract class LuaResourceModule extends AbstractModule {
     private NamedScriptBindingBuilder internalFilesystemScriptFile(final File scriptFile) {
         return scriptName -> {
 
-            final Provider<LuaInternalResource> provider = filesystemProviderForScript(scriptFile);
+            final Provider<LuaWorker> provider = filesystemProviderForScript(scriptFile);
 
-            return bind(InternalResource.class)
+            return bind(Worker.class)
                     .annotatedWith(Names.named(scriptName))
                     .toProvider(Providers.guicify(provider));
 

@@ -38,7 +38,7 @@ public class SimpleServerModule extends AbstractModule {
                             .toProvider(Providers.guicify(internalResourceLockFactoryProvider()));
 
         internalServerBinder.expose(SimpleInternalContainer.class);
-        internalServerBinder.expose(new TypeLiteral<Container<InternalResource>>(){});
+        internalServerBinder.expose(new TypeLiteral<Container<Worker>>(){});
 
         binder().bind(ExecutorService.class)
                 .annotatedWith(Names.named(AbstractSimpleContainer.EXECUTOR_SERVICE))
@@ -79,7 +79,7 @@ public class SimpleServerModule extends AbstractModule {
      *
      * This uses the {@link SimplePathLockFactory} to accomplish the task.
      *
-     * @return a {@link PathLockFactory} for {@link InternalResource} instances
+     * @return a {@link PathLockFactory} for {@link Worker} instances
      */
     protected Provider<PathLockFactory> internalResourceLockFactoryProvider() {
         return () -> new SimplePathLockFactory();
