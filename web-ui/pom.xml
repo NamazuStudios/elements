@@ -12,14 +12,14 @@
 
     <groupId>com.namazustudios.socialengine</groupId>
     <artifactId>web-ui</artifactId>
-    <packaging>jar</packaging>
+    <packaging>gwt-lib</packaging>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
         <gwtp.version>1.4</gwtp.version>
         <gin.version>2.1.2</gin.version>
-        <restygwt.version>2.0.2</restygwt.version>
-        <boostrap.version>0.9</boostrap.version>
+        <restygwt.version>2.2.0</restygwt.version>
+        <boostrap.version>0.9.4</boostrap.version>
         <hibernate.validator.version>4.1.0.Final</hibernate.validator.version>
         <log4j.version>1.2.16</log4j.version>
     </properties>
@@ -71,11 +71,6 @@
             <version>${boostrap.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.google.gwt.inject</groupId>
-            <artifactId>gin</artifactId>
-            <version>${gin.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.gwtplatform</groupId>
             <artifactId>gwtp-mvp-client</artifactId>
             <version>${gwtp.version}</version>
@@ -111,15 +106,13 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
+                <groupId>net.ltgt.gwt.maven</groupId>
                 <artifactId>gwt-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>resources</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                <version>1.0-rc-6</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <moduleName>com.namazustudios.socialengine.ControlPanel</moduleName>
+                </configuration>
             </plugin>
         </plugins>
     </build>

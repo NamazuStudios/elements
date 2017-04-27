@@ -15,7 +15,7 @@
     <artifactId>web-ui-war</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>web-ui-war</name>
-    <packaging>war</packaging>
+    <packaging>gwt-app</packaging>
 
     <dependencyManagement>
         <dependencies>
@@ -39,7 +39,6 @@
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>web-ui</artifactId>
             <version>${project.version}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
@@ -56,34 +55,20 @@
     <build>
 
         <!-- Output classes directly into the webapp, so that IDEs and "mvn process-classes" update them in DevMode -->
-        <outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF/classes</outputDirectory>
+        <!--<outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF/classes</outputDirectory>-->
 
         <plugins>
-
-            <!-- GWT Maven Plugin -->
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
+                <groupId>net.ltgt.gwt.maven</groupId>
                 <artifactId>gwt-maven-plugin</artifactId>
-                <version>2.7.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>test</goal>
-                            <goal>generateAsync</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <!-- Plugin configuration. There are many available options, see
-                  gwt-maven-plugin documentation at codehaus.org -->
+                <version>1.0-rc-6</version>
+                <extensions>true</extensions>
                 <configuration>
-                    <runTarget>login.html</runTarget>
-                    <modules>
-                        <module>com.namazustudios.socialengine.Index</module>
-                    </modules>
+                    <moduleName>com.namazustudios.socialengine.Index</moduleName>
                 </configuration>
             </plugin>
         </plugins>
+
     </build>
 
 </project>

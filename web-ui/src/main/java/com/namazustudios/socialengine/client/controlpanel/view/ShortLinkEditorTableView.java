@@ -25,7 +25,7 @@ import org.gwtbootstrap3.client.ui.Panel;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.constants.LabelType;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
-import org.gwtbootstrap3.extras.growl.client.ui.Growl;
+import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
 import javax.inject.Inject;
 
@@ -185,7 +185,7 @@ public class ShortLinkEditorTableView extends ViewImpl implements ShortLinkEdito
 
             @Override
             public void onSuccess(Method method, Void aVoid) {
-                Growl.growl(shortLink.getShortLinkURL() + " deleted.");
+                Notify.notify(shortLink.getShortLinkURL() + " deleted.");
                 shortLinkEditorCellTable.setVisibleRangeAndClearData(shortLinkEditorCellTable.getVisibleRange(), true);
             }
 

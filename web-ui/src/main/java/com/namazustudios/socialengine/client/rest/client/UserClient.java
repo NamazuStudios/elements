@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.client.rest.client;
 
-import com.google.gwt.dev.generator.ast.MethodCall;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.MethodCallback;

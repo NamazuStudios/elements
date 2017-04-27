@@ -29,10 +29,12 @@
   <inherits name="org.gwtbootstrap3.GwtBootstrap3"/>
   <inherits name="org.gwtbootstrap3.GwtBootstrap3Theme"/>
   <inherits name="org.gwtbootstrap3.extras.animate.Animate"/>
-  <inherits name="org.gwtbootstrap3.extras.growl.Growl"/>
+  <inherits name="org.gwtbootstrap3.extras.notify.Notify"/>
 
   <!-- Validation -->
   <inherits name="org.hibernate.validator.HibernateValidator" />
+  <inherits name="org.gwtbootstrap3.extras.notify.Notify"/>
+
   <replace-with class="com.namazustudios.socialengine.client.validation.ValidatiorFactory">
     <when-type-is class="javax.validation.ValidatorFactory" />
   </replace-with>

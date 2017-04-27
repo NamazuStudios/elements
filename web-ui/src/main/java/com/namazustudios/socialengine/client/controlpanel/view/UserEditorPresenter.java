@@ -13,7 +13,7 @@ import com.namazustudios.socialengine.client.rest.client.UserClient;
 import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
-import org.gwtbootstrap3.extras.growl.client.ui.Growl;
+import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
 import javax.inject.Inject;
 
@@ -72,7 +72,7 @@ public class UserEditorPresenter extends Presenter<UserEditorPresenter.MyView, U
             public void onFailure(Method method, Throwable throwable) {
                 getProxy().manualReveal(UserEditorPresenter.this);
                 getView().createUser();
-                Growl.growl("Could not load user " + method.getData());
+                Notify.notify("Could not load user " + method.getData());
             }
 
             @Override
