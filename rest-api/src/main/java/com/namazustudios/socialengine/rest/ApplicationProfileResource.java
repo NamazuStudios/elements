@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rest;
 
-import com.google.common.base.Strings;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.ApplicationProfile;
@@ -11,6 +10,8 @@ import io.swagger.annotations.ApiOperation;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+
+import static com.google.common.base.Strings.nullToEmpty;
 
 /**
  * Created by patricktwohig on 7/13/15.
@@ -23,20 +24,19 @@ import javax.ws.rs.core.MediaType;
 @Path("application/{applicationNameOrId}/profile")
 public class ApplicationProfileResource {
 
-    @Inject
     private ApplicationProfileService applicationProfileService;
 
     @GET
-    @Path("{applicationNameOrId}/{offset}/{count}/{search}")
+    @Path("{applicationNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Searches application profiles",
                   notes = "Searches all instances of ApplicationProfiles associated with " +
                           "the application.  The search query may be a full text search.")
-    public Pagination<? extends ApplicationProfile> searchApplicationProfiles(
+    public Pagination<ApplicationProfile> getApplicationProfiles(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
-            @PathParam("offset") final int offset,
-            @PathParam("count")  final int count,
-            @PathParam("search") final String search) {
+            @QueryParam("offset") @DefaultValue("0")  final int offset,
+            @QueryParam("count")  @DefaultValue("20") final int count,
+            @QueryParam("search") final String search) {
 
         if (offset < 0) {
             throw new InvalidParameterException("Offset must have positive value.");
@@ -46,40 +46,21 @@ public class ApplicationProfileResource {
             throw new InvalidParameterException("Count must have positive value.");
         }
 
-        return applicationProfileService.getApplicationProfiles(applicationNameOrId, offset, count, search);
+        final String query = nullToEmpty(search).trim();
+
+        return query.isEmpty() ?
+            getApplicationProfileService().getApplicationProfiles(applicationNameOrId, offset, count) :
+            getApplicationProfileService().getApplicationProfiles(applicationNameOrId, offset, count, search);
 
     }
 
-    /**
-     * Searches for all instances of {@link ApplicationProfile} associated with the
-     * application.
-     *
-     * @param applicationNameOrId the application name or identifier
-     * @param offset the offset
-     * @param count the count
-     * @return the {@link Pagination} of {@link ApplicationProfile} instances
-     */
-    @GET
-    @Path("{applicationNameOrId}/{offset}/{count}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets application profiles",
-                  notes = "Lists all instances of ApplicationProfiles associated with " +
-                          "the application.")
-    public Pagination<? extends ApplicationProfile> getApplicationProfiles(
-            @PathParam("applicationNameOrId") final String applicationNameOrId,
-            @PathParam("offset") @DefaultValue("0")  final int offset,
-            @PathParam("count")  @DefaultValue("20") final int count) {
+    public ApplicationProfileService getApplicationProfileService() {
+        return applicationProfileService;
+    }
 
-        if (offset < 0) {
-            throw new InvalidParameterException("Offset must have positive value.");
-        }
-
-        if (count < 0) {
-            throw new InvalidParameterException("Count must have positive value.");
-        }
-
-        return applicationProfileService.getApplicationProfiles(applicationNameOrId, offset, count);
-
+    @Inject
+    public void setApplicationProfileService(ApplicationProfileService applicationProfileService) {
+        this.applicationProfileService = applicationProfileService;
     }
 
 }

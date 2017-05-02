@@ -12,17 +12,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.Objects;
+
+import static com.google.common.base.Strings.nullToEmpty;
 
 /**
  * Created by patricktwohig on 3/25/15.
@@ -33,43 +27,19 @@ import java.util.Objects;
                    "with a login name or email address.")
 public class UserResource {
 
-    @Inject
     private UserService userService;
 
-    @Inject
-    private ValidationHelper validationService;
+    private ValidationHelper validationHelper;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("{offset}/{count}/{search}")
     @ApiOperation(value = "Search Users",
                   notes = "Searches all users in the system and returning the metadata for all matches against " +
                           "the given search filter.")
-    public Pagination<User> searchUsers(
-            @PathParam("offset") final int offset,
-            @PathParam("count")  final int count,
-            @PathParam("search") final String search) {
-
-        if (offset < 0) {
-            throw new InvalidParameterException("Offset must have positive value.");
-        }
-
-        if (count < 0) {
-            throw new InvalidParameterException("Count must have positive value.");
-        }
-
-        return userService.getUsers(offset, count, search);
-
-    }
-
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{offset}/{count}")
-    @ApiOperation(value = "Gets Users",
-                  notes = "Gets all users known to the server in the default order.")
     public Pagination<User> getUsers(
-            @PathParam("offset") final int offset,
-            @PathParam("count")  final int count) {
+            @QueryParam("offset") @DefaultValue("0") final int offset,
+            @QueryParam("count")  @DefaultValue("20") final int count,
+            @QueryParam("search") final String search) {
 
         if (offset < 0) {
             throw new InvalidParameterException("Offset must have positive value.");
@@ -79,10 +49,13 @@ public class UserResource {
             throw new InvalidParameterException("Count must have positive value.");
         }
 
-        return userService.getUsers(offset, count);
+        final String query = nullToEmpty(search).trim();
+
+        return query.isEmpty() ?
+            getUserService().getUsers(offset, count) :
+            getUserService().getUsers(offset, count, search);
 
     }
-
 
     @GET
     @Path("{name}")
@@ -90,7 +63,7 @@ public class UserResource {
     @ApiOperation(value = "Gets a Specific User",
                   notes = "Gets a specific user by email or unique user ID.")
     public User getUser(@PathParam("name") final String name) {
-        return userService.getUser(name);
+        return getUserService().getUser(name);
     }
 
     @GET
@@ -101,7 +74,7 @@ public class UserResource {
                           "user is typically associated with the session but may be derived any other way.  This " +
                           "is essentially an alias for using GET /user/myUserId")
     public User getUser() {
-        return userService.getCurrentUser();
+        return getUserService().getCurrentUser();
     }
 
     @PUT
@@ -114,7 +87,7 @@ public class UserResource {
                            @PathParam("name") String name,
                            @QueryParam("password") String password) {
 
-        validationService.validateModel(user);
+        getValidationHelper().validateModel(user);
         name = Strings.nullToEmpty(name).trim();
         password = Strings.nullToEmpty(password).trim();
 
@@ -129,9 +102,9 @@ public class UserResource {
         }
 
         if (Strings.isNullOrEmpty(password)) {
-            return userService.updateUser(user);
+            return getUserService().updateUser(user);
         } else {
-            return userService.updateUser(user, password);
+            return getUserService().updateUser(user, password);
         }
 
     }
@@ -141,16 +114,15 @@ public class UserResource {
     @ApiOperation(value = "Creates a User",
                   notes = "Supplying the user object, this will update the user with the new information supplied " +
                           "in the body of the request.  Optionally, the user's password may be provided.")
-    public User createUser(final User user,
-                           @QueryParam("password") String password) {
+    public User createUser(final User user, @QueryParam("password") String password) {
 
-        validationService.validateModel(user);
+        getValidationHelper().validateModel(user);
         password = Strings.nullToEmpty(password).trim();
 
-        if (password.trim().isEmpty()){
-            return userService.createUser(user);
+        if (password.isEmpty()){
+            return getUserService().createUser(user);
         } else {
-            return userService.createUser(user, password);
+            return getUserService().createUser(user, password);
         }
 
     }
@@ -164,6 +136,24 @@ public class UserResource {
                           "APIs.")
     public void deactivateUser(@PathParam("name") final String name) {
         userService.deleteUser(name);
+    }
+
+    public UserService getUserService() {
+        return userService;
+    }
+
+    @Inject
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
     }
 
 }
