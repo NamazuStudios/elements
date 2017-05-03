@@ -1,3 +1,0 @@
-[submodule "web-ui-war/src/main/webapp/doc"]
-	path = web-ui-war/src/main/webapp/doc
-	url = https://github.com/swagger-api/swagger-ui.git

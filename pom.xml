@@ -36,7 +36,7 @@
 
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
-        <guice.version>3.0</guice.version>
+        <guice.version>4.1.0</guice.version>
         <javax.inject.version>1</javax.inject.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javax.servlet.api.version>3.1.0</javax.servlet.api.version>
@@ -44,7 +44,7 @@
         <guava.version>18.0</guava.version>
         <commons.lang.version>3.3.2</commons.lang.version>
         <jaxrs.api.version>2.0.1</jaxrs.api.version>
-        <jersey.version>2.17</jersey.version>
+        <jersey.version>2.25.1</jersey.version>
         <gwt.version>2.8.0</gwt.version>
         <javax.validation.version>1.0.0.GA</javax.validation.version>
         <lucene.version>5.1.0</lucene.version>
@@ -53,10 +53,10 @@
         <test.groups>unit</test.groups>
         <surefire.version>2.18.1</surefire.version>
         <testng.version>6.8.21</testng.version>
-        <jackson.version>2.5.2</jackson.version>
+        <jackson.version>2.8.8</jackson.version>
         <bson4jackson.version>2.4.0</bson4jackson.version>
         <reflections.version>0.9.10</reflections.version>
-        <swagger.version>1.5.7</swagger.version>
+        <swagger.version>1.5.13</swagger.version>
     </properties>
 
     <dependencies>
