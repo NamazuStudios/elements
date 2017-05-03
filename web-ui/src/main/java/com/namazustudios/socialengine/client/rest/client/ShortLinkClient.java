@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.client.rest.client;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ShortLink;
-import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.RestService;
 
@@ -24,9 +23,8 @@ public interface ShortLinkClient extends RestService {
      * @param paginationMethodCallback
      */
     @GET
-    @Path("{offset}/{count}")
-    void getShortLinks(@PathParam("offset") int offset,
-                       @PathParam("count") int count,
+    void getShortLinks(@QueryParam("offset") int offset,
+                       @QueryParam("count") int count,
                        final MethodCallback<Pagination<ShortLink>> paginationMethodCallback);
 
     /**

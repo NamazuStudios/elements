@@ -20,9 +20,8 @@ public interface UserClient extends RestService {
      * @param count the number of results to return
      */
     @GET
-    @Path("{offset}/{count}")
-    void getUsers(@PathParam("offset") int offset,
-                  @PathParam("count") int count,
+    void getUsers(@QueryParam("offset") int offset,
+                  @QueryParam("count") int count,
                   final MethodCallback<Pagination<User>> users);
 
     /**
@@ -35,10 +34,9 @@ public interface UserClient extends RestService {
      *
      */
     @GET
-    @Path("{offset}/{count}/{search}")
-    void getUsers(final @PathParam("offset") int offset,
-                  final @PathParam("count")  int count,
-                  final @PathParam("search") String search,
+    void getUsers(final @QueryParam("offset") int offset,
+                  final @QueryParam("count")  int count,
+                  final @QueryParam("search") String search,
                   final MethodCallback<Pagination<User>> users);
 
     /**

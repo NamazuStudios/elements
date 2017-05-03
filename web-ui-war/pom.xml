@@ -75,24 +75,24 @@
             <artifactId>jackson-annotations</artifactId>
             <version>${jackson.version}</version>
         </dependency>
+
+        <!--
+            This shoudln't be in the war file, but rather should be handled by
+            the container itself.  However, Jetty seems to have issues using slf4j
+            when configured so I'm leaving this in here.
+        -->
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>
-
         <!-- Output classes directly into the webapp, so that IDEs and "mvn process-classes" update them in DevMode -->
         <outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF/classes</outputDirectory>
-        <!--<plugins>-->
-            <!--<plugin>-->
-                <!--<groupId>net.ltgt.gwt.maven</groupId>-->
-                <!--<artifactId>gwt-maven-plugin</artifactId>-->
-                <!--<version>1.0-rc-7</version>-->
-                <!--<extensions>true</extensions>-->
-                <!--<configuration>-->
-                    <!--<moduleName>com.namazustudios.socialengine.Index</moduleName>-->
-                <!--</configuration>-->
-            <!--</plugin>-->
-        <!--</plugins>-->
-
     </build>
 
 </project>
