@@ -54,7 +54,7 @@ public class GridFSDirectoryTest extends BaseDirectoryTestCase {
 
     @After
     public void tearDownMongo() {
-        mongoDatabase.dropDatabase();
+        mongoDatabase.drop();
         mongoClient.close();
     }
 
