@@ -26,7 +26,7 @@
             <artifactId>jersey-bom</artifactId>
             <version>${jersey.version}</version>
             <type>pom</type>
-            <scope>import</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
@@ -66,11 +66,6 @@
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>rest-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

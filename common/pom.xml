@@ -13,7 +13,7 @@
     <groupId>com.namazustudios.socialengine</groupId>
     <artifactId>common</artifactId>
     <name>common</name>
-    <packaging>gwt-lib</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -26,13 +26,18 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>net.ltgt.gwt.maven</groupId>
-                <artifactId>gwt-maven-plugin</artifactId>
-                <version>1.0-rc-7</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <moduleName>com.namazustudios.socialengine.Common</moduleName>
-                </configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
