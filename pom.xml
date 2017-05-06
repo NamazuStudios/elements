@@ -32,6 +32,7 @@
         <module>rt-server-lua</module>
         <module>rt-guice-example</module>
         <module>rt-client</module>
+	<module>combined-war</module>
     </modules>
 
     <properties>
@@ -45,7 +46,7 @@
         <commons.lang.version>3.3.2</commons.lang.version>
         <jaxrs.api.version>2.0.1</jaxrs.api.version>
         <jersey.version>2.25.1</jersey.version>
-        <gwt.version>2.8.0</gwt.version>
+        <gwt.version>2.8.1</gwt.version>
         <javax.validation.version>1.0.0.GA</javax.validation.version>
         <lucene.version>5.1.0</lucene.version>
         <mongo.java.driver.version>3.4.0</mongo.java.driver.version>
