@@ -14,4 +14,41 @@
     <artifactId>combined-war</artifactId>
     <packaging>war</packaging>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rest-war</artifactId>
+            <version>${project.version}</version>
+            <type>war</type>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>web-ui-war</artifactId>
+            <version>${project.version}</version>
+            <type>war</type>    
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <overlays>
+                        <overlay>
+                            <groupId>com.namazustudios.socialengine</groupId>
+                            <artifactId>web-ui-war</artifactId>
+                        </overlay>
+                        <overlay>
+                            <groupId>com.namazustudios.socialengine</groupId>
+                            <artifactId>rest-war</artifactId>
+                        </overlay>
+                    </overlays>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

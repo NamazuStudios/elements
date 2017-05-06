@@ -15,7 +15,7 @@
     </properties>
 
     <groupId>com.namazustudios.socialengine</groupId>
-    <artifactId>rt-container</artifactId>
+    <artifactId>rt-server</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>rt-container-core</name>

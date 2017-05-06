@@ -34,7 +34,7 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rt-container-mina</artifactId>
+            <artifactId>rt-mina</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
