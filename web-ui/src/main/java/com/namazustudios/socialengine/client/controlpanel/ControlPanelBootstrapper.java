@@ -24,11 +24,9 @@ public class ControlPanelBootstrapper implements Bootstrapper {
     @Override
     public void onBootstrap() {
 
-        // This should be done in a module, however it's not because of some
-        // worker problems with Resty-GWT.  This probably should be moved
-        // to a configuration or @Named field but alas this is what we've got.
+        final String apiUrl = Config.getApiRoot();
+        Defaults.setServiceRoot(apiUrl);
 
-        Defaults.setServiceRoot("/api");
 
         loginService.refreshCurrentUser(new MethodCallback<User>() {
 

@@ -25,7 +25,7 @@
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>web-ui-war</artifactId>
             <version>${project.version}</version>
-            <type>war</type>    
+            <type>war</type>
         </dependency>
     </dependencies>
 
