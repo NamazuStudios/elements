@@ -25,7 +25,6 @@
         <module>lucene-pojo</module>
         <module>lucene-indexer</module>
         <module>mongo-lucene</module>
-        <module>servlet-support</module>
         <module>rt-common</module>
         <module>rt-server</module>
         <module>rt-mina</module>
@@ -38,6 +37,7 @@
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
         <guice.version>4.1.0</guice.version>
+        <guice.bridge.version>2.5.0-b32</guice.bridge.version>
         <javax.inject.version>1</javax.inject.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javax.servlet.api.version>3.1.0</javax.servlet.api.version>
@@ -58,6 +58,7 @@
         <bson4jackson.version>2.4.0</bson4jackson.version>
         <reflections.version>0.9.10</reflections.version>
         <swagger.version>1.5.13</swagger.version>
+        <rocoto.version>6.2</rocoto.version>
     </properties>
 
     <dependencies>

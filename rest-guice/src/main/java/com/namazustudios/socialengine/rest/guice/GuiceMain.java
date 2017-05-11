@@ -1,8 +1,10 @@
 package com.namazustudios.socialengine.rest.guice;
 
-import com.google.inject.Injector;
 import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.SystemPropertiesConfiguration;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
@@ -38,17 +40,17 @@ public class GuiceMain extends GuiceServletContextListener {
     @Override
     protected Injector getInjector() {
 
-        final String apiRoot = "/api";
+        final SystemPropertiesConfiguration systemPropertiesConfiguration = new SystemPropertiesConfiguration();
+        final String apiRoot = systemPropertiesConfiguration.get().getProperty(Constants.API_PREFIX);
 
         return injector = Guice.createInjector(
-                new ConfigurationModule(),
+                new ConfigurationModule(systemPropertiesConfiguration),
                 new JerseyModule(apiRoot) {
                     @Override
                     protected void configureResoures() {
                         enableAllResources();
                     }
                 },
-                new ShortLinkFilterModule(apiRoot),
                 new ServicesModule(),
                 new MongoDaoModule(),
                 new MongoSearchModule(),

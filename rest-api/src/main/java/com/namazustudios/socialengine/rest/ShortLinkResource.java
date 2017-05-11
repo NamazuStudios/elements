@@ -87,7 +87,7 @@ public class ShortLinkResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Processes a ShortLink",
                   notes = "Process a ShortLink by generating the proper HTTP response by following " +
-                          "the link.  This shoudln't be used as the actual destination for a ShortLink as it " +
+                          "the link.  This shouldn't be used as the actual destination for a ShortLink as it " +
                           "is likely to be longer than the original link.  However, this can be used as the " +
                           "destination for some upstream service as a target.  Examples include Servlet forwards " +
                           "or HTTP request rewrites.")
