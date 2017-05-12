@@ -37,7 +37,10 @@ public abstract class JerseyModule extends ServletModule {
 
         bindSwagger();
         configureResoures();
+
         bind(DefaultExceptionMapper.class);
+        bind(CORSFilter.class);
+        bind(ShortLinkForwardingFilter.class);
 
         // Setup servlets
 

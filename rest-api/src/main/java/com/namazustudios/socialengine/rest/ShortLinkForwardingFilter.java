@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -19,6 +20,7 @@ import java.util.Objects;
 /**
  * Created by patricktwohig on 6/12/15.
  */
+@Provider
 @PreMatching
 public class ShortLinkForwardingFilter implements ContainerRequestFilter {
 

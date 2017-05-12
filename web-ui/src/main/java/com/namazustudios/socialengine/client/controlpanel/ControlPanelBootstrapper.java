@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.client.controlpanel;
 import com.google.gwt.core.client.GWT;
 import com.gwtplatform.mvp.client.Bootstrapper;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
+import com.namazustudios.socialengine.client.rest.client.CORSRequestDispatcher;
 import com.namazustudios.socialengine.client.rest.client.UiConfigClient;
 import com.namazustudios.socialengine.client.rest.service.LoginService;
 import com.namazustudios.socialengine.model.UiConfig;
@@ -31,6 +32,7 @@ public class ControlPanelBootstrapper implements Bootstrapper {
     public void onBootstrap() {
 
         Defaults.setServiceRoot("/ui");
+        Defaults.setDispatcher(new CORSRequestDispatcher());
 
         uiConfigClient.getUiConfig(new MethodCallback<UiConfig>() {
 

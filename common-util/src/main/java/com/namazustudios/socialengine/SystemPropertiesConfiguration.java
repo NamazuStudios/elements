@@ -29,6 +29,7 @@ public class SystemPropertiesConfiguration implements Supplier<Properties> {
         defaultProperties.setProperty(Constants.PASSWORD_ENCODING, "UTF-8");
         defaultProperties.setProperty(Constants.API_PREFIX, "");
         defaultProperties.setProperty(Constants.API_OUTSIDE_URL, "http://localhost:8080/api");
+        defaultProperties.setProperty(Constants.CORS_ALLOWED_ORIGINS, "http://localhost:8888, http://127.0.0.1:8888");
 
         final Properties properties = new Properties(defaultProperties);
         final File propertiesFile = new File(properties.getProperty(

@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.client.rest.client;
 
 import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.MethodCallback;
+import org.fusesource.restygwt.client.Options;
 import org.fusesource.restygwt.client.RestService;
 
 import javax.inject.Singleton;
@@ -14,6 +15,7 @@ import javax.ws.rs.QueryParam;
  * Created by patricktwohig on 4/16/15.
  */
 @Path("session")
+@Options()
 public interface LoginClient extends RestService {
 
     /**
