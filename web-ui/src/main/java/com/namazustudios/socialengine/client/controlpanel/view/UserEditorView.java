@@ -23,7 +23,7 @@ import org.gwtbootstrap3.client.ui.Input;
 import org.gwtbootstrap3.client.ui.Label;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.constants.ValidationState;
-import org.gwtbootstrap3.extras.growl.client.ui.Growl;
+import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
 import javax.inject.Inject;
 import javax.validation.Validator;
@@ -192,7 +192,7 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
 
                 unlock();
 
-                Growl.growl("Successfully created user.");
+                Notify.notify("Successfully created user.");
 
                 final PlaceRequest placeRequest = new PlaceRequest.Builder()
                         .nameToken(NameTokens.MAIN)
@@ -237,7 +237,7 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
 
                 unlock();
 
-                Growl.growl("Successfully updated user.");
+                Notify.notify("Successfully updated user.");
 
                 final PlaceRequest placeRequest = new PlaceRequest.Builder()
                         .nameToken(NameTokens.MAIN)

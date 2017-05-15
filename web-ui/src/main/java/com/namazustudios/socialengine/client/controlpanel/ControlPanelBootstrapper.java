@@ -1,8 +1,12 @@
 package com.namazustudios.socialengine.client.controlpanel;
 
+import com.google.gwt.core.client.GWT;
 import com.gwtplatform.mvp.client.Bootstrapper;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
+import com.namazustudios.socialengine.client.rest.client.CORSRequestDispatcher;
+import com.namazustudios.socialengine.client.rest.client.UiConfigClient;
 import com.namazustudios.socialengine.client.rest.service.LoginService;
+import com.namazustudios.socialengine.model.UiConfig;
 import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.Defaults;
 import org.fusesource.restygwt.client.Method;
@@ -21,15 +25,33 @@ public class ControlPanelBootstrapper implements Bootstrapper {
     @Inject
     private PlaceManager placeManager;
 
+    @Inject
+    private UiConfigClient uiConfigClient;
+
     @Override
     public void onBootstrap() {
 
-        // This should be done in a module, however it's not because of some
-        // worker problems with Resty-GWT.  This probably shoudl be moved
-        // to a configuration or @Named field but alas this is what we've got.
+        Defaults.setServiceRoot("/ui");
+        Defaults.setDispatcher(new CORSRequestDispatcher());
 
-        Defaults.setServiceRoot("/api");
+        uiConfigClient.getUiConfig(new MethodCallback<UiConfig>() {
 
+            @Override
+            public void onFailure(Method method, Throwable throwable) {
+                placeManager.revealCurrentPlace();
+            }
+
+            @Override
+            public void onSuccess(Method method, UiConfig uiConfig) {
+                Defaults.setServiceRoot(uiConfig.getApiUrl());
+                refreshCurrentUser();
+            }
+
+        });
+
+    }
+
+    private void refreshCurrentUser() {
         loginService.refreshCurrentUser(new MethodCallback<User>() {
 
             @Override
@@ -43,7 +65,6 @@ public class ControlPanelBootstrapper implements Bootstrapper {
             }
 
         });
-
     }
 
 }

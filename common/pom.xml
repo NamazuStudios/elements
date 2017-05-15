@@ -13,6 +13,7 @@
     <groupId>com.namazustudios.socialengine</groupId>
     <artifactId>common</artifactId>
     <name>common</name>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -25,12 +26,15 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>gwt-maven-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
                 <executions>
                     <execution>
+                        <id>attach-sources</id>
+                        <phase>verify</phase>
                         <goals>
-                            <goal>resources</goal>
+                            <goal>jar-no-fork</goal>
                         </goals>
                     </execution>
                 </executions>

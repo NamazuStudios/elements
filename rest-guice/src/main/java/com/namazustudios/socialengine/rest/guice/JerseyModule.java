@@ -2,14 +2,11 @@ package com.namazustudios.socialengine.rest.guice;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.servlet.ServletModule;
-import com.namazustudios.socialengine.exception.BaseException;
 import com.namazustudios.socialengine.rest.*;
 import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.reflections.Reflections;
-import org.reflections.scanners.ResourcesScanner;
 import org.reflections.scanners.SubTypesScanner;
-import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 import org.slf4j.Logger;
@@ -17,6 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
 import java.util.Map;
+
+import static java.lang.reflect.Modifier.ABSTRACT;
 
 /**
  * Created by patricktwohig on 3/19/15.
@@ -38,7 +37,10 @@ public abstract class JerseyModule extends ServletModule {
 
         bindSwagger();
         configureResoures();
+
         bind(DefaultExceptionMapper.class);
+        bind(CORSFilter.class);
+        bind(ShortLinkForwardingFilter.class);
 
         // Setup servlets
 
@@ -150,6 +152,7 @@ public abstract class JerseyModule extends ServletModule {
 
         final String swaggerPackage = "io.swagger.jaxrs.listing";
 
+
         final Reflections reflections = new Reflections(
                 new ConfigurationBuilder()
                         .forPackages(swaggerPackage)
@@ -163,8 +166,13 @@ public abstract class JerseyModule extends ServletModule {
             final Class<?> cls;
 
             try {
+
                 cls = Class.forName(type);
-                bind(cls);
+
+                if ((cls.getModifiers() & ABSTRACT) == 0) {
+                    bind(cls);
+                }
+
             } catch (ClassNotFoundException ex) {
                 throw new IllegalStateException(ex);
             }

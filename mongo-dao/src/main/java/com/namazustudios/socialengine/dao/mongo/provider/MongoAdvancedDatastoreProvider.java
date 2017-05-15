@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.dao.mongo.provider;
 import com.mongodb.MongoClient;
 import com.namazustudios.socialengine.dao.mongo.model.*;
 import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.DatastoreImpl;
 import org.mongodb.morphia.Morphia;
 
 import javax.inject.Inject;
@@ -36,7 +35,10 @@ public class MongoAdvancedDatastoreProvider implements Provider<AdvancedDatastor
         );
 
         final MongoClient mongoClient = mongoProvider.get();
-        final AdvancedDatastore advancedDatastore = new DatastoreImpl(morphia, mongoClient, databaseName);
+
+        final AdvancedDatastore advancedDatastore;
+        advancedDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, databaseName);
+
         advancedDatastore.ensureIndexes();
         return advancedDatastore;
 

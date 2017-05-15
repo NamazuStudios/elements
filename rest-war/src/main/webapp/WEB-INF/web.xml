@@ -6,11 +6,11 @@
          xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
          version="2.4">
 
-    <display-name>Namazu Promotions REST API</display-name>
+    <display-name>Namazu Social Engine REST API</display-name>
 
-    <handlerClientSessionObserver>
-        <handlerClientSessionObserver-class>com.namazustudios.socialengine.rest.guice.GuiceMain</handlerClientSessionObserver-class>
-    </handlerClientSessionObserver>
+    <listener>
+        <listener-class>com.namazustudios.socialengine.rest.guice.GuiceMain</listener-class>
+    </listener>
 
     <filter>
         <filter-name>guiceFilter</filter-name>

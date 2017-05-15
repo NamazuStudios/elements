@@ -1,8 +1,5 @@
 package com.namazustudios.socialengine.rest;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
-import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ShortLink;
@@ -16,7 +13,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Set;
+
+import static com.google.common.base.Strings.nullToEmpty;
 
 /**
  * Created by patricktwohig on 6/10/15.
@@ -33,34 +31,12 @@ public class ShortLinkResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("{offset}/{count}/{search}")
     @ApiOperation(value = "Search Short Links",
                   notes = "Gets a listing of all ShortLinks with the given search filter.")
-    public Pagination<ShortLink> searchShortLinks(
-            @PathParam("offset") final int offset,
-            @PathParam("count")  final int count,
-            @PathParam("search") final String search) {
-
-        if (offset < 0) {
-            throw new InvalidParameterException("Offset must have positive value.");
-        }
-
-        if (count < 0) {
-            throw new InvalidParameterException("Count must have positive value.");
-        }
-
-        return shortLinkService.getShortLinks(offset, count, search);
-
-    }
-
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{offset}/{count}")
-    @ApiOperation(value = "Get Short Links",
-                  notes = "Gets a listing of all ShortLinks in the default order.")
     public Pagination<ShortLink> getShortLinks(
-            @PathParam("offset") final int offset,
-            @PathParam("count")  final int count) {
+            @QueryParam("offset") @DefaultValue("0") final int offset,
+            @QueryParam("count")  @DefaultValue("20") final int count,
+            @QueryParam("search") final String search) {
 
         if (offset < 0) {
             throw new InvalidParameterException("Offset must have positive value.");
@@ -70,7 +46,11 @@ public class ShortLinkResource {
             throw new InvalidParameterException("Count must have positive value.");
         }
 
-        return shortLinkService.getShortLinks(offset, count);
+        final String query = nullToEmpty(search).trim();
+
+        return query.isEmpty() ?
+            getShortLinkService().getShortLinks(offset, count) :
+            getShortLinkService().getShortLinks(offset, count, query);
 
     }
 
@@ -80,7 +60,7 @@ public class ShortLinkResource {
     @ApiOperation(value = "Get A ShortLink",
                   notes = "Gets the metadata for a specific short link with the given ID.")
     public ShortLink getShortLink(@PathParam("id") @DefaultValue("") final String id) {
-        return shortLinkService.getShortLink(id);
+        return getShortLinkService().getShortLink(id);
     }
 
     @POST
@@ -98,7 +78,7 @@ public class ShortLinkResource {
     @ApiOperation(value = "Deletes a short link.",
                   notes = "Deletes a short link known to the server.  Once delete, a short link will " +
                           "no longer resolve to its address an will be gone from the server permanently.")
-    public void delete(@PathParam("id") @DefaultValue("") final String id) {
+    public void delete(@PathParam("id") final String id) {
         shortLinkService.deleteShortLink(id);
     }
 
@@ -107,7 +87,7 @@ public class ShortLinkResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Processes a ShortLink",
                   notes = "Process a ShortLink by generating the proper HTTP response by following " +
-                          "the link.  This shoudln't be used as the actual destination for a ShortLink as it " +
+                          "the link.  This shouldn't be used as the actual destination for a ShortLink as it " +
                           "is likely to be longer than the original link.  However, this can be used as the " +
                           "destination for some upstream service as a target.  Examples include Servlet forwards " +
                           "or HTTP request rewrites.")
@@ -125,6 +105,15 @@ public class ShortLinkResource {
             throw new NotFoundException();
         }
 
+    }
+
+    public ShortLinkService getShortLinkService() {
+        return shortLinkService;
+    }
+
+    @Inject
+    public void setShortLinkService(ShortLinkService shortLinkService) {
+        this.shortLinkService = shortLinkService;
     }
 
 }

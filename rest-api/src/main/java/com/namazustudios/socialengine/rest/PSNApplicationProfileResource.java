@@ -19,7 +19,6 @@ import javax.ws.rs.core.MediaType;
 @Path("application/{applicationNameOrId}/profile/psn")
 public class PSNApplicationProfileResource {
 
-    @Inject
     private ApplicationProfileService applicationProfileService;
 
     /**
@@ -39,7 +38,7 @@ public class PSNApplicationProfileResource {
     public PSNApplicationProfile getPSNApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        return applicationProfileService.getPSNApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
+        return getApplicationProfileService().getPSNApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
     }
 
     /**
@@ -57,7 +56,7 @@ public class PSNApplicationProfileResource {
     public PSNApplicationProfile createPSNApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             final PSNApplicationProfile psnApplicationProfile) {
-        return applicationProfileService.createApplicationProfile(applicationNameOrId, psnApplicationProfile);
+        return getApplicationProfileService().createApplicationProfile(applicationNameOrId, psnApplicationProfile);
     }
 
     /**
@@ -78,7 +77,7 @@ public class PSNApplicationProfileResource {
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId,
             final PSNApplicationProfile psnApplicationProfile) {
-        return applicationProfileService.updateApplicationProfile(
+        return getApplicationProfileService().updateApplicationProfile(
                 applicationNameOrId,
                 applicationProfileNameOrId,
                 psnApplicationProfile);
@@ -98,10 +97,19 @@ public class PSNApplicationProfileResource {
     public void deletePSNApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        applicationProfileService.deleteApplicationProfile(
+        getApplicationProfileService().deleteApplicationProfile(
                 applicationNameOrId,
                 applicationProfileNameOrId,
                 PSNApplicationProfile.class);
+    }
+
+    public ApplicationProfileService getApplicationProfileService() {
+        return applicationProfileService;
+    }
+
+    @Inject
+    public void setApplicationProfileService(ApplicationProfileService applicationProfileService) {
+        this.applicationProfileService = applicationProfileService;
     }
 
 }

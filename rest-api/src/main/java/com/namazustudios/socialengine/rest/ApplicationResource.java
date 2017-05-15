@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rest;
 
-import com.google.common.base.Strings;
 import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
@@ -12,6 +11,8 @@ import io.swagger.annotations.ApiOperation;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+
+import static com.google.common.base.Strings.nullToEmpty;
 
 /**
  * Created by patricktwohig on 7/9/15.
@@ -26,45 +27,19 @@ import javax.ws.rs.core.MediaType;
 @Path("application")
 public class ApplicationResource {
 
-    @Inject
     private ApplicationService applicationService;
 
-    @Inject
-    private ValidationHelper validationService;
+    private ValidationHelper validationHelper;
 
     @GET
-    @Path("{offset}/{count}/{search}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Search Applications",
                   notes = "Performs a full-text search of all applications known to the server.  As with " +
                           "other full-text endpoints this allows for pagination and offset.")
-    public Pagination<Application> searchApplications(
-            @PathParam("offset") final int offset,
-            @PathParam("count")  final int count,
-            @PathParam("search") final String search) {
-
-        if (offset < 0) {
-            throw new InvalidParameterException("Offset must have positive value.");
-        }
-
-        if (count < 0) {
-            throw new InvalidParameterException("Count must have positive value.");
-        }
-
-        final String searchQuery = Strings.nullToEmpty(search).trim();
-        return applicationService.getApplications(offset, count, searchQuery);
-
-    }
-
-    @GET
-    @Path("{offset}/{count}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Get Applications",
-            notes = "Lists all Applications known to the server in the default order.  Provides " +
-                    "no filtering by full text.")
     public Pagination<Application> getApplications(
-            @PathParam("offset") @DefaultValue("0")  final int offset,
-            @PathParam("count")  @DefaultValue("20") final int count) {
+            @QueryParam("offset") @DefaultValue("0")  final int offset,
+            @QueryParam("count")  @DefaultValue("20") final int count,
+            @QueryParam("search") final String search) {
 
         if (offset < 0) {
             throw new InvalidParameterException("Offset must have positive value.");
@@ -74,7 +49,11 @@ public class ApplicationResource {
             throw new InvalidParameterException("Count must have positive value.");
         }
 
-        return applicationService.getApplications(offset, count);
+        final String query = nullToEmpty(search).trim();
+
+        return query.isEmpty() ?
+            getApplicationService().getApplications(offset, count) :
+            getApplicationService().getApplications(offset, count, query);
 
     }
 
@@ -84,8 +63,9 @@ public class ApplicationResource {
     @ApiOperation(value = "Get an Application",
                   notes = "Gets the metadata for a single application.  This may include more specific " +
                           "details not availble in the bulk-get or fetch operation.")
-    public Application getApplication(@PathParam("nameOrId") final String nameOrId) {
-        return applicationService.getApplication(nameOrId);
+    public Application getApplication(
+            @PathParam("nameOrId") final String nameOrId) {
+        return getApplicationService().getApplication(nameOrId);
     }
 
     @POST
@@ -95,8 +75,8 @@ public class ApplicationResource {
                   notes = "Gets the metadata for a single application.  This may include more specific " +
                           "details not available in the bulk-get or fetch operation.")
     public Application createApplication(final Application application) {
-        validationService.validateModel(application);
-        return applicationService.createApplication(application);
+        getValidationHelper().validateModel(application);
+        return getApplicationService().createApplication(application);
     }
 
     @PUT
@@ -105,17 +85,38 @@ public class ApplicationResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates an Application",
                   notes = "Performs an update to an existing application known to the server.")
-    public Application updateApplication(@PathParam("nameOrId") final String nameOrId, final Application application) {
-        validationService.validateModel(application);
-        return applicationService.updateApplication(nameOrId, application);
+    public Application updateApplication(
+            @PathParam("nameOrId") final String nameOrId,
+            final Application application) {
+        getValidationHelper().validateModel(application);
+        return getApplicationService().updateApplication(nameOrId, application);
     }
 
     @DELETE
     @Path("{nameOrId}")
     @ApiOperation(value = "Deletes an Application",
                   notes = "Deletes a specific application known to the server.")
-    public void deleteApplication(@PathParam("nameOrId") final String nameOrId) {
-        applicationService.deleteApplication(nameOrId);
+    public void deleteApplication(
+            @PathParam("nameOrId") final String nameOrId) {
+        getApplicationService().deleteApplication(nameOrId);
+    }
+
+    public ApplicationService getApplicationService() {
+        return applicationService;
+    }
+
+    @Inject
+    public void setApplicationService(ApplicationService applicationService) {
+        this.applicationService = applicationService;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
     }
 
 }

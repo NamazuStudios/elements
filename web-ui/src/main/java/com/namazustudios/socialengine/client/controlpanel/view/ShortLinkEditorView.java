@@ -17,7 +17,7 @@ import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.gwtbootstrap3.client.ui.*;
 import org.gwtbootstrap3.client.ui.constants.ValidationState;
-import org.gwtbootstrap3.extras.growl.client.ui.Growl;
+import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
 import javax.inject.Inject;
 import javax.validation.Validator;
@@ -134,7 +134,7 @@ public class ShortLinkEditorView extends ViewImpl implements ShortLinkEditorPres
             public void onSuccess(Method method, ShortLink shortLink) {
 
                 unlock();
-                Growl.growl("Successfully created short link.");
+                Notify.notify("Successfully created short link.");
 
                 final PlaceRequest placeRequest = new PlaceRequest.Builder()
                         .nameToken(NameTokens.MAIN)

@@ -1,20 +1,13 @@
 package com.namazustudios.socialengine.rest;
 
+import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.SocialCampaign;
 import com.namazustudios.socialengine.service.SocialCampaignService;
-import com.namazustudios.socialengine.ValidationHelper;
 
 import javax.inject.Inject;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -31,11 +24,10 @@ public class SocialCampaignResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("{offset}/{count}/{search}")
     public Pagination<SocialCampaign> getSocialCampaigns(
-            @PathParam("offset") int offset,
-            @PathParam("count") int count,
-            @PathParam("search") String search) {
+            @QueryParam("offset") @DefaultValue("0") final int offset,
+            @QueryParam("count")  @DefaultValue("20") final int count,
+            @QueryParam("search") final String search) {
 
         if (offset < 0) {
             throw new InvalidParameterException("Offset must have positive value.");

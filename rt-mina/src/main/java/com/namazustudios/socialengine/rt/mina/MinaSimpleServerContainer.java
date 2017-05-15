@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.rt.Constants;
 import com.namazustudios.socialengine.rt.Container;
 import com.namazustudios.socialengine.rt.ServerContainer;
 import com.namazustudios.socialengine.rt.handler.Handler;
-import com.namazustudios.socialengine.rt.internal.InternalResource;
+import com.namazustudios.socialengine.rt.worker.Worker;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.util.IdentityHashSet;
 import org.slf4j.Logger;
@@ -33,7 +33,7 @@ public class MinaSimpleServerContainer implements ServerContainer {
     private Container<Handler> simpleHandlerContainer;
 
     @Inject
-    private Container<InternalResource> simpleWorkerContainer;
+    private Container<Worker> simpleWorkerContainer;
 
     @Inject
     @Named(Constants.TRANSPORT_RELIABLE)

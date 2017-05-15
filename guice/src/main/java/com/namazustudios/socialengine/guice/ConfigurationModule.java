@@ -1,48 +1,62 @@
 package com.namazustudios.socialengine.guice;
 
+import com.google.common.base.Splitter;
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
-import com.namazustudios.socialengine.Constants;
+import org.nnsoft.guice.rocoto.converters.URIConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Properties;
+import java.util.function.Supplier;
+
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
+import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.Constants.CORS_ALLOWED_ORIGINS;
 
 /**
  * Created by patricktwohig on 4/3/15.
  */
 public class ConfigurationModule extends AbstractModule {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ConfigurationModule.class);
+    private static final Logger logger = LoggerFactory.getLogger(ConfigurationModule.class);
+
+    private final Supplier<Properties> propertiesSupplier;
+
+    public ConfigurationModule(final Supplier<Properties> propertiesSupplier) {
+        this.propertiesSupplier = propertiesSupplier;
+    }
 
     @Override
     protected void configure() {
 
-        final Properties defaultProperties = new Properties(System.getProperties());
+        install(new URIConverter());
 
-        defaultProperties.setProperty(Constants.SHORT_LINK_BASE, "http://localhost:8888/l");
-        defaultProperties.setProperty(Constants.QUERY_MAX_RESULTS, Integer.valueOf(20).toString());
-        defaultProperties.setProperty(Constants.PASSWORD_DIGEST_ALGORITHM, "SHA-256");
-        defaultProperties.setProperty(Constants.PASSWORD_ENCODING, "UTF-8");
-
-        final Properties properties = new Properties(defaultProperties);
-        final File propertiesFile = new File(properties.getProperty(
-                Constants.PROPERTIES_FILE,
-                Constants.DEFAULT_PROPERTIES_FILE));
-
-        try (final InputStream is = new FileInputStream(propertiesFile)) {
-            properties.load(is);
-        } catch (IOException ex) {
-            LOG.warn("Could not load properties.", ex);
-        }
-
-        LOG.info("Using configuration properties " + properties);
-
+        final Properties properties = propertiesSupplier.get();
+        logger.info("Using configuration properties " + properties);
         Names.bindProperties(binder(), properties);
+
+        final Multibinder<URI> corsAllowedOriginsMultibinder;
+        corsAllowedOriginsMultibinder = newSetBinder(binder(), URI.class, named(CORS_ALLOWED_ORIGINS));
+
+        final String corsAllowedOriginsProperty = properties.getProperty(CORS_ALLOWED_ORIGINS, "");
+
+        final Iterable<String> corsAllowedOrigins = Splitter
+            .on(",")
+            .trimResults()
+            .omitEmptyStrings()
+            .split(corsAllowedOriginsProperty);
+
+        for (final String origin : corsAllowedOrigins) {
+            try {
+                corsAllowedOriginsMultibinder.addBinding().toInstance(new URI(origin));
+            } catch (URISyntaxException e) {
+                binder().addError(e);
+            }
+        }
 
     }
 

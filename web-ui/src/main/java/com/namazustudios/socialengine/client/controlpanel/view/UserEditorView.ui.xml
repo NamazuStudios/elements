@@ -26,24 +26,24 @@
 
                     <b:FormGroup ui:field="usernameFormGroup">
                         <b:FormLabel for="username">Username</b:FormLabel>
-                        <b:TextBox b:resourceId="username" placeholder="Username" ui:field="usernameTextBox"/>
+                        <b:TextBox placeholder="Username" ui:field="usernameTextBox"/>
                         <b:Label ui:field="usernameWarningLabel" visible="false" text="Username must be alpha-numeric." type="DANGER"/>
                     </b:FormGroup>
 
                     <b:FormGroup ui:field="emailFormGroup">
                         <b:FormLabel for="email">Email</b:FormLabel>
-                        <b:TextBox b:resourceId="email" placeholder="Email" ui:field="emailTextBox"/>
+                        <b:TextBox placeholder="Email" ui:field="emailTextBox"/>
                         <b:Label ui:field="emailWarningLabel" visible="false" text="Email format not valid." type="DANGER"/>
                     </b:FormGroup>
 
                     <b:FormGroup ui:field="passwordFormGroup">
                         <b:FormLabel for="password">Password</b:FormLabel>
-                        <b:Input b:resourceId="password" type="PASSWORD" placeholder="(password)" ui:field="passwordInput"/>
+                        <b:Input type="PASSWORD" placeholder="(password)" ui:field="passwordInput"/>
                         <b:Label ui:field="passwordWarningLabel" visible="false" text="Invalid Password." type="DANGER"/>
                     </b:FormGroup>
 
                     <b:FormGroup ui:field="passwordConfirmFormGroup">
-                        <b:Input b:resourceId="passwordConfirm" type="PASSWORD" placeholder="(confirm password)" ui:field="passwordConfirmInput"/>
+                        <b:Input type="PASSWORD" placeholder="(confirm password)" ui:field="passwordConfirmInput"/>
                         <b:Label ui:field="passwordConfirmWarningLabel" visible="false" text="Passwords do not match." type="DANGER"/>
                     </b:FormGroup>
 
@@ -51,7 +51,7 @@
                         <b:FormLabel for="userLevel">User Level</b:FormLabel>
                         <w:UserLevelEnumDropDown ui:field="levelDropdown">
                             <b:Anchor ui:field="levelAnchor" dataToggle="DROPDOWN">(please select)</b:Anchor>
-                            <b:DropDownMenu b:resourceId="userLevel">
+                            <b:DropDownMenu>
                                 <w:UserLevelAnchorListItem enumerant="UNPRIVILEGED">Unprivileged User</w:UserLevelAnchorListItem>
                                 <w:UserLevelAnchorListItem enumerant="USER">Normal User</w:UserLevelAnchorListItem>
                                 <w:UserLevelAnchorListItem enumerant="SUPERUSER">Super-User</w:UserLevelAnchorListItem>

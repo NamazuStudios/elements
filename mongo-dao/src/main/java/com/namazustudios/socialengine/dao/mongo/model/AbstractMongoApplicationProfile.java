@@ -3,13 +3,9 @@ package com.namazustudios.socialengine.dao.mongo.model;
 import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
-import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.Platform;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Created by patricktwohig on 7/10/15.

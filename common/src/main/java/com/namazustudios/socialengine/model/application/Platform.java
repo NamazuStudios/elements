@@ -23,6 +23,14 @@ public enum Platform {
         this.profileModelType = profileModelType;
     }
 
-    public final Class<?> profileModelType;
+    private final Class<?> profileModelType;
+
+    /**
+     * Gets the {@link Class} assocaited with the supplied profile model.
+     * @return
+     */
+    public Class<?> getProfileModelType() {
+        return profileModelType;
+    }
 
 }

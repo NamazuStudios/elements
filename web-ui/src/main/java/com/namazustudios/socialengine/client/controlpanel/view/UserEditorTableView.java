@@ -29,7 +29,7 @@ import org.gwtbootstrap3.client.ui.Panel;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.constants.LabelType;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
-import org.gwtbootstrap3.extras.growl.client.ui.Growl;
+import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -255,7 +255,7 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
 
             @Override
             public void onSuccess(Method method, User user) {
-                Growl.growl(user.getName() + " updated.");
+                Notify.notify(user.getName() + " updated.");
                 userEditorCellTable.redrawRow(toRedraw);
             }
 
@@ -291,7 +291,7 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
 
             @Override
             public void onSuccess(Method method, Void aVoid) {
-                Growl.growl(user.getName() + " deleted.");
+                Notify.notify(user.getName() + " deleted.");
                 userEditorCellTable.setVisibleRangeAndClearData(userEditorCellTable.getVisibleRange(), true);
             }
 
