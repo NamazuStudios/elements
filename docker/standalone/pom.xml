@@ -31,6 +31,7 @@
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>setup</artifactId>
             <version>${project.version}</version>
+            <classifier>jar-with-dependencies</classifier>
         </dependency>
     </dependencies>
 
@@ -77,7 +78,7 @@
                         <argument>--build-arg</argument>
                         <argument>WEB_UI_WAR=target/lib/web-ui-war-${project.version}.war</argument>
                         <argument>--build-arg</argument>
-                        <argument>SETUP_JAR=target/lib/setup-${project.version}.jar</argument>
+                        <argument>SETUP_JAR=target/lib/setup-${project.version}-jar-with-dependencies.jar</argument>
                         <argument>--tag</argument>
                         <argument>socialengine-standalone:${project.version}</argument>
                     </arguments>
