@@ -27,35 +27,28 @@
             <version>${project.version}</version>
             <type>war</type>
         </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>setup</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <!--<plugin>-->
-                <!--<artifactId>maven-dependency-plugin</artifactId>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<phase>initialize</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>copy-dependencies</goal>-->
-                        <!--</goals>-->
-                        <!--<configuration>-->
-                            <!--<overWriteReleases>false</overWriteReleases>-->
-                            <!--<includeScope>runtime</includeScope>-->
-                            <!--<outputDirectory>${project.build.directory}/lib</outputDirectory>-->
-                        <!--</configuration>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>${dependency.plugin.version}</version>
                 <executions>
                     <execution>
+                        <phase>initialize</phase>
                         <goals>
-                            <goal>properties</goal>
+                            <goal>copy-dependencies</goal>
                         </goals>
+                        <configuration>
+                            <includeScope>runtime</includeScope>
+                            <overWriteReleases>false</overWriteReleases>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -74,15 +67,19 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <workingDiregory>${project.basedir}</workingDiregory>
+                    <workingDirectory>${project.basedir}</workingDirectory>
                     <executable>docker</executable>
                     <arguments>
                         <argument>build</argument>
                         <argument>${project.basedir}</argument>
                         <argument>--build-arg</argument>
-                        <argument>restWar=${com.namazustudios.socialengine:rest-war:war}</argument>
+                        <argument>REST_WAR=target/lib/rest-war-${project.version}.war</argument>
                         <argument>--build-arg</argument>
-                        <argument>webUiWar=${com.namazustudios.socialengine:web-ui-war:war}</argument>
+                        <argument>WEB_UI_WAR=target/lib/web-ui-war-${project.version}.war</argument>
+                        <argument>--build-arg</argument>
+                        <argument>SETUP_JAR=target/lib/setup-${project.version}.jar</argument>
+                        <argument>--tag</argument>
+                        <argument>socialengine-standalone:${project.version}</argument>
                     </arguments>
                 </configuration>
             </plugin>

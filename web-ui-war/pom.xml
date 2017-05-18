@@ -25,6 +25,11 @@
             <classifier>sources</classifier>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>web-ui</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

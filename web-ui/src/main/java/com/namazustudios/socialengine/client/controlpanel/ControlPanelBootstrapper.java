@@ -31,7 +31,7 @@ public class ControlPanelBootstrapper implements Bootstrapper {
     @Override
     public void onBootstrap() {
 
-        Defaults.setServiceRoot("/ui");
+        Defaults.setServiceRoot("ui");
         Defaults.setDispatcher(new CORSRequestDispatcher());
 
         uiConfigClient.getUiConfig(new MethodCallback<UiConfig>() {
