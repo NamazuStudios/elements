@@ -17,7 +17,14 @@ public enum Platform {
     /**
      * Represents the PlayStation(tm) Network for Vita enabled titles..
      */
-    PSN_VITA(PSNApplicationProfile.class);
+    PSN_VITA(PSNApplicationProfile.class),
+
+    /**
+     *
+     */
+    IOS_APP_STORE(IosApplicationProfile.class),
+
+    ANDROID_GOOGLE_PLAY(GooglePlayApplicationProfile.class);
 
     Platform(final Class<?> profileModelType) {
         this.profileModelType = profileModelType;

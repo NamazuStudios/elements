@@ -4,7 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.SystemPropertiesConfiguration;
+import com.namazustudios.socialengine.DefaultConfiguration;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
@@ -13,6 +13,7 @@ import org.apache.bval.guice.ValidationModule;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.annotation.WebListener;
+import java.util.Properties;
 
 /**
  * Created by patricktwohig on 3/19/15.
@@ -40,11 +41,12 @@ public class GuiceMain extends GuiceServletContextListener {
     @Override
     protected Injector getInjector() {
 
-        final SystemPropertiesConfiguration systemPropertiesConfiguration = new SystemPropertiesConfiguration();
-        final String apiRoot = systemPropertiesConfiguration.get().getProperty(Constants.API_PREFIX);
+        final DefaultConfiguration defaultConfiguration = new DefaultConfiguration();
+        final Properties properties = defaultConfiguration.get();
+        final String apiRoot = properties.getProperty(Constants.API_PREFIX);
 
         return injector = Guice.createInjector(
-                new ConfigurationModule(systemPropertiesConfiguration),
+                new ConfigurationModule(defaultConfiguration),
                 new JerseyModule(apiRoot) {
                     @Override
                     protected void configureResoures() {

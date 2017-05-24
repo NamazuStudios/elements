@@ -6,7 +6,7 @@ package com.namazustudios.socialengine.model.application;
  *
  * Created by patricktwohig on 5/23/17.
  */
-public class GooglePlayApplicationProfile {
+public class GooglePlayApplicationProfile extends ApplicationProfile{
 
     private String applicationId;
 

@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.model;
 
+import io.swagger.annotations.ApiModel;
+
 import javax.validation.constraints.NotNull;
 
 /**
@@ -8,6 +10,7 @@ import javax.validation.constraints.NotNull;
  *
  * Created by patricktwohig on 6/9/15.
  */
+@ApiModel
 public class ShortLink {
 
     private String id;

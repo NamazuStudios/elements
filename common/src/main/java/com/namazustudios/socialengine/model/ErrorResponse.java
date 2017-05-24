@@ -1,8 +1,11 @@
 package com.namazustudios.socialengine.model;
 
+import io.swagger.annotations.ApiModel;
+
 /**
  * Created by patricktwohig on 4/10/15.
  */
+@ApiModel
 public class ErrorResponse {
 
     private String code;

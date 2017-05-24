@@ -60,10 +60,10 @@ public class Setup {
             return;
         }
 
-        final SystemPropertiesConfiguration systemPropertiesConfiguration = new SystemPropertiesConfiguration();
+        final DefaultConfiguration defaultConfiguration = new DefaultConfiguration();
 
         final Injector injector = Guice.createInjector(
-                new ConfigurationModule(systemPropertiesConfiguration),
+                new ConfigurationModule(defaultConfiguration),
                 new MongoDaoModule(),
                 new MongoSearchModule(),
                 new ValidationModule(),

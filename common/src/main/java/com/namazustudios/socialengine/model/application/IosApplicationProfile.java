@@ -6,7 +6,7 @@ package com.namazustudios.socialengine.model.application;
  *
  * Created by patricktwohig on 5/23/17.
  */
-public class IosApplicationProfile {
+public class IosApplicationProfile extends ApplicationProfile {
 
     private String appId;
 
@@ -18,6 +18,10 @@ public class IosApplicationProfile {
         return appId;
     }
 
+    /**
+     * Sets the application ID, as deinfed in the AppStore (com.mycompany.app)
+     * @param appId
+     */
     public void setAppId(String appId) {
         this.appId = appId;
     }

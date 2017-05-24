@@ -1,11 +1,14 @@
 package com.namazustudios.socialengine.model;
 
+import io.swagger.annotations.ApiModel;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by patricktwohig on 3/25/15.
  */
+@ApiModel
 public class Pagination<T> {
 
     private int offset;
@@ -14,7 +17,7 @@ public class Pagination<T> {
 
     private boolean approximation;
 
-    private List<T> objects = new ArrayList<>();
+    private List<T> objects = new ArrayList<T>();
 
     public int getOffset() {
         return offset;
