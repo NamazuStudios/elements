@@ -10,7 +10,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 /**
- * Handles the creation of {@link PSNApplicationProfile} isntances.
+ * Handles the management of {@link PSNApplicationProfile} instances.
  *
  * Created by patricktwohig on 7/13/15.
  */
@@ -38,7 +38,7 @@ public class PSNApplicationProfileResource {
     public PSNApplicationProfile getPSNApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        return getPsnApplicationProfileService().getPSNApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
+        return getPsnApplicationProfileService().getApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
     }
 
     /**

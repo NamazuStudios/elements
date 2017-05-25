@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.model.application.ApplicationProfile;
 import com.namazustudios.socialengine.model.application.PSNApplicationProfile;
 
 /**
@@ -13,7 +12,7 @@ public interface PSNApplicationProfileService {
      * Deletes a {@link PSNApplicationProfile} using the ID as reference.
      *
      * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationProfileNameOrId the {@link ApplicationProfile} id
+     * @param applicationProfileNameOrId the {@link PSNApplicationProfile} id
      *
      */
     void deleteApplicationProfile(final String applicationNameOrId, final String applicationProfileNameOrId);
@@ -22,11 +21,11 @@ public interface PSNApplicationProfileService {
      * Gets an application with the specific name or identifier.
      *
      * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationProfileNameOrId the {@link ApplicationProfile} id
+     * @param applicationProfileNameOrId the {@link PSNApplicationProfile} id
      *
      */
-    PSNApplicationProfile getPSNApplicationProfile(final String applicationNameOrId,
-                                                   final String applicationProfileNameOrId);
+    PSNApplicationProfile getApplicationProfile(final String applicationNameOrId,
+                                                final String applicationProfileNameOrId);
 
     /**
      * Updates an application with the specific name/identifiers.

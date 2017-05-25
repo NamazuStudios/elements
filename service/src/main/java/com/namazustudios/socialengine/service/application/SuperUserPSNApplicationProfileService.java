@@ -14,7 +14,7 @@ public class SuperUserPSNApplicationProfileService implements PSNApplicationProf
     private PSNApplicationProfileDao psnApplicationProfileDao;
 
     @Override
-    public PSNApplicationProfile getPSNApplicationProfile(String applicationNameOrId, String applicationProfileNameOrId) {
+    public PSNApplicationProfile getApplicationProfile(String applicationNameOrId, String applicationProfileNameOrId) {
         return getPsnApplicationProfileDao().getPSNApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
     }
 
