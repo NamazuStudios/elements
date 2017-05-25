@@ -1,19 +1,17 @@
 package com.namazustudios.socialengine.rest.guice;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.servlet.RequestScoped;
 import com.google.inject.servlet.ServletScopes;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.rest.provider.UserProvider;
 import com.namazustudios.socialengine.service.*;
 import com.namazustudios.socialengine.service.application.ApplicationProfileServiceProvider;
 import com.namazustudios.socialengine.service.application.ApplicationServiceProvider;
+import com.namazustudios.socialengine.service.application.PSNApplicationProfileServiceProvider;
 import com.namazustudios.socialengine.service.auth.AuthServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
-
-import javax.servlet.Servlet;
 
 /**
  * Created by patricktwohig on 3/19/15.
@@ -48,6 +46,10 @@ public class ServicesModule extends AbstractModule {
 
         bind(ApplicationProfileService.class)
                 .toProvider(ApplicationProfileServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
+        bind(PSNApplicationProfileService.class)
+                .toProvider(PSNApplicationProfileServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
     }

@@ -1,10 +1,7 @@
 package com.namazustudios.socialengine.service;
 
-import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
-
-import javax.inject.Inject;
 
 /**
  * Manages the lifecycle of the {@link Application} instance.

@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.model.application.PSNApplicationProfile;
-import com.namazustudios.socialengine.service.ApplicationProfileService;
+import com.namazustudios.socialengine.service.PSNApplicationProfileService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -19,7 +19,7 @@ import javax.ws.rs.core.MediaType;
 @Path("application/{applicationNameOrId}/profile/psn")
 public class PSNApplicationProfileResource {
 
-    private ApplicationProfileService applicationProfileService;
+    private PSNApplicationProfileService psnApplicationProfileService;
 
     /**
      * Gets the specific {@link PSNApplicationProfile} instances assocated with the
@@ -38,7 +38,7 @@ public class PSNApplicationProfileResource {
     public PSNApplicationProfile getPSNApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        return getApplicationProfileService().getPSNApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
+        return getPsnApplicationProfileService().getPSNApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
     }
 
     /**
@@ -56,7 +56,7 @@ public class PSNApplicationProfileResource {
     public PSNApplicationProfile createPSNApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             final PSNApplicationProfile psnApplicationProfile) {
-        return getApplicationProfileService().createApplicationProfile(applicationNameOrId, psnApplicationProfile);
+        return getPsnApplicationProfileService().createApplicationProfile(applicationNameOrId, psnApplicationProfile);
     }
 
     /**
@@ -77,7 +77,7 @@ public class PSNApplicationProfileResource {
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId,
             final PSNApplicationProfile psnApplicationProfile) {
-        return getApplicationProfileService().updateApplicationProfile(
+        return getPsnApplicationProfileService().updateApplicationProfile(
                 applicationNameOrId,
                 applicationProfileNameOrId,
                 psnApplicationProfile);
@@ -97,19 +97,16 @@ public class PSNApplicationProfileResource {
     public void deletePSNApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        getApplicationProfileService().deleteApplicationProfile(
-                applicationNameOrId,
-                applicationProfileNameOrId,
-                PSNApplicationProfile.class);
+        getPsnApplicationProfileService().deleteApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
     }
 
-    public ApplicationProfileService getApplicationProfileService() {
-        return applicationProfileService;
+    public PSNApplicationProfileService getPsnApplicationProfileService() {
+        return psnApplicationProfileService;
     }
 
     @Inject
-    public void setApplicationProfileService(ApplicationProfileService applicationProfileService) {
-        this.applicationProfileService = applicationProfileService;
+    public void setPsnApplicationProfileService(PSNApplicationProfileService psnApplicationProfileService) {
+        this.psnApplicationProfileService = psnApplicationProfileService;
     }
 
 }
