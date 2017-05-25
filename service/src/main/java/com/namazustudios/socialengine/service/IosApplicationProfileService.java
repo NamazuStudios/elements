@@ -2,15 +2,15 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationProfile;
-import com.namazustudios.socialengine.model.application.PSNApplicationProfile;
+import com.namazustudios.socialengine.model.application.IosApplicationProfile;
 
 /**
  * Created by patricktwohig on 5/24/17.
  */
-public interface PSNApplicationProfileService {
+public interface IosApplicationProfileService {
 
     /**
-     * Deletes a {@link PSNApplicationProfile} using the ID as reference.
+     * Deletes an {@link IosApplicationProfile} using the ID as reference.
      *
      * @param applicationNameOrId the {@link Application} name or id
      * @param applicationProfileNameOrId the {@link ApplicationProfile} id
@@ -25,32 +25,32 @@ public interface PSNApplicationProfileService {
      * @param applicationProfileNameOrId the {@link ApplicationProfile} id
      *
      */
-    PSNApplicationProfile getPSNApplicationProfile(final String applicationNameOrId,
+    IosApplicationProfile getPSNApplicationProfile(final String applicationNameOrId,
                                                    final String applicationProfileNameOrId);
 
     /**
      * Updates an application with the specific name/identifiers.
      *
      * @param applicationNameOrId the {@link Application} name or id
-     * @param psnApplicationProfile the {@link PSNApplicationProfile} object to write
-     * @return the {@link PSNApplicationProfile} object as it was persisted to the database.
+     * @param iosApplicationProfile the {@link IosApplicationProfile} object to write
+     * @return the {@link IosApplicationProfile} object as it was persisted to the database.
      *
      */
-    PSNApplicationProfile createApplicationProfile(final String applicationNameOrId,
-                                                   final PSNApplicationProfile psnApplicationProfile);
+    IosApplicationProfile createApplicationProfile(final String applicationNameOrId,
+                                                   final IosApplicationProfile iosApplicationProfile);
 
     /**
      * Updates an application with the specific name/identifiers.
      *
      * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationProfileNameOrId the {@link PSNApplicationProfile} id
-     * @param psnApplicationProfile the {@link PSNApplicationProfile} object to write
+     * @param applicationProfileNameOrId the {@link IosApplicationProfile} id
+     * @param iosApplicationProfile the {@link IosApplicationProfile} object to write
      *
-     * @return the {@link PSNApplicationProfile} object as it was persisted to the database.
+     * @return the {@link IosApplicationProfile} object as it was persisted to the database.
      *
      */
-    PSNApplicationProfile updateApplicationProfile(final String applicationNameOrId,
+    IosApplicationProfile updateApplicationProfile(final String applicationNameOrId,
                                                    final String applicationProfileNameOrId,
-                                                   final PSNApplicationProfile psnApplicationProfile);
+                                                   final IosApplicationProfile iosApplicationProfile);
 
 }

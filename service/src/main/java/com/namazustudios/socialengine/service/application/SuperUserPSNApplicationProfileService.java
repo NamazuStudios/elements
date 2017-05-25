@@ -21,8 +21,7 @@ public class SuperUserPSNApplicationProfileService implements PSNApplicationProf
     @Override
     public PSNApplicationProfile createApplicationProfile(String applicationNameOrId,
                                                           PSNApplicationProfile psnApplicationProfile) {
-        return getApplicationProfileDao().createOrUpdateInactiveApplicationProfile(applicationNameOrId,
-                psnApplicationProfile);
+        return getApplicationProfileDao().createOrUpdateInactiveApplicationProfile(applicationNameOrId, psnApplicationProfile);
     }
 
     @Override

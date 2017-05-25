@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.mongodb.MongoCommandException;
 import com.namazustudios.socialengine.ValidationHelper;
@@ -106,12 +105,7 @@ public class MongoApplicationProfileDao implements ApplicationProfileDao {
         query.filter("active =", true);
         query.filter("parent =", mongoApplication);
 
-        return mongoDBUtils.paginationFromQuery(query, offset, count, new Function<AbstractMongoApplicationProfile, ApplicationProfile>() {
-            @Override
-            public ApplicationProfile apply(AbstractMongoApplicationProfile input) {
-                return transform(input);
-            }
-        });
+        return mongoDBUtils.paginationFromQuery(query, offset, count, input -> transform(input));
 
     }
 
@@ -137,13 +131,7 @@ public class MongoApplicationProfileDao implements ApplicationProfileDao {
             throw new BadQueryException(ex);
         }
 
-        return mongoDBUtils.paginationFromSearch(AbstractMongoApplicationProfile.class, booleanQuery, offset, count,
-                new Function<AbstractMongoApplicationProfile, ApplicationProfile>() {
-                    @Override
-                    public ApplicationProfile apply(AbstractMongoApplicationProfile input) {
-                        return transform(input);
-                    }
-                });
+        return mongoDBUtils.paginationFromSearch(AbstractMongoApplicationProfile.class, booleanQuery, offset, count, input -> transform(input));
 
     }
 
