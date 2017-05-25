@@ -60,8 +60,8 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
                 query.criteria("name").equal(psnApplicationProfile.getNpIdentifier())
         );
 
-        final UpdateOperations<MongoPSNApplicationProfile> updateOperations =
-                datastore.createUpdateOperations(MongoPSNApplicationProfile.class);
+        final UpdateOperations<MongoPSNApplicationProfile> updateOperations;
+        updateOperations = datastore.createUpdateOperations(MongoPSNApplicationProfile.class);
 
         updateOperations.set("name", psnApplicationProfile.getNpIdentifier().trim());
         updateOperations.set("client_secret", nullToEmpty(psnApplicationProfile.getClientSecret()).trim());
@@ -118,10 +118,12 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
                                                           final String applicationProfileNameOrId,
                                                           final PSNApplicationProfile psnApplicationProfile) {
 
-        final MongoApplication mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final MongoApplication mongoApplication;
+        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
         validate(psnApplicationProfile);
 
-        final Query<MongoPSNApplicationProfile> query = getDatastore().createQuery(MongoPSNApplicationProfile.class);
+        final Query<MongoPSNApplicationProfile> query;
+        query = getDatastore().createQuery(MongoPSNApplicationProfile.class);
 
         query.filter("active =", true);
         query.filter("parent =", mongoApplication);
@@ -269,5 +271,5 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
     public void setBeanMapper(Mapper beanMapper) {
         this.beanMapper = beanMapper;
     }
-    
+
 }
