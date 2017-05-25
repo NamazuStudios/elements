@@ -1,10 +1,10 @@
 package com.namazustudios.socialengine.model.application;
 
 import com.namazustudios.socialengine.Constants;
+import io.swagger.annotations.ApiModel;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-import java.util.List;
 
 /**
  * Represents an application.  This serves as place to house the
@@ -15,6 +15,7 @@ import java.util.List;
  *
  * Created by patricktwohig on 7/9/15.
  */
+@ApiModel
 public class Application {
 
     private String id;
