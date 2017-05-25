@@ -24,6 +24,8 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.util.Properties;
 
+import static com.google.inject.name.Names.bindProperties;
+
 /**
  * Configures any Mongo-specific system properties.
  *
@@ -66,13 +68,15 @@ public class MongoDaoModule extends AbstractModule {
 
         LOG.info("Using configuration properties " + properties);
 
-        Names.bindProperties(binder(), properties);
+        bindProperties(binder(), properties);
 
         binder().bind(UserDao.class).to(MongoUserDao.class);
         binder().bind(SocialCampaignDao.class).to(MongoSocialCampaignDao.class);
         binder().bind(ShortLinkDao.class).to(MongoShortLinkDao.class);
         binder().bind(ApplicationDao.class).to(MongoApplicationDao.class);
         binder().bind(ApplicationProfileDao.class).to(MongoApplicationProfileDao.class);
+        binder().bind(IosApplicationProfileDao.class).to(MongoIosApplicationProfileDao.class);
+        binder().bind(GooglePlayApplicationProfileDao.class).to(MongoGoogePlayApplicationProfileDao.class);
 
         binder().bind(MongoClient.class).toProvider(MongoClientProvider.class).in(Singleton.class);
         binder().bind(Datastore.class).toProvider(MongoDatastoreProvider.class);

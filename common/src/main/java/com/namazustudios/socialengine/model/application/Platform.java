@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.model.application;
 
+import io.swagger.annotations.ApiModel;
+
 /**
  * Represents the platform with which SocialEngine integrates.  Each platform
  * profile is a specific type which houses the necessary information to communicate
@@ -7,6 +9,7 @@ package com.namazustudios.socialengine.model.application;
  *
  * Created by patricktwohig on 7/10/15.
  */
+@ApiModel
 public enum Platform {
 
     /**
@@ -20,10 +23,13 @@ public enum Platform {
     PSN_VITA(PSNApplicationProfile.class),
 
     /**
-     *
+     * Represents an iOS application profile for the Apple iTunes AppStore
      */
     IOS_APP_STORE(IosApplicationProfile.class),
 
+    /**
+     * Represents an Android application profile for Google Play
+     */
     ANDROID_GOOGLE_PLAY(GooglePlayApplicationProfile.class);
 
     Platform(final Class<?> profileModelType) {
