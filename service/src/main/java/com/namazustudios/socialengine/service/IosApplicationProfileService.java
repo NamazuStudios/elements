@@ -25,8 +25,8 @@ public interface IosApplicationProfileService {
      * @param applicationProfileNameOrId the {@link ApplicationProfile} id
      *
      */
-    IosApplicationProfile getPSNApplicationProfile(final String applicationNameOrId,
-                                                   final String applicationProfileNameOrId);
+    IosApplicationProfile getApplicationProfile(final String applicationNameOrId,
+                                                final String applicationProfileNameOrId);
 
     /**
      * Updates an application with the specific name/identifiers.

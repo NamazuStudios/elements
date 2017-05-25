@@ -15,8 +15,8 @@ public class SuperUserIosApplicationProfileService implements IosApplicationProf
     }
 
     @Override
-    public IosApplicationProfile getPSNApplicationProfile(final String applicationNameOrId,
-                                                          final String applicationProfileNameOrId) {
+    public IosApplicationProfile getApplicationProfile(final String applicationNameOrId,
+                                                       final String applicationProfileNameOrId) {
         return null;
     }
 

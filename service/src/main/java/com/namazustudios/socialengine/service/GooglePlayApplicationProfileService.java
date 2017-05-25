@@ -25,8 +25,8 @@ public interface GooglePlayApplicationProfileService {
      * @param applicationProfileNameOrId the {@link ApplicationProfile} id
      *
      */
-    GooglePlayApplicationProfile getPSNApplicationProfile(final String applicationNameOrId,
-                                                          final String applicationProfileNameOrId);
+    GooglePlayApplicationProfile getApplicationProfile(final String applicationNameOrId,
+                                                       final String applicationProfileNameOrId);
 
     /**
      * Updates an application with the specific name/identifiers.

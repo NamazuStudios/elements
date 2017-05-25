@@ -14,8 +14,8 @@ public class SuperUserGooglePlayApplicationProfileService implements GooglePlayA
     }
 
     @Override
-    public GooglePlayApplicationProfile getPSNApplicationProfile(final String applicationNameOrId,
-                                                                 final String applicationProfileNameOrId) {
+    public GooglePlayApplicationProfile getApplicationProfile(final String applicationNameOrId,
+                                                              final String applicationProfileNameOrId) {
         return null;
     }
 
