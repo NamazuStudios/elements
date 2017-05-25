@@ -60,6 +60,7 @@
         <reflections.version>0.9.10</reflections.version>
         <swagger.version>1.5.13</swagger.version>
         <rocoto.version>6.2</rocoto.version>
+        <dozer.version>5.5.1</dozer.version>
     </properties>
 
     <dependencies>

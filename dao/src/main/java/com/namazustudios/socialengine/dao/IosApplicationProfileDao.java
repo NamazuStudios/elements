@@ -49,6 +49,7 @@ public interface IosApplicationProfileDao {
      * @param applicationProfileNameOrId the {@link IosApplicationProfile} id
      *
      */
-    void softDeleteApplicationProfile(final String applicationNameOrId, final String applicationProfileNameOrId);
+    void softDeleteApplicationProfile(final String applicationNameOrId,
+                                      final String applicationProfileNameOrId);
 
 }

@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service.application;
 
-import com.namazustudios.socialengine.dao.ApplicationProfileDao;
+import com.namazustudios.socialengine.dao.PSNApplicationProfileDao;
 import com.namazustudios.socialengine.model.application.PSNApplicationProfile;
 import com.namazustudios.socialengine.service.PSNApplicationProfileService;
 
@@ -11,38 +11,38 @@ import javax.inject.Inject;
  */
 public class SuperUserPSNApplicationProfileService implements PSNApplicationProfileService {
 
-    private ApplicationProfileDao applicationProfileDao;
+    private PSNApplicationProfileDao psnApplicationProfileDao;
 
     @Override
     public PSNApplicationProfile getPSNApplicationProfile(String applicationNameOrId, String applicationProfileNameOrId) {
-        return getApplicationProfileDao().getPSNApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
+        return getPsnApplicationProfileDao().getPSNApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
     }
 
     @Override
     public PSNApplicationProfile createApplicationProfile(String applicationNameOrId,
                                                           PSNApplicationProfile psnApplicationProfile) {
-        return getApplicationProfileDao().createOrUpdateInactiveApplicationProfile(applicationNameOrId, psnApplicationProfile);
+        return getPsnApplicationProfileDao().createOrUpdateInactiveApplicationProfile(applicationNameOrId, psnApplicationProfile);
     }
 
     @Override
     public PSNApplicationProfile updateApplicationProfile(String applicationNameOrId,
                                                           String applicationProfileNameOrId,
                                                           PSNApplicationProfile psnApplicationProfile) {
-        return getApplicationProfileDao().updateApplicationProfile(applicationNameOrId, applicationProfileNameOrId, psnApplicationProfile);
+        return getPsnApplicationProfileDao().updateApplicationProfile(applicationNameOrId, applicationProfileNameOrId, psnApplicationProfile);
     }
 
     @Override
     public void deleteApplicationProfile(String applicationNameOrId, String applicationProfileNameOrId) {
-        applicationProfileDao.softDeleteApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
+        getPsnApplicationProfileDao().softDeleteApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
     }
 
-    public ApplicationProfileDao getApplicationProfileDao() {
-        return applicationProfileDao;
+    public PSNApplicationProfileDao getPsnApplicationProfileDao() {
+        return psnApplicationProfileDao;
     }
 
     @Inject
-    public void setApplicationProfileDao(ApplicationProfileDao applicationProfileDao) {
-        this.applicationProfileDao = applicationProfileDao;
+    public void setPsnApplicationProfileDao(PSNApplicationProfileDao psnApplicationProfileDao) {
+        this.psnApplicationProfileDao = psnApplicationProfileDao;
     }
 
 }

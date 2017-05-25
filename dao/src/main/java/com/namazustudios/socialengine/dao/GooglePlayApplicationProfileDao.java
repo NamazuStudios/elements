@@ -26,8 +26,9 @@ public interface GooglePlayApplicationProfileDao {
      * @param applicationNameOrId the {@link Application} name or id
      * @param applicationProfileNameOrId the {@link ApplicationProfile} id
      */
-    GooglePlayApplicationProfile getGooglePlayApplicationProfile(final String applicationNameOrId,
-                                                   final String applicationProfileNameOrId);
+    GooglePlayApplicationProfile getGooglePlayApplicationProfile(
+            final String applicationNameOrId,
+            final String applicationProfileNameOrId);
 
     /**
      * Updates an application with the specific name/identifiers.
@@ -47,7 +48,7 @@ public interface GooglePlayApplicationProfileDao {
     /**
      * Delets an {@link GooglePlayApplicationProfile} using the ID as reference.
      *
-     *  @param applicationNameOrId the {@link Application} name or id
+     * @param applicationNameOrId the {@link Application} name or id
      * @param applicationProfileNameOrId the {@link GooglePlayApplicationProfile} id
      *
      */
