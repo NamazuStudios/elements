@@ -17,7 +17,7 @@ import javax.ws.rs.core.MediaType;
 @Api(
     value = "iOS Application Profiles",
     description = "Operations for the management of ApplictionProfiles for iOS Applications.")
-@Path("application/{applicationNameOrId}/profile/google_play")
+@Path("application/{applicationNameOrId}/profile/ios")
 public class IoSApplicationProfileResource {
 
     private IosApplicationProfileService iosApplicationProfileService;

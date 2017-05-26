@@ -4,10 +4,7 @@ import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -37,9 +34,12 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
         try (final InputStream is = new FileInputStream(propertiesFile)) {
             properties.load(is);
             logger.info("Loaded properties from file: {}", propertiesFile.getAbsolutePath());
+        } catch (FileNotFoundException ex) {
+            properties.putAll(System.getProperties());
+            logger.info("Could not find {}.  Using system properties.", propertiesFile.getAbsolutePath());
         } catch (IOException ex) {
             properties.putAll(System.getProperties());
-            logger.info("Could not load properties.  Using system properties.", ex);
+            logger.warn("Could not load properties from {}.  Using system properties.", propertiesFile.getAbsolutePath(), ex);
         }
 
         logger.info("Using configuration properties " + properties);
