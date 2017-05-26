@@ -52,7 +52,7 @@ public abstract class ClasspathScanningLuaResourceModule extends LuaResourceModu
 
     /**
      * Scans the given package as a java FQN name, searching for lua files matching the given
-     * patterrn, and binding them to the resource.
+     * pattern, and binding them to the resource.
      *
      * @param pkg the package, e.g. com.foo.bar
      * @param filePattern the file pattern eg ".*\.lua"

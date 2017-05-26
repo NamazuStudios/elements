@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine;
 
+import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -25,16 +27,7 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
     public DefaultConfigurationSupplier() {
 
-        final Properties defaultProperties = new Properties();
-
-        defaultProperties.setProperty(Constants.SHORT_LINK_BASE, "http://localhost:8888/l");
-        defaultProperties.setProperty(Constants.QUERY_MAX_RESULTS, Integer.valueOf(20).toString());
-        defaultProperties.setProperty(Constants.PASSWORD_DIGEST_ALGORITHM, "SHA-256");
-        defaultProperties.setProperty(Constants.PASSWORD_ENCODING, "UTF-8");
-        defaultProperties.setProperty(Constants.API_PREFIX, "rest");
-        defaultProperties.setProperty(Constants.API_OUTSIDE_URL, "http://localhost:8080/api/rest");
-        defaultProperties.setProperty(Constants.CORS_ALLOWED_ORIGINS, "http://localhost:8888, http://127.0.0.1:8888");
-
+        final Properties defaultProperties = scanForDefaults();
         final Properties properties = new Properties(defaultProperties);
 
         final File propertiesFile = new File(System.getProperties().getProperty(
@@ -56,6 +49,32 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
     public Properties get() {
         return new Properties(this.properties);
+    }
+
+    private Properties scanForDefaults() {
+
+        final Reflections reflections = new Reflections("com.namazustudios");
+        final Set<Class<? extends ModuleDefaults>> classSet = reflections.getSubTypesOf(ModuleDefaults.class);
+
+        final Properties defaultProperties = new Properties();
+
+        for (final Class<? extends ModuleDefaults> cls : classSet) {
+            try {
+
+                logger.info("Loading default properties for {}", cls);
+
+                final ModuleDefaults defaults = cls.newInstance();
+                defaultProperties.putAll(defaults.get());
+
+            } catch (InstantiationException e) {
+                logger.error("Could not build module defaults.", e);
+            } catch (IllegalAccessException e) {
+                logger.error("Could not build module defaults.", e);
+            }
+        }
+
+        return defaultProperties;
+
     }
 
 }

@@ -1,8 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.guice;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
-import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoObjectIndexProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoStandardAnalyzerProvider;
 import com.namazustudios.socialengine.fts.ObjectIndex;
@@ -12,11 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
 
 /**
  * Sets up and configures the {@link ObjectIndex} using the Mongo Lucene drivers
@@ -31,26 +24,6 @@ public class MongoSearchModule extends AbstractModule {
 
     @Override
     protected void configure() {
-
-        final Properties defaultProperties = new Properties(System.getProperties());
-
-        defaultProperties.setProperty(MongoDirectoryProvider.LOCK_COLLECTION, "fts.locks");
-        defaultProperties.setProperty(MongoDirectoryProvider.SEARCH_INDEX_BUCKET, "fts.index");
-
-        final Properties properties = new Properties(defaultProperties);
-        final File propertiesFile = new File(properties.getProperty(
-                Constants.PROPERTIES_FILE,
-                Constants.DEFAULT_PROPERTIES_FILE));
-
-        try (final InputStream is = new FileInputStream(propertiesFile)) {
-            properties.load(is);
-        } catch (IOException ex) {
-            LOG.warn("Could not load properties.  Using defaults.", ex);
-        }
-
-        LOG.info("Using configuration properties " + properties);
-
-        Names.bindProperties(binder(), properties);
 
         binder().bind(Analyzer.class)
                 .toProvider(MongoStandardAnalyzerProvider.class);
