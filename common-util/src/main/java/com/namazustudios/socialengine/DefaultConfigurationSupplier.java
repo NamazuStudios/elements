@@ -17,13 +17,13 @@ import java.util.function.Supplier;
  *
  * Created by patricktwohig on 5/9/17.
  */
-public class DefaultConfiguration implements Supplier<Properties> {
+public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultConfiguration.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultConfigurationSupplier.class);
 
     private final Properties properties;
 
-    public DefaultConfiguration() {
+    public DefaultConfigurationSupplier() {
 
         final Properties defaultProperties = new Properties();
 

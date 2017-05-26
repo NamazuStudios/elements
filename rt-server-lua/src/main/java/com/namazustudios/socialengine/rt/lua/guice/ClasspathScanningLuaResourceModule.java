@@ -1,8 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.common.base.Function;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.namazustudios.socialengine.rt.Path;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
@@ -12,8 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.io.File;
-import java.util.List;
 import java.util.regex.Pattern;
 
 /**

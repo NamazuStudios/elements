@@ -13,7 +13,6 @@ import org.mongodb.morphia.annotations.Property;
 /**
  * Created by patricktwohig on 3/31/15.
  */
-@Entity(value = "user", noClassnameStored = true)
 @SearchableIdentity(@SearchableField(
         name = "id",
         path = "/objectId",
@@ -29,6 +28,7 @@ import org.mongodb.morphia.annotations.Property;
             @SearchableField(name = "level", path = "/level")
         }
 )
+@Entity(value = "user", noClassnameStored = true)
 public class MongoUser {
 
     @Id

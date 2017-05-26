@@ -32,7 +32,7 @@ public class MongoDBUtils {
 
     /**
      * Parses the given ObjectID string using {@link ObjectId}.  If this fails, this
-     * throws the appropraite exception type.
+     * throws the appropriate exception type.
      *
      * @param objectId
      * @return

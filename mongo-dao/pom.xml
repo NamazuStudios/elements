@@ -93,8 +93,8 @@
             <version>${lucene.version}</version>
         </dependency>
         <dependency>
-            <groupId>net.sf.dozer</groupId>
-            <artifactId>dozer</artifactId>
+            <groupId>com.github.dozermapper</groupId>
+            <artifactId>dozer-core</artifactId>
             <version>${dozer.version}</version>
         </dependency>
     </dependencies>

@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.server.guice;
 
 import com.google.inject.AbstractModule;
-import com.namazustudios.socialengine.DefaultConfiguration;
+import com.namazustudios.socialengine.DefaultConfigurationSupplier;
 
 import java.util.Properties;
 
@@ -14,8 +14,9 @@ public class UiGuiceConfigurationModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        final DefaultConfiguration defaultConfiguration = new DefaultConfiguration();
-        final Properties properties = defaultConfiguration.get();
+        final DefaultConfigurationSupplier defaultConfigurationSupplier;
+        defaultConfigurationSupplier = new DefaultConfigurationSupplier();
+        final Properties properties = defaultConfigurationSupplier.get();
         bindProperties(binder(), properties);
     }
 
