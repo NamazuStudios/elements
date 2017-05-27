@@ -9,6 +9,10 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
+    <groupId>com.namazustudios.socialengine</groupId>
+    <artifactId>docker</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
     <modules>
         <module>standalone</module>
     </modules>
@@ -20,7 +24,5 @@
 
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
-
-    <artifactId>docker</artifactId>
 
 </project>
