@@ -19,12 +19,12 @@
     <dependencies>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rt-container</artifactId>
+            <artifactId>rt-server</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rt-container-lua</artifactId>
+            <artifactId>rt-server-lua</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
