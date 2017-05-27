@@ -54,11 +54,6 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>servlet-support</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>guice</artifactId>
             <version>${project.version}</version>
         </dependency>
