@@ -8,22 +8,22 @@ package com.namazustudios.socialengine.model.application;
  */
 public class IosApplicationProfile extends ApplicationProfile {
 
-    private String appId;
+    private String applicationId;
 
     /**
      * Gets the Application ID, as defined in the AppStore (com.mycompany.app)
      * @return the app id
      */
-    public String getAppId() {
-        return appId;
+    public String getApplicationId() {
+        return applicationId;
     }
 
     /**
      * Sets the application ID, as deinfed in the AppStore (com.mycompany.app)
-     * @param appId
+     * @param applicationId
      */
-    public void setAppId(String appId) {
-        this.appId = appId;
+    public void setApplicationId(String applicationId) {
+        this.applicationId = applicationId;
     }
 
 }

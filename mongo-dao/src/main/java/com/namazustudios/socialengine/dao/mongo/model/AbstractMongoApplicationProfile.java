@@ -20,19 +20,22 @@ import org.mongodb.morphia.annotations.*;
 @SearchableDocument(
         fields = {
                 @SearchableField(name = "name", path = "/name"),
-                @SearchableField(name = "applicationId", path = "/parent/objectId"),
                 @SearchableField(name = "applicationName", path = "/parent/name"),
                 @SearchableField(name = "platform", path = "/platform"),
                 @SearchableField(name = "active", path = "/active")
         }
 )
-@Indexes(@Index(value = "platform, parent, name", unique = true))
+@Indexes({
+        @Index(value = "platform, parent, name", unique = true),
+        @Index(value = "platform"),
+        @Index(value = "parent"),
+        @Index(value = "name")
+})
 public abstract class AbstractMongoApplicationProfile {
 
     @Id
     private ObjectId objectId;
 
-    @Indexed
     @Property("name")
     private String name;
 
