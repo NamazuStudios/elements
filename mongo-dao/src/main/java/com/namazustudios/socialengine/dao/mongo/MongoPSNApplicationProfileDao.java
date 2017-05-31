@@ -15,6 +15,7 @@ import com.namazustudios.socialengine.model.application.Platform;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -61,7 +62,7 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
         );
 
         final UpdateOperations<MongoPSNApplicationProfile> updateOperations;
-        updateOperations = datastore.createUpdateOperations(MongoPSNApplicationProfile.class);
+        updateOperations = getDatastore().createUpdateOperations(MongoPSNApplicationProfile.class);
 
         updateOperations.set("name", psnApplicationProfile.getNpIdentifier().trim());
         updateOperations.set("client_secret", nullToEmpty(psnApplicationProfile.getClientSecret()).trim());
@@ -72,7 +73,13 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
         final MongoPSNApplicationProfile mongoPSNApplicationProfile;
 
         try {
-            mongoPSNApplicationProfile = getDatastore().findAndModify(query, updateOperations, false, true);
+
+            final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
+                    .returnNew(true)
+                    .upsert(true);
+
+            mongoPSNApplicationProfile = getDatastore().findAndModify(query, updateOperations, findAndModifyOptions);
+
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
                 throw new DuplicateException(ex);
@@ -81,7 +88,7 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
             }
         }
 
-        objectIndex.index(mongoPSNApplicationProfile);
+        getObjectIndex().index(mongoPSNApplicationProfile);
         return getBeanMapper().map(mongoPSNApplicationProfile, PSNApplicationProfile.class);
 
     }
@@ -90,8 +97,8 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
     public PSNApplicationProfile getPSNApplicationProfile(final String applicationNameOrId,
                                                           final String applicationProfileNameOrId) {
 
-        final MongoApplication mongoApplication = mongoApplicationDao.getActiveMongoApplication(applicationNameOrId);
-        final Query<MongoPSNApplicationProfile> query = datastore.createQuery(MongoPSNApplicationProfile.class);
+        final MongoApplication mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final Query<MongoPSNApplicationProfile> query = getDatastore().createQuery(MongoPSNApplicationProfile.class);
 
         query.filter("active =", true);
         query.filter("parent =", mongoApplication);
@@ -146,7 +153,13 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
         final MongoPSNApplicationProfile mongoPSNApplicationProfile;
 
         try {
-            mongoPSNApplicationProfile = getDatastore().findAndModify(query, updateOperations, false, false);
+
+            final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
+                    .returnNew(true)
+                    .upsert(false);
+
+            mongoPSNApplicationProfile = getDatastore().findAndModify(query, updateOperations, findAndModifyOptions);
+
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
                 throw new DuplicateException(ex);
@@ -159,7 +172,7 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
             throw new NotFoundException("profile with ID not found: " + mongoPSNApplicationProfile);
         }
 
-        objectIndex.index(mongoPSNApplicationProfile);
+        getObjectIndex().index(mongoPSNApplicationProfile);
         return getBeanMapper().map(mongoPSNApplicationProfile, PSNApplicationProfile.class);
 
     }
@@ -185,14 +198,20 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
         }
 
         final UpdateOperations<MongoPSNApplicationProfile> updateOperations =
-                datastore.createUpdateOperations(MongoPSNApplicationProfile.class);
+                getDatastore().createUpdateOperations(MongoPSNApplicationProfile.class);
 
         updateOperations.set("active", false);
 
         final MongoPSNApplicationProfile mongoPSNApplicationProfile;
 
         try {
-            mongoPSNApplicationProfile = datastore.findAndModify(query, updateOperations, false, false);
+
+            final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
+                    .returnNew(true)
+                    .upsert(false);
+
+            mongoPSNApplicationProfile = getDatastore().findAndModify(query, updateOperations, findAndModifyOptions);
+
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
                 throw new DuplicateException(ex);
@@ -205,7 +224,7 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
             throw new NotFoundException("profile with ID not found: " + mongoPSNApplicationProfile);
         }
 
-        objectIndex.index(mongoPSNApplicationProfile);
+        getObjectIndex().index(mongoPSNApplicationProfile);
 
     }
 
@@ -223,7 +242,7 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
                 throw new InvalidDataException("platform not supported: " + psnApplicationProfile.getPlatform());
         }
 
-        validationHelper.validateModel(psnApplicationProfile);
+        getValidationHelper().validateModel(psnApplicationProfile);
 
     }
 
