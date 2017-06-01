@@ -1,18 +1,13 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.mongodb.MongoCommandException;
 import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.IosApplicationProfileDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
 import com.namazustudios.socialengine.dao.mongo.model.MongoIosApplicationProfile;
-import com.namazustudios.socialengine.dao.mongo.model.MongoPSNApplicationProfile;
-import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.application.IosApplicationProfile;
-import com.namazustudios.socialengine.model.application.Platform;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -21,6 +16,8 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
+
+import static com.namazustudios.socialengine.model.application.Platform.IOS_APP_STORE;
 
 /**
  * Created by patricktwohig on 5/25/17.
@@ -37,6 +34,8 @@ public class MongoIosApplicationProfileDao implements IosApplicationProfileDao {
 
     private Mapper beanMapper;
 
+    private MongoDBUtils mongoDBUtils;
+
     @Override
     public IosApplicationProfile createOrUpdateInactiveApplicationProfile(
             final String applicationNameOrId,
@@ -47,44 +46,35 @@ public class MongoIosApplicationProfileDao implements IosApplicationProfileDao {
 
         validate(iosApplicationProfile);
 
-        final Query<MongoPSNApplicationProfile> query;
-        query = getDatastore().createQuery(MongoPSNApplicationProfile.class);
+        final Query<MongoIosApplicationProfile> query;
+        query = getDatastore().createQuery(MongoIosApplicationProfile.class);
 
         query.and(
-                query.criteria("active").equal(false),
-                query.criteria("parent").equal(mongoApplication),
-                query.criteria("platform").equal(Platform.IOS_APP_STORE),
-                query.criteria("name").equal(iosApplicationProfile.getApplicationId())
+            query.criteria("active").equal(false),
+            query.criteria("parent").equal(mongoApplication),
+            query.criteria("platform").equal(IOS_APP_STORE),
+            query.criteria("name").equal(iosApplicationProfile.getApplicationId())
         );
 
-        final UpdateOperations<MongoPSNApplicationProfile> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoPSNApplicationProfile.class);
+        final UpdateOperations<MongoIosApplicationProfile> updateOperations;
+        updateOperations = getDatastore().createUpdateOperations(MongoIosApplicationProfile.class);
 
         updateOperations.set("name", iosApplicationProfile.getApplicationId().trim());
         updateOperations.set("active", true);
         updateOperations.set("platform", iosApplicationProfile.getPlatform());
         updateOperations.set("parent", mongoApplication);
 
-        final MongoPSNApplicationProfile mongoPSNApplicationProfile;
+        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
+            .returnNew(true)
+            .upsert(true);
 
-        try {
+        final MongoIosApplicationProfile mongoIosApplicationProfile;
 
-            final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                .returnNew(true)
-                .upsert(true);
+        mongoIosApplicationProfile = getMongoDBUtils()
+            .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
-            mongoPSNApplicationProfile = getDatastore().findAndModify(query, updateOperations, findAndModifyOptions);
-
-        } catch (MongoCommandException ex) {
-            if (ex.getErrorCode() == 11000) {
-                throw new DuplicateException(ex);
-            } else {
-                throw new InternalException(ex);
-            }
-        }
-
-        objectIndex.index(mongoPSNApplicationProfile);
-        return getBeanMapper().map(mongoPSNApplicationProfile, IosApplicationProfile.class);
+        getObjectIndex().index(mongoIosApplicationProfile);
+        return getBeanMapper().map(mongoIosApplicationProfile, IosApplicationProfile.class);
 
     }
 
@@ -93,12 +83,17 @@ public class MongoIosApplicationProfileDao implements IosApplicationProfileDao {
             final String applicationNameOrId,
             final String applicationProfileNameOrId) {
 
-        final MongoApplication mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
-        final Query<MongoIosApplicationProfile> query = getDatastore().createQuery(MongoIosApplicationProfile.class);
+        final MongoApplication mongoApplication;
+        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        query.filter("active =", true);
-        query.filter("parent =", mongoApplication);
-        query.filter("platform = ", Platform.IOS_APP_STORE);
+        final Query<MongoIosApplicationProfile> query;
+        query = getDatastore().createQuery(MongoIosApplicationProfile.class);
+
+        query.and(
+            query.criteria("active").equal(true),
+            query.criteria("parent").equal(mongoApplication),
+            query.criteria("platform").equal(IOS_APP_STORE)
+        );
 
         try {
             query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
@@ -129,9 +124,11 @@ public class MongoIosApplicationProfileDao implements IosApplicationProfileDao {
         final Query<MongoIosApplicationProfile> query;
         query = getDatastore().createQuery(MongoIosApplicationProfile.class);
 
-        query.filter("active =", true);
-        query.filter("parent =", mongoApplication);
-        query.filter("platform =", Platform.IOS_APP_STORE);
+        query.and(
+            query.criteria("active").equal(true),
+            query.criteria("parent").equal(mongoApplication),
+            query.criteria("platform").equal(IOS_APP_STORE)
+        );
 
         try {
             query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
@@ -146,23 +143,13 @@ public class MongoIosApplicationProfileDao implements IosApplicationProfileDao {
         updateOperations.set("platform", iosApplicationProfile.getPlatform());
         updateOperations.set("parent", mongoApplication);
 
+        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
+            .returnNew(true)
+            .upsert(false);
+
         final MongoIosApplicationProfile mongoIosApplicationProfile;
-
-        try {
-
-            final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                .returnNew(true)
-                .upsert(true);
-
-            mongoIosApplicationProfile = getDatastore().findAndModify(query, updateOperations, findAndModifyOptions);
-
-        } catch (MongoCommandException ex) {
-            if (ex.getErrorCode() == 11000) {
-                throw new DuplicateException(ex);
-            } else {
-                throw new InternalException(ex);
-            }
-        }
+        mongoIosApplicationProfile = getMongoDBUtils()
+            .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
         if (mongoIosApplicationProfile == null) {
             throw new NotFoundException("profile with ID not found: " + applicationProfileNameOrId);
@@ -184,9 +171,11 @@ public class MongoIosApplicationProfileDao implements IosApplicationProfileDao {
         final Query<MongoIosApplicationProfile> query;
         query = getDatastore().createQuery(MongoIosApplicationProfile.class);
 
-        query.filter("active =", true);
-        query.filter("parent =", mongoApplication);
-        query.filter("platform =", Platform.ANDROID_GOOGLE_PLAY);
+        query.and(
+            query.criteria("active").equal(true),
+            query.criteria("parent").equal(mongoApplication),
+            query.criteria("platform").equal(IOS_APP_STORE)
+        );
 
         try {
             query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
@@ -199,23 +188,14 @@ public class MongoIosApplicationProfileDao implements IosApplicationProfileDao {
 
         updateOperations.set("active", false);
 
+        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
+                .returnNew(true)
+                .upsert(false);
+
         final MongoIosApplicationProfile mongoIosApplicationProfile;
 
-        try {
-
-            final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                    .returnNew(true)
-                    .upsert(false);
-
-            mongoIosApplicationProfile = getDatastore().findAndModify(query, updateOperations, findAndModifyOptions);
-
-        } catch (MongoCommandException ex) {
-            if (ex.getErrorCode() == 11000) {
-                throw new DuplicateException(ex);
-            } else {
-                throw new InternalException(ex);
-            }
-        }
+        mongoIosApplicationProfile = getMongoDBUtils()
+            .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
         if (mongoIosApplicationProfile == null) {
             throw new NotFoundException("profile with ID not found: " + mongoIosApplicationProfile.getObjectId());
@@ -285,6 +265,15 @@ public class MongoIosApplicationProfileDao implements IosApplicationProfileDao {
     @Inject
     public void setBeanMapper(Mapper beanMapper) {
         this.beanMapper = beanMapper;
+    }
+
+    public MongoDBUtils getMongoDBUtils() {
+        return mongoDBUtils;
+    }
+
+    @Inject
+    public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
+        this.mongoDBUtils = mongoDBUtils;
     }
 
 }

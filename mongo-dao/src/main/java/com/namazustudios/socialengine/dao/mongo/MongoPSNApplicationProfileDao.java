@@ -1,17 +1,13 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.mongodb.MongoCommandException;
 import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.PSNApplicationProfileDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
 import com.namazustudios.socialengine.dao.mongo.model.MongoPSNApplicationProfile;
-import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.application.PSNApplicationProfile;
-import com.namazustudios.socialengine.model.application.Platform;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -22,6 +18,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 import javax.inject.Inject;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.namazustudios.socialengine.model.application.Platform.PSN_PS4;
+import static com.namazustudios.socialengine.model.application.Platform.PSN_VITA;
 import static org.testng.collections.Lists.newArrayList;
 
 /**
@@ -39,6 +37,8 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
 
     private Mapper beanMapper;
 
+    private MongoDBUtils mongoDBUtils;
+
     @Override
     public PSNApplicationProfile createOrUpdateInactiveApplicationProfile(final String applicationNameOrId,
                                                                           final PSNApplicationProfile psnApplicationProfile) {
@@ -52,13 +52,10 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
         query = getDatastore().createQuery(MongoPSNApplicationProfile.class);
 
         query.and(
-                query.criteria("active").equal(false),
-                query.criteria("parent").equal(mongoApplication),
-                query.criteria("platform").in(newArrayList(
-                        Platform.PSN_PS4,
-                        Platform.PSN_VITA
-                )),
-                query.criteria("name").equal(psnApplicationProfile.getNpIdentifier())
+            query.criteria("active").equal(false),
+            query.criteria("parent").equal(mongoApplication),
+            query.criteria("platform").in(newArrayList(PSN_PS4, PSN_VITA)),
+            query.criteria("name").equal(psnApplicationProfile.getNpIdentifier())
         );
 
         final UpdateOperations<MongoPSNApplicationProfile> updateOperations;
@@ -66,27 +63,18 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
 
         updateOperations.set("name", psnApplicationProfile.getNpIdentifier().trim());
         updateOperations.set("client_secret", nullToEmpty(psnApplicationProfile.getClientSecret()).trim());
-        updateOperations.set("active", true);
+        updateOperations.set("active", false);
         updateOperations.set("platform", psnApplicationProfile.getPlatform());
         updateOperations.set("parent", mongoApplication);
 
+        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
+            .returnNew(true)
+            .upsert(true);
+
         final MongoPSNApplicationProfile mongoPSNApplicationProfile;
 
-        try {
-
-            final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                    .returnNew(true)
-                    .upsert(true);
-
-            mongoPSNApplicationProfile = getDatastore().findAndModify(query, updateOperations, findAndModifyOptions);
-
-        } catch (MongoCommandException ex) {
-            if (ex.getErrorCode() == 11000) {
-                throw new DuplicateException(ex);
-            } else {
-                throw new InternalException(ex);
-            }
-        }
+        mongoPSNApplicationProfile = getMongoDBUtils()
+            .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
         getObjectIndex().index(mongoPSNApplicationProfile);
         return getBeanMapper().map(mongoPSNApplicationProfile, PSNApplicationProfile.class);
@@ -100,9 +88,11 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
         final MongoApplication mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
         final Query<MongoPSNApplicationProfile> query = getDatastore().createQuery(MongoPSNApplicationProfile.class);
 
-        query.filter("active =", true);
-        query.filter("parent =", mongoApplication);
-        query.filter("platform in", new Object[]{Platform.PSN_VITA, Platform.PSN_PS4});
+        query.and(
+            query.criteria("active").equal(true),
+            query.criteria("parent").equal(mongoApplication),
+            query.criteria("platform").in(newArrayList(PSN_VITA, PSN_PS4))
+        );
 
         try {
             query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
@@ -132,9 +122,11 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
         final Query<MongoPSNApplicationProfile> query;
         query = getDatastore().createQuery(MongoPSNApplicationProfile.class);
 
-        query.filter("active =", true);
-        query.filter("parent =", mongoApplication);
-        query.filter("platform in", new Object[]{Platform.PSN_VITA, Platform.PSN_PS4});
+        query.and(
+            query.criteria("active").equal(true),
+            query.criteria("parent").equal(mongoApplication),
+            query.criteria("platform").in(newArrayList(PSN_VITA, PSN_PS4))
+        );
 
         try {
             query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
@@ -152,21 +144,12 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
 
         final MongoPSNApplicationProfile mongoPSNApplicationProfile;
 
-        try {
+        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
+                .returnNew(true)
+                .upsert(false);
 
-            final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                    .returnNew(true)
-                    .upsert(false);
-
-            mongoPSNApplicationProfile = getDatastore().findAndModify(query, updateOperations, findAndModifyOptions);
-
-        } catch (MongoCommandException ex) {
-            if (ex.getErrorCode() == 11000) {
-                throw new DuplicateException(ex);
-            } else {
-                throw new InternalException(ex);
-            }
-        }
+        mongoPSNApplicationProfile = getMongoDBUtils()
+            .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
         if (mongoPSNApplicationProfile == null) {
             throw new NotFoundException("profile with ID not found: " + mongoPSNApplicationProfile);
@@ -187,9 +170,11 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
         final Query<MongoPSNApplicationProfile> query;
         query = getDatastore().createQuery(MongoPSNApplicationProfile.class);
 
-        query.filter("active =", true);
-        query.filter("parent =", mongoApplication);
-        query.filter("platform in", new Object[]{Platform.PSN_VITA, Platform.PSN_PS4});
+        query.and(
+            query.criteria("active").equal(true),
+            query.criteria("parent").equal(mongoApplication),
+            query.criteria("platform").in(newArrayList(PSN_VITA, PSN_PS4))
+        );
 
         try {
             query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
@@ -202,23 +187,14 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
 
         updateOperations.set("active", false);
 
+        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
+                .returnNew(true)
+                .upsert(false);
+
         final MongoPSNApplicationProfile mongoPSNApplicationProfile;
 
-        try {
-
-            final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                    .returnNew(true)
-                    .upsert(false);
-
-            mongoPSNApplicationProfile = getDatastore().findAndModify(query, updateOperations, findAndModifyOptions);
-
-        } catch (MongoCommandException ex) {
-            if (ex.getErrorCode() == 11000) {
-                throw new DuplicateException(ex);
-            } else {
-                throw new InternalException(ex);
-            }
-        }
+        mongoPSNApplicationProfile = getMongoDBUtils()
+            .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
         if (mongoPSNApplicationProfile == null) {
             throw new NotFoundException("profile with ID not found: " + mongoPSNApplicationProfile);
@@ -289,6 +265,15 @@ public class MongoPSNApplicationProfileDao implements PSNApplicationProfileDao {
     @Inject
     public void setBeanMapper(Mapper beanMapper) {
         this.beanMapper = beanMapper;
+    }
+
+    public MongoDBUtils getMongoDBUtils() {
+        return mongoDBUtils;
+    }
+
+    @Inject
+    public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
+        this.mongoDBUtils = mongoDBUtils;
     }
 
 }

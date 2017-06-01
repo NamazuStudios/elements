@@ -84,12 +84,7 @@ public class MongoApplicationDao implements ApplicationDao {
         final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
         query.filter("active = ", true);
 
-        return mongoDBUtils.paginationFromQuery(query, offset, count, new Function<MongoApplication, Application>() {
-            @Override
-            public Application apply(MongoApplication input) {
-                return transform(input);
-            }
-        });
+        return mongoDBUtils.paginationFromQuery(query, offset, count, input -> transform(input));
 
     }
 
