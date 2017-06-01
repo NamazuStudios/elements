@@ -29,7 +29,7 @@ import javax.inject.Provider;
 public class ControlPanelPresenter extends Presenter<ControlPanelPresenter.MyView, ControlPanelPresenter.MyProxy> {
 
     @ContentSlot
-    public static final GwtEvent.Type<RevealContentHandler<?>> SET_MAIN_CONTENT_TYPE = new GwtEvent.Type<RevealContentHandler<?>>();
+    public static final GwtEvent.Type<RevealContentHandler<?>> SET_MAIN_CONTENT_TYPE = new GwtEvent.Type<>();
 
     @ProxyStandard
     @NameToken(NameTokens.MAIN)

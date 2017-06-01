@@ -34,8 +34,6 @@ public class MongoDBUtils {
 
     private ObjectIndex objectIndex;
 
-    @Inject
-    @Named(Constants.QUERY_MAX_RESULTS)
     private int queryMaxResults;
 
     /**
@@ -198,7 +196,7 @@ public class MongoDBUtils {
     }
 
     @Inject
-    public void setQueryMaxResults(int queryMaxResults) {
+    public void setQueryMaxResults(    @Named(Constants.QUERY_MAX_RESULTS) int queryMaxResults) {
         this.queryMaxResults = queryMaxResults;
     }
 

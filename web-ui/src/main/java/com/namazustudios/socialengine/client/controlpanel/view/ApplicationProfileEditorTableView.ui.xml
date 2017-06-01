@@ -22,7 +22,7 @@
     <b:Panel addStyleNames="{style.root-panel}">
 
         <b:PanelHeader>
-            <b:Heading size="H3" text="Users"/>
+            <b:Heading size="H3" text="Application Profiles"/>
         </b:PanelHeader>
 
         <b:PanelBody>
@@ -32,14 +32,14 @@
 
             <b:InputGroup addStyleNames="{style.searchbox}">
                 <b:InputGroupAddon icon="USER">User</b:InputGroupAddon>
-                <b:TextBox ui:field="searchLinksSearchTextBox" placeholder="Search Short Links" autoComplete="false"/>
+                <b:TextBox ui:field="applicationProfileSearchTextBox" placeholder="Search Application Profiles" autoComplete="false"/>
             </b:InputGroup>
 
-            <b.gwt:CellTable ui:field="shortLinkEditorCellTable" bordered="true"
-                             condensed="true"                 striped="true"
-                             hover="true"                     addStyleNames="{style.table}"/>
+            <b.gwt:CellTable ui:field="applicationProfileEditorCellTable" bordered="true"
+                                condensed="true"                          striped="true"
+                                hover="true"                              addStyleNames="{style.table}"/>
 
-            <b:Pagination ui:field="shortLinkEditorCellTablePagination"/>
+            <b:Pagination ui:field="applicationProfileEditorCellTablePagination"/>
 
         </b:PanelBody>
 
