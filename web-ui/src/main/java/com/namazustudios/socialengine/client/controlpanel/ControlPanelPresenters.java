@@ -59,6 +59,12 @@ public class ControlPanelPresenters extends AbstractPresenterModule {
                 ApplicationProfileEditorTableView.class,
                 ApplicationProfileEditorTablePresenter.MyProxy.class);
 
+        bindPresenter(
+                ApplicationEditorPresenter.class,
+                ApplicationEditorPresenter.MyView.class,
+                ApplicationEditorView.class,
+                ApplicationEditorPresenter.MyProxy.class);
+
     }
 
 }
