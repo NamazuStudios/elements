@@ -2,17 +2,15 @@ package com.namazustudios.socialengine.client.controlpanel.view;
 
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.Presenter;
 import com.gwtplatform.mvp.client.View;
-import com.gwtplatform.mvp.client.annotations.ContentSlot;
 import com.gwtplatform.mvp.client.annotations.NameToken;
 import com.gwtplatform.mvp.client.annotations.ProxyStandard;
+import com.gwtplatform.mvp.client.presenter.slots.NestedSlot;
 import com.gwtplatform.mvp.client.proxy.ProxyPlace;
-import com.gwtplatform.mvp.client.proxy.RevealContentHandler;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.socialengine.client.controlpanel.NameTokens;
 import com.namazustudios.socialengine.client.rest.service.LoginService;
@@ -28,8 +26,7 @@ import javax.inject.Provider;
  */
 public class ControlPanelPresenter extends Presenter<ControlPanelPresenter.MyView, ControlPanelPresenter.MyProxy> {
 
-    @ContentSlot
-    public static final GwtEvent.Type<RevealContentHandler<?>> SET_MAIN_CONTENT_TYPE = new GwtEvent.Type<>();
+    public static final NestedSlot SET_MAIN_CONTENT_TYPE = new NestedSlot();
 
     @ProxyStandard
     @NameToken(NameTokens.MAIN)
