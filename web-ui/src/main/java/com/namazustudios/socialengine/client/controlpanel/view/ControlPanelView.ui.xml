@@ -44,6 +44,7 @@
                             <b:ListDropDown>
                                 <b:AnchorButton dataToggle="DROPDOWN">Applications</b:AnchorButton>
                                 <b:DropDownMenu>
+                                    <b:AnchorListItem targetHistoryToken="{nameTokens.getApplicationEditTable}">View Applications</b:AnchorListItem>
                                     <b:AnchorListItem targetHistoryToken="{nameTokens.getApplicationProfileEditTable}">View Application Profiles</b:AnchorListItem>
                                 </b:DropDownMenu>
                             </b:ListDropDown>

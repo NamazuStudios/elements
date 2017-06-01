@@ -48,6 +48,12 @@ public class ControlPanelPresenters extends AbstractPresenterModule {
                 ShortLinkEditorTablePresenter.MyProxy.class);
 
         bindPresenter(
+                ApplicationEditorTablePresenter.class,
+                ApplicationEditorTablePresenter.MyView.class,
+                ApplicationEditorTableView.class,
+                ApplicationEditorTablePresenter.MyProxy.class);
+
+        bindPresenter(
                 ApplicationProfileEditorTablePresenter.class,
                 ApplicationProfileEditorTablePresenter.MyView.class,
                 ApplicationProfileEditorTableView.class,

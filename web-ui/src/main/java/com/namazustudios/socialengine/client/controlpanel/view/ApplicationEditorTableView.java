@@ -16,18 +16,18 @@ import javax.inject.Inject;
 /**
  * Created by patricktwohig on 5/31/17.
  */
-public class ApplicationProfileEditorTableView extends ViewImpl implements ApplicationProfileEditorTablePresenter.MyView {
+public class ApplicationEditorTableView extends ViewImpl implements ApplicationEditorTablePresenter.MyView {
 
-    interface ApplicationProfileEditorTableViewBinder extends UiBinder<Panel, ApplicationProfileEditorTableView> {}
-
-    @UiField
-    CellTable<ApplicationProfile> applicationProfileEditorCellTable;
+    interface ApplicationEditorTableViewBinder extends UiBinder<Panel, ApplicationEditorTableView> {}
 
     @UiField
-    Pagination applicationProfileEditorCellTablePagination;
+    CellTable<ApplicationProfile> applicationEditorCellTable;
 
     @UiField
-    TextBox applicationProfileSearchTextBox;
+    Pagination applicationEditorTablePagination;
+
+    @UiField
+    TextBox applicationsSearchTextBox;
 
     @UiField
     ErrorModal errorModal;
@@ -36,8 +36,8 @@ public class ApplicationProfileEditorTableView extends ViewImpl implements Appli
     ConfirmationModal confirmationModal;
 
     @Inject
-    public ApplicationProfileEditorTableView(final ApplicationProfileEditorTableViewBinder applicationProfileEditorTableViewBinder) {
-        initWidget(applicationProfileEditorTableViewBinder.createAndBindUi(this));
+    public ApplicationEditorTableView(final ApplicationEditorTableViewBinder applicationEditorTableViewBinder) {
+        initWidget(applicationEditorTableViewBinder.createAndBindUi(this));
     }
 
 }
