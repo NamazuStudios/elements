@@ -7,6 +7,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.SimplePager;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
+import com.namazustudios.socialengine.client.rest.client.ApplicationClient;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationProfile;
 import org.gwtbootstrap3.client.ui.*;
@@ -38,7 +39,8 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
     TextBox applicationNameTextBox;
 
     @UiField
-    Label applicationNameWarningLabel;
+    @Ignore
+    Label nameWarningLabel;
 
     @UiField
     FormGroup applicationDescriptionFormGroup;
@@ -48,7 +50,8 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
     TextBox applicationDescriptionTextBox;
 
     @UiField
-    Label applicationDescriptionWarningLabel;
+    @Ignore
+    Label descriptionWarningLabel;
 
     @UiField
     CellTable<ApplicationProfile> applicationProfileCellTable;
@@ -58,6 +61,9 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
     @Inject
     private Driver driver;
+
+    @Inject
+    private ApplicationClient applicationClient;
 
     private Consumer<Application> save = a -> { lockOut(); createNewUser(); };
 
@@ -90,8 +96,8 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
         applicationNameFormGroup.setValidationState(NONE);
         applicationDescriptionFormGroup.setValidationState(NONE);
 
-        applicationNameWarningLabel.setVisible(false);
-        applicationDescriptionWarningLabel.setVisible(false);
+        nameWarningLabel.setVisible(false);
+        descriptionWarningLabel.setVisible(false);
 
         // TODO: Figure out how to clear the table
 

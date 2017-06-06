@@ -13,7 +13,6 @@ public class NameTokens {
     public static final String SHORT_LINK_EDIT_TABLE = "short_link_edit_table";
     public static final String APPLICATION_EDIT = "application_edit";
     public static final String APPLICATION_EDIT_TABLE = "application_edit_table";
-    public static final String APPLICATION_PROFILE_EDIT_TABLE = "application_profile_edit_table";
 
     public static String getLogin() { return LOGIN; }
     public static String getUserEdit() {return USER_EDIT;}
@@ -23,6 +22,5 @@ public class NameTokens {
     public static String getShortLinkEditTable() {return SHORT_LINK_EDIT_TABLE;}
     public static String getApplicationEdit() { return APPLICATION_EDIT; }
     public static String getApplicationEditTable() {return APPLICATION_EDIT_TABLE; }
-    public static String getApplicationProfileEditTable() { return APPLICATION_PROFILE_EDIT_TABLE; }
 
 }
