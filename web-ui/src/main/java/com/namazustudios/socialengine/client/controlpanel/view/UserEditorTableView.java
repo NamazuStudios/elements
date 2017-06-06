@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.client.controlpanel.view;
 import com.google.common.collect.ImmutableList;
 import com.google.gwt.cell.client.ButtonCell;
 import com.google.gwt.cell.client.EditTextCell;
-import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.cell.client.SelectionCell;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -11,7 +10,6 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.SimplePager;
-import com.google.gwt.view.client.RangeChangeEvent;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
@@ -106,18 +104,10 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
             }
         };
 
-        emailColumn.setFieldUpdater(new FieldUpdater<User, String>() {
-            @Override
-            public void update(int index, final User object, String value) {
-                final String old = object.getEmail();
-                object.setEmail(value);
-                save(object, index, new Runnable() {
-                    @Override
-                    public void run() {
-                        object.setEmail(old);
-                    }
-                });
-            }
+        emailColumn.setFieldUpdater((index, object, value) -> {
+            final String old = object.getEmail();
+            object.setEmail(value);
+            save(object, index, () -> object.setEmail(old));
         });
 
         final Column<User, String> levelColumn;
@@ -181,19 +171,8 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
         emptyLabel.setText("No users found matching query.");
         userEditorCellTable.setEmptyTableWidget(emptyLabel);
 
-        userEditorCellTable.addRangeChangeHandler(new RangeChangeEvent.Handler() {
-            @Override
-            public void onRangeChange(RangeChangeEvent event) {
-                userEditorCellTablePagination.rebuild(simplePager);
-            }
-        });
-
-        asyncUserDataProvider.addRefreshListener(new UserSearchableDataProvider.AsyncRefreshListener() {
-            @Override
-            public void onRefresh() {
-                userEditorCellTablePagination.rebuild(simplePager);
-            }
-        });
+        userEditorCellTable.addRangeChangeHandler(event -> userEditorCellTablePagination.rebuild(simplePager));
+        asyncUserDataProvider.addRefreshListener(() -> userEditorCellTablePagination.rebuild(simplePager));
 
         simplePager.setDisplay(userEditorCellTable);
         userEditorCellTablePagination.clear();

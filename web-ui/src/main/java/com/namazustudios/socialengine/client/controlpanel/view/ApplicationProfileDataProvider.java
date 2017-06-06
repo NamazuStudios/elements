@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.model.application.ApplicationProfile;
 /**
  * Created by patricktwohig on 6/5/17.
  */
-public class ApplicationProfileSearchableDataProvider extends AbstractSearchableDataProvider<ApplicationProfile> {
+public class ApplicationProfileDataProvider extends AbstractSearchableDataProvider<ApplicationProfile> {
 
     private Application parentApplication;
 

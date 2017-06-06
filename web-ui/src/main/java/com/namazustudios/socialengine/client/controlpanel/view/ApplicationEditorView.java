@@ -1,12 +1,14 @@
 package com.namazustudios.socialengine.client.controlpanel.view;
 
+import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.editor.client.Editor;
 import com.google.gwt.editor.client.SimpleBeanEditorDriver;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.cellview.client.SimplePager;
+import com.google.gwt.user.cellview.client.*;
+import com.google.gwt.user.cellview.client.Column;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
@@ -19,6 +21,7 @@ import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.gwtbootstrap3.client.ui.*;
 import org.gwtbootstrap3.client.ui.constants.ValidationState;
+import org.gwtbootstrap3.client.ui.gwt.ButtonCell;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
 import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
@@ -87,6 +90,51 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
     @Inject
     public ApplicationEditorView(final ApplicationEditorViewBinder applicationEditorViewBinder) {
         initWidget(applicationEditorViewBinder.createAndBindUi(this));
+
+        final Column<ApplicationProfile, String> profileIdColumn = new Column<ApplicationProfile, String>(new TextCell()) {
+            @Override
+            public String getValue(ApplicationProfile object) {
+                return object.getId();
+            }
+        };
+
+
+        final Column<ApplicationProfile, String> profilePlatformColumn = new Column<ApplicationProfile, String>(new TextCell()) {
+            @Override
+            public String getValue(ApplicationProfile object) {
+                return object.getPlatform().toString();
+            }
+        };
+
+        profilePlatformColumn.setFieldUpdater(((index, object, value) -> {
+            // TODO Implemnt delete and refresh table.
+            Notify.notify("Todo!");
+        }));
+
+        final Column<ApplicationProfile, String> editColumn = new Column<ApplicationProfile, String>(new ButtonCell()) {
+            @Override
+            public String getValue(ApplicationProfile object) {
+                return "Edit";
+            }
+        };
+
+        editColumn.setFieldUpdater((index, object, value) -> {
+            // TODO Implemnt delete and refresh table.
+            Notify.notify("Todo!");
+        });
+
+        final Column<ApplicationProfile, String> deleteColumn = new Column<ApplicationProfile, String>(new ButtonCell()) {
+            @Override
+            public String getValue(ApplicationProfile object) {
+                return "Delete";
+            }
+        };
+
+        applicationProfileCellTable.addColumn(profileIdColumn, "Proile ID");
+        applicationProfileCellTable.addColumn(profilePlatformColumn, "Platform");
+        applicationProfileCellTable.addColumn(editColumn);
+        applicationProfileCellTable.addColumn(deleteColumn);
+
     }
 
     public void lockOut() {
