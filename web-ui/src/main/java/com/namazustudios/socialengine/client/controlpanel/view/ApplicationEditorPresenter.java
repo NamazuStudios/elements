@@ -1,15 +1,23 @@
 package com.namazustudios.socialengine.client.controlpanel.view;
 
+import com.google.common.base.Strings;
 import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.Presenter;
 import com.gwtplatform.mvp.client.View;
 import com.gwtplatform.mvp.client.annotations.NameToken;
 import com.gwtplatform.mvp.client.annotations.ProxyStandard;
 import com.gwtplatform.mvp.client.proxy.ProxyPlace;
+import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.socialengine.client.controlpanel.NameTokens;
+import com.namazustudios.socialengine.client.rest.client.ApplicationClient;
 import com.namazustudios.socialengine.model.application.Application;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
+import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
 import javax.inject.Inject;
+
+import static com.namazustudios.socialengine.client.controlpanel.view.ApplicationEditorPresenter.Param.app;
 
 /**
  * Created by patricktwohig on 6/1/17.
@@ -43,6 +51,9 @@ public class ApplicationEditorPresenter extends Presenter<ApplicationEditorPrese
     public interface MyProxy extends ProxyPlace<ApplicationEditorPresenter> {}
 
     @Inject
+    private ApplicationClient applicationClient;
+
+    @Inject
     public ApplicationEditorPresenter(
             final EventBus eventBus,
             final MyView view,
@@ -50,4 +61,61 @@ public class ApplicationEditorPresenter extends Presenter<ApplicationEditorPrese
         super(eventBus, view, proxy, ControlPanelPresenter.SET_MAIN_CONTENT_TYPE);
     }
 
+
+    @Override
+    protected void onReset() {
+        super.onReset();
+        getView().reset();
+    }
+
+    @Override
+    protected void onReveal() {
+        super.onReveal();
+        getView().createApplication();
+    }
+
+    @Override
+    public void prepareFromRequest(PlaceRequest request) {
+        super.prepareFromRequest(request);
+
+        final String userName = request.getParameter(app.name().toLowerCase(), "").trim();
+
+        if (Strings.isNullOrEmpty(userName)) {
+            getView().createApplication();
+            getProxy().manualReveal(this);
+        } else {
+            loadApplicationAndShow(userName);
+        }
+
+    }
+
+    private void loadApplicationAndShow(final String applicationNameOrId) {
+        applicationClient.getApplication(applicationNameOrId, new MethodCallback<Application>() {
+
+            @Override
+            public void onFailure(Method method, Throwable exception) {
+                getProxy().manualReveal(ApplicationEditorPresenter.this);
+                getView().createApplication();
+                Notify.notify("Could not load application " + method.getData());
+
+            }
+
+            @Override
+            public void onSuccess(Method method, Application response) {
+                getProxy().manualReveal(ApplicationEditorPresenter.this);
+                getView().editApplication(response);
+            }
+
+        });
+    }
+
+    public enum Param {
+
+        /**
+         * Parameter to indicate the app.  Passing this and specifying application ID or name will
+         * allow you t
+         */
+        app;
+
+    }
 }
