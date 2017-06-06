@@ -4,8 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.gwt.cell.client.ButtonCell;
 import com.google.gwt.cell.client.EditTextCell;
 import com.google.gwt.cell.client.SelectionCell;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.Column;
@@ -183,14 +181,9 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
     }
 
     private void setupSearch() {
-        searchUsersTextBox.addChangeHandler(new ChangeHandler() {
-
-            @Override
-            public void onChange(ChangeEvent event) {
-                asyncUserDataProvider.setSearchFilter(searchUsersTextBox.getText());
-                userEditorCellTable.setVisibleRangeAndClearData(userEditorCellTable.getVisibleRange(), true);
-            }
-
+        searchUsersTextBox.addChangeHandler(event -> {
+            asyncUserDataProvider.setSearchFilter(searchUsersTextBox.getText());
+            userEditorCellTable.setVisibleRangeAndClearData(userEditorCellTable.getVisibleRange(), true);
         });
     }
 

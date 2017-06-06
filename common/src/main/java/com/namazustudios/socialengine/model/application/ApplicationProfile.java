@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.model.application;
 
-import com.namazustudios.socialengine.Constants;
-
 import javax.validation.constraints.NotNull;
 
 /**
@@ -10,7 +8,7 @@ import javax.validation.constraints.NotNull;
  *
  * Created by patricktwohig on 7/10/15.
  */
-public abstract class ApplicationProfile {
+public class ApplicationProfile {
 
     private String id;
 

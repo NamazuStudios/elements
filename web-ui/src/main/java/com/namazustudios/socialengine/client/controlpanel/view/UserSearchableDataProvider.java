@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.client.controlpanel.view;
 
-import com.google.common.base.Strings;
 import com.google.gwt.view.client.HasData;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.Range;
@@ -11,8 +10,6 @@ import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by patricktwohig on 5/11/15.
@@ -47,26 +44,11 @@ public class UserSearchableDataProvider extends AbstractSearchableDataProvider<U
                 @Override
                 public void onSuccess(Method method, Pagination<User> userPagination) {
 
-//                    final List<User> userList = new ArrayList<>();
-//
-//                    for (int i = 0; i < 100; ++i) {
-//                        final User user = new User();
-//                        user.setName("user" + i);
-//                        user.setEmail("user" + i + "@example.com");
-//                        user.setLevel(User.Level.UNPRIVILEGED);
-//                        user.setActive(true);
-//                        userList.add(user);
-//                    }
-//
-//                    updateRowData(range.getStart(), userList);
-//                    updateRowCount(userList.size(), true);
-
                     if (!userPagination.getObjects().isEmpty()) {
                         updateRowData(range.getStart(), userPagination.getObjects());
                     }
 
                     updateRowCount(userPagination.getTotal(), !userPagination.isApproximation());
-
                     notifyRefreshListeners();
 
                 }

@@ -15,7 +15,7 @@ import javax.ws.rs.QueryParam;
  *
  * Created by patricktwohig on 6/1/17.
  */
-@Path("application/{applicationNameOrId}/profile")
+@Path("application")
 public interface ApplicationProfileClient extends RestService {
 
     /**
@@ -26,6 +26,7 @@ public interface ApplicationProfileClient extends RestService {
      * @param methodCallback
      */
     @GET
+    @Path("{applicationNameOrId}/profile")
     void getAllProfiles(
             @PathParam("applicationNameOrId") String applicationNameOrId,
             @QueryParam("offset") int offset,
@@ -41,6 +42,7 @@ public interface ApplicationProfileClient extends RestService {
      * @param methodCallback
      */
     @GET
+    @Path("{applicationNameOrId}/profile")
     void getAllProfiles(
             @PathParam("applicationNameOrId") String applicationNameOrId,
             @QueryParam("offset") int offset,

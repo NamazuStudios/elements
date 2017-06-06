@@ -17,9 +17,11 @@ import com.namazustudios.socialengine.client.modal.ErrorModal;
 import com.namazustudios.socialengine.client.rest.client.ApplicationClient;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationProfile;
+import com.namazustudios.socialengine.model.application.Platform;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.gwtbootstrap3.client.ui.*;
+import org.gwtbootstrap3.client.ui.constants.LabelType;
 import org.gwtbootstrap3.client.ui.constants.ValidationState;
 import org.gwtbootstrap3.client.ui.gwt.ButtonCell;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
@@ -88,7 +90,10 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
     private final SimplePager simplePager = new SimplePager();
 
     @Inject
-    public ApplicationEditorView(final ApplicationEditorViewBinder applicationEditorViewBinder) {
+    public ApplicationEditorView(
+            final ApplicationEditorViewBinder applicationEditorViewBinder,
+            final ApplicationProfileDataProvider applicationProfileDataProvider) {
+
         initWidget(applicationEditorViewBinder.createAndBindUi(this));
 
         final Column<ApplicationProfile, String> profileIdColumn = new Column<ApplicationProfile, String>(new TextCell()) {
@@ -98,18 +103,13 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
             }
         };
 
-
         final Column<ApplicationProfile, String> profilePlatformColumn = new Column<ApplicationProfile, String>(new TextCell()) {
             @Override
             public String getValue(ApplicationProfile object) {
-                return object.getPlatform().toString();
+                final Platform platform = object.getPlatform();
+                return platform == null ? "" : platform.toString();
             }
         };
-
-        profilePlatformColumn.setFieldUpdater(((index, object, value) -> {
-            // TODO Implemnt delete and refresh table.
-            Notify.notify("Todo!");
-        }));
 
         final Column<ApplicationProfile, String> editColumn = new Column<ApplicationProfile, String>(new ButtonCell()) {
             @Override
@@ -130,10 +130,27 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
             }
         };
 
+        deleteColumn.setFieldUpdater(((index, object, value) -> {
+            // TODO Implemnt delete and refresh table.
+            Notify.notify("Todo!");
+        }));
+
         applicationProfileCellTable.addColumn(profileIdColumn, "Proile ID");
         applicationProfileCellTable.addColumn(profilePlatformColumn, "Platform");
         applicationProfileCellTable.addColumn(editColumn);
         applicationProfileCellTable.addColumn(deleteColumn);
+
+        applicationProfileCellTable.addRangeChangeHandler(event -> applicationProfileCellTablePagination.rebuild(simplePager));
+        applicationProfileDataProvider.addRefreshListener(() -> applicationProfileCellTablePagination.rebuild(simplePager));
+
+        final Label emptyLabel = new Label();
+        emptyLabel.setType(LabelType.DANGER);
+        emptyLabel.setText("No Application Profiles Exist");
+        applicationProfileCellTable.setEmptyTableWidget(emptyLabel);
+
+        simplePager.setDisplay(applicationProfileCellTable);
+        applicationProfileCellTablePagination.clear();
+        applicationProfileDataProvider.addDataDisplay(applicationProfileCellTable);
 
     }
 
@@ -161,7 +178,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
         applicationNameWarningLabel.setVisible(false);
         descriptionWarningLabel.setVisible(false);
 
-        // TODO: Figure out how to clear the table
+        applicationProfileCellTablePagination.clear();
 
     }
 
@@ -200,7 +217,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
             public void onFailure(Method method, Throwable exception) {
                 unlock();
                 errorModal.setErrorMessage("There was a problem creating the application.");
-
+                errorModal.show();
             }
 
             @Override

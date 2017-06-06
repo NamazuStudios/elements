@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.client.controlpanel.view;
 
-import com.google.gwt.view.client.*;
+import com.google.gwt.view.client.HasData;
+import com.google.gwt.view.client.Range;
 import com.namazustudios.socialengine.client.rest.client.ShortLinkClient;
-import com.namazustudios.socialengine.client.rest.client.UserClient;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ShortLink;
 import org.fusesource.restygwt.client.Method;
@@ -19,12 +19,7 @@ public class ShortLinkDataProvider extends AbstractSearchableDataProvider<ShortL
     private ShortLinkClient shortLinkClient;
 
     public ShortLinkDataProvider() {
-        super(new ProvidesKey<ShortLink>() {
-            @Override
-            public Object getKey(ShortLink item) {
-                return item.getId();
-            }
-        });
+        super(item -> item.getId());
     }
 
     @Override

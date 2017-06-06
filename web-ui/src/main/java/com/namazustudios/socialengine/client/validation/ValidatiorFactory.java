@@ -6,6 +6,7 @@ import com.google.gwt.validation.client.GwtValidation;
 import com.google.gwt.validation.client.impl.AbstractGwtValidator;
 import com.namazustudios.socialengine.model.ShortLink;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.application.Application;
 
 import javax.validation.Validator;
 
@@ -14,7 +15,7 @@ import javax.validation.Validator;
  */
 public class ValidatiorFactory extends AbstractGwtValidatorFactory {
 
-    @GwtValidation({User.class, ShortLink.class})
+    @GwtValidation({User.class, ShortLink.class, Application.class})
     public interface GwtValidator extends Validator {}
 
     @Override
