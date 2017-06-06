@@ -34,9 +34,9 @@
                             <b:Legend>Application Details</b:Legend>
 
                             <b:FormGroup ui:field="applicationNameFormGroup">
-                                <b:FormLabel for="username">Application Name</b:FormLabel>
+                                <b:FormLabel for="name">Application Name</b:FormLabel>
                                 <b:TextBox placeholder="Application Name" ui:field="applicationNameTextBox"/>
-                                <b:Label ui:field="nameWarningLabel" visible="false" text="Application name must be alpha-numeric." type="DANGER"/>
+                                <b:Label ui:field="applicationNameWarningLabel" visible="false" text="Application name must be alpha-numeric." type="DANGER"/>
                             </b:FormGroup>
 
                             <b:FormGroup ui:field="applicationDescriptionFormGroup">
@@ -44,6 +44,8 @@
                                 <b:TextBox placeholder="Application Description" ui:field="applicationDescriptionTextBox"/>
                                 <b:Label ui:field="descriptionWarningLabel" visible="false" text="Description Not Valid" type="DANGER"/>
                             </b:FormGroup>
+
+                            <b:Button ui:field="create">Submit</b:Button>
 
                         </b:FieldSet>
                     </b:Form>

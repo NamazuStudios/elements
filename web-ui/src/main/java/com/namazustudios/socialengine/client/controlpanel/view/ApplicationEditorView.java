@@ -2,19 +2,28 @@ package com.namazustudios.socialengine.client.controlpanel.view;
 
 import com.google.gwt.editor.client.Editor;
 import com.google.gwt.editor.client.SimpleBeanEditorDriver;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.cellview.client.SimplePager;
 import com.gwtplatform.mvp.client.ViewImpl;
+import com.gwtplatform.mvp.client.proxy.PlaceManager;
+import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
+import com.namazustudios.socialengine.client.controlpanel.NameTokens;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
 import com.namazustudios.socialengine.client.rest.client.ApplicationClient;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationProfile;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 import org.gwtbootstrap3.client.ui.*;
+import org.gwtbootstrap3.client.ui.constants.ValidationState;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
+import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
 import javax.inject.Inject;
-
+import javax.validation.Validator;
 import java.util.function.Consumer;
 
 import static org.gwtbootstrap3.client.ui.constants.ValidationState.NONE;
@@ -40,7 +49,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
     @UiField
     @Ignore
-    Label nameWarningLabel;
+    Label applicationNameWarningLabel;
 
     @UiField
     FormGroup applicationDescriptionFormGroup;
@@ -63,15 +72,20 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
     private Driver driver;
 
     @Inject
+    private Validator validator;
+
+    @Inject
     private ApplicationClient applicationClient;
 
-    private Consumer<Application> save = a -> { lockOut(); createNewUser(); };
+    @Inject
+    private PlaceManager placeManager;
+
+    private Consumer<Application> save = a -> { lockOut(); createNewApplication(a);};
 
     private final SimplePager simplePager = new SimplePager();
 
     @Inject
-    public ApplicationEditorView(
-            final ApplicationEditorViewBinder applicationEditorViewBinder) {
+    public ApplicationEditorView(final ApplicationEditorViewBinder applicationEditorViewBinder) {
         initWidget(applicationEditorViewBinder.createAndBindUi(this));
     }
 
@@ -96,7 +110,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
         applicationNameFormGroup.setValidationState(NONE);
         applicationDescriptionFormGroup.setValidationState(NONE);
 
-        nameWarningLabel.setVisible(false);
+        applicationNameWarningLabel.setVisible(false);
         descriptionWarningLabel.setVisible(false);
 
         // TODO: Figure out how to clear the table
@@ -113,7 +127,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
         save = a -> {
             lockOut();
-            createNewUser();
+            createNewApplication(a);
         };
 
     }
@@ -131,11 +145,90 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
         };
     }
 
-    private void createNewUser() {
+    private void createNewApplication(final Application application) {
+        applicationClient.createApplication(application, new MethodCallback<Application>() {
 
+            @Override
+            public void onFailure(Method method, Throwable exception) {
+                unlock();
+                errorModal.setErrorMessage("There was a problem creating the application.");
+
+            }
+
+            @Override
+            public void onSuccess(Method method, Application response) {
+
+                unlock();
+
+                Notify.notify("Successfully created new Application.");
+
+                final PlaceRequest placeRequest = new PlaceRequest.Builder()
+                        .nameToken(NameTokens.MAIN)
+                        .build();
+
+                placeManager.revealPlace(placeRequest);
+
+            }
+
+        });
     }
 
     private void updateExistingApplication(final Application application) {
+        applicationClient.updateApplication(application.getId(), application, new MethodCallback<Application>() {
+
+            @Override
+            public void onFailure(Method method, Throwable exception) {
+                unlock();
+                errorModal.setErrorMessage("There was a updating the application.");
+
+            }
+
+            @Override
+            public void onSuccess(Method method, Application response) {
+
+                unlock();
+
+                Notify.notify("Successfully updated application.");
+
+                final PlaceRequest placeRequest = new PlaceRequest.Builder()
+                        .nameToken(NameTokens.MAIN)
+                        .build();
+
+                placeManager.revealPlace(placeRequest);
+
+            }
+
+        });
+
+    }
+
+    @UiHandler("create")
+    public void onClickCreate(final ClickEvent ev) {
+
+        boolean failed = false;
+        final Application application = driver.flush();
+
+        if (!validator.validateProperty(application, "name").isEmpty()) {
+            failed = true;
+            applicationNameWarningLabel.setVisible(true);
+            applicationNameFormGroup.setValidationState(ValidationState.ERROR);
+        } else {
+            applicationNameWarningLabel.setVisible(false);
+            applicationNameFormGroup.setValidationState(ValidationState.NONE);
+        }
+
+        if (!validator.validateProperty(application, "description").isEmpty()) {
+            failed = true;
+            descriptionWarningLabel.setVisible(true);
+            applicationDescriptionFormGroup.setValidationState(ValidationState.ERROR);
+        } else {
+            descriptionWarningLabel.setVisible(false);
+            applicationDescriptionFormGroup.setValidationState(ValidationState.NONE);
+        }
+
+        if (!failed) {
+            save.accept(application);
+        }
 
     }
 
