@@ -18,10 +18,10 @@
 
     <b:Container>
 
+        <m:ErrorModal ui:field="errorModal"/>
+
         <b:Row>
             <b:Panel>
-
-                <m:ErrorModal ui:field="errorModal"/>
 
                 <b:PanelHeader>
                     <b:Heading size="H3" text="Application Information"/>

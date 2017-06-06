@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.client.modal;
 
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.Label;
 import org.gwtbootstrap3.client.ui.Button;
@@ -37,14 +35,7 @@ public class ErrorModal extends Modal {
         button.setText("Dismiss");
         modalFooter.add(button);
 
-        button.addClickHandler(new ClickHandler() {
-
-            @Override
-            public void onClick(ClickEvent event) {
-                hide();
-            }
-
-        });
+        button.addClickHandler(event -> hide());
 
     }
 

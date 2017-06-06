@@ -10,7 +10,13 @@ import org.mongodb.morphia.annotations.*;
  * Created by patricktwohig on 7/10/15.
  */
 
-@SearchableIdentity(@SearchableField(name = "id", path = "/objectId", type = String.class))
+@SearchableIdentity(@SearchableField(
+        name = "id",
+        path = "/objectId",
+        type = ObjectId.class,
+        extractor = ObjectIdExtractor.class,
+        processors = ObjectIdProcessor.class)
+)
 @SearchableDocument(
         fields = {
                 @SearchableField(name = "name", path = "/name"),
