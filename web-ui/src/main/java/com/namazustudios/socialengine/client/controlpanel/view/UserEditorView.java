@@ -28,6 +28,7 @@ import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 import javax.inject.Inject;
 import javax.validation.Validator;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
 /**
  * Created by patricktwohig on 5/5/15.
@@ -108,7 +109,10 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
     @Inject
     private PlaceManager placeManager;
 
-    private Submitter submitter;
+    private BiConsumer<User, String> submitter = (user, password) -> {
+        lockOut();
+        updateUser(user, password);
+    };
 
     @Inject
     public UserEditorView(final UserEditorViewUiBinder userEditorViewUiBinder) {
@@ -168,12 +172,9 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
         driver.initialize(this);
         driver.edit(new User());
 
-        submitter = new Submitter() {
-            @Override
-            public void submit(User user, String password) {
-                lockOut();
-                createNewUser(user, password);
-            }
+        submitter = (user, password) -> {
+            lockOut();
+            createNewUser(user, password);
         };
 
     }
@@ -213,12 +214,9 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
         driver.initialize(this);
         driver.edit(user);
 
-        submitter = new Submitter() {
-            @Override
-            public void submit(User user, String password) {
-                lockOut();
-                updateUser(user, password);
-            }
+        submitter = (u, password) -> {
+            lockOut();
+            updateUser(u, password);
         };
 
     }
@@ -304,14 +302,8 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
         }
 
         if (!failed) {
-            submitter.submit(user, password);
+            submitter.accept(user, password);
         }
-
-    }
-
-    private interface Submitter {
-
-        void submit(final User user, final String password);
 
     }
 

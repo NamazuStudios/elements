@@ -81,30 +81,20 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
 
         this.asyncUserDataProvider = asyncUserDataProvider;
 
-        final Column<User, String> nameColumn;
-
-        nameColumn = new Column<User, String>(new EditTextCell()) {
+        final Column<User, String> nameColumn = new Column<User, String>(new EditTextCell()) {
             @Override
             public String getValue(User object) {
                 return object.getName();
             }
         };
 
-        nameColumn.setFieldUpdater(new FieldUpdater<User, String>() {
-            @Override
-            public void update(int index, final User object, String value) {
+        nameColumn.setFieldUpdater((index, object, value) -> {
 
-                final String old = object.getName();
-                object.setName(value);
+            final String old = object.getName();
+            object.setName(value);
 
-                save(object, index, new Runnable() {
-                    @Override
-                    public void run() {
-                        object.setName(old);
-                    }
-                });
+            save(object, index, () -> object.setName(old));
 
-            }
         });
 
         final Column<User, String> emailColumn;
@@ -139,22 +129,14 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
             }
         };
 
-        levelColumn.setFieldUpdater(new FieldUpdater<User, String>() {
-            @Override
-            public void update(int index, final User object, String value) {
+        levelColumn.setFieldUpdater((index, object, value) -> {
 
-                final User.Level old = object.getLevel();
-                final User.Level level = User.Level.values()[USER_LEVEL_OPTIONS.indexOf(value)];
+            final User.Level old = object.getLevel();
+            final User.Level level = User.Level.values()[USER_LEVEL_OPTIONS.indexOf(value)];
 
-                object.setLevel(level);
-                save(object, index, new Runnable() {
-                    @Override
-                    public void run() {
-                        object.setLevel(old);
-                    }
-                });
+            object.setLevel(level);
+            save(object, index, () -> object.setLevel(old));
 
-            }
         });
 
         final Column<User, String> editColumn;
@@ -166,18 +148,15 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
             }
         };
 
-        editColumn.setFieldUpdater(new FieldUpdater<User, String>() {
-            @Override
-            public void update(int index, User object, String value) {
+        editColumn.setFieldUpdater((index, object, value) -> {
 
-                final PlaceRequest placeRequest = new PlaceRequest.Builder()
-                        .nameToken(NameTokens.USER_EDIT)
-                        .with(UserEditorPresenter.Param.user.toString(), object.getName())
-                        .build();
+            final PlaceRequest placeRequest = new PlaceRequest.Builder()
+                    .nameToken(NameTokens.USER_EDIT)
+                    .with(UserEditorPresenter.Param.user.toString(), object.getName())
+                    .build();
 
-                placeManager.revealPlace(placeRequest);
+            placeManager.revealPlace(placeRequest);
 
-            }
         });
 
         final Column<User, String> deleteColumn;
@@ -189,14 +168,7 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
             }
         };
 
-        deleteColumn.setFieldUpdater(new FieldUpdater<User, String>() {
-
-            @Override
-            public void update(int index, User object, String value) {
-                confirmDelete(object);
-            }
-
-        });
+        deleteColumn.setFieldUpdater((index, object, value) -> confirmDelete(object));
 
         userEditorCellTable.addColumn(nameColumn, "User Name");
         userEditorCellTable.addColumn(emailColumn, "Email Address");

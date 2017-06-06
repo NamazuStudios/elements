@@ -33,13 +33,13 @@
 
                             <b:Legend>Application Details</b:Legend>
 
-                            <b:FormGroup ui:field="nameFormGroup">
+                            <b:FormGroup ui:field="applicationNameFormGroup">
                                 <b:FormLabel for="username">Application Name</b:FormLabel>
                                 <b:TextBox placeholder="Application Name" ui:field="applicationNameTextBox"/>
                                 <b:Label ui:field="applicationNameWarningLabel" visible="false" text="Application name must be alpha-numeric." type="DANGER"/>
                             </b:FormGroup>
 
-                            <b:FormGroup ui:field="descriptionFormGroup">
+                            <b:FormGroup ui:field="applicationDescriptionFormGroup">
                                 <b:FormLabel for="description">Application Description</b:FormLabel>
                                 <b:TextBox placeholder="Application Description" ui:field="applicationDescriptionTextBox"/>
                                 <b:Label ui:field="applicationDescriptionWarningLabel" visible="false" text="Description Not Valid" type="DANGER"/>

@@ -3,30 +3,27 @@ package com.namazustudios.socialengine.client.rest.client;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
 import org.fusesource.restygwt.client.MethodCallback;
+import org.fusesource.restygwt.client.RestService;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
+import javax.ws.rs.*;
 
 /**
  * Created by patricktwohig on 6/1/17.
  */
 @Path("application")
-public interface ApplicationClient {
+public interface ApplicationClient extends RestService {
 
     /**
      * Gets a listing of applications, filtering by query.
      *
      * @param offset
      * @param count
-     * @param query
      * @param paginationMethodCall
      */
     @GET
     void getApplications(
-            final int offset,
-            final int count, String query,
+            @QueryParam("offset") final int offset,
+            @QueryParam("count")  final int count,
             final MethodCallback<Pagination<Application>> paginationMethodCall);
 
     /**
@@ -38,19 +35,21 @@ public interface ApplicationClient {
      */
     @GET
     void getApplications(
-            final int offset,
-            final int count,
+            @QueryParam("offset") final int offset,
+            @QueryParam("count")  final int count,
+            @QueryParam("search") String search,
             final MethodCallback<Pagination<Application>> paginationMethodCall);
 
     /**
      * Gets a specific application by name or ID.
      *
-     * @param applicationId
+     * @param nameOrId
      * @param applicationMethodCallback
      */
     @GET
+    @Path("{nameOrId}")
     void getApplication(
-            final String applicationId,
+            @PathParam("nameOrId") final String nameOrId,
             final MethodCallback<Application> applicationMethodCallback);
 
     /**
@@ -68,14 +67,16 @@ public interface ApplicationClient {
      * @param application the application itself
      */
     @PUT
-    void updateApplication(final String nameOrId, final Application application);
+    @Path("{nameOrId}")
+    void updateApplication(@PathParam("nameOrId") final String nameOrId, final Application application);
 
     /**
      * Deletes an application with the supplied name or ID.
      *
      * @param nameOrId the name or ID of the application
      */
-    @PUT
-    void deleteApplication(final String nameOrId);
+    @DELETE
+    @Path("{nameOrId}")
+    void deleteApplication(@PathParam("nameOrId") final String nameOrId);
 
 }
