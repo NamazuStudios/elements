@@ -24,7 +24,7 @@ public interface ApplicationClient extends RestService {
     void getApplications(
             @QueryParam("offset") final int offset,
             @QueryParam("count")  final int count,
-            final MethodCallback<Pagination<Application>> paginationMethodCall);
+            MethodCallback<Pagination<Application>> paginationMethodCall);
 
     /**
      * Gets a listing of applications.
@@ -38,7 +38,7 @@ public interface ApplicationClient extends RestService {
             @QueryParam("offset") final int offset,
             @QueryParam("count")  final int count,
             @QueryParam("search") String search,
-            final MethodCallback<Pagination<Application>> paginationMethodCall);
+            MethodCallback<Pagination<Application>> paginationMethodCall);
 
     /**
      * Gets a specific application by name or ID.
@@ -48,9 +48,8 @@ public interface ApplicationClient extends RestService {
      */
     @GET
     @Path("{nameOrId}")
-    void getApplication(
-            @PathParam("nameOrId") final String nameOrId,
-            final MethodCallback<Application> applicationMethodCallback);
+    void getApplication(@PathParam("nameOrId") final String nameOrId,
+                        MethodCallback<Application> applicationMethodCallback);
 
     /**
      * Creates a new application.
@@ -58,7 +57,8 @@ public interface ApplicationClient extends RestService {
      * @param application
      */
     @POST
-    void createApplication(Application application);
+    void createApplication(Application application,
+                           MethodCallback<Application> applicationMethodCallback);
 
     /**
      * Updates an existing application, given the ID and application model object.
@@ -68,7 +68,9 @@ public interface ApplicationClient extends RestService {
      */
     @PUT
     @Path("{nameOrId}")
-    void updateApplication(@PathParam("nameOrId") final String nameOrId, final Application application);
+    void updateApplication(@PathParam("nameOrId") String nameOrId,
+                           Application application,
+                           MethodCallback<Application> applicationMethodCallback);
 
     /**
      * Deletes an application with the supplied name or ID.
@@ -77,6 +79,7 @@ public interface ApplicationClient extends RestService {
      */
     @DELETE
     @Path("{nameOrId}")
-    void deleteApplication(@PathParam("nameOrId") final String nameOrId);
+    void deleteApplication(@PathParam("nameOrId") String nameOrId,
+                           MethodCallback<Void> applicationMethodCallback);
 
 }
