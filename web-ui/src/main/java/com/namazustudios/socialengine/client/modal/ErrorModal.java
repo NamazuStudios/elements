@@ -6,6 +6,7 @@ import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.Modal;
 import org.gwtbootstrap3.client.ui.ModalBody;
 import org.gwtbootstrap3.client.ui.ModalFooter;
+import org.gwtbootstrap3.client.ui.constants.ModalBackdrop;
 
 /**
  * Created by patricktwohig on 4/30/15.
@@ -20,6 +21,7 @@ public class ErrorModal extends Modal {
 
         setFade(true);
         setClosable(true);
+        setDataBackdrop(ModalBackdrop.FALSE);
         setTitle("Ooops...something went wrong.");
 
         final ModalBody modalBody = new ModalBody();
