@@ -10,7 +10,6 @@ import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 
 import javax.inject.Inject;
-import java.util.Collections;
 
 /**
  * Created by patricktwohig on 6/5/17.
@@ -25,7 +24,8 @@ public class ApplicationProfileDataProvider extends AbstractSearchableDataProvid
     @Override
     protected void onRangeChanged(final HasData<ApplicationProfile> display) {
         if (getParentApplication() == null) {
-            display.setRowData(0, Collections.emptyList());
+            updateRowCount(0, true);
+            notifyRefreshListeners();
         } else {
 
             final Range range = display.getVisibleRange();

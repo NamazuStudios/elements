@@ -31,7 +31,7 @@
             <m:ConfirmationModal ui:field="confirmationModal"/>
 
             <b:InputGroup addStyleNames="{style.searchbox}">
-                <b:InputGroupAddon icon="USER">User</b:InputGroupAddon>
+                <b:InputGroupAddon icon="SEARCH">User</b:InputGroupAddon>
                 <b:TextBox ui:field="applicationsSearchTextBox" placeholder="Search Applications" autoComplete="false"/>
             </b:InputGroup>
 

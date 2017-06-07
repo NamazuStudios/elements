@@ -104,13 +104,7 @@ public class MongoApplicationDao implements ApplicationDao {
             throw new BadQueryException(ex);
         }
 
-        return mongoDBUtils.paginationFromSearch(MongoApplication.class, booleanQuery, offset, count,
-                new Function<MongoApplication, Application>() {
-                    @Override
-                    public Application apply(MongoApplication input) {
-                        return transform(input);
-                    }
-                });
+        return mongoDBUtils.paginationFromSearch(MongoApplication.class, booleanQuery, offset, count, (Function<MongoApplication, Application>) input -> transform(input));
     }
 
     @Override

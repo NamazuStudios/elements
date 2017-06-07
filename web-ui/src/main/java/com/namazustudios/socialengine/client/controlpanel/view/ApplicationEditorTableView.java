@@ -36,8 +36,11 @@ public class ApplicationEditorTableView extends ViewImpl implements ApplicationE
     ConfirmationModal confirmationModal;
 
     @Inject
-    public ApplicationEditorTableView(final ApplicationEditorTableViewBinder applicationEditorTableViewBinder) {
+    public ApplicationEditorTableView(
+            final ApplicationEditorTableViewBinder applicationEditorTableViewBinder) {
         initWidget(applicationEditorTableViewBinder.createAndBindUi(this));
+
+
     }
 
 }

@@ -1,9 +1,12 @@
 package com.namazustudios.socialengine.client.controlpanel.view;
 
 import com.google.gwt.view.client.HasData;
-import com.google.gwt.view.client.ProvidesKey;
+import com.google.gwt.view.client.Range;
 import com.namazustudios.socialengine.client.rest.client.ApplicationClient;
+import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import javax.inject.Inject;
 
@@ -16,17 +19,31 @@ public class ApplicationDataProvider extends AbstractSearchableDataProvider<Appl
     private ApplicationClient applicationClient;
 
     public ApplicationDataProvider() {
-        super(new ProvidesKey<Application>() {
-            @Override
-            public Object getKey(Application item) {
-                return item.getId();
-            }
-        });
+        super(item -> item.getId());
     }
 
     @Override
     protected void onRangeChanged(HasData<Application> display) {
+        final Range range = display.getVisibleRange();
 
+        applicationClient.getApplications(
+                range.getStart(),
+                range.getLength(),
+                getSearchFilter(),
+                new MethodCallback<Pagination<Application>>() {
+                    @Override
+                    public void onFailure(Method method, Throwable exception) {
+                        notifyErrorListeners(exception);
+                    }
+
+                    @Override
+                    public void onSuccess(Method method, Pagination<Application> applicationPagination) {
+                        updateRowData(range.getStart(), applicationPagination.getObjects());
+                        updateRowCount(applicationPagination.getTotal(), !applicationPagination.isApproximation());
+                        notifyRefreshListeners();
+                    }
+
+                });
     }
 
 }
