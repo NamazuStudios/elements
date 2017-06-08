@@ -144,7 +144,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
         applicationProfileDataProvider.addRefreshListener(() -> applicationProfileCellTablePagination.rebuild(simplePager));
 
         final Label emptyLabel = new Label();
-        emptyLabel.setType(LabelType.DANGER);
+        emptyLabel.setType(LabelType.INFO);
         emptyLabel.setText("No Application Profiles Exist");
         applicationProfileCellTable.setEmptyTableWidget(emptyLabel);
 
@@ -245,7 +245,6 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
             public void onFailure(Method method, Throwable exception) {
                 unlock();
                 errorModal.setErrorMessage("There was a updating the application.");
-
             }
 
             @Override

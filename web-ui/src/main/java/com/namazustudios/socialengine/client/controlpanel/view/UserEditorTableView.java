@@ -165,7 +165,7 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
         userEditorCellTable.addColumn(deleteColumn);
 
         final Label emptyLabel = new Label();
-        emptyLabel.setType(LabelType.DANGER);
+        emptyLabel.setType(LabelType.INFO);
         emptyLabel.setText("No users found matching query.");
         userEditorCellTable.setEmptyTableWidget(emptyLabel);
 

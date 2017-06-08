@@ -44,11 +44,13 @@ public class UserSearchableDataProvider extends AbstractSearchableDataProvider<U
                 @Override
                 public void onSuccess(Method method, Pagination<User> userPagination) {
 
-                    if (!userPagination.getObjects().isEmpty()) {
+                    if (userPagination.getTotal() == 0) {
+                        updateRowCount(0, true);
+                    } else {
                         updateRowData(range.getStart(), userPagination.getObjects());
+                        updateRowCount(userPagination.getTotal(), !userPagination.isApproximation());
                     }
 
-                    updateRowCount(userPagination.getTotal(), !userPagination.isApproximation());
                     notifyRefreshListeners();
 
                 }

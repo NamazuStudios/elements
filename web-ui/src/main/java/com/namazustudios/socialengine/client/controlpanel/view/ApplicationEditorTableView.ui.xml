@@ -21,14 +21,15 @@
 
     <b:Panel addStyleNames="{style.root-panel}">
 
+        <m:ErrorModal ui:field="errorModal"/>
+
+        <m:ConfirmationModal ui:field="confirmationModal"/>
+
         <b:PanelHeader>
             <b:Heading size="H3" text="Users"/>
         </b:PanelHeader>
 
         <b:PanelBody>
-
-            <m:ErrorModal ui:field="errorModal"/>
-            <m:ConfirmationModal ui:field="confirmationModal"/>
 
             <b:InputGroup addStyleNames="{style.searchbox}">
                 <b:InputGroupAddon icon="SEARCH">User</b:InputGroupAddon>

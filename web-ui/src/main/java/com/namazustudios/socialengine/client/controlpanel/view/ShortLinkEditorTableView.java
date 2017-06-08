@@ -96,8 +96,8 @@ public class ShortLinkEditorTableView extends ViewImpl implements ShortLinkEdito
         shortLinkEditorCellTable.addColumn(deleteColumn);
 
         final Label emptyLabel = new Label();
-        emptyLabel.setType(LabelType.DANGER);
-        emptyLabel.setText("No users found matching query.");
+        emptyLabel.setType(LabelType.INFO);
+        emptyLabel.setText("No short links found matching query.");
         shortLinkEditorCellTable.setEmptyTableWidget(emptyLabel);
 
         shortLinkEditorCellTable.addRangeChangeHandler(event -> shortLinkEditorCellTablePagination.rebuild(simplePager));
@@ -108,7 +108,6 @@ public class ShortLinkEditorTableView extends ViewImpl implements ShortLinkEdito
         asyncUserDataProvider.addDataDisplay(shortLinkEditorCellTable);
 
         setupSearch();
-
 
     }
 

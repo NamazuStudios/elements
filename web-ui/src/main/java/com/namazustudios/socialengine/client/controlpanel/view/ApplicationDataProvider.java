@@ -38,9 +38,15 @@ public class ApplicationDataProvider extends AbstractSearchableDataProvider<Appl
 
                     @Override
                     public void onSuccess(Method method, Pagination<Application> applicationPagination) {
-                        updateRowData(range.getStart(), applicationPagination.getObjects());
-                        updateRowCount(applicationPagination.getTotal(), !applicationPagination.isApproximation());
+
+                        if (applicationPagination.getTotal() == 0) {
+                            updateRowCount(0, true);
+                        } else {
+                            updateRowData(range.getStart(), applicationPagination.getObjects());
+                        }
+
                         notifyRefreshListeners();
+
                     }
 
                 });

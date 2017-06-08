@@ -1,12 +1,11 @@
 package com.namazustudios.socialengine.client.modal;
 
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.Label;
 import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.Modal;
 import org.gwtbootstrap3.client.ui.ModalBody;
 import org.gwtbootstrap3.client.ui.ModalFooter;
+import org.gwtbootstrap3.client.ui.constants.ModalBackdrop;
 
 /**
  * Created by patricktwohig on 6/5/15.
@@ -22,6 +21,7 @@ public class ConfirmationModal extends Modal {
         setFade(true);
         setClosable(true);
         setTitle("Confirm?");
+        setDataBackdrop(ModalBackdrop.FALSE);
 
         final ModalBody modalBody = new ModalBody();
         add(modalBody);
@@ -36,17 +36,12 @@ public class ConfirmationModal extends Modal {
         confirmButton.setText("Confirm");
         modalFooter.add(confirmButton);
 
-        confirmButton.addClickHandler(new ClickHandler() {
+        confirmButton.addClickHandler(event -> {
 
-            @Override
-            public void onClick(ClickEvent event) {
+            hide();
 
-                hide();
-
-                if (onConfirmHandler != null) {
-                    onConfirmHandler.onConfirm();
-                }
-
+            if (onConfirmHandler != null) {
+                onConfirmHandler.onConfirm();
             }
 
         });
@@ -55,17 +50,12 @@ public class ConfirmationModal extends Modal {
         dismissButton.setText("Dismiss");
         modalFooter.add(dismissButton);
 
-        dismissButton.addClickHandler(new ClickHandler() {
+        dismissButton.addClickHandler(event -> {
 
-            @Override
-            public void onClick(ClickEvent event) {
+            hide();
 
-                hide();
-
-                if (onConfirmHandler != null) {
-                    onConfirmHandler.onDismiss();
-                }
-
+            if (onConfirmHandler != null) {
+                onConfirmHandler.onDismiss();
             }
 
         });
