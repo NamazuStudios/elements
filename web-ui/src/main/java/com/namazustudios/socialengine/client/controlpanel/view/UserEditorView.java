@@ -10,8 +10,6 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Panel;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
-import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
-import com.namazustudios.socialengine.client.controlpanel.NameTokens;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
 import com.namazustudios.socialengine.client.rest.client.UserClient;
 import com.namazustudios.socialengine.client.widget.UserLevelEnumDropDown;
@@ -190,17 +188,9 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
 
             @Override
             public void onSuccess(Method method, User user) {
-
                 unlock();
-
                 Notify.notify("Successfully created user.");
-
-                final PlaceRequest placeRequest = new PlaceRequest.Builder()
-                        .nameToken(NameTokens.MAIN)
-                        .build();
-
-                placeManager.revealPlace(placeRequest);
-
+                editUser(user);
             }
 
         });
@@ -232,17 +222,9 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
 
             @Override
             public void onSuccess(Method method, User user) {
-
                 unlock();
-
                 Notify.notify("Successfully updated user.");
-
-                final PlaceRequest placeRequest = new PlaceRequest.Builder()
-                        .nameToken(NameTokens.MAIN)
-                        .build();
-
-                placeManager.revealPlace(placeRequest);
-
+                editUser(user);
             }
 
         });

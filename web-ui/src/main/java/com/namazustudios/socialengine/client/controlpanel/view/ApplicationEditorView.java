@@ -7,12 +7,10 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.cellview.client.*;
 import com.google.gwt.user.cellview.client.Column;
+import com.google.gwt.user.cellview.client.SimplePager;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
-import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
-import com.namazustudios.socialengine.client.controlpanel.NameTokens;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
 import com.namazustudios.socialengine.client.rest.client.ApplicationClient;
 import com.namazustudios.socialengine.model.application.Application;
@@ -60,7 +58,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
     FormGroup applicationDescriptionFormGroup;
 
     @UiField
-    @Path("name")
+    @Path("description")
     TextBox applicationDescriptionTextBox;
 
     @UiField
@@ -222,17 +220,9 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
             @Override
             public void onSuccess(Method method, Application response) {
-
                 unlock();
-
                 Notify.notify("Successfully created new Application.");
-
-                final PlaceRequest placeRequest = new PlaceRequest.Builder()
-                        .nameToken(NameTokens.MAIN)
-                        .build();
-
-                placeManager.revealPlace(placeRequest);
-
+                editApplication(response);
             }
 
         });
@@ -249,17 +239,9 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
             @Override
             public void onSuccess(Method method, Application response) {
-
                 unlock();
-
                 Notify.notify("Successfully updated application.");
-
-                final PlaceRequest placeRequest = new PlaceRequest.Builder()
-                        .nameToken(NameTokens.MAIN)
-                        .build();
-
-                placeManager.revealPlace(placeRequest);
-
+                editApplication(response);
             }
 
         });
