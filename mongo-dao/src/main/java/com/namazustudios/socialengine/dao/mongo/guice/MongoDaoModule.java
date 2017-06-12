@@ -8,21 +8,19 @@ import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.dao.mongo.*;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoAdvancedDatastoreProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvider;
-import com.namazustudios.socialengine.dao.mongo.provider.MongoDatabaseProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDatastoreProvider;
+import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
 import com.namazustudios.socialengine.fts.ObjectIndex;
+import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.security.MessageDigest;
-import java.util.Properties;
+
+import static com.google.inject.util.Providers.guicify;
 
 /**
  * Configures any Mongo-specific system properties.
@@ -46,33 +44,13 @@ public class MongoDaoModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        final Properties defaultProperties = new Properties(System.getProperties());
-
-        defaultProperties.setProperty(MongoClientProvider.MONGO_DB_URLS, "mongo://localhost");
-        defaultProperties.setProperty(MongoDatabaseProvider.DATABASE_NAME, "socialengine");
-        defaultProperties.setProperty(Atomic.FALLOFF_TIME_MS, Integer.toString(DEFAULT_FALLOFF_TIME_MS));
-        defaultProperties.setProperty(Atomic.OPTIMISTIC_RETRY_COUNT, Integer.toString(OPTISMITIC_RETRY_COUNT));
-
-        final Properties properties = new Properties(defaultProperties);
-        final File propertiesFile = new File(properties.getProperty(
-                Constants.PROPERTIES_FILE,
-                Constants.DEFAULT_PROPERTIES_FILE));
-
-        try (final InputStream is = new FileInputStream(propertiesFile)) {
-            properties.load(is);
-        } catch (IOException ex) {
-            LOG.warn("Could not load properties.  Using defaults.", ex);
-        }
-
-        LOG.info("Using configuration properties " + properties);
-
-        Names.bindProperties(binder(), properties);
-
         binder().bind(UserDao.class).to(MongoUserDao.class);
         binder().bind(SocialCampaignDao.class).to(MongoSocialCampaignDao.class);
         binder().bind(ShortLinkDao.class).to(MongoShortLinkDao.class);
         binder().bind(ApplicationDao.class).to(MongoApplicationDao.class);
         binder().bind(ApplicationProfileDao.class).to(MongoApplicationProfileDao.class);
+        binder().bind(IosApplicationProfileDao.class).to(MongoIosApplicationProfileDao.class);
+        binder().bind(GooglePlayApplicationProfileDao.class).to(MongoGoogePlayApplicationProfileDao.class);
 
         binder().bind(MongoClient.class).toProvider(MongoClientProvider.class).in(Singleton.class);
         binder().bind(Datastore.class).toProvider(MongoDatastoreProvider.class);
@@ -81,6 +59,8 @@ public class MongoDaoModule extends AbstractModule {
         binder().bind(MessageDigest.class)
                 .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
                 .toProvider(PasswordDigestProvider.class);
+
+        binder().bind(Mapper.class).toProvider(guicify(new MongoDozerMapperProvider()));
 
     }
 

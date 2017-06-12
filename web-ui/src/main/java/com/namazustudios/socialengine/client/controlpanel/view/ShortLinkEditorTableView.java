@@ -2,15 +2,11 @@ package com.namazustudios.socialengine.client.controlpanel.view;
 
 import com.google.gwt.cell.client.ButtonCell;
 import com.google.gwt.cell.client.ClickableTextCell;
-import com.google.gwt.cell.client.FieldUpdater;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.SimplePager;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.view.client.RangeChangeEvent;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.namazustudios.socialengine.client.modal.ConfirmationModal;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
@@ -75,12 +71,7 @@ public class ShortLinkEditorTableView extends ViewImpl implements ShortLinkEdito
             }
         };
 
-        destinationColumn.setFieldUpdater(new FieldUpdater<ShortLink, String>() {
-            @Override
-            public void update(int index, ShortLink object, String value) {
-                Window.open(object.getDestinationURL(), "_blank", "");
-            }
-        });
+        destinationColumn.setFieldUpdater((index, object, value) -> Window.open(object.getDestinationURL(), "_blank", ""));
 
         final Column<ShortLink, String> shortLinkColumn = new Column<ShortLink, String>(new ClickableTextCell()) {
             @Override
@@ -89,12 +80,7 @@ public class ShortLinkEditorTableView extends ViewImpl implements ShortLinkEdito
             }
         };
 
-        shortLinkColumn.setFieldUpdater(new FieldUpdater<ShortLink, String>() {
-            @Override
-            public void update(int index, ShortLink object, String value) {
-                Window.open(object.getShortLinkURL(), "_blank", "");
-            }
-        });
+        shortLinkColumn.setFieldUpdater((index, object, value) -> Window.open(object.getShortLinkURL(), "_blank", ""));
 
         final Column<ShortLink, String> deleteColumn = new Column<ShortLink,String>(new ButtonCell()) {
             @Override
@@ -103,35 +89,19 @@ public class ShortLinkEditorTableView extends ViewImpl implements ShortLinkEdito
             }
         };
 
-        deleteColumn.setFieldUpdater(new FieldUpdater<ShortLink, String>() {
-            @Override
-            public void update(int index, ShortLink object, String value) {
-                confirmDelete(object);
-            }
-        });
+        deleteColumn.setFieldUpdater((index, object, value) -> confirmDelete(object));
 
         shortLinkEditorCellTable.addColumn(destinationColumn, "Link Destination");
         shortLinkEditorCellTable.addColumn(shortLinkColumn, "Short Link");
         shortLinkEditorCellTable.addColumn(deleteColumn);
 
         final Label emptyLabel = new Label();
-        emptyLabel.setType(LabelType.DANGER);
-        emptyLabel.setText("No users found matching query.");
+        emptyLabel.setType(LabelType.INFO);
+        emptyLabel.setText("No short links found matching query.");
         shortLinkEditorCellTable.setEmptyTableWidget(emptyLabel);
 
-        shortLinkEditorCellTable.addRangeChangeHandler(new RangeChangeEvent.Handler() {
-            @Override
-            public void onRangeChange(RangeChangeEvent event) {
-                shortLinkEditorCellTablePagination.rebuild(simplePager);
-            }
-        });
-
-        asyncUserDataProvider.addRefreshListener(new UserSearchableDataProvider.AsyncRefreshListener() {
-            @Override
-            public void onRefresh() {
-                shortLinkEditorCellTablePagination.rebuild(simplePager);
-            }
-        });
+        shortLinkEditorCellTable.addRangeChangeHandler(event -> shortLinkEditorCellTablePagination.rebuild(simplePager));
+        asyncUserDataProvider.addRefreshListener(() -> shortLinkEditorCellTablePagination.rebuild(simplePager));
 
         simplePager.setDisplay(shortLinkEditorCellTable);
         shortLinkEditorCellTablePagination.clear();
@@ -139,18 +109,12 @@ public class ShortLinkEditorTableView extends ViewImpl implements ShortLinkEdito
 
         setupSearch();
 
-
     }
 
     private void setupSearch() {
-        searchLinksSearchTextBox.addChangeHandler(new ChangeHandler() {
-
-            @Override
-            public void onChange(ChangeEvent event) {
-                asyncUserDataProvider.setSearchFilter(searchLinksSearchTextBox.getText());
-                shortLinkEditorCellTable.setVisibleRangeAndClearData(shortLinkEditorCellTable.getVisibleRange(), true);
-            }
-
+        searchLinksSearchTextBox.addChangeHandler(event -> {
+            asyncUserDataProvider.setSearchFilter(searchLinksSearchTextBox.getText());
+            shortLinkEditorCellTable.setVisibleRangeAndClearData(shortLinkEditorCellTable.getVisibleRange(), true);
         });
     }
 

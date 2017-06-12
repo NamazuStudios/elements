@@ -27,7 +27,6 @@ public class ApplicationProfileResource {
     private ApplicationProfileService applicationProfileService;
 
     @GET
-    @Path("{applicationNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Searches application profiles",
                   notes = "Searches all instances of ApplicationProfiles associated with " +

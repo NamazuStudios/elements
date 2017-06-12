@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.service.application;
 import com.namazustudios.socialengine.dao.ApplicationProfileDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.ApplicationProfile;
-import com.namazustudios.socialengine.model.application.PSNApplicationProfile;
 import com.namazustudios.socialengine.service.ApplicationProfileService;
 
 import javax.inject.Inject;
@@ -25,33 +24,6 @@ public class SuperUserApplicationProfileService implements ApplicationProfileSer
     public Pagination<ApplicationProfile> getApplicationProfiles(String applicationNameOrId,
                                                                  int offset, int count, String search) {
         return applicationProfileDao.getActiveApplicationProfiles(applicationNameOrId, offset, count, search);
-    }
-
-    @Override
-    public PSNApplicationProfile getPSNApplicationProfile(String applicationNameOrId, String applicationProfileNameOrId) {
-        return applicationProfileDao.getPSNApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
-    }
-
-    @Override
-    public PSNApplicationProfile createApplicationProfile(String applicationNameOrId,
-                                                          PSNApplicationProfile psnApplicationProfile) {
-        return applicationProfileDao.createOrUpdateInactiveApplicationProfile(applicationNameOrId,
-                psnApplicationProfile);
-    }
-
-    @Override
-    public PSNApplicationProfile updateApplicationProfile(String applicationNameOrId,
-                                                          String applicationProfileNameOrId,
-                                                          PSNApplicationProfile psnApplicationProfile) {
-        return applicationProfileDao.updateApplicationProfile(applicationNameOrId,
-                applicationProfileNameOrId, psnApplicationProfile);
-    }
-
-    @Override
-    public void deleteApplicationProfile(String applicationNameOrId,
-                                         String applicationProfileNameOrId,
-                                         Class<? extends ApplicationProfile> type) {
-        applicationProfileDao.softDeleteApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
     }
 
 }

@@ -1,13 +1,12 @@
 package com.namazustudios.socialengine.client.modal;
 
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.Label;
 import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.Modal;
 import org.gwtbootstrap3.client.ui.ModalBody;
 import org.gwtbootstrap3.client.ui.ModalFooter;
+import org.gwtbootstrap3.client.ui.constants.ModalBackdrop;
 
 /**
  * Created by patricktwohig on 4/30/15.
@@ -22,6 +21,7 @@ public class ErrorModal extends Modal {
 
         setFade(true);
         setClosable(true);
+        setDataBackdrop(ModalBackdrop.FALSE);
         setTitle("Ooops...something went wrong.");
 
         final ModalBody modalBody = new ModalBody();
@@ -37,14 +37,7 @@ public class ErrorModal extends Modal {
         button.setText("Dismiss");
         modalFooter.add(button);
 
-        button.addClickHandler(new ClickHandler() {
-
-            @Override
-            public void onClick(ClickEvent event) {
-                hide();
-            }
-
-        });
+        button.addClickHandler(event -> hide());
 
     }
 

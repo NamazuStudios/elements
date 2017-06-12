@@ -35,6 +35,9 @@ public class CORSFilter implements ContainerResponseFilter {
 
     public static final String AC_ALLOW_CREDENTIALS_VALUE = "true";
 
+    public static final String AC_ALLOW_ALLOW_METHODS = "Access-Control-Allow-Methods";
+
+    public static final String AC_ALLOW_ALLOW_METHODS_VALUE = "GET, POST, PUT, DELETE";
 
     private Set<URI> allowedOrigins;
 
@@ -61,6 +64,7 @@ public class CORSFilter implements ContainerResponseFilter {
             responseContext.getHeaders().add(AC_ALLOW_ORIGIN, originHeader);
             responseContext.getHeaders().add(AC_ALLOW_HEADERS, AC_ALLOW_HEADERS_VALUE);
             responseContext.getHeaders().add(AC_ALLOW_CREDENTIALS, AC_ALLOW_CREDENTIALS_VALUE);
+            responseContext.getHeaders().add(AC_ALLOW_ALLOW_METHODS, AC_ALLOW_ALLOW_METHODS_VALUE);
         }
 
     }

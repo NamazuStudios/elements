@@ -27,7 +27,7 @@ public abstract class JerseyModule extends ServletModule {
     private final String apiRoot;
 
     public JerseyModule(final String apiRoot) {
-        this.apiRoot = apiRoot.replace("/.$","") + "/*";
+        this.apiRoot = "/" + apiRoot.replace("/.$","") + "/*";
     }
 
     @Override

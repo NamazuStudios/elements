@@ -1,12 +1,15 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import com.mongodb.MongoCommandException;
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.fts.*;
+import com.namazustudios.socialengine.fts.NoResultException;
+import com.namazustudios.socialengine.fts.ObjectIndex;
+import com.namazustudios.socialengine.fts.SearchException;
+import com.namazustudios.socialengine.fts.TopDocsSearchResult;
 import com.namazustudios.socialengine.model.Pagination;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
@@ -14,25 +17,48 @@ import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static java.util.stream.StreamSupport.stream;
 
 /**
+ * Some helper methods used in various parts of the MongoDB code.
+ *
  * Created by patricktwohig on 6/10/15.
  */
 public class MongoDBUtils {
 
-    @Inject
     private Datastore datastore;
 
-    @Inject
     private ObjectIndex objectIndex;
 
-    @Inject
-    @Named(Constants.QUERY_MAX_RESULTS)
     private int queryMaxResults;
 
     /**
+     * Performs the supplied operation, catching all {@link MongoCommandException} instances and
+     * mapping to the appropraite type of exception internally.
+     *
+     * @param operation the operation
+     * @param <T> the expected return type
+     * @return the object retured by the supplied operation
+     */
+    public <T> T perform(final Function<Datastore, T> operation) {
+        try {
+            return operation.apply(getDatastore());
+        } catch (MongoCommandException ex) {
+            if (ex.getErrorCode() == 11000) {
+                throw new DuplicateException(ex);
+            } else {
+                throw new InternalException(ex);
+            }
+        }
+    }
+
+    /**
      * Parses the given ObjectID string using {@link ObjectId}.  If this fails, this
-     * throws the appropraite exception type.
+     * throws the appropriate exception type.
      *
      * @param objectId
      * @return
@@ -68,9 +94,15 @@ public class MongoDBUtils {
         final int limit = Math.min(queryMaxResults, count);
 
         final Iterable<ModelT> userIterable;
-        userIterable = Iterables.limit(Iterables.transform(query.offset(offset), function), limit);
 
-        pagination.setObjects(Lists.newArrayList(userIterable));
+        final List<ModelT> modelTList;
+
+        modelTList = stream(query.spliterator(), false)
+            .map(function)
+            .limit(limit)
+            .collect(Collectors.toList());
+
+        pagination.setObjects(modelTList);
         return pagination;
 
     }
@@ -139,6 +171,33 @@ public class MongoDBUtils {
         } catch (SearchException ex) {
             throw new InternalException(ex.getMessage(), ex);
         }
+    }
+
+    public Datastore getDatastore() {
+        return datastore;
+    }
+
+    @Inject
+    public void setDatastore(Datastore datastore) {
+        this.datastore = datastore;
+    }
+
+    public ObjectIndex getObjectIndex() {
+        return objectIndex;
+    }
+
+    @Inject
+    public void setObjectIndex(ObjectIndex objectIndex) {
+        this.objectIndex = objectIndex;
+    }
+
+    public int getQueryMaxResults() {
+        return queryMaxResults;
+    }
+
+    @Inject
+    public void setQueryMaxResults(    @Named(Constants.QUERY_MAX_RESULTS) int queryMaxResults) {
+        this.queryMaxResults = queryMaxResults;
     }
 
 }

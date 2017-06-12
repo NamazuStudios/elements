@@ -4,10 +4,10 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.gwt.view.client.AsyncDataProvider;
 import com.google.gwt.view.client.ProvidesKey;
-import com.namazustudios.socialengine.model.User;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Created by patricktwohig on 6/25/15.
@@ -16,7 +16,7 @@ public abstract class AbstractSearchableDataProvider<ModelT> extends AsyncDataPr
 
     private final List<AsyncRefreshListener> asyncRefreshListeners = new ArrayList<>();
 
-    private final List<ErrorListener> errorListeners = new ArrayList<>();
+    private final List<Consumer<Throwable>> errorListeners = new ArrayList<>();
 
     private String searchFilter = "";
 
@@ -42,11 +42,11 @@ public abstract class AbstractSearchableDataProvider<ModelT> extends AsyncDataPr
         asyncRefreshListeners.remove(asyncRefreshListener);
     }
 
-    public void addErrorListener(final ErrorListener errorListener) {
+    public void addErrorListener(final Consumer<Throwable> errorListener) {
         errorListeners.add(errorListener);
     }
 
-    public void removeErrorListener(final  ErrorListener errorListener) {
+    public void removeErrorListener(final Consumer<Throwable> errorListener) {
         errorListeners.remove(errorListener);
     }
 
@@ -60,8 +60,8 @@ public abstract class AbstractSearchableDataProvider<ModelT> extends AsyncDataPr
 
     protected void notifyErrorListeners(final Throwable throwable) {
 
-        for (final ErrorListener errorListener : Lists.newArrayList(errorListeners)) {
-            errorListener.onError(throwable);
+        for (final Consumer<Throwable> errorListener : Lists.newArrayList(errorListeners)) {
+            errorListener.accept(throwable);
         }
 
     }
@@ -69,21 +69,13 @@ public abstract class AbstractSearchableDataProvider<ModelT> extends AsyncDataPr
     /**
      * Used to signal async changes to the user data provider.
      */
+    @FunctionalInterface
     public interface AsyncRefreshListener {
 
         /**
          * Called any time the data is refreshed, loaded, or changed.
          */
         void onRefresh();
-
-    }
-
-    /**
-     * Used to signal an error.
-     */
-    public interface ErrorListener {
-
-        void onError(final Throwable throwable);
 
     }
 

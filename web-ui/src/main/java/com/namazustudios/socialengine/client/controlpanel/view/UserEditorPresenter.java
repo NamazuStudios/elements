@@ -17,6 +17,8 @@ import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
 import javax.inject.Inject;
 
+import static com.namazustudios.socialengine.client.controlpanel.view.UserEditorPresenter.Param.user;
+
 /**
  * Created by patricktwohig on 5/5/15.
  */
@@ -54,7 +56,7 @@ public class UserEditorPresenter extends Presenter<UserEditorPresenter.MyView, U
 
         super.prepareFromRequest(request);
 
-        final String userName = request.getParameter(Param.user.name().toLowerCase(), "").trim();
+        final String userName = request.getParameter(user.name().toLowerCase(), "").trim();
 
         if (Strings.isNullOrEmpty(userName)) {
             getView().createUser();

@@ -31,7 +31,6 @@
         <module>rt-server-lua</module>
         <module>rt-guice-example</module>
         <module>rt-client</module>
-	    <module>combined-war</module>
         <module>docker</module>
     </modules>
 
@@ -60,6 +59,7 @@
         <reflections.version>0.9.10</reflections.version>
         <swagger.version>1.5.13</swagger.version>
         <rocoto.version>6.2</rocoto.version>
+        <dozer.version>6.0.0</dozer.version>
     </properties>
 
     <dependencies>
@@ -67,6 +67,12 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

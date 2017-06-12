@@ -3,15 +3,11 @@ package com.namazustudios.socialengine.client.controlpanel.view;
 import com.google.common.collect.ImmutableList;
 import com.google.gwt.cell.client.ButtonCell;
 import com.google.gwt.cell.client.EditTextCell;
-import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.cell.client.SelectionCell;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.SimplePager;
-import com.google.gwt.view.client.RangeChangeEvent;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
@@ -81,30 +77,20 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
 
         this.asyncUserDataProvider = asyncUserDataProvider;
 
-        final Column<User, String> nameColumn;
-
-        nameColumn = new Column<User, String>(new EditTextCell()) {
+        final Column<User, String> nameColumn = new Column<User, String>(new EditTextCell()) {
             @Override
             public String getValue(User object) {
                 return object.getName();
             }
         };
 
-        nameColumn.setFieldUpdater(new FieldUpdater<User, String>() {
-            @Override
-            public void update(int index, final User object, String value) {
+        nameColumn.setFieldUpdater((index, object, value) -> {
 
-                final String old = object.getName();
-                object.setName(value);
+            final String old = object.getName();
+            object.setName(value);
 
-                save(object, index, new Runnable() {
-                    @Override
-                    public void run() {
-                        object.setName(old);
-                    }
-                });
+            save(object, index, () -> object.setName(old));
 
-            }
         });
 
         final Column<User, String> emailColumn;
@@ -116,18 +102,10 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
             }
         };
 
-        emailColumn.setFieldUpdater(new FieldUpdater<User, String>() {
-            @Override
-            public void update(int index, final User object, String value) {
-                final String old = object.getEmail();
-                object.setEmail(value);
-                save(object, index, new Runnable() {
-                    @Override
-                    public void run() {
-                        object.setEmail(old);
-                    }
-                });
-            }
+        emailColumn.setFieldUpdater((index, object, value) -> {
+            final String old = object.getEmail();
+            object.setEmail(value);
+            save(object, index, () -> object.setEmail(old));
         });
 
         final Column<User, String> levelColumn;
@@ -139,22 +117,14 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
             }
         };
 
-        levelColumn.setFieldUpdater(new FieldUpdater<User, String>() {
-            @Override
-            public void update(int index, final User object, String value) {
+        levelColumn.setFieldUpdater((index, object, value) -> {
 
-                final User.Level old = object.getLevel();
-                final User.Level level = User.Level.values()[USER_LEVEL_OPTIONS.indexOf(value)];
+            final User.Level old = object.getLevel();
+            final User.Level level = User.Level.values()[USER_LEVEL_OPTIONS.indexOf(value)];
 
-                object.setLevel(level);
-                save(object, index, new Runnable() {
-                    @Override
-                    public void run() {
-                        object.setLevel(old);
-                    }
-                });
+            object.setLevel(level);
+            save(object, index, () -> object.setLevel(old));
 
-            }
         });
 
         final Column<User, String> editColumn;
@@ -166,18 +136,15 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
             }
         };
 
-        editColumn.setFieldUpdater(new FieldUpdater<User, String>() {
-            @Override
-            public void update(int index, User object, String value) {
+        editColumn.setFieldUpdater((index, object, value) -> {
 
-                final PlaceRequest placeRequest = new PlaceRequest.Builder()
-                        .nameToken(NameTokens.USER_EDIT)
-                        .with(UserEditorPresenter.Param.user.toString(), object.getName())
-                        .build();
+            final PlaceRequest placeRequest = new PlaceRequest.Builder()
+                    .nameToken(NameTokens.USER_EDIT)
+                    .with(UserEditorPresenter.Param.user.toString(), object.getName())
+                    .build();
 
-                placeManager.revealPlace(placeRequest);
+            placeManager.revealPlace(placeRequest);
 
-            }
         });
 
         final Column<User, String> deleteColumn;
@@ -189,14 +156,7 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
             }
         };
 
-        deleteColumn.setFieldUpdater(new FieldUpdater<User, String>() {
-
-            @Override
-            public void update(int index, User object, String value) {
-                confirmDelete(object);
-            }
-
-        });
+        deleteColumn.setFieldUpdater((index, object, value) -> confirmDelete(object));
 
         userEditorCellTable.addColumn(nameColumn, "User Name");
         userEditorCellTable.addColumn(emailColumn, "Email Address");
@@ -205,23 +165,12 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
         userEditorCellTable.addColumn(deleteColumn);
 
         final Label emptyLabel = new Label();
-        emptyLabel.setType(LabelType.DANGER);
+        emptyLabel.setType(LabelType.INFO);
         emptyLabel.setText("No users found matching query.");
         userEditorCellTable.setEmptyTableWidget(emptyLabel);
 
-        userEditorCellTable.addRangeChangeHandler(new RangeChangeEvent.Handler() {
-            @Override
-            public void onRangeChange(RangeChangeEvent event) {
-                userEditorCellTablePagination.rebuild(simplePager);
-            }
-        });
-
-        asyncUserDataProvider.addRefreshListener(new UserSearchableDataProvider.AsyncRefreshListener() {
-            @Override
-            public void onRefresh() {
-                userEditorCellTablePagination.rebuild(simplePager);
-            }
-        });
+        userEditorCellTable.addRangeChangeHandler(event -> userEditorCellTablePagination.rebuild(simplePager));
+        asyncUserDataProvider.addRefreshListener(() -> userEditorCellTablePagination.rebuild(simplePager));
 
         simplePager.setDisplay(userEditorCellTable);
         userEditorCellTablePagination.clear();
@@ -232,14 +181,9 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
     }
 
     private void setupSearch() {
-        searchUsersTextBox.addChangeHandler(new ChangeHandler() {
-
-            @Override
-            public void onChange(ChangeEvent event) {
-                asyncUserDataProvider.setSearchFilter(searchUsersTextBox.getText());
-                userEditorCellTable.setVisibleRangeAndClearData(userEditorCellTable.getVisibleRange(), true);
-            }
-
+        searchUsersTextBox.addChangeHandler(event -> {
+            asyncUserDataProvider.setSearchFilter(searchUsersTextBox.getText());
+            userEditorCellTable.setVisibleRangeAndClearData(userEditorCellTable.getVisibleRange(), true);
         });
     }
 

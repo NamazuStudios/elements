@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.guice;
 import com.google.common.base.Splitter;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Names;
 import org.nnsoft.guice.rocoto.converters.URIConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +13,7 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
+import static com.google.inject.name.Names.bindProperties;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.Constants.CORS_ALLOWED_ORIGINS;
 
@@ -37,7 +37,7 @@ public class ConfigurationModule extends AbstractModule {
 
         final Properties properties = propertiesSupplier.get();
         logger.info("Using configuration properties " + properties);
-        Names.bindProperties(binder(), properties);
+        bindProperties(binder(), properties);
 
         final Multibinder<URI> corsAllowedOriginsMultibinder;
         corsAllowedOriginsMultibinder = newSetBinder(binder(), URI.class, named(CORS_ALLOWED_ORIGINS));
