@@ -15,22 +15,22 @@ public enum Platform {
     /**
      * Represents the PlayStation(tm) Network for PS4 enabled titles..
      */
-    PSN_PS4(PSNApplicationProfile.class),
+    PSN_PS4(PSNApplicationConfiguration.class),
 
     /**
      * Represents the PlayStation(tm) Network for Vita enabled titles..
      */
-    PSN_VITA(PSNApplicationProfile.class),
+    PSN_VITA(PSNApplicationConfiguration.class),
 
     /**
      * Represents an iOS application profile for the Apple iTunes AppStore
      */
-    IOS_APP_STORE(IosApplicationProfile.class),
+    IOS_APP_STORE(IosApplicationConfiguration.class),
 
     /**
      * Represents an Android application profile for Google Play
      */
-    ANDROID_GOOGLE_PLAY(GooglePlayApplicationProfile.class);
+    ANDROID_GOOGLE_PLAY(GooglePlayApplicationConfiguration.class);
 
     Platform(final Class<?> profileModelType) {
         this.profileModelType = profileModelType;

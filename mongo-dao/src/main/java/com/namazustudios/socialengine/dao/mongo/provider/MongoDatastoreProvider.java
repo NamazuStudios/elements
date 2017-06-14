@@ -33,7 +33,7 @@ public class MongoDatastoreProvider implements Provider<Datastore> {
                 MongoSteamEntrant.class,
                 MongoUser.class,
                 MongoApplication.class,
-                MongoPSNApplicationProfile.class
+                MongoPSNApplicationConfiguration.class
         );
 
         final MongoClient mongoClient = mongoProvider.get();

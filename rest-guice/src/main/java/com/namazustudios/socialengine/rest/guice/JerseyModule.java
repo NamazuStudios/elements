@@ -117,17 +117,17 @@ public abstract class JerseyModule extends ServletModule {
      */
     public JerseyModule enableApplicationResource() {
         bind(ApplicationResource.class);
-        bind(ApplicationProfileResource.class);
+        bind(ApplicationConfigurationResource.class);
         return this;
     }
 
     /**
-     * Enables the {@link PSNApplicationProfileResource}
+     * Enables the {@link PSNApplicationConfigurationResource}
      *
      * @return this
      */
     public JerseyModule enablePSNApplicationProfileResource() {
-        bind(PSNApplicationProfileResource.class);
+        bind(PSNApplicationConfigurationResource.class);
         return this;
     }
 
@@ -143,8 +143,8 @@ public abstract class JerseyModule extends ServletModule {
         bind(ShortLinkResource.class);
         bind(SocialCampaignResource.class);
         bind(ApplicationResource.class);
-        bind(ApplicationProfileResource.class);
-        bind(PSNApplicationProfileResource.class);
+        bind(ApplicationConfigurationResource.class);
+        bind(PSNApplicationConfigurationResource.class);
         return this;
     }
 

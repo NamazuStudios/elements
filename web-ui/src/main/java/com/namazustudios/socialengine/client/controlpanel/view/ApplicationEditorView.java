@@ -14,7 +14,7 @@ import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
 import com.namazustudios.socialengine.client.rest.client.ApplicationClient;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.model.application.ApplicationProfile;
+import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.Platform;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
@@ -66,7 +66,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
     Label descriptionWarningLabel;
 
     @UiField
-    CellTable<ApplicationProfile> applicationProfileCellTable;
+    CellTable<ApplicationConfiguration> applicationProfileCellTable;
 
     @UiField
     Pagination applicationProfileCellTablePagination;
@@ -90,28 +90,28 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
     @Inject
     public ApplicationEditorView(
             final ApplicationEditorViewBinder applicationEditorViewBinder,
-            final ApplicationProfileDataProvider applicationProfileDataProvider) {
+            final ApplicationConfigurationDataProvider applicationConfigurationDataProvider) {
 
         initWidget(applicationEditorViewBinder.createAndBindUi(this));
 
-        final Column<ApplicationProfile, String> profileIdColumn = new Column<ApplicationProfile, String>(new TextCell()) {
+        final Column<ApplicationConfiguration, String> profileIdColumn = new Column<ApplicationConfiguration, String>(new TextCell()) {
             @Override
-            public String getValue(ApplicationProfile object) {
+            public String getValue(ApplicationConfiguration object) {
                 return object.getId();
             }
         };
 
-        final Column<ApplicationProfile, String> profilePlatformColumn = new Column<ApplicationProfile, String>(new TextCell()) {
+        final Column<ApplicationConfiguration, String> profilePlatformColumn = new Column<ApplicationConfiguration, String>(new TextCell()) {
             @Override
-            public String getValue(ApplicationProfile object) {
+            public String getValue(ApplicationConfiguration object) {
                 final Platform platform = object.getPlatform();
                 return platform == null ? "" : platform.toString();
             }
         };
 
-        final Column<ApplicationProfile, String> editColumn = new Column<ApplicationProfile, String>(new ButtonCell()) {
+        final Column<ApplicationConfiguration, String> editColumn = new Column<ApplicationConfiguration, String>(new ButtonCell()) {
             @Override
-            public String getValue(ApplicationProfile object) {
+            public String getValue(ApplicationConfiguration object) {
                 return "Edit";
             }
         };
@@ -121,9 +121,9 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
             Notify.notify("Todo!");
         });
 
-        final Column<ApplicationProfile, String> deleteColumn = new Column<ApplicationProfile, String>(new ButtonCell()) {
+        final Column<ApplicationConfiguration, String> deleteColumn = new Column<ApplicationConfiguration, String>(new ButtonCell()) {
             @Override
-            public String getValue(ApplicationProfile object) {
+            public String getValue(ApplicationConfiguration object) {
                 return "Delete";
             }
         };
@@ -139,7 +139,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
         applicationProfileCellTable.addColumn(deleteColumn);
 
         applicationProfileCellTable.addRangeChangeHandler(event -> applicationProfileCellTablePagination.rebuild(simplePager));
-        applicationProfileDataProvider.addRefreshListener(() -> applicationProfileCellTablePagination.rebuild(simplePager));
+        applicationConfigurationDataProvider.addRefreshListener(() -> applicationProfileCellTablePagination.rebuild(simplePager));
 
         final Label emptyLabel = new Label();
         emptyLabel.setType(LabelType.INFO);
@@ -148,7 +148,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
         simplePager.setDisplay(applicationProfileCellTable);
         applicationProfileCellTablePagination.clear();
-        applicationProfileDataProvider.addDataDisplay(applicationProfileCellTable);
+        applicationConfigurationDataProvider.addDataDisplay(applicationProfileCellTable);
 
     }
 
