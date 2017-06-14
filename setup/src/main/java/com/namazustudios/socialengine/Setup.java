@@ -11,6 +11,9 @@ import org.apache.bval.guice.ValidationModule;
 
 import java.io.Console;
 import java.util.Arrays;
+import java.util.Properties;
+
+import static org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY;
 
 /**
  * A Setup utility that can be run from the command-line.  This operates git-style where
@@ -30,6 +33,12 @@ public class Setup {
      * @throws Exception in case something goes wrong.
      */
     public void run(final String args[]) throws Exception {
+
+        final Properties systemProperties = System.getProperties();
+
+        if (!systemProperties.containsKey(DEFAULT_LOG_LEVEL_KEY)) {
+            systemProperties.setProperty(DEFAULT_LOG_LEVEL_KEY, "warn");
+        }
 
         if (args.length < 1) {
             System.err.print("Please specify commandType.");

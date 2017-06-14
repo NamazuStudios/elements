@@ -26,9 +26,10 @@ then
 	echo "Found Setup File.  Skipping Setup."
 else
 
-	echo "Setup Not Found."
+	echo "Setup Not Found.  Performing first-time setup actions."
 
-	java -jar /opt/socialengine/setup.jar \
+	java -Dorg.slf4j.simpleLogger.defaultLogLevel=info \
+	    -jar /opt/socialengine/setup.jar \
 		add-user \
 		-email=root@namazustudios.net \
 		-user=root -password=root \
@@ -52,7 +53,7 @@ else
 fi
 
 echo "Starting Jetty."
-/docker-entrypoint.sh
+/docker-entrypoint.sh -DdumpOnStart
 
 echo "Jetty Stopped.  Shutting down MongoDB."
 mongod --shutdown --pidfilepath ${mongo_db_pidfile}

@@ -14,18 +14,20 @@ public class UiGuiceServletContextListener extends GuiceServletContextListener {
 
     private Injector injector;
 
+    private ServletContext servletContext;
+
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
+        servletContext = servletContextEvent.getServletContext();
         super.contextInitialized(servletContextEvent);
-        final ServletContext context = servletContextEvent.getServletContext();
-        context.setAttribute(UiGuiceResourceConfig.INJECOR_ATTRIBUTE_NAME, injector);
+        servletContext.setAttribute(UiGuiceResourceConfig.INJECOR_ATTRIBUTE_NAME, injector);
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
         super.contextDestroyed(servletContextEvent);
-        final ServletContext context = servletContextEvent.getServletContext();
-        context.removeAttribute(UiGuiceResourceConfig.INJECOR_ATTRIBUTE_NAME);
+        servletContext.removeAttribute(UiGuiceResourceConfig.INJECOR_ATTRIBUTE_NAME);
+        servletContext = null;
         injector = null;
     }
 
@@ -33,7 +35,7 @@ public class UiGuiceServletContextListener extends GuiceServletContextListener {
     protected Injector getInjector() {
         return injector =  Guice.createInjector(
             new UiGuiceServletModule(),
-            new UiGuiceConfigurationModule()
+            new UiGuiceConfigurationModule(servletContext::getClassLoader)
         );
     }
 

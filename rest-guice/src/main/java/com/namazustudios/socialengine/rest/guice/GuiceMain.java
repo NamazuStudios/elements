@@ -23,18 +23,20 @@ public class GuiceMain extends GuiceServletContextListener {
 
     private Injector injector;
 
+    private ServletContext servletContext;
+
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
+        servletContext = servletContextEvent.getServletContext();
         super.contextInitialized(servletContextEvent);
-        final ServletContext context = servletContextEvent.getServletContext();
-        context.setAttribute(GuiceResourceConfig.INJECOR_ATTRIBUTE_NAME, injector);
+        servletContext.setAttribute(GuiceResourceConfig.INJECOR_ATTRIBUTE_NAME, injector);
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
         super.contextDestroyed(servletContextEvent);
-        final ServletContext context = servletContextEvent.getServletContext();
-        context.removeAttribute(GuiceResourceConfig.INJECOR_ATTRIBUTE_NAME);
+        servletContext.removeAttribute(GuiceResourceConfig.INJECOR_ATTRIBUTE_NAME);
+        servletContext = null;
         injector = null;
     }
 
@@ -42,7 +44,7 @@ public class GuiceMain extends GuiceServletContextListener {
     protected Injector getInjector() {
 
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
-        defaultConfigurationSupplier = new DefaultConfigurationSupplier();
+        defaultConfigurationSupplier = new DefaultConfigurationSupplier(servletContext.getClassLoader());
 
         final Properties properties = defaultConfigurationSupplier.get();
         final String apiRoot = properties.getProperty(Constants.API_PREFIX);

@@ -23,8 +23,11 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
     private final Properties properties;
 
     public DefaultConfigurationSupplier() {
+        this(ClassLoader.getSystemClassLoader());
+    }
 
-        final Properties defaultProperties = scanForDefaults();
+    public DefaultConfigurationSupplier(final ClassLoader classLoader) {
+        final Properties defaultProperties = scanForDefaults(classLoader);
         final Properties properties = new Properties(defaultProperties);
 
         final File propertiesFile = new File(System.getProperties().getProperty(
@@ -44,16 +47,15 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
         logger.info("Using configuration properties " + properties);
         this.properties = properties;
-
     }
 
     public Properties get() {
         return new Properties(this.properties);
     }
 
-    private Properties scanForDefaults() {
+    private Properties scanForDefaults(final ClassLoader classLoader) {
 
-        final Reflections reflections = new Reflections("com.namazustudios");
+        final Reflections reflections = new Reflections("com.namazustudios", classLoader);
         final Set<Class<? extends ModuleDefaults>> classSet = reflections.getSubTypesOf(ModuleDefaults.class);
 
         final Properties defaultProperties = new Properties();
