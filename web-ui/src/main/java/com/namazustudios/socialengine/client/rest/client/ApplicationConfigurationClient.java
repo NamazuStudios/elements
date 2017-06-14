@@ -26,7 +26,7 @@ public interface ApplicationConfigurationClient extends RestService {
      * @param methodCallback
      */
     @GET
-    @Path("{applicationNameOrId}/profile")
+    @Path("{applicationNameOrId}/configuration")
     void getAllProfiles(
             @PathParam("applicationNameOrId") String applicationNameOrId,
             @QueryParam("offset") int offset,
@@ -42,7 +42,7 @@ public interface ApplicationConfigurationClient extends RestService {
      * @param methodCallback
      */
     @GET
-    @Path("{applicationNameOrId}/profile")
+    @Path("{applicationNameOrId}/configuration")
     void getAllProfiles(
             @PathParam("applicationNameOrId") String applicationNameOrId,
             @QueryParam("offset") int offset,

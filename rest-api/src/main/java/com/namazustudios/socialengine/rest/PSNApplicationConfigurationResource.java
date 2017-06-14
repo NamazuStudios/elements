@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Api(value = "PSN Application Configurations",
     description = "Operations for the management of ApplictionProfiles for the Playstation Network.")
-@Path("application/{applicationNameOrId}/profile/psn")
+@Path("application/{applicationNameOrId}/configuration/psn")
 public class PSNApplicationConfigurationResource {
 
     private PSNApplicationConfigurationService psnApplicationConfigurationService;

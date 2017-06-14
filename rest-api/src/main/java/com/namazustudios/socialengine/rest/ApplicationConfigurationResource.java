@@ -21,7 +21,7 @@ import static com.google.common.base.Strings.nullToEmpty;
                    "application metadata for a particular configuration of deployment.  For example, " +
                    "an application may be deployed on both Android and iOS.  One application profile" +
                    "each for Android and iOS would be required.")
-@Path("application/{applicationNameOrId}/profile")
+@Path("application/{applicationNameOrId}/configuration")
 public class ApplicationConfigurationResource {
 
     private ApplicationConfigurationService applicationConfigurationService;

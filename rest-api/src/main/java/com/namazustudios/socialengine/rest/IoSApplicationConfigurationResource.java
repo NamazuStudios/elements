@@ -17,7 +17,7 @@ import javax.ws.rs.core.MediaType;
 @Api(
     value = "iOS Application Configuration",
     description = "Operations for the management of ApplictionProfiles for iOS Applications.")
-@Path("application/{applicationNameOrId}/profile/ios")
+@Path("application/{applicationNameOrId}/configuration/ios")
 public class IoSApplicationConfigurationResource {
 
     private IosApplicationConfigurationService iosApplicationConfigurationService;

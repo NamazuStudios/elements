@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Api(value = "Google Play Application Configuration",
      description = "Operations for the management of ApplictionProfiles for Google Play.")
-@Path("application/{applicationNameOrId}/profile/google_play")
+@Path("application/{applicationNameOrId}/configuration/google_play")
 public class GooglePlayApplicationConfigurationResource {
 
     private GooglePlayApplicationConfigurationService googlePlayApplicationConfigurationService;
