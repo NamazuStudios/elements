@@ -37,14 +37,14 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
     private MongoDBUtils mongoDBUtils;
 
     @Override
-    public IosApplicationConfiguration createOrUpdateInactiveApplicationProfile(
+    public IosApplicationConfiguration createOrUpdateInactiveApplicationConfiguration(
             final String applicationNameOrId,
-            final IosApplicationConfiguration iosApplicationProfile) {
+            final IosApplicationConfiguration iosApplicationConfiguration) {
 
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        validate(iosApplicationProfile);
+        validate(iosApplicationConfiguration);
 
         final Query<MongoIosApplicationConfiguration> query;
         query = getDatastore().createQuery(MongoIosApplicationConfiguration.class);
@@ -53,15 +53,15 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
             query.criteria("active").equal(false),
             query.criteria("parent").equal(mongoApplication),
             query.criteria("platform").equal(IOS_APP_STORE),
-            query.criteria("name").equal(iosApplicationProfile.getApplicationId())
+            query.criteria("name").equal(iosApplicationConfiguration.getApplicationId())
         );
 
         final UpdateOperations<MongoIosApplicationConfiguration> updateOperations;
         updateOperations = getDatastore().createUpdateOperations(MongoIosApplicationConfiguration.class);
 
-        updateOperations.set("name", iosApplicationProfile.getApplicationId().trim());
+        updateOperations.set("name", iosApplicationConfiguration.getApplicationId().trim());
         updateOperations.set("active", true);
-        updateOperations.set("platform", iosApplicationProfile.getPlatform());
+        updateOperations.set("platform", iosApplicationConfiguration.getPlatform());
         updateOperations.set("parent", mongoApplication);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
@@ -79,9 +79,9 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
     }
 
     @Override
-    public IosApplicationConfiguration getIosApplicationProfile(
+    public IosApplicationConfiguration getIosApplicationConfiguration(
             final String applicationNameOrId,
-            final String applicationProfileNameOrId) {
+            final String applicationConfigurationNameOrId) {
 
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
@@ -96,15 +96,15 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         );
 
         try {
-            query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
+            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
         } catch (IllegalArgumentException ex) {
-            query.filter("name = ", applicationProfileNameOrId);
+            query.filter("name = ", applicationConfigurationNameOrId);
         }
 
         final MongoIosApplicationConfiguration mongoIosApplicationProfile = query.get();
 
         if (mongoIosApplicationProfile == null) {
-            throw new NotFoundException("application profile " + applicationProfileNameOrId + " not found.");
+            throw new NotFoundException("application profile " + applicationConfigurationNameOrId + " not found.");
         }
 
         return getBeanMapper().map(mongoIosApplicationProfile, IosApplicationConfiguration.class);
@@ -112,14 +112,14 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
     }
 
     @Override
-    public IosApplicationConfiguration updateApplicationProfile(
+    public IosApplicationConfiguration updateApplicationConfiguration(
             final String applicationNameOrId,
             final String applicationProfileNameOrId,
-            final IosApplicationConfiguration iosApplicationProfile) {
+            final IosApplicationConfiguration iosApplicationConfiguration) {
 
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
-        validate(iosApplicationProfile);
+        validate(iosApplicationConfiguration);
 
         final Query<MongoIosApplicationConfiguration> query;
         query = getDatastore().createQuery(MongoIosApplicationConfiguration.class);
@@ -139,8 +139,8 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         final UpdateOperations<MongoIosApplicationConfiguration> updateOperations;
         updateOperations = getDatastore().createUpdateOperations(MongoIosApplicationConfiguration.class);
 
-        updateOperations.set("name", iosApplicationProfile.getApplicationId().trim());
-        updateOperations.set("platform", iosApplicationProfile.getPlatform());
+        updateOperations.set("name", iosApplicationConfiguration.getApplicationId().trim());
+        updateOperations.set("platform", iosApplicationConfiguration.getPlatform());
         updateOperations.set("parent", mongoApplication);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
@@ -155,15 +155,15 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
             throw new NotFoundException("profile with ID not found: " + applicationProfileNameOrId);
         }
 
-        getObjectIndex().index(iosApplicationProfile);
-        return getBeanMapper().map(iosApplicationProfile, IosApplicationConfiguration.class);
+        getObjectIndex().index(iosApplicationConfiguration);
+        return getBeanMapper().map(iosApplicationConfiguration, IosApplicationConfiguration.class);
 
     }
 
     @Override
-    public void softDeleteApplicationProfile(
+    public void softDeleteApplicationConfiguration(
             final String applicationNameOrId,
-            final String applicationProfileNameOrId) {
+            final String applicationConfigurationNameOrId) {
 
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
@@ -178,9 +178,9 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         );
 
         try {
-            query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
+            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
         } catch (IllegalArgumentException ex) {
-            query.filter("name = ", applicationProfileNameOrId);
+            query.filter("name = ", applicationConfigurationNameOrId);
         }
 
         final UpdateOperations<MongoIosApplicationConfiguration> updateOperations;

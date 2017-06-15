@@ -13,42 +13,42 @@ public interface PSNApplicationConfigurationDao {
      * Creates, or updates an inactive ApplicationConfiguration object.
      *
      * @param applicationNameOrId
-     * @param psnApplicationProfile
+     * @param psnApplicationConfiguration
      * @return
      */
-    PSNApplicationConfiguration createOrUpdateInactiveApplicationProfile(final String applicationNameOrId,
-                                                                         final PSNApplicationConfiguration psnApplicationProfile);
+    PSNApplicationConfiguration createOrUpdateInactiveApplicationConfiguration(final String applicationNameOrId,
+                                                                               final PSNApplicationConfiguration psnApplicationConfiguration);
 
     /**
      * Gets an {@link PSNApplicationConfiguration} with the specific name or identifier.
      *
      * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationProfileNameOrId the {@link ApplicationConfiguration} id
+     * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration} id
      */
-    PSNApplicationConfiguration getPSNApplicationProfile(final String applicationNameOrId,
-                                                         final String applicationProfileNameOrId);
+    PSNApplicationConfiguration getPSNApplicationConfiguration(final String applicationNameOrId,
+                                                               final String applicationConfigurationNameOrId);
 
     /**
      * Updates an application with the specific name/identifiers.
      *
      * @param applicationNameOrId the {@link Application} name or id
      * @param applicationProfileNameOrId the {@link PSNApplicationConfiguration} id
-     * @param psnApplicationProfile the {@link PSNApplicationConfiguration} object to write
+     * @param psnApplicationConfiguration the {@link PSNApplicationConfiguration} object to write
      *
      * @return the {@link PSNApplicationConfiguration} object as it was persisted to the database.
      *
      */
-    PSNApplicationConfiguration updateApplicationProfile(final String applicationNameOrId,
-                                                         final String applicationProfileNameOrId,
-                                                         final PSNApplicationConfiguration psnApplicationProfile);
+    PSNApplicationConfiguration updateApplicationConfiguration(final String applicationNameOrId,
+                                                               final String applicationProfileNameOrId,
+                                                               final PSNApplicationConfiguration psnApplicationConfiguration);
 
     /**
      * Delets an {@link PSNApplicationConfiguration} using the ID as reference.
      *
      *  @param applicationNameOrId the {@link Application} name or id
-     * @param applicationProfileNameOrId the {@link PSNApplicationConfiguration} id
+     * @param applicationConfigurationNameOrId the {@link PSNApplicationConfiguration} id
      *
      */
-    void softDeleteApplicationProfile(final String applicationNameOrId, final String applicationProfileNameOrId);
+    void softDeleteApplicationConfiguration(final String applicationNameOrId, final String applicationConfigurationNameOrId);
 
 }

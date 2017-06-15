@@ -15,25 +15,25 @@ public class SuperUserPSNApplicationConfigurationService implements PSNApplicati
 
     @Override
     public PSNApplicationConfiguration getApplicationConfiguration(String applicationNameOrId, String applicationProfileNameOrId) {
-        return getPsnApplicationConfigurationDao().getPSNApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
+        return getPsnApplicationConfigurationDao().getPSNApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId);
     }
 
     @Override
     public PSNApplicationConfiguration createApplicationConfiguration(String applicationNameOrId,
                                                                       PSNApplicationConfiguration psnApplicationProfile) {
-        return getPsnApplicationConfigurationDao().createOrUpdateInactiveApplicationProfile(applicationNameOrId, psnApplicationProfile);
+        return getPsnApplicationConfigurationDao().createOrUpdateInactiveApplicationConfiguration(applicationNameOrId, psnApplicationProfile);
     }
 
     @Override
     public PSNApplicationConfiguration updateApplicationConfiguration(String applicationNameOrId,
                                                                       String applicationProfileNameOrId,
                                                                       PSNApplicationConfiguration psnApplicationProfile) {
-        return getPsnApplicationConfigurationDao().updateApplicationProfile(applicationNameOrId, applicationProfileNameOrId, psnApplicationProfile);
+        return getPsnApplicationConfigurationDao().updateApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId, psnApplicationProfile);
     }
 
     @Override
     public void deleteApplicationConfiguration(String applicationNameOrId, String applicationProfileNameOrId) {
-        getPsnApplicationConfigurationDao().softDeleteApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
+        getPsnApplicationConfigurationDao().softDeleteApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId);
     }
 
     public PSNApplicationConfigurationDao getPsnApplicationConfigurationDao() {

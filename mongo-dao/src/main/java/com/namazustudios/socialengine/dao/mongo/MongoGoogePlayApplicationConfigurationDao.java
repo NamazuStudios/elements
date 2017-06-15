@@ -37,14 +37,14 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
     private MongoDBUtils mongoDBUtils;
 
     @Override
-    public GooglePlayApplicationConfiguration createOrUpdateInactiveApplicationProfile(
+    public GooglePlayApplicationConfiguration createOrUpdateInactiveApplicationConfiguration(
             final String applicationNameOrId,
-            final GooglePlayApplicationConfiguration googlePlayApplicationProfile) {
+            final GooglePlayApplicationConfiguration googlePlayApplicationConfiguration) {
 
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        validate(googlePlayApplicationProfile);
+        validate(googlePlayApplicationConfiguration);
 
         final Query<MongoGooglePlayApplicationConfiguration> query;
         query = getDatastore().createQuery(MongoGooglePlayApplicationConfiguration.class);
@@ -53,15 +53,15 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
             query.criteria("active").equal(false),
             query.criteria("parent").equal(mongoApplication),
             query.criteria("platform").equal(ANDROID_GOOGLE_PLAY),
-            query.criteria("name").equal(googlePlayApplicationProfile.getApplicationId())
+            query.criteria("name").equal(googlePlayApplicationConfiguration.getApplicationId())
         );
 
         final UpdateOperations<MongoGooglePlayApplicationConfiguration> updateOperations;
         updateOperations = getDatastore().createUpdateOperations(MongoGooglePlayApplicationConfiguration.class);
 
-        updateOperations.set("name", googlePlayApplicationProfile.getApplicationId().trim());
+        updateOperations.set("name", googlePlayApplicationConfiguration.getApplicationId().trim());
         updateOperations.set("active", true);
-        updateOperations.set("platform", googlePlayApplicationProfile.getPlatform());
+        updateOperations.set("platform", googlePlayApplicationConfiguration.getPlatform());
         updateOperations.set("parent", mongoApplication);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
@@ -78,9 +78,9 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
     }
 
     @Override
-    public GooglePlayApplicationConfiguration getGooglePlayApplicationProfile(
+    public GooglePlayApplicationConfiguration getGooglePlayApplicationConfiguration(
             final String applicationNameOrId,
-            final String applicationProfileNameOrId) {
+            final String applicationConfigurationNameOrId) {
 
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
@@ -95,15 +95,15 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
         );
 
         try {
-            query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
+            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
         } catch (IllegalArgumentException ex) {
-            query.filter("name = ", applicationProfileNameOrId);
+            query.filter("name = ", applicationConfigurationNameOrId);
         }
 
         final MongoGooglePlayApplicationConfiguration mongoIosApplicationProfile = query.get();
 
         if (mongoIosApplicationProfile == null) {
-            throw new NotFoundException("application profile " + applicationProfileNameOrId + " not found.");
+            throw new NotFoundException("application profile " + applicationConfigurationNameOrId + " not found.");
         }
 
         return getBeanMapper().map(mongoIosApplicationProfile, GooglePlayApplicationConfiguration.class);
@@ -111,14 +111,14 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
     }
 
     @Override
-    public GooglePlayApplicationConfiguration updateApplicationProfile(
+    public GooglePlayApplicationConfiguration updateApplicationConfiguration(
             final String applicationNameOrId,
             final String applicationProfileNameOrId,
-            final GooglePlayApplicationConfiguration googlePlayApplicationProfile) {
+            final GooglePlayApplicationConfiguration googlePlayApplicationConfiguration) {
 
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
-        validate(googlePlayApplicationProfile);
+        validate(googlePlayApplicationConfiguration);
 
         final Query<MongoGooglePlayApplicationConfiguration> query;
         query = getDatastore().createQuery(MongoGooglePlayApplicationConfiguration.class);
@@ -138,8 +138,8 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
         final UpdateOperations<MongoGooglePlayApplicationConfiguration> updateOperations;
         updateOperations = getDatastore().createUpdateOperations(MongoGooglePlayApplicationConfiguration.class);
 
-        updateOperations.set("name", googlePlayApplicationProfile.getApplicationId().trim());
-        updateOperations.set("platform", googlePlayApplicationProfile.getPlatform());
+        updateOperations.set("name", googlePlayApplicationConfiguration.getApplicationId().trim());
+        updateOperations.set("platform", googlePlayApplicationConfiguration.getPlatform());
         updateOperations.set("parent", mongoApplication);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
@@ -160,9 +160,9 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
     }
 
     @Override
-    public void softDeleteApplicationProfile(
+    public void softDeleteApplicationConfiguration(
             final String applicationNameOrId,
-            final String applicationProfileNameOrId) {
+            final String applicationConfigurationNameOrId) {
 
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
@@ -177,9 +177,9 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
         );
 
         try {
-            query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
+            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
         } catch (IllegalArgumentException ex) {
-            query.filter("name = ", applicationProfileNameOrId);
+            query.filter("name = ", applicationConfigurationNameOrId);
         }
 
         final UpdateOperations<MongoGooglePlayApplicationConfiguration> updateOperations;
