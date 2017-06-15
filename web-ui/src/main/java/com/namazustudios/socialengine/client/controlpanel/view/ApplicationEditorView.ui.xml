@@ -58,7 +58,7 @@
             <b:Panel>
 
                 <b:PanelHeader>
-                    <b:Heading size="H3" text="Application Profiles"/>
+                    <b:Heading size="H3" text="Application Configurations"/>
                 </b:PanelHeader>
 
                 <b:PanelBody>
