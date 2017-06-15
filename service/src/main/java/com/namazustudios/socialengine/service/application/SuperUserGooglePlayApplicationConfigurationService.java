@@ -14,28 +14,28 @@ public class SuperUserGooglePlayApplicationConfigurationService implements Googl
     private GooglePlayApplicationConfigurationDao googlePlayApplicationConfigurationDao;
 
     @Override
-    public void deleteApplicationProfile(final String applicationNameOrId,
-                                         final String applicationProfileNameOrId) {
-        getGooglePlayApplicationConfigurationDao().softDeleteApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
+    public void deleteApplicationConfiguration(final String applicationNameOrId,
+                                               final String applicationConfigurationNameOrId) {
+        getGooglePlayApplicationConfigurationDao().softDeleteApplicationProfile(applicationNameOrId, applicationConfigurationNameOrId);
     }
 
     @Override
-    public GooglePlayApplicationConfiguration getApplicationProfile(final String applicationNameOrId,
-                                                                    final String applicationProfileNameOrId) {
-        return getGooglePlayApplicationConfigurationDao().getGooglePlayApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
+    public GooglePlayApplicationConfiguration getApplicationConfiguration(final String applicationNameOrId,
+                                                                          final String applicationConfigurationNameOrId) {
+        return getGooglePlayApplicationConfigurationDao().getGooglePlayApplicationProfile(applicationNameOrId, applicationConfigurationNameOrId);
     }
 
     @Override
-    public GooglePlayApplicationConfiguration createApplicationProfile(final String applicationNameOrId,
-                                                                       final GooglePlayApplicationConfiguration googlePlayApplicationProfile) {
-        return getGooglePlayApplicationConfigurationDao().createOrUpdateInactiveApplicationProfile(applicationNameOrId, googlePlayApplicationProfile);
+    public GooglePlayApplicationConfiguration createApplicationConfiguration(final String applicationNameOrId,
+                                                                             final GooglePlayApplicationConfiguration googlePlayApplicationConfiguration) {
+        return getGooglePlayApplicationConfigurationDao().createOrUpdateInactiveApplicationProfile(applicationNameOrId, googlePlayApplicationConfiguration);
     }
 
     @Override
-    public GooglePlayApplicationConfiguration updateApplicationProfile(final String applicationNameOrId,
-                                                                       final String applicationProfileNameOrId,
-                                                                       final GooglePlayApplicationConfiguration googlePlayApplicationProfile) {
-        return getGooglePlayApplicationConfigurationDao().updateApplicationProfile(applicationNameOrId, applicationProfileNameOrId, googlePlayApplicationProfile);
+    public GooglePlayApplicationConfiguration updateApplicationConfiguration(final String applicationNameOrId,
+                                                                             final String applicationConfigurationNameOrId,
+                                                                             final GooglePlayApplicationConfiguration googlePlayApplicationConfiguration) {
+        return getGooglePlayApplicationConfigurationDao().updateApplicationProfile(applicationNameOrId, applicationConfigurationNameOrId, googlePlayApplicationConfiguration);
     }
 
     public GooglePlayApplicationConfigurationDao getGooglePlayApplicationConfigurationDao() {

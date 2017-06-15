@@ -39,7 +39,7 @@ public class GooglePlayApplicationConfigurationResource {
     public GooglePlayApplicationConfiguration getGooglePlayApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        return getGooglePlayApplicationConfigurationService().getApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
+        return getGooglePlayApplicationConfigurationService().getApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId);
     }
 
     /**
@@ -58,7 +58,7 @@ public class GooglePlayApplicationConfigurationResource {
     public GooglePlayApplicationConfiguration createGooglePlayApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             final GooglePlayApplicationConfiguration googlePlayApplicationProfile) {
-        return getGooglePlayApplicationConfigurationService().createApplicationProfile(applicationNameOrId, googlePlayApplicationProfile);
+        return getGooglePlayApplicationConfigurationService().createApplicationConfiguration(applicationNameOrId, googlePlayApplicationProfile);
     }
 
     /**
@@ -80,7 +80,7 @@ public class GooglePlayApplicationConfigurationResource {
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId,
             final GooglePlayApplicationConfiguration googlePlayApplicationProfile) {
-        return getGooglePlayApplicationConfigurationService().updateApplicationProfile(
+        return getGooglePlayApplicationConfigurationService().updateApplicationConfiguration(
                 applicationNameOrId,
                 applicationProfileNameOrId,
                 googlePlayApplicationProfile);
@@ -101,7 +101,7 @@ public class GooglePlayApplicationConfigurationResource {
     public void deleteGooglePlayApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        getGooglePlayApplicationConfigurationService().deleteApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
+        getGooglePlayApplicationConfigurationService().deleteApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId);
     }
 
 

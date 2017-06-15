@@ -13,44 +13,43 @@ public interface GooglePlayApplicationConfigurationService {
      * Deletes an {@link GooglePlayApplicationConfiguration} using the ID as reference.
      *
      * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationProfileNameOrId the {@link ApplicationConfiguration} id
+     * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration} id
      *
      */
-    void deleteApplicationProfile(final String applicationNameOrId, final String applicationProfileNameOrId);
+    void deleteApplicationConfiguration(final String applicationNameOrId, final String applicationConfigurationNameOrId);
 
     /**
      * Gets an application with the specific name or identifier.
-     *
-     * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationProfileNameOrId the {@link ApplicationConfiguration} id
+     *  @param applicationNameOrId the {@link Application} name or id
+     * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration} id
      *
      */
-    GooglePlayApplicationConfiguration getApplicationProfile(final String applicationNameOrId,
-                                                             final String applicationProfileNameOrId);
+    GooglePlayApplicationConfiguration getApplicationConfiguration(final String applicationNameOrId,
+                                                                   final String applicationConfigurationNameOrId);
 
     /**
      * Updates an application with the specific name/identifiers.
      *
      * @param applicationNameOrId the {@link Application} name or id
-     * @param googlePlayApplicationProfile the {@link GooglePlayApplicationConfiguration} object to write
+     * @param googlePlayApplicationConfiguration the {@link GooglePlayApplicationConfiguration} object to write
      * @return the {@link GooglePlayApplicationConfiguration} object as it was persisted to the database.
      *
      */
-    GooglePlayApplicationConfiguration createApplicationProfile(final String applicationNameOrId,
-                                                                final GooglePlayApplicationConfiguration googlePlayApplicationProfile);
+    GooglePlayApplicationConfiguration createApplicationConfiguration(final String applicationNameOrId,
+                                                                      final GooglePlayApplicationConfiguration googlePlayApplicationConfiguration);
 
     /**
      * Updates an application with the specific name/identifiers.
      *
      * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationProfileNameOrId the {@link GooglePlayApplicationConfiguration} id
-     * @param googlePlayApplicationProfile the {@link GooglePlayApplicationConfiguration} object to write
+     * @param applicationConfigurationNameOrId the {@link GooglePlayApplicationConfiguration} id
+     * @param googlePlayApplicationConfiguration the {@link GooglePlayApplicationConfiguration} object to write
      *
      * @return the {@link GooglePlayApplicationConfiguration} object as it was persisted to the database.
      *
      */
-    GooglePlayApplicationConfiguration updateApplicationProfile(final String applicationNameOrId,
-                                                                final String applicationProfileNameOrId,
-                                                                final GooglePlayApplicationConfiguration googlePlayApplicationProfile);
+    GooglePlayApplicationConfiguration updateApplicationConfiguration(final String applicationNameOrId,
+                                                                      final String applicationConfigurationNameOrId,
+                                                                      final GooglePlayApplicationConfiguration googlePlayApplicationConfiguration);
 
 }

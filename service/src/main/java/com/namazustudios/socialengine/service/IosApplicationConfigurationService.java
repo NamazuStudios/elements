@@ -13,44 +13,43 @@ public interface IosApplicationConfigurationService {
      * Deletes an {@link IosApplicationConfiguration} using the ID as reference.
      *
      * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationProfileNameOrId the {@link ApplicationConfiguration} id
+     * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration} id
      *
      */
-    void deleteApplicationProfile(final String applicationNameOrId, final String applicationProfileNameOrId);
+    void deleteApplicationConfiguration(String applicationNameOrId, String applicationConfigurationNameOrId);
 
     /**
      * Gets an application with the specific name or identifier.
      *
      * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationProfileNameOrId the {@link ApplicationConfiguration} id
+     * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration} id
      *
      */
-    IosApplicationConfiguration getApplicationProfile(final String applicationNameOrId,
-                                                      final String applicationProfileNameOrId);
+    IosApplicationConfiguration getApplicationConfiguration(String applicationNameOrId, String applicationConfigurationNameOrId);
 
     /**
      * Updates an application with the specific name/identifiers.
      *
      * @param applicationNameOrId the {@link Application} name or id
-     * @param iosApplicationProfile the {@link IosApplicationConfiguration} object to write
+     * @param iosApplicationConfiguration the {@link IosApplicationConfiguration} object to write
      * @return the {@link IosApplicationConfiguration} object as it was persisted to the database.
      *
      */
-    IosApplicationConfiguration createApplicationProfile(final String applicationNameOrId,
-                                                         final IosApplicationConfiguration iosApplicationProfile);
+    IosApplicationConfiguration createApplicationConfiguration(final String applicationNameOrId,
+                                                               final IosApplicationConfiguration iosApplicationConfiguration);
 
     /**
      * Updates an application with the specific name/identifiers.
      *
      * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationProfileNameOrId the {@link IosApplicationConfiguration} id
-     * @param iosApplicationProfile the {@link IosApplicationConfiguration} object to write
+     * @param applicationConfigurationNameOrId the {@link IosApplicationConfiguration} id
+     * @param iosApplicationConfiguration the {@link IosApplicationConfiguration} object to write
      *
      * @return the {@link IosApplicationConfiguration} object as it was persisted to the database.
      *
      */
-    IosApplicationConfiguration updateApplicationProfile(final String applicationNameOrId,
-                                                         final String applicationProfileNameOrId,
-                                                         final IosApplicationConfiguration iosApplicationProfile);
+    IosApplicationConfiguration updateApplicationConfiguration(final String applicationNameOrId,
+                                                               final String applicationConfigurationNameOrId,
+                                                               final IosApplicationConfiguration iosApplicationConfiguration);
 
 }

@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rest;
+package com.namazustudios.socialengine.rest.application;
 
 import com.namazustudios.socialengine.model.application.PSNApplicationConfiguration;
 import com.namazustudios.socialengine.service.PSNApplicationConfigurationService;

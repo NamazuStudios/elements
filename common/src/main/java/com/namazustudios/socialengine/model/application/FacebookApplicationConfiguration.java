@@ -24,9 +24,6 @@ public class FacebookApplicationConfiguration extends ApplicationConfiguration {
     @ApiModelProperty("The set of built-in permissions connected clients will need to request.")
     private List<String> builtinApplicationPermissions;
 
-    @ApiModelProperty("The set of user-specified permissions connected clients will need to request.")
-    private List<String> userSpecifiedApplicationPermissions;
-
     public String getApplicationId() {
         return applicationId;
     }
@@ -49,14 +46,6 @@ public class FacebookApplicationConfiguration extends ApplicationConfiguration {
 
     public void setBuiltinApplicationPermissions(List<String> builtinApplicationPermissions) {
         this.builtinApplicationPermissions = builtinApplicationPermissions;
-    }
-
-    public List<String> getUserSpecifiedApplicationPermissions() {
-        return userSpecifiedApplicationPermissions;
-    }
-
-    public void setUserSpecifiedApplicationPermissions(List<String> userSpecifiedApplicationPermissions) {
-        this.userSpecifiedApplicationPermissions = userSpecifiedApplicationPermissions;
     }
 
 }

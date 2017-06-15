@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rest;
+package com.namazustudios.socialengine.rest.application;
 
 import com.namazustudios.socialengine.model.application.IosApplicationConfiguration;
 import com.namazustudios.socialengine.service.IosApplicationConfigurationService;
@@ -40,7 +40,7 @@ public class IoSApplicationConfigurationResource {
     public IosApplicationConfiguration getIosApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        return getIosApplicationConfigurationService().getApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
+        return getIosApplicationConfigurationService().getApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId);
     }
 
     /**
@@ -59,7 +59,7 @@ public class IoSApplicationConfigurationResource {
     public IosApplicationConfiguration createIosApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             final IosApplicationConfiguration iosApplicationProfiles) {
-        return getIosApplicationConfigurationService().createApplicationProfile(applicationNameOrId, iosApplicationProfiles);
+        return getIosApplicationConfigurationService().createApplicationConfiguration(applicationNameOrId, iosApplicationProfiles);
     }
 
     /**
@@ -81,7 +81,7 @@ public class IoSApplicationConfigurationResource {
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId,
             final IosApplicationConfiguration iosApplicationProfile) {
-        return getIosApplicationConfigurationService().updateApplicationProfile(
+        return getIosApplicationConfigurationService().updateApplicationConfiguration(
                 applicationNameOrId,
                 applicationProfileNameOrId,
                 iosApplicationProfile);
@@ -102,7 +102,7 @@ public class IoSApplicationConfigurationResource {
     public void deleteIosApplicationProfile(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        getIosApplicationConfigurationService().deleteApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
+        getIosApplicationConfigurationService().deleteApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId);
     }
 
     public IosApplicationConfigurationService getIosApplicationConfigurationService() {

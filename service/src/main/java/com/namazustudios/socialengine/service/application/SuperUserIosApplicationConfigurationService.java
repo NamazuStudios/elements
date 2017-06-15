@@ -14,28 +14,28 @@ public class SuperUserIosApplicationConfigurationService implements IosApplicati
     private IosApplicationConfigurationDao iosApplicationConfigurationDao;
 
     @Override
-    public void deleteApplicationProfile(final String applicationNameOrId,
-                                         final String applicationProfileNameOrId) {
+    public void deleteApplicationConfiguration(final String applicationNameOrId,
+                                               final String applicationProfileNameOrId) {
         getIosApplicationConfigurationDao().softDeleteApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
     }
 
     @Override
-    public IosApplicationConfiguration getApplicationProfile(final String applicationNameOrId,
-                                                             final String applicationProfileNameOrId) {
+    public IosApplicationConfiguration getApplicationConfiguration(final String applicationNameOrId,
+                                                                   final String applicationProfileNameOrId) {
         return getIosApplicationConfigurationDao().getIosApplicationProfile(applicationNameOrId, applicationProfileNameOrId);
     }
 
     @Override
-    public IosApplicationConfiguration createApplicationProfile(final String applicationNameOrId,
-                                                                final IosApplicationConfiguration iosApplicationProfile) {
-        return getIosApplicationConfigurationDao().createOrUpdateInactiveApplicationProfile(applicationNameOrId, iosApplicationProfile);
+    public IosApplicationConfiguration createApplicationConfiguration(final String applicationNameOrId,
+                                                                      final IosApplicationConfiguration iosApplicationConfiguration) {
+        return getIosApplicationConfigurationDao().createOrUpdateInactiveApplicationProfile(applicationNameOrId, iosApplicationConfiguration);
     }
 
     @Override
-    public IosApplicationConfiguration updateApplicationProfile(final String applicationNameOrId,
-                                                                final String applicationProfileNameOrId,
-                                                                final IosApplicationConfiguration iosApplicationProfile) {
-        return getIosApplicationConfigurationDao().updateApplicationProfile(applicationNameOrId, applicationProfileNameOrId, iosApplicationProfile);
+    public IosApplicationConfiguration updateApplicationConfiguration(final String applicationNameOrId,
+                                                                      final String applicationConfigurationNameOrId,
+                                                                      final IosApplicationConfiguration iosApplicationConfiguration) {
+        return getIosApplicationConfigurationDao().updateApplicationProfile(applicationNameOrId, applicationConfigurationNameOrId, iosApplicationConfiguration);
     }
 
     public IosApplicationConfigurationDao getIosApplicationConfigurationDao() {
