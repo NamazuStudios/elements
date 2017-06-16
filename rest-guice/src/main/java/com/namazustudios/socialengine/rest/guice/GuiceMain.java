@@ -5,9 +5,11 @@ import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.DefaultConfigurationSupplier;
+import com.namazustudios.socialengine.FacebookBuiltinPermissionsSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
+import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import org.apache.bval.guice.ValidationModule;
 
 import javax.servlet.ServletContext;
@@ -49,8 +51,12 @@ public class GuiceMain extends GuiceServletContextListener {
         final Properties properties = defaultConfigurationSupplier.get();
         final String apiRoot = properties.getProperty(Constants.API_PREFIX);
 
+        final FacebookBuiltinPermissionsSupplier facebookBuiltinPermissionsSupplier;
+        facebookBuiltinPermissionsSupplier = new FacebookBuiltinPermissionsSupplier(servletContext.getClassLoader());
+
         return injector = Guice.createInjector(
                 new ConfigurationModule(defaultConfigurationSupplier),
+                new FacebookBuiltinPermissionsModule(facebookBuiltinPermissionsSupplier),
                 new JerseyModule(apiRoot) {
                     @Override
                     protected void configureResoures() {
