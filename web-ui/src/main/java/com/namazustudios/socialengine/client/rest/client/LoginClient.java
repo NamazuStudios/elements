@@ -5,9 +5,8 @@ import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.Options;
 import org.fusesource.restygwt.client.RestService;
 
-import javax.inject.Singleton;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 
@@ -25,7 +24,7 @@ public interface LoginClient extends RestService {
      * @param password query param for apssword
      * @param methodCallback the method callback
      */
-    @GET
+    @POST
     void login(@QueryParam("userId") final String userId,
                @QueryParam("password") final String password,
                final MethodCallback<User> methodCallback);
