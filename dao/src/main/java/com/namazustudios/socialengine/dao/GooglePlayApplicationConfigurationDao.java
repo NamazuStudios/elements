@@ -17,8 +17,8 @@ public interface GooglePlayApplicationConfigurationDao {
      * @return
      */
     GooglePlayApplicationConfiguration createOrUpdateInactiveApplicationConfiguration(
-            final String applicationNameOrId,
-            final GooglePlayApplicationConfiguration googlePlayApplicationConfiguration);
+            String applicationNameOrId,
+            GooglePlayApplicationConfiguration googlePlayApplicationConfiguration);
 
     /**
      * Gets an {@link GooglePlayApplicationConfiguration} with the specific name or identifier.
@@ -26,9 +26,9 @@ public interface GooglePlayApplicationConfigurationDao {
      * @param applicationNameOrId the {@link Application} name or id
      * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration} id
      */
-    GooglePlayApplicationConfiguration getGooglePlayApplicationConfiguration(
-            final String applicationNameOrId,
-            final String applicationConfigurationNameOrId);
+    GooglePlayApplicationConfiguration getApplicationConfiguration(
+            String applicationNameOrId,
+            String applicationConfigurationNameOrId);
 
     /**
      * Updates an application with the specific name/identifiers.
@@ -41,9 +41,9 @@ public interface GooglePlayApplicationConfigurationDao {
      *
      */
     GooglePlayApplicationConfiguration updateApplicationConfiguration(
-            final String applicationNameOrId,
-            final String applicationProfileNameOrId,
-            final GooglePlayApplicationConfiguration googlePlayApplicationConfiguration);
+            String applicationNameOrId,
+            String applicationProfileNameOrId,
+            GooglePlayApplicationConfiguration googlePlayApplicationConfiguration);
 
     /**
      * Delets an {@link GooglePlayApplicationConfiguration} using the ID as reference.
@@ -52,6 +52,6 @@ public interface GooglePlayApplicationConfigurationDao {
      * @param applicationConfigurationNameOrId the {@link GooglePlayApplicationConfiguration} id
      *
      */
-    void softDeleteApplicationConfiguration(final String applicationNameOrId, final String applicationConfigurationNameOrId);
+    void softDeleteApplicationConfiguration(String applicationNameOrId, String applicationConfigurationNameOrId);
 
 }

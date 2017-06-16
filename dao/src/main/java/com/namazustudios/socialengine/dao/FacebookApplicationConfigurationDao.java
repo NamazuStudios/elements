@@ -13,43 +13,45 @@ public interface FacebookApplicationConfigurationDao {
      * Creates, or updates an inactive ApplicationConfiguration object.
      *
      * @param applicationNameOrId
-     * @param iosApplicationProfile
+     * @param facebookApplicationConfiguration
      * @return
      */
-    FacebookApplicationConfiguration createOrUpdateInactiveApplicationProfile(final String applicationNameOrId,
-                                                                              final FacebookApplicationConfiguration iosApplicationProfile);
+    FacebookApplicationConfiguration createOrUpdateInactiveApplicationConfiguration(
+            String applicationNameOrId,
+            FacebookApplicationConfiguration facebookApplicationConfiguration);
 
     /**
      * Gets an {@link FacebookApplicationConfiguration} with the specific name or identifier.
      *
      * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationProfileNameOrId the {@link ApplicationConfiguration} id
+     * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration} id
      */
-    FacebookApplicationConfiguration getIosApplicationProfile(final String applicationNameOrId,
-                                                         final String applicationProfileNameOrId);
+    FacebookApplicationConfiguration getApplicationConfiguration(
+            String applicationNameOrId,
+            String applicationConfigurationNameOrId);
 
     /**
      * Updates an application with the specific name/identifiers.
      *
      * @param applicationNameOrId the {@link Application} name or id
      * @param applicationProfileNameOrId the {@link FacebookApplicationConfiguration} id
-     * @param iosApplicationProfile the {@link FacebookApplicationConfiguration} object to write
+     * @param facebookApplicationConfiguration the {@link FacebookApplicationConfiguration} object to write
      *
      * @return the {@link FacebookApplicationConfiguration} object as it was persisted to the database.
      *
      */
-    FacebookApplicationConfiguration updateApplicationProfile(final String applicationNameOrId,
-                                                         final String applicationProfileNameOrId,
-                                                         final FacebookApplicationConfiguration iosApplicationProfile);
+    FacebookApplicationConfiguration updateApplicationConfiguration(
+            String applicationNameOrId,
+            String applicationProfileNameOrId,
+            FacebookApplicationConfiguration facebookApplicationConfiguration);
 
     /**
      * Delets an {@link FacebookApplicationConfiguration} using the ID as reference.
      *
      *  @param applicationNameOrId the {@link Application} name or id
-     * @param applicationProfileNameOrId the {@link FacebookApplicationConfiguration} id
+     * @param applicationConfigurationNameOrId the {@link FacebookApplicationConfiguration} id
      *
      */
-    void softDeleteApplicationProfile(final String applicationNameOrId,
-                                      final String applicationProfileNameOrId);
+    void softDeleteApplicationConfiguration(String applicationNameOrId, String applicationConfigurationNameOrId);
 
 }

@@ -8,4 +8,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "application_profile", noClassnameStored = true)
 public class MongoGooglePlayApplicationConfiguration extends AbstractMongoApplicationConfiguration {
     // TODO This will likely be populated with more information.
+    // The unique app id (eg com.mycompany.myapp) is stored as the unique ID in the parent
+    // class.  This will likely include additional information such as the server side
+    // certificates and what not to enable push notifications or verify purchases.
 }

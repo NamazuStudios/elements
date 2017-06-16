@@ -53,13 +53,13 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
             query.criteria("active").equal(false),
             query.criteria("parent").equal(mongoApplication),
             query.criteria("platform").equal(IOS_APP_STORE),
-            query.criteria("name").equal(iosApplicationConfiguration.getApplicationId())
+            query.criteria("uniqueIdentifier").equal(iosApplicationConfiguration.getApplicationId())
         );
 
         final UpdateOperations<MongoIosApplicationConfiguration> updateOperations;
         updateOperations = getDatastore().createUpdateOperations(MongoIosApplicationConfiguration.class);
 
-        updateOperations.set("name", iosApplicationConfiguration.getApplicationId().trim());
+        updateOperations.set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim());
         updateOperations.set("active", true);
         updateOperations.set("platform", iosApplicationConfiguration.getPlatform());
         updateOperations.set("parent", mongoApplication);
@@ -98,7 +98,7 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         try {
             query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
         } catch (IllegalArgumentException ex) {
-            query.filter("name = ", applicationConfigurationNameOrId);
+            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
         }
 
         final MongoIosApplicationConfiguration mongoIosApplicationProfile = query.get();
@@ -133,13 +133,13 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         try {
             query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
         } catch (IllegalArgumentException ex) {
-            query.filter("name = ", applicationProfileNameOrId);
+            query.filter("uniqueIdentifier = ", applicationProfileNameOrId);
         }
 
         final UpdateOperations<MongoIosApplicationConfiguration> updateOperations;
         updateOperations = getDatastore().createUpdateOperations(MongoIosApplicationConfiguration.class);
 
-        updateOperations.set("name", iosApplicationConfiguration.getApplicationId().trim());
+        updateOperations.set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim());
         updateOperations.set("platform", iosApplicationConfiguration.getPlatform());
         updateOperations.set("parent", mongoApplication);
 
@@ -180,7 +180,7 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         try {
             query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
         } catch (IllegalArgumentException ex) {
-            query.filter("name = ", applicationConfigurationNameOrId);
+            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
         }
 
         final UpdateOperations<MongoIosApplicationConfiguration> updateOperations;

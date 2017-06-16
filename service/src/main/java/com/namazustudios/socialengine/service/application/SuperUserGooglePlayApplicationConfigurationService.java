@@ -22,7 +22,7 @@ public class SuperUserGooglePlayApplicationConfigurationService implements Googl
     @Override
     public GooglePlayApplicationConfiguration getApplicationConfiguration(final String applicationNameOrId,
                                                                           final String applicationConfigurationNameOrId) {
-        return getGooglePlayApplicationConfigurationDao().getGooglePlayApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
+        return getGooglePlayApplicationConfigurationDao().getApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
     }
 
     @Override

@@ -1,3 +1,5 @@
+package com.namazustudios.socialengine.service.application;
+
 import com.namazustudios.socialengine.dao.FacebookApplicationConfigurationDao;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import com.namazustudios.socialengine.service.FacebookApplicationConfigurationService;
@@ -13,22 +15,22 @@ public class SuperUserFacebookApplicationConfigurationService implements Faceboo
 
     @Override
     public void deleteApplicationConfiguration(String applicationNameOrId, String applicationConfigurationNameOrId) {
-        getFacebookApplicationConfigurationDao().softDeleteApplicationProfile(applicationNameOrId, applicationConfigurationNameOrId);
+        getFacebookApplicationConfigurationDao().softDeleteApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
     }
 
     @Override
     public FacebookApplicationConfiguration getApplicationConfiguration(String applicationNameOrId, String applicationConfigurationNameOrId) {
-        return getFacebookApplicationConfigurationDao().getIosApplicationProfile(applicationNameOrId, applicationConfigurationNameOrId);
+        return getFacebookApplicationConfigurationDao().getApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
     }
 
     @Override
     public FacebookApplicationConfiguration createApplicationConfiguration(String applicationNameOrId, FacebookApplicationConfiguration facebookApplicationConfiguration) {
-        return getFacebookApplicationConfigurationDao().createOrUpdateInactiveApplicationProfile(applicationNameOrId, facebookApplicationConfiguration);
+        return getFacebookApplicationConfigurationDao().createOrUpdateInactiveApplicationConfiguration(applicationNameOrId, facebookApplicationConfiguration);
     }
 
     @Override
     public FacebookApplicationConfiguration updateApplicationConfiguration(String applicationNameOrId, String applicationConfigurationNameOrId, FacebookApplicationConfiguration facebookApplicationConfiguration) {
-        return getFacebookApplicationConfigurationDao().updateApplicationProfile(applicationNameOrId, applicationConfigurationNameOrId, facebookApplicationConfiguration);
+        return getFacebookApplicationConfigurationDao().updateApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId, facebookApplicationConfiguration);
     }
 
     public FacebookApplicationConfigurationDao getFacebookApplicationConfigurationDao() {

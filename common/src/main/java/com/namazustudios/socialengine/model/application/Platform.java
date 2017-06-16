@@ -30,7 +30,12 @@ public enum Platform {
     /**
      * Represents an Android application profile for Google Play
      */
-    ANDROID_GOOGLE_PLAY(GooglePlayApplicationConfiguration.class);
+    ANDROID_GOOGLE_PLAY(GooglePlayApplicationConfiguration.class),
+
+    /**
+     * Represents a Facebook application.
+     */
+    FACEBOOK(FacebookApplicationConfiguration.class);
 
     Platform(final Class<?> profileModelType) {
         this.profileModelType = profileModelType;

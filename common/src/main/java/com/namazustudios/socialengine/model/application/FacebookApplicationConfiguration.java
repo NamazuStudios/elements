@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.model.application;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
@@ -15,12 +16,15 @@ import java.util.List;
                   "the Faceook API.  The Facebook API will ")
 public class FacebookApplicationConfiguration extends ApplicationConfiguration {
 
+    @NotNull
     @ApiModelProperty("The AppID as it appears in the Facebook Developer Console")
     private String applicationId;
 
+    @NotNull
     @ApiModelProperty("The App Secret as it appears in the Facebook Developer Console")
     private String applicationSecret;
 
+    @NotNull
     @ApiModelProperty("The set of built-in permissions connected clients will need to request.")
     private List<String> builtinApplicationPermissions;
 

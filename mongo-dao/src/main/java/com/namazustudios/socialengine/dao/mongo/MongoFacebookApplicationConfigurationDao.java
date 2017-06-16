@@ -1,13 +1,13 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.ValidationHelper;
-import com.namazustudios.socialengine.dao.GooglePlayApplicationConfigurationDao;
+import com.namazustudios.socialengine.dao.FacebookApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
-import com.namazustudios.socialengine.dao.mongo.model.MongoGooglePlayApplicationConfiguration;
+import com.namazustudios.socialengine.dao.mongo.model.MongoFacebookApplicationConfiguration;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
-import com.namazustudios.socialengine.model.application.GooglePlayApplicationConfiguration;
+import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -17,12 +17,12 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 
-import static com.namazustudios.socialengine.model.application.Platform.ANDROID_GOOGLE_PLAY;
+import static com.namazustudios.socialengine.model.application.Platform.FACEBOOK;
 
 /**
- * Created by patricktwohig on 5/25/17.
+ * Created by patricktwohig on 6/15/17.
  */
-public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayApplicationConfigurationDao {
+public class MongoFacebookApplicationConfigurationDao implements FacebookApplicationConfigurationDao {
 
     private ObjectIndex objectIndex;
 
@@ -37,61 +37,61 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
     private MongoDBUtils mongoDBUtils;
 
     @Override
-    public GooglePlayApplicationConfiguration createOrUpdateInactiveApplicationConfiguration(
+    public FacebookApplicationConfiguration createOrUpdateInactiveApplicationConfiguration(
             final String applicationNameOrId,
-            final GooglePlayApplicationConfiguration googlePlayApplicationConfiguration) {
+            final FacebookApplicationConfiguration facebookApplicationConfiguration) {
 
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        validate(googlePlayApplicationConfiguration);
+        validate(facebookApplicationConfiguration);
 
-        final Query<MongoGooglePlayApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoGooglePlayApplicationConfiguration.class);
+        final Query<MongoFacebookApplicationConfiguration> query;
+        query = getDatastore().createQuery(MongoFacebookApplicationConfiguration.class);
 
         query.and(
             query.criteria("active").equal(false),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").equal(ANDROID_GOOGLE_PLAY),
-            query.criteria("uniqueIdentifier").equal(googlePlayApplicationConfiguration.getApplicationId())
+            query.criteria("platform").equal(FACEBOOK),
+            query.criteria("uniqueIdentifier").equal(facebookApplicationConfiguration.getApplicationId())
         );
 
-        final UpdateOperations<MongoGooglePlayApplicationConfiguration> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoGooglePlayApplicationConfiguration.class);
+        final UpdateOperations<MongoFacebookApplicationConfiguration> updateOperations;
+        updateOperations = getDatastore().createUpdateOperations(MongoFacebookApplicationConfiguration.class);
 
-        updateOperations.set("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId().trim());
+        updateOperations.set("uniqueIdentifier", facebookApplicationConfiguration.getApplicationId().trim());
         updateOperations.set("active", true);
-        updateOperations.set("platform", googlePlayApplicationConfiguration.getPlatform());
+        updateOperations.set("platform", facebookApplicationConfiguration.getPlatform());
         updateOperations.set("parent", mongoApplication);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-            .returnNew(true)
-            .upsert(true);
+                .returnNew(true)
+                .upsert(true);
 
-        final MongoGooglePlayApplicationConfiguration mongoGooglePlayApplicationProfile;
-        mongoGooglePlayApplicationProfile = getMongoDBUtils()
-            .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+        final MongoFacebookApplicationConfiguration mongoFacebookApplicationProfile;
+        mongoFacebookApplicationProfile = getMongoDBUtils()
+                .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
-        getObjectIndex().index(mongoGooglePlayApplicationProfile);
-        return getBeanMapper().map(mongoGooglePlayApplicationProfile, GooglePlayApplicationConfiguration.class);
+        getObjectIndex().index(mongoFacebookApplicationProfile);
+        return getBeanMapper().map(mongoFacebookApplicationProfile, FacebookApplicationConfiguration.class);
 
     }
 
     @Override
-    public GooglePlayApplicationConfiguration getApplicationConfiguration(
+    public FacebookApplicationConfiguration getApplicationConfiguration(
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId) {
 
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        final Query<MongoGooglePlayApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoGooglePlayApplicationConfiguration.class);
+        final Query<MongoFacebookApplicationConfiguration> query;
+        query = getDatastore().createQuery(MongoFacebookApplicationConfiguration.class);
 
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").equal(ANDROID_GOOGLE_PLAY)
+            query.criteria("platform").equal(FACEBOOK)
         );
 
         try {
@@ -100,33 +100,33 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
             query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
         }
 
-        final MongoGooglePlayApplicationConfiguration mongoIosApplicationProfile = query.get();
+        final MongoFacebookApplicationConfiguration mongoIosApplicationProfile = query.get();
 
         if (mongoIosApplicationProfile == null) {
             throw new NotFoundException("application profile " + applicationConfigurationNameOrId + " not found.");
         }
 
-        return getBeanMapper().map(mongoIosApplicationProfile, GooglePlayApplicationConfiguration.class);
+        return getBeanMapper().map(mongoIosApplicationProfile, FacebookApplicationConfiguration.class);
 
     }
 
     @Override
-    public GooglePlayApplicationConfiguration updateApplicationConfiguration(
+    public FacebookApplicationConfiguration updateApplicationConfiguration(
             final String applicationNameOrId,
             final String applicationProfileNameOrId,
-            final GooglePlayApplicationConfiguration googlePlayApplicationConfiguration) {
+            final FacebookApplicationConfiguration facebookApplicationConfiguration) {
 
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
-        validate(googlePlayApplicationConfiguration);
+        validate(facebookApplicationConfiguration);
 
-        final Query<MongoGooglePlayApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoGooglePlayApplicationConfiguration.class);
+        final Query<MongoFacebookApplicationConfiguration> query;
+        query = getDatastore().createQuery(MongoFacebookApplicationConfiguration.class);
 
         query.and(
-            query.criteria("active").equal(true),
-            query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").equal(ANDROID_GOOGLE_PLAY)
+                query.criteria("active").equal(true),
+                query.criteria("parent").equal(mongoApplication),
+                query.criteria("platform").equal(FACEBOOK)
         );
 
         try {
@@ -135,27 +135,27 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
             query.filter("uniqueIdentifier = ", applicationProfileNameOrId);
         }
 
-        final UpdateOperations<MongoGooglePlayApplicationConfiguration> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoGooglePlayApplicationConfiguration.class);
+        final UpdateOperations<MongoFacebookApplicationConfiguration> updateOperations;
+        updateOperations = getDatastore().createUpdateOperations(MongoFacebookApplicationConfiguration.class);
 
-        updateOperations.set("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId().trim());
-        updateOperations.set("platform", googlePlayApplicationConfiguration.getPlatform());
+        updateOperations.set("uniqueIdentifier", facebookApplicationConfiguration.getApplicationId().trim());
+        updateOperations.set("platform", facebookApplicationConfiguration.getPlatform());
         updateOperations.set("parent", mongoApplication);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
                 .returnNew(true)
                 .upsert(false);
 
-        final MongoGooglePlayApplicationConfiguration mongoGooglePlayApplicationProfile;
-        mongoGooglePlayApplicationProfile = getMongoDBUtils()
+        final MongoFacebookApplicationConfiguration mongoFacebookApplicationProfile;
+        mongoFacebookApplicationProfile = getMongoDBUtils()
                 .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
-        if (mongoGooglePlayApplicationProfile == null) {
+        if (mongoFacebookApplicationProfile == null) {
             throw new NotFoundException("profile with ID not found: " + applicationProfileNameOrId);
         }
 
-        getObjectIndex().index(mongoGooglePlayApplicationProfile);
-        return getBeanMapper().map(mongoGooglePlayApplicationProfile, GooglePlayApplicationConfiguration.class);
+        getObjectIndex().index(mongoFacebookApplicationProfile);
+        return getBeanMapper().map(mongoFacebookApplicationProfile, FacebookApplicationConfiguration.class);
 
     }
 
@@ -167,13 +167,13 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        final Query<MongoGooglePlayApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoGooglePlayApplicationConfiguration.class);
+        final Query<MongoFacebookApplicationConfiguration> query;
+        query = getDatastore().createQuery(MongoFacebookApplicationConfiguration.class);
 
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").equal(ANDROID_GOOGLE_PLAY)
+            query.criteria("platform").equal(FACEBOOK)
         );
 
         try {
@@ -182,42 +182,42 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
             query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
         }
 
-        final UpdateOperations<MongoGooglePlayApplicationConfiguration> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoGooglePlayApplicationConfiguration.class);
+        final UpdateOperations<MongoFacebookApplicationConfiguration> updateOperations;
+        updateOperations = getDatastore().createUpdateOperations(MongoFacebookApplicationConfiguration.class);
 
         updateOperations.set("active", false);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-            .returnNew(true)
-            .upsert(false);
+                .returnNew(true)
+                .upsert(false);
 
-        final MongoGooglePlayApplicationConfiguration mongoGooglePlayApplicationProfile;
+        final MongoFacebookApplicationConfiguration mongoFacebookApplicationProfile;
 
-        mongoGooglePlayApplicationProfile = getMongoDBUtils()
+        mongoFacebookApplicationProfile = getMongoDBUtils()
                 .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
-        if (mongoGooglePlayApplicationProfile == null) {
-            throw new NotFoundException("profile with ID not found: " + mongoGooglePlayApplicationProfile.getObjectId());
+        if (mongoFacebookApplicationProfile == null) {
+            throw new NotFoundException("profile with ID not found: " + mongoFacebookApplicationProfile.getObjectId());
         }
 
-        getObjectIndex().index(mongoGooglePlayApplicationProfile);
+        getObjectIndex().index(mongoFacebookApplicationProfile);
 
     }
 
-    public void validate(final GooglePlayApplicationConfiguration googlePlayApplicationConfiguration) {
+    public void validate(final FacebookApplicationConfiguration facebookApplicationConfiguration) {
 
-        if (googlePlayApplicationConfiguration == null) {
+        if (facebookApplicationConfiguration == null) {
             throw new InvalidDataException("psnApplicationProfile must not be null.");
         }
 
-        switch (googlePlayApplicationConfiguration.getPlatform()) {
-            case ANDROID_GOOGLE_PLAY:
+        switch (facebookApplicationConfiguration.getPlatform()) {
+            case FACEBOOK:
                 break;
             default:
-                throw new InvalidDataException("platform not supported: " + googlePlayApplicationConfiguration.getPlatform());
+                throw new InvalidDataException("platform not supported: " + facebookApplicationConfiguration.getPlatform());
         }
 
-        getValidationHelper().validateModel(googlePlayApplicationConfiguration);
+        getValidationHelper().validateModel(facebookApplicationConfiguration);
 
     }
 

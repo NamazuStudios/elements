@@ -14,8 +14,6 @@ import com.namazustudios.socialengine.fts.ObjectIndex;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
 import java.security.MessageDigest;
@@ -34,12 +32,6 @@ import static com.google.inject.util.Providers.guicify;
  * Created by patricktwohig on 4/3/15.
  */
 public class MongoDaoModule extends AbstractModule {
-
-    private static final Logger LOG = LoggerFactory.getLogger(MongoDaoModule.class);
-
-    public static final int DEFAULT_FALLOFF_TIME_MS = 100;
-
-    public static final int OPTISMITIC_RETRY_COUNT = 10;
 
     @Override
     protected void configure() {

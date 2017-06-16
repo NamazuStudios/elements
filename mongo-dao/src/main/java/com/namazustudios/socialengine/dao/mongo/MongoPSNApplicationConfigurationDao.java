@@ -55,13 +55,13 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
             query.criteria("active").equal(false),
             query.criteria("parent").equal(mongoApplication),
             query.criteria("platform").in(newArrayList(PSN_PS4, PSN_VITA)),
-            query.criteria("name").equal(psnApplicationConfiguration.getNpIdentifier())
+            query.criteria("uniqueIdentifier").equal(psnApplicationConfiguration.getNpIdentifier())
         );
 
         final UpdateOperations<MongoPSNApplicationConfiguration> updateOperations;
         updateOperations = getDatastore().createUpdateOperations(MongoPSNApplicationConfiguration.class);
 
-        updateOperations.set("name", psnApplicationConfiguration.getNpIdentifier().trim());
+        updateOperations.set("uniqueIdentifier", psnApplicationConfiguration.getNpIdentifier().trim());
         updateOperations.set("client_secret", nullToEmpty(psnApplicationConfiguration.getClientSecret()).trim());
         updateOperations.set("active", false);
         updateOperations.set("platform", psnApplicationConfiguration.getPlatform());
@@ -97,7 +97,7 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
         try {
             query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
         } catch (IllegalArgumentException ex) {
-            query.filter("name = ", applicationConfigurationNameOrId);
+            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
         }
 
         final MongoPSNApplicationConfiguration mongoPSNApplicationProfile = query.get();
@@ -131,13 +131,13 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
         try {
             query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
         } catch (IllegalArgumentException ex) {
-            query.filter("name = ", applicationProfileNameOrId);
+            query.filter("uniqueIdentifier = ", applicationProfileNameOrId);
         }
 
         final UpdateOperations<MongoPSNApplicationConfiguration> updateOperations;
         updateOperations = getDatastore().createUpdateOperations(MongoPSNApplicationConfiguration.class);
 
-        updateOperations.set("name", psnApplicationConfiguration.getNpIdentifier().trim());
+        updateOperations.set("uniqueIdentifier", psnApplicationConfiguration.getNpIdentifier().trim());
         updateOperations.set("client_secret", nullToEmpty(psnApplicationConfiguration.getClientSecret()).trim());
         updateOperations.set("platform", psnApplicationConfiguration.getPlatform());
         updateOperations.set("parent", mongoApplication);
@@ -179,7 +179,7 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
         try {
             query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
         } catch (IllegalArgumentException ex) {
-            query.filter("name = ", applicationConfigurationNameOrId);
+            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
         }
 
         final UpdateOperations<MongoPSNApplicationConfiguration> updateOperations =

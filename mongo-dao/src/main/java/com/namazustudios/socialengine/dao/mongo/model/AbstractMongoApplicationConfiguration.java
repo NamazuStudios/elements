@@ -19,7 +19,7 @@ package com.namazustudios.socialengine.dao.mongo.model;
 )
 @SearchableDocument(
         fields = {
-                @SearchableField(name = "name", path = "/name"),
+                @SearchableField(name = "uniqueIdentifier", path = "/uniqueIdentifier"),
                 @SearchableField(name = "applicationName", path = "/parent/name"),
                 @SearchableField(name = "platform", path = "/platform"),
                 @SearchableField(name = "active", path = "/active")
@@ -37,7 +37,7 @@ public abstract class AbstractMongoApplicationConfiguration {
     private ObjectId objectId;
 
     @Property("name")
-    private String name;
+    private String uniqueIdentifier;
 
     @Reference("parent")
     private MongoApplication parent;
@@ -56,12 +56,12 @@ public abstract class AbstractMongoApplicationConfiguration {
         this.objectId = objectId;
     }
 
-    public String getName() {
-        return name;
+    public String getUniqueIdentifier() {
+        return uniqueIdentifier;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUniqueIdentifier(String uniqueIdentifier) {
+        this.uniqueIdentifier = uniqueIdentifier;
     }
 
     public MongoApplication getParent() {
