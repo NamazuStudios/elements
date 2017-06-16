@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.client.controlpanel.view;
+package com.namazustudios.socialengine.client.controlpanel.view.login;
 
 import com.google.common.base.Strings;
 import com.google.gwt.event.dom.client.ClickEvent;

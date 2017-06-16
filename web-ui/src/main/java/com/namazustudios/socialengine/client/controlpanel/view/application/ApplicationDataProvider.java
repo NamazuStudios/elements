@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.client.controlpanel.view;
+package com.namazustudios.socialengine.client.controlpanel.view.application;
 
 import com.google.gwt.view.client.HasData;
 import com.google.gwt.view.client.Range;

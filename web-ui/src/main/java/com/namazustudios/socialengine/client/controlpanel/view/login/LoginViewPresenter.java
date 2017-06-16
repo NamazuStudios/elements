@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.client.controlpanel.view;
+package com.namazustudios.socialengine.client.controlpanel.view.login;
 
 import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.Presenter;
@@ -8,6 +8,7 @@ import com.gwtplatform.mvp.client.annotations.ProxyStandard;
 import com.gwtplatform.mvp.client.proxy.ProxyPlace;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.socialengine.client.controlpanel.NameTokens;
+import com.namazustudios.socialengine.client.controlpanel.view.ControlPanelPresenter;
 import com.namazustudios.socialengine.client.rest.service.LoginService;
 import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.Method;

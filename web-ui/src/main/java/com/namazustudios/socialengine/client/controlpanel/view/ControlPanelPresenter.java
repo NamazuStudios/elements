@@ -13,6 +13,7 @@ import com.gwtplatform.mvp.client.presenter.slots.NestedSlot;
 import com.gwtplatform.mvp.client.proxy.ProxyPlace;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.socialengine.client.controlpanel.NameTokens;
+import com.namazustudios.socialengine.client.controlpanel.view.login.LoginViewPresenter;
 import com.namazustudios.socialengine.client.rest.service.LoginService;
 import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.Method;

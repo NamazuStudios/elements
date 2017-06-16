@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.client.controlpanel.view;
+package com.namazustudios.socialengine.client.controlpanel.view.user;
 
 import com.google.common.collect.ImmutableList;
 import com.google.gwt.cell.client.ButtonCell;

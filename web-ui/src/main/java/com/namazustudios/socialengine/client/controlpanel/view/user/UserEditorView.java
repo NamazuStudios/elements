@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.client.controlpanel.view;
+package com.namazustudios.socialengine.client.controlpanel.view.user;
 
 import com.google.common.base.Strings;
 import com.google.gwt.editor.client.Editor;

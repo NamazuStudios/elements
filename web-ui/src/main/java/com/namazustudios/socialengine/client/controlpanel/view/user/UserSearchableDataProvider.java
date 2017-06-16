@@ -1,8 +1,9 @@
-package com.namazustudios.socialengine.client.controlpanel.view;
+package com.namazustudios.socialengine.client.controlpanel.view.user;
 
 import com.google.gwt.view.client.HasData;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.Range;
+import com.namazustudios.socialengine.client.controlpanel.view.application.AbstractSearchableDataProvider;
 import com.namazustudios.socialengine.client.rest.client.UserClient;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;

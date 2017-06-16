@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.client.controlpanel.view;
+package com.namazustudios.socialengine.client.controlpanel.view.user;
 
 import com.google.common.base.Strings;
 import com.google.web.bindery.event.shared.EventBus;
@@ -9,6 +9,7 @@ import com.gwtplatform.mvp.client.annotations.ProxyCodeSplit;
 import com.gwtplatform.mvp.client.proxy.ProxyPlace;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.socialengine.client.controlpanel.NameTokens;
+import com.namazustudios.socialengine.client.controlpanel.view.ControlPanelPresenter;
 import com.namazustudios.socialengine.client.rest.client.UserClient;
 import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.Method;
@@ -17,7 +18,7 @@ import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
 import javax.inject.Inject;
 
-import static com.namazustudios.socialengine.client.controlpanel.view.UserEditorPresenter.Param.user;
+import static com.namazustudios.socialengine.client.controlpanel.view.user.UserEditorPresenter.Param.user;
 
 /**
  * Created by patricktwohig on 5/5/15.

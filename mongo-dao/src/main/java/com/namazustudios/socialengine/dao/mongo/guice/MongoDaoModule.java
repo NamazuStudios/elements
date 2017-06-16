@@ -43,6 +43,7 @@ public class MongoDaoModule extends AbstractModule {
         binder().bind(ApplicationConfigurationDao.class).to(MongoApplicationConfigurationDao.class);
         binder().bind(IosApplicationConfigurationDao.class).to(MongoIosApplicationConfigurationDao.class);
         binder().bind(GooglePlayApplicationConfigurationDao.class).to(MongoGoogePlayApplicationConfigurationDao.class);
+        binder().bind(FacebookApplicationConfigurationDao.class).to(MongoFacebookApplicationConfigurationDao.class);
 
         binder().bind(MongoClient.class).toProvider(MongoClientProvider.class).in(Singleton.class);
         binder().bind(Datastore.class).toProvider(MongoDatastoreProvider.class);

@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.client.controlpanel.view;
+package com.namazustudios.socialengine.client.controlpanel.view.application;
 
 import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.editor.client.Editor;
