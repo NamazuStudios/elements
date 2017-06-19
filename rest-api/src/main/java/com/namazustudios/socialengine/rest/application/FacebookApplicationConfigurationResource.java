@@ -24,20 +24,20 @@ public class FacebookApplicationConfigurationResource {
      * application.
      *
      * @param applicationNameOrId the application name or ID
-     * @param applicationProfileNameOrId the application profile name or ID
+     * @param applicationConfigurationNameOrId the application profile name or ID
      *
      * @return the {@link FacebookApplicationConfiguration} instance
      */
     @GET
-    @Path("{applicationProfileNameOrId}")
+    @Path("{applicationConfigurationNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
-            value = "Gets a Facebook Application Profile",
+            value = "Gets a Facebook Application Configuration",
             notes = "Gets a single Facebook application based on unique name or ID.")
-    public FacebookApplicationConfiguration getIosApplicationProfile(
+    public FacebookApplicationConfiguration getIosApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
-            @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        return getFacebookApplicationConfigurationService().getApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId);
+            @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId) {
+        return getFacebookApplicationConfigurationService().getApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
     }
 
     /**
@@ -46,14 +46,14 @@ public class FacebookApplicationConfigurationResource {
      * @param applicationNameOrId the applciation name or ID
      * @param facebookApplicationConfiguration the Facebook appliation profile object to creates
      *
-     * @return the {@link FacebookApplicationConfiguration} the Facebook Application Profile
+     * @return the {@link FacebookApplicationConfiguration} the Facebook Application Configuration
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
             value = "Creates a new Facebook ApplicationConfiguration",
             notes = "Creates a new Facebook ApplicationConfiguration with the specific ID or application.")
-    public FacebookApplicationConfiguration createIosApplicationProfile(
+    public FacebookApplicationConfiguration createIosApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             final FacebookApplicationConfiguration facebookApplicationConfiguration) {
         return getFacebookApplicationConfigurationService().createApplicationConfiguration(applicationNameOrId, facebookApplicationConfiguration);
@@ -63,24 +63,24 @@ public class FacebookApplicationConfigurationResource {
      * Updates an existing {@link FacebookApplicationConfiguration} isntance.
      *
      * @param applicationNameOrId the applciation name or ID
-     * @param applicationProfileNameOrId the name or identifier of the {@link FacebookApplicationConfiguration}
+     * @param applicationConfigurationNameOrId the name or identifier of the {@link FacebookApplicationConfiguration}
      * @param facebookApplicationConfiguration the Facebook application profile object to update
      *
-     * @return the {@link FacebookApplicationConfiguration} the Facebook Application Profile
+     * @return the {@link FacebookApplicationConfiguration} the Facebook Application Configuration
      */
     @PUT
-    @Path("{applicationProfileNameOrId}")
+    @Path("{applicationConfigurationNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
             value = "Updates a Facebook ApplicationConfiguration",
             notes = "Updates an existing Facebook Application profile if it is known to the server.")
-    public FacebookApplicationConfiguration updateApplicationProfile(
+    public FacebookApplicationConfiguration updateApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
-            @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId,
+            @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId,
             final FacebookApplicationConfiguration facebookApplicationConfiguration) {
         return getFacebookApplicationConfigurationService().updateApplicationConfiguration(
                 applicationNameOrId,
-                applicationProfileNameOrId,
+                applicationConfigurationNameOrId,
                 facebookApplicationConfiguration);
     }
 
@@ -88,18 +88,18 @@ public class FacebookApplicationConfigurationResource {
      * Deletes an instance of {@link FacebookApplicationConfiguration}.
      *
      * @param applicationNameOrId the application ID, or name
-     * @param applicationProfileNameOrId the application profile ID, or name
+     * @param applicationConfigurationNameOrId the application profile ID, or name
      */
     @DELETE
-    @Path("{applicationProfileNameOrId}")
+    @Path("{applicationConfigurationNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
             value = "Deletes a Facebook ApplicationConfiguration",
             notes = "Deletes an existing Facebook Application profile if it is known to the server.")
-    public void deleteIosApplicationProfile(
+    public void deleteIosApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
-            @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        getFacebookApplicationConfigurationService().deleteApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId);
+            @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId) {
+        getFacebookApplicationConfigurationService().deleteApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
     }
 
     public FacebookApplicationConfigurationService getFacebookApplicationConfigurationService() {

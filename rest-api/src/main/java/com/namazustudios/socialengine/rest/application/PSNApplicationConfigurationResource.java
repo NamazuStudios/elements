@@ -15,7 +15,7 @@ import javax.ws.rs.core.MediaType;
  * Created by patricktwohig on 7/13/15.
  */
 @Api(value = "PSN Application Configurations",
-    description = "Operations for the management of ApplictionProfiles for the Playstation Network.")
+    description = "Operations for the management of ApplictionConfigurations for the Playstation Network.")
 @Path("application/{applicationNameOrId}/configuration/psn")
 public class PSNApplicationConfigurationResource {
 
@@ -26,78 +26,78 @@ public class PSNApplicationConfigurationResource {
      * application.
      *
      * @param applicationNameOrId the application name or ID
-     * @param applicationProfileNameOrId the application profile name or ID
+     * @param applicationConfigurationNameOrId the application profile name or ID
      *
      * @return the {@link PSNApplicationConfiguration} instance
      */
     @GET
-    @Path("{applicationProfileNameOrId}")
+    @Path("{applicationConfigurationNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets a PSN Application Profile",
+    @ApiOperation(value = "Gets a PSN Application Configuration",
                   notes = "Gets a single PSN application based on unique name or ID.")
-    public PSNApplicationConfiguration getPSNApplicationProfile(
+    public PSNApplicationConfiguration getPSNApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
-            @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        return getPsnApplicationConfigurationService().getApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId);
+            @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId) {
+        return getPsnApplicationConfigurationService().getApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
     }
 
     /**
      * Creates a new {@link PSNApplicationConfiguration} isntance.
      *
      * @param applicationNameOrId the applciation name or ID
-     * @param psnApplicationProfile the PSN appliation profile object to creates
+     * @param psnApplicationConfiguration the PSN appliation profile object to creates
      *
-     * @return the {@link PSNApplicationConfiguration} the PSN Application Profile
+     * @return the {@link PSNApplicationConfiguration} the PSN Application Configuration
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Creates a new PSN ApplicationConfiguration",
                   notes = "Creates a new PSN ApplicationConfiguration with the specific ID or application.")
-    public PSNApplicationConfiguration createPSNApplicationProfile(
+    public PSNApplicationConfiguration createPSNApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
-            final PSNApplicationConfiguration psnApplicationProfile) {
-        return getPsnApplicationConfigurationService().createApplicationConfiguration(applicationNameOrId, psnApplicationProfile);
+            final PSNApplicationConfiguration psnApplicationConfiguration) {
+        return getPsnApplicationConfigurationService().createApplicationConfiguration(applicationNameOrId, psnApplicationConfiguration);
     }
 
     /**
      * Updates an existing {@link PSNApplicationConfiguration} isntance.
      *
      * @param applicationNameOrId the applciation name or ID
-     * @param applicationProfileNameOrId the name or identifier of the {@link PSNApplicationConfiguration}
-     * @param psnApplicationProfile the PSN appliation profile object to update
+     * @param applicationConfigurationNameOrId the name or identifier of the {@link PSNApplicationConfiguration}
+     * @param psnApplicationConfiguration the PSN appliation profile object to update
      *
-     * @return the {@link PSNApplicationConfiguration} the PSN Application Profile
+     * @return the {@link PSNApplicationConfiguration} the PSN Application Configuration
      */
     @PUT
-    @Path("{applicationProfileNameOrId}")
+    @Path("{applicationConfigurationNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates a PSN ApplicationConfiguration",
                   notes = "Updates an existing PSN Application profile if it is known to the server.")
-    public PSNApplicationConfiguration updateApplicationProfile(
+    public PSNApplicationConfiguration updateApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
-            @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId,
-            final PSNApplicationConfiguration psnApplicationProfile) {
+            @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId,
+            final PSNApplicationConfiguration psnApplicationConfiguration) {
         return getPsnApplicationConfigurationService().updateApplicationConfiguration(
                 applicationNameOrId,
-                applicationProfileNameOrId,
-                psnApplicationProfile);
+                applicationConfigurationNameOrId,
+                psnApplicationConfiguration);
     }
 
     /**
      * Deletes an instance of {@link PSNApplicationConfiguration}.
      *
      * @param applicationNameOrId the application ID, or name
-     * @param applicationProfileNameOrId the application profile ID, or name
+     * @param applicationConfigurationNameOrId the application profile ID, or name
      */
     @DELETE
-    @Path("{applicationProfileNameOrId}")
+    @Path("{applicationConfigurationNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Deletes a PSN ApplicationConfiguration",
                   notes = "Deletes an existing PSN Application profile if it is known to the server.")
-    public void deletePSNApplicationProfile(
+    public void deletePSNApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
-            @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        getPsnApplicationConfigurationService().deleteApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId);
+            @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId) {
+        getPsnApplicationConfigurationService().deleteApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
     }
 
     public PSNApplicationConfigurationService getPsnApplicationConfigurationService() {

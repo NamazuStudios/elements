@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Api(
     value = "iOS Application Configuration",
-    description = "Operations for the management of ApplictionProfiles for iOS Applications.")
+    description = "Operations for the management of ApplictionConfigurations for iOS Applications.")
 @Path("application/{applicationNameOrId}/configuration/ios")
 public class IoSApplicationConfigurationResource {
 
@@ -27,82 +27,82 @@ public class IoSApplicationConfigurationResource {
      * application.
      *
      * @param applicationNameOrId the application name or ID
-     * @param applicationProfileNameOrId the application profile name or ID
+     * @param applicationConfigurationNameOrId the application profile name or ID
      *
      * @return the {@link IosApplicationConfiguration} instance
      */
     @GET
-    @Path("{applicationProfileNameOrId}")
+    @Path("{applicationConfigurationNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
-        value = "Gets a iOS Application Profile",
+        value = "Gets a iOS Application Configuration",
         notes = "Gets a single iOS application based on unique name or ID.")
-    public IosApplicationConfiguration getIosApplicationProfile(
+    public IosApplicationConfiguration getIosApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
-            @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        return getIosApplicationConfigurationService().getApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId);
+            @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId) {
+        return getIosApplicationConfigurationService().getApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
     }
 
     /**
      * Creates a new {@link IosApplicationConfiguration} isntance.
      *
      * @param applicationNameOrId the applciation name or ID
-     * @param iosApplicationProfiles the iOS appliation profile object to creates
+     * @param iosApplicationConfigurations the iOS appliation profile object to creates
      *
-     * @return the {@link IosApplicationConfiguration} the iOS Application Profile
+     * @return the {@link IosApplicationConfiguration} the iOS Application Configuration
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
         value = "Creates a new iOS ApplicationConfiguration",
         notes = "Creates a new iOS ApplicationConfiguration with the specific ID or application.")
-    public IosApplicationConfiguration createIosApplicationProfile(
+    public IosApplicationConfiguration createIosApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
-            final IosApplicationConfiguration iosApplicationProfiles) {
-        return getIosApplicationConfigurationService().createApplicationConfiguration(applicationNameOrId, iosApplicationProfiles);
+            final IosApplicationConfiguration iosApplicationConfigurations) {
+        return getIosApplicationConfigurationService().createApplicationConfiguration(applicationNameOrId, iosApplicationConfigurations);
     }
 
     /**
      * Updates an existing {@link IosApplicationConfiguration} isntance.
      *
      * @param applicationNameOrId the applciation name or ID
-     * @param applicationProfileNameOrId the name or identifier of the {@link IosApplicationConfiguration}
-     * @param iosApplicationProfile the iOS application profile object to update
+     * @param applicationConfigurationNameOrId the name or identifier of the {@link IosApplicationConfiguration}
+     * @param iosApplicationConfiguration the iOS application profile object to update
      *
-     * @return the {@link IosApplicationConfiguration} the iOS Application Profile
+     * @return the {@link IosApplicationConfiguration} the iOS Application Configuration
      */
     @PUT
-    @Path("{applicationProfileNameOrId}")
+    @Path("{applicationConfigurationNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
             value = "Updates a iOS ApplicationConfiguration",
             notes = "Updates an existing iOS Application profile if it is known to the server.")
-    public IosApplicationConfiguration updateApplicationProfile(
+    public IosApplicationConfiguration updateApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
-            @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId,
-            final IosApplicationConfiguration iosApplicationProfile) {
+            @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId,
+            final IosApplicationConfiguration iosApplicationConfiguration) {
         return getIosApplicationConfigurationService().updateApplicationConfiguration(
                 applicationNameOrId,
-                applicationProfileNameOrId,
-                iosApplicationProfile);
+                applicationConfigurationNameOrId,
+                iosApplicationConfiguration);
     }
 
     /**
      * Deletes an instance of {@link IosApplicationConfiguration}.
      *
      * @param applicationNameOrId the application ID, or name
-     * @param applicationProfileNameOrId the application profile ID, or name
+     * @param applicationConfigurationNameOrId the application profile ID, or name
      */
     @DELETE
-    @Path("{applicationProfileNameOrId}")
+    @Path("{applicationConfigurationNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
             value = "Deletes a iOS ApplicationConfiguration",
             notes = "Deletes an existing iOS Application profile if it is known to the server.")
-    public void deleteIosApplicationProfile(
+    public void deleteIosApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
-            @PathParam("applicationProfileNameOrId") final String applicationProfileNameOrId) {
-        getIosApplicationConfigurationService().deleteApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId);
+            @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId) {
+        getIosApplicationConfigurationService().deleteApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
     }
 
     public IosApplicationConfigurationService getIosApplicationConfigurationService() {
