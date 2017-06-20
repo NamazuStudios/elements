@@ -96,7 +96,7 @@ public class ApplicationEditorTableView extends ViewImpl implements ApplicationE
 
             final PlaceRequest placeRequest = new PlaceRequest.Builder()
                     .nameToken(NameTokens.APPLICATION_EDIT)
-                    .with(ApplicationEditorPresenter.Param.app.toString(), object.getId())
+                    .with(ApplicationEditorPresenter.Param.application_id.toString(), object.getId())
                     .build();
 
             placeManager.revealPlace(placeRequest);

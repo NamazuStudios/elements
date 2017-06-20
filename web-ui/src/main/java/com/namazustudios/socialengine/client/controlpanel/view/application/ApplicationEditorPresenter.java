@@ -18,7 +18,7 @@ import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
 import javax.inject.Inject;
 
-import static com.namazustudios.socialengine.client.controlpanel.view.application.ApplicationEditorPresenter.Param.app;
+import static com.namazustudios.socialengine.client.controlpanel.view.application.ApplicationEditorPresenter.Param.application_id;
 
 /**
  * Created by patricktwohig on 6/1/17.
@@ -79,7 +79,7 @@ public class ApplicationEditorPresenter extends Presenter<ApplicationEditorPrese
     public void prepareFromRequest(PlaceRequest request) {
         super.prepareFromRequest(request);
 
-        final String userName = request.getParameter(app.name().toLowerCase(), "").trim();
+        final String userName = request.getParameter(application_id.name().toLowerCase(), "").trim();
 
         if (Strings.isNullOrEmpty(userName)) {
             getView().createApplication();
@@ -116,7 +116,7 @@ public class ApplicationEditorPresenter extends Presenter<ApplicationEditorPrese
          * Parameter to indicate the app.  Passing this and specifying application ID or name will
          * allow you t
          */
-        app;
+        application_id;
 
     }
 }

@@ -10,6 +10,8 @@
         }
     </ui:style>
 
+    <ui:with field="nameTokens" type="com.namazustudios.socialengine.client.controlpanel.NameTokens"/>
+
     <b:Panel>
 
         <m:ErrorModal ui:field="errorModal"/>

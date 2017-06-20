@@ -9,7 +9,6 @@ public class UserLevelAnchorListItem extends EnumAnchorListItem<User.Level> {
 
     public UserLevelAnchorListItem() {
         super(User.Level.class);
-
     }
 
 }

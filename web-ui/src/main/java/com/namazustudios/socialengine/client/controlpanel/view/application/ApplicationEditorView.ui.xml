@@ -16,6 +16,8 @@
 
     </ui:style>
 
+    <ui:with field="nameTokens" type="com.namazustudios.socialengine.client.controlpanel.NameTokens"/>
+
     <b:Container>
 
         <m:ErrorModal ui:field="errorModal"/>
@@ -54,7 +56,20 @@
             </b:Panel>
         </b:Row>
 
-        <b:Row>
+        <b:Row ui:field="addConfigurationDropDownRow">
+            <b:DropDown>
+                <b:Button icon="PLUS" dataToggle="DROPDOWN" />
+                <b:DropDownMenu>
+                    <b:AnchorListItem ui:field="createIos" icon="MOBILE_PHONE">iOS AppStore</b:AnchorListItem>
+                    <b:AnchorListItem ui:field="createAndroidGooglePlay" icon="MOBILE_PHONE">Android Google Play</b:AnchorListItem>
+                    <b:AnchorListItem ui:field="createFacebook" icon="FACEBOOK">Facebook</b:AnchorListItem>
+                    <b:AnchorListItem ui:field="createPS4" icon="GAMEPAD">Playstation Network (PS4)</b:AnchorListItem>
+                    <b:AnchorListItem ui:field="createVita" icon="GAMEPAD">Playstation Network (Vita)</b:AnchorListItem>
+                </b:DropDownMenu>
+            </b:DropDown>
+        </b:Row>
+
+        <b:Row ui:field="configurationsTableRow">
             <b:Panel>
 
                 <b:PanelHeader>

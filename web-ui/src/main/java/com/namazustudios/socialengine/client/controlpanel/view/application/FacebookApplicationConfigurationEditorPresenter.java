@@ -3,8 +3,11 @@ package com.namazustudios.socialengine.client.controlpanel.view.application;
 import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.Presenter;
 import com.gwtplatform.mvp.client.View;
+import com.gwtplatform.mvp.client.annotations.NameToken;
+import com.gwtplatform.mvp.client.annotations.ProxyCodeSplit;
 import com.gwtplatform.mvp.client.proxy.ProxyPlace;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
+import com.namazustudios.socialengine.client.controlpanel.NameTokens;
 import com.namazustudios.socialengine.client.controlpanel.view.ControlPanelPresenter;
 import com.namazustudios.socialengine.client.rest.client.FacebookApplicationConfigurationClient;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
@@ -33,20 +36,30 @@ public class FacebookApplicationConfigurationEditorPresenter extends Presenter<
         void reset();
 
         /**
-         * Sets up the application editor to
+         * Setup the view with no selection of application.
          */
-        void createApplicationConfiguration();
+        void createEmpty();
+
+        /**
+         * Sets up the application editor to create a configuration for the specified application.
+         */
+        void createApplicationConfiguration(String applicationNameOrId);
 
         /**
          * Edits the supplied application.
          *
-         * @param psnApplicationConfiguration
+         * @param applicationNameOrId
+         * @param facebookApplicationConfiguration
          */
-        void editApplicationConfiguration(FacebookApplicationConfiguration psnApplicationConfiguration);
+        void editApplicationConfiguration(
+                String applicationNameOrId,
+                FacebookApplicationConfiguration facebookApplicationConfiguration);
 
     }
 
-    public interface MyProxy extends ProxyPlace<IosApplicationConfigurationEditorPresenter> {}
+    @ProxyCodeSplit
+    @NameToken(NameTokens.APPLICATION_CONFIG_FACEBOOK_EDIT)
+    public interface MyProxy extends ProxyPlace<FacebookApplicationConfigurationEditorPresenter> {}
 
     @Inject
     private FacebookApplicationConfigurationClient facebookApplicationConfigurationClient;
@@ -65,7 +78,7 @@ public class FacebookApplicationConfigurationEditorPresenter extends Presenter<
     @Override
     protected void onReveal() {
         super.onReveal();
-        getView().createApplicationConfiguration();
+        getView().createEmpty();
     }
 
     @Override
@@ -75,8 +88,10 @@ public class FacebookApplicationConfigurationEditorPresenter extends Presenter<
         final String applicationId = request.getParameter(application_id.name().toLowerCase(), "").trim();
         final String configurationId = request.getParameter(configuration_id.name().toLowerCase(), "").trim();
 
-        if (isNullOrEmpty(configurationId) || isNullOrEmpty(applicationId)) {
-            getView().createApplicationConfiguration();
+        if (isNullOrEmpty(applicationId)) {
+            getView().createEmpty();
+        } else if (isNullOrEmpty(configurationId)) {
+            getView().createApplicationConfiguration(applicationId);
             getProxy().manualReveal(this);
         } else {
             loadApplicationConifgurationAndShow(applicationId, configurationId);
@@ -88,24 +103,24 @@ public class FacebookApplicationConfigurationEditorPresenter extends Presenter<
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId) {
         facebookApplicationConfigurationClient.getApplicationConfiguration(
-                applicationNameOrId,
-                applicationConfigurationNameOrId,
-                new MethodCallback<FacebookApplicationConfiguration>() {
+            applicationNameOrId,
+            applicationConfigurationNameOrId,
+            new MethodCallback<FacebookApplicationConfiguration>() {
 
-                    @Override
-                    public void onFailure(Method method, Throwable exception) {
-                        getProxy().manualReveal(FacebookApplicationConfigurationEditorPresenter.this);
-                        getView().createApplicationConfiguration();
-                        Notify.notify("Could not load application " + method.getData());
-                    }
+                @Override
+                public void onFailure(Method method, Throwable exception) {
+                    getProxy().manualReveal(FacebookApplicationConfigurationEditorPresenter.this);
+                    getView().createEmpty();
+                    Notify.notify("Could not load application configuration " + method.getData());
+                }
 
-                    @Override
-                    public void onSuccess(Method method, FacebookApplicationConfiguration response) {
-                        getProxy().manualReveal(FacebookApplicationConfigurationEditorPresenter.this);
-                        getView().editApplicationConfiguration(response);
-                    }
+                @Override
+                public void onSuccess(Method method, FacebookApplicationConfiguration response) {
+                    getProxy().manualReveal(FacebookApplicationConfigurationEditorPresenter.this);
+                    getView().editApplicationConfiguration(applicationNameOrId, response);
+                }
 
-                });
+            });
     }
 
     public enum Param {

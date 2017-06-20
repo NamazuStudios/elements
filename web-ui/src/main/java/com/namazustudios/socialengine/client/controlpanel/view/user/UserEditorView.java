@@ -9,7 +9,6 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Panel;
 import com.gwtplatform.mvp.client.ViewImpl;
-import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
 import com.namazustudios.socialengine.client.rest.client.UserClient;
 import com.namazustudios.socialengine.client.widget.UserLevelEnumDropDown;
@@ -104,9 +103,6 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
     @Inject
     private Driver driver;
 
-    @Inject
-    private PlaceManager placeManager;
-
     private BiConsumer<User, String> submitter = (user, password) -> {
         lockOut();
         updateUser(user, password);
@@ -136,7 +132,6 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
         levelDropdown.setEnabled(true);
 
     }
-
 
     @Override
     public void reset() {

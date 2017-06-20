@@ -11,6 +11,8 @@ import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.SimplePager;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
+import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
+import com.namazustudios.socialengine.client.controlpanel.NameTokens;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
 import com.namazustudios.socialengine.client.rest.client.ApplicationClient;
 import com.namazustudios.socialengine.model.application.Application;
@@ -29,6 +31,7 @@ import javax.inject.Inject;
 import javax.validation.Validator;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.client.controlpanel.view.application.FacebookApplicationConfigurationEditorPresenter.Param.application_id;
 import static org.gwtbootstrap3.client.ui.constants.ValidationState.NONE;
 
 /**
@@ -70,6 +73,12 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
     @UiField
     Pagination applicationProfileCellTablePagination;
+
+    @UiField
+    Row configurationsTableRow;
+
+    @UiField
+    Row addConfigurationDropDownRow;
 
     @Inject
     private Driver driver;
@@ -178,6 +187,9 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
         applicationProfileCellTablePagination.clear();
 
+        configurationsTableRow.setVisible(false);
+        addConfigurationDropDownRow.setVisible(false);
+
     }
 
     @Override
@@ -187,6 +199,9 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
         driver.initialize(this);
         driver.edit(new Application());
+
+        configurationsTableRow.setVisible(false);
+        addConfigurationDropDownRow.setVisible(false);
 
         save = a -> {
             lockOut();
@@ -201,6 +216,8 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
         driver.initialize(this);
         driver.edit(application);
+        configurationsTableRow.setVisible(true);
+        addConfigurationDropDownRow.setVisible(true);
 
         save = a -> {
             lockOut();
@@ -276,6 +293,40 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
             save.accept(application);
         }
 
+    }
+
+    @UiHandler("createFacebook")
+    public void onClickCreateFacebookConfiguration(ClickEvent ev) {
+
+        final Application application = driver.flush();
+
+        final PlaceRequest placeRequest = new PlaceRequest.Builder()
+                .nameToken(NameTokens.APPLICATION_CONFIG_FACEBOOK_EDIT)
+                .with(application_id.name(), application.getId())
+                .build();
+
+        placeManager.revealPlace(placeRequest);
+
+    }
+
+    @UiHandler("createIos")
+    public void onClickCreateIosConfiguration(ClickEvent ev) {
+        Notify.notify("Not implemented - iOS");
+    }
+
+    @UiHandler("createAndroidGooglePlay")
+    public void onClickCreateAndroidGooglePLay(ClickEvent ev) {
+        Notify.notify("Not implemented - Google Play");
+    }
+
+    @UiHandler("createPS4")
+    public void onClickCreatePS4(ClickEvent ev) {
+        Notify.notify("Not implemented - PS4");
+    }
+
+    @UiHandler("createVita")
+    public void onClickCreateVita(ClickEvent ev) {
+        Notify.notify("Not implemented - Vita");
     }
 
 }

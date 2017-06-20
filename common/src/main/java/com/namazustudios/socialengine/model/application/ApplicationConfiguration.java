@@ -16,24 +16,6 @@ public class ApplicationConfiguration {
     private Platform platform;
 
     /**
-     * Gets the platfrom identifier.
-     *
-     * @return the identifier type
-     */
-    public Platform getPlatform() {
-        return platform;
-    }
-
-    /**
-     * Sets the platform identifier.
-     *
-     * @param platform the platform identifier type.
-     */
-    public void setPlatform(Platform platform) {
-        this.platform = platform;
-    }
-
-    /**
      * Gets the actual profile ID.
      *
      * @return the profile ID
@@ -49,6 +31,24 @@ public class ApplicationConfiguration {
      */
     public void setId(String id) {
         this.id = id;
+    }
+
+    /**
+     * Gets the platfrom identifier.
+     *
+     * @return the identifier type
+     */
+    public Platform getPlatform() {
+        return platform;
+    }
+
+    /**
+     * Sets the platform identifier.
+     *
+     * @param platform the platform identifier type.
+     */
+    public void setPlatform(Platform platform) {
+        this.platform = platform;
     }
 
 }
