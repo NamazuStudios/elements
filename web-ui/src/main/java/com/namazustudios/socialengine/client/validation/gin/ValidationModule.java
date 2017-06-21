@@ -13,4 +13,5 @@ public class ValidationModule extends AbstractGinModule {
     public void configure() {
         binder().bind(Validator.class).toProvider(ValidationProvider.class);
     }
+
 }

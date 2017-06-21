@@ -1,13 +1,8 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
 import com.namazustudios.socialengine.dao.mongo.converter.ObjectIdConverter;
-import com.namazustudios.socialengine.dao.mongo.model.MongoGooglePlayApplicationConfiguration;
-import com.namazustudios.socialengine.dao.mongo.model.MongoIosApplicationConfiguration;
-import com.namazustudios.socialengine.dao.mongo.model.MongoPSNApplicationConfiguration;
-import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
-import com.namazustudios.socialengine.model.application.GooglePlayApplicationConfiguration;
-import com.namazustudios.socialengine.model.application.IosApplicationConfiguration;
-import com.namazustudios.socialengine.model.application.PSNApplicationConfiguration;
+import com.namazustudios.socialengine.dao.mongo.model.*;
+import com.namazustudios.socialengine.model.application.*;
 import org.dozer.DozerBeanMapper;
 import org.dozer.Mapper;
 import org.dozer.loader.api.BeanMappingBuilder;
@@ -28,6 +23,9 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             @Override
             protected void configure() {
 
+                mapping(ApplicationConfiguration.class, MongoApplicationConfiguration.class)
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+
                 mapping(PSNApplicationConfiguration.class, MongoPSNApplicationConfiguration.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                     .fields("npIdentifier", "uniqueIdentifier");
@@ -40,11 +38,7 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                     .fields("applicationId","uniqueIdentifier");
 
-                mapping(GooglePlayApplicationConfiguration.class, MongoGooglePlayApplicationConfiguration.class)
-                    .fields("id", "objectId", customConverter(ObjectIdConverter.class))
-                    .fields("applicationId","uniqueIdentifier");
-
-                mapping(FacebookApplicationConfiguration.class, MongoGooglePlayApplicationConfiguration.class)
+                mapping(FacebookApplicationConfiguration.class, MongoFacebookApplicationConfiguration.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                     .fields("applicationId","uniqueIdentifier");
 

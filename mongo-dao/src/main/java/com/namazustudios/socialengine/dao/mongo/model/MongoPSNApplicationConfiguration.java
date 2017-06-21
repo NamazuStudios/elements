@@ -5,8 +5,8 @@ import org.mongodb.morphia.annotations.*;
 /**
  * Created by patricktwohig on 7/10/15.
  */
-@Entity(value = "application_profile", noClassnameStored = true)
-public class MongoPSNApplicationConfiguration extends AbstractMongoApplicationConfiguration {
+@Entity(value = "application_configuration", noClassnameStored = true)
+public class MongoPSNApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property("client_secret")
     private String clientSecret;

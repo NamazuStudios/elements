@@ -18,7 +18,6 @@
     <name>setup</name>
 
     <properties>
-        <bval.version>0.5</bval.version>
         <jopt.version>4.9-beta-1</jopt.version>
     </properties>
 

@@ -24,7 +24,6 @@ public class FacebookApplicationConfiguration extends ApplicationConfiguration {
     @ApiModelProperty("The App Secret as it appears in the Facebook Developer Console")
     private String applicationSecret;
 
-    @NotNull
     @ApiModelProperty("The set of built-in permissions connected clients will need to request.")
     private List<String> builtinApplicationPermissions;
 

@@ -26,6 +26,8 @@ import javax.inject.Inject;
 import javax.validation.Validator;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.model.application.Platform.FACEBOOK;
+
 /**
  * Created by patricktwohig on 6/16/17.
  */
@@ -148,7 +150,6 @@ public class FacebookApplicationConfigurationEditorView extends ViewImpl impleme
             create.setVisible(true);
             driver.initialize(this);
             driver.edit(new FacebookApplicationConfiguration());
-//            applicationNameLabel.setText(application.getName());
 
             submitter = configuration -> {
                 lockOut();
@@ -169,7 +170,8 @@ public class FacebookApplicationConfigurationEditorView extends ViewImpl impleme
             @Override
             public void onFailure(Method method, Throwable throwable) {
                 unlock();
-                errorModal.setErrorMessage("There was a problem creating the user.");
+                errorModal.setErrorMessage("There was a problem creating the application configuration.");
+                errorModal.show();
             }
 
             @Override
@@ -193,15 +195,40 @@ public class FacebookApplicationConfigurationEditorView extends ViewImpl impleme
             create.setVisible(true);
             driver.initialize(this);
             driver.edit(facebookApplicationConfiguration);
-//            applicationNameLabel.setText(application.getName());
 
             submitter = c -> {
                 lockOut();
-                createNewConfiguration(applicationNameOrId, c);
+                updateConfiguration(applicationNameOrId, c);
             };
 
         });
 
+    }
+
+
+    private void updateConfiguration(final String applicationNameOrId,
+                                     final FacebookApplicationConfiguration facebookApplicationConfiguration) {
+        facebookApplicationConfigurationClient.updateApplicationConfiguration(
+            applicationNameOrId,
+            facebookApplicationConfiguration.getId(),
+            facebookApplicationConfiguration,
+            new MethodCallback<FacebookApplicationConfiguration>() {
+
+                @Override
+                public void onFailure(Method method, Throwable throwable) {
+                    unlock();
+                    errorModal.setErrorMessage("There was a problem creating the user.");
+                    errorModal.show();
+                }
+
+                @Override
+                public void onSuccess(Method method, FacebookApplicationConfiguration response) {
+                    unlock();
+                    Notify.notify("Successfully created user.");
+                    editApplicationConfiguration(applicationNameOrId, response);
+                }
+
+            });
     }
 
     @UiHandler("create")
@@ -210,6 +237,8 @@ public class FacebookApplicationConfigurationEditorView extends ViewImpl impleme
         final FacebookApplicationConfiguration facebookApplicationConfiguration = driver.flush();
 
         boolean failed = false;
+
+        facebookApplicationConfiguration.setPlatform(FACEBOOK);
 
         if (!validator.validateProperty(facebookApplicationConfiguration, "applicationId").isEmpty()) {
             failed = true;

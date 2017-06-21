@@ -9,6 +9,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.SimplePager;
+import com.google.gwt.view.client.Range;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
@@ -96,6 +97,8 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
     private final SimplePager simplePager = new SimplePager();
 
+    private final ApplicationConfigurationDataProvider applicationConfigurationDataProvider;
+
     @Inject
     public ApplicationEditorView(
             final ApplicationEditorViewBinder applicationEditorViewBinder,
@@ -115,6 +118,13 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
             public String getValue(ApplicationConfiguration object) {
                 final Platform platform = object.getPlatform();
                 return platform == null ? "" : platform.toString();
+            }
+        };
+
+        final Column<ApplicationConfiguration, String> profileUniqueIdentifierColumn = new Column<ApplicationConfiguration, String>(new TextCell()) {
+            @Override
+            public String getValue(ApplicationConfiguration object) {
+                return object.getUniqueIdentifier();
             }
         };
 
@@ -144,6 +154,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
         applicationProfileCellTable.addColumn(profileIdColumn, "Proile ID");
         applicationProfileCellTable.addColumn(profilePlatformColumn, "Platform");
+        applicationProfileCellTable.addColumn(profileUniqueIdentifierColumn, "Unique Identifier");
         applicationProfileCellTable.addColumn(editColumn);
         applicationProfileCellTable.addColumn(deleteColumn);
 
@@ -158,6 +169,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
         simplePager.setDisplay(applicationProfileCellTable);
         applicationProfileCellTablePagination.clear();
         applicationConfigurationDataProvider.addDataDisplay(applicationProfileCellTable);
+        this.applicationConfigurationDataProvider = applicationConfigurationDataProvider;
 
     }
 
@@ -202,6 +214,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
         configurationsTableRow.setVisible(false);
         addConfigurationDropDownRow.setVisible(false);
+        applicationConfigurationDataProvider.setParentApplication(null);
 
         save = a -> {
             lockOut();
@@ -218,11 +231,16 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
         driver.edit(application);
         configurationsTableRow.setVisible(true);
         addConfigurationDropDownRow.setVisible(true);
+        applicationConfigurationDataProvider.setParentApplication(application);
+
+        final Range range = new Range(0, applicationProfileCellTable.getVisibleRange().getLength());
+        applicationProfileCellTable.setVisibleRangeAndClearData(range, true);
 
         save = a -> {
             lockOut();
             updateExistingApplication(a);
         };
+
     }
 
     private void createNewApplication(final Application application) {

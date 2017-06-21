@@ -5,8 +5,8 @@ import org.mongodb.morphia.annotations.Entity;
 /**
  * Created by patricktwohig on 5/31/17.
  */
-@Entity(value = "application_profile", noClassnameStored = true)
-public class MongoIosApplicationConfiguration extends AbstractMongoApplicationConfiguration {
+@Entity(value = "application_configuration", noClassnameStored = true)
+public class MongoIosApplicationConfiguration extends MongoApplicationConfiguration {
     // TODO This will likely be populated with more information.
     // The unique app id (eg com.mycompany.myapp) is stored as the unique ID in the parent
     // class.  This will likely include additional information such as the server side

@@ -53,7 +53,7 @@ public class MongoDaoModule extends AbstractModule {
                 .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
                 .toProvider(PasswordDigestProvider.class);
 
-        binder().bind(Mapper.class).toProvider(guicify(new MongoDozerMapperProvider()));
+        binder().bind(Mapper.class).toProvider(guicify(new MongoDozerMapperProvider())).asEagerSingleton();
 
     }
 

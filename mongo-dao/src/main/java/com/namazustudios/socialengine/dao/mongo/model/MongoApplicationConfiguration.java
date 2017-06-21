@@ -31,7 +31,8 @@ package com.namazustudios.socialengine.dao.mongo.model;
         @Index(value = "parent"),
         @Index(value = "name")
 })
-public abstract class AbstractMongoApplicationConfiguration {
+@Entity(value = "application_configuration", noClassnameStored = true)
+public class MongoApplicationConfiguration {
 
     @Id
     private ObjectId objectId;

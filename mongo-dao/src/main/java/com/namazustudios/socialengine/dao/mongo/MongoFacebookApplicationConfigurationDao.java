@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
+import com.namazustudios.socialengine.model.application.Platform;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -208,6 +209,10 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
 
         if (facebookApplicationConfiguration == null) {
             throw new InvalidDataException("psnApplicationProfile must not be null.");
+        }
+
+        if (facebookApplicationConfiguration.getPlatform() == null) {
+            facebookApplicationConfiguration.setPlatform(Platform.FACEBOOK);
         }
 
         switch (facebookApplicationConfiguration.getPlatform()) {

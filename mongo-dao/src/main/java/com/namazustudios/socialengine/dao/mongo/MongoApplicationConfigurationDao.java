@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.ApplicationConfigurationDao;
-import com.namazustudios.socialengine.dao.mongo.model.AbstractMongoApplicationConfiguration;
+import com.namazustudios.socialengine.dao.mongo.model.MongoApplicationConfiguration;
 import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
 import com.namazustudios.socialengine.exception.BadQueryException;
 import com.namazustudios.socialengine.model.Pagination;
@@ -40,11 +40,13 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        final Query<AbstractMongoApplicationConfiguration> query;
-        query = getDatastore().createQuery(AbstractMongoApplicationConfiguration.class);
+        final Query<MongoApplicationConfiguration> query;
+        query = getDatastore().createQuery(MongoApplicationConfiguration.class);
 
-        query.filter("active =", true);
-        query.filter("parent =", mongoApplication);
+        query.and(
+            query.criteria("active").equal(true),
+            query.criteria("parent").equal(mongoApplication)
+        );
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> getBeanMapper().map(input, ApplicationConfiguration.class));
 
@@ -72,7 +74,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             throw new BadQueryException(ex);
         }
 
-        return getMongoDBUtils().paginationFromSearch(AbstractMongoApplicationConfiguration.class, booleanQuery, offset, count, input -> getBeanMapper().map(input, ApplicationConfiguration.class));
+        return getMongoDBUtils().paginationFromSearch(MongoApplicationConfiguration.class, booleanQuery, offset, count, input -> getBeanMapper().map(input, ApplicationConfiguration.class));
 
     }
 

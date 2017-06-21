@@ -5,8 +5,8 @@ import org.mongodb.morphia.annotations.Entity;
 /**
  * Created by patricktwohig on 6/15/17.
  */
-@Entity(value = "application_profile", noClassnameStored = true)
-public class MongoFacebookApplicationConfiguration extends AbstractMongoApplicationConfiguration {
+@Entity(value = "application_configuration", noClassnameStored = true)
+public class MongoFacebookApplicationConfiguration extends MongoApplicationConfiguration {
 
     private String applicationSecret;
 
@@ -17,5 +17,4 @@ public class MongoFacebookApplicationConfiguration extends AbstractMongoApplicat
     public void setApplicationSecret(String applicationSecret) {
         this.applicationSecret = applicationSecret;
     }
-
 }
