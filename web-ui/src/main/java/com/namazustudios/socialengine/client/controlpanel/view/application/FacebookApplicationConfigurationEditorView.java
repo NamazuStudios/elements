@@ -177,7 +177,7 @@ public class FacebookApplicationConfigurationEditorView extends ViewImpl impleme
             @Override
             public void onSuccess(Method method, FacebookApplicationConfiguration response) {
                 unlock();
-                Notify.notify("Successfully created user.");
+                Notify.notify("Successfully created Facebook Configuration: " + facebookApplicationConfiguration.getUniqueIdentifier());
                 editApplicationConfiguration(applicationNameOrId, response);
             }
 
@@ -208,7 +208,6 @@ public class FacebookApplicationConfigurationEditorView extends ViewImpl impleme
 
     }
 
-
     private void updateConfiguration(final String applicationNameOrId,
                                      final FacebookApplicationConfiguration facebookApplicationConfiguration) {
         facebookApplicationConfigurationClient.updateApplicationConfiguration(
@@ -220,14 +219,13 @@ public class FacebookApplicationConfigurationEditorView extends ViewImpl impleme
                 @Override
                 public void onFailure(Method method, Throwable throwable) {
                     unlock();
-                    errorModal.setErrorMessage("There was a problem creating the user.");
+                    errorModal.setErrorMessage("There was a problem updating the configuration.");
                     errorModal.show();
                 }
 
                 @Override
                 public void onSuccess(Method method, FacebookApplicationConfiguration response) {
-                    unlock();
-                    Notify.notify("Successfully created user.");
+                    Notify.notify("Successfully updated: " + facebookApplicationConfiguration.getUniqueIdentifier());
                     editApplicationConfiguration(applicationNameOrId, response);
                 }
 
