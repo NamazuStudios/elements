@@ -210,7 +210,7 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
     public void validate(final FacebookApplicationConfiguration facebookApplicationConfiguration) {
 
         if (facebookApplicationConfiguration == null) {
-            throw new InvalidDataException("psnApplicationProfile must not be null.");
+            throw new InvalidDataException("facebookApplicationConfiguration must not be null.");
         }
 
         if (facebookApplicationConfiguration.getPlatform() == null) {

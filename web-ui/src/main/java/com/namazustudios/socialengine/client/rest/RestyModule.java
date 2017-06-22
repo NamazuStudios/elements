@@ -6,7 +6,6 @@ import com.namazustudios.socialengine.client.rest.gin.UserProvider;
 import com.namazustudios.socialengine.client.rest.service.LoginService;
 import com.namazustudios.socialengine.client.rest.service.RestyLoginService;
 import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 
 /**
  * Created by patricktwohig on 4/16/15.
@@ -24,7 +23,7 @@ public class RestyModule extends AbstractGinModule {
         binder().bind(IosApplicationConfigurationClient.class);
         binder().bind(GooglePlayApplicationConfigurationClient.class);
         binder().bind(PSNApplicationConfigurationClient.class);
-        binder().bind(FacebookApplicationConfiguration.class);
+        binder().bind(FacebookApplicationConfigurationClient.class);
 
         binder().bind(User.class).toProvider(UserProvider.class);
         binder().bind(LoginService.class).to(RestyLoginService.class);
