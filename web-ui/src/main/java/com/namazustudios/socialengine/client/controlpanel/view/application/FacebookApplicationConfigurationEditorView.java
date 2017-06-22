@@ -189,8 +189,11 @@ public class FacebookApplicationConfigurationEditorView extends ViewImpl impleme
             final String applicationNameOrId,
             final FacebookApplicationConfiguration facebookApplicationConfiguration) {
 
+        lockOut();
         loadApplication(applicationNameOrId, application -> {
+
             reset();
+            unlock();
 
             create.setVisible(true);
             driver.initialize(this);

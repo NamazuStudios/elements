@@ -26,8 +26,8 @@ import org.mongodb.morphia.annotations.*;
 )
 @Entity(value = "application", noClassnameStored = true)
 @Indexes({
-    @Index(value = "name", unique = true),
-    @Index(value = "active")
+        @Index(fields = @Field("active")),
+        @Index(fields =@Field("name"), unique = true)
 })
 public class MongoApplication {
 

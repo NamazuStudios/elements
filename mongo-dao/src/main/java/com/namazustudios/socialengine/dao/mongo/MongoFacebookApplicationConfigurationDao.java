@@ -64,6 +64,7 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
         updateOperations.set("active", true);
         updateOperations.set("platform", facebookApplicationConfiguration.getPlatform());
         updateOperations.set("parent", mongoApplication);
+        updateOperations.set("applicationSecret", facebookApplicationConfiguration.getApplicationSecret().trim());
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
                 .returnNew(true)
@@ -142,6 +143,7 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
         updateOperations.set("uniqueIdentifier", facebookApplicationConfiguration.getApplicationId().trim());
         updateOperations.set("platform", facebookApplicationConfiguration.getPlatform());
         updateOperations.set("parent", mongoApplication);
+        updateOperations.set("applicationSecret", facebookApplicationConfiguration.getApplicationSecret().trim());
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
                 .returnNew(true)

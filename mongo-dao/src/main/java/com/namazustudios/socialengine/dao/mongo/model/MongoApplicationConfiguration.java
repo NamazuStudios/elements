@@ -26,10 +26,10 @@ package com.namazustudios.socialengine.dao.mongo.model;
         }
 )
 @Indexes({
-        @Index(value = "platform, parent, name", unique = true),
-        @Index(value = "platform"),
-        @Index(value = "parent"),
-        @Index(value = "name")
+        @Index(fields = @Field("name")),
+        @Index(fields = @Field("platform")),
+        @Index(fields = @Field("parent")),
+        @Index(fields = {@Field("platform"), @Field("parent"), @Field("name") }, unique = true),
 })
 @Entity(value = "application_configuration", noClassnameStored = true)
 public class MongoApplicationConfiguration {
