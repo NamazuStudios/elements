@@ -21,6 +21,7 @@
     <b:Container>
 
         <m:ErrorModal ui:field="errorModal"/>
+        <m:ConfirmationModal ui:field="confirmationModal"/>
 
         <b:Row>
             <b:Panel>
@@ -77,12 +78,12 @@
                 </b:PanelHeader>
 
                 <b:PanelBody>
-                    <b.gwt:CellTable ui:field="applicationProfileCellTable" bordered="true"
-                                        condensed="true"                    striped="true"
-                                        hover="true"                        addStyleNames="{style.table}"/>
+                    <b.gwt:CellTable ui:field="applicationConfigurationCellTable" bordered="true"
+                                     condensed="true" striped="true"
+                                     hover="true" addStyleNames="{style.table}"/>
                 </b:PanelBody>
 
-                <b:Pagination ui:field="applicationProfileCellTablePagination"/>
+                <b:Pagination ui:field="applicationConfigurationCellTablePagination"/>
 
             </b:Panel>
         </b:Row>

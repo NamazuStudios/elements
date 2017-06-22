@@ -9,24 +9,24 @@ import javax.ws.rs.*;
 /**
  * Created by patricktwohig on 6/19/17.
  */
-@Path("application/{applicationNameOrId}/configuration/psn")
 public interface PSNApplicationConfigurationClient extends RestService {
 
     @POST
-    void updateApplicationProfile(
+    @Path("application/{applicationNameOrId}/configuration/psn")
+    void createApplicationConfiguration(
             @PathParam("applicationNameOrId") String applicationNameOrId,
             PSNApplicationConfiguration psnApplicationConfiguration,
             MethodCallback<PSNApplicationConfiguration> psnApplicationConfigurationMethodCallback);
 
     @GET
-    @Path("{applicationProfileNameOrId}")
+    @Path("application/{applicationNameOrId}/configuration/psn/{applicationProfileNameOrId}")
     void getApplicationConfiguration(
             @PathParam("applicationNameOrId") String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") String applicationProfileNameOrId,
             MethodCallback<PSNApplicationConfiguration> psnApplicationConfigurationMethodCallback);
 
     @PUT
-    @Path("{applicationProfileNameOrId}")
+    @Path("application/{applicationNameOrId}/configuration/psn/{applicationProfileNameOrId}")
     void updateApplicationConfiguration(
             @PathParam("applicationNameOrId") String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") String applicationProfileNameOrId,
@@ -34,8 +34,10 @@ public interface PSNApplicationConfigurationClient extends RestService {
             MethodCallback<PSNApplicationConfiguration> psnApplicationConfigurationMethodCallback);
 
     @DELETE
-    void updateApplicationConfiguration(
+    @Path("application/{applicationNameOrId}/configuration/psn/{applicationProfileNameOrId}")
+    void deleteApplicationConfiguration(
             @PathParam("applicationNameOrId") String applicationNameOrId,
+            @PathParam("applicationProfileNameOrId") String applicationProfileNameOrId,
             MethodCallback<Void> voidMethodCallback);
 
 }

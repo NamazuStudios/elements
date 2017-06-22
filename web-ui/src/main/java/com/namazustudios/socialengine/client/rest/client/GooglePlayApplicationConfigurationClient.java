@@ -9,24 +9,24 @@ import javax.ws.rs.*;
 /**
  * Created by patricktwohig on 6/19/17.
  */
-@Path("application/{applicationNameOrId}/configuration/google_play")
 public interface GooglePlayApplicationConfigurationClient extends RestService {
 
     @POST
-    void updateApplicationProfile(
+    @Path("application/{applicationNameOrId}/configuration/google_play")
+    void createApplicationConfiguration(
             @PathParam("applicationNameOrId") String applicationNameOrId,
             GooglePlayApplicationConfiguration googlePlayApplicationConfiguration,
             MethodCallback<GooglePlayApplicationConfiguration> googlePlayApplicationConfigurationMethodCallback);
 
     @GET
-    @Path("{applicationProfileNameOrId}")
+    @Path("application/{applicationNameOrId}/configuration/google_play/{applicationProfileNameOrId}")
     void getApplicationConfiguration(
             @PathParam("applicationNameOrId") String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") String applicationProfileNameOrId,
             MethodCallback<GooglePlayApplicationConfiguration> googlePlayApplicationConfigurationMethodCallback);
 
     @PUT
-    @Path("{applicationProfileNameOrId}")
+    @Path("application/{applicationNameOrId}/configuration/google_play/{applicationProfileNameOrId}")
     void updateApplicationConfiguration(
             @PathParam("applicationNameOrId") String applicationNameOrId,
             @PathParam("applicationProfileNameOrId") String applicationProfileNameOrId,
@@ -34,8 +34,10 @@ public interface GooglePlayApplicationConfigurationClient extends RestService {
             MethodCallback<GooglePlayApplicationConfiguration> googlePlayApplicationConfigurationMethodCallback);
 
     @DELETE
-    void updateApplicationConfiguration(
+    @Path("application/{applicationNameOrId}/configuration/google_play/{applicationProfileNameOrId}")
+    void deleteApplicationConfiguration(
             @PathParam("applicationNameOrId") String applicationNameOrId,
+            @PathParam("applicationProfileNameOrId") String applicationProfileNameOrId,
             MethodCallback<Void> voidMethodCallback);
 
 }

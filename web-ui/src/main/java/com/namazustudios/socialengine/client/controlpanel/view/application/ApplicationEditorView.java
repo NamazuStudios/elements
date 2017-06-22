@@ -14,6 +14,7 @@ import com.gwtplatform.mvp.client.ViewImpl;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.socialengine.client.controlpanel.NameTokens;
+import com.namazustudios.socialengine.client.modal.ConfirmationModal;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
 import com.namazustudios.socialengine.client.rest.client.ApplicationClient;
 import com.namazustudios.socialengine.model.application.Application;
@@ -48,6 +49,9 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
     ErrorModal errorModal;
 
     @UiField
+    ConfirmationModal confirmationModal;
+
+    @UiField
     FormGroup applicationNameFormGroup;
 
     @UiField
@@ -70,10 +74,10 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
     Label descriptionWarningLabel;
 
     @UiField
-    CellTable<ApplicationConfiguration> applicationProfileCellTable;
+    CellTable<ApplicationConfiguration> applicationConfigurationCellTable;
 
     @UiField
-    Pagination applicationProfileCellTablePagination;
+    Pagination applicationConfigurationCellTablePagination;
 
     @UiField
     Row configurationsTableRow;
@@ -92,6 +96,9 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
     @Inject
     private PlaceManager placeManager;
+
+    @Inject
+    private ConfigurationUtils configurationUtils;
 
     private Consumer<Application> save = a -> { lockOut(); createNewApplication(a);};
 
@@ -135,10 +142,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
             }
         };
 
-        editColumn.setFieldUpdater((index, object, value) -> {
-            // TODO Implemnt delete and refresh table.
-            Notify.notify("Todo!");
-        });
+        editColumn.setFieldUpdater((index, object, value) -> editConfiguration(object));
 
         final Column<ApplicationConfiguration, String> deleteColumn = new Column<ApplicationConfiguration, String>(new ButtonCell()) {
             @Override
@@ -147,30 +151,72 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
             }
         };
 
-        deleteColumn.setFieldUpdater(((index, object, value) -> {
-            // TODO Implemnt delete and refresh table.
-            Notify.notify("Todo!");
-        }));
+        deleteColumn.setFieldUpdater(((index, object, value) -> confirmDeleteConfiguration(object)));
 
-        applicationProfileCellTable.addColumn(profileIdColumn, "Proile ID");
-        applicationProfileCellTable.addColumn(profilePlatformColumn, "Platform");
-        applicationProfileCellTable.addColumn(profileUniqueIdentifierColumn, "Unique Identifier");
-        applicationProfileCellTable.addColumn(editColumn);
-        applicationProfileCellTable.addColumn(deleteColumn);
+        applicationConfigurationCellTable.addColumn(profileIdColumn, "Proile ID");
+        applicationConfigurationCellTable.addColumn(profilePlatformColumn, "Platform");
+        applicationConfigurationCellTable.addColumn(profileUniqueIdentifierColumn, "Unique Identifier");
+        applicationConfigurationCellTable.addColumn(editColumn);
+        applicationConfigurationCellTable.addColumn(deleteColumn);
 
-        applicationProfileCellTable.addRangeChangeHandler(event -> applicationProfileCellTablePagination.rebuild(simplePager));
-        applicationConfigurationDataProvider.addRefreshListener(() -> applicationProfileCellTablePagination.rebuild(simplePager));
+        applicationConfigurationCellTable.addRangeChangeHandler(event -> applicationConfigurationCellTablePagination.rebuild(simplePager));
+        applicationConfigurationDataProvider.addRefreshListener(() -> applicationConfigurationCellTablePagination.rebuild(simplePager));
 
         final Label emptyLabel = new Label();
         emptyLabel.setType(LabelType.INFO);
         emptyLabel.setText("No Application Profiles Exist");
-        applicationProfileCellTable.setEmptyTableWidget(emptyLabel);
+        applicationConfigurationCellTable.setEmptyTableWidget(emptyLabel);
 
-        simplePager.setDisplay(applicationProfileCellTable);
-        applicationProfileCellTablePagination.clear();
-        applicationConfigurationDataProvider.addDataDisplay(applicationProfileCellTable);
+        simplePager.setDisplay(applicationConfigurationCellTable);
+        applicationConfigurationCellTablePagination.clear();
+        applicationConfigurationDataProvider.addDataDisplay(applicationConfigurationCellTable);
         this.applicationConfigurationDataProvider = applicationConfigurationDataProvider;
 
+    }
+
+    private void editConfiguration(final ApplicationConfiguration configuration) {
+        final Application application = driver.flush();
+        configurationUtils.editConfiguration(application, configuration);
+    }
+
+    private void confirmDeleteConfiguration(final ApplicationConfiguration configuration) {
+
+
+        confirmationModal.getErrorTextLabel().setText(
+            "Are you sure you wish to delete " + configuration.getPlatform() + " configuration " +
+            "with unique identifier " + configuration.getUniqueIdentifier()
+        );
+
+        confirmationModal.setOnConfirmHandler(() -> deleteConfiguration(configuration));
+        confirmationModal.show();
+
+    }
+
+    private void deleteConfiguration(final ApplicationConfiguration configuration) {
+
+        final Application application = driver.flush();
+
+        lockOut();
+
+        configurationUtils
+                .deleteConfiguration(configuration)
+                .perform(application.getId(), configuration.getId(), new MethodCallback<Void>() {
+
+                    @Override
+                    public void onFailure(Method method, Throwable exception) {
+                        unlock();
+                        errorModal.setErrorMessage("There was a problem deleting the configuration.");
+                        errorModal.show();
+                        editApplication(application);
+                    }
+
+                    @Override
+                    public void onSuccess(Method method, Void response) {
+                        unlock();
+                        Notify.notify("Successfully deleted " + configuration.getUniqueIdentifier());
+                    }
+
+                });
     }
 
     public void lockOut() {
@@ -197,7 +243,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
         applicationNameWarningLabel.setVisible(false);
         descriptionWarningLabel.setVisible(false);
 
-        applicationProfileCellTablePagination.clear();
+        applicationConfigurationCellTablePagination.clear();
 
         configurationsTableRow.setVisible(false);
         addConfigurationDropDownRow.setVisible(false);
@@ -233,8 +279,8 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
         addConfigurationDropDownRow.setVisible(true);
         applicationConfigurationDataProvider.setParentApplication(application);
 
-        final Range range = new Range(0, applicationProfileCellTable.getVisibleRange().getLength());
-        applicationProfileCellTable.setVisibleRangeAndClearData(range, true);
+        final Range range = new Range(0, applicationConfigurationCellTable.getVisibleRange().getLength());
+        applicationConfigurationCellTable.setVisibleRangeAndClearData(range, true);
 
         save = a -> {
             lockOut();
