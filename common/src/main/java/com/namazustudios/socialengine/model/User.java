@@ -26,6 +26,8 @@ public class User {
     @NotNull
     private Level level;
 
+    private String facebookId;
+
     private boolean active;
 
     private static final User UNPRIVILIGED = new User() {
@@ -48,6 +50,11 @@ public class User {
         @Override
         public boolean isActive() {
             return false;
+        }
+
+        @Override
+        public String getFacebookId() {
+            return null;
         }
 
         @Override
@@ -127,6 +134,25 @@ public class User {
      */
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    /**
+     * Gets the user's facebook id, if present.  If a user is not linked to
+     * a Facebook account then this will simply be null.
+     *
+     * @return the user's facebook ID
+     */
+    public String getFacebookId() {
+        return facebookId;
+    }
+
+    /**
+     * Sets a user's facebook id.
+     *
+     * @param facebookId the user's facebook id
+     */
+    public void setFacebookId(String facebookId) {
+        this.facebookId = facebookId;
     }
 
     /**

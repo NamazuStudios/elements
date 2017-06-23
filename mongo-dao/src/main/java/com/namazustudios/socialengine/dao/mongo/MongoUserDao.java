@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
@@ -9,7 +8,7 @@ import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.*;
-import com.namazustudios.socialengine.fts.*;
+import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import org.apache.lucene.index.Term;
@@ -261,6 +260,12 @@ public class MongoUserDao implements UserDao {
             }
         }
 
+    }
+
+    @Override
+    public User createOrUpdateUser(User user) {
+        // TODO Implement this method.
+        throw new UnsupportedOperationException("Not yet implementd.");
     }
 
     @Override

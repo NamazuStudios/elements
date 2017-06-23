@@ -15,8 +15,6 @@ public class FacebookSession {
 
     private String longLivedToken;
 
-    private String applicationName;
-
     public User getUser() {
         return user;
     }
@@ -33,11 +31,4 @@ public class FacebookSession {
         this.longLivedToken = longLivedToken;
     }
 
-    public String getApplicationName() {
-        return applicationName;
-    }
-
-    public void setApplicationName(String applicationName) {
-        this.applicationName = applicationName;
-    }
 }

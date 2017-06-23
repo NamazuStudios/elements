@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.session.FacebookSession;
 import com.namazustudios.socialengine.service.FacebookAuthService;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -21,7 +22,7 @@ import static com.namazustudios.socialengine.rest.provider.UserProvider.USER_SES
 /**
  * Created by patricktwohig on 6/22/17.
  */
-@Path("application/{applicationNameOrId}/session/facebook")
+@Path("application/{applicationNameOrId}/session/facebook/{applicationConfigurationNameOrId}")
 public class FacebookSessionResource {
 
     private HttpServletRequest httpServletRequest;
@@ -36,17 +37,28 @@ public class FacebookSessionResource {
                     "token is scoped to the application which created it.  This may have effects on how subsequent " +
                     "requests will behave based on the requested token.")
     public FacebookSession createSession(
-        @PathParam("applicationNameOrId") final String applicationNameOrId,
-        @QueryParam("facebookToken")      String facebookToken) {
 
-        facebookToken = nullToEmpty(facebookToken).trim();
+        @ApiParam("The application name or id")
+        @PathParam("applicationNameOrId")
+        final String applicationNameOrId,
+
+        @ApiParam("The application configuation name or id.  For Facebook applications this is the Facebook App ID.")
+        @PathParam("applicationConfigurationNameOrId")
+        final String applicationConfigurationNameOrId,
+
+        @QueryParam("facebookOAuthAccessToken")
+        @ApiParam("The Facebook OAuth token (should be a short-lived token).")
+        String facebookOAuthAccessToken) {
+
+        facebookOAuthAccessToken = nullToEmpty(facebookOAuthAccessToken).trim();
 
         if (Strings.isNullOrEmpty(applicationNameOrId)) {
             throw new InvalidDataException("Must specify OAuth Token.");
         }
 
         final FacebookSession facebookSession;
-        facebookSession = getFacebookAuthService().authorizeWithToken(applicationNameOrId, facebookToken);
+        facebookSession = getFacebookAuthService()
+            .createOrUpdateUserWithFacebookOAuthAccessToken(applicationNameOrId, applicationConfigurationNameOrId, facebookOAuthAccessToken);
 
         final User user = facebookSession.getUser();
         final HttpSession httpSession = httpServletRequest.getSession(true);

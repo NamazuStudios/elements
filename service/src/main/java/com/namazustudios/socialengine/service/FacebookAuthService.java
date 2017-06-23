@@ -3,6 +3,9 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.model.session.FacebookSession;
 
 /**
+ * Used to authorize requests users using Facebook OAuth access tokens.  This acts as the connection
+ * point between.
+ *
  * Created by patricktwohig on 6/22/17.
  */
 public interface FacebookAuthService {
@@ -17,10 +20,13 @@ public interface FacebookAuthService {
      * to a long-term token and supply the result.
      *
      * @param applicationNameOrId the application name or id
-     * @param facebookToken the facebook token the facebook token
+     * @param applicationConfigurationNameOrId the application configuration name or id
+     * @param facebookOAuthAccessToken the facebook token the facebook token
      *
      * @return
      */
-    FacebookSession authorizeWithToken(String applicationNameOrId, String facebookToken);
+    FacebookSession createOrUpdateUserWithFacebookOAuthAccessToken(String applicationNameOrId,
+                                                                   String applicationConfigurationNameOrId,
+                                                                   String facebookOAuthAccessToken);
 
 }
