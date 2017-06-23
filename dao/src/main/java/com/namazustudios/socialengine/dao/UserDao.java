@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 
@@ -79,8 +80,8 @@ public interface UserDao {
      *
      * @return the {@link User} as it was created
      */
-    default User createOrActivateUser(final User user) {
-        return createOrActivateUser(user, (name, iteration) -> name + iteration);
+    default User createOrReactivateUser(final User user) {
+        return createOrReactivateUser(user, (name, iteration) -> name + iteration);
     }
 
     /**
@@ -89,19 +90,24 @@ public interface UserDao {
      * and therefore the user must change password at a later date.
      *
      * Because a user may need to assign a unique name, this allows for the specification
-     * of an object which can be used to generate the name.  The {@link Function} will
+     * of an object which can be used to generate the name.  The {@link BiFunction} will
      * be supplied the the number of attempts it has made to generate the user's name
      * in the event of a failure.  This is only called in the event that the name already
      * supplied in by the {@link User#getName()} method collides with another user name.
      *
      * The supplied {@link Function} for name generation may throw the appropriate exception
-     * indicating that the user cannot be created or updated.
+     * indicating that the user cannot be created or updated.  Usually this should be a
+     * {@link DuplicateException}.
+     *
+     * Similar to {@link #createUserStrict(User)} the user will be assigned a scrambled
+     * password if the user does not exist (or was previously inactive). This will not
+     * touch the user's password if the user both exists and was flagged as active.
      *
      * @param user the user
      * @param nameGenerator the name generator
      * @return the User, as written to the database
      */
-    User createOrActivateUser(final User user, final BiFunction<String, Integer, String> nameGenerator);
+    User createOrReactivateUser(final User user, final BiFunction<String, Integer, String> nameGenerator);
 
     /**
      * Creates a user and sets the user's password.  If the user exists
@@ -113,23 +119,6 @@ public interface UserDao {
      * @return the User, as was written to the database
      */
     User createOrActivateUser(final User user, final String password);
-
-    /**
-     * Creates a user, or updates the user with the latest user information.  This
-     * can be thought of as an upsert operation.  A user will be created if the user
-     * does not exist.  If the user does exist, the user will be updated and
-     * the active flag will be set to true.
-     *
-     * Similar to {@link #createUserStrict(User)} the user will be assigned a scrambled
-     * password if the user does not exist (or was previously inactive).
-     *
-     * This will not touch the user's password if the user both exists and was flagged
-     * as active.
-     *
-     * @param user the user
-     * @return the {@link User} instance
-     */
-    User createOrUpdateUser(final User user);
 
     /**
      * Updates the given user, regardless of active status and then returns

@@ -17,6 +17,7 @@ import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
+import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -30,6 +31,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.function.BiFunction;
 
 /**
  * MongoDB implementation of {@link UserDao}.
@@ -41,33 +43,26 @@ public class MongoUserDao implements UserDao {
 
     private static final int SALT_LENGTH = 12;
 
-    @Inject
     private AdvancedDatastore datastore;
 
-    @Inject
-    @Named(Constants.PASSWORD_DIGEST)
     private Provider<MessageDigest> messageDigestProvider;
 
-    @Inject
-    @Named(Constants.PASSWORD_ENCODING)
     private String passwordEncoding;
 
-    @Inject
     private ValidationHelper validationHelper;
 
-    @Inject
     private ObjectIndex objectIndex;
 
-    @Inject
     private StandardQueryParser standardQueryParser;
 
-    @Inject
     private MongoDBUtils mongoDBUtils;
+
+    private Mapper dozerMapper;
 
     @Override
     public User getActiveUser(String userId) {
 
-        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
 
         query.or(
             query.criteria("name").equal(userId),
@@ -77,13 +72,13 @@ public class MongoUserDao implements UserDao {
         );
 
         final MongoUser mongoUser = query.get();
-        return transform(mongoUser);
+        return getDozerMapper().map(mongoUser, User.class);
 
     }
 
     @Override
     public Pagination<User> getActiveUsers(int offset, int count) {
-        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         query.filter("active = ", true);
         return paginationFromQuery(query, offset, count);
     }
@@ -98,18 +93,18 @@ public class MongoUserDao implements UserDao {
             final Term activeTerm = new Term("active", "true");
 
             booleanQuery.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
-            booleanQuery.add(standardQueryParser.parse(queryString, "name"), BooleanClause.Occur.FILTER);
+            booleanQuery.add(getStandardQueryParser().parse(queryString, "name"), BooleanClause.Occur.FILTER);
 
         } catch (QueryNodeException ex) {
             throw new BadQueryException(ex);
         }
 
-        return mongoDBUtils.paginationFromSearch(MongoUser.class, booleanQuery, offset, count, this::transform);
+        return getMongoDBUtils().paginationFromSearch(MongoUser.class, booleanQuery, offset, count, u -> getDozerMapper().map(u, User.class));
 
     }
 
     private Pagination<User> paginationFromQuery(final Query<MongoUser> query, final int offset, final int count) {
-        return mongoDBUtils.paginationFromQuery(query, offset, count, input -> transform(input));
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, u -> getDozerMapper().map(u, User.class));
     }
 
     @Override
@@ -135,17 +130,17 @@ public class MongoUserDao implements UserDao {
         secureRandom.nextBytes(tmp);
         mongoUser.setPasswordHash(tmp);
 
-        final MessageDigest digest = messageDigestProvider.get();
+        final MessageDigest digest = getMessageDigestProvider().get();
         mongoUser.setHashAlgorithm(digest.getAlgorithm());
 
         try {
-            datastore.save(mongoUser);
-            objectIndex.index(mongoUser);
+            getDatastore().save(mongoUser);
+            getObjectIndex().index(mongoUser);
         } catch (DuplicateKeyException ex) {
             throw new DuplicateException(ex);
         }
 
-        return transform(mongoUser);
+        return getDozerMapper().map(mongoUser, User.class);
 
     }
 
@@ -163,7 +158,7 @@ public class MongoUserDao implements UserDao {
         final byte[] passwordBytes;
 
         try {
-            passwordBytes = password.getBytes(passwordEncoding);
+            passwordBytes = password.getBytes(getPasswordEncoding());
         } catch (UnsupportedEncodingException ex) {
             throw new InternalException(ex);
         }
@@ -174,7 +169,7 @@ public class MongoUserDao implements UserDao {
         final SecureRandom secureRandom = new SecureRandom();
         secureRandom.nextBytes(salt);
 
-        final MessageDigest digest = messageDigestProvider.get();
+        final MessageDigest digest = getMessageDigestProvider().get();
         digest.update(salt);
         digest.update(passwordBytes);
 
@@ -183,13 +178,13 @@ public class MongoUserDao implements UserDao {
         mongoUser.setHashAlgorithm(digest.getAlgorithm());
 
         try {
-            datastore.save(mongoUser);
-            objectIndex.index(mongoUser);
+            getDatastore().save(mongoUser);
+            getObjectIndex().index(mongoUser);
         } catch (DuplicateKeyException ex) {
             throw new DuplicateException(ex);
         }
 
-        return transform(mongoUser);
+        return getDozerMapper().map(mongoUser, User.class);
 
     }
 
@@ -197,8 +192,8 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
-        final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
         query.and(
             query.criteria("name").equal(user.getName()),
@@ -215,8 +210,8 @@ public class MongoUserDao implements UserDao {
         scramblePassword(operations);
 
         try {
-            final MongoUser mongoUser = datastore.findAndModify(query, operations, false, true);
-            return transform(mongoUser);
+            final MongoUser mongoUser = getDatastore().findAndModify(query, operations, false, true);
+            return getDozerMapper().map(mongoUser, User.class);
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
                 throw new DuplicateException(ex);
@@ -231,8 +226,8 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
-        final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
         query.and(
             query.criteria("name").equal(user.getName()),
@@ -249,9 +244,9 @@ public class MongoUserDao implements UserDao {
         addPasswordToOperations(operations, password);
 
         try {
-            final MongoUser mongoUser = datastore.findAndModify(query, operations, false, true);
-            objectIndex.index(mongoUser);
-            return transform(mongoUser);
+            final MongoUser mongoUser = getDatastore().findAndModify(query, operations, false, true);
+            getObjectIndex().index(mongoUser);
+            return getDozerMapper().map(mongoUser, User.class);
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
                 throw new DuplicateException(ex);
@@ -263,9 +258,17 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User createOrUpdateUser(User user) {
-        // TODO Implement this method.
-        throw new UnsupportedOperationException("Not yet implementd.");
+    public User createOrReactivateUser(final User user, final BiFunction<String, Integer, String> nameGenerator) {
+        for (int iteration = 0; true; ++iteration) {
+            return createOrReactivateUser(iteration, user, nameGenerator);
+        }
+    }
+
+    private User createOrReactivateUser(final int iteration,
+                                        final User user,
+                                        final BiFunction<String, Integer, String> nameGenerator) {
+
+        return null;
     }
 
     @Override
@@ -273,8 +276,8 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
-        final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
         query.and(
                 query.criteria("name").equal(user.getName()),
@@ -286,14 +289,14 @@ public class MongoUserDao implements UserDao {
         operations.set("level", user.getLevel());
         operations.set("active", user.isActive());
 
-        final MongoUser mongoUser = datastore.findAndModify(query, operations, false, false);
-        objectIndex.index(mongoUser);
+        final MongoUser mongoUser = getDatastore().findAndModify(query, operations, false, false);
+        getObjectIndex().index(mongoUser);
 
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
         }
 
-        return transform(mongoUser);
+        return getDozerMapper().map(mongoUser, User.class);
 
     }
 
@@ -302,8 +305,8 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
-        final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
         query.and(
                 query.criteria("name").equal(user.getName()),
@@ -316,14 +319,14 @@ public class MongoUserDao implements UserDao {
         operations.set("active", user.isActive());
         addPasswordToOperations(operations, password);
 
-        final MongoUser mongoUser = datastore.findAndModify(query, operations, false, false);
-        objectIndex.index(mongoUser);
+        final MongoUser mongoUser = getDatastore().findAndModify(query, operations, false, false);
+        getObjectIndex().index(mongoUser);
 
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
         }
 
-        return transform(mongoUser);
+        return getDozerMapper().map(mongoUser, User.class);
 
     }
 
@@ -332,8 +335,8 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
-        final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
         query.and(
             query.criteria("name").equal(user.getName()),
@@ -346,14 +349,14 @@ public class MongoUserDao implements UserDao {
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
 
-        final MongoUser mongoUser = datastore.findAndModify(query, operations);
-        objectIndex.index(mongoUser);
+        final MongoUser mongoUser = getDatastore().findAndModify(query, operations);
+        getObjectIndex().index(mongoUser);
 
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
         }
 
-        return transform(mongoUser);
+        return getDozerMapper().map(mongoUser, User.class);
 
     }
 
@@ -362,8 +365,8 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
-        final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
         query.and(
                 query.criteria("name").equal(user.getName()),
@@ -378,22 +381,22 @@ public class MongoUserDao implements UserDao {
 
         addPasswordToOperations(operations, password);
 
-        final MongoUser mongoUser = datastore.findAndModify(query, operations);
-        objectIndex.index(mongoUser);
+        final MongoUser mongoUser = getDatastore().findAndModify(query, operations);
+        getObjectIndex().index(mongoUser);
 
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
         }
 
-        return transform(mongoUser);
+        return getDozerMapper().map(mongoUser, User.class);
 
     }
 
     @Override
     public void softDeleteUser(String userId) {
 
-        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
-        final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
         query.or(
             query.criteria("name").equal(userId),
@@ -405,8 +408,8 @@ public class MongoUserDao implements UserDao {
         operations.set("active", false);
         scramblePassword(operations);
 
-        final MongoUser mongoUser = datastore.findAndModify(query, operations);
-        objectIndex.index(mongoUser);
+        final MongoUser mongoUser = getDatastore().findAndModify(query, operations);
+        getObjectIndex().index(mongoUser);
 
         if (mongoUser == null) {
             throw new NotFoundException("User with userid does not exist:" + userId);
@@ -423,8 +426,8 @@ public class MongoUserDao implements UserDao {
             throw new InvalidDataException("Password must not be blank.");
         }
 
-        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
-        final UpdateOperations<MongoUser> operations = datastore.createUpdateOperations(MongoUser.class);
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
         query.or(
             query.criteria("name").equal(userId),
@@ -438,7 +441,7 @@ public class MongoUserDao implements UserDao {
         final byte[] passwordBytes;
 
         try {
-            passwordBytes = password.getBytes(passwordEncoding);
+            passwordBytes = password.getBytes(getPasswordEncoding());
         } catch (UnsupportedEncodingException ex) {
             throw new InternalException(ex);
         }
@@ -449,7 +452,7 @@ public class MongoUserDao implements UserDao {
         final SecureRandom secureRandom = new SecureRandom();
         secureRandom.nextBytes(salt);
 
-        final MessageDigest digest = messageDigestProvider.get();
+        final MessageDigest digest = getMessageDigestProvider().get();
         digest.update(salt);
         digest.update(passwordBytes);
 
@@ -457,36 +460,23 @@ public class MongoUserDao implements UserDao {
         operations.set("password_hash", digest.digest());
         operations.set("hash_algorithm", digest.getAlgorithm());
 
-        final MongoUser mongoUser = datastore.findAndModify(query, operations);
-        objectIndex.index(mongoUser);
+        final MongoUser mongoUser = getDatastore().findAndModify(query, operations);
+        getObjectIndex().index(mongoUser);
 
         if (mongoUser == null) {
             throw new NotFoundException("User with userid does not exist:" + userId);
         }
 
-        return transform(mongoUser);
+        return getDozerMapper().map(mongoUser, User.class);
     }
-
-    private User transform(final MongoUser mongoUser) {
-
-        final User user = new User();
-
-        user.setName(mongoUser.getName());
-        user.setEmail(mongoUser.getEmail());
-        user.setLevel(mongoUser.getLevel());
-        user.setActive(mongoUser.isActive());
-
-        return user;
-
-    }
-
+    
     public void validate(final User user) {
 
         if (user == null) {
             throw new InvalidDataException("User must not be null.");
         }
 
-        validationHelper.validateModel(user);
+        getValidationHelper().validateModel(user);
 
         user.setEmail(Strings.nullToEmpty(user.getEmail()).trim());
         user.setName(Strings.nullToEmpty(user.getName()).trim());
@@ -496,7 +486,7 @@ public class MongoUserDao implements UserDao {
     @Override
     public User validateActiveUserPassword(String userId, String password) {
 
-        final Query<MongoUser> query = datastore.createQuery(MongoUser.class);
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
 
         query.or(
             query.criteria("name").equal(userId),
@@ -514,7 +504,7 @@ public class MongoUserDao implements UserDao {
         final byte[] passwordBytes;
 
         try {
-            passwordBytes = password.getBytes(passwordEncoding);
+            passwordBytes = password.getBytes(getPasswordEncoding());
         } catch (UnsupportedEncodingException ex) {
             throw new InternalException(ex);
         }
@@ -540,7 +530,7 @@ public class MongoUserDao implements UserDao {
         final byte[] existingPasswordHash = mongoUser.getPasswordHash();
 
         if (existingPasswordHash != null && Arrays.equals(existingPasswordHash, digest.digest())) {
-            return transform(mongoUser);
+            return getDozerMapper().map(mongoUser, User.class);
         }
 
         throw new ForbiddenException("Invalid credentials for " + userId);
@@ -567,7 +557,7 @@ public class MongoUserDao implements UserDao {
         secureRandom.nextBytes(tmp);
         operations.set("password_hash", tmp);
 
-        final MessageDigest digest = messageDigestProvider.get();
+        final MessageDigest digest = getMessageDigestProvider().get();
         operations.set("hash_algorithm", digest.getAlgorithm());
 
     }
@@ -583,7 +573,7 @@ public class MongoUserDao implements UserDao {
         final byte[] passwordBytes;
 
         try {
-            passwordBytes = password.getBytes(passwordEncoding);
+            passwordBytes = password.getBytes(getPasswordEncoding());
         } catch (UnsupportedEncodingException ex) {
             throw new InternalException(ex);
         }
@@ -594,7 +584,7 @@ public class MongoUserDao implements UserDao {
         final SecureRandom secureRandom = new SecureRandom();
         secureRandom.nextBytes(salt);
 
-        final MessageDigest digest = messageDigestProvider.get();
+        final MessageDigest digest = getMessageDigestProvider().get();
         digest.update(salt);
         digest.update(passwordBytes);
 
@@ -603,5 +593,79 @@ public class MongoUserDao implements UserDao {
         operations.set("hash_algorithm", digest.getAlgorithm());
 
     }
+
+    public AdvancedDatastore getDatastore() {
+        return datastore;
+    }
+
+    @Inject
+    public void setDatastore(AdvancedDatastore datastore) {
+        this.datastore = datastore;
+    }
+
+    public Provider<MessageDigest> getMessageDigestProvider() {
+        return messageDigestProvider;
+    }
+
+    @Inject
+    public void setMessageDigestProvider(@Named(Constants.PASSWORD_DIGEST) Provider<MessageDigest> messageDigestProvider) {
+        this.messageDigestProvider = messageDigestProvider;
+    }
+
+    public String getPasswordEncoding() {
+        return passwordEncoding;
+    }
+
+    @Inject
+    public void setPasswordEncoding(@Named(Constants.PASSWORD_ENCODING) String passwordEncoding) {
+        this.passwordEncoding = passwordEncoding;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
+    }
+
+    public ObjectIndex getObjectIndex() {
+        return objectIndex;
+    }
+
+    @Inject
+    public void setObjectIndex(ObjectIndex objectIndex) {
+        this.objectIndex = objectIndex;
+    }
+
+    public StandardQueryParser getStandardQueryParser() {
+        return standardQueryParser;
+    }
+
+    @Inject
+    public void setStandardQueryParser(StandardQueryParser standardQueryParser) {
+        this.standardQueryParser = standardQueryParser;
+    }
+
+    public MongoDBUtils getMongoDBUtils() {
+        return mongoDBUtils;
+    }
+
+    @Inject
+    public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
+        this.mongoDBUtils = mongoDBUtils;
+    }
+
+    public Mapper getDozerMapper() {
+        return dozerMapper;
+    }
+
+    @Inject
+    public void setDozerMapper(Mapper dozerMapper) {
+        this.dozerMapper = dozerMapper;
+    }
+
+    private class DuplicateNameException extends DuplicateException {}
 
 }

@@ -47,7 +47,7 @@ public class AnonFacebookAuthService implements FacebookAuthService {
         final FacebookClient facebookClient = new DefaultFacebookClient(facebookOAuthAccessToken, Version.LATEST);
 
         final com.restfb.types.User fbUser = facebookClient.fetchObject("me", com.restfb.types.User.class);
-        final User user = getUserDao().createOrActivateUser(map(fbUser));
+        final User user = getUserDao().createOrReactivateUser(map(fbUser));
 
         final FacebookClient.AccessToken longLivedAccessToken;
         longLivedAccessToken = facebookClient.obtainExtendedAccessToken(
