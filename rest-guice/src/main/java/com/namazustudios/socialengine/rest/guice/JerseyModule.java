@@ -84,12 +84,12 @@ public abstract class JerseyModule extends ServletModule {
     }
 
     /**
-     * Enables the {@link SessionResource}.
+     * Enables the {@link HttpSessionResource}.
      *
      * @return this
      */
     public JerseyModule enableSessionResource() {
-        bind(SessionResource.class);
+        bind(HttpSessionResource.class);
         return this;
     }
 
@@ -142,7 +142,7 @@ public abstract class JerseyModule extends ServletModule {
     public JerseyModule enableAllResources() {
         bind(UserResource.class);
         bind(EntrantResource.class);
-        bind(SessionResource.class);
+        bind(HttpSessionResource.class);
         bind(ShortLinkResource.class);
         bind(SocialCampaignResource.class);
         bind(ApplicationResource.class);

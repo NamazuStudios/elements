@@ -13,7 +13,7 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by patricktwohig on 4/16/15.
  */
-@Path("session")
+@Path("session/http")
 @Options()
 public interface LoginClient extends RestService {
 

@@ -19,8 +19,8 @@ import javax.ws.rs.core.MediaType;
  */
 @Api(value = "Session and Login",
      description = "Starts a session by associating a User with the current HTTP session.")
-@Path("session")
-public class SessionResource {
+@Path("session/http")
+public class HttpSessionResource {
 
     @Inject
     private AuthService authService;
@@ -30,13 +30,13 @@ public class SessionResource {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets a Session",
+    @ApiOperation(value = "Creates a Session",
                   notes = "Begins a session by accepting both the UserID and the Passoword.  Upon successful " +
                           "completion of this call, the user will be added to the current HTTP session.  If " +
                           "the session expires, the user will have to reestablish the session by supplying " +
                           "credentials again.  This is most useful for applications delivered in a web page.")
-    public User getSession(@QueryParam("userId") String userId,
-                           @QueryParam("password") String password) {
+    public User createSession(@QueryParam("userId") String userId,
+                              @QueryParam("password") String password) {
 
         userId = Strings.nullToEmpty(userId).trim();
         password = Strings.nullToEmpty(password).trim();
