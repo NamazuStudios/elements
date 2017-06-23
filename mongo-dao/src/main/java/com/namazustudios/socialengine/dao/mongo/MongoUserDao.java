@@ -144,7 +144,7 @@ public class MongoUserDao implements UserDao {
 
     }
 
-    public User createUserStrict(final User user, final String password) {
+    public User createUserWithPasswordStrict(final User user, final String password) {
 
         validate(user);
 
@@ -188,41 +188,7 @@ public class MongoUserDao implements UserDao {
 
     }
 
-    public User createOrActivateUser(final User user) {
-
-        validate(user);
-
-        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
-        final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
-
-        query.and(
-            query.criteria("name").equal(user.getName()),
-            query.criteria("email").equal(user.getEmail())
-        ).and(
-            query.criteria("active").equal(false)
-        );
-
-        operations.set("active", true);
-        operations.set("name", user.getName());
-        operations.set("email", user.getEmail());
-        operations.set("level", user.getLevel());
-
-        scramblePassword(operations);
-
-        try {
-            final MongoUser mongoUser = getDatastore().findAndModify(query, operations, false, true);
-            return getDozerMapper().map(mongoUser, User.class);
-        } catch (MongoCommandException ex) {
-            if (ex.getErrorCode() == 11000) {
-                throw new DuplicateException(ex);
-            } else {
-                throw new InternalException(ex);
-            }
-        }
-
-    }
-
-    public User createOrActivateUser(final User user, final String password) {
+    public User createOrRectivateUserWithPassword(final User user, final String password) {
 
         validate(user);
 
@@ -258,17 +224,37 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User createOrReactivateUser(final User user, final BiFunction<String, Integer, String> nameGenerator) {
-        for (int iteration = 0; true; ++iteration) {
-            return createOrReactivateUser(iteration, user, nameGenerator);
+    public User createOrReactivateUser(User user) {
+        validate(user);
+
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
+
+        query.and(
+                query.criteria("name").equal(user.getName()),
+                query.criteria("email").equal(user.getEmail())
+        ).and(
+                query.criteria("active").equal(false)
+        );
+
+        operations.set("active", true);
+        operations.set("name", user.getName());
+        operations.set("email", user.getEmail());
+        operations.set("level", user.getLevel());
+
+        scramblePassword(operations);
+
+        try {
+            final MongoUser mongoUser = getDatastore().findAndModify(query, operations, false, true);
+            return getDozerMapper().map(mongoUser, User.class);
+        } catch (MongoCommandException ex) {
+            if (ex.getErrorCode() == 11000) {
+                throw new DuplicateException(ex);
+            } else {
+                throw new InternalException(ex);
+            }
         }
-    }
 
-    private User createOrReactivateUser(final int iteration,
-                                        final User user,
-                                        final BiFunction<String, Integer, String> nameGenerator) {
-
-        return null;
     }
 
     @Override
@@ -469,7 +455,7 @@ public class MongoUserDao implements UserDao {
 
         return getDozerMapper().map(mongoUser, User.class);
     }
-    
+
     public void validate(final User user) {
 
         if (user == null) {
