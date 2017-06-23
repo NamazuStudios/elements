@@ -5,6 +5,7 @@ import com.google.inject.servlet.ServletModule;
 import com.namazustudios.socialengine.rest.*;
 import com.namazustudios.socialengine.rest.application.ApplicationConfigurationResource;
 import com.namazustudios.socialengine.rest.application.ApplicationResource;
+import com.namazustudios.socialengine.rest.application.FacebookSessionResource;
 import com.namazustudios.socialengine.rest.application.PSNApplicationConfigurationResource;
 import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
 import org.glassfish.jersey.servlet.ServletContainer;
@@ -88,8 +89,18 @@ public abstract class JerseyModule extends ServletModule {
      *
      * @return this
      */
-    public JerseyModule enableSessionResource() {
+    public JerseyModule enableHttpSessionResource() {
         bind(HttpSessionResource.class);
+        return this;
+    }
+
+    /**
+     * Enables the {@link FacebookSessionResource}.
+     *
+     * @return this
+     */
+    public JerseyModule enableFacebookSessionResource() {
+        bind(FacebookSessionResource.class);
         return this;
     }
 
@@ -143,6 +154,7 @@ public abstract class JerseyModule extends ServletModule {
         bind(UserResource.class);
         bind(EntrantResource.class);
         bind(HttpSessionResource.class);
+        bind(FacebookSessionResource.class);
         bind(ShortLinkResource.class);
         bind(SocialCampaignResource.class);
         bind(ApplicationResource.class);

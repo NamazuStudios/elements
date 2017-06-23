@@ -76,7 +76,7 @@ public class AnonFacebookAuthService implements FacebookAuthService {
     private String generateUserName(final com.restfb.types.User fbUser) {
         final String firstName = emptyToNull(nullToEmpty(fbUser.getFirstName()).trim());
         final String middleName = emptyToNull(nullToEmpty(fbUser.getMiddleName()).trim());
-        final String lastName = emptyToNull(nullToEmpty(fbUser.getLastName().trim()));
+        final String lastName = emptyToNull(nullToEmpty(fbUser.getLastName()).trim());
         return Joiner.on(".").skipNulls().join(firstName, middleName, lastName, fbUser.getId());
     }
 

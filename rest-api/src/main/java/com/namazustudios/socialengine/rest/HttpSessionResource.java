@@ -22,10 +22,8 @@ import javax.ws.rs.core.MediaType;
 @Path("session/http")
 public class HttpSessionResource {
 
-    @Inject
     private AuthService authService;
 
-    @Inject
     private HttpServletRequest httpServletRequest;
 
     @POST
@@ -63,6 +61,25 @@ public class HttpSessionResource {
                   notes = "Simply invalidates the session and effectively logs the user out.")
     public void destroySession() {
         httpServletRequest.getSession().invalidate();
+    }
+
+    public AuthService getAuthService() {
+        return authService;
+    }
+
+    @Inject
+    public void setAuthService(AuthService authService) {
+        this.authService = authService;
+    }
+
+    public HttpServletRequest getHttpServletRequest() {
+        return httpServletRequest;
+    }
+
+    @Inject
+
+    public void setHttpServletRequest(HttpServletRequest httpServletRequest) {
+        this.httpServletRequest = httpServletRequest;
     }
 
 }

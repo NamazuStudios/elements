@@ -1,21 +1,20 @@
 package com.namazustudios.socialengine.rest.application;
 
-import com.google.common.base.Strings;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.session.FacebookSession;
 import com.namazustudios.socialengine.service.FacebookAuthService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.provider.UserProvider.USER_SESSION_KEY;
 
@@ -23,6 +22,9 @@ import static com.namazustudios.socialengine.rest.provider.UserProvider.USER_SES
  * Created by patricktwohig on 6/22/17.
  */
 @Path("application/{applicationNameOrId}/session/facebook/{applicationConfigurationNameOrId}")
+@Api(value = "Facebook Session and Login",
+     description = "Allows the user to login and create accoutns using Facebook.")
+
 public class FacebookSessionResource {
 
     private HttpServletRequest httpServletRequest;
@@ -35,24 +37,26 @@ public class FacebookSessionResource {
                     "sessions backed by HTTP sessions, Facebook sessions must be created under the " +
                     "application.  This may implicitly create a new User account.  Additionally, the returned " +
                     "token is scoped to the application which created it.  This may have effects on how subsequent " +
-                    "requests will behave based on the requested token.")
+                    "requests will behave based on the requested token.  Subsequent requests require that the supplied " +
+                    "long-term Facebook token be supplied in authorization headers.")
+    @Produces(MediaType.APPLICATION_JSON)
     public FacebookSession createSession(
 
-        @ApiParam("The application name or id")
-        @PathParam("applicationNameOrId")
-        final String applicationNameOrId,
+            @ApiParam("The application name or id")
+            @PathParam("applicationNameOrId")
+            final String applicationNameOrId,
 
-        @ApiParam("The application configuation name or id.  For Facebook applications this is the Facebook App ID.")
-        @PathParam("applicationConfigurationNameOrId")
-        final String applicationConfigurationNameOrId,
+            @ApiParam("The application configuation name or id.  For Facebook applications this is the Facebook App ID.")
+            @PathParam("applicationConfigurationNameOrId")
+            final String applicationConfigurationNameOrId,
 
-        @QueryParam("facebookOAuthAccessToken")
-        @ApiParam("The Facebook OAuth token (should be a short-lived token).")
-        String facebookOAuthAccessToken) {
+            @QueryParam("facebookOAuthAccessToken")
+            @ApiParam(value = "The Facebook OAuth token (should be a short-lived token).", required = true)
+            String facebookOAuthAccessToken) {
 
         facebookOAuthAccessToken = nullToEmpty(facebookOAuthAccessToken).trim();
 
-        if (Strings.isNullOrEmpty(applicationNameOrId)) {
+        if (isNullOrEmpty(facebookOAuthAccessToken)) {
             throw new InvalidDataException("Must specify OAuth Token.");
         }
 
@@ -61,7 +65,7 @@ public class FacebookSessionResource {
             .createOrUpdateUserWithFacebookOAuthAccessToken(applicationNameOrId, applicationConfigurationNameOrId, facebookOAuthAccessToken);
 
         final User user = facebookSession.getUser();
-        final HttpSession httpSession = httpServletRequest.getSession(true);
+        final HttpSession httpSession = getHttpServletRequest().getSession(true);
         httpSession.setAttribute(USER_SESSION_KEY, user);
 
         return facebookSession;
