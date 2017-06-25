@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.model.session.FacebookSession;
 import com.namazustudios.socialengine.service.FacebookAuthService;
 import com.restfb.DefaultFacebookClient;
 import com.restfb.FacebookClient;
+import com.restfb.Parameter;
 import com.restfb.Version;
 
 import javax.inject.Inject;
@@ -30,6 +31,9 @@ import static com.google.common.base.Strings.nullToEmpty;
 })
 public class AnonFacebookAuthService implements FacebookAuthService {
 
+    private static final String FIELDS_PARAMETER_VALUE = Joiner.on(",")
+        .join("id","name","email","first_name","last_name");
+
     private UserDao userDao;
 
     private FacebookApplicationConfigurationDao facebookApplicationConfigurationDao;
@@ -46,7 +50,12 @@ public class AnonFacebookAuthService implements FacebookAuthService {
 
         final FacebookClient facebookClient = new DefaultFacebookClient(facebookOAuthAccessToken, Version.LATEST);
 
-        final com.restfb.types.User fbUser = facebookClient.fetchObject("me", com.restfb.types.User.class);
+        final com.restfb.types.User fbUser = facebookClient
+                .fetchObject(
+                    "me",
+                    com.restfb.types.User.class,
+                    Parameter.with("fields", FIELDS_PARAMETER_VALUE));
+
         final User user = getUserDao().createOrReactivateUser(map(fbUser));
 
         final FacebookClient.AccessToken longLivedAccessToken;
@@ -74,9 +83,9 @@ public class AnonFacebookAuthService implements FacebookAuthService {
     }
 
     private String generateUserName(final com.restfb.types.User fbUser) {
-        final String firstName = emptyToNull(nullToEmpty(fbUser.getFirstName()).trim());
-        final String middleName = emptyToNull(nullToEmpty(fbUser.getMiddleName()).trim());
-        final String lastName = emptyToNull(nullToEmpty(fbUser.getLastName()).trim());
+        final String firstName = emptyToNull(nullToEmpty(fbUser.getFirstName()).trim().toLowerCase());
+        final String middleName = emptyToNull(nullToEmpty(fbUser.getMiddleName()).trim().toLowerCase());
+        final String lastName = emptyToNull(nullToEmpty(fbUser.getLastName()).trim().toLowerCase());
         return Joiner.on(".").skipNulls().join(firstName, middleName, lastName, fbUser.getId());
     }
 
