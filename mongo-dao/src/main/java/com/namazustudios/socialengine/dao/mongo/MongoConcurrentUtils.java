@@ -12,13 +12,12 @@ import javax.inject.Singleton;
 import java.util.Objects;
 
 /**
- *
  * A class that helps reduce the boilerplate code when atomic operations are necessary.
  *
  * Created by patricktwohig on 3/29/15.
  */
 @Singleton
-public class Atomic {
+public class MongoConcurrentUtils {
 
     public static final String FALLOFF_TIME_MS = "com.namazustudios.socialengine.mongo.optimistic.falloff.time.ms";
 
@@ -65,6 +64,7 @@ public class Atomic {
      * An interface to some code that is only called once.
      * @param <ReturnT>
      */
+    @FunctionalInterface
     public interface Once<ReturnT> {
 
         /**
@@ -117,7 +117,7 @@ public class Atomic {
      * an atomic update.
      *
      * The result of the query, or a freshly created instance, is passed to
-     * {@link com.namazustudios.socialengine.dao.mongo.Atomic.CriticalOperationWithModel#attempt(AdvancedDatastore, Object)}
+     * {@link MongoConcurrentUtils.CriticalOperationWithModel#attempt(AdvancedDatastore, Object)}
      * just before attempting the write.
      *
      * Before attempting an update, a snapshot of the object is taken using {@link Datastore#queryByExample(Object)}
@@ -163,18 +163,18 @@ public class Atomic {
             final Query<ModelT> qbe = datastore.queryByExample(model);
             final ReturnT out = operation.attempt(datastore, model);
 
-            if (key != null && Objects.equals(key, datastore.getKey(model))) {
+            if (key != null && !Objects.equals(key, datastore.getKey(model))) {
 
                 // If we were looking to update a specific object we had better make sure
                 // that nobody fucked with the key or else this operation will not behave
                 // properly.
 
-                throw new IllegalStateException("Key mismatch.  Expected " + key +
+                throw new IllegalArgumentException("Key mismatch.  Expected " + key +
                         " but got " + datastore.getKey(model) + " instead.");
 
             }
 
-            final UpdateResults result = datastore.updateFirst(qbe, model, false);
+            final UpdateResults result = datastore.updateFirst(qbe, model, true);
 
             if (!(result.getUpdatedCount() == 1 || result.getInsertedCount() == 1)) {
                 throw new ContentionException();
@@ -192,6 +192,7 @@ public class Atomic {
      *
      * @param <ReturnT> the operation
      */
+    @FunctionalInterface
     public interface CriticalOperation<ReturnT> {
 
         /**
@@ -250,7 +251,7 @@ public class Atomic {
     }
 
     /**
-     * Thrown when the operation fails.  In the event an {@link com.namazustudios.socialengine.dao.mongo.Atomic.CriticalOperation}
+     * Thrown when the operation fails.  In the event an {@link MongoConcurrentUtils.CriticalOperation}
      * fails because the object has changed, this exception may be raised to re-attempt the operation.
      */
     public class ConflictException extends OptimistcException {

@@ -37,6 +37,7 @@ public class MongoDaoModule extends AbstractModule {
     protected void configure() {
 
         binder().bind(UserDao.class).to(MongoUserDao.class);
+        binder().bind(FacebookUserDao.class).to(MongoFacebookUserDao.class);
         binder().bind(SocialCampaignDao.class).to(MongoSocialCampaignDao.class);
         binder().bind(ShortLinkDao.class).to(MongoShortLinkDao.class);
         binder().bind(ApplicationDao.class).to(MongoApplicationDao.class);

@@ -13,8 +13,7 @@ public interface FacebookUserDao {
 
 
     /**
-     * Creates or activates a user, or if the user is currently inactive
-     * this will reinstate access.  Unlike the operations in {@link UserDao}, this
+     * Creates, reactivates, or updates a user.  Unlike the operations in {@link UserDao}, this
      * queries for user based on Facebook ID.
      *
      * Similar to {@link UserDao#createUserStrict(User)} the user will be assigned a scrambled

@@ -31,7 +31,7 @@ public class MongoFacebookUserDao implements FacebookUserDao {
 
     private MongoPasswordUtils mongoPasswordUtils;
 
-    private Atomic atomic;
+    private MongoConcurrentUtils mongoConcurrentUtils;
 
     @Override
     public User createReactivateOrUpdateUser(User user) {
@@ -41,13 +41,13 @@ public class MongoFacebookUserDao implements FacebookUserDao {
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
 
         query.and(
-            query.criteria("facebookId").equal(user.getName())
+            query.criteria("facebookId").equal(user.getFacebookId())
         );
 
         final MongoUser mongoUser;
 
         try {
-            mongoUser = getAtomic().performOptimisticUpsert(query, (datastore, toUpsert) -> {
+            mongoUser = getMongoConcurrentUtils().performOptimisticUpsert(query, (datastore, toUpsert) -> {
 
                 if (!toUpsert.isActive()) {
                     toUpsert.setActive(true);
@@ -58,7 +58,7 @@ public class MongoFacebookUserDao implements FacebookUserDao {
                 return toUpsert;
 
             });
-        } catch (Atomic.ConflictException e) {
+        } catch (MongoConcurrentUtils.ConflictException e) {
             throw new TooBusyException(e);
         }
 
@@ -71,6 +71,10 @@ public class MongoFacebookUserDao implements FacebookUserDao {
 
         if (user == null) {
             throw new InvalidDataException("User must not be null.");
+        }
+
+        if (user.getFacebookId() == null) {
+            throw new InvalidDataException("User must specify Facebook ID.");
         }
 
         getValidationHelper().validateModel(user);
@@ -134,12 +138,13 @@ public class MongoFacebookUserDao implements FacebookUserDao {
         this.mongoPasswordUtils = mongoPasswordUtils;
     }
 
-    public Atomic getAtomic() {
-        return atomic;
+    public MongoConcurrentUtils getMongoConcurrentUtils() {
+        return mongoConcurrentUtils;
     }
 
-    public void setAtomic(Atomic atomic) {
-        this.atomic = atomic;
+    @Inject
+    public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
+        this.mongoConcurrentUtils = mongoConcurrentUtils;
     }
 
 }

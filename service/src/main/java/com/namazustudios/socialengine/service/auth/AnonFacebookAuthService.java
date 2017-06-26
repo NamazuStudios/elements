@@ -50,6 +50,11 @@ public class AnonFacebookAuthService implements FacebookAuthService {
 
         final FacebookClient facebookClient = new DefaultFacebookClient(facebookOAuthAccessToken, Version.LATEST);
 
+        final FacebookClient.AccessToken longLivedAccessToken;
+        longLivedAccessToken = facebookClient.obtainExtendedAccessToken(
+                facebookApplicationConfiguration.getApplicationId(),
+                facebookApplicationConfiguration.getApplicationSecret());
+
         final com.restfb.types.User fbUser = facebookClient
                 .fetchObject(
                     "me",
@@ -57,11 +62,6 @@ public class AnonFacebookAuthService implements FacebookAuthService {
                     Parameter.with("fields", FIELDS_PARAMETER_VALUE));
 
         final User user = getFacebookUserDao().createReactivateOrUpdateUser(map(fbUser));
-
-        final FacebookClient.AccessToken longLivedAccessToken;
-        longLivedAccessToken = facebookClient.obtainExtendedAccessToken(
-            facebookApplicationConfiguration.getApplicationId(),
-            facebookApplicationConfiguration.getApplicationSecret());
 
         final FacebookSession facebookSession = new FacebookSession();
 

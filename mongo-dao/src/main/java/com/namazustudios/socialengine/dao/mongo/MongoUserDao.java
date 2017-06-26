@@ -110,7 +110,6 @@ public class MongoUserDao implements UserDao {
         validate(user);
 
         final MongoUser mongoUser = getDozerMapper().map(user, MongoUser.class);
-        final SecureRandom secureRandom = new SecureRandom();
 
         mongoUser.setActive(true);
         getMongoPasswordUtils().scramblePassword(mongoUser);
@@ -196,6 +195,7 @@ public class MongoUserDao implements UserDao {
 
             final MongoUser mongoUser = getDatastore().findAndModify(query, operations, options);
             getObjectIndex().index(mongoUser);
+
             return getDozerMapper().map(mongoUser, User.class);
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {

@@ -41,7 +41,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
     private MongoShortLinkDao mongoShortLinkDao;
 
     @Inject
-    private Atomic atomic;
+    private MongoConcurrentUtils mongoConcurrentUtils;
 
     @Inject
     @Named(Constants.QUERY_MAX_RESULTS)
@@ -144,16 +144,16 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
             throw new NotFoundException("Social campaign " + campaign + " was not found.");
         }
 
-        final Atomic.Once<MongoShortLink> mongoShortLinkOnce = atomic.once(() -> mongoShortLinkDao.createMongoShortLinkFromURL(mongoSocialCampaign.getLinkUrl()));
+        final MongoConcurrentUtils.Once<MongoShortLink> mongoShortLinkOnce = mongoConcurrentUtils.once(() -> mongoShortLinkDao.createMongoShortLinkFromURL(mongoSocialCampaign.getLinkUrl()));
 
         try {
 
             final Query<MongoBasicEntrant> query = datastore.createQuery(MongoBasicEntrant.class);
             query.filter("email = ", entrant.getEmail());
 
-            return atomic.performOptimisticUpsert(query, new Atomic.CriticalOperationWithModel<SocialCampaignEntry, MongoBasicEntrant>() {
+            return mongoConcurrentUtils.performOptimisticUpsert(query, new MongoConcurrentUtils.CriticalOperationWithModel<SocialCampaignEntry, MongoBasicEntrant>() {
                 @Override
-                public SocialCampaignEntry attempt(AdvancedDatastore datastore, MongoBasicEntrant model) throws Atomic.ContentionException {
+                public SocialCampaignEntry attempt(AdvancedDatastore datastore, MongoBasicEntrant model) throws MongoConcurrentUtils.ContentionException {
 
                     model.setSalutation(entrant.getSalutation());
                     model.setFirstName(entrant.getFirstName());
@@ -181,7 +181,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
                 }
             });
 
-        } catch (Atomic.ConflictException ex) {
+        } catch (MongoConcurrentUtils.ConflictException ex) {
             throw new TooBusyException(ex);
         }
 
@@ -197,7 +197,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
 
         validate(entrant);
 
-        final Atomic.Once<MongoShortLink> mongoShortLinkOnce = atomic.once(() -> mongoShortLinkDao.createMongoShortLinkFromURL(mongoSocialCampaign.getLinkUrl()));
+        final MongoConcurrentUtils.Once<MongoShortLink> mongoShortLinkOnce = mongoConcurrentUtils.once(() -> mongoShortLinkDao.createMongoShortLinkFromURL(mongoSocialCampaign.getLinkUrl()));
 
         try {
 
@@ -206,9 +206,9 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
             final Query<MongoSteamEntrant> query = datastore.createQuery(MongoSteamEntrant.class);
             query.filter("email = ", entrant.getEmail());
 
-            return atomic.performOptimisticUpsert(query, new Atomic.CriticalOperationWithModel<SocialCampaignEntry, MongoSteamEntrant>() {
+            return mongoConcurrentUtils.performOptimisticUpsert(query, new MongoConcurrentUtils.CriticalOperationWithModel<SocialCampaignEntry, MongoSteamEntrant>() {
                 @Override
-                public SocialCampaignEntry attempt(AdvancedDatastore datastore, MongoSteamEntrant model) throws Atomic.ContentionException {
+                public SocialCampaignEntry attempt(AdvancedDatastore datastore, MongoSteamEntrant model) throws MongoConcurrentUtils.ContentionException {
 
                     model.setSalutation(entrant.getSalutation());
                     model.setFirstName(entrant.getFirstName());
@@ -237,7 +237,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
                 }
             });
 
-        } catch (Atomic.ConflictException ex) {
+        } catch (MongoConcurrentUtils.ConflictException ex) {
             throw new TooBusyException(ex);
         }
 
