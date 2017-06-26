@@ -8,7 +8,6 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.User;
-import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
@@ -25,8 +24,6 @@ public class MongoFacebookUserDao implements FacebookUserDao {
     private ValidationHelper validationHelper;
 
     private ObjectIndex objectIndex;
-
-    private StandardQueryParser standardQueryParser;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -52,14 +49,14 @@ public class MongoFacebookUserDao implements FacebookUserDao {
         try {
             mongoUser = getAtomic().performOptimisticUpsert(query, (datastore, toUpsert) -> {
 
-                getDozerMapper().map(user, toUpsert);
-
                 if (!toUpsert.isActive()) {
                     toUpsert.setActive(true);
                     getMongoPasswordUtils().scramblePassword(toUpsert);
                 }
 
+                getDozerMapper().map(user, toUpsert);
                 return toUpsert;
+
             });
         } catch (Atomic.ConflictException e) {
             throw new TooBusyException(e);
@@ -108,15 +105,6 @@ public class MongoFacebookUserDao implements FacebookUserDao {
     @Inject
     public void setObjectIndex(ObjectIndex objectIndex) {
         this.objectIndex = objectIndex;
-    }
-
-    public StandardQueryParser getStandardQueryParser() {
-        return standardQueryParser;
-    }
-
-    @Inject
-    public void setStandardQueryParser(StandardQueryParser standardQueryParser) {
-        this.standardQueryParser = standardQueryParser;
     }
 
     public MongoDBUtils getMongoDBUtils() {

@@ -10,6 +10,8 @@ import com.namazustudios.socialengine.model.User;
  */
 public interface FacebookUserDao {
 
+
+
     /**
      * Creates or activates a user, or if the user is currently inactive
      * this will reinstate access.  Unlike the operations in {@link UserDao}, this

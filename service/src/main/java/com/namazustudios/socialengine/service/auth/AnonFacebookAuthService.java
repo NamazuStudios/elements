@@ -4,7 +4,7 @@ import com.google.common.base.Joiner;
 import com.namazustudios.socialengine.annotation.FacebookPermission;
 import com.namazustudios.socialengine.annotation.FacebookPermissions;
 import com.namazustudios.socialengine.dao.FacebookApplicationConfigurationDao;
-import com.namazustudios.socialengine.dao.UserDao;
+import com.namazustudios.socialengine.dao.FacebookUserDao;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import com.namazustudios.socialengine.model.session.FacebookSession;
@@ -34,7 +34,7 @@ public class AnonFacebookAuthService implements FacebookAuthService {
     private static final String FIELDS_PARAMETER_VALUE = Joiner.on(",")
         .join("id","name","email","first_name","last_name");
 
-    private UserDao userDao;
+    private FacebookUserDao facebookUserDao;
 
     private FacebookApplicationConfigurationDao facebookApplicationConfigurationDao;
 
@@ -56,7 +56,7 @@ public class AnonFacebookAuthService implements FacebookAuthService {
                     com.restfb.types.User.class,
                     Parameter.with("fields", FIELDS_PARAMETER_VALUE));
 
-        final User user = getUserDao().createOrReactivateUser(map(fbUser));
+        final User user = getFacebookUserDao().createReactivateOrUpdateUser(map(fbUser));
 
         final FacebookClient.AccessToken longLivedAccessToken;
         longLivedAccessToken = facebookClient.obtainExtendedAccessToken(
@@ -89,13 +89,13 @@ public class AnonFacebookAuthService implements FacebookAuthService {
         return Joiner.on(".").skipNulls().join(firstName, middleName, lastName, fbUser.getId());
     }
 
-    public UserDao getUserDao() {
-        return userDao;
+    public FacebookUserDao getFacebookUserDao() {
+        return facebookUserDao;
     }
 
     @Inject
-    public void setUserDao(UserDao userDao) {
-        this.userDao = userDao;
+    public void setFacebookUserDao(FacebookUserDao facebookUserDao) {
+        this.facebookUserDao = facebookUserDao;
     }
 
     public FacebookApplicationConfigurationDao getFacebookApplicationConfigurationDao() {
