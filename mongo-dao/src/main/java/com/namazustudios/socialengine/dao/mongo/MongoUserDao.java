@@ -183,7 +183,10 @@ public class MongoUserDao implements UserDao {
         operations.set("name", user.getName());
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
-        operations.set("facebookId", user.getFacebookId());
+
+        if (user.getFacebookId() != null) {
+            operations.set("facebookId", user.getFacebookId());
+        }
 
         getMongoPasswordUtils().addPasswordToOperations(operations, password);
 
@@ -225,7 +228,10 @@ public class MongoUserDao implements UserDao {
         operations.set("name", user.getName());
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
-        operations.set("facebookId", user.getFacebookId());
+
+        if (user.getFacebookId() != null) {
+            operations.set("facebookId", user.getFacebookId());
+        }
 
         getMongoPasswordUtils().scramblePassword(operations);
 
@@ -267,7 +273,10 @@ public class MongoUserDao implements UserDao {
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
         operations.set("active", user.isActive());
-        operations.set("facebookId", user.getFacebookId());
+
+        if (user.getFacebookId() != null) {
+            operations.set("facebookId", user.getFacebookId());
+        }
 
         final FindAndModifyOptions options = new FindAndModifyOptions()
                 .returnNew(true)
@@ -301,7 +310,10 @@ public class MongoUserDao implements UserDao {
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
         operations.set("active", user.isActive());
-        operations.set("facebookId", user.getFacebookId());
+
+        if (user.getFacebookId() != null) {
+            operations.set("facebookId", user.getFacebookId());
+        }
 
         getMongoPasswordUtils().addPasswordToOperations(operations, password);
 
@@ -338,7 +350,10 @@ public class MongoUserDao implements UserDao {
         operations.set("name", user.getName());
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
-        operations.set("facebookId", user.getFacebookId());
+
+        if (user.getFacebookId() != null) {
+            operations.set("facebookId", user.getFacebookId());
+        }
 
         final MongoUser mongoUser = getDatastore().findAndModify(query, operations);
         getObjectIndex().index(mongoUser);
@@ -369,7 +384,10 @@ public class MongoUserDao implements UserDao {
         operations.set("name", user.getName());
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
-        operations.set("facebookId", user.getFacebookId());
+
+        if (user.getFacebookId() != null) {
+            operations.set("facebookId", user.getFacebookId());
+        }
 
         getMongoPasswordUtils().addPasswordToOperations(operations, password);
 
