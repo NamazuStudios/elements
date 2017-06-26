@@ -81,6 +81,31 @@ public class MongoPasswordUtils {
     }
 
     /**
+     * Given the instance of {@link MongoUser}, this will scramble the password making it
+     * extremely impossible for a user to login.
+     *
+     * @param mongoUser the instance of {@link MongoUser}
+     */
+    public void scramblePassword(final MongoUser mongoUser) {
+
+        final SecureRandom secureRandom = new SecureRandom();
+
+        byte[] tmp;
+
+        tmp = new byte[MongoPasswordUtils.SALT_LENGTH];
+        secureRandom.nextBytes(tmp);
+        mongoUser.setSalt(tmp);
+
+        tmp = new byte[MongoPasswordUtils.SALT_LENGTH];
+        secureRandom.nextBytes(tmp);
+        mongoUser.setPasswordHash(tmp);
+
+        final MessageDigest digest = newPasswordMessageDigest();
+        mongoUser.setHashAlgorithm(digest.getAlgorithm());
+
+    }
+
+    /**
      * Creates a new {@link MessageDigest} instance used to hash passwords
      *
      * @return the {@link MessageDigest} used to make the password.

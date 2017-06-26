@@ -144,12 +144,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
             throw new NotFoundException("Social campaign " + campaign + " was not found.");
         }
 
-        final Atomic.Once<MongoShortLink> mongoShortLinkOnce = atomic.once(new Atomic.Once<MongoShortLink>() {
-            @Override
-            public MongoShortLink call() {
-                return mongoShortLinkDao.createMongoShortLinkFromURL(mongoSocialCampaign.getLinkUrl());
-            }
-        });
+        final Atomic.Once<MongoShortLink> mongoShortLinkOnce = atomic.once(() -> mongoShortLinkDao.createMongoShortLinkFromURL(mongoSocialCampaign.getLinkUrl()));
 
         try {
 
@@ -202,12 +197,7 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
 
         validate(entrant);
 
-        final Atomic.Once<MongoShortLink> mongoShortLinkOnce = atomic.once(new Atomic.Once<MongoShortLink>() {
-            @Override
-            public MongoShortLink call() {
-                return mongoShortLinkDao.createMongoShortLinkFromURL(mongoSocialCampaign.getLinkUrl());
-            }
-        });
+        final Atomic.Once<MongoShortLink> mongoShortLinkOnce = atomic.once(() -> mongoShortLinkDao.createMongoShortLinkFromURL(mongoSocialCampaign.getLinkUrl()));
 
         try {
 

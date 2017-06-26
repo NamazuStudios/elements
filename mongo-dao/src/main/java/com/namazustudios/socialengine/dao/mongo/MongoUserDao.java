@@ -19,6 +19,7 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -38,7 +39,6 @@ import java.util.Arrays;
  */
 @Singleton
 public class MongoUserDao implements UserDao {
-
 
     private AdvancedDatastore datastore;
 
@@ -109,26 +109,11 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final MongoUser mongoUser = new MongoUser();
+        final MongoUser mongoUser = getDozerMapper().map(user, MongoUser.class);
         final SecureRandom secureRandom = new SecureRandom();
 
         mongoUser.setActive(true);
-        mongoUser.setName(user.getName());
-        mongoUser.setEmail(user.getEmail());
-        mongoUser.setLevel(user.getLevel());
-
-        byte[] tmp;
-
-        tmp = new byte[MongoPasswordUtils.SALT_LENGTH];
-        secureRandom.nextBytes(tmp);
-        mongoUser.setSalt(tmp);
-
-        tmp = new byte[MongoPasswordUtils.SALT_LENGTH];
-        secureRandom.nextBytes(tmp);
-        mongoUser.setPasswordHash(tmp);
-
-        final MessageDigest digest = getMongoPasswordUtils().newPasswordMessageDigest();
-        mongoUser.setHashAlgorithm(digest.getAlgorithm());
+        getMongoPasswordUtils().scramblePassword(mongoUser);
 
         try {
             getDatastore().save(mongoUser);
@@ -145,12 +130,8 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final MongoUser mongoUser = new MongoUser();
-
+        final MongoUser mongoUser = getDozerMapper().map(user, MongoUser.class);
         mongoUser.setActive(true);
-        mongoUser.setName(user.getName());
-        mongoUser.setEmail(user.getEmail());
-        mongoUser.setLevel(user.getLevel());
 
         final byte[] passwordBytes;
 
@@ -192,7 +173,7 @@ public class MongoUserDao implements UserDao {
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
-        query.and(
+        query.or(
             query.criteria("name").equal(user.getName()),
             query.criteria("email").equal(user.getEmail())
         ).and(
@@ -203,11 +184,17 @@ public class MongoUserDao implements UserDao {
         operations.set("name", user.getName());
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
+        operations.set("facebookId", user.getFacebookId());
 
         getMongoPasswordUtils().addPasswordToOperations(operations, password);
 
         try {
-            final MongoUser mongoUser = getDatastore().findAndModify(query, operations, false, true);
+
+            final FindAndModifyOptions options = new FindAndModifyOptions()
+                    .returnNew(true)
+                    .upsert(true);
+
+            final MongoUser mongoUser = getDatastore().findAndModify(query, operations, options);
             getObjectIndex().index(mongoUser);
             return getDozerMapper().map(mongoUser, User.class);
         } catch (MongoCommandException ex) {
@@ -227,7 +214,7 @@ public class MongoUserDao implements UserDao {
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
-        query.and(
+        query.or(
                 query.criteria("name").equal(user.getName()),
                 query.criteria("email").equal(user.getEmail())
         ).and(
@@ -238,12 +225,21 @@ public class MongoUserDao implements UserDao {
         operations.set("name", user.getName());
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
+        operations.set("facebookId", user.getFacebookId());
 
         getMongoPasswordUtils().scramblePassword(operations);
 
         try {
-            final MongoUser mongoUser = getDatastore().findAndModify(query, operations, false, true);
+
+            final FindAndModifyOptions options = new FindAndModifyOptions()
+                .returnNew(true)
+                .upsert(true);
+
+            final MongoUser mongoUser = getDatastore().findAndModify(query, operations, options);
+            getObjectIndex().index(mongoUser);
+
             return getDozerMapper().map(mongoUser, User.class);
+
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
                 throw new DuplicateException(ex);
@@ -271,8 +267,13 @@ public class MongoUserDao implements UserDao {
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
         operations.set("active", user.isActive());
+        operations.set("facebookId", user.getFacebookId());
 
-        final MongoUser mongoUser = getDatastore().findAndModify(query, operations, false, false);
+        final FindAndModifyOptions options = new FindAndModifyOptions()
+                .returnNew(true)
+                .upsert(false);
+
+        final MongoUser mongoUser = getDatastore().findAndModify(query, operations, options);
         getObjectIndex().index(mongoUser);
 
         if (mongoUser == null) {
@@ -300,9 +301,15 @@ public class MongoUserDao implements UserDao {
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
         operations.set("active", user.isActive());
+        operations.set("facebookId", user.getFacebookId());
+
         getMongoPasswordUtils().addPasswordToOperations(operations, password);
 
-        final MongoUser mongoUser = getDatastore().findAndModify(query, operations, false, false);
+        final FindAndModifyOptions options = new FindAndModifyOptions()
+                .returnNew(true)
+                .upsert(false);
+
+        final MongoUser mongoUser = getDatastore().findAndModify(query, operations, options);
         getObjectIndex().index(mongoUser);
 
         if (mongoUser == null) {
@@ -331,6 +338,7 @@ public class MongoUserDao implements UserDao {
         operations.set("name", user.getName());
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
+        operations.set("facebookId", user.getFacebookId());
 
         final MongoUser mongoUser = getDatastore().findAndModify(query, operations);
         getObjectIndex().index(mongoUser);
@@ -361,6 +369,8 @@ public class MongoUserDao implements UserDao {
         operations.set("name", user.getName());
         operations.set("email", user.getEmail());
         operations.set("level", user.getLevel());
+        operations.set("facebookId", user.getFacebookId());
+
         getMongoPasswordUtils().addPasswordToOperations(operations, password);
 
         final MongoUser mongoUser = getDatastore().findAndModify(query, operations);
@@ -519,63 +529,6 @@ public class MongoUserDao implements UserDao {
 
     }
 
-//    /**
-//     * Scrambles both the salt and the password.  This effectively wipes out the account's
-//     * password making it inaccessible.
-//     *
-//     * @param operations the operations
-//     */
-//    private void scramblePassword(final UpdateOperations<MongoUser> operations) {
-//
-//        final SecureRandom secureRandom = new SecureRandom();
-//
-//        byte[] tmp;
-//
-//        tmp = new byte[SALT_LENGTH];
-//        secureRandom.nextBytes(tmp);
-//        operations.set("salt", tmp);
-//
-//        tmp = new byte[SALT_LENGTH];
-//        secureRandom.nextBytes(tmp);
-//        operations.set("password_hash", tmp);
-//
-//        final MessageDigest digest = getMessageDigestProvider().get();
-//        operations.set("hash_algorithm", digest.getAlgorithm());
-//
-//    }
-
-//    /**
-//     * Generates salt and password hash according to the configuration.
-//     *
-//     * @param operations the operations to mutate
-//     * @param password the password
-//     */
-//    private void addPasswordToOperations(final UpdateOperations<MongoUser> operations, final String password) {
-//
-//        final byte[] passwordBytes;
-//
-//        try {
-//            passwordBytes = password.getBytes(getPasswordEncoding());
-//        } catch (UnsupportedEncodingException ex) {
-//            throw new InternalException(ex);
-//        }
-//
-//        // Generate the hash
-//
-//        final byte[] salt = new byte[SALT_LENGTH];
-//        final SecureRandom secureRandom = new SecureRandom();
-//        secureRandom.nextBytes(salt);
-//
-//        final MessageDigest digest = getMessageDigestProvider().get();
-//        digest.update(salt);
-//        digest.update(passwordBytes);
-//
-//        operations.set("salt", salt);
-//        operations.set("password_hash", digest.digest());
-//        operations.set("hash_algorithm", digest.getAlgorithm());
-//
-//    }
-
     public AdvancedDatastore getDatastore() {
         return datastore;
     }
@@ -584,15 +537,6 @@ public class MongoUserDao implements UserDao {
     public void setDatastore(AdvancedDatastore datastore) {
         this.datastore = datastore;
     }
-
-//    public Provider<MessageDigest> getMessageDigestProvider() {
-//        return messageDigestProvider;
-//    }
-//
-//    @Inject
-//    public void setMessageDigestProvider(@Named(Constants.PASSWORD_DIGEST) Provider<MessageDigest> messageDigestProvider) {
-//        this.messageDigestProvider = messageDigestProvider;
-//    }
 
     public String getPasswordEncoding() {
         return passwordEncoding;

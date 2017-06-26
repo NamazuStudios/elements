@@ -22,6 +22,6 @@ public interface FacebookUserDao {
      * @param user the user
      * @return the User, as written to the database
      */
-    User createOrReactivateUser(final User user);
+    User createReactivateOrUpdateUser(final User user);
 
 }

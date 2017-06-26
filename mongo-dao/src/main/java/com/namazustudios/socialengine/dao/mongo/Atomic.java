@@ -136,56 +136,51 @@ public class Atomic {
             final Query<ModelT> query,
             final CriticalOperationWithModel<ReturnT, ModelT> operation) throws ConflictException {
 
-        return performOptimistic(new CriticalOperation<ReturnT>() {
+        return performOptimistic(datastore -> {
 
-            @Override
-            public ReturnT attempt(AdvancedDatastore datastore) throws ContentionException {
+            final ModelT model;
+            final Key<ModelT> key;
 
-                final ModelT model;
-                final Key<ModelT> key;
+            if (datastore.getCount(query) == 0) {
 
-                if (datastore.getCount(query) == 0) {
+                key = null;
 
-                    key = null;
-
-                    try {
-                        model = query.getEntityClass().newInstance();
-                    } catch (InstantiationException ex) {
-                        throw new IllegalStateException(ex);
-                    } catch (IllegalAccessException ex) {
-                        throw new IllegalStateException(ex);
-                    }
-
-                } else if (datastore.getCount(query) == 1) {
-                    model = query.get();
-                    key = datastore.getKey(model);
-                } else {
-                    throw new IllegalArgumentException("Multiple objects exist for query.");
+                try {
+                    model = query.getEntityClass().newInstance();
+                } catch (InstantiationException ex) {
+                    throw new IllegalStateException(ex);
+                } catch (IllegalAccessException ex) {
+                    throw new IllegalStateException(ex);
                 }
 
-                final Query<ModelT> qbe = datastore.queryByExample(model);
-                final ReturnT out = operation.attempt(datastore, model);
+            } else if (datastore.getCount(query) == 1) {
+                model = query.get();
+                key = datastore.getKey(model);
+            } else {
+                throw new IllegalArgumentException("Multiple objects exist for query.");
+            }
 
-                if (key != null && Objects.equals(key, datastore.getKey(model))) {
+            final Query<ModelT> qbe = datastore.queryByExample(model);
+            final ReturnT out = operation.attempt(datastore, model);
 
-                    // If we were looking to update a specific object we had better make sure
-                    // that nobody fucked with the key or else this operation will not behave
-                    // properly.
+            if (key != null && Objects.equals(key, datastore.getKey(model))) {
 
-                    throw new IllegalStateException("Key mismatch.  Expected " + key +
-                            " but got " + datastore.getKey(model) + " instead.");
+                // If we were looking to update a specific object we had better make sure
+                // that nobody fucked with the key or else this operation will not behave
+                // properly.
 
-                }
-
-                final UpdateResults result = datastore.updateFirst(qbe, model, false);
-
-                if (!(result.getUpdatedCount() == 1 || result.getInsertedCount() == 1)) {
-                    throw new ContentionException();
-                }
-
-                return out;
+                throw new IllegalStateException("Key mismatch.  Expected " + key +
+                        " but got " + datastore.getKey(model) + " instead.");
 
             }
+
+            final UpdateResults result = datastore.updateFirst(qbe, model, false);
+
+            if (!(result.getUpdatedCount() == 1 || result.getInsertedCount() == 1)) {
+                throw new ContentionException();
+            }
+
+            return out;
 
         });
     }
