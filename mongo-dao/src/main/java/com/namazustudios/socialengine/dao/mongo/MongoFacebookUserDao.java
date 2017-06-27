@@ -72,10 +72,10 @@ public class MongoFacebookUserDao implements FacebookUserDao {
 
                 if (!toUpsert.isActive()) {
                     toUpsert.setActive(true);
+                    getDozerMapper().map(user, toUpsert);
                     getMongoPasswordUtils().scramblePassword(toUpsert);
                 }
 
-                getDozerMapper().map(user, toUpsert);
                 return toUpsert;
 
             });

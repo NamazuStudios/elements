@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rest.application;
 
 import com.namazustudios.socialengine.exception.InvalidDataException;
-import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.session.FacebookSession;
 import com.namazustudios.socialengine.service.FacebookAuthService;
 import io.swagger.annotations.Api;
@@ -59,12 +58,10 @@ public class FacebookSessionResource {
         }
 
         final FacebookSession facebookSession;
-        facebookSession = getFacebookAuthService()
-            .createOrUpdateUserWithFacebookOAuthAccessToken(applicationNameOrId, applicationConfigurationNameOrId, facebookOAuthAccessToken);
-
-        final User user = facebookSession.getUser();
-//        final HttpSession httpSession = getHttpServletRequest().getSession(true);
-//        httpSession.setAttribute(USER_ATTRIBUTE, user);
+        facebookSession = getFacebookAuthService().createOrUpdateUserWithFacebookOAuthAccessToken(
+            applicationNameOrId,
+            applicationConfigurationNameOrId,
+            facebookOAuthAccessToken);
 
         return facebookSession;
 
