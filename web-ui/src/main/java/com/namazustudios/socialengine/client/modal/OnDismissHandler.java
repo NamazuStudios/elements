@@ -8,6 +8,6 @@ public interface OnDismissHandler {
     /**
      * Called when a modal is dismissed.
      */
-    void onDismiss();
+    default void onDismiss() {}
 
 }

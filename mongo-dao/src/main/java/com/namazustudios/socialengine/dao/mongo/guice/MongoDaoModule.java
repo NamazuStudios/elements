@@ -14,8 +14,6 @@ import com.namazustudios.socialengine.fts.ObjectIndex;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
 import java.security.MessageDigest;
@@ -35,22 +33,18 @@ import static com.google.inject.util.Providers.guicify;
  */
 public class MongoDaoModule extends AbstractModule {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MongoDaoModule.class);
-
-    public static final int DEFAULT_FALLOFF_TIME_MS = 100;
-
-    public static final int OPTISMITIC_RETRY_COUNT = 10;
-
     @Override
     protected void configure() {
 
         binder().bind(UserDao.class).to(MongoUserDao.class);
+        binder().bind(FacebookUserDao.class).to(MongoFacebookUserDao.class);
         binder().bind(SocialCampaignDao.class).to(MongoSocialCampaignDao.class);
         binder().bind(ShortLinkDao.class).to(MongoShortLinkDao.class);
         binder().bind(ApplicationDao.class).to(MongoApplicationDao.class);
-        binder().bind(ApplicationProfileDao.class).to(MongoApplicationProfileDao.class);
-        binder().bind(IosApplicationProfileDao.class).to(MongoIosApplicationProfileDao.class);
-        binder().bind(GooglePlayApplicationProfileDao.class).to(MongoGoogePlayApplicationProfileDao.class);
+        binder().bind(ApplicationConfigurationDao.class).to(MongoApplicationConfigurationDao.class);
+        binder().bind(IosApplicationConfigurationDao.class).to(MongoIosApplicationConfigurationDao.class);
+        binder().bind(GooglePlayApplicationConfigurationDao.class).to(MongoGoogePlayApplicationConfigurationDao.class);
+        binder().bind(FacebookApplicationConfigurationDao.class).to(MongoFacebookApplicationConfigurationDao.class);
 
         binder().bind(MongoClient.class).toProvider(MongoClientProvider.class).in(Singleton.class);
         binder().bind(Datastore.class).toProvider(MongoDatastoreProvider.class);
@@ -60,7 +54,7 @@ public class MongoDaoModule extends AbstractModule {
                 .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
                 .toProvider(PasswordDigestProvider.class);
 
-        binder().bind(Mapper.class).toProvider(guicify(new MongoDozerMapperProvider()));
+        binder().bind(Mapper.class).toProvider(guicify(new MongoDozerMapperProvider())).asEagerSingleton();
 
     }
 

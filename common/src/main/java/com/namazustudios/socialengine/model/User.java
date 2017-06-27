@@ -28,6 +28,8 @@ public class User {
 
     private boolean active;
 
+    private String facebookId;
+
     private static final User UNPRIVILIGED = new User() {
 
         @Override
@@ -48,6 +50,11 @@ public class User {
         @Override
         public boolean isActive() {
             return false;
+        }
+
+        @Override
+        public String getFacebookId() {
+            return null;
         }
 
         @Override
@@ -130,6 +137,25 @@ public class User {
     }
 
     /**
+     * Gets the user's facebook id, if present.  If a user is not linked to
+     * a Facebook account then this will simply be null.
+     *
+     * @return the user's facebook ID
+     */
+    public String getFacebookId() {
+        return facebookId;
+    }
+
+    /**
+     * Sets a user's facebook id.
+     *
+     * @param facebookId the user's facebook id
+     */
+    public void setFacebookId(String facebookId) {
+        this.facebookId = facebookId;
+    }
+
+    /**
      * Gets a special User object which is set to unprivileged.  This is used
      * as a palceholder when a user is not logged in.
      *
@@ -140,6 +166,12 @@ public class User {
     public static User getUnprivileged() {
         return UNPRIVILIGED;
     }
+
+    /**
+     * Used as the key for the user attribute where appropriate.  This is equivalent
+     * to the FQN of the {@link User} class.
+     */
+    public static final String USER_ATTRIBUTE = User.class.getName();
 
     public enum Level {
 

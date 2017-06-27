@@ -10,6 +10,8 @@ import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static java.util.Collections.reverse;
+
 /**
  * The abstract implementation of the {@link DocumentGenerator}.  This can accept custom
  * instances of both {@link IndexableFieldExtractor.Provider} and
@@ -66,7 +68,7 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
             superclass = superclass.getSuperclass();
         } while (superclass != null);
 
-        Collections.reverse(hierarchy);
+        reverse(hierarchy);
 
         w.lock();
 
@@ -82,6 +84,11 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
     private ContextProcessor analyzeHierarchy(final List<Class<?>> classes) {
 
         final List<ContextProcessor> contextProcessors = new ArrayList<>();
+
+        classes.stream()
+            .filter(c -> c.getAnnotation(SearchableDocument.class) != null)
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("@SearchableDocument not found in class hierarchy " + classes));
 
         // This operates in two phases.  First, it generates the individual
         // class context processors, or fetches them from the already cached
@@ -99,20 +106,29 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
             final SearchableDocument searchableDocument = cls.getAnnotation(SearchableDocument.class);
 
             if (searchableDocument == null) {
-                continue;
+                // We insert an empty context processor in this hierarchy to indicate
+                // that there is not an annotation.  When processed, this processor
+                // will add nothing to the list of fields to index.
+                individualClassContextProcessors.put(cls, EMPTY_CONTEXT_PROCESSOR);
+            } else {
+
+                // We analyze the current class in the hierarchy.  If it already exists
+                // we pull from the cache.  Otherwise we analyze this the first time.
+
+                foundSearchableDocumentAnnotation = true;
+
+                if (individualClassContextProcessors.containsKey(cls)) {
+                    contextProcessors.add(individualClassContextProcessors.get(cls));
+                    continue;
+                }
+
+                final ContextProcessor contextProcessor = new ClassContextProcessor(cls, indexableFieldProcessorProvider);
+
+                contextProcessors.add(contextProcessor);
+                individualClassContextProcessors.put(cls, contextProcessor);
+
             }
 
-            foundSearchableDocumentAnnotation = true;
-
-            if (individualClassContextProcessors.containsKey(cls)) {
-                contextProcessors.add(individualClassContextProcessors.get(cls));
-                continue;
-            }
-
-            final ContextProcessor contextProcessor = new ClassContextProcessor(cls, indexableFieldProcessorProvider);
-
-            contextProcessors.add(contextProcessor);
-            individualClassContextProcessors.put(cls, contextProcessor);
             theClass = cls;
 
         }
@@ -130,12 +146,9 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
         if (contextProcessors.isEmpty()) {
             hierarchicalClassContextProcessors.put(theClass, contextProcessor = EMPTY_CONTEXT_PROCESSOR);
         } else {
-            hierarchicalClassContextProcessors.put(theClass, contextProcessor = new ContextProcessor() {
-                @Override
-                public void process(JXPathContext context, DocumentEntry<?> documentEntry) {
-                    for (final ContextProcessor contextProcessor : contextProcessors) {
-                        contextProcessor.process(context, documentEntry);
-                    }
+            hierarchicalClassContextProcessors.put(theClass, contextProcessor = (context, documentEntry) -> {
+                for (final ContextProcessor innerProcessor : contextProcessors) {
+                    innerProcessor.process(context, documentEntry);
                 }
             });
         }
@@ -170,7 +183,7 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
 
         try {
 
-            final ContextProcessor out = individualClassContextProcessors.get(cls);
+            final ContextProcessor out = hierarchicalClassContextProcessors.get(cls);
 
             if (out != null) {
                 return out;
@@ -186,7 +199,7 @@ public abstract class AbstractDocumentGenerator implements DocumentGenerator {
 
     @Override
     public DocumentEntry<?> entry(final Document document) {
-        return new BasicDocumentEntry<Object>(document, indexableFieldExtractorProvider);
+        return new BasicDocumentEntry<>(document, indexableFieldExtractorProvider);
     }
 
     @Override

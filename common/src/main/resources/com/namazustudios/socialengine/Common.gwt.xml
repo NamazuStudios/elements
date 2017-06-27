@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module>
     <source path="model"/>
+    <source path="model/session"/>
+    <source path="model/application"/>
 </module>

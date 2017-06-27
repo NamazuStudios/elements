@@ -14,20 +14,18 @@ import org.mongodb.morphia.annotations.Property;
  * Created by patricktwohig on 3/31/15.
  */
 @SearchableIdentity(@SearchableField(
-        name = "id",
-        path = "/objectId",
-        type = ObjectId.class,
-        extractor = ObjectIdExtractor.class,
-        processors = ObjectIdProcessor.class)
-)
-@SearchableDocument(
-        fields = {
-            @SearchableField(name = "name", path = "/name"),
-            @SearchableField(name = "email", path = "/email"),
-            @SearchableField(name = "active", path = "/active"),
-            @SearchableField(name = "level", path = "/level")
-        }
-)
+    name = "id",
+    path = "/objectId",
+    type = ObjectId.class,
+    extractor = ObjectIdExtractor.class,
+    processors = ObjectIdProcessor.class))
+@SearchableDocument(fields = {
+    @SearchableField(name = "name", path = "/name"),
+    @SearchableField(name = "email", path = "/email"),
+    @SearchableField(name = "active", path = "/active"),
+    @SearchableField(name = "level", path = "/level"),
+    @SearchableField(name = "facebookId", path = "/facebookId")
+})
 @Entity(value = "user", noClassnameStored = true)
 public class MongoUser {
 
@@ -57,6 +55,10 @@ public class MongoUser {
     @Property("active")
     @Indexed
     private boolean active;
+
+    @Property("facebookId")
+    @Indexed(unique = true, sparse = true)
+    private String facebookId;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -120,6 +122,14 @@ public class MongoUser {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public String getFacebookId() {
+        return facebookId;
+    }
+
+    public void setFacebookId(String facebookId) {
+        this.facebookId = facebookId;
     }
 
 }

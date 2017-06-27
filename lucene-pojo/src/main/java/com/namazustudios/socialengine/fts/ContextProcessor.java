@@ -10,6 +10,7 @@ import org.apache.lucene.index.IndexableField;
  *
  * Created by patricktwohig on 5/13/15.
  */
+@FunctionalInterface
 public interface ContextProcessor {
 
     /**

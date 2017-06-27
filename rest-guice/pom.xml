@@ -15,10 +15,6 @@
     <version>1.0-SNAPSHOT</version>
     <name>rest-guice</name>
 
-    <properties>
-        <bval.version>0.5</bval.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.glassfish.jersey</groupId>
@@ -91,7 +87,7 @@
         <dependency>
             <groupId>org.apache.bval</groupId>
             <artifactId>bval-guice</artifactId>
-            <version>${bval.version}</version>
+            <version>${bval.guice.version}</version>
         </dependency>
         <dependency>
             <groupId>io.swagger</groupId>
@@ -117,6 +113,11 @@
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
             <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>${commons.logging.version}</version>
         </dependency>
     </dependencies>
 

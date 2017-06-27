@@ -65,17 +65,21 @@ public interface UserDao {
      * @param password
      * @return
      */
-    User createUserStrict(final User user, final String password);
+    User createUserWithPasswordStrict(final User user, final String password);
 
     /**
      * Creates or activates a user, or if the user is currently inactive
      * this will reinstate access.  This securely scrambles the user's password
      * and therefore the user must change password at a later date.
      *
+     * Similar to {@link #createUserStrict(User)} the user will be assigned a scrambled
+     * password if the user does not exist (or was previously inactive). This will not
+     * touch the user's password if the user both exists and was flagged as active.
+     *
      * @param user the user
      * @return the User, as written to the database
      */
-    User createOrActivateUser(final User user);
+    User createOrReactivateUser(final User user);
 
     /**
      * Creates a user and sets the user's password.  If the user exists
@@ -86,7 +90,7 @@ public interface UserDao {
      *
      * @return the User, as was written to the database
      */
-    User createOrActivateUser(final User user, final String password);
+    User createOrRectivateUserWithPassword(final User user, final String password);
 
     /**
      * Updates the given user, regardless of active status and then returns

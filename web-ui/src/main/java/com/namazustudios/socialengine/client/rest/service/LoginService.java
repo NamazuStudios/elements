@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.client.rest.service;
 
+import com.namazustudios.socialengine.client.rest.client.LoginClient;
 import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.MethodCallback;
 

@@ -2,6 +2,17 @@ package com.namazustudios.socialengine.client.controlpanel;
 
 import com.gwtplatform.mvp.client.gin.AbstractPresenterModule;
 import com.namazustudios.socialengine.client.controlpanel.view.*;
+import com.namazustudios.socialengine.client.controlpanel.view.application.*;
+import com.namazustudios.socialengine.client.controlpanel.view.login.LoginView;
+import com.namazustudios.socialengine.client.controlpanel.view.login.LoginViewPresenter;
+import com.namazustudios.socialengine.client.controlpanel.view.shortlink.ShortLinkEditorPresenter;
+import com.namazustudios.socialengine.client.controlpanel.view.shortlink.ShortLinkEditorTablePresenter;
+import com.namazustudios.socialengine.client.controlpanel.view.shortlink.ShortLinkEditorTableView;
+import com.namazustudios.socialengine.client.controlpanel.view.shortlink.ShortLinkEditorView;
+import com.namazustudios.socialengine.client.controlpanel.view.user.UserEditorPresenter;
+import com.namazustudios.socialengine.client.controlpanel.view.user.UserEditorTablePresenter;
+import com.namazustudios.socialengine.client.controlpanel.view.user.UserEditorTableView;
+import com.namazustudios.socialengine.client.controlpanel.view.user.UserEditorView;
 
 /**
  * Created by patricktwohig on 4/28/15.
@@ -59,6 +70,12 @@ public class ControlPanelPresenters extends AbstractPresenterModule {
                 ApplicationEditorView.class,
                 ApplicationEditorPresenter.MyProxy.class);
 
+        bindPresenter(
+                FacebookApplicationConfigurationEditorPresenter.class,
+                FacebookApplicationConfigurationEditorPresenter.MyView.class,
+                FacebookApplicationConfigurationEditorView.class,
+                FacebookApplicationConfigurationEditorPresenter.MyProxy.class
+        );
     }
 
 }

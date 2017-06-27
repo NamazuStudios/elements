@@ -20,8 +20,8 @@ public class MongoDaoModuleDefaults implements ModuleDefaults {
         final Properties defaultProperties = new Properties(System.getProperties());
         defaultProperties.setProperty(MongoClientProvider.MONGO_DB_URLS, "mongo://localhost");
         defaultProperties.setProperty(MongoDatabaseProvider.DATABASE_NAME, "socialengine");
-        defaultProperties.setProperty(Atomic.FALLOFF_TIME_MS, Integer.toString(DEFAULT_FALLOFF_TIME_MS));
-        defaultProperties.setProperty(Atomic.OPTIMISTIC_RETRY_COUNT, Integer.toString(OPTISMITIC_RETRY_COUNT));
+        defaultProperties.setProperty(MongoConcurrentUtils.FALLOFF_TIME_MS, Integer.toString(DEFAULT_FALLOFF_TIME_MS));
+        defaultProperties.setProperty(MongoConcurrentUtils.OPTIMISTIC_RETRY_COUNT, Integer.toString(OPTISMITIC_RETRY_COUNT));
         return defaultProperties;
     }
 

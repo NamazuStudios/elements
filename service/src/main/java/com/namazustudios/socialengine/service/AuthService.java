@@ -14,7 +14,7 @@ public interface AuthService {
      * @param password the user's password
      * @return the API key instance
      */
-    public User loginUser(final String userId, final String password);
+    User loginUser(final String userId, final String password);
 
 }
 

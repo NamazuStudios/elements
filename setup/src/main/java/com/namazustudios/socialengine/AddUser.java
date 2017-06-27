@@ -21,15 +21,15 @@ public class AddUser extends AbstractUserCommand {
 
         if (hasPassword) {
             if (strict) {
-                userDao.createUserStrict(getUser(), getPassword());
+                userDao.createUserWithPasswordStrict(getUser(), getPassword());
             } else {
-                userDao.createOrActivateUser(getUser(), getPassword());
+                userDao.createOrRectivateUserWithPassword(getUser(), getPassword());
             }
         } else {
             if (strict) {
                 userDao.createUserStrict(getUser());
             } else {
-                userDao.createOrActivateUser(getUser());
+                userDao.createOrReactivateUser(getUser());
             }
         }
 

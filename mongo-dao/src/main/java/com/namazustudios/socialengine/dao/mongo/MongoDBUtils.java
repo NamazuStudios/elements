@@ -89,13 +89,15 @@ public class MongoDBUtils {
         final Pagination<ModelT> pagination = new Pagination<>();
 
         pagination.setOffset(offset);
-        pagination.setTotal((int) query.countAll());
+        pagination.setTotal((int) query.count());
 
         final int limit = Math.min(queryMaxResults, count);
 
         final Iterable<ModelT> userIterable;
 
         final List<ModelT> modelTList;
+
+        List<MongoModelT> l = query.asList();
 
         modelTList = stream(query.spliterator(), false)
             .map(function)

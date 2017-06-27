@@ -5,10 +5,12 @@ import com.google.inject.servlet.ServletScopes;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.rest.provider.UserProvider;
 import com.namazustudios.socialengine.service.*;
-import com.namazustudios.socialengine.service.application.ApplicationProfileServiceProvider;
+import com.namazustudios.socialengine.service.application.ApplicationConfigurationServiceProvider;
 import com.namazustudios.socialengine.service.application.ApplicationServiceProvider;
-import com.namazustudios.socialengine.service.application.PSNApplicationProfileServiceProvider;
+import com.namazustudios.socialengine.service.application.FacebookApplicationConfigurationServiceProvider;
+import com.namazustudios.socialengine.service.application.PSNApplicationConfigurationServiceProvider;
 import com.namazustudios.socialengine.service.auth.AuthServiceProvider;
+import com.namazustudios.socialengine.service.auth.DefaultFacebookAuthService;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
@@ -23,7 +25,7 @@ public class ServicesModule extends AbstractModule {
 
         bind(User.class)
                 .toProvider(UserProvider.class);
-
+        
         bind(AuthService.class)
                 .toProvider(AuthServiceProvider.class)
                 .in(ServletScopes.REQUEST);
@@ -44,13 +46,20 @@ public class ServicesModule extends AbstractModule {
                 .toProvider(ApplicationServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
-        bind(ApplicationProfileService.class)
-                .toProvider(ApplicationProfileServiceProvider.class)
+        bind(ApplicationConfigurationService.class)
+                .toProvider(ApplicationConfigurationServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
-        bind(PSNApplicationProfileService.class)
-                .toProvider(PSNApplicationProfileServiceProvider.class)
+        bind(PSNApplicationConfigurationService.class)
+                .toProvider(PSNApplicationConfigurationServiceProvider.class)
                 .in(ServletScopes.REQUEST);
+
+        bind(FacebookApplicationConfigurationService.class)
+                .toProvider(FacebookApplicationConfigurationServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
+        bind(FacebookAuthService.class).to(DefaultFacebookAuthService.class);
+
 
     }
 
