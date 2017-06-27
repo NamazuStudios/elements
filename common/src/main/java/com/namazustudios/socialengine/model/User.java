@@ -5,7 +5,6 @@ import io.swagger.annotations.ApiModel;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-import java.security.Principal;
 
 /**
  * Represents a user in the system.  Users are differing from entrants in that they are active users
@@ -14,7 +13,7 @@ import java.security.Principal;
  * Created by patricktwohig on 3/19/15.
  */
 @ApiModel
-public class User implements Principal {
+public class User {
 
     @NotNull
     @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
@@ -27,9 +26,9 @@ public class User implements Principal {
     @NotNull
     private Level level;
 
-    private String facebookId;
-
     private boolean active;
+
+    private String facebookId;
 
     private static final User UNPRIVILIGED = new User() {
 
@@ -75,7 +74,6 @@ public class User implements Principal {
      *
      * @return
      */
-    @Override
     public String getName() {
         return name;
     }

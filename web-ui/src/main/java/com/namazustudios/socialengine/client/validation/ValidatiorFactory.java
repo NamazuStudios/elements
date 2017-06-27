@@ -19,6 +19,7 @@ public class ValidatiorFactory extends AbstractGwtValidatorFactory {
             User.class,
             ShortLink.class,
             Application.class,
+            ApplicationConfiguration.class,
             FacebookApplicationConfiguration.class,
             IosApplicationConfiguration.class,
             GooglePlayApplicationConfiguration.class,

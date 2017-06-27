@@ -25,6 +25,7 @@ public class ApplicationConfiguration {
     private String uniqueIdentifier;
 
     @ApiModelProperty("The parent application owning this configuration.")
+    @NotNull
     private Application parent;
 
     /**
