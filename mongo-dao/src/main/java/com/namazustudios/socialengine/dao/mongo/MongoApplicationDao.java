@@ -121,6 +121,11 @@ public class MongoApplicationDao implements ApplicationDao {
         }
 
         final MongoApplication mongoApplication = query.get();
+
+        if (mongoApplication == null) {
+            throw new NotFoundException("Application " + nameOrId + " not found.");
+        }
+
         return transform(mongoApplication);
 
     }

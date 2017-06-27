@@ -14,21 +14,18 @@ import org.mongodb.morphia.annotations.Property;
  * Created by patricktwohig on 3/31/15.
  */
 @SearchableIdentity(@SearchableField(
-        name = "id",
-        path = "/objectId",
-        type = ObjectId.class,
-        extractor = ObjectIdExtractor.class,
-        processors = ObjectIdProcessor.class)
-)
-@SearchableDocument(
-        fields = {
-            @SearchableField(name = "name", path = "/name"),
-            @SearchableField(name = "email", path = "/email"),
-            @SearchableField(name = "active", path = "/active"),
-            @SearchableField(name = "level", path = "/level"),
-            @SearchableField(name = "facebookId", path = "/facebookId")
-        }
-)
+    name = "id",
+    path = "/objectId",
+    type = ObjectId.class,
+    extractor = ObjectIdExtractor.class,
+    processors = ObjectIdProcessor.class))
+@SearchableDocument(fields = {
+    @SearchableField(name = "name", path = "/name"),
+    @SearchableField(name = "email", path = "/email"),
+    @SearchableField(name = "active", path = "/active"),
+    @SearchableField(name = "level", path = "/level"),
+    @SearchableField(name = "facebookId", path = "/facebookId")
+})
 @Entity(value = "user", noClassnameStored = true)
 public class MongoUser {
 

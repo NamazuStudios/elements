@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.service.application;
 
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.service.ApplicationConfigurationService;
-import com.namazustudios.socialengine.service.Services;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -14,21 +13,47 @@ import javax.inject.Provider;
  */
 public class ApplicationConfigurationServiceProvider implements Provider<ApplicationConfigurationService> {
 
-    @Inject
     private User user;
 
-    @Inject
+    private Provider<AnonApplicationConfigurationService> anonApplicationConfigurationServiceProvider;
+
     private Provider<SuperUserApplicationConfigurationService> superUserApplicationProfileServiceProvider;
 
     @Override
     public ApplicationConfigurationService get() {
-        switch (user.getLevel()) {
+        switch (getUser().getLevel()) {
             case SUPERUSER:
-                return superUserApplicationProfileServiceProvider.get();
+                return getSuperUserApplicationProfileServiceProvider().get();
             default:
-                return Services.forbidden(ApplicationConfigurationService.class);
-
+                return getAnonApplicationConfigurationServiceProvider().get();
         }
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Provider<AnonApplicationConfigurationService> getAnonApplicationConfigurationServiceProvider() {
+        return anonApplicationConfigurationServiceProvider;
+    }
+
+    @Inject
+    public void setAnonApplicationConfigurationServiceProvider(Provider<AnonApplicationConfigurationService> anonApplicationConfigurationServiceProvider) {
+        this.anonApplicationConfigurationServiceProvider = anonApplicationConfigurationServiceProvider;
+    }
+
+    public Provider<SuperUserApplicationConfigurationService> getSuperUserApplicationProfileServiceProvider() {
+        return superUserApplicationProfileServiceProvider;
+    }
+
+    @Inject
+    public void setSuperUserApplicationProfileServiceProvider(Provider<SuperUserApplicationConfigurationService> superUserApplicationProfileServiceProvider) {
+        this.superUserApplicationProfileServiceProvider = superUserApplicationProfileServiceProvider;
     }
 
 }

@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.service.application;
 
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.service.FacebookApplicationConfigurationService;
-import com.namazustudios.socialengine.service.Services;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -12,20 +11,47 @@ import javax.inject.Provider;
  */
 public class FacebookApplicationConfigurationServiceProvider implements Provider<FacebookApplicationConfigurationService> {
 
-    @Inject
     private User user;
 
-    @Inject
+    private Provider<AnonFacebookApplicationConfigurationService> anonFacebookApplicationConfigurationServiceProvider;
+
     private Provider<SuperUserFacebookApplicationConfigurationService> superUserFacebookApplicationConfigurationServiceProvider;
 
     @Override
     public FacebookApplicationConfigurationService get() {
-        switch (user.getLevel()) {
+        switch (getUser().getLevel()) {
             case SUPERUSER:
-                return superUserFacebookApplicationConfigurationServiceProvider.get();
+                return getSuperUserFacebookApplicationConfigurationServiceProvider().get();
             default:
-                return Services.forbidden(FacebookApplicationConfigurationService.class);
+                return getAnonFacebookApplicationConfigurationServiceProvider().get();
         }
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Provider<AnonFacebookApplicationConfigurationService> getAnonFacebookApplicationConfigurationServiceProvider() {
+        return anonFacebookApplicationConfigurationServiceProvider;
+    }
+
+    @Inject
+    public void setAnonFacebookApplicationConfigurationServiceProvider(Provider<AnonFacebookApplicationConfigurationService> anonFacebookApplicationConfigurationServiceProvider) {
+        this.anonFacebookApplicationConfigurationServiceProvider = anonFacebookApplicationConfigurationServiceProvider;
+    }
+
+    public Provider<SuperUserFacebookApplicationConfigurationService> getSuperUserFacebookApplicationConfigurationServiceProvider() {
+        return superUserFacebookApplicationConfigurationServiceProvider;
+    }
+
+    @Inject
+    public void setSuperUserFacebookApplicationConfigurationServiceProvider(Provider<SuperUserFacebookApplicationConfigurationService> superUserFacebookApplicationConfigurationServiceProvider) {
+        this.superUserFacebookApplicationConfigurationServiceProvider = superUserFacebookApplicationConfigurationServiceProvider;
     }
 
 }
