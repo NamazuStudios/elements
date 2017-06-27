@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rest;
 /**
  * Created by patricktwohig on 6/26/17.
  */
-public interface HTTPHeaders {
+public interface XHttpHeaders {
 
     /**
      * Represents the application.  The value must be either the application name or

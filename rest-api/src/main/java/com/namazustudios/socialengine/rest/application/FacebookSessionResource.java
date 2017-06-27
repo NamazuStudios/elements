@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.namazustudios.socialengine.rest.security.HttpSessionUserAuthenticationMethod.USER_SESSION_KEY;
+import static com.namazustudios.socialengine.model.User.*;
 
 /**
  * Created by patricktwohig on 6/22/17.
@@ -66,7 +66,7 @@ public class FacebookSessionResource {
 
         final User user = facebookSession.getUser();
         final HttpSession httpSession = getHttpServletRequest().getSession(true);
-        httpSession.setAttribute(USER_SESSION_KEY, user);
+        httpSession.setAttribute(USER_ATTRIBUTE, user);
 
         return facebookSession;
 

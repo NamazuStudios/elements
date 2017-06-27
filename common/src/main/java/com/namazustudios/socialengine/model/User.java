@@ -169,6 +169,12 @@ public class User implements Principal {
         return UNPRIVILIGED;
     }
 
+    /**
+     * Used as the key for the user attribute where appropriate.  This is equivalent
+     * to the FQN of the {@link User} class.
+     */
+    public static final String USER_ATTRIBUTE = User.class.getName();
+
     public enum Level {
 
         /**

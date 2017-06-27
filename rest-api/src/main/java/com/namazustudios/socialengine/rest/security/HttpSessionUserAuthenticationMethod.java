@@ -7,12 +7,12 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
+
 /**
  * Created by patricktwohig on 6/26/17.
  */
 public class HttpSessionUserAuthenticationMethod implements UserAuthenticationMethod {
-
-    public static final String USER_SESSION_KEY = User.class.getName();
 
     private HttpServletRequest httpServletRequest;
 
@@ -27,7 +27,7 @@ public class HttpSessionUserAuthenticationMethod implements UserAuthenticationMe
 
         final User user = (User) getHttpServletRequest()
             .getSession()
-            .getAttribute(USER_SESSION_KEY);
+            .getAttribute(USER_ATTRIBUTE);
 
         if (user == null) {
             throw new ForbiddenException();

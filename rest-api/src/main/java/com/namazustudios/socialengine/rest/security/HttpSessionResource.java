@@ -13,6 +13,8 @@ import javax.servlet.http.HttpSession;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
+
 /**
  * Created by patricktwohig on 4/2/15.
  */
@@ -49,7 +51,7 @@ public class HttpSessionResource {
         final User user = getAuthService().loginUser(userId, password);
         final HttpSession httpSession = getHttpServletRequest().getSession(true);
 
-        httpSession.setAttribute(HttpSessionUserAuthenticationMethod.USER_SESSION_KEY, user);
+        httpSession.setAttribute(USER_ATTRIBUTE, user);
 
         return user;
 
