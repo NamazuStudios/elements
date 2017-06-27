@@ -57,7 +57,7 @@ public class MongoUserDao implements UserDao {
     private MongoPasswordUtils mongoPasswordUtils;
 
     @Override
-    public User getActiveUser(String userId) {
+    public User getActiveUser(final String userId) {
 
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
 
@@ -69,6 +69,11 @@ public class MongoUserDao implements UserDao {
         );
 
         final MongoUser mongoUser = query.get();
+
+        if (mongoUser == null) {
+            throw new NotFoundException("User with id " + userId + " not found.");
+        }
+
         return getDozerMapper().map(mongoUser, User.class);
 
     }

@@ -15,6 +15,8 @@ public class FacebookSession {
 
     private String longLivedToken;
 
+    private String appSecretProof;
+
     public User getUser() {
         return user;
     }
@@ -29,6 +31,14 @@ public class FacebookSession {
 
     public void setLongLivedToken(String longLivedToken) {
         this.longLivedToken = longLivedToken;
+    }
+
+    public String getAppSecretProof() {
+        return appSecretProof;
+    }
+
+    public void setAppSecretProof(String appSecretProof) {
+        this.appSecretProof = appSecretProof;
     }
 
 }

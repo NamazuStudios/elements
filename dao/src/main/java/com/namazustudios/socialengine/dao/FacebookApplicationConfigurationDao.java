@@ -21,7 +21,16 @@ public interface FacebookApplicationConfigurationDao {
             FacebookApplicationConfiguration facebookApplicationConfiguration);
 
     /**
-     * Gets an {@link FacebookApplicationConfiguration} with the specific name or identifier.
+     * Gets an {@link FacebookApplicationConfiguration} with the specific name or identifier.  This
+     * may accept either the facebook app ID, or the internal identifier for the configuration.
+     *
+     * @param applicationConfigurationNameOrId the {@link Application} name or id
+     */
+    FacebookApplicationConfiguration getApplicationConfiguration(String applicationConfigurationNameOrId);
+
+    /**
+     * Gets an {@link FacebookApplicationConfiguration} with the specific name or identifier
+     * combined witht he supplied {@link Application} identifier
      *
      * @param applicationNameOrId the {@link Application} name or id
      * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration} id

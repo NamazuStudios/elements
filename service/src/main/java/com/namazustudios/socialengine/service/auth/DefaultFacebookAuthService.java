@@ -5,6 +5,8 @@ import com.namazustudios.socialengine.annotation.FacebookPermission;
 import com.namazustudios.socialengine.annotation.FacebookPermissions;
 import com.namazustudios.socialengine.dao.FacebookApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.FacebookUserDao;
+import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import com.namazustudios.socialengine.model.session.FacebookSession;
@@ -29,7 +31,7 @@ import static com.google.common.base.Strings.nullToEmpty;
     @FacebookPermission("public_profile"),
     @FacebookPermission("user_friends")
 })
-public class AnonFacebookAuthService implements FacebookAuthService {
+public class DefaultFacebookAuthService implements FacebookAuthService {
 
     private static final String FIELDS_PARAMETER_VALUE = Joiner.on(",")
         .join("id","name","email","first_name","last_name");
@@ -37,6 +39,35 @@ public class AnonFacebookAuthService implements FacebookAuthService {
     private FacebookUserDao facebookUserDao;
 
     private FacebookApplicationConfigurationDao facebookApplicationConfigurationDao;
+
+    @Override
+    public User authenticateUser(String applicationConfigurationNameOrId,
+                                 String facebookOAuthAccessToken) {
+
+        final FacebookApplicationConfiguration facebookApplicationConfiguration =
+            getFacebookApplicationConfigurationDao()
+                .getApplicationConfiguration(applicationConfigurationNameOrId);
+
+        final FacebookClient facebookClient = new DefaultFacebookClient(facebookOAuthAccessToken, Version.LATEST);
+
+        final String appsecretProof = facebookClient.obtainAppSecretProof(
+                facebookOAuthAccessToken,
+                facebookApplicationConfiguration.getApplicationSecret());
+
+        final com.restfb.types.User fbUser = facebookClient
+                .fetchObject(
+                    "me",
+                    com.restfb.types.User.class,
+                    Parameter.with("fields", FIELDS_PARAMETER_VALUE),
+                    Parameter.with("appsecret_proof", appsecretProof));
+
+        try {
+            return getFacebookUserDao().findActiveByFacebookId(fbUser.getId());
+        } catch (NotFoundException ex) {
+            throw new ForbiddenException(ex);
+        }
+
+    }
 
     @Override
     public FacebookSession createOrUpdateUserWithFacebookOAuthAccessToken(
@@ -55,17 +86,23 @@ public class AnonFacebookAuthService implements FacebookAuthService {
                 facebookApplicationConfiguration.getApplicationId(),
                 facebookApplicationConfiguration.getApplicationSecret());
 
+        final String appsecretProof = facebookClient.obtainAppSecretProof(
+                facebookOAuthAccessToken,
+                facebookApplicationConfiguration.getApplicationSecret());
+
         final com.restfb.types.User fbUser = facebookClient
                 .fetchObject(
                     "me",
                     com.restfb.types.User.class,
-                    Parameter.with("fields", FIELDS_PARAMETER_VALUE));
+                    Parameter.with("fields", FIELDS_PARAMETER_VALUE),
+                    Parameter.with("appsecret_proof", appsecretProof));
 
         final User user = getFacebookUserDao().createReactivateOrUpdateUser(map(fbUser));
 
         final FacebookSession facebookSession = new FacebookSession();
 
         facebookSession.setUser(user);
+        facebookSession.setAppSecretProof(appsecretProof);
         facebookSession.setLongLivedToken(longLivedAccessToken.getAccessToken());
 
         return facebookSession;

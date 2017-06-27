@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.FacebookUserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.User;
@@ -32,6 +33,26 @@ public class MongoFacebookUserDao implements FacebookUserDao {
     private MongoPasswordUtils mongoPasswordUtils;
 
     private MongoConcurrentUtils mongoConcurrentUtils;
+
+    @Override
+    public User findActiveByFacebookId(String facebookId) {
+
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
+
+        query.and(
+            query.criteria("active").equal(true),
+            query.criteria("facebookId").equal(facebookId)
+        );
+
+        final MongoUser mongoUser = query.get();
+
+        if (mongoUser == null) {
+            throw new NotFoundException("User with Facebook ID " + facebookId + " not found.");
+        }
+
+        return getDozerMapper().map(mongoUser, User.class);
+
+    }
 
     @Override
     public User createReactivateOrUpdateUser(User user) {

@@ -11,22 +11,47 @@ import javax.inject.Provider;
  */
 public class AuthServiceProvider implements Provider<AuthService> {
 
-    @Inject
     private User user;
 
-    @Inject
     private Provider<UserAuthService> userAuthServiceProvider;
 
-    @Inject Provider<AnonAuthService> anonAuthServiceProvider;
+    private Provider<AnonAuthService> anonAuthServiceProvider;
 
     @Override
     public AuthService get() {
-        switch (user.getLevel()) {
+        switch (getUser().getLevel()) {
             case UNPRIVILEGED:
-                return anonAuthServiceProvider.get();
+                return getAnonAuthServiceProvider().get();
             default:
-                return userAuthServiceProvider.get();
+                return getUserAuthServiceProvider().get();
         }
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Provider<UserAuthService> getUserAuthServiceProvider() {
+        return userAuthServiceProvider;
+    }
+
+    @Inject
+    public void setUserAuthServiceProvider(Provider<UserAuthService> userAuthServiceProvider) {
+        this.userAuthServiceProvider = userAuthServiceProvider;
+    }
+
+    public Provider<AnonAuthService> getAnonAuthServiceProvider() {
+        return anonAuthServiceProvider;
+    }
+
+    @Inject
+    public void setAnonAuthServiceProvider(Provider<AnonAuthService> anonAuthServiceProvider) {
+        this.anonAuthServiceProvider = anonAuthServiceProvider;
     }
 
 }

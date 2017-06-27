@@ -10,7 +10,14 @@ import com.namazustudios.socialengine.model.User;
  */
 public interface FacebookUserDao {
 
-
+    /**
+     * Finds a {@link User} provided the facebook ID.  This only considers active users
+     * as determined by {@link User#isActive()}.
+     *
+     * @param facebookId the user's facebook ID.
+     * @return the {@link User}
+     */
+    User findActiveByFacebookId(String facebookId);
 
     /**
      * Creates, reactivates, or updates a user.  Unlike the operations in {@link UserDao}, this

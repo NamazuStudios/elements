@@ -81,6 +81,34 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
 
     @Override
     public FacebookApplicationConfiguration getApplicationConfiguration(
+            final String applicationConfigurationNameOrId) {
+
+        final Query<MongoFacebookApplicationConfiguration> query;
+        query = getDatastore().createQuery(MongoFacebookApplicationConfiguration.class);
+
+        query.and(
+                query.criteria("active").equal(true),
+                query.criteria("platform").equal(FACEBOOK)
+        );
+
+        try {
+            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
+        } catch (IllegalArgumentException ex) {
+            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
+        }
+
+        final MongoFacebookApplicationConfiguration mongoFacebookApplicationConfiguration = query.get();
+
+        if (mongoFacebookApplicationConfiguration == null) {
+            throw new NotFoundException("application profile " + applicationConfigurationNameOrId + " not found.");
+        }
+
+        return getBeanMapper().map(mongoFacebookApplicationConfiguration, FacebookApplicationConfiguration.class);
+
+    }
+
+    @Override
+    public FacebookApplicationConfiguration getApplicationConfiguration(
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId) {
 
@@ -102,13 +130,13 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
             query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
         }
 
-        final MongoFacebookApplicationConfiguration mongoIosApplicationProfile = query.get();
+        final MongoFacebookApplicationConfiguration mongoFacebookApplicationConfiguration = query.get();
 
-        if (mongoIosApplicationProfile == null) {
+        if (mongoFacebookApplicationConfiguration == null) {
             throw new NotFoundException("application profile " + applicationConfigurationNameOrId + " not found.");
         }
 
-        return getBeanMapper().map(mongoIosApplicationProfile, FacebookApplicationConfiguration.class);
+        return getBeanMapper().map(mongoFacebookApplicationConfiguration, FacebookApplicationConfiguration.class);
 
     }
 

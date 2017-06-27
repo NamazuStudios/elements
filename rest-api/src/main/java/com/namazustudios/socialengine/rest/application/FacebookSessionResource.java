@@ -10,13 +10,11 @@ import io.swagger.annotations.ApiParam;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.namazustudios.socialengine.model.User.*;
 
 /**
  * Created by patricktwohig on 6/22/17.
@@ -65,8 +63,8 @@ public class FacebookSessionResource {
             .createOrUpdateUserWithFacebookOAuthAccessToken(applicationNameOrId, applicationConfigurationNameOrId, facebookOAuthAccessToken);
 
         final User user = facebookSession.getUser();
-        final HttpSession httpSession = getHttpServletRequest().getSession(true);
-        httpSession.setAttribute(USER_ATTRIBUTE, user);
+//        final HttpSession httpSession = getHttpServletRequest().getSession(true);
+//        httpSession.setAttribute(USER_ATTRIBUTE, user);
 
         return facebookSession;
 

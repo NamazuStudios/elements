@@ -35,8 +35,6 @@ public class AuthorizationHeader {
 
         if (!headerComponents.hasNext()) {
             throw new AuthorizationHeaderParseException("Unable to find credentials.");
-        } else if (AUTH_TYPE_FACEBOOK.equals(type)) {
-            throw new AuthorizationHeaderParseException("Invalid Header Type: " + type);
         }
 
         credentials = headerComponents.next();
@@ -53,7 +51,7 @@ public class AuthorizationHeader {
 
     public FacebookAuthorizationHeader asFacebookAuthHeader() {
 
-        if (AUTH_TYPE_FACEBOOK.equals(getType())) {
+        if (!AUTH_TYPE_FACEBOOK.equals(getType())) {
             throw new AuthorizationHeaderParseException(getType() + " not suitable for Facebook");
         }
 

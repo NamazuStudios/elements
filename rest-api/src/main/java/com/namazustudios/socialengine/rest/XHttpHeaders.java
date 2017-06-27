@@ -1,19 +1,15 @@
 package com.namazustudios.socialengine.rest;
 
 /**
+ * A place to store the non-standard HTTP header (and related) constants..
+ *
  * Created by patricktwohig on 6/26/17.
  */
 public interface XHttpHeaders {
 
     /**
-     * Represents the application.  The value must be either the application name or
-     * identifier.
-     */
-    String X_APPLICATION = "X-NamazuSocialengineApplication";
-
-    /**
-     * Used in conjunction with the specific Auth type header, this will ensure
-     * that the
+     * Used in conjunction with the standard Authorization header.  This is used to
+     * trigger an attempt to authorize the user via Facebook OAuth tokens.
      */
     String AUTH_TYPE_FACEBOOK = "Facebook";
 

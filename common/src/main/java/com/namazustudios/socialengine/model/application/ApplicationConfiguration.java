@@ -24,6 +24,9 @@ public class ApplicationConfiguration {
     @ApiModelProperty("The application-configuration specific uinique ID.  (Varies by Platform)")
     private String uniqueIdentifier;
 
+    @ApiModelProperty("The parent application owning this configuration.")
+    private Application parent;
+
     /**
      * Gets the actual profile ID.
      *
@@ -76,6 +79,24 @@ public class ApplicationConfiguration {
      */
     public void setUniqueIdentifier(String uniqueIdentifier) {
         this.uniqueIdentifier = uniqueIdentifier;
+    }
+
+    /**
+     * Gets the parent {@link Application}
+     *
+     * @return the parent
+     */
+    public Application getParent() {
+        return parent;
+    }
+
+    /**
+     * Sets the parent {@link Application}
+     *
+     * @param parent the parent
+     */
+    public void setParent(Application parent) {
+        this.parent = parent;
     }
 
 }
