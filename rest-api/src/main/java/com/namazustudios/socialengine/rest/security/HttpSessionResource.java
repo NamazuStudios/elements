@@ -1,9 +1,8 @@
-package com.namazustudios.socialengine.rest;
+package com.namazustudios.socialengine.rest.security;
 
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.rest.provider.UserProvider;
 import com.namazustudios.socialengine.service.AuthService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -47,10 +46,10 @@ public class HttpSessionResource {
             throw new InvalidDataException("Password must be specified.");
         }
 
-        final User user = authService.loginUser(userId, password);
-        final HttpSession httpSession = httpServletRequest.getSession(true);
+        final User user = getAuthService().loginUser(userId, password);
+        final HttpSession httpSession = getHttpServletRequest().getSession(true);
 
-        httpSession.setAttribute(UserProvider.USER_SESSION_KEY, user);
+        httpSession.setAttribute(HttpSessionUserAuthenticationMethod.USER_SESSION_KEY, user);
 
         return user;
 
@@ -77,7 +76,6 @@ public class HttpSessionResource {
     }
 
     @Inject
-
     public void setHttpServletRequest(HttpServletRequest httpServletRequest) {
         this.httpServletRequest = httpServletRequest;
     }

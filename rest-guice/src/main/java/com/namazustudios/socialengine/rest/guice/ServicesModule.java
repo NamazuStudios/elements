@@ -25,7 +25,7 @@ public class ServicesModule extends AbstractModule {
 
         bind(User.class)
                 .toProvider(UserProvider.class);
-
+        
         bind(AuthService.class)
                 .toProvider(AuthServiceProvider.class)
                 .in(ServletScopes.REQUEST);

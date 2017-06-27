@@ -64,6 +64,7 @@ public class GuiceMain extends GuiceServletContextListener {
                     }
                 },
                 new ServicesModule(),
+                new SecurityModule(),
                 new MongoDaoModule(),
                 new MongoSearchModule(),
                 new ValidationModule()

@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.namazustudios.socialengine.rest.provider.UserProvider.USER_SESSION_KEY;
+import static com.namazustudios.socialengine.rest.security.HttpSessionUserAuthenticationMethod.USER_SESSION_KEY;
 
 /**
  * Created by patricktwohig on 6/22/17.

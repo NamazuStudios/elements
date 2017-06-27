@@ -1,47 +1,52 @@
 package com.namazustudios.socialengine.rest.provider;
 
+import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.rest.security.UserAuthenticationMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import javax.ws.rs.core.HttpHeaders;
+import java.util.Set;
 
 /**
- * Manages the {@link com.namazustudios.socialengine.model.User} object and provides it as needed.
+ * Iterates all bound {@link UserAuthenticationMethod}s currently available and returns the
+ * {@link User} instance determined by a combindation of headers or other authentication methods.
  *
- * In the event the {@link com.namazustudios.socialengine.model.User} is not logged in, this returns a default
- * {@link com.namazustudios.socialengine.model.User} with the level set to
- * {@link com.namazustudios.socialengine.model.User.Level#UNPRIVILEGED}
+ * If no suitable authentication method is found, then this will resort to
+ * {@link UserAuthenticationMethod#UNPRIVILEGED}.
  *
- * Created by patricktwohig on 4/1/15.
  */
 public class UserProvider implements Provider<User> {
 
-    public static final String USER_SESSION_KEY = User.class.getName();
+    private static final Logger logger = LoggerFactory.getLogger(UserProvider.class);
 
-    @Inject
-    private HttpServletRequest httpServletRequest;
+    private Set<UserAuthenticationMethod> supportedAuthenticationMethods;
 
     @Override
     public User get() {
 
-        final HttpSession httpSession = httpServletRequest.getSession(false);
-
-        if (httpSession == null) {
-            return User.getUnprivileged();
+        for (final UserAuthenticationMethod method : getSupportedAuthenticationMethods()) {
+            try {
+                return method.attempt();
+            } catch (ForbiddenException ex) {
+                logger.debug("Failed authentication method {}", method, ex);
+                continue;
+            }
         }
 
-        final User user = (User) httpServletRequest.getSession().getAttribute(USER_SESSION_KEY);
+        return UserAuthenticationMethod.UNPRIVILEGED.attempt();
 
-        if (user == null) {
-            return User.getUnprivileged();
-        }
+    }
 
-        httpServletRequest.setAttribute(USER_SESSION_KEY, user);
-        return user;
+    public Set<UserAuthenticationMethod> getSupportedAuthenticationMethods() {
+        return supportedAuthenticationMethods;
+    }
 
+    @Inject
+    public void setSupportedAuthenticationMethods(Set<UserAuthenticationMethod> supportedAuthenticationMethods) {
+        this.supportedAuthenticationMethods = supportedAuthenticationMethods;
     }
 
 }

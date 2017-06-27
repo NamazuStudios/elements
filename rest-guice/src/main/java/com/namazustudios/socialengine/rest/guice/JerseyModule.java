@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.rest.application.ApplicationConfigurationR
 import com.namazustudios.socialengine.rest.application.ApplicationResource;
 import com.namazustudios.socialengine.rest.application.FacebookSessionResource;
 import com.namazustudios.socialengine.rest.application.PSNApplicationConfigurationResource;
+import com.namazustudios.socialengine.rest.security.HttpSessionResource;
 import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.reflections.Reflections;
