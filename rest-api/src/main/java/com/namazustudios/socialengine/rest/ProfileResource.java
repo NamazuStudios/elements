@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.service.ProfileService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -26,6 +27,8 @@ import static com.google.common.base.Strings.nullToEmpty;
                    "Applications.")
 @Path("profile")
 public class ProfileResource {
+
+    private ProfileService profileService;
 
     private ValidationHelper validationHelper;
 
@@ -49,10 +52,9 @@ public class ProfileResource {
 
         final String query = nullToEmpty(search).trim();
 
-        return null;
-//        return query.isEmpty() ?
-//                getUserService().getUsers(offset, count) :
-//                getUserService().getUsers(offset, count, search);
+        return query.isEmpty() ?
+                getProfileService().getProfiles(offset, count) :
+                getProfileService().getProfiles(offset, count, search);
 
     }
 
@@ -62,8 +64,15 @@ public class ProfileResource {
     @ApiOperation(value = "Gets a Specific Profile",
             notes = "Gets a specific profile by profile ID.")
     public Profile getProfile(@PathParam("name") String profileId) {
-//        profileId = Strings.nullToEmpty(profileId).trim();
-        return null;
+
+        profileId = Strings.nullToEmpty(profileId).trim();
+
+        if (profileId.isEmpty()) {
+            throw new NotFoundException();
+        }
+
+        return getProfileService().getProfile(profileId);
+
     }
 
     @GET
@@ -76,7 +85,7 @@ public class ProfileResource {
                     "User is operating.  This may not be availble, in which case the appopraite " +
                     "error is rasied.")
     public Profile getCurrentProfile() {
-        return null;
+        return getProfileService().getCurrentProfile();
     }
 
     @PUT
@@ -93,16 +102,10 @@ public class ProfileResource {
         if (Strings.isNullOrEmpty(profileId)) {
             throw new NotFoundException("Profile not found.");
         } else if (!(Objects.equals(profile.getId(), profileId))) {
-            throw new InvalidDataException("User name does not match the path.");
+            throw new InvalidDataException("Profile id does not match path.");
         }
 
-//        if (Strings.isNullOrEmpty(password)) {
-//            return getUserService().updateUser(profile);
-//        } else {
-//            return getUserService().updateUser(profile, password);
-//        }
-
-        return null;
+        return getProfileService().updateProfile(profile);
 
     }
 
@@ -121,25 +124,27 @@ public class ProfileResource {
             throw new BadRequestException("Profile ID must be blank.");
         }
 
-//        if (password.isEmpty()){
-//            return getUserService().createUser(user);
-//        } else {
-//            return getUserService().createUser(user, password);
-//        }
-
-        return null;
+        return getProfileService().createProfile(profile);
 
     }
 
     @DELETE
     @Path("{profileId}")
-    @ApiOperation(value = "Deletes a User",
-            notes = "Deletes and permanently removes the user from the server.  The server may keep " +
-                    "some metadata as necessary to avoid data inconsistency.  However, the user has been " +
-                    "deleted from the client standpoint and will not be accessible through any of the existing " +
-                    "APIs.")
+    @ApiOperation(value = "Deletes a Profile",
+            notes = "Deletes and permanently removes the Profile from the server.  The server may" +
+                    "keep some record around to preserve relationships and references, but " +
+                    "this profile will not be accessible again until it is recreated.")
     public void deactivateProfile(@PathParam("profileId") final String profileId) {
-//        userService.deleteUser(name);
+        getProfileService().deleteProfile(profileId);
+    }
+
+    public ProfileService getProfileService() {
+        return profileService;
+    }
+
+    @Inject
+    public void setProfileService(ProfileService profileService) {
+        this.profileService = profileService;
     }
 
     public ValidationHelper getValidationHelper() {
