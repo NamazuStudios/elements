@@ -10,14 +10,20 @@ import java.util.function.Supplier;
  * Created by patricktwohig on 6/28/17.
  */
 public class ProfileSupplierProvider implements Provider<Supplier<Profile>> {
+
     @Override
     public Supplier<Profile> get() {
 
         // TODO: Determine profile from scope of request
+
+        // As a last resort, if the profile can't be determined, then we just
+        // provide something that throws the appropriate exception which
+        // shoudl end up being caught by the exception handling system.
 
         return () -> {
             throw new NotFoundException();
         };
 
     }
+
 }

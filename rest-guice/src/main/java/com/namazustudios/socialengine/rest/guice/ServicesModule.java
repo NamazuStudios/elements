@@ -1,8 +1,10 @@
 package com.namazustudios.socialengine.rest.guice;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.servlet.ServletScopes;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rest.provider.UserProvider;
 import com.namazustudios.socialengine.service.*;
 import com.namazustudios.socialengine.service.application.ApplicationConfigurationServiceProvider;
@@ -12,9 +14,12 @@ import com.namazustudios.socialengine.service.application.PSNApplicationConfigur
 import com.namazustudios.socialengine.service.auth.AuthServiceProvider;
 import com.namazustudios.socialengine.service.auth.DefaultFacebookAuthService;
 import com.namazustudios.socialengine.service.profile.ProfileServiceProvider;
+import com.namazustudios.socialengine.service.profile.ProfileSupplierProvider;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
+
+import java.util.function.Supplier;
 
 /**
  * Created by patricktwohig on 3/19/15.
@@ -26,7 +31,10 @@ public class ServicesModule extends AbstractModule {
 
         bind(User.class)
                 .toProvider(UserProvider.class);
-        
+
+        bind(new TypeLiteral<Supplier<Profile>>(){})
+                .toProvider(ProfileSupplierProvider.class);
+
         bind(AuthService.class)
                 .toProvider(AuthServiceProvider.class)
                 .in(ServletScopes.REQUEST);

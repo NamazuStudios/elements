@@ -58,14 +58,19 @@ public class MongoUserDao implements UserDao {
 
     @Override
     public User getActiveUser(final String userId) {
+        final MongoUser mongoUser = getActiveMongoUser(userId);
+        return getDozerMapper().map(mongoUser, User.class);
+    }
+
+    public MongoUser getActiveMongoUser(final String userId) {
 
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
 
         query.or(
-            query.criteria("name").equal(userId),
-            query.criteria("email").equal(userId)
+                query.criteria("name").equal(userId),
+                query.criteria("email").equal(userId)
         ).and(
-            query.criteria("active").equal(true)
+                query.criteria("active").equal(true)
         );
 
         final MongoUser mongoUser = query.get();
@@ -74,7 +79,7 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User with id " + userId + " not found.");
         }
 
-        return getDozerMapper().map(mongoUser, User.class);
+        return mongoUser;
 
     }
 

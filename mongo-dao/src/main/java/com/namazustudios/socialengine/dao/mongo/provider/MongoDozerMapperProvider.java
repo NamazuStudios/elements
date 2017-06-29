@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.dao.mongo.provider;
 import com.namazustudios.socialengine.dao.mongo.converter.ObjectIdConverter;
 import com.namazustudios.socialengine.dao.mongo.model.*;
 import com.namazustudios.socialengine.model.application.*;
+import com.namazustudios.socialengine.model.profile.Profile;
 import org.dozer.DozerBeanMapper;
 import org.dozer.Mapper;
 import org.dozer.loader.api.BeanMappingBuilder;
@@ -42,6 +43,10 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 mapping(FacebookApplicationConfiguration.class, MongoFacebookApplicationConfiguration.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                     .fields("applicationId","uniqueIdentifier");
+
+                mapping(Profile.class, MongoProfile.class)
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class))
+                    .fields("application.id", "application.objectId", customConverter(ObjectIdConverter.class));
 
             }
         };
