@@ -27,7 +27,14 @@ public class MongoAdvancedDatastoreProvider implements Provider<AdvancedDatastor
         final Morphia morphia = new Morphia();
 
         morphia.map(
+                MongoApplication.class,
+                MongoApplicationConfiguration.class,
                 MongoBasicEntrant.class,
+                MongoFacebookApplicationConfiguration.class,
+                MongoGooglePlayApplicationConfiguration.class,
+                MongoIosApplicationConfiguration.class,
+                MongoProfile.class,
+                MongoPSNApplicationConfiguration.class,
                 MongoShortLink.class,
                 MongoSocialCampaign.class,
                 MongoSteamEntrant.class,
