@@ -75,4 +75,30 @@ public class Profile {
         this.displayName = displayName;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Profile)) return false;
+
+        Profile profile = (Profile) o;
+
+        if (getId() != null ? !getId().equals(profile.getId()) : profile.getId() != null) return false;
+        if (getUser() != null ? !getUser().equals(profile.getUser()) : profile.getUser() != null) return false;
+        if (getApplication() != null ? !getApplication().equals(profile.getApplication()) : profile.getApplication() != null)
+            return false;
+        if (getImageUrl() != null ? !getImageUrl().equals(profile.getImageUrl()) : profile.getImageUrl() != null)
+            return false;
+        return getDisplayName() != null ? getDisplayName().equals(profile.getDisplayName()) : profile.getDisplayName() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getId() != null ? getId().hashCode() : 0;
+        result = 31 * result + (getUser() != null ? getUser().hashCode() : 0);
+        result = 31 * result + (getApplication() != null ? getApplication().hashCode() : 0);
+        result = 31 * result + (getImageUrl() != null ? getImageUrl().hashCode() : 0);
+        result = 31 * result + (getDisplayName() != null ? getDisplayName().hashCode() : 0);
+        return result;
+    }
+
 }

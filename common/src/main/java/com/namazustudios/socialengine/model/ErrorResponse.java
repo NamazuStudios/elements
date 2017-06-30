@@ -28,4 +28,22 @@ public class ErrorResponse {
         this.message = message;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ErrorResponse)) return false;
+
+        ErrorResponse that = (ErrorResponse) o;
+
+        if (getCode() != null ? !getCode().equals(that.getCode()) : that.getCode() != null) return false;
+        return getMessage() != null ? getMessage().equals(that.getMessage()) : that.getMessage() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getCode() != null ? getCode().hashCode() : 0;
+        result = 31 * result + (getMessage() != null ? getMessage().hashCode() : 0);
+        return result;
+    }
+
 }

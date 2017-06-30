@@ -28,4 +28,22 @@ public class GooglePlayApplicationConfiguration extends ApplicationConfiguration
         this.applicationId = applicationId;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof GooglePlayApplicationConfiguration)) return false;
+        if (!super.equals(o)) return false;
+
+        GooglePlayApplicationConfiguration that = (GooglePlayApplicationConfiguration) o;
+
+        return getApplicationId() != null ? getApplicationId().equals(that.getApplicationId()) : that.getApplicationId() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (getApplicationId() != null ? getApplicationId().hashCode() : 0);
+        return result;
+    }
+
 }

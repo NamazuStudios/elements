@@ -56,4 +56,25 @@ public class PSNApplicationConfiguration extends ApplicationConfiguration {
         this.clientSecret = clientSecret;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PSNApplicationConfiguration)) return false;
+        if (!super.equals(o)) return false;
+
+        PSNApplicationConfiguration that = (PSNApplicationConfiguration) o;
+
+        if (getNpIdentifier() != null ? !getNpIdentifier().equals(that.getNpIdentifier()) : that.getNpIdentifier() != null)
+            return false;
+        return getClientSecret() != null ? getClientSecret().equals(that.getClientSecret()) : that.getClientSecret() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (getNpIdentifier() != null ? getNpIdentifier().hashCode() : 0);
+        result = 31 * result + (getClientSecret() != null ? getClientSecret().hashCode() : 0);
+        return result;
+    }
+
 }

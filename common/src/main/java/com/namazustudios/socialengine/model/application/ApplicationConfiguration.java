@@ -100,4 +100,27 @@ public class ApplicationConfiguration {
         this.parent = parent;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ApplicationConfiguration)) return false;
+
+        ApplicationConfiguration that = (ApplicationConfiguration) o;
+
+        if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
+        if (getPlatform() != that.getPlatform()) return false;
+        if (getUniqueIdentifier() != null ? !getUniqueIdentifier().equals(that.getUniqueIdentifier()) : that.getUniqueIdentifier() != null)
+            return false;
+        return getParent() != null ? getParent().equals(that.getParent()) : that.getParent() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getId() != null ? getId().hashCode() : 0;
+        result = 31 * result + (getPlatform() != null ? getPlatform().hashCode() : 0);
+        result = 31 * result + (getUniqueIdentifier() != null ? getUniqueIdentifier().hashCode() : 0);
+        result = 31 * result + (getParent() != null ? getParent().hashCode() : 0);
+        return result;
+    }
+
 }

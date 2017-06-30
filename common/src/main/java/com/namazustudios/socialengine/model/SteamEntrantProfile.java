@@ -27,4 +27,19 @@ public class SteamEntrantProfile extends BasicEntrantProfile {
         this.steamId = steamId;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SteamEntrantProfile)) return false;
+
+        SteamEntrantProfile that = (SteamEntrantProfile) o;
+
+        return getSteamId() != null ? getSteamId().equals(that.getSteamId()) : that.getSteamId() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return getSteamId() != null ? getSteamId().hashCode() : 0;
+    }
+
 }

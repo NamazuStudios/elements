@@ -41,4 +41,24 @@ public class FacebookSession {
         this.appSecretProof = appSecretProof;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FacebookSession)) return false;
+
+        FacebookSession that = (FacebookSession) o;
+
+        if (getUser() != null ? !getUser().equals(that.getUser()) : that.getUser() != null) return false;
+        if (getLongLivedToken() != null ? !getLongLivedToken().equals(that.getLongLivedToken()) : that.getLongLivedToken() != null)
+            return false;
+        return getAppSecretProof() != null ? getAppSecretProof().equals(that.getAppSecretProof()) : that.getAppSecretProof() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getUser() != null ? getUser().hashCode() : 0;
+        result = 31 * result + (getLongLivedToken() != null ? getLongLivedToken().hashCode() : 0);
+        result = 31 * result + (getAppSecretProof() != null ? getAppSecretProof().hashCode() : 0);
+        return result;
+    }
 }

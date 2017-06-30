@@ -155,6 +155,30 @@ public class User {
         this.facebookId = facebookId;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+
+        User user = (User) o;
+
+        if (isActive() != user.isActive()) return false;
+        if (getName() != null ? !getName().equals(user.getName()) : user.getName() != null) return false;
+        if (getEmail() != null ? !getEmail().equals(user.getEmail()) : user.getEmail() != null) return false;
+        if (getLevel() != user.getLevel()) return false;
+        return getFacebookId() != null ? getFacebookId().equals(user.getFacebookId()) : user.getFacebookId() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getName() != null ? getName().hashCode() : 0;
+        result = 31 * result + (getEmail() != null ? getEmail().hashCode() : 0);
+        result = 31 * result + (getLevel() != null ? getLevel().hashCode() : 0);
+        result = 31 * result + (isActive() ? 1 : 0);
+        result = 31 * result + (getFacebookId() != null ? getFacebookId().hashCode() : 0);
+        return result;
+    }
+
     /**
      * Gets a special User object which is set to unprivileged.  This is used
      * as a palceholder when a user is not logged in.

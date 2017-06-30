@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -237,6 +238,11 @@ public class MongoProfileDao implements ProfileDao {
         }
 
         getObjectIndex().index(mongoProfile);
+
+    }
+
+    @Override
+    public void softDeleteProfile(User user, String profileId) {
 
     }
 

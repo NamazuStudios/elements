@@ -75,4 +75,31 @@ public class BasicEntrantProfile {
         this.birthday = birthday;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BasicEntrantProfile)) return false;
+
+        BasicEntrantProfile that = (BasicEntrantProfile) o;
+
+        if (getSalutation() != null ? !getSalutation().equals(that.getSalutation()) : that.getSalutation() != null)
+            return false;
+        if (getFirstName() != null ? !getFirstName().equals(that.getFirstName()) : that.getFirstName() != null)
+            return false;
+        if (getLastName() != null ? !getLastName().equals(that.getLastName()) : that.getLastName() != null)
+            return false;
+        if (getEmail() != null ? !getEmail().equals(that.getEmail()) : that.getEmail() != null) return false;
+        return getBirthday() != null ? getBirthday().equals(that.getBirthday()) : that.getBirthday() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getSalutation() != null ? getSalutation().hashCode() : 0;
+        result = 31 * result + (getFirstName() != null ? getFirstName().hashCode() : 0);
+        result = 31 * result + (getLastName() != null ? getLastName().hashCode() : 0);
+        result = 31 * result + (getEmail() != null ? getEmail().hashCode() : 0);
+        result = 31 * result + (getBirthday() != null ? getBirthday().hashCode() : 0);
+        return result;
+    }
+
 }

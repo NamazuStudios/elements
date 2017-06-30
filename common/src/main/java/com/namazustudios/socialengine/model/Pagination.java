@@ -51,4 +51,26 @@ public class Pagination<T> {
         this.approximation = approximation;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Pagination)) return false;
+
+        Pagination<?> that = (Pagination<?>) o;
+
+        if (getOffset() != that.getOffset()) return false;
+        if (getTotal() != that.getTotal()) return false;
+        if (isApproximation() != that.isApproximation()) return false;
+        return getObjects() != null ? getObjects().equals(that.getObjects()) : that.getObjects() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getOffset();
+        result = 31 * result + getTotal();
+        result = 31 * result + (isApproximation() ? 1 : 0);
+        result = 31 * result + (getObjects() != null ? getObjects().hashCode() : 0);
+        return result;
+    }
+
 }
