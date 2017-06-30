@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.ModuleDefaults;
-import com.namazustudios.socialengine.dao.mongo.guice.MongoDirectoryProvider;
+import com.namazustudios.socialengine.dao.mongo.provider.MongoDirectoryProvider;
 
 import java.util.Properties;
 
