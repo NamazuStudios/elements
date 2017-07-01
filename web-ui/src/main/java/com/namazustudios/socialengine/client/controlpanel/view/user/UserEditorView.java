@@ -179,6 +179,7 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
             public void onFailure(Method method, Throwable throwable) {
                 unlock();
                 errorModal.setErrorMessage("There was a problem creating the user.");
+                errorModal.show();
             }
 
             @Override

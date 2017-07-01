@@ -15,6 +15,8 @@ import javax.validation.constraints.Pattern;
 @ApiModel
 public class User {
 
+    private String id;
+
     @NotNull
     @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
     private String name;
@@ -68,6 +70,24 @@ public class User {
         }
 
     };
+
+    /**
+     * Gets the user's unique ID.
+     *
+     * @return the user's unique ID.
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * Sets the unique ID of the user.
+     *
+     * @param id the user's unique ID
+     */
+    public void setId(String id) {
+        this.id = id;
+    }
 
     /**
      * Gets the user's login name.
@@ -163,6 +183,7 @@ public class User {
         User user = (User) o;
 
         if (isActive() != user.isActive()) return false;
+        if (getId() != null ? !getId().equals(user.getId()) : user.getId() != null) return false;
         if (getName() != null ? !getName().equals(user.getName()) : user.getName() != null) return false;
         if (getEmail() != null ? !getEmail().equals(user.getEmail()) : user.getEmail() != null) return false;
         if (getLevel() != user.getLevel()) return false;
@@ -171,7 +192,8 @@ public class User {
 
     @Override
     public int hashCode() {
-        int result = getName() != null ? getName().hashCode() : 0;
+        int result = getId() != null ? getId().hashCode() : 0;
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getEmail() != null ? getEmail().hashCode() : 0);
         result = 31 * result + (getLevel() != null ? getLevel().hashCode() : 0);
         result = 31 * result + (isActive() ? 1 : 0);

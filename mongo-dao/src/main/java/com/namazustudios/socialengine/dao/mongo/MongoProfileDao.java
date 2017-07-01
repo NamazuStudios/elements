@@ -10,7 +10,6 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -123,9 +122,6 @@ public class MongoProfileDao implements ProfileDao {
         final ObjectId objectId = getMongoDBUtils().parse(profile.getId());
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
-        final MongoUser user = getMongoUserFromProfile(profile);
-        final MongoApplication application = getMongoApplicationFromProfile(profile);
-
         query.and(
             query.criteria("active").equal(true),
             query.criteria("_id").equal(objectId)
@@ -133,8 +129,6 @@ public class MongoProfileDao implements ProfileDao {
 
         final UpdateOperations<MongoProfile> updateOperations = datastore.createUpdateOperations(MongoProfile.class);
 
-        updateOperations.set("user", user);
-        updateOperations.set("application", application);
         updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
         updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
 
@@ -169,8 +163,10 @@ public class MongoProfileDao implements ProfileDao {
         final MongoApplication application = getMongoApplicationFromProfile(profile);
 
         query.and(
-                query.criteria("active").equal(false),
-                query.criteria("_id").equal(objectId)
+            query.criteria("active").equal(false),
+            query.criteria("_id").equal(objectId),
+            query.criteria("user").equal(user),
+            query.criteria("application").equal(application)
         );
 
         final UpdateOperations<MongoProfile> updateOperations = datastore.createUpdateOperations(MongoProfile.class);
@@ -200,13 +196,11 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     private MongoUser getMongoUserFromProfile(final Profile profile) {
-        return profile.getUser() == null ? null :
-                getMongoUserDao().getActiveMongoUser(profile.getUser().getName());
+        return getMongoUserDao().getActiveMongoUser(profile.getUser().getName());
     }
 
     private MongoApplication getMongoApplicationFromProfile(final Profile profile) {
-        return profile.getApplication() == null ? null :
-                getMongoApplicationDao().getActiveMongoApplication(profile.getApplication().getId());
+        return getMongoApplicationDao().getActiveMongoApplication(profile.getApplication().getId());
     }
 
     @Override
@@ -238,11 +232,6 @@ public class MongoProfileDao implements ProfileDao {
         }
 
         getObjectIndex().index(mongoProfile);
-
-    }
-
-    @Override
-    public void softDeleteProfile(User user, String profileId) {
 
     }
 
