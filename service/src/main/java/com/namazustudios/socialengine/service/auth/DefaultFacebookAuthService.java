@@ -5,21 +5,26 @@ import com.namazustudios.socialengine.annotation.FacebookPermission;
 import com.namazustudios.socialengine.annotation.FacebookPermissions;
 import com.namazustudios.socialengine.dao.FacebookApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.FacebookUserDao;
+import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
+import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.FacebookSession;
 import com.namazustudios.socialengine.service.FacebookAuthService;
 import com.restfb.DefaultFacebookClient;
 import com.restfb.FacebookClient;
 import com.restfb.Parameter;
 import com.restfb.Version;
+import com.restfb.types.ProfilePictureSource;
 
 import javax.inject.Inject;
 
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
+import static java.lang.String.format;
 
 /**
  * This is the basic {@link FacebookAuthService} used
@@ -28,13 +33,15 @@ import static com.google.common.base.Strings.nullToEmpty;
  */
 @FacebookPermissions({
     @FacebookPermission("email"),
-    @FacebookPermission("public_profile"),
-    @FacebookPermission("user_friends")
+    @FacebookPermission("public_profile")
 })
 public class DefaultFacebookAuthService implements FacebookAuthService {
 
+
     private static final String FIELDS_PARAMETER_VALUE = Joiner.on(",")
         .join("id","name","email","first_name","last_name");
+
+    private ProfileDao profileDao;
 
     private FacebookUserDao facebookUserDao;
 
@@ -60,6 +67,7 @@ public class DefaultFacebookAuthService implements FacebookAuthService {
                     com.restfb.types.User.class,
                     Parameter.with("fields", FIELDS_PARAMETER_VALUE),
                     Parameter.with("appsecret_proof", appsecretProof));
+
 
         try {
             return getFacebookUserDao().findActiveByFacebookId(fbUser.getId());
@@ -97,11 +105,23 @@ public class DefaultFacebookAuthService implements FacebookAuthService {
                     Parameter.with("fields", FIELDS_PARAMETER_VALUE),
                     Parameter.with("appsecret_proof", appsecretProof));
 
+        final ProfilePictureSource profilePictureSource = facebookClient
+                .fetchObject(
+                    format("%s/picture", fbUser.getId()),
+                    ProfilePictureSource.class,
+                    Parameter.with("type", "large"),
+                    Parameter.with("redirect", false));
+
         final User user = getFacebookUserDao().createReactivateOrUpdateUser(map(fbUser));
+        final Profile profile = getProfileDao().upsertProfile(map(
+                user,
+                facebookApplicationConfiguration,
+                profilePictureSource));
 
         final FacebookSession facebookSession = new FacebookSession();
 
         facebookSession.setUser(user);
+        facebookSession.setProfile(profile);
         facebookSession.setAppSecretProof(appsecretProof);
         facebookSession.setLongLivedToken(longLivedAccessToken.getAccessToken());
 
@@ -124,6 +144,26 @@ public class DefaultFacebookAuthService implements FacebookAuthService {
         final String middleName = emptyToNull(nullToEmpty(fbUser.getMiddleName()).trim().toLowerCase());
         final String lastName = emptyToNull(nullToEmpty(fbUser.getLastName()).trim().toLowerCase());
         return Joiner.on(".").skipNulls().join(firstName, middleName, lastName, fbUser.getId());
+    }
+
+    private Profile map(final User user,
+                        final FacebookApplicationConfiguration facebookApplicationConfiguration,
+                        final ProfilePictureSource profilePictureSource) {
+        final Profile profile = new Profile();
+        profile.setUser(user);
+        profile.setApplication(facebookApplicationConfiguration.getParent());
+        profile.setDisplayName(user.getName());
+        profile.setImageUrl(profilePictureSource.getUrl());
+        return profile;
+    }
+
+    public ProfileDao getProfileDao() {
+        return profileDao;
+    }
+
+    @Inject
+    public void setProfileDao(ProfileDao profileDao) {
+        this.profileDao = profileDao;
     }
 
     public FacebookUserDao getFacebookUserDao() {

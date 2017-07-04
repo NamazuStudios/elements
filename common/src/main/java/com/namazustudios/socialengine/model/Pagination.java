@@ -4,6 +4,8 @@ import io.swagger.annotations.ApiModel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Created by patricktwohig on 3/25/15.
@@ -49,6 +51,24 @@ public class Pagination<T> {
 
     public void setApproximation(boolean approximation) {
         this.approximation = approximation;
+    }
+
+    public <U> Pagination<U> transform(final Function<T, U> function) {
+
+        final Pagination<U> tPagination = new Pagination<>();
+        tPagination.setTotal(getTotal());
+        tPagination.setOffset(getOffset());
+        tPagination.setApproximation(isApproximation());
+
+        if (getObjects() != null) {
+            tPagination.setObjects(getObjects()
+                .stream()
+                .map(function)
+                .collect(Collectors.toList()));
+        }
+
+        return tPagination;
+
     }
 
     @Override

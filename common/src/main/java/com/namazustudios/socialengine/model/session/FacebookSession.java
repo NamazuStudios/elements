@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.model.session;
 
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.ApiModel;
 
 /**
@@ -12,6 +13,8 @@ import io.swagger.annotations.ApiModel;
 public class FacebookSession {
 
     private User user;
+
+    private Profile profile;
 
     private String longLivedToken;
 
@@ -41,6 +44,14 @@ public class FacebookSession {
         this.appSecretProof = appSecretProof;
     }
 
+    public Profile getProfile() {
+        return profile;
+    }
+
+    public void setProfile(Profile profile) {
+        this.profile = profile;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -49,6 +60,7 @@ public class FacebookSession {
         FacebookSession that = (FacebookSession) o;
 
         if (getUser() != null ? !getUser().equals(that.getUser()) : that.getUser() != null) return false;
+        if (getProfile() != null ? !getProfile().equals(that.getProfile()) : that.getProfile() != null) return false;
         if (getLongLivedToken() != null ? !getLongLivedToken().equals(that.getLongLivedToken()) : that.getLongLivedToken() != null)
             return false;
         return getAppSecretProof() != null ? getAppSecretProof().equals(that.getAppSecretProof()) : that.getAppSecretProof() == null;
@@ -57,6 +69,7 @@ public class FacebookSession {
     @Override
     public int hashCode() {
         int result = getUser() != null ? getUser().hashCode() : 0;
+        result = 31 * result + (getProfile() != null ? getProfile().hashCode() : 0);
         result = 31 * result + (getLongLivedToken() != null ? getLongLivedToken().hashCode() : 0);
         result = 31 * result + (getAppSecretProof() != null ? getAppSecretProof().hashCode() : 0);
         return result;
