@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.FacebookSession;
@@ -18,9 +17,11 @@ import com.restfb.DefaultFacebookClient;
 import com.restfb.FacebookClient;
 import com.restfb.Parameter;
 import com.restfb.Version;
+import com.restfb.exception.FacebookOAuthException;
 import com.restfb.types.ProfilePictureSource;
 
 import javax.inject.Inject;
+import java.util.function.Supplier;
 
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
@@ -50,31 +51,33 @@ public class DefaultFacebookAuthService implements FacebookAuthService {
     @Override
     public User authenticateUser(String applicationConfigurationNameOrId,
                                  String facebookOAuthAccessToken) {
+        return doFacebookOperation(() -> {
 
-        final FacebookApplicationConfiguration facebookApplicationConfiguration =
-            getFacebookApplicationConfigurationDao()
-                .getApplicationConfiguration(applicationConfigurationNameOrId);
+            final FacebookApplicationConfiguration facebookApplicationConfiguration =
+                    getFacebookApplicationConfigurationDao()
+                            .getApplicationConfiguration(applicationConfigurationNameOrId);
 
-        final FacebookClient facebookClient = new DefaultFacebookClient(facebookOAuthAccessToken, Version.LATEST);
+            final FacebookClient facebookClient = new DefaultFacebookClient(facebookOAuthAccessToken, Version.LATEST);
 
-        final String appsecretProof = facebookClient.obtainAppSecretProof(
-                facebookOAuthAccessToken,
-                facebookApplicationConfiguration.getApplicationSecret());
+            final String appsecretProof = facebookClient.obtainAppSecretProof(
+                    facebookOAuthAccessToken,
+                    facebookApplicationConfiguration.getApplicationSecret());
 
-        final com.restfb.types.User fbUser = facebookClient
-                .fetchObject(
-                    "me",
-                    com.restfb.types.User.class,
-                    Parameter.with("fields", FIELDS_PARAMETER_VALUE),
-                    Parameter.with("appsecret_proof", appsecretProof));
+            final com.restfb.types.User fbUser = facebookClient
+                    .fetchObject(
+                            "me",
+                            com.restfb.types.User.class,
+                            Parameter.with("fields", FIELDS_PARAMETER_VALUE),
+                            Parameter.with("appsecret_proof", appsecretProof));
 
 
-        try {
-            return getFacebookUserDao().findActiveByFacebookId(fbUser.getId());
-        } catch (NotFoundException ex) {
-            throw new ForbiddenException(ex);
-        }
+            try {
+                return getFacebookUserDao().findActiveByFacebookId(fbUser.getId());
+            } catch (NotFoundException ex) {
+                throw new ForbiddenException(ex);
+            }
 
+        });
     }
 
     @Override
@@ -82,51 +85,63 @@ public class DefaultFacebookAuthService implements FacebookAuthService {
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId,
             final String facebookOAuthAccessToken) {
+        return doFacebookOperation(() -> {
 
-        final FacebookApplicationConfiguration facebookApplicationConfiguration =
-            getFacebookApplicationConfigurationDao()
-                .getApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
+            final FacebookApplicationConfiguration facebookApplicationConfiguration =
+                    getFacebookApplicationConfigurationDao()
+                            .getApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
 
-        final FacebookClient facebookClient = new DefaultFacebookClient(facebookOAuthAccessToken, Version.LATEST);
 
-        final FacebookClient.AccessToken longLivedAccessToken;
-        longLivedAccessToken = facebookClient.obtainExtendedAccessToken(
-                facebookApplicationConfiguration.getApplicationId(),
-                facebookApplicationConfiguration.getApplicationSecret());
+            final FacebookClient facebookClient = new DefaultFacebookClient(facebookOAuthAccessToken, Version.LATEST);
 
-        final String appsecretProof = facebookClient.obtainAppSecretProof(
-                facebookOAuthAccessToken,
-                facebookApplicationConfiguration.getApplicationSecret());
+            final FacebookClient.AccessToken longLivedAccessToken;
+            longLivedAccessToken = facebookClient.obtainExtendedAccessToken(
+                    facebookApplicationConfiguration.getApplicationId(),
+                    facebookApplicationConfiguration.getApplicationSecret());
 
-        final com.restfb.types.User fbUser = facebookClient
-                .fetchObject(
-                    "me",
-                    com.restfb.types.User.class,
-                    Parameter.with("fields", FIELDS_PARAMETER_VALUE),
-                    Parameter.with("appsecret_proof", appsecretProof));
+            final String appsecretProof = facebookClient.obtainAppSecretProof(
+                    facebookOAuthAccessToken,
+                    facebookApplicationConfiguration.getApplicationSecret());
 
-        final ProfilePictureSource profilePictureSource = facebookClient
-                .fetchObject(
-                    format("%s/picture", fbUser.getId()),
-                    ProfilePictureSource.class,
-                    Parameter.with("type", "large"),
-                    Parameter.with("redirect", false));
+            final com.restfb.types.User fbUser = facebookClient
+                    .fetchObject(
+                            "me",
+                            com.restfb.types.User.class,
+                            Parameter.with("fields", FIELDS_PARAMETER_VALUE),
+                            Parameter.with("appsecret_proof", appsecretProof));
 
-        final User user = getFacebookUserDao().createReactivateOrUpdateUser(map(fbUser));
-        final Profile profile = getProfileDao().upsertProfile(map(
-                user,
-                facebookApplicationConfiguration,
-                profilePictureSource));
+            final ProfilePictureSource profilePictureSource = facebookClient
+                    .fetchObject(
+                            format("%s/picture", fbUser.getId()),
+                            ProfilePictureSource.class,
+                            Parameter.with("type", "large"),
+                            Parameter.with("redirect", false),
+                            Parameter.with("appsecret_proof", appsecretProof));
 
-        final FacebookSession facebookSession = new FacebookSession();
+            final User user = getFacebookUserDao().createReactivateOrUpdateUser(map(fbUser));
+            final Profile profile = getProfileDao().upsertProfile(map(
+                    user,
+                    facebookApplicationConfiguration,
+                    profilePictureSource));
 
-        facebookSession.setUser(user);
-        facebookSession.setProfile(profile);
-        facebookSession.setAppSecretProof(appsecretProof);
-        facebookSession.setLongLivedToken(longLivedAccessToken.getAccessToken());
+            final FacebookSession facebookSession = new FacebookSession();
 
-        return facebookSession;
+            facebookSession.setUser(user);
+            facebookSession.setProfile(profile);
+            facebookSession.setAppSecretProof(appsecretProof);
+            facebookSession.setLongLivedToken(longLivedAccessToken.getAccessToken());
 
+            return facebookSession;
+
+        });
+    }
+
+    private <T> T doFacebookOperation(final Supplier<T> supplier) {
+        try {
+            return supplier.get();
+        } catch (FacebookOAuthException ex) {
+            throw new ForbiddenException(ex.getMessage(), ex);
+        }
     }
 
     private User map(final com.restfb.types.User fbUser) {

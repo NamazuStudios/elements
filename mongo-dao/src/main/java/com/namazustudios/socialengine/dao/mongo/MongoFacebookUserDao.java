@@ -70,6 +70,10 @@ public class MongoFacebookUserDao implements FacebookUserDao {
         try {
             mongoUser = getMongoConcurrentUtils().performOptimisticUpsert(query, (datastore, toUpsert) -> {
 
+                if (toUpsert.getObjectId() != null) {
+                    user.setId(toUpsert.getObjectId().toHexString());
+                }
+
                 if (!toUpsert.isActive()) {
                     toUpsert.setActive(true);
                     getDozerMapper().map(user, toUpsert);

@@ -147,9 +147,13 @@ public class FacebookApplicationConfigurationEditorView extends ViewImpl impleme
             reset();
             unlock();
 
+            final FacebookApplicationConfiguration facebookApplicationConfiguration;
+            facebookApplicationConfiguration = new FacebookApplicationConfiguration();
+            facebookApplicationConfiguration.setParent(application);
+
             create.setVisible(true);
             driver.initialize(this);
-            driver.edit(new FacebookApplicationConfiguration());
+            driver.edit(facebookApplicationConfiguration);
 
             submitter = configuration -> {
                 lockOut();
@@ -194,6 +198,8 @@ public class FacebookApplicationConfigurationEditorView extends ViewImpl impleme
 
             reset();
             unlock();
+
+            facebookApplicationConfiguration.setParent(application);
 
             create.setVisible(true);
             driver.initialize(this);
