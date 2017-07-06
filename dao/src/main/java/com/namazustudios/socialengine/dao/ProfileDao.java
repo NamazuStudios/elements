@@ -67,7 +67,7 @@ public interface ProfileDao {
      * @param profile the user
      * @return the {@link Profile}, as written to the database
      */
-    Profile upsertOrRefreshProfile(final Profile profile);
+    Profile createReactivateOrRefreshProfile(final Profile profile);
 
     /**
      * Deletes a profile by marking it as inactive.  Data is otherwise retained in the database.

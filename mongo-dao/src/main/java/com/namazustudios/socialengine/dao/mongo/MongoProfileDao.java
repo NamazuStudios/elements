@@ -200,7 +200,7 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     @Override
-    public Profile upsertOrRefreshProfile(Profile profile) {
+    public Profile createReactivateOrRefreshProfile(Profile profile) {
 
         validate(profile);
 
