@@ -252,7 +252,6 @@ public class MongoProfileDao implements ProfileDao {
                 } else {
                     toUpsert.setActive(true);
                     getBeanMapper().map(profile, toUpsert);
-                    toUpsert.setDisplayName(user.getName());
                 }
 
                 return toUpsert;

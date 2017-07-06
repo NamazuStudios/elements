@@ -68,5 +68,4 @@ public class MongoObjectIndexProvider implements Provider<ObjectIndex> {
 
     }
 
-
 }

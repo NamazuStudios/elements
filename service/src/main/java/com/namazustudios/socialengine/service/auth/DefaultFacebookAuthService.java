@@ -26,6 +26,7 @@ import java.util.function.Supplier;
 
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
+import static java.lang.Math.min;
 
 /**
  * This is the basic {@link FacebookAuthService} used
@@ -138,6 +139,7 @@ public class DefaultFacebookAuthService implements FacebookAuthService {
             final User user = getFacebookUserDao().createReactivateOrUpdateUser(map(fbUser));
             final Profile profile = getProfileDao().createReactivateOrRefreshProfile(map(
                     user,
+                    fbUser,
                     facebookApplicationConfiguration,
                     profilePictureSource));
 
@@ -180,14 +182,29 @@ public class DefaultFacebookAuthService implements FacebookAuthService {
     }
 
     private Profile map(final User user,
+                        final com.restfb.types.User fbUser,
                         final FacebookApplicationConfiguration facebookApplicationConfiguration,
                         final ProfilePictureSource profilePictureSource) {
         final Profile profile = new Profile();
         profile.setUser(user);
         profile.setApplication(facebookApplicationConfiguration.getParent());
-        profile.setDisplayName(user.getName());
+        profile.setDisplayName(generateDisplayName(fbUser));
         profile.setImageUrl(profilePictureSource.getUrl());
         return profile;
+    }
+
+    private String generateDisplayName(final com.restfb.types.User fbUser) {
+
+        final String firstName = nullToEmpty(fbUser.getFirstName()).trim();
+        final String lastName = nullToEmpty(fbUser.getLastName()).trim();
+
+        if (lastName.isEmpty()) {
+            return firstName;
+        } else {
+            final String lastInitial = lastName.substring(0, min(1, lastName.length())) + ".";
+            return Joiner.on(" ").join(firstName, lastInitial);
+        }
+
     }
 
     public ProfileDao getProfileDao() {
