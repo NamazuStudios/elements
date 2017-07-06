@@ -26,12 +26,21 @@ public class UserProfileService implements ProfileService {
 
     @Override
     public Pagination<Profile> getProfiles(int offset, int count) {
-        return getProfileDao().getActiveProfiles(offset, count);
+        return getProfileDao()
+            .getActiveProfiles(offset, count)
+            .transform(this::redactPrivateInformation);
     }
 
     @Override
     public Pagination<Profile> getProfiles(int offset, int count, String search) {
-        return getProfileDao().getActiveProfiles(offset, count, search);
+        return getProfileDao()
+            .getActiveProfiles(offset, count, search)
+            .transform(this::redactPrivateInformation);
+    }
+
+    private Profile redactPrivateInformation(final Profile profile) {
+        profile.setUser(null);
+        return profile;
     }
 
     @Override

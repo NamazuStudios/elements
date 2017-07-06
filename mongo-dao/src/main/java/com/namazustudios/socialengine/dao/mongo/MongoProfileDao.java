@@ -172,6 +172,7 @@ public class MongoProfileDao implements ProfileDao {
         final UpdateOperations<MongoProfile> updateOperations = datastore.createUpdateOperations(MongoProfile.class);
 
         updateOperations.set("user", user);
+        updateOperations.set("active", true);
         updateOperations.set("application", application);
         updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
         updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
@@ -200,21 +201,21 @@ public class MongoProfileDao implements ProfileDao {
 
         validate(profile);
 
-        final ObjectId objectId = getMongoDBUtils().parse(profile.getId());
+
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
         final MongoUser user = getMongoUserFromProfile(profile);
         final MongoApplication application = getMongoApplicationFromProfile(profile);
 
         query.and(
-            query.criteria("_id").equal(objectId),
-            query.criteria("user").equal(user),
-            query.criteria("application").equal(application)
+                query.criteria("user").equal(user),
+                query.criteria("application").equal(application)
         );
 
         final UpdateOperations<MongoProfile> updateOperations = datastore.createUpdateOperations(MongoProfile.class);
 
         updateOperations.set("user", user);
+        updateOperations.set("active", true);
         updateOperations.set("application", application);
         updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
         updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());

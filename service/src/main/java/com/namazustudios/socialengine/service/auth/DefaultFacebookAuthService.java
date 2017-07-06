@@ -18,6 +18,7 @@ import com.restfb.FacebookClient;
 import com.restfb.Parameter;
 import com.restfb.Version;
 import com.restfb.exception.FacebookOAuthException;
+import com.restfb.json.JsonObject;
 import com.restfb.types.ProfilePictureSource;
 
 import javax.inject.Inject;
@@ -25,7 +26,6 @@ import java.util.function.Supplier;
 
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
-import static java.lang.String.format;
 
 /**
  * This is the basic {@link FacebookAuthService} used
@@ -40,7 +40,7 @@ public class DefaultFacebookAuthService implements FacebookAuthService {
 
 
     private static final String FIELDS_PARAMETER_VALUE = Joiner.on(",")
-        .join("id","name","email","first_name","last_name");
+        .join("id","name","email","first_name","last_name","picture");
 
     private ProfileDao profileDao;
 
@@ -69,7 +69,6 @@ public class DefaultFacebookAuthService implements FacebookAuthService {
                             com.restfb.types.User.class,
                             Parameter.with("fields", FIELDS_PARAMETER_VALUE),
                             Parameter.with("appsecret_proof", appsecretProof));
-
 
             try {
                 return getFacebookUserDao().findActiveByFacebookId(fbUser.getId());
@@ -110,13 +109,17 @@ public class DefaultFacebookAuthService implements FacebookAuthService {
                             Parameter.with("fields", FIELDS_PARAMETER_VALUE),
                             Parameter.with("appsecret_proof", appsecretProof));
 
-            final ProfilePictureSource profilePictureSource = facebookClient
+            final JsonObject rawProfilePicture = facebookClient
                     .fetchObject(
-                            format("%s/picture", fbUser.getId()),
-                            ProfilePictureSource.class,
+                            "me/picture",
+                            JsonObject.class,
                             Parameter.with("type", "large"),
                             Parameter.with("redirect", false),
                             Parameter.with("appsecret_proof", appsecretProof));
+
+            final ProfilePictureSource profilePictureSource = facebookClient
+                .getJsonMapper()
+                .toJavaObject(rawProfilePicture.get("data").toString(), ProfilePictureSource.class);
 
             final User user = getFacebookUserDao().createReactivateOrUpdateUser(map(fbUser));
             final Profile profile = getProfileDao().upsertProfile(map(

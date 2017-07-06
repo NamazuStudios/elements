@@ -22,7 +22,7 @@ import org.mongodb.morphia.annotations.*;
         @SearchableField(name = "displayName", path = "/displayName"),
         @SearchableField(name = "active", path = "/active")
     })
-@Entity(value = "application", noClassnameStored = true)
+@Entity(value = "profile", noClassnameStored = true)
 @Indexes({
     @Index(fields = @Field("active")),
     @Index(fields = {@Field("user"), @Field("application")}, unique = true)
@@ -32,7 +32,7 @@ public class MongoProfile {
     @Id
     private ObjectId objectId;
 
-    @Property
+    @Property("active")
     private boolean active;
 
     @Reference
