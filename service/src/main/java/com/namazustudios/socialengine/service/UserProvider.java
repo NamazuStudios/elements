@@ -1,8 +1,7 @@
-package com.namazustudios.socialengine.rest.provider;
+package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.rest.security.UserAuthenticationMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

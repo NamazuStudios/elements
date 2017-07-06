@@ -5,7 +5,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.servlet.ServletScopes;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.rest.provider.UserProvider;
+import com.namazustudios.socialengine.service.UserProvider;
 import com.namazustudios.socialengine.service.*;
 import com.namazustudios.socialengine.service.application.ApplicationConfigurationServiceProvider;
 import com.namazustudios.socialengine.service.application.ApplicationServiceProvider;
@@ -14,7 +14,7 @@ import com.namazustudios.socialengine.service.application.PSNApplicationConfigur
 import com.namazustudios.socialengine.service.auth.AuthServiceProvider;
 import com.namazustudios.socialengine.service.auth.DefaultFacebookAuthService;
 import com.namazustudios.socialengine.service.profile.ProfileServiceProvider;
-import com.namazustudios.socialengine.service.profile.ProfileSupplierProvider;
+import com.namazustudios.socialengine.rest.provider.HttpRequestAttributeProfileSupplierProvider;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
@@ -33,7 +33,7 @@ public class ServicesModule extends AbstractModule {
                 .toProvider(UserProvider.class);
 
         bind(new TypeLiteral<Supplier<Profile>>(){})
-                .toProvider(ProfileSupplierProvider.class);
+                .toProvider(HttpRequestAttributeProfileSupplierProvider.class);
 
         bind(AuthService.class)
                 .toProvider(AuthServiceProvider.class)

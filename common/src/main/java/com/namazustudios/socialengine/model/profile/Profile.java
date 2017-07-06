@@ -101,4 +101,10 @@ public class Profile {
         return result;
     }
 
+    /**
+     * Used as the key for the profile attribute where appropriate.  This is equivalent
+     * to the FQN of the {@link Profile} class.
+     */
+    public static final String PROFILE_ATTRIBUTE = Profile.class.getName();
+
 }

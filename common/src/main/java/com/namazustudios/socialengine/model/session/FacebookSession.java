@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.model.session;
 
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.ApiModel;
 
@@ -16,9 +17,11 @@ public class FacebookSession {
 
     private Profile profile;
 
-    private String longLivedToken;
+    private Application application;
 
     private String appSecretProof;
+
+    private String userAccessToken;
 
     public User getUser() {
         return user;
@@ -28,12 +31,12 @@ public class FacebookSession {
         this.user = user;
     }
 
-    public String getLongLivedToken() {
-        return longLivedToken;
+    public String getUserAccessToken() {
+        return userAccessToken;
     }
 
-    public void setLongLivedToken(String longLivedToken) {
-        this.longLivedToken = longLivedToken;
+    public void setUserAccessToken(String userAccessToken) {
+        this.userAccessToken = userAccessToken;
     }
 
     public String getAppSecretProof() {
@@ -52,6 +55,14 @@ public class FacebookSession {
         this.profile = profile;
     }
 
+    public Application getApplication() {
+        return application;
+    }
+
+    public void setApplication(Application application) {
+        this.application = application;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -61,17 +72,21 @@ public class FacebookSession {
 
         if (getUser() != null ? !getUser().equals(that.getUser()) : that.getUser() != null) return false;
         if (getProfile() != null ? !getProfile().equals(that.getProfile()) : that.getProfile() != null) return false;
-        if (getLongLivedToken() != null ? !getLongLivedToken().equals(that.getLongLivedToken()) : that.getLongLivedToken() != null)
+        if (getApplication() != null ? !getApplication().equals(that.getApplication()) : that.getApplication() != null)
             return false;
-        return getAppSecretProof() != null ? getAppSecretProof().equals(that.getAppSecretProof()) : that.getAppSecretProof() == null;
+        if (getAppSecretProof() != null ? !getAppSecretProof().equals(that.getAppSecretProof()) : that.getAppSecretProof() != null)
+            return false;
+        return getUserAccessToken() != null ? getUserAccessToken().equals(that.getUserAccessToken()) : that.getUserAccessToken() == null;
     }
 
     @Override
     public int hashCode() {
         int result = getUser() != null ? getUser().hashCode() : 0;
         result = 31 * result + (getProfile() != null ? getProfile().hashCode() : 0);
-        result = 31 * result + (getLongLivedToken() != null ? getLongLivedToken().hashCode() : 0);
+        result = 31 * result + (getApplication() != null ? getApplication().hashCode() : 0);
         result = 31 * result + (getAppSecretProof() != null ? getAppSecretProof().hashCode() : 0);
+        result = 31 * result + (getUserAccessToken() != null ? getUserAccessToken().hashCode() : 0);
         return result;
     }
+
 }

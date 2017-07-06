@@ -1,8 +1,10 @@
 package com.namazustudios.socialengine.rest.security;
 
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.session.FacebookSession;
 import com.namazustudios.socialengine.service.FacebookAuthService;
-import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -13,7 +15,6 @@ import java.io.IOException;
 
 import static com.namazustudios.socialengine.rest.XHttpHeaders.AUTH_TYPE_FACEBOOK;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
-import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Created by patricktwohig on 6/26/17.
@@ -21,8 +22,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 @Provider
 @PreMatching
 public class FacebookAuthenticationFilter implements ContainerRequestFilter {
-
-    private static final Logger logger = getLogger(FacebookAuthenticationFilter.class);
 
     private FacebookAuthService facebookAuthService;
 
@@ -42,17 +41,19 @@ public class FacebookAuthenticationFilter implements ContainerRequestFilter {
             final FacebookAuthorizationHeader facebookAuthorizationHeader;
             facebookAuthorizationHeader = authorizationHeader.asFacebookAuthHeader();
 
-            final User user = getUser(facebookAuthorizationHeader);
-            requestContext.setProperty(User.USER_ATTRIBUTE, user);
+            final FacebookSession facebookSession = getFacebookSession(facebookAuthorizationHeader);
+            requestContext.setProperty(User.USER_ATTRIBUTE, facebookSession.getUser());
+            requestContext.setProperty(Profile.PROFILE_ATTRIBUTE, facebookSession.getProfile());
+            requestContext.setProperty(Application.APPLICATION_ATTRIUTE, facebookSession.getApplication());
 
         }
 
     }
 
-    private User getUser(final FacebookAuthorizationHeader facebookAuthorizationHeader) {
+    private FacebookSession getFacebookSession(final FacebookAuthorizationHeader facebookAuthorizationHeader) {
         final String applicationId = facebookAuthorizationHeader.getApplicationId();
         final String userAccessToken = facebookAuthorizationHeader.getAccessToken();
-        return getFacebookAuthService().authenticateUser(applicationId, userAccessToken);
+        return getFacebookAuthService().authenticate(applicationId, userAccessToken);
     }
 
     public FacebookAuthService getFacebookAuthService() {

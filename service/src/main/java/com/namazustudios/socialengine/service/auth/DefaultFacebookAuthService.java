@@ -49,8 +49,8 @@ public class DefaultFacebookAuthService implements FacebookAuthService {
     private FacebookApplicationConfigurationDao facebookApplicationConfigurationDao;
 
     @Override
-    public User authenticateUser(String applicationConfigurationNameOrId,
-                                 String facebookOAuthAccessToken) {
+    public FacebookSession authenticate(String applicationConfigurationNameOrId,
+                                        String facebookOAuthAccessToken) {
         return doFacebookOperation(() -> {
 
             final FacebookApplicationConfiguration facebookApplicationConfiguration =
@@ -71,7 +71,21 @@ public class DefaultFacebookAuthService implements FacebookAuthService {
                             Parameter.with("appsecret_proof", appsecretProof));
 
             try {
-                return getFacebookUserDao().findActiveByFacebookId(fbUser.getId());
+
+                final FacebookSession facebookSession = new FacebookSession();
+                final User user = getFacebookUserDao().findActiveByFacebookId(fbUser.getId());
+                final Profile profile = getProfileDao().getActiveProfile(
+                    user.getId(),
+                    facebookApplicationConfiguration.getParent().getId());
+
+                facebookSession.setUser(user);
+                facebookSession.setProfile(profile);
+                facebookSession.setApplication(facebookApplicationConfiguration.getParent());
+                facebookSession.setAppSecretProof(appsecretProof);
+                facebookSession.setUserAccessToken(facebookOAuthAccessToken);
+
+                return facebookSession;
+
             } catch (NotFoundException ex) {
                 throw new ForbiddenException(ex);
             }
@@ -131,8 +145,9 @@ public class DefaultFacebookAuthService implements FacebookAuthService {
 
             facebookSession.setUser(user);
             facebookSession.setProfile(profile);
+            facebookSession.setApplication(facebookApplicationConfiguration.getParent());
             facebookSession.setAppSecretProof(appsecretProof);
-            facebookSession.setLongLivedToken(longLivedAccessToken.getAccessToken());
+            facebookSession.setUserAccessToken(longLivedAccessToken.getAccessToken());
 
             return facebookSession;
 

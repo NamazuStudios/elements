@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rest.security;
 
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.service.UserAuthenticationMethod;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;

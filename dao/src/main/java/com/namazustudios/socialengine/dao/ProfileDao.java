@@ -39,6 +39,18 @@ public interface ProfileDao {
     Profile getActiveProfile(String profileId);
 
     /**
+     * Gets the application profile provided the combination of the user ID and the application
+     * id.
+     *
+     * @param userId as returned by {@link User#getId()}
+     * @param applicationId as returned by {@link Application#getId()}
+     * @return the {@link Profile} associated with both, never null
+     *
+     * @throws {@link NotFoundException} if no such application and user combination matches
+     */
+    Profile getActiveProfile(String userId, String applicationId);
+
+    /**
      * Updates the specific active profile with the id, or throws a {@link NotFoundException} if the
      * profile can't be found.  The {@link Profile#getId()} is used to key the profile being updated.
      *
@@ -75,5 +87,6 @@ public interface ProfileDao {
      * @param profileId the profile ID
      */
     void softDeleteProfile(String profileId);
+
 
 }
