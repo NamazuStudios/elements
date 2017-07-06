@@ -57,14 +57,17 @@ public interface ProfileDao {
     Profile createOrReactivateProfile(Profile profile);
 
     /**
-     * Creates, reactivates, or updates a {@link Profile}.  This is similar to
+     * Creates, reactivates, or refreshes a {@link Profile}.  This is similar to
      * {@link #createOrReactivateProfile(Profile)} except that it will upsert
      * the {@link Profile}.
+     *
+     * If the profile is already active, then this will perform minimal updates
+     * of the profile as it is supplied.
      *
      * @param profile the user
      * @return the {@link Profile}, as written to the database
      */
-    Profile upsertProfile(final Profile profile);
+    Profile upsertOrRefreshProfile(final Profile profile);
 
     /**
      * Deletes a profile by marking it as inactive.  Data is otherwise retained in the database.

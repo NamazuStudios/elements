@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.BadQueryException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -49,6 +50,8 @@ public class MongoProfileDao implements ProfileDao {
     private MongoUserDao mongoUserDao;
 
     private MongoApplicationDao mongoApplicationDao;
+
+    private MongoConcurrentUtils mongoConcurrentUtils;
 
     public Pagination<Profile> getActiveProfiles(int offset, int count) {
 
@@ -197,10 +200,9 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     @Override
-    public Profile upsertProfile(Profile profile) {
+    public Profile upsertOrRefreshProfile(Profile profile) {
 
         validate(profile);
-
 
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
@@ -208,27 +210,35 @@ public class MongoProfileDao implements ProfileDao {
         final MongoApplication application = getMongoApplicationFromProfile(profile);
 
         query.and(
-                query.criteria("user").equal(user),
-                query.criteria("application").equal(application)
+            query.criteria("user").equal(user),
+            query.criteria("application").equal(application)
         );
 
-        final UpdateOperations<MongoProfile> updateOperations = datastore.createUpdateOperations(MongoProfile.class);
+        final MongoProfile mongoProfile;
 
-        updateOperations.set("user", user);
-        updateOperations.set("active", true);
-        updateOperations.set("application", application);
-        updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
-        updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
+        try {
 
-        final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
+            mongoProfile = getMongoConcurrentUtils().performOptimisticUpsert(query, (datastore, toUpsert) -> {
 
-            final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                    .upsert(true)
-                    .returnNew(true);
+                if (toUpsert.getObjectId() != null) {
+                    profile.setId(toUpsert.getObjectId().toHexString());
+                }
 
-            return ds.findAndModify(query, updateOperations, findAndModifyOptions);
+                if (toUpsert.isActive()) {
+                    // The only thing to refresh here is the
+                    toUpsert.setImageUrl(profile.getImageUrl());
+                } else {
+                    toUpsert.setActive(true);
+                    getBeanMapper().map(profile, toUpsert);
+                    toUpsert.setDisplayName(user.getName());
+                }
 
-        });
+                return toUpsert;
+
+            });
+        } catch (MongoConcurrentUtils.ConflictException e) {
+            throw new TooBusyException(e);
+        }
 
         if (mongoProfile == null) {
             throw new NotFoundException("application not found: " + profile.getId());
@@ -374,6 +384,15 @@ public class MongoProfileDao implements ProfileDao {
     @Inject
     public void setObjectIndex(ObjectIndex objectIndex) {
         this.objectIndex = objectIndex;
+    }
+
+    public MongoConcurrentUtils getMongoConcurrentUtils() {
+        return mongoConcurrentUtils;
+    }
+
+    @Inject
+    public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
+        this.mongoConcurrentUtils = mongoConcurrentUtils;
     }
 
 }

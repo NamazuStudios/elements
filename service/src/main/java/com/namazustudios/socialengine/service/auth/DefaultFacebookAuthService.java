@@ -122,7 +122,7 @@ public class DefaultFacebookAuthService implements FacebookAuthService {
                 .toJavaObject(rawProfilePicture.get("data").toString(), ProfilePictureSource.class);
 
             final User user = getFacebookUserDao().createReactivateOrUpdateUser(map(fbUser));
-            final Profile profile = getProfileDao().upsertProfile(map(
+            final Profile profile = getProfileDao().upsertOrRefreshProfile(map(
                     user,
                     facebookApplicationConfiguration,
                     profilePictureSource));
