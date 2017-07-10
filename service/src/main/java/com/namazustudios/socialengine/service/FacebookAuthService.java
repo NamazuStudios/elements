@@ -22,7 +22,7 @@ public interface FacebookAuthService {
      * @return the user
      * @throws ForbiddenException if the user cannot be authorized by Facebook
      */
-    User authenticateUser(String applicationConfigurationNameOrId, String facebookOAuthAccessToken);
+    FacebookSession authenticate(String applicationConfigurationNameOrId, String facebookOAuthAccessToken);
 
     /**
      * Creates a new session using the supplied application configuration as well as the Facebook token.  If

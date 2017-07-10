@@ -127,6 +127,32 @@ public class SocialCampaign {
         this.endDate = endDate;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SocialCampaign)) return false;
+
+        SocialCampaign that = (SocialCampaign) o;
+
+        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
+        if (getLinkUrl() != null ? !getLinkUrl().equals(that.getLinkUrl()) : that.getLinkUrl() != null) return false;
+        if (getAllowedEntrantTypes() != null ? !getAllowedEntrantTypes().equals(that.getAllowedEntrantTypes()) : that.getAllowedEntrantTypes() != null)
+            return false;
+        if (getBeginDate() != null ? !getBeginDate().equals(that.getBeginDate()) : that.getBeginDate() != null)
+            return false;
+        return getEndDate() != null ? getEndDate().equals(that.getEndDate()) : that.getEndDate() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getName() != null ? getName().hashCode() : 0;
+        result = 31 * result + (getLinkUrl() != null ? getLinkUrl().hashCode() : 0);
+        result = 31 * result + (getAllowedEntrantTypes() != null ? getAllowedEntrantTypes().hashCode() : 0);
+        result = 31 * result + (getBeginDate() != null ? getBeginDate().hashCode() : 0);
+        result = 31 * result + (getEndDate() != null ? getEndDate().hashCode() : 0);
+        return result;
+    }
+
     /**
      * A list of entrant allowedEntrantTypes for the campaign.
      */

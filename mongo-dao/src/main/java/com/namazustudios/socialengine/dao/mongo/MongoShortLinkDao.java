@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.io.BaseEncoding;
-import com.mongodb.Mongo;
 import com.mongodb.WriteResult;
 import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.ShortLinkDao;
@@ -18,14 +17,12 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.zip.GZIPInputStream;
 
 /**
  * Created by patricktwohig on 3/26/15.
@@ -68,12 +65,7 @@ public class MongoShortLinkDao implements ShortLinkDao {
         return mongoDBUtils.paginationFromSearch(
                 MongoShortLink.class, searchQuery,
                 offset, count,
-                new Function<MongoShortLink, ShortLink>() {
-                    @Override
-                    public ShortLink apply(MongoShortLink input) {
-                        return transform(input);
-                    }
-                });
+                (Function<MongoShortLink, ShortLink>) input -> transform(input));
 
     }
 

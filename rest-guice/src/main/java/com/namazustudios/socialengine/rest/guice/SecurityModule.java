@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.namazustudios.socialengine.rest.security.RequestAttributeAuthenticationMethod;
 import com.namazustudios.socialengine.rest.security.HttpSessionUserAuthenticationMethod;
-import com.namazustudios.socialengine.rest.security.UserAuthenticationMethod;
+import com.namazustudios.socialengine.service.UserAuthenticationMethod;
 
 /**
  * Created by patricktwohig on 6/26/17.

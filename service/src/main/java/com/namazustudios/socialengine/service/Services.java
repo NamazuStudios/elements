@@ -2,15 +2,16 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.exception.ForbiddenException;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static java.lang.reflect.Proxy.newProxyInstance;
+
 /**
  * A class which helps implement the {@link javax.inject.Provider} instances
- * for the service-level objects.
+ * for the service-level objects.  This provides default implementations designed
+ * to throw exceptions, effectively blocking usage of the service.
  *
  * Created by patricktwohig on 4/2/15.
  */
@@ -19,34 +20,20 @@ public class Services {
     private static final ConcurrentMap<Class<?>, Object> forbiddenServices = new ConcurrentHashMap<>();
 
     /**
-     * Gets a proxy that always throws an instance of {@link ForbiddenException}.
+     * Gets a proxy that always throws an instance of {@link ForbiddenException}.  This uses the {@link Proxy}
+     * method builtin to the JDK.  As such, this will not work properly with non-interface types.
      *
-     * @param cls the service type
-     * @param <T> the service type
+     * @param cls the service type {@link Class}.
+     * @param <T> the service proxy instance.
+     *
      * @return a proxy instance of the service type
      */
-    public static <T> T forbidden(Class<T> cls) {
-
-        T existing = (T) forbiddenServices.get(cls);
-
-        if (existing != null) {
-            return existing;
-        }
-
-        final T toPut = newForbiddenService(cls);
-        existing = (T) forbiddenServices.putIfAbsent(cls, toPut);
-
-        return  existing == null ? toPut : existing;
-
-    }
-
-    private static <T> T newForbiddenService(Class<T> cls) {
-        return (T)Proxy.newProxyInstance(Services.class.getClassLoader(), new Class<?>[]{cls}, new InvocationHandler() {
-            @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public static <T> T forbidden(final Class<T> cls) {
+        return (T) forbiddenServices.computeIfAbsent(cls, c ->
+            newProxyInstance(Services.class.getClassLoader(), new Class[]{c}, (p,m,a) -> {
                 throw new ForbiddenException();
             }
-        });
+        ));
     }
 
 }

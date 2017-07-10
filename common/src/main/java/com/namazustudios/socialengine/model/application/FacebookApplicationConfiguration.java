@@ -51,4 +51,28 @@ public class FacebookApplicationConfiguration extends ApplicationConfiguration {
         this.builtinApplicationPermissions = builtinApplicationPermissions;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FacebookApplicationConfiguration)) return false;
+        if (!super.equals(o)) return false;
+
+        FacebookApplicationConfiguration that = (FacebookApplicationConfiguration) o;
+
+        if (getApplicationId() != null ? !getApplicationId().equals(that.getApplicationId()) : that.getApplicationId() != null)
+            return false;
+        if (getApplicationSecret() != null ? !getApplicationSecret().equals(that.getApplicationSecret()) : that.getApplicationSecret() != null)
+            return false;
+        return getBuiltinApplicationPermissions() != null ? getBuiltinApplicationPermissions().equals(that.getBuiltinApplicationPermissions()) : that.getBuiltinApplicationPermissions() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (getApplicationId() != null ? getApplicationId().hashCode() : 0);
+        result = 31 * result + (getApplicationSecret() != null ? getApplicationSecret().hashCode() : 0);
+        result = 31 * result + (getBuiltinApplicationPermissions() != null ? getBuiltinApplicationPermissions().hashCode() : 0);
+        return result;
+    }
+
 }

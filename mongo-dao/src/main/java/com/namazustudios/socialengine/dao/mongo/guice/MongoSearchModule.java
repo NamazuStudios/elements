@@ -1,13 +1,12 @@
 package com.namazustudios.socialengine.dao.mongo.guice;
 
 import com.google.inject.AbstractModule;
+import com.namazustudios.socialengine.dao.mongo.provider.MongoDirectoryProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoObjectIndexProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoStandardAnalyzerProvider;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.store.Directory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
 
@@ -19,8 +18,6 @@ import javax.inject.Singleton;
  * Created by patricktwohig on 5/17/15.
  */
 public class MongoSearchModule extends AbstractModule {
-
-    private static final Logger LOG = LoggerFactory.getLogger(MongoSearchModule.class);
 
     @Override
     protected void configure() {

@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rest.application;
 
+import com.namazustudios.socialengine.ValidationHelper;
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import com.namazustudios.socialengine.service.FacebookApplicationConfigurationService;
 import io.swagger.annotations.Api;
@@ -8,6 +10,7 @@ import io.swagger.annotations.ApiOperation;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.Objects;
 
 /**
  * Created by patricktwohig on 6/14/17.
@@ -16,6 +19,8 @@ import javax.ws.rs.core.MediaType;
      description = "Operations for the management of ApplictionConfiguration instances for Facebook Applications.")
 @Path("application/{applicationNameOrId}/configuration/facebook")
 public class FacebookApplicationConfigurationResource {
+
+    private ValidationHelper validationHelper;
 
     private FacebookApplicationConfigurationService facebookApplicationConfigurationService;
 
@@ -56,7 +61,16 @@ public class FacebookApplicationConfigurationResource {
     public FacebookApplicationConfiguration createIosApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             final FacebookApplicationConfiguration facebookApplicationConfiguration) {
-        return getFacebookApplicationConfigurationService().createApplicationConfiguration(applicationNameOrId, facebookApplicationConfiguration);
+
+        getValidationHelper().validateModel(facebookApplicationConfiguration);
+
+        if (Objects.equals(facebookApplicationConfiguration.getParent().getId(), applicationNameOrId) ||
+            Objects.equals(facebookApplicationConfiguration.getParent().getName(), applicationNameOrId)) {
+            return getFacebookApplicationConfigurationService().createApplicationConfiguration(applicationNameOrId, facebookApplicationConfiguration);
+        } else {
+            throw new InvalidDataException("application name or id mismatch");
+        }
+
     }
 
     /**
@@ -78,10 +92,19 @@ public class FacebookApplicationConfigurationResource {
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId,
             final FacebookApplicationConfiguration facebookApplicationConfiguration) {
-        return getFacebookApplicationConfigurationService().updateApplicationConfiguration(
-                applicationNameOrId,
-                applicationConfigurationNameOrId,
-                facebookApplicationConfiguration);
+
+        getValidationHelper().validateModel(facebookApplicationConfiguration);
+
+        if (Objects.equals(facebookApplicationConfiguration.getParent().getId(), applicationNameOrId) ||
+            Objects.equals(facebookApplicationConfiguration.getParent().getName(), applicationNameOrId)) {
+            return getFacebookApplicationConfigurationService().updateApplicationConfiguration(
+                    applicationNameOrId,
+                    applicationConfigurationNameOrId,
+                    facebookApplicationConfiguration);
+        } else {
+            throw new InvalidDataException("application name or id mismatch");
+        }
+
     }
 
     /**
@@ -100,6 +123,15 @@ public class FacebookApplicationConfigurationResource {
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId) {
         getFacebookApplicationConfigurationService().deleteApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
     }
 
     public FacebookApplicationConfigurationService getFacebookApplicationConfigurationService() {

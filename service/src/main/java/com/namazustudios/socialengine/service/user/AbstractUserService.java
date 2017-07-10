@@ -22,7 +22,9 @@ public abstract class AbstractUserService implements UserService {
 
     @Override
     public void checkForCurrentUser(final String userId) {
-        if (!Objects.equals(currentUser.getEmail(), userId) && !Objects.equals(currentUser.getName(), userId)) {
+        if (!Objects.equals(getCurrentUser().getEmail(), userId) &&
+            !Objects.equals(getCurrentUser().getName(), userId)  &&
+            !Objects.equals(getCurrentUser().getId(), userId)) {
             throw new NotFoundException("User with id " + userId + " not found.");
         }
     }

@@ -81,4 +81,30 @@ public class Application {
         this.description = description;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Application)) return false;
+
+        Application that = (Application) o;
+
+        if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
+        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
+        return getDescription() != null ? getDescription().equals(that.getDescription()) : that.getDescription() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getId() != null ? getId().hashCode() : 0;
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
+        result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
+        return result;
+    }
+
+    /**
+     * Used as the key for the application attribute where appropriate.  This is equivalent
+     * to the FQN of the {@link Application} class.
+     */
+    public static final String APPLICATION_ATTRIUTE = Application.class.getName();
+
 }

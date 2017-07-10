@@ -78,4 +78,29 @@ public class ShortLink {
         this.destinationURL = destinationURL;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ShortLink)) return false;
+
+    ShortLink shortLink = (ShortLink) o;
+
+        if (getId() != null ? !getId().equals(shortLink.getId()) : shortLink.getId() != null) return false;
+        if (getShortLinkPath() != null ? !getShortLinkPath().equals(shortLink.getShortLinkPath()) : shortLink.getShortLinkPath() != null)
+            return false;
+        if (getShortLinkURL() != null ? !getShortLinkURL().equals(shortLink.getShortLinkURL()) : shortLink.getShortLinkURL() != null)
+            return false;
+        return getDestinationURL() != null ? getDestinationURL().equals(shortLink.getDestinationURL()) : shortLink.getDestinationURL() == null;
 }
+
+    @Override
+    public int hashCode() {
+        int result = getId() != null ? getId().hashCode() : 0;
+        result = 31 * result + (getShortLinkPath() != null ? getShortLinkPath().hashCode() : 0);
+        result = 31 * result + (getShortLinkURL() != null ? getShortLinkURL().hashCode() : 0);
+        result = 31 * result + (getDestinationURL() != null ? getDestinationURL().hashCode() : 0);
+        return result;
+    }
+
+}
+

@@ -18,4 +18,19 @@ public class SocialCampaignEntry {
         this.shortLink = shortLink;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SocialCampaignEntry)) return false;
+
+        SocialCampaignEntry that = (SocialCampaignEntry) o;
+
+        return getShortLink() != null ? getShortLink().equals(that.getShortLink()) : that.getShortLink() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return getShortLink() != null ? getShortLink().hashCode() : 0;
+    }
+
 }
