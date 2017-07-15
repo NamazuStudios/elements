@@ -3,9 +3,11 @@ package com.namazustudios.socialengine.rest.application;
 import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
+import com.namazustudios.socialengine.rest.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.FacebookApplicationConfigurationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -16,7 +18,8 @@ import java.util.Objects;
  * Created by patricktwohig on 6/14/17.
  */
 @Api(value = "Facebook Application Configuration",
-     description = "Operations for the management of ApplictionConfiguration instances for Facebook Applications.")
+     description = "Operations for the management of ApplictionConfiguration instances for Facebook Applications.",
+     authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
 @Path("application/{applicationNameOrId}/configuration/facebook")
 public class FacebookApplicationConfigurationResource {
 

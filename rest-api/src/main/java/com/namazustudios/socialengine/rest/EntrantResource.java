@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.service.SocialCampaignService;
 import com.namazustudios.socialengine.ValidationHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,8 @@ import javax.ws.rs.core.MediaType;
      description = "Allows users to register for entry into social camapaigs.  Social " +
                    "campaigns are essentially simple promotions which allow a user to " +
                    "receive some sort of reward or incentive for sharing a specific link " +
-                   "which is tracked through a short linker.")
+                   "which is tracked through a short linker.",
+     authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
 @Path("campaign/{name}")
 public class EntrantResource {
 

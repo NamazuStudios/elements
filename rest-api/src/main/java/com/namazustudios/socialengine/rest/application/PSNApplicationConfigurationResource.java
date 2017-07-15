@@ -1,9 +1,11 @@
 package com.namazustudios.socialengine.rest.application;
 
 import com.namazustudios.socialengine.model.application.PSNApplicationConfiguration;
+import com.namazustudios.socialengine.rest.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.PSNApplicationConfigurationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -15,7 +17,8 @@ import javax.ws.rs.core.MediaType;
  * Created by patricktwohig on 7/13/15.
  */
 @Api(value = "PSN Application Configurations",
-    description = "Operations for the management of ApplictionConfigurations for the Playstation Network.")
+    description = "Operations for the management of ApplictionConfigurations for the Playstation Network.",
+    authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
 @Path("application/{applicationNameOrId}/configuration/psn")
 public class PSNApplicationConfigurationResource {
 

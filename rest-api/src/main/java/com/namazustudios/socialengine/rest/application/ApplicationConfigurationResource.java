@@ -3,9 +3,11 @@ package com.namazustudios.socialengine.rest.application;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
+import com.namazustudios.socialengine.rest.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.ApplicationConfigurationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -17,10 +19,11 @@ import static com.google.common.base.Strings.nullToEmpty;
  * Created by patricktwohig on 7/13/15.
  */
 @Api(value = "Application Configurations",
-     description = "Manages application profiles.  An application profile is a collection of " +
+    description = "Manages application profiles.  An application profile is a collection of " +
                    "application metadata for a particular configuration of deployment.  For example, " +
                    "an application may be deployed on both Android and iOS.  One application profile" +
-                   "each for Android and iOS would be required.")
+                   "each for Android and iOS would be required.",
+    authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
 @Path("application/{applicationNameOrId}/configuration")
 public class ApplicationConfigurationResource {
 

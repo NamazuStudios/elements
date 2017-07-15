@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.ProfileService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -24,7 +25,8 @@ import static com.google.common.base.Strings.nullToEmpty;
 @Api(value = "Profiles",
      description = "Allows for the manipulation of Profile objects.  Profile objects store the " +
                    "basic information for the users in the system as they are associated with " +
-                   "Applications.")
+                   "Applications.",
+     authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
 @Path("profile")
 public class ProfileResource {
 

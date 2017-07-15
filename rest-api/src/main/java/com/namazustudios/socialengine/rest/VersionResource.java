@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.model.Version;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ import java.util.Properties;
  *
  * Created by patricktwohig on 7/14/17.
  */
+@Api("Sever Version Metadata")
 @Path("version")
 public final class VersionResource {
 
