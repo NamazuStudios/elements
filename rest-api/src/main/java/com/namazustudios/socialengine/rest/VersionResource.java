@@ -1,10 +1,7 @@
 package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.model.Version;
-import io.swagger.annotations.ApiKeyAuthDefinition;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.SecurityDefinition;
-import io.swagger.annotations.SwaggerDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,23 +18,8 @@ import java.util.Properties;
  *
  * Created by patricktwohig on 7/14/17.
  */
-@SwaggerDefinition(
-    securityDefinition = @SecurityDefinition(
-        apiKeyAuthDefinitions = {@ApiKeyAuthDefinition(
-            name = "Authorization",
-            description = "Uses a combination Facebook Application ID in combination with an OAuth Token" +
-                          "in order to perform API operations.  Must be specified in the format Facebook " +
-                          "Authorization Facebook appid:token.  Failure to specify both app ID and token " +
-                          "will result in a failed request.",
-            in = ApiKeyAuthDefinition.ApiKeyLocation.HEADER,
-            key = VersionResource.FACBOOK_OAUTH_KEY
-        )}
-    )
-)
 @Path("version")
 public final class VersionResource {
-
-    public static final String FACBOOK_OAUTH_KEY = "facebook_oauth";
 
     public static final String VERSION;
 

@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rest.guice;
 
 import com.google.inject.Injector;
+import com.namazustudios.socialengine.rest.EnhancedApiListingResource;
+import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.jvnet.hk2.guice.bridge.api.GuiceBridge;
@@ -24,7 +26,9 @@ public class GuiceResourceConfig extends ResourceConfig {
     @Inject
     public GuiceResourceConfig(ServiceLocator serviceLocator, ServletContext context) {
 
-        packages(true, "io.swagger.jaxrs.listing");
+        register(SwaggerSerializers.class);
+        register(EnhancedApiListingResource.class);
+
         packages(true, "com.namazustudios.socialengine.rest");
         packages(true, "com.namazustudios.socialengine.model");
 
