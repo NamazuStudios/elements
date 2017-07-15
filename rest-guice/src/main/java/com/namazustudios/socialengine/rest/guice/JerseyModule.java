@@ -27,7 +27,7 @@ import static java.lang.reflect.Modifier.ABSTRACT;
  */
 public abstract class JerseyModule extends ServletModule {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JerseyModule.class);
+    private static final Logger logger = LoggerFactory.getLogger(JerseyModule.class);
 
     private final String apiRoot;
 
@@ -43,6 +43,7 @@ public abstract class JerseyModule extends ServletModule {
         bindSwagger();
         configureResoures();
 
+        bind(VersionResource.class);
         bind(DefaultExceptionMapper.class);
         bind(CORSFilter.class);
         bind(ShortLinkForwardingFilter.class);
@@ -152,6 +153,7 @@ public abstract class JerseyModule extends ServletModule {
      * @return this
      */
     public JerseyModule enableAllResources() {
+        bind(VersionResource.class);
         bind(UserResource.class);
         bind(EntrantResource.class);
         bind(HttpSessionResource.class);
@@ -171,11 +173,11 @@ public abstract class JerseyModule extends ServletModule {
 
         final Reflections reflections = new Reflections(
                 new ConfigurationBuilder()
-                        .forPackages(swaggerPackage)
-                        .filterInputsBy(new FilterBuilder().includePackage(swaggerPackage))
-                        .setScanners(new SubTypesScanner(false)));
+                    .forPackages(swaggerPackage)
+                    .filterInputsBy(new FilterBuilder().includePackage(swaggerPackage))
+                    .setScanners(new SubTypesScanner(false)));
 
-        LOG.info("Scanning package io.swagger.jaxrs.listing for inclusion into JAX-RS");
+        logger.info("Scanning package io.swagger.jaxrs.listing for inclusion into JAX-RS");
 
         for (final String type : reflections.getAllTypes()) {
 

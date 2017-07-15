@@ -9,6 +9,12 @@
     <packaging>pom</packaging>
     <name>namazu-socialengine-system</name>
 
+    <scm>
+        <url>ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git</url>
+        <connection>scm:git:ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git</connection>
+        <developerConnection>scm:git:ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git</developerConnection>
+    </scm>
+
     <modules>
         <module>common</module>
         <module>rest-api</module>
@@ -89,6 +95,24 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>create-metadata</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <doCheck>false</doCheck>
+                    <doUpdate>false</doUpdate>
+                    <timestampFormat>yyyy-MM-dd HH:mm:ss</timestampFormat>
+                    <addOutputDirectoryToResources>true</addOutputDirectoryToResources>
                 </configuration>
             </plugin>
         </plugins>
