@@ -18,7 +18,7 @@
     <artifactId>rt-server</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>rt-container-core</name>
+    <name>rt-server</name>
 
     <dependencies>
         <dependency>
