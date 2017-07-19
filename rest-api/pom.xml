@@ -63,5 +63,16 @@
         </dependency>
     </dependencies>
 
-</project>
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>socialengine-version.txt</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
 
+</project>

@@ -2,10 +2,12 @@ package com.namazustudios.socialengine.rest.application;
 
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.session.FacebookSession;
+import com.namazustudios.socialengine.rest.VersionResource;
 import com.namazustudios.socialengine.service.FacebookAuthService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -21,7 +23,6 @@ import static com.google.common.base.Strings.nullToEmpty;
 @Path("application/{applicationNameOrId}/session/facebook/{applicationConfigurationNameOrId}")
 @Api(value = "Facebook Session and Login",
      description = "Allows the user to login and create accoutns using Facebook.")
-
 public class FacebookSessionResource {
 
     private HttpServletRequest httpServletRequest;
@@ -35,7 +36,8 @@ public class FacebookSessionResource {
                     "application.  This may implicitly create a new User account.  Additionally, the returned " +
                     "token is scoped to the application which created it.  This may have effects on how subsequent " +
                     "requests will behave based on the requested token.  Subsequent requests require that the supplied " +
-                    "long-term Facebook token be supplied in authorization headers.")
+                    "long-term Facebook token be supplied in authorization headers.",
+            authorizations = {@Authorization(VersionResource.FACBOOK_OAUTH_KEY)})
     @Produces(MediaType.APPLICATION_JSON)
     public FacebookSession createSession(
 
