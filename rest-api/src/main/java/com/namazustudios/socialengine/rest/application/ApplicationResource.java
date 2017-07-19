@@ -4,9 +4,11 @@ import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.rest.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.ApplicationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -23,7 +25,8 @@ import static com.google.common.base.Strings.nullToEmpty;
                    "for each and is used primairly as an aggregation point for other application " +
                    "profiles.  Application metadata is typically used for client side apps to determine " +
                    "the latest version or to resolve any compatiblity issues.  This can also be used to " +
-                   "perform force upgrades.")
+                   "perform force upgrades.",
+     authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
 @Path("application")
 public class ApplicationResource {
 

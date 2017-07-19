@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -24,7 +25,8 @@ import static com.google.common.base.Strings.nullToEmpty;
 @Path("user")
 @Api(value = "Users",
      description = "Manages users in the server.  Users are single-end users typically associated " +
-                   "with a login name or email address.")
+                   "with a login name or email address.",
+     authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
 public class UserResource {
 
     private UserService userService;

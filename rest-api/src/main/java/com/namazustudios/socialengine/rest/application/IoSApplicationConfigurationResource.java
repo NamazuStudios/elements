@@ -1,9 +1,11 @@
 package com.namazustudios.socialengine.rest.application;
 
 import com.namazustudios.socialengine.model.application.IosApplicationConfiguration;
+import com.namazustudios.socialengine.rest.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.IosApplicationConfigurationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -16,7 +18,8 @@ import javax.ws.rs.core.MediaType;
  */
 @Api(
     value = "iOS Application Configuration",
-    description = "Operations for the management of ApplictionConfigurations for iOS Applications.")
+    description = "Operations for the management of ApplictionConfigurations for iOS Applications.",
+    authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
 @Path("application/{applicationNameOrId}/configuration/ios")
 public class IoSApplicationConfigurationResource {
 

@@ -9,18 +9,13 @@ import com.namazustudios.socialengine.rest.application.FacebookSessionResource;
 import com.namazustudios.socialengine.rest.application.PSNApplicationConfigurationResource;
 import com.namazustudios.socialengine.rest.security.HttpSessionResource;
 import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
+import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.jersey.servlet.ServletContainer;
-import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
-import org.reflections.util.ConfigurationBuilder;
-import org.reflections.util.FilterBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
 import java.util.Map;
-
-import static java.lang.reflect.Modifier.ABSTRACT;
 
 /**
  * Created by patricktwohig on 3/19/15.
@@ -170,32 +165,36 @@ public abstract class JerseyModule extends ServletModule {
 
         final String swaggerPackage = "io.swagger.jaxrs.listing";
 
+        bind(SwaggerSerializers.class);
+        bind(EnhancedApiListingResource.class);
 
-        final Reflections reflections = new Reflections(
-                new ConfigurationBuilder()
-                    .forPackages(swaggerPackage)
-                    .filterInputsBy(new FilterBuilder().includePackage(swaggerPackage))
-                    .setScanners(new SubTypesScanner(false)));
-
-        logger.info("Scanning package io.swagger.jaxrs.listing for inclusion into JAX-RS");
-
-        for (final String type : reflections.getAllTypes()) {
-
-            final Class<?> cls;
-
-            try {
-
-                cls = Class.forName(type);
-
-                if ((cls.getModifiers() & ABSTRACT) == 0) {
-                    bind(cls);
-                }
-
-            } catch (ClassNotFoundException ex) {
-                throw new IllegalStateException(ex);
-            }
-
-        }
+//        final Reflections reflections = new Reflections(
+//                new ConfigurationBuilder()
+//                    .forPackages(swaggerPackage)
+//                    .filterInputsBy(new FilterBuilder().includePackage(swaggerPackage))
+//                    .setScanners(new SubTypesScanner(false)));
+//
+//        logger.info("Scanning package io.swagger.jaxrs.listing for inclusion into JAX-RS");
+//
+//        for (final String type : reflections.getAllTypes()) {
+//
+//            final Class<?> cls;
+//
+//            try {
+//
+//                cls = Class.forName(type);
+//
+//                if (ApiListingResource.class.equals(cls)) {
+//                    logger.info("Skipping binding for {}", cls.getName());
+//                } else if ((cls.getModifiers() & ABSTRACT) == 0) {
+//                    bind(cls);
+//                }
+//
+//            } catch (ClassNotFoundException ex) {
+//                throw new IllegalStateException(ex);
+//            }
+//
+//        }
 
     }
 }

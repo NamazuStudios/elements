@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.model.application.GooglePlayApplicationCon
 import com.namazustudios.socialengine.service.GooglePlayApplicationConfigurationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -15,7 +16,8 @@ import javax.ws.rs.core.MediaType;
  * Created by patricktwohig on 7/13/15.
  */
 @Api(value = "Google Play Application Configuration",
-     description = "Operations for the management of ApplictionConfigurations for Google Play.")
+     description = "Operations for the management of ApplictionConfigurations for Google Play.",
+     authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
 @Path("application/{applicationNameOrId}/configuration/google_play")
 public class GooglePlayApplicationConfigurationResource {
 

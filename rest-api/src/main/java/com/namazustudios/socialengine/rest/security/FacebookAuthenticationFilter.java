@@ -5,6 +5,8 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.FacebookSession;
 import com.namazustudios.socialengine.service.FacebookAuthService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -23,6 +25,8 @@ import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 @PreMatching
 public class FacebookAuthenticationFilter implements ContainerRequestFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(FacebookAuthenticationFilter.class);
+
     private FacebookAuthService facebookAuthService;
 
     @Override
@@ -34,18 +38,24 @@ public class FacebookAuthenticationFilter implements ContainerRequestFilter {
             return;
         }
 
-        final AuthorizationHeader authorizationHeader = new AuthorizationHeader(authorizationHeaderValue);
+        try {
 
-        if (AUTH_TYPE_FACEBOOK.equals(authorizationHeader.getType())) {
+            final AuthorizationHeader authorizationHeader = new AuthorizationHeader(authorizationHeaderValue);
 
-            final FacebookAuthorizationHeader facebookAuthorizationHeader;
-            facebookAuthorizationHeader = authorizationHeader.asFacebookAuthHeader();
+            if (AUTH_TYPE_FACEBOOK.equals(authorizationHeader.getType())) {
 
-            final FacebookSession facebookSession = getFacebookSession(facebookAuthorizationHeader);
-            requestContext.setProperty(User.USER_ATTRIBUTE, facebookSession.getUser());
-            requestContext.setProperty(Profile.PROFILE_ATTRIBUTE, facebookSession.getProfile());
-            requestContext.setProperty(Application.APPLICATION_ATTRIUTE, facebookSession.getApplication());
+                final FacebookAuthorizationHeader facebookAuthorizationHeader;
+                facebookAuthorizationHeader = authorizationHeader.asFacebookAuthHeader();
 
+                final FacebookSession facebookSession = getFacebookSession(facebookAuthorizationHeader);
+                requestContext.setProperty(User.USER_ATTRIBUTE, facebookSession.getUser());
+                requestContext.setProperty(Profile.PROFILE_ATTRIBUTE, facebookSession.getProfile());
+                requestContext.setProperty(Application.APPLICATION_ATTRIUTE, facebookSession.getApplication());
+
+            }
+
+        } catch (AuthorizationHeaderParseException ex) {
+            logger.info("Bad request.  Failing silently: {}", ex.getMessage());
         }
 
     }
