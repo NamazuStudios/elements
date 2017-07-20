@@ -27,7 +27,7 @@ import static java.util.Arrays.asList;
     securityDefinition = @SecurityDefinition(
         apiKeyAuthDefinitions = {@ApiKeyAuthDefinition(
             name = "Authorization",
-            description = "Uses a combination Facebook Application ID in combination with an OAuth Token" +
+            description = "Uses a combination Facebook Application ID in combination with an OAuth Token " +
                           "in order to perform API operations.  Must be specified in the format Facebook " +
                           "Authorization Facebook appid:token.  Failure to specify both app ID and token " +
                           "will result in a failed request.",
