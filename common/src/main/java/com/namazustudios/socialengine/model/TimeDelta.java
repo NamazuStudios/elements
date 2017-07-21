@@ -5,15 +5,15 @@ import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel("Represents a delta, or change, in a resource.  This, for example, is used to poll for when an " +
           "object (or set of objects) changes such that the client may update state accordingly.")
-public class TimeDelta<IdentifierT, ModelT> {
+public abstract class TimeDelta<IdentifierT, ModelT> {
 
     @ApiModelProperty(
         "The timeStamp at which the delta occurred.  This is effectively the number of edits since the " +
         "object was created.")
     private long timeStamp;
 
-    @ApiModelProperty("The identifier of the object.  This must always be present.")
-    private IdentifierT identifier;
+    @ApiModelProperty("The id of the object.  This must always be present.")
+    private IdentifierT id;
 
     @ApiModelProperty("The operation which changed the object.")
     private Operation operation;
@@ -30,12 +30,12 @@ public class TimeDelta<IdentifierT, ModelT> {
         this.timeStamp = timeStamp;
     }
 
-    public IdentifierT getIdentifier() {
-        return identifier;
+    public IdentifierT getId() {
+        return id;
     }
 
-    public void setIdentifier(IdentifierT identifier) {
-        this.identifier = identifier;
+    public void setId(IdentifierT id) {
+        this.id = id;
     }
 
     public Operation getOperation() {
@@ -62,7 +62,7 @@ public class TimeDelta<IdentifierT, ModelT> {
         TimeDelta<?, ?> timeDelta = (TimeDelta<?, ?>) o;
 
         if (getTimeStamp() != timeDelta.getTimeStamp()) return false;
-        if (getIdentifier() != null ? !getIdentifier().equals(timeDelta.getIdentifier()) : timeDelta.getIdentifier() != null)
+        if (getId() != null ? !getId().equals(timeDelta.getId()) : timeDelta.getId() != null)
             return false;
         if (getOperation() != timeDelta.getOperation()) return false;
         return getSnapshot() != null ? getSnapshot().equals(timeDelta.getSnapshot()) : timeDelta.getSnapshot() == null;
@@ -71,7 +71,7 @@ public class TimeDelta<IdentifierT, ModelT> {
     @Override
     public int hashCode() {
         int result = (int) (getTimeStamp() ^ (getTimeStamp() >>> 32));
-        result = 31 * result + (getIdentifier() != null ? getIdentifier().hashCode() : 0);
+        result = 31 * result + (getId() != null ? getId().hashCode() : 0);
         result = 31 * result + (getOperation() != null ? getOperation().hashCode() : 0);
         result = 31 * result + (getSnapshot() != null ? getSnapshot().hashCode() : 0);
         return result;

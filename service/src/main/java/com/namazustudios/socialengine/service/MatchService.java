@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.TimeDelta;
 import com.namazustudios.socialengine.model.match.Match;
+import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -86,10 +87,11 @@ public interface MatchService {
      *
      * @param timeStamp timeStamp
      *
+     * @param timeDeltaListConsumer
      * @return a {@link Runnable} which may be used to cancel the pending request
      */
     Runnable waitForDeltas(long timeStamp,
-                           final Consumer<List<TimeDelta<String, Match>>> timeDeltaListConsumer,
+                           final Consumer<List<MatchTimeDelta>> timeDeltaListConsumer,
                            final Consumer<Exception> exceptionConsumer);
 
     /**
@@ -100,10 +102,11 @@ public interface MatchService {
      * @param timeStamp timeStamp
      * @param matchId the Match ID as specified by {@link Match#getId()}
      *
+     * @param timeDeltaListConsumer
      * @return a {@link Runnable} which may be used to cancel the pending request
      */
     Runnable waitForDeltas(long timeStamp, String matchId,
-                           final Consumer<List<TimeDelta<String, Match>>> timeDeltaListConsumer,
+                           final Consumer<List<MatchTimeDelta>> timeDeltaListConsumer,
                            final Consumer<Exception> exceptionConsumer);
 
 }

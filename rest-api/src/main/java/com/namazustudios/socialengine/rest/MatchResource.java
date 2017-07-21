@@ -7,9 +7,9 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.TimeDelta;
 import com.namazustudios.socialengine.model.match.Match;
+import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import com.namazustudios.socialengine.service.MatchService;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
@@ -242,8 +242,5 @@ public class MatchResource {
     }
 
     private static final class MatchesPagination extends Pagination<Match> {}
-
-    @ApiModel("A TimeDelta type for Match instance.")
-    private static class MatchTimeDelta extends TimeDelta<String, Match> {}
 
 }

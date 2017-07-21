@@ -16,6 +16,9 @@ public class Match {
     @ApiModelProperty("The unique ID of the match.")
     private String id;
 
+    @ApiModelProperty("The player requesting the match.  If not specified, then the current profile will be inferred.")
+    private Profile player;
+
     @ApiModelProperty("The opposing player, or null if no suitable opponent has been found.")
     private Profile opponent;
 
@@ -42,6 +45,24 @@ public class Match {
      */
     public void setId(String id) {
         this.id = id;
+    }
+
+    /**
+     * Gets the {@link Profile} of the player requesting the match.
+     *
+     * @return the player's {@link Profile}
+     */
+    public Profile getPlayer() {
+        return player;
+    }
+
+    /**
+     * Sets the {@link Profile} of the player requesting the match.
+     *
+     * @param player the player
+     */
+    public void setPlayer(Profile player) {
+        this.player = player;
     }
 
     /**
