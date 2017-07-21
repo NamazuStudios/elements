@@ -4,11 +4,12 @@ import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.exception.NotImplementedException;
-import com.namazustudios.socialengine.model.Match;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.TimeDelta;
+import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.service.MatchService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
@@ -18,11 +19,11 @@ import javax.ws.rs.*;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static java.lang.Long.max;
+import static java.lang.Math.min;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Manages match resources
@@ -32,10 +33,11 @@ import static java.lang.Long.max;
 @Api(
     value = "Matches",
     description = "Drives the matchmaking API.  The matching system is used to match players of " +
-                  "of roughly equal skill based on their past performance record.  Once a mactch is made, " +
+                  "of roughly equal skill based on their past performance record.  Once a Match is made, " +
                   "this allows two separate players (as represented by their profiles) to participate in a " +
                   "game.  Note, this API only provides matching.  The players must separately create a game " +
-                   "from the match.")
+                  "from the match.  A match only provides a token which can be used to create a game which will " +
+                  "be private among the two players involved.")
 @Path("match")
 public class MatchResource {
 
@@ -51,30 +53,12 @@ public class MatchResource {
             value = "List Matches",
             notes = "Lists all matches available.  Under most circumstances, this will requires " +
                     "that a profile be made available to the request.  The server may choose to " +
-                    "return an error if no suitable profile can be determined.")
-    public void getMatches(
-
-            @Suspended
-            final AsyncResponse asyncResponse,
-
-            @QueryParam("offset")
-            @DefaultValue("0")
-            @ApiParam("Ignored if long-polling.")
-            final int offset,
-
-            @QueryParam("count")
-            @DefaultValue("20")
-            @ApiParam("Ignored if long-polling.")
-            final int count,
-
-            @HeaderParam(XHttpHeaders.X_REQUEST_LONG_POLL_TIMEOUT)
-            @ApiParam("Specifies the timeout of the request.")
-            final Integer longPollTimeout,
-
-            @QueryParam("lastUpdatedSince")
-            @ApiParam("Filter by Matches updated since.  If unspecified, this will return matches " +
-                      "since the provided date.")
-            Date lastUpdatedSince) {
+                    "return an error if no suitable profile can be determined.",
+            response = MatchesPagination.class)
+    public Pagination<Match> getMatches(
+            @QueryParam("offset")  @DefaultValue("0")  final int offset,
+            @QueryParam("count")   @DefaultValue("20") final int count,
+            @QueryParam("search") final String search) {
 
         if (offset < 0) {
             throw new InvalidParameterException("Offset must have positive value.");
@@ -84,25 +68,11 @@ public class MatchResource {
             throw new InvalidParameterException("Count must have positive value.");
         }
 
-        if (lastUpdatedSince == null) {
-            lastUpdatedSince = new Date(0);
-        }
+        final String query = nullToEmpty(search).trim();
 
-        if (longPollTimeout == null) {
-            final Pagination<Match> matchPagination;
-            matchPagination = getMatchService().getMatches(offset, count, lastUpdatedSince);
-            asyncResponse.resume(matchPagination);
-        } else {
-
-            long timeout = max(longPollTimeout, getAsyncTimeoutLimit());
-            asyncResponse.setTimeout(timeout, TimeUnit.SECONDS);
-
-            getMatchService().waitForUpdates(
-                lastUpdatedSince,
-                matches -> asyncResponse.resume(Pagination.from(matches)),
-                error -> asyncResponse.resume(error));
-
-        }
+        return query.isEmpty() ?
+                getMatchService().getMatches(offset, count) :
+                getMatchService().getMatches(offset, count, search);
 
     }
 
@@ -120,8 +90,88 @@ public class MatchResource {
             throw new NotFoundException();
         }
 
-        throw new NotImplementedException();
-//        return getProfileService().getProfile(profileId);
+        return getMatchService().getMatch(matchId);
+
+    }
+
+    @GET
+    @Path("delta")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+        value = "Gets Deltas of All Matches",
+        notes = "Streams a list of TimeDelta objects for any or all match.",
+        response = MatchTimeDelta.class,
+        responseContainer = "List")
+    public void getDeltasForMatches(
+
+            @Suspended
+            final AsyncResponse asyncResponse,
+
+            @QueryParam("timeStamp")
+            @DefaultValue("0")
+            @ApiParam("Filters deltas since the specified sequence.")
+            final long timeStamp,
+
+            @HeaderParam(XHttpHeaders.X_REQUEST_LONG_POLL_TIMEOUT)
+            @ApiParam(XHttpHeaders.X_REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
+            final Long longPollTimeout) {
+
+        if (longPollTimeout == null) {
+            final List<TimeDelta<String, Match>> timeDelta = getMatchService().getDeltas(timeStamp);
+            asyncResponse.resume(timeDelta);
+        } else {
+
+            final Runnable cancel = getMatchService().waitForDeltas(
+                timeStamp,
+                diffList -> asyncResponse.resume(diffList),
+                exception -> asyncResponse.resume(exception));
+
+            asyncResponse.setTimeoutHandler(r -> cancel.run());
+            asyncResponse.setTimeout(min(longPollTimeout, getAsyncTimeoutLimit()), SECONDS);
+
+        }
+
+    }
+
+    @GET
+    @Path("{matchId}/delta")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            value = "Gets Deltas for a single Match",
+            notes = "Streams a list of TimeDelta objects for any or all match.",
+            response = MatchTimeDelta.class,
+            responseContainer = "List")
+    public void getDeltasForMatch(
+
+            @Suspended
+            final AsyncResponse asyncResponse,
+
+            @PathParam("matchId")
+            final String matchId,
+
+            @QueryParam("timeStamp")
+            @DefaultValue("0")
+            @ApiParam("Filters deltas since the specified sequence.")
+            final long timeStamp,
+
+            @HeaderParam(XHttpHeaders.X_REQUEST_LONG_POLL_TIMEOUT)
+            @ApiParam(XHttpHeaders.X_REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
+            final Long longPollTimeout) {
+
+        if (longPollTimeout == null) {
+            final List<TimeDelta<String, Match>> timeDelta = getMatchService().getDeltasForMatch(timeStamp, matchId);
+            asyncResponse.resume(timeDelta);
+        } else {
+
+            final Runnable cancel = getMatchService().waitForDeltas(
+                    timeStamp, matchId,
+                    diffList -> asyncResponse.resume(diffList),
+                    exception -> asyncResponse.resume(exception));
+
+            asyncResponse.setTimeoutHandler(r -> cancel.run());
+            asyncResponse.setTimeout(min(longPollTimeout, getAsyncTimeoutLimit()), SECONDS);
+
+        }
 
     }
 
@@ -133,18 +183,19 @@ public class MatchResource {
                 "a suitable opponent for a game.  As other suitable players create matches the created " +
                 "match object may be updated as a suitable opponent is found.  The client must poll matches " +
                 "for updates and react accordingly.")
-    public Match createProfile(final Match match) {
+    public Match createMatch(final Match match) {
 
         getValidationHelper().validateModel(match);
 
-        final String profileId = nullToEmpty(match.getId()).trim();
+        final String matchId = nullToEmpty(match.getId()).trim();
 
-        if (!profileId.isEmpty()) {
-            throw new BadRequestException("Profile ID must be blank.");
+        if (!matchId.isEmpty()) {
+            throw new BadRequestException("match ID must be blank when creating a match");
+        } else if (match.getOpponent() != null) {
+            throw new BadRequestException("matches may not specify opponents on creation");
         }
 
-        throw new NotImplementedException();
-//        return getProfileService().createProfile(profile);
+        return getMatchService().createMatch(match);
 
     }
 
@@ -155,18 +206,21 @@ public class MatchResource {
                 "will cancel any pending request for a match.  If a game is currently being played " +
                 "agaist the match, the server may reject the request to delete the match until the game " +
                 "concludes.")
-    public void deactivateProfile(@PathParam("profileId") final String matchId) {
-        throw new NotImplementedException();
-//        getProfileService().deleteProfile(profileId);
+    public void deleteMatch(@PathParam("profileId") final String matchId) {
+        getMatchService().deleteMatch(matchId);
     }
 
     public int getAsyncTimeoutLimit() {
         return asyncTimeoutLimit;
     }
 
-    @Inject
-    public void setAsyncTimeoutLimit(@Named(Constants.ASYNC_TIMEOUT_LIMIT) int asyncTimeoutLimit) {
+    public void setAsyncTimeoutLimit(int asyncTimeoutLimit) {
         this.asyncTimeoutLimit = asyncTimeoutLimit;
+    }
+
+    @Inject
+    public void setAsyncTimeoutLimitAsString(@Named(Constants.ASYNC_TIMEOUT_LIMIT) String asyncTimeoutLimit) {
+        setAsyncTimeoutLimit(Integer.parseInt(asyncTimeoutLimit));
     }
 
     public MatchService getMatchService() {
@@ -186,5 +240,10 @@ public class MatchResource {
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
     }
+
+    private static final class MatchesPagination extends Pagination<Match> {}
+
+    @ApiModel("A TimeDelta type for Match instance.")
+    private static class MatchTimeDelta extends TimeDelta<String, Match> {}
 
 }

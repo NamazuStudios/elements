@@ -1,10 +1,8 @@
-package com.namazustudios.socialengine.model;
+package com.namazustudios.socialengine.model.match;
 
 import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-
-import java.util.Date;
 
 /**
  * Created by patricktwohig on 7/18/17.
@@ -26,7 +24,7 @@ public class Match {
     private String gameId;
 
     @ApiModelProperty("The time of the last modification of the match.")
-    private Date lastUpdated;
+    private long lastUpdatedTimestamp;
 
     /**
      * Gets the unique server-assigned ID of this match.
@@ -86,17 +84,17 @@ public class Match {
      *
      * @return the last-updated date
      */
-    public Date getLastUpdated() {
-        return lastUpdated;
+    public long getLastUpdatedTimestamp() {
+        return lastUpdatedTimestamp;
     }
 
     /**
      * Sets the date at which the last modification was made to this match.
      *
-     * @param lastUpdated the last-updated date
+     * @param lastUpdatedTimestamp the last-updated date
      */
-    public void setLastUpdated(Date lastUpdated) {
-        this.lastUpdated = lastUpdated;
+    public void setLastUpdatedTimestamp(long lastUpdatedTimestamp) {
+        this.lastUpdatedTimestamp = lastUpdatedTimestamp;
     }
 
     @Override
@@ -106,11 +104,11 @@ public class Match {
 
         Match match = (Match) o;
 
+        if (getLastUpdatedTimestamp() != match.getLastUpdatedTimestamp()) return false;
         if (getId() != null ? !getId().equals(match.getId()) : match.getId() != null) return false;
         if (getOpponent() != null ? !getOpponent().equals(match.getOpponent()) : match.getOpponent() != null)
             return false;
-        if (getGameId() != null ? !getGameId().equals(match.getGameId()) : match.getGameId() != null) return false;
-        return getLastUpdated() != null ? getLastUpdated().equals(match.getLastUpdated()) : match.getLastUpdated() == null;
+        return getGameId() != null ? getGameId().equals(match.getGameId()) : match.getGameId() == null;
     }
 
     @Override
@@ -118,7 +116,7 @@ public class Match {
         int result = getId() != null ? getId().hashCode() : 0;
         result = 31 * result + (getOpponent() != null ? getOpponent().hashCode() : 0);
         result = 31 * result + (getGameId() != null ? getGameId().hashCode() : 0);
-        result = 31 * result + (getLastUpdated() != null ? getLastUpdated().hashCode() : 0);
+        result = 31 * result + (int) (getLastUpdatedTimestamp() ^ (getLastUpdatedTimestamp() >>> 32));
         return result;
     }
 
