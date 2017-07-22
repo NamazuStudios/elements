@@ -11,7 +11,7 @@ import org.mongodb.morphia.annotations.Property;
 @Entity(value = "application_configuration", noClassnameStored = true)
 public class MongoFacebookApplicationConfiguration extends MongoApplicationConfiguration {
 
-    @Property("applicationSecret")
+    @Property
     private String applicationSecret;
 
     public String getApplicationSecret() {
