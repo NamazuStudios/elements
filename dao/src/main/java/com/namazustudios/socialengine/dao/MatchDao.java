@@ -78,9 +78,26 @@ public interface MatchDao {
      */
     MatchTimeDelta deleteMatchAndLogDelta(String playerId, String matchId);
 
-    List<TimeDelta<String,Match>> getDeltasForPlayerAfter(String profileId, long timeStamp);
+    /**
+     * Gets all {@link MatchTimeDelta} instances after the provided timestamp.  This will filter
+     * {@link Match} instances for the supplied player ID.
+     *
+     * @param playerId as specified by the value of {@link Profile#getId()} of {@link Match#getPlayer()}
+     * @param timeStamp the earliest timestamp to fetch
+     * @return a {@link List<MatchTimeDelta>} instance which represents all {@link MatchTimeDelta}s which satisfy the criteria.
+     */
+    List<MatchTimeDelta> getDeltasForPlayerAfter(String playerId, long timeStamp);
 
-    List<TimeDelta<String, Match>> getDeltasForPlayerAfter(String id, long timeStamp, String matchId);
+    /**
+     * Gets all {@link MatchTimeDelta} instances after the provided timestamp.  This will filter
+     * {@link Match} instances for the supplied player ID and specific match
+     *
+     * @param playerId as specified by the value of {@link Profile#getId()} of {@link Match#getPlayer()}
+     * @param timeStamp the earliest timestamp to fetch
+     * @param matchId the Match ID as determined by {@link Match#getId()}
+     * @return a {@link List<MatchTimeDelta>} instance which represents all {@link MatchTimeDelta}s which satisfy the criteria.
+     */
+    List<MatchTimeDelta> getDeltasForPlayerAfter(String playerId, long timeStamp, String matchId);
 
     /**
      * Used as the return value for the various methods tracking {@link TimeDelta} isntances.

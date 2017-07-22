@@ -21,7 +21,7 @@ public class GuiceResourceConfig extends ResourceConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(GuiceResourceConfig.class);
 
-    public static final String INJECOR_ATTRIBUTE_NAME = GuiceResourceConfig.class.getName() + ".Injector";
+    public static final String INJECTOR_ATTRIBUTE_NAME = GuiceResourceConfig.class.getName() + ".Injector";
 
     @Inject
     public GuiceResourceConfig(ServiceLocator serviceLocator, ServletContext context) {
@@ -49,7 +49,7 @@ public class GuiceResourceConfig extends ResourceConfig {
         GuiceBridge.getGuiceBridge().initializeGuiceBridge(serviceLocator);
 
         final GuiceIntoHK2Bridge guiceBridge = serviceLocator.getService(GuiceIntoHK2Bridge.class);
-        final Injector injector = (Injector) context.getAttribute(INJECOR_ATTRIBUTE_NAME);
+        final Injector injector = (Injector) context.getAttribute(INJECTOR_ATTRIBUTE_NAME);
         guiceBridge.bridgeGuiceInjector(injector);
 
     }

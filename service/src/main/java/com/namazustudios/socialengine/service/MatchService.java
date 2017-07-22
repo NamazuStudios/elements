@@ -85,19 +85,27 @@ public interface MatchService {
      * made to {@link Match} instances.  This will listen for changes to all {@link Match}
      * instances.
      *
+     * Either supplied {@link Consumer} instance will be called exactly once.
+     *
+     * {@see {@link Topic.Subscription#subscribeNext(Consumer, Consumer)}}
+     *
      * @param timeStamp timeStamp
      *
      * @param timeDeltaListConsumer
      * @return a {@link Runnable} which may be used to cancel the pending request
      */
-    Runnable waitForDeltas(long timeStamp,
-                           final Consumer<List<MatchTimeDelta>> timeDeltaListConsumer,
-                           final Consumer<Exception> exceptionConsumer);
+    Topic.Subscription waitForDeltas(long timeStamp,
+                                     final Consumer<List<MatchTimeDelta>> timeDeltaListConsumer,
+                                     final Consumer<Exception> exceptionConsumer);
 
     /**
      * Waits for a {@link List<TimeDelta<String, Match>>} to become available as changes are
      * made to {@link Match} instances.  This will listen for changes to a specific {@link Match}
      * instance.
+     *
+     * Either supplied {@link Consumer} instance will be called exactly once.
+     *
+     * {@see {@link Topic.Subscription#subscribeNext(Consumer, Consumer)}}
      *
      * @param timeStamp timeStamp
      * @param matchId the Match ID as specified by {@link Match#getId()}
@@ -105,8 +113,8 @@ public interface MatchService {
      * @param timeDeltaListConsumer
      * @return a {@link Runnable} which may be used to cancel the pending request
      */
-    Runnable waitForDeltas(long timeStamp, String matchId,
-                           final Consumer<List<MatchTimeDelta>> timeDeltaListConsumer,
-                           final Consumer<Exception> exceptionConsumer);
+    Topic.Subscription waitForDeltas(long timeStamp, String matchId,
+                                    final Consumer<List<MatchTimeDelta>> timeDeltaListConsumer,
+                                    final Consumer<Exception> exceptionConsumer);
 
 }

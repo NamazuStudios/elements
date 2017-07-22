@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.model.TimeDelta;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import com.namazustudios.socialengine.service.MatchService;
+import com.namazustudios.socialengine.service.Topic;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -121,12 +122,12 @@ public class MatchResource {
             asyncResponse.resume(timeDelta);
         } else {
 
-            final Runnable cancel = getMatchService().waitForDeltas(
+            final Topic.Subscription subscription = getMatchService().waitForDeltas(
                 timeStamp,
                 diffList -> asyncResponse.resume(diffList),
                 exception -> asyncResponse.resume(exception));
 
-            asyncResponse.setTimeoutHandler(r -> cancel.run());
+            asyncResponse.setTimeoutHandler(r -> subscription.close());
             asyncResponse.setTimeout(min(longPollTimeout, getAsyncTimeoutLimit()), SECONDS);
 
         }
@@ -163,12 +164,12 @@ public class MatchResource {
             asyncResponse.resume(timeDelta);
         } else {
 
-            final Runnable cancel = getMatchService().waitForDeltas(
+            final Topic.Subscription subscription = getMatchService().waitForDeltas(
                     timeStamp, matchId,
                     diffList -> asyncResponse.resume(diffList),
                     exception -> asyncResponse.resume(exception));
 
-            asyncResponse.setTimeoutHandler(r -> cancel.run());
+            asyncResponse.setTimeoutHandler(r -> subscription.close());
             asyncResponse.setTimeout(min(longPollTimeout, getAsyncTimeoutLimit()), SECONDS);
 
         }

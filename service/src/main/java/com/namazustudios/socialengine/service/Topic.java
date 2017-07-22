@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service;
 
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /**
@@ -15,13 +16,67 @@ import java.util.function.Consumer;
 public interface Topic<T> {
 
     /**
-     * Listents for incoming messages on this {@link Topic}
+     * Listens for incoming messages on this {@link Topic}.
      *
      * @param tConsumer a {@link Consumer<T>} that will accept incoming messages.
      *
      * @return a {@link Runnable} which can be used to cancel the subscription.
      */
     Subscription subscribe(Consumer<T> tConsumer);
+
+    /**
+     * Similar to {@link #subscribe(Consumer)}, this will subscribe to messages.  However, this
+     * will automatically invoke {@link Subscription#close()} once the first message has been
+     * processed.
+     *
+     * One of either {@link Consumer} will be called, at most, once.
+     *
+     * @param consumer the {@link Consumer<T>} which will accept the next message
+     * @param exceptionConsumer a {@link Consumer<Exception>} instance which will handle possible exceptions invoking {@link Subscription#close()}
+     *
+     * @return a {@link Subscription} instance.  Invoking {@link Subscription#close()} a second time on this is guaranteed to have no ill-effects
+     */
+    default Subscription subscribeNext(final Consumer<T> consumer, final Consumer<Exception> exceptionConsumer) {
+
+        final AtomicReference<Topic.Subscription> subscriptionAtomicReference = new AtomicReference<>();
+
+        final Consumer<T> wrapped = t -> {
+
+            final Topic.Subscription subscription = subscriptionAtomicReference.getAndSet(null);
+
+            try {
+                if (subscription != null) {
+                    subscription.close();
+                    consumer.accept(t);
+                }
+            } catch (Exception ex) {
+                exceptionConsumer.accept(ex);
+            }
+
+        };
+
+        try {
+            subscriptionAtomicReference.set(subscribe(wrapped));
+        } catch (final Exception ex) {
+            exceptionConsumer.accept(ex);
+            return () -> {};
+        }
+
+        return () -> {
+
+            final Topic.Subscription subscription = subscriptionAtomicReference.getAndSet(null);
+
+            try {
+                if (subscription != null) {
+                    subscription.close();
+                }
+            } catch (Exception ex) {
+                exceptionConsumer.accept(ex);
+            }
+
+        };
+
+    }
 
     /**
      * Opens a connection to the underlying topic service and allows for the publication of messages
@@ -39,14 +94,14 @@ public interface Topic<T> {
     Topic<T> getSubtopicNamed(String name);
 
     /**
-     * Represents a subscription.  Can be closed later, and once closed will no loner
-     * drive calls to the associated consumer.
+     * Represents a subscription.  Once {@link #close()} has been invoked the associated
+     * {@link Consumer} will no longer receive any further calls to to its {@link Consumer#accept(Object)}
+     * method.
      */
     interface Subscription extends AutoCloseable {
 
         /**
-         * For convienience this removes the exception spec from the super interface, but
-         * expect this will throw any number of the common SocialEngine exceptions.
+         * For the sake of convenience, this omits the {@link Exception} specification.
          */
         @Override
         void close();
@@ -63,8 +118,7 @@ public interface Topic<T> {
     interface Publisher<U> extends Consumer<U>, AutoCloseable {
 
         /**
-         * For convienience this removes the exception spec from the super interface, but
-         * expect this will throw any number of the common SocialEngine exceptions.
+         * For the sake of convenience, this omits the {@link Exception} specification.
          */
         @Override
         void close();

@@ -4,7 +4,6 @@ import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.TimeDelta;
-import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -19,14 +18,10 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static java.util.Collections.singletonList;
-
 /**
  * Created by patricktwohig on 7/20/17.
  */
 public class UserMatchService implements MatchService {
-
-    private User currentUser;
 
     private Supplier<Profile> currentProfileSupplier;
 
@@ -130,7 +125,7 @@ public class UserMatchService implements MatchService {
     }
 
     @Override
-    public Runnable waitForDeltas(
+    public Topic.Subscription waitForDeltas(
             final long timeStamp,
             final Consumer<List<MatchTimeDelta>> timeDeltaListConsumer,
             final Consumer<Exception> exceptionConsumer) {
@@ -142,12 +137,18 @@ public class UserMatchService implements MatchService {
                 .getTopicForTypeNamed(MatchTimeDelta.class, MatchTimeDelta.ROOT_DELTA_TOPIC)
                 .getSubtopicNamed(profile.getId());
 
-        return waitForDeltasOnTopic(timeStamp, matchTimeDeltaTopic, timeDeltaListConsumer, exceptionConsumer);
+        return matchTimeDeltaTopic.subscribeNext(matchTimeDelta -> {
+            if (matchTimeDelta.getTimeStamp() >= timeStamp) {
+                final List<MatchTimeDelta> matchTimeDeltaList;
+                matchTimeDeltaList = getMatchDao().getDeltasForPlayerAfter(profile.getId(), timeStamp);
+                timeDeltaListConsumer.accept(matchTimeDeltaList);
+            }
+        }, exceptionConsumer);
 
     }
 
     @Override
-    public Runnable waitForDeltas(
+    public Topic.Subscription waitForDeltas(
             final long timeStamp,
             final String matchId,
             final Consumer<List<MatchTimeDelta>> timeDeltaListConsumer,
@@ -162,39 +163,13 @@ public class UserMatchService implements MatchService {
                 .getSubtopicNamed(profile.getId())
                 .getSubtopicNamed(match.getId());
 
-        return waitForDeltasOnTopic(timeStamp, matchTimeDeltaTopic, timeDeltaListConsumer, exceptionConsumer);
-
-    }
-
-    private Runnable waitForDeltasOnTopic(
-            final long timeStamp,
-            final Topic<MatchTimeDelta> matchTimeDeltaTopic,
-            final Consumer<List<MatchTimeDelta>> timeDeltaListConsumer,
-            final Consumer<Exception> exceptionConsumer) {
-
-        try {
-
-            final Topic.Subscription subscription;
-
-            subscription = matchTimeDeltaTopic.subscribe(matchTimeDelta -> {
-                if (matchTimeDelta.getTimeStamp() >= timeStamp) {
-                    final List<MatchTimeDelta> matchTimeDeltaList = singletonList(matchTimeDelta);
-                    timeDeltaListConsumer.accept(matchTimeDeltaList);
-                }
-            });
-
-            return () ->  {
-                try {
-                    subscription.close();
-                } catch (Exception ex) {
-                    exceptionConsumer.accept(ex);
-                }
-            };
-
-        } catch (Exception ex) {
-            exceptionConsumer.accept(ex);
-            return () -> {};
-        }
+        return matchTimeDeltaTopic.subscribeNext(matchTimeDelta ->  {
+            if (matchTimeDelta.getTimeStamp() >= timeStamp) {
+                final List<MatchTimeDelta> matchTimeDeltaList;
+                matchTimeDeltaList = getMatchDao().getDeltasForPlayerAfter(profile.getId(), timeStamp, matchId);
+                timeDeltaListConsumer.accept(matchTimeDeltaList);
+            }
+        }, exceptionConsumer);
 
     }
 
@@ -213,15 +188,6 @@ public class UserMatchService implements MatchService {
 
         return stringMatchTimeDelta;
 
-    }
-
-    public User getCurrentUser() {
-        return currentUser;
-    }
-
-    @Inject
-    public void setCurrentUser(User currentUser) {
-        this.currentUser = currentUser;
     }
 
     public Supplier<Profile> getCurrentProfileSupplier() {
