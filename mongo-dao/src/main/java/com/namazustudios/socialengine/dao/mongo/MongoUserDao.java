@@ -508,8 +508,8 @@ public class MongoUserDao implements UserDao {
         digest.update(passwordBytes);
 
         operations.set("salt", salt);
-        operations.set("password_hash", digest.digest());
-        operations.set("hash_algorithm", digest.getAlgorithm());
+        operations.set("passwordHash", digest.digest());
+        operations.set("hashAlgorithm", digest.getAlgorithm());
 
         final MongoUser mongoUser = getDatastore().findAndModify(query, operations);
         getObjectIndex().index(mongoUser);
