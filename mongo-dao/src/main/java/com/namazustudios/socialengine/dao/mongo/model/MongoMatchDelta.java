@@ -11,6 +11,10 @@ import org.mongodb.morphia.annotations.*;
 public class MongoMatchDelta {
 
     @Id
+    private ObjectId objectId;
+
+    @Indexed
+    @Property
     private ObjectId matchId;
 
     @Indexed
@@ -22,13 +26,18 @@ public class MongoMatchDelta {
     private long timeStamp;
 
     @Property
-    private ObjectId objectId;
-
-    @Property
     private TimeDelta.Operation operation;
 
     @Embedded
     private MongoMatch snapshot;
+
+    public ObjectId getObjectId() {
+        return objectId;
+    }
+
+    public void setObjectId(ObjectId objectId) {
+        this.objectId = objectId;
+    }
 
     public ObjectId getMatchId() {
         return matchId;
@@ -52,14 +61,6 @@ public class MongoMatchDelta {
 
     public void setTimeStamp(long timeStamp) {
         this.timeStamp = timeStamp;
-    }
-
-    public ObjectId getObjectId() {
-        return objectId;
-    }
-
-    public void setObjectId(ObjectId objectId) {
-        this.objectId = objectId;
     }
 
     public TimeDelta.Operation getOperation() {

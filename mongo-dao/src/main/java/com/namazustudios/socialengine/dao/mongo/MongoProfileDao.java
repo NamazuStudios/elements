@@ -97,13 +97,19 @@ public class MongoProfileDao implements ProfileDao {
 
     @Override
     public Profile getActiveProfile(String profileId) {
+        final MongoProfile mongoProfile = getActiveMongoProfile(profileId);
+        return getBeanMapper().map(mongoProfile, Profile.class);
+
+    }
+
+    public MongoProfile getActiveMongoProfile(String profileId) {
 
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
         final ObjectId objectId = getMongoDBUtils().parse(profileId);
 
         query.and(
-            query.criteria("active").equal(true),
-            query.criteria("_id").equal(objectId)
+                query.criteria("active").equal(true),
+                query.criteria("_id").equal(objectId)
         );
 
         final MongoProfile mongoProfile = query.get();
@@ -112,8 +118,7 @@ public class MongoProfileDao implements ProfileDao {
             throw new NotFoundException("No profile exists with id " + profileId);
         }
 
-        return getBeanMapper().map(mongoProfile, Profile.class);
-
+        return mongoProfile;
     }
 
     @Override
