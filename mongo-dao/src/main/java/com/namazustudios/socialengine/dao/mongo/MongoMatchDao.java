@@ -30,6 +30,7 @@ import org.mongodb.morphia.query.Query;
 import javax.inject.Inject;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.mongodb.morphia.query.Sort.ascending;
@@ -55,6 +56,8 @@ public class MongoMatchDao implements MatchDao {
     private ValidationHelper validationHelper;
 
     private MongoConcurrentUtils mongoConcurrentUtils;
+
+    private Function<MatchingAlgorithm, Matchmaker> matchmakerSupplierFunction;
 
     @Override
     public Match getMatchForPlayer(String playerId, String matchId) throws NotFoundException {
@@ -249,8 +252,7 @@ public class MongoMatchDao implements MatchDao {
 
     @Override
     public Matchmaker getMatchmaker(MatchingAlgorithm matchingAlgorithm) {
-        // TODO Implement basic FIFO algorithm
-        throw new NotImplementedException();
+        return getMatchmakerSupplierFunction().apply(matchingAlgorithm);
     }
 
     public MongoMatchDelta getLatestDelta(final String matchId) {
@@ -340,6 +342,15 @@ public class MongoMatchDao implements MatchDao {
     @Inject
     public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
         this.mongoConcurrentUtils = mongoConcurrentUtils;
+    }
+
+    public Function<MatchingAlgorithm, Matchmaker> getMatchmakerSupplierFunction() {
+        return matchmakerSupplierFunction;
+    }
+
+    @Inject
+    public void setMatchmakerSupplierFunction(Function<MatchingAlgorithm, Matchmaker> matchmakerSupplierFunction) {
+        this.matchmakerSupplierFunction = matchmakerSupplierFunction;
     }
 
 }
