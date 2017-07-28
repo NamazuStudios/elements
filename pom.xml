@@ -21,6 +21,7 @@
         <module>rest-api</module>
         <module>web-ui</module>
         <module>service</module>
+        <module>service-redis</module>
         <module>mongo-dao</module>
         <module>dao</module>
         <module>setup</module>
@@ -39,7 +40,6 @@
         <module>rt-guice-example</module>
         <module>rt-client</module>
         <module>docker</module>
-        <module>service-redis</module>
     </modules>
 
     <properties>

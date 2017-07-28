@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.service;
 
 import com.google.common.base.Joiner;
-import org.redisson.Redisson;
 import org.redisson.api.RPatternTopic;
 import org.redisson.api.RTopic;
+import org.redisson.api.RedissonClient;
 import org.redisson.api.listener.PatternMessageListener;
 
 import java.util.function.Consumer;
@@ -21,9 +21,9 @@ public class RedissonTopic<T> implements Topic<T> {
 
     private final String name;
 
-    private final Redisson redisson;
+    private final RedissonClient redisson;
 
-    public RedissonTopic(final Redisson redisson, final String name) {
+    public RedissonTopic(final RedissonClient redisson, final String name) {
         this.redisson = redisson;
         this.name = checkValidName(name);
     }

@@ -65,6 +65,7 @@ public class GuiceMain extends GuiceServletContextListener {
                 }
             },
             new ServicesModule(),
+            new RedisServicesModule(),
             new SecurityModule(),
             new MongoCoreModule(),
             new MongoDaoModule(),
