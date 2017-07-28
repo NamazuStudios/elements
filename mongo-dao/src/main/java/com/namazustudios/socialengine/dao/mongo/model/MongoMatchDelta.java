@@ -69,7 +69,7 @@ public class MongoMatchDelta {
      */
     public static final class Key {
 
-        @Reference
+        @Property
         private ObjectId match;
 
         @Property

@@ -7,13 +7,13 @@ import io.swagger.annotations.ApiModelProperty;
           "object (or set of objects) changes such that the client may update state accordingly.")
 public abstract class TimeDelta<IdentifierT, ModelT> {
 
+    @ApiModelProperty("The id of the object chich changed.  This must always be present and must match the snapshot's unique ID.")
+    private IdentifierT id;
+
     @ApiModelProperty(
         "The timeStamp at which the delta occurred.  This is effectively the number of edits since the " +
         "object was created.")
     private long timeStamp;
-
-    @ApiModelProperty("The id of the object chich changed.  This must always be present and must match the snapshot's unique ID.")
-    private IdentifierT id;
 
     @ApiModelProperty("The operation which changed the object.")
     private Operation operation;
