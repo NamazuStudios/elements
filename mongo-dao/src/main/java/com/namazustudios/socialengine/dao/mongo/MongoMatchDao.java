@@ -87,6 +87,24 @@ public class MongoMatchDao implements MatchDao {
         return mongoMatch;
     }
 
+    public MongoMatch getMongoMatch(final String matchId) {
+
+        final ObjectId objectId = getMongoDBUtils().parse(matchId);
+
+        final Query<MongoMatch> mongoMatchQuery;
+        mongoMatchQuery = getDatastore().createQuery(MongoMatch.class);
+        mongoMatchQuery.criteria("_id").equal(objectId);
+
+        final MongoMatch mongoMatch = mongoMatchQuery.get();
+
+        if (mongoMatch == null) {
+            throw new NotFoundException("match with id " + matchId + " not found.");
+        }
+
+        return mongoMatch;
+
+    }
+
     @Override
     public Pagination<Match> getMatchesForPlayer(String playerId, int offset, int count) {
 
