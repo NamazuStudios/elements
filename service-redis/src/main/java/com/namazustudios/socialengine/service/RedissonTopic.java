@@ -45,7 +45,7 @@ public class RedissonTopic<T> implements Topic<T> {
     @Override
     public Topic<T> getSubtopicNamed(String name) {
         final String fullName = Joiner.on(SUBTOPIC_SEPARATOR).join(this.name, checkValidName(name));
-        return new RedissonTopic<T>(redisson, name);
+        return new RedissonTopic<T>(redisson, fullName);
     }
 
     @Override
