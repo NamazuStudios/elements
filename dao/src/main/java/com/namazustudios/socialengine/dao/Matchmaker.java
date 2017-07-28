@@ -12,6 +12,8 @@ import java.util.List;
  */
 public interface Matchmaker {
 
+    int DEFAULT_MAX_CANDIDATES = 100;
+
     /**
      * Returns the {@link MatchingAlgorithm} implemented by this matchmaker.
      *
@@ -20,17 +22,29 @@ public interface Matchmaker {
     MatchingAlgorithm getAlgorithm();
 
     /**
+     * Invokes {@link #attemptToFindOpponent(Match, int)} using the {@link #DEFAULT_MAX_CANDIDATES} value.
+     *
+     * @param match the {@link Match} to use
+     * @return a {@link SuccessfulMatchTuple} representing a successful match, never null
+     * @throws NoSuitableMatchException if there is no suitable match found
+     */
+    default SuccessfulMatchTuple attemptToFindOpponent(final Match match) throws NoSuitableMatchException {
+        return attemptToFindOpponent(match, DEFAULT_MAX_CANDIDATES);
+    }
+
+    /**
      * Attempts to find an opponent for the supplied {@link Match} instance.  This will
      * query the database for suitable matches.  This will return a {@link SuccessfulMatchTuple} combining
      * the match of the player and the opponent's match.
      *
-     * @param match the {@link Match}
-     * @return a {@link SuccessfulMatchTuple} representing a successful match
+     * @param match the {@link Match} the player match
+     * @param maxCandidatesToConsider the maximum number of candidates to consider
+     * @return a {@link SuccessfulMatchTuple} representing a successful match, never null
      *
      * @throws NoSuitableMatchException if there is no suitable match found
      *
      */
-    SuccessfulMatchTuple attemptToFindOpponent(final Match match) throws NoSuitableMatchException;
+    SuccessfulMatchTuple attemptToFindOpponent(final Match match, int maxCandidatesToConsider) throws NoSuitableMatchException;
 
     /**
      * Combines a {@link Match} for both a player and an opponent.  This is used to supply

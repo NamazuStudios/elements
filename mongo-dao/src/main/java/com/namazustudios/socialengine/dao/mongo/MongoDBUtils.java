@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.min;
 import static java.util.stream.StreamSupport.stream;
 
 /**
@@ -91,7 +92,7 @@ public class MongoDBUtils {
         pagination.setOffset(offset);
         pagination.setTotal((int) query.count());
 
-        final int limit = Math.min(queryMaxResults, count);
+        final int limit = min(queryMaxResults, count);
 
         final Iterable<ModelT> userIterable;
 

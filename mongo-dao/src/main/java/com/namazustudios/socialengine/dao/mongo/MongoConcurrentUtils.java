@@ -243,7 +243,7 @@ public class MongoConcurrentUtils {
     /**
      * General exception type for a failure of an Optimistic operation.
      */
-    public class OptimistcException extends Exception {
+    public static class OptimistcException extends Exception {
 
         public OptimistcException() {}
 
@@ -269,7 +269,7 @@ public class MongoConcurrentUtils {
      * Thrown when the operation fails.  In the event an {@link MongoConcurrentUtils.CriticalOperation}
      * fails because the object has changed, this exception may be raised to re-attempt the operation.
      */
-    public class ConflictException extends OptimistcException {
+    public static class ConflictException extends OptimistcException {
 
         public ConflictException() {}
 
@@ -294,7 +294,7 @@ public class MongoConcurrentUtils {
      * Thrown when there is too much contention over a particular resource.  If an optimistic exception
      * fails too many times then this exception is raised.
      */
-    public class ContentionException extends  OptimistcException {
+    public static class ContentionException extends  OptimistcException {
 
         public ContentionException() {}
 

@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.model.match.Match;
  *
  * Created by patricktwohig on 7/27/17.
  */
-public class NoSuitableMatchException extends Exception {
+public class NoSuitableMatchException extends RuntimeException {
 
     public NoSuitableMatchException() {}
 

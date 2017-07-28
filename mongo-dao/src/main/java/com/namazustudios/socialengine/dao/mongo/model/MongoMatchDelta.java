@@ -118,6 +118,19 @@ public class MongoMatchDelta {
             return new Key(getMatch(), getSequence() + 1, timeStamp);
         }
 
+        /**
+         * Generates the next {@link Key} in the sequence.
+         *
+         * @return the next {@link Key}
+         */
+        public Key nextInSequence(long timeStamp) {
+            // A poor-man's method of compensating for clock-skew.  This is probably not that accruate
+            // but for our purposes will have to do.  If separate hosts write diffs and the clocks are
+            // slightly off this will just adjust to ensure that the write happens at the same time because
+            // the sequence (which always moves forward) will ultimately be the tiebreaker.
+            return new Key(getMatch(), getSequence() + 1, max(timeStamp, getTimeStamp()));
+        }
+
     }
 
 }

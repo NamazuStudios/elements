@@ -17,7 +17,9 @@ public class MongoFIFOMatchmaker implements Matchmaker {
     }
 
     @Override
-    public SuccessfulMatchTuple attemptToFindOpponent(Match match) throws NoSuitableMatchException {
+    public SuccessfulMatchTuple attemptToFindOpponent(
+            final Match match,
+            final int maxCandidatesToConsider) throws NoSuitableMatchException {
         throw new NotImplementedException();
     }
 

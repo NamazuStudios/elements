@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.common.collect.Streams;
 import com.mongodb.DuplicateKeyException;
-import com.mongodb.WriteResult;
 import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
@@ -34,7 +33,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.mongodb.morphia.query.Sort.ascending;
-import static org.mongodb.morphia.query.Sort.descending;
 
 /**
  * Created by patricktwohig on 7/25/17.
@@ -58,6 +56,8 @@ public class MongoMatchDao implements MatchDao {
     private MongoConcurrentUtils mongoConcurrentUtils;
 
     private Function<MatchingAlgorithm, Matchmaker> matchmakerSupplierFunction;
+
+    private MongoMatchUtils mongoMatchUtils;
 
     @Override
     public Match getMatchForPlayer(String playerId, String matchId) throws NotFoundException {
@@ -171,30 +171,34 @@ public class MongoMatchDao implements MatchDao {
     @Override
     public MatchTimeDelta deleteMatchAndLogDelta(final String playerId, final String matchId) {
 
-        final ObjectId objectId = getMongoDBUtils().parse(matchId);
-        final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
+        final MongoMatch toDelete = getMongoMatchForPlayer(playerId, matchId);
 
-        final Query<MongoMatch> query = getDatastore().createQuery(MongoMatch.class);
+        try {
+            getMongoConcurrentUtils().performOptimistic(ds -> getMongoMatchUtils().attemptLock(() -> {
 
-        query.and(
-            query.criteria("_id").equal(objectId),
-            query.criteria("player").equal(playerProfile)
-        );
+                final MongoMatch m = getMongoMatchForPlayer(playerId, matchId);
 
-        final WriteResult writeResult = getDatastore().delete(query);
+                if (m.getOpponent() == null) {
+                    ds.delete(m);
+                } else {
+                    throw new InvalidDataException("unable to delete match with opponent assigned.");
+                }
 
-        if (writeResult.getN() == 0) {
-            throw new NotFoundException("no match found for player " + playerId + " and match " + matchId);
+                return null;
+
+            }, toDelete));
+        } catch (MongoConcurrentUtils.ConflictException ex) {
+            throw new TooBusyException(ex);
         }
 
         try {
             return getMongoConcurrentUtils().performOptimisticInsert(ds -> {
 
-                final MongoMatchDelta existing = getLatestDelta(matchId);
+                final MongoMatchDelta existing = getMongoMatchUtils().getLatestDelta(matchId);
                 final MongoMatchDelta toInsert = new MongoMatchDelta();
 
                 if (existing == null) {
-                    final MongoMatchDelta.Key mongoMatchDeltaKey = new MongoMatchDelta.Key(objectId);
+                    final MongoMatchDelta.Key mongoMatchDeltaKey = new MongoMatchDelta.Key(toDelete.getObjectId());
                     toInsert.setKey(mongoMatchDeltaKey);
                 } else {
                     toInsert.setKey(existing.getKey().nextInSequence());
@@ -253,19 +257,6 @@ public class MongoMatchDao implements MatchDao {
     @Override
     public Matchmaker getMatchmaker(MatchingAlgorithm matchingAlgorithm) {
         return getMatchmakerSupplierFunction().apply(matchingAlgorithm);
-    }
-
-    public MongoMatchDelta getLatestDelta(final String matchId) {
-
-        final ObjectId objectId = getMongoDBUtils().parse(matchId);
-        final Query<MongoMatchDelta> matchTimeDeltaQuery = getDatastore().createQuery(MongoMatchDelta.class);
-
-        matchTimeDeltaQuery.order(descending("sequence")).and(
-            matchTimeDeltaQuery.criteria("_id.match").equal(objectId)
-        );
-
-        return matchTimeDeltaQuery.get();
-
     }
 
     public void validate(final Match match) {
@@ -351,6 +342,15 @@ public class MongoMatchDao implements MatchDao {
     @Inject
     public void setMatchmakerSupplierFunction(Function<MatchingAlgorithm, Matchmaker> matchmakerSupplierFunction) {
         this.matchmakerSupplierFunction = matchmakerSupplierFunction;
+    }
+
+    public MongoMatchUtils getMongoMatchUtils() {
+        return mongoMatchUtils;
+    }
+
+    @Inject
+    public void setMongoMatchUtils(MongoMatchUtils mongoMatchUtils) {
+        this.mongoMatchUtils = mongoMatchUtils;
     }
 
 }
