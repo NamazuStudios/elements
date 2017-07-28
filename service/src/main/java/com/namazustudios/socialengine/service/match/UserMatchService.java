@@ -1,12 +1,15 @@
 package com.namazustudios.socialengine.service.match;
 
 import com.namazustudios.socialengine.dao.MatchDao;
+import com.namazustudios.socialengine.dao.Matchmaker;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.TimeDelta;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchTimeDelta;
+import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.MatchService;
 import com.namazustudios.socialengine.service.Topic;
@@ -65,20 +68,50 @@ public class UserMatchService implements MatchService {
             throw new InvalidDataException("must not specifcy opponent when creating a match.");
         }
 
-        final MatchDao.TimeDeltaTuple tuple = getMatchDao().createMatchAndLogDelta(match);
+        final MatchDao.TimeDeltaTuple matchCreationTuple = getMatchDao().createMatchAndLogDelta(match);
 
         final Topic<MatchTimeDelta> matchTimeDeltaTopic;
 
         matchTimeDeltaTopic = getTopicService()
             .getTopicForTypeNamed(MatchTimeDelta.class, MatchTimeDelta.ROOT_DELTA_TOPIC)
             .getSubtopicNamed(profile.getId())
-            .getSubtopicNamed(tuple.getTimeDelta().getId());
+            .getSubtopicNamed(matchCreationTuple.getTimeDelta().getId());
 
         try (final Topic.Publisher<MatchTimeDelta> matchTimeDeltaPublisher = matchTimeDeltaTopic.getPublisher()) {
-            matchTimeDeltaPublisher.accept(tuple.getTimeDelta());
+            matchTimeDeltaPublisher.accept(matchCreationTuple.getTimeDelta());
         }
 
-        return redactOpponentUser(tuple.getMatch());
+        final Matchmaker matchmaker = getMatchDao().getMatchmaker(MatchingAlgorithm.FIFO);
+
+        try {
+            final Matchmaker.SuccessfulMatchTuple successfulMatchTuple;
+            successfulMatchTuple = matchmaker.attemptToFindOpponent(matchCreationTuple.getMatch());
+            return handleSuccessfulMatch(successfulMatchTuple);
+        } catch (NoSuitableMatchException ex) {
+            return redactOpponentUser(matchCreationTuple.getMatch());
+        }
+
+    }
+
+    private Match handleSuccessfulMatch(Matchmaker.SuccessfulMatchTuple successfulMatchTuple) {
+
+        for(final MatchTimeDelta matchTimeDelta : successfulMatchTuple.getMatchDeltas()) {
+
+            final Topic<MatchTimeDelta> matchTimeDeltaTopic;
+            final Profile profile = matchTimeDelta.getSnapshot().getPlayer();
+
+            matchTimeDeltaTopic = getTopicService()
+                    .getTopicForTypeNamed(MatchTimeDelta.class, MatchTimeDelta.ROOT_DELTA_TOPIC)
+                    .getSubtopicNamed(profile.getId())
+                    .getSubtopicNamed(matchTimeDelta.getId());
+
+            try (final Topic.Publisher<MatchTimeDelta> matchTimeDeltaPublisher = matchTimeDeltaTopic.getPublisher()) {
+                matchTimeDeltaPublisher.accept(matchTimeDelta);
+            }
+
+        }
+
+        return redactOpponentUser(successfulMatchTuple.getPlayerMatch());
 
     }
 

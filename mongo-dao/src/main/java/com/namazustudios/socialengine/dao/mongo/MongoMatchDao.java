@@ -5,18 +5,17 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
 import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.MatchDao;
+import com.namazustudios.socialengine.dao.Matchmaker;
 import com.namazustudios.socialengine.dao.mongo.model.MongoMatch;
 import com.namazustudios.socialengine.dao.mongo.model.MongoMatchDelta;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
-import com.namazustudios.socialengine.exception.BadQueryException;
-import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.exception.TooBusyException;
+import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchTimeDelta;
+import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -246,6 +245,12 @@ public class MongoMatchDao implements MatchDao {
             .map(mongoMatchDelta -> getDozerMapper().map(mongoMatchDelta, MatchTimeDelta.class))
             .collect(Collectors.toList());
 
+    }
+
+    @Override
+    public Matchmaker getMatchmaker(MatchingAlgorithm matchingAlgorithm) {
+        // TODO Implement basic FIFO algorithm
+        throw new NotImplementedException();
     }
 
     public MongoMatchDelta getLatestDelta(final String matchId) {

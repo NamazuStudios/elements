@@ -1,10 +1,12 @@
 package com.namazustudios.socialengine.dao;
 
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.TimeDelta;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchTimeDelta;
+import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
 
 import java.util.List;
@@ -98,6 +100,16 @@ public interface MatchDao {
      * @return a {@link List<MatchTimeDelta>} instance which represents all {@link MatchTimeDelta}s which satisfy the criteria.
      */
     List<MatchTimeDelta> getDeltasForPlayerAfter(String playerId, long timeStamp, String matchId);
+
+    /**
+     * Returns a {@link Matchmaker} instance for the supplied {@link MatchingAlgorithm}.
+     *
+     * @param matchingAlgorithm the requested {@link MatchingAlgorithm}
+     * @return a {@link Matchmaker}
+     *
+     * @throws {@link NotImplementedException} if the supplied algorithm is not supported.
+     */
+    Matchmaker getMatchmaker(final MatchingAlgorithm matchingAlgorithm);
 
     /**
      * Used as the return value for the various methods tracking {@link TimeDelta} isntances.

@@ -12,7 +12,7 @@ public abstract class TimeDelta<IdentifierT, ModelT> {
         "object was created.")
     private long timeStamp;
 
-    @ApiModelProperty("The id of the object.  This must always be present.")
+    @ApiModelProperty("The id of the object chich changed.  This must always be present and must match the snapshot's unique ID.")
     private IdentifierT id;
 
     @ApiModelProperty("The operation which changed the object.")
