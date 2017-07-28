@@ -12,7 +12,8 @@
     <scm>
         <url>ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git</url>
         <connection>scm:git:ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git</connection>
-        <developerConnection>scm:git:ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git</developerConnection>
+        <developerConnection>scm:git:ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git
+        </developerConnection>
     </scm>
 
     <modules>
@@ -38,6 +39,7 @@
         <module>rt-guice-example</module>
         <module>rt-client</module>
         <module>docker</module>
+        <module>service-redis</module>
     </modules>
 
     <properties>
@@ -100,6 +102,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>1.4</version>
                 <executions>
                     <execution>
                         <phase>generate-resources</phase>

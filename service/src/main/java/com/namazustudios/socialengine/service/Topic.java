@@ -1,7 +1,12 @@
 package com.namazustudios.socialengine.service;
 
+import com.namazustudios.socialengine.Constants;
+
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
+
+import static com.google.common.base.Strings.nullToEmpty;
 
 /**
  * Represents a system-wide topic which can be used as a place to publish and subscribe to messages.  The simple
@@ -14,6 +19,8 @@ import java.util.function.Consumer;
  * Created by patricktwohig on 7/20/17.
  */
 public interface Topic<T> {
+
+    Pattern VALID_NAME_PATTERN = Pattern.compile(Constants.Regexp.WORD_ONLY);
 
     /**
      * Listens for incoming messages on this {@link Topic}.
@@ -121,8 +128,28 @@ public interface Topic<T> {
          * For the sake of convenience, this omits the {@link Exception} specification.
          */
         @Override
-        void close();
+        default void close() {};
 
     }
+
+    /**
+     * Checks if the supplied {@link Topic} name is valid.
+     *
+     * @param name the name to check
+     * @return the value passed to the function
+     * @throws IllegalArgumentException if the name is not valid
+     */
+    static String checkValidName(String name) {
+
+        name = nullToEmpty(name).trim();
+
+        if (!VALID_NAME_PATTERN.matcher(name).matches()) {
+            throw new IllegalArgumentException(name + " is not a valid topic name.");
+        }
+
+        return name;
+
+    }
+
 
 }

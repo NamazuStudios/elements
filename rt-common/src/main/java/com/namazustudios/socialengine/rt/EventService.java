@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import javax.validation.Payload;
 import java.util.function.Consumer;
 
 /**

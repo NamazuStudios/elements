@@ -1,5 +1,9 @@
 package com.namazustudios.socialengine.service;
 
+import com.namazustudios.socialengine.Constants;
+
+import java.util.regex.Pattern;
+
 /**
  * Entry point for manging {@link Topic} instances in the system.  {@link Topic}s are
  * a means for the system, as a whole, to publish asynchronous messages.

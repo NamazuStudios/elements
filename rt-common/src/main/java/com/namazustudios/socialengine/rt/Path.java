@@ -29,6 +29,8 @@ public final class Path implements Comparable<Path> {
      */
     public static final String WILDCARD = "*";
 
+    private static final Pattern VALID_PATH = Pattern.compile("[\\w*]+");
+
     private final List<String> components;
 
     // Kind of confusing, but this indicates the maximum index at which the
@@ -63,10 +65,19 @@ public final class Path implements Comparable<Path> {
      * @param components the path components
      */
     public Path(final List<String> components) {
+
         final int idx = components.indexOf(WILDCARD);
+
         wildcard = idx >= 0;
         maxCompareIndex = wildcard ? idx : components.size();
         this.components = new ImmutableList.Builder<String>().addAll(components).build();
+
+        this.components.forEach(c -> {
+            if (!VALID_PATH.matcher(c).matches()) {
+                throw new IllegalArgumentException(c + " has invalid characters");
+            }
+        });
+
     }
 
     /**

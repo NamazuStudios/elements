@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.handler;
 
+import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.*;
 
 import javax.inject.Inject;

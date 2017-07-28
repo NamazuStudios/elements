@@ -5,6 +5,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.mina.guice.MinaDefaultClientModule;
 import org.slf4j.Logger;

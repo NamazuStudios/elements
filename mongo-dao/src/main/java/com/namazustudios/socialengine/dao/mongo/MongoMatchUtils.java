@@ -105,7 +105,13 @@ public class MongoMatchUtils {
                 continue;
             }
 
-            return attemptToPairCandidates(playerMatch, candidateMatch);
+            try {
+                return attemptToPairCandidates(playerMatch, candidateMatch);
+            } catch (NoSuitableMatchException ex) {
+                // We keep attempting until we have exhausted all possible options
+                // in the supplied list.
+                continue;
+            }
 
         }
 
@@ -177,7 +183,6 @@ public class MongoMatchUtils {
         } else if (playerMatch.getOpponent() != null || opponentMatch.getOpponent() != null) {
             throw new NoSuitableMatchException("player or opponent already matched");
         }
-
 
         final long now = currentTimeMillis();
 

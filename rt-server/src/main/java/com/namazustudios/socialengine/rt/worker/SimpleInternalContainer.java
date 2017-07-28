@@ -1,9 +1,8 @@
 package com.namazustudios.socialengine.rt.worker;
 
+import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.handler.SimpleHandlerContainer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
