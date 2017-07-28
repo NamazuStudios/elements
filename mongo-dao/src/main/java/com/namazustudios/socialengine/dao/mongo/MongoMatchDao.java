@@ -1,11 +1,18 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.google.common.collect.Streams;
+import com.mongodb.DuplicateKeyException;
+import com.mongodb.WriteResult;
+import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoMatch;
+import com.namazustudios.socialengine.dao.mongo.model.MongoMatchDelta;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.BadQueryException;
+import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.match.Match;
@@ -22,7 +29,12 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
+import java.sql.Timestamp;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.mongodb.morphia.query.Sort.ascending;
+import static org.mongodb.morphia.query.Sort.descending;
 
 /**
  * Created by patricktwohig on 7/25/17.
@@ -41,8 +53,17 @@ public class MongoMatchDao implements MatchDao {
 
     private StandardQueryParser standardQueryParser;
 
+    private ValidationHelper validationHelper;
+
+    private MongoConcurrentUtils mongoConcurrentUtils;
+
     @Override
     public Match getMatchForPlayer(String playerId, String matchId) throws NotFoundException {
+        final MongoMatch mongoMatch = getMongoMatchForPlayer(playerId, matchId);
+        return getDozerMapper().map(mongoMatch, Match.class);
+    }
+
+    public MongoMatch getMongoMatchForPlayer(String playerId, String matchId) {
 
         final ObjectId objectId = getMongoDBUtils().parse(matchId);
         final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
@@ -51,10 +72,9 @@ public class MongoMatchDao implements MatchDao {
         mongoMatchQuery = getDatastore().createQuery(MongoMatch.class);
 
         mongoMatchQuery.and(
-            mongoMatchQuery.criteria("_id").equal(objectId),
-            mongoMatchQuery.criteria("player").equal(playerProfile)
+                mongoMatchQuery.criteria("_id").equal(objectId),
+                mongoMatchQuery.criteria("player").equal(playerProfile)
         );
-
 
         final MongoMatch mongoMatch = mongoMatchQuery.get();
 
@@ -62,8 +82,7 @@ public class MongoMatchDao implements MatchDao {
             throw new NotFoundException("match with id " + matchId + " not found.");
         }
 
-        return getDozerMapper().map(mongoMatch, Match.class);
-
+        return mongoMatch;
     }
 
     @Override
@@ -104,22 +123,146 @@ public class MongoMatchDao implements MatchDao {
 
     @Override
     public TimeDeltaTuple createMatchAndLogDelta(Match match) {
-        return null;
+
+        validate(match);
+
+        // Just checks to see if it's
+        getMongoProfileDao().getActiveMongoProfile(match.getPlayer().getId());
+
+        final MongoMatch mongoMatch = getDozerMapper().map(match, MongoMatch.class);
+
+        final Timestamp now = new Timestamp(System.currentTimeMillis());
+        mongoMatch.setLastUpdatedTimestamp(now);
+
+        try {
+            getDatastore().save(mongoMatch);
+            getObjectIndex().index(mongoMatch);
+        } catch (DuplicateKeyException ex) {
+            throw new DuplicateException(ex);
+        }
+
+        final MongoMatchDelta mongoMatchDelta = new MongoMatchDelta();
+        final MongoMatchDelta.Key mongoMatchDeltaKey = new MongoMatchDelta.Key(mongoMatch);
+
+        mongoMatchDelta.setKey(mongoMatchDeltaKey);
+        mongoMatchDelta.setOperation(MatchTimeDelta.Operation.CREATED);
+        mongoMatchDelta.setSnapshot(mongoMatch);
+
+        getMongoDBUtils().perform(ds -> ds.save(mongoMatchDelta));
+
+        return new TimeDeltaTuple() {
+
+            @Override
+            public Match getMatch() {
+                return getDozerMapper().map(mongoMatch, Match.class);
+            }
+
+            @Override
+            public MatchTimeDelta getTimeDelta() {
+                return getDozerMapper().map(mongoMatchDelta, MatchTimeDelta.class);
+            }
+
+        };
+
     }
 
     @Override
-    public MatchTimeDelta deleteMatchAndLogDelta(String playerId, String matchId) {
-        return null;
+    public MatchTimeDelta deleteMatchAndLogDelta(final String playerId, final String matchId) {
+
+        final ObjectId objectId = getMongoDBUtils().parse(matchId);
+        final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
+
+        final Query<MongoMatch> query = getDatastore().createQuery(MongoMatch.class);
+
+        query.and(
+            query.criteria("_id").equal(objectId),
+            query.criteria("player").equal(playerProfile)
+        );
+
+        final WriteResult writeResult = getDatastore().delete(query);
+
+        if (writeResult.getN() == 0) {
+            throw new NotFoundException("no match found for player " + playerId + " and match " + matchId);
+        }
+
+        try {
+            return getMongoConcurrentUtils().performOptimisticInsert(ds -> {
+
+                final MongoMatchDelta existing = getLatestDelta(matchId);
+                final MongoMatchDelta toInsert = new MongoMatchDelta();
+
+                if (existing == null) {
+                    final MongoMatchDelta.Key mongoMatchDeltaKey = new MongoMatchDelta.Key(objectId);
+                    toInsert.setKey(mongoMatchDeltaKey);
+                } else {
+                    toInsert.setKey(existing.getKey().nextInSequence());
+                }
+
+                toInsert.setOperation(MatchTimeDelta.Operation.REMOVED);
+                toInsert.setSnapshot(null);
+
+                getDatastore().save(toInsert);
+
+                return getDozerMapper().map(toInsert, MatchTimeDelta.class);
+
+            });
+        } catch (MongoConcurrentUtils.ConflictException e) {
+            throw new TooBusyException(e);
+        }
+
     }
 
     @Override
     public List<MatchTimeDelta> getDeltasForPlayerAfter(String playerId, long timeStamp) {
-        return null;
+
+        final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
+        final Query<MongoMatchDelta> matchTimeDeltaQuery = getDatastore().createQuery(MongoMatchDelta.class);
+
+        matchTimeDeltaQuery.order(ascending("sequence")).and(
+            matchTimeDeltaQuery.criteria("_id.timeStamp").greaterThanOrEq(timeStamp),
+            matchTimeDeltaQuery.criteria("snapshot.player").equal(playerProfile)
+        );
+
+        return Streams.stream(matchTimeDeltaQuery)
+            .map(mongoMatchDelta -> getDozerMapper().map(mongoMatchDelta, MatchTimeDelta.class))
+            .collect(Collectors.toList());
+
     }
 
     @Override
     public List<MatchTimeDelta> getDeltasForPlayerAfter(String playerId, long timeStamp, String matchId) {
-        return null;
+
+        final MongoMatch mongoMatch = getMongoMatchForPlayer(playerId, matchId);
+        final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
+        final Query<MongoMatchDelta> matchTimeDeltaQuery = getDatastore().createQuery(MongoMatchDelta.class);
+
+        matchTimeDeltaQuery.order(ascending("sequence")).and(
+            matchTimeDeltaQuery.criteria("_id.match").equal(mongoMatch.getObjectId()),
+            matchTimeDeltaQuery.criteria("_id.timeStamp").greaterThanOrEq(timeStamp),
+            matchTimeDeltaQuery.criteria("snapshot.player").equal(playerProfile)
+        );
+
+        return Streams.stream(matchTimeDeltaQuery)
+            .map(mongoMatchDelta -> getDozerMapper().map(mongoMatchDelta, MatchTimeDelta.class))
+            .collect(Collectors.toList());
+
+    }
+
+    public MongoMatchDelta getLatestDelta(final String matchId) {
+
+        final ObjectId objectId = getMongoDBUtils().parse(matchId);
+        final Query<MongoMatchDelta> matchTimeDeltaQuery = getDatastore().createQuery(MongoMatchDelta.class);
+
+        matchTimeDeltaQuery.order(descending("sequence")).and(
+            matchTimeDeltaQuery.criteria("_id.match").equal(objectId)
+        );
+
+        return matchTimeDeltaQuery.get();
+
+    }
+
+    public void validate(final Match match) {
+        getValidationHelper().validateModel(match);
     }
 
     public AdvancedDatastore getDatastore() {
@@ -174,6 +317,24 @@ public class MongoMatchDao implements MatchDao {
     @Inject
     public void setStandardQueryParser(StandardQueryParser standardQueryParser) {
         this.standardQueryParser = standardQueryParser;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
+    }
+
+    public MongoConcurrentUtils getMongoConcurrentUtils() {
+        return mongoConcurrentUtils;
+    }
+
+    @Inject
+    public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
+        this.mongoConcurrentUtils = mongoConcurrentUtils;
     }
 
 }

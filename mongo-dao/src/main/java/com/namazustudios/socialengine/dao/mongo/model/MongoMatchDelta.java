@@ -3,27 +3,34 @@ package com.namazustudios.socialengine.dao.mongo.model;
 import com.namazustudios.socialengine.model.TimeDelta;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
+import org.mongodb.morphia.utils.IndexType;
+
+import static java.lang.Math.max;
+import static java.lang.System.currentTimeMillis;
 
 /**
  * Created by patricktwohig on 7/21/17.
  */
 @Entity(value = "match_time_delta", noClassnameStored = true)
+@Indexes({
+    @Index(fields = @Field(value = "_id.match")),
+    @Index(fields = @Field(value = "_id.sequence", type = IndexType.ASC)),
+    @Index(fields = @Field(value = "_id.sequence", type = IndexType.DESC)),
+    @Index(fields = @Field(value = "_id.timeStamp"), options = @IndexOptions(expireAfterSeconds = MongoMatchDelta.MATCH_DELTA_EXPIRATION_SECONDS)),
+    @Index(fields = @Field(value = "snapshot.player"))
+})
 public class MongoMatchDelta {
 
+    /**
+     * The amount of seconds a delta will be available.  This is set to something considerably
+     * larger than what will ever be practically necessary, but allows clients to read a history
+     * of the associated {@link MongoMatch} in order to sync state appropriately.  In reality
+     * a {@link MongoMatchDelta} should only need to live for a few seconds.
+     */
+    public static final int MATCH_DELTA_EXPIRATION_SECONDS = 5 * 60;
+
     @Id
-    private ObjectId objectId;
-
-    @Indexed
-    @Property
-    private ObjectId matchId;
-
-    @Indexed
-    @Property
-    private int sequence;
-
-    @Indexed
-    @Property
-    private long timeStamp;
+    private Key key;
 
     @Property
     private TimeDelta.Operation operation;
@@ -31,36 +38,12 @@ public class MongoMatchDelta {
     @Embedded
     private MongoMatch snapshot;
 
-    public ObjectId getObjectId() {
-        return objectId;
+    public Key getKey() {
+        return key;
     }
 
-    public void setObjectId(ObjectId objectId) {
-        this.objectId = objectId;
-    }
-
-    public ObjectId getMatchId() {
-        return matchId;
-    }
-
-    public void setMatchId(ObjectId matchId) {
-        this.matchId = matchId;
-    }
-
-    public int getSequence() {
-        return sequence;
-    }
-
-    public void setSequence(int sequence) {
-        this.sequence = sequence;
-    }
-
-    public long getTimeStamp() {
-        return timeStamp;
-    }
-
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
+    public void setKey(Key key) {
+        this.key = key;
     }
 
     public TimeDelta.Operation getOperation() {
@@ -79,11 +62,62 @@ public class MongoMatchDelta {
         this.snapshot = snapshot;
     }
 
-    @PostLoad
-    public void syncSnapshot() {
-        if (getSnapshot() != null) {
-            getSnapshot().setObjectId(getMatchId());
+    /**
+     * A compound key type used to ensure only one delta per sequence and timestamp exists.
+     * This supports the ability to easily and quickly increment the existing sequence number
+     * and move to the next {@link MongoMatchDelta} in the sequence.
+     */
+    public static final class Key {
+
+        @Reference
+        private ObjectId match;
+
+        @Property
+        private int sequence;
+
+        @Property
+        private long timeStamp;
+
+        public Key(MongoMatch match) {
+            this(match.getObjectId(), 0, currentTimeMillis());
         }
+
+        public Key(ObjectId match) {
+            this(match, 0, currentTimeMillis());
+        }
+
+        public Key(ObjectId match, int sequence, long timeStamp) {
+            this.match = match;
+            this.sequence = sequence;
+            this.timeStamp = timeStamp;
+        }
+
+        public ObjectId getMatch() {
+            return match;
+        }
+
+        public int getSequence() {
+            return sequence;
+        }
+
+        public long getTimeStamp() {
+            return timeStamp;
+        }
+
+        /**
+         * Generates the next {@link Key} in the sequence.
+         *
+         * @return the next {@link Key}
+         */
+        public Key nextInSequence() {
+            // A poor-man's method of compensating for clock-skew.  This is probably not that accruate
+            // but for our purposes will have to do.  If separate hosts write diffs and the clocks are
+            // slightly off this will just adjust to ensure that the write happens at the same time because
+            // the sequence (which always moves forward) will ultimately be the tiebreaker.
+            final long timeStamp = max(currentTimeMillis(), getTimeStamp());
+            return new Key(getMatch(), getSequence() + 1, timeStamp);
+        }
+
     }
 
 }

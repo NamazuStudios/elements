@@ -6,6 +6,8 @@ import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
+import java.sql.Timestamp;
+
 /**
  * Created by patricktwohig on 7/21/17.
  */
@@ -36,9 +38,9 @@ public class MongoMatch {
     @Property
     private MongoProfile opponent;
 
-    private String gameId;
-
-    private long lastUpdatedTimestamp;
+    @Indexed
+    @Property
+    private Timestamp lastUpdatedTimestamp;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -64,19 +66,11 @@ public class MongoMatch {
         this.opponent = opponent;
     }
 
-    public String getGameId() {
-        return gameId;
-    }
-
-    public void setGameId(String gameId) {
-        this.gameId = gameId;
-    }
-
-    public long getLastUpdatedTimestamp() {
+    public Timestamp getLastUpdatedTimestamp() {
         return lastUpdatedTimestamp;
     }
 
-    public void setLastUpdatedTimestamp(long lastUpdatedTimestamp) {
+    public void setLastUpdatedTimestamp(Timestamp lastUpdatedTimestamp) {
         this.lastUpdatedTimestamp = lastUpdatedTimestamp;
     }
 

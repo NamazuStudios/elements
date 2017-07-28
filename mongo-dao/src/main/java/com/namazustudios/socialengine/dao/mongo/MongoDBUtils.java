@@ -73,8 +73,8 @@ public class MongoDBUtils {
 
     /**
      * Transforms the given {@link Query} to the resulting {@link Pagination}.
-     *
-     * @param query the query
+            *
+            * @param query the query
      * @param offset the offset
      * @param count the count
      * @param function the function to transform the values

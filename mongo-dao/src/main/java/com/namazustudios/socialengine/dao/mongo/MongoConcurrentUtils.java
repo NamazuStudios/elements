@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.mongodb.MongoException;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
@@ -75,6 +76,20 @@ public class MongoConcurrentUtils {
          */
         ReturnT call();
 
+    }
+
+    public <ReturnT> ReturnT performOptimisticInsert(final CriticalOperation<ReturnT> criticalOperation) throws ConflictException {
+        return performOptimistic(ds -> {
+            try {
+                return criticalOperation.attempt(ds);
+            } catch (MongoException ex) {
+                if (ex.getCode() == 11000) {
+                    throw new ContentionException(ex);
+                } else {
+                    throw ex;
+                }
+            }
+        });
     }
 
     /**

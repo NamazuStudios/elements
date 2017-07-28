@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service.match;
 
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.TimeDelta;
 import com.namazustudios.socialengine.model.match.Match;
@@ -60,6 +61,8 @@ public class UserMatchService implements MatchService {
             match.setOpponent(profile);
         } else if (!Objects.equals(profile, match.getPlayer())) {
             throw new ForbiddenException("player must match current profile");
+        } else if (match.getOpponent() != null) {
+            throw new InvalidDataException("must not specifcy opponent when creating a match.");
         }
 
         final MatchDao.TimeDeltaTuple tuple = getMatchDao().createMatchAndLogDelta(match);

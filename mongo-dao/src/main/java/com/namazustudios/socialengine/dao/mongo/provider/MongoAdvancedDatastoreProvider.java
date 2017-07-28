@@ -38,7 +38,9 @@ public class MongoAdvancedDatastoreProvider implements Provider<AdvancedDatastor
                 MongoShortLink.class,
                 MongoSocialCampaign.class,
                 MongoSteamEntrant.class,
-                MongoUser.class
+                MongoUser.class,
+                MongoMatch.class,
+                MongoMatchDelta.class
         );
 
         final MongoClient mongoClient = mongoProvider.get();
