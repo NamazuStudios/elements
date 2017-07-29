@@ -24,6 +24,7 @@ import java.util.List;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static java.lang.Math.min;
+import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -127,8 +128,12 @@ public class MatchResource {
                 diffList -> asyncResponse.resume(diffList),
                 exception -> asyncResponse.resume(exception));
 
-            asyncResponse.setTimeoutHandler(r -> subscription.close());
-            asyncResponse.setTimeout(min(longPollTimeout, getAsyncTimeoutLimit()), SECONDS);
+            asyncResponse.setTimeoutHandler(r -> {
+                subscription.close();
+                r.resume(emptyList());
+            });
+
+            asyncResponse.setTimeout(calculateLongPollTimeout(longPollTimeout), SECONDS);
 
         }
 
@@ -165,15 +170,23 @@ public class MatchResource {
         } else {
 
             final Topic.Subscription subscription = getMatchService().waitForDeltas(
-                    timeStamp, matchId,
-                    diffList -> asyncResponse.resume(diffList),
-                    exception -> asyncResponse.resume(exception));
+                timeStamp, matchId,
+                diffList -> asyncResponse.resume(diffList),
+                exception -> asyncResponse.resume(exception));
 
-            asyncResponse.setTimeoutHandler(r -> subscription.close());
-            asyncResponse.setTimeout(min(longPollTimeout, getAsyncTimeoutLimit()), SECONDS);
+            asyncResponse.setTimeoutHandler(r -> {
+                subscription.close();
+                r.resume(emptyList());
+            });
+
+            asyncResponse.setTimeout(calculateLongPollTimeout(longPollTimeout), SECONDS);
 
         }
 
+    }
+
+    private long calculateLongPollTimeout(final long longPollTimeout) {
+        return getAsyncTimeoutLimit() == 0 ? longPollTimeout : min(getAsyncTimeoutLimit(), longPollTimeout);
     }
 
     @POST
@@ -201,13 +214,13 @@ public class MatchResource {
     }
 
     @DELETE
-    @Path("{profileId}")
+    @Path("{matchId}")
     @ApiOperation(value = "Deletes a Match",
         notes = "Deletes and permanently removes the Match fromt he server.  This effectively " +
                 "will cancel any pending request for a match.  If a game is currently being played " +
                 "agaist the match, the server may reject the request to delete the match until the game " +
                 "concludes.")
-    public void deleteMatch(@PathParam("profileId") final String matchId) {
+    public void deleteMatch(@PathParam("matchId") final String matchId) {
         getMatchService().deleteMatch(matchId);
     }
 

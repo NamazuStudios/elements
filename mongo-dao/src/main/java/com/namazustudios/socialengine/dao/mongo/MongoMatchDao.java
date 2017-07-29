@@ -242,7 +242,7 @@ public class MongoMatchDao implements MatchDao {
         final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
         final Query<MongoMatchDelta> matchTimeDeltaQuery = getDatastore().createQuery(MongoMatchDelta.class);
 
-        matchTimeDeltaQuery.order(ascending("sequence")).and(
+        matchTimeDeltaQuery.order(ascending("_id.sequence")).and(
             matchTimeDeltaQuery.criteria("_id.timeStamp").greaterThanOrEq(timeStamp),
             matchTimeDeltaQuery.criteria("snapshot.player").equal(playerProfile)
         );

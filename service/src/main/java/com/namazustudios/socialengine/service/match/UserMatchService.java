@@ -168,10 +168,9 @@ public class UserMatchService implements MatchService {
 
         final Profile profile = getCurrentProfileSupplier().get();
 
-        final Topic<MatchTimeDelta> matchTimeDeltaTopic;
-        matchTimeDeltaTopic = getTopicService()
-                .getTopicForTypeNamed(MatchTimeDelta.class, MatchTimeDelta.ROOT_DELTA_TOPIC)
-                .getSubtopicNamed(profile.getId());
+        final Topic<MatchTimeDelta> matchTimeDeltaTopic = getTopicService()
+            .getTopicForTypeNamed(MatchTimeDelta.class, MatchTimeDelta.ROOT_DELTA_TOPIC)
+            .getSubtopicNamed(profile.getId());
 
         return matchTimeDeltaTopic.subscribeNext(matchTimeDelta -> {
             if (matchTimeDelta.getTimeStamp() >= timeStamp) {
