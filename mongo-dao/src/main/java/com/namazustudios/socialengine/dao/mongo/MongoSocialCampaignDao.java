@@ -4,29 +4,22 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.mongodb.DuplicateKeyException;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.SocialCampaignDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoBasicEntrant;
-import com.namazustudios.socialengine.dao.mongo.model.MongoShortLink;
 import com.namazustudios.socialengine.dao.mongo.model.MongoSocialCampaign;
-import com.namazustudios.socialengine.dao.mongo.model.MongoSteamEntrant;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.exception.TooBusyException;
+import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.*;
-import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by patricktwohig on 3/26/15.
@@ -135,112 +128,12 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
 
     @Override
     public SocialCampaignEntry submitEntrant(final String campaign, final BasicEntrantProfile entrant) {
-
-        validate(entrant);
-
-        final MongoSocialCampaign mongoSocialCampaign = datastore.get(MongoSocialCampaign.class, campaign);
-
-        if (mongoSocialCampaign == null) {
-            throw new NotFoundException("Social campaign " + campaign + " was not found.");
-        }
-
-        final MongoConcurrentUtils.Once<MongoShortLink> mongoShortLinkOnce = mongoConcurrentUtils.once(() -> mongoShortLinkDao.createMongoShortLinkFromURL(mongoSocialCampaign.getLinkUrl()));
-
-        try {
-
-            final Query<MongoBasicEntrant> query = datastore.createQuery(MongoBasicEntrant.class);
-            query.filter("email = ", entrant.getEmail());
-
-            return mongoConcurrentUtils.performOptimisticUpsert(query, new MongoConcurrentUtils.CriticalOperationWithModel<SocialCampaignEntry, MongoBasicEntrant>() {
-                @Override
-                public SocialCampaignEntry attempt(AdvancedDatastore datastore, MongoBasicEntrant model) throws MongoConcurrentUtils.ContentionException {
-
-                    model.setSalutation(entrant.getSalutation());
-                    model.setFirstName(entrant.getFirstName());
-                    model.setLastName(entrant.getLastName());
-
-                    final Map<String, MongoShortLink> shortLinksByCampaign;
-
-                    if (model.getShortLinksByCampaign() == null) {
-                        shortLinksByCampaign = Maps.newHashMap();
-                    } else {
-                        shortLinksByCampaign = new HashMap<>(model.getShortLinksByCampaign());
-                    }
-
-                    MongoShortLink mongoShortLink = shortLinksByCampaign.get(mongoSocialCampaign.getObjectId());
-
-                    if (mongoShortLink == null) {
-                        mongoShortLink = mongoShortLinkOnce.call();
-                        shortLinksByCampaign.put(mongoSocialCampaign.getObjectId(), mongoShortLink);
-                    }
-
-                    final SocialCampaignEntry socialCampaignEntry = new SocialCampaignEntry();
-                    socialCampaignEntry.setShortLink(mongoShortLinkDao.transform(mongoShortLink));
-                    return socialCampaignEntry;
-
-                }
-            });
-
-        } catch (MongoConcurrentUtils.ConflictException ex) {
-            throw new TooBusyException(ex);
-        }
-
+        throw new NotImplementedException();
     }
 
     @Override
     public SocialCampaignEntry submitEntrant(final String campaign, final SteamEntrantProfile entrant) {
-        final MongoSocialCampaign mongoSocialCampaign = datastore.get(MongoSocialCampaign.class, campaign);
-
-        if (mongoSocialCampaign == null) {
-            throw new NotFoundException("Social campaign " + campaign + " was not found.");
-        }
-
-        validate(entrant);
-
-        final MongoConcurrentUtils.Once<MongoShortLink> mongoShortLinkOnce = mongoConcurrentUtils.once(() -> mongoShortLinkDao.createMongoShortLinkFromURL(mongoSocialCampaign.getLinkUrl()));
-
-        try {
-
-            final MongoSteamEntrant mongoSteamEntrant = new MongoSteamEntrant();
-
-            final Query<MongoSteamEntrant> query = datastore.createQuery(MongoSteamEntrant.class);
-            query.filter("email = ", entrant.getEmail());
-
-            return mongoConcurrentUtils.performOptimisticUpsert(query, new MongoConcurrentUtils.CriticalOperationWithModel<SocialCampaignEntry, MongoSteamEntrant>() {
-                @Override
-                public SocialCampaignEntry attempt(AdvancedDatastore datastore, MongoSteamEntrant model) throws MongoConcurrentUtils.ContentionException {
-
-                    model.setSalutation(entrant.getSalutation());
-                    model.setFirstName(entrant.getFirstName());
-                    model.setLastName(entrant.getLastName());
-                    model.setSteamId(entrant.getSteamId());
-
-                    final Map<String, MongoShortLink> shortLinksByCampaign;
-
-                    if (mongoSteamEntrant.getShortLinksByCampaign() == null) {
-                        shortLinksByCampaign = Maps.newHashMap();
-                    } else {
-                        shortLinksByCampaign = new HashMap<>(mongoSteamEntrant.getShortLinksByCampaign());
-                    }
-
-                    MongoShortLink mongoShortLink = shortLinksByCampaign.get(mongoSocialCampaign.getObjectId());
-
-                    if (mongoShortLink == null) {
-                        mongoShortLink = mongoShortLinkOnce.call();
-                        shortLinksByCampaign.put(mongoSocialCampaign.getObjectId(), mongoShortLink);
-                    }
-
-                    final SocialCampaignEntry socialCampaignEntry = new SocialCampaignEntry();
-                    socialCampaignEntry.setShortLink(mongoShortLinkDao.transform(mongoShortLink));
-                    return socialCampaignEntry;
-
-                }
-            });
-
-        } catch (MongoConcurrentUtils.ConflictException ex) {
-            throw new TooBusyException(ex);
-        }
-
+        throw new NotImplementedException();
     }
 
     public void validate(final SocialCampaign socialCampaign) {

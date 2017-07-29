@@ -243,13 +243,15 @@ public class MongoProfileDao implements ProfileDao {
 
         final MongoProfile mongoProfile;
 
-        try {
+            try {
 
             mongoProfile = getMongoConcurrentUtils().performOptimisticUpsert(query, (datastore, toUpsert) -> {
 
-                if (toUpsert.getObjectId() != null) {
-                    profile.setId(toUpsert.getObjectId().toHexString());
+                if (toUpsert.getObjectId() == null) {
+                    toUpsert.setObjectId(new ObjectId());
                 }
+
+                profile.setId(toUpsert.getObjectId().toHexString());
 
                 if (toUpsert.isActive()) {
                     // The only thing to refresh here is the
@@ -258,8 +260,6 @@ public class MongoProfileDao implements ProfileDao {
                     toUpsert.setActive(true);
                     getBeanMapper().map(profile, toUpsert);
                 }
-
-                return toUpsert;
 
             });
         } catch (MongoConcurrentUtils.ConflictException e) {

@@ -141,7 +141,7 @@ public class MongoUserDao implements UserDao {
             throw new DuplicateException(ex);
         }
 
-        return getDozerMapper().map(mongoUser, User.class);
+        return getDozerMapper().map(getDatastore().get(mongoUser), User.class);
 
     }
 
