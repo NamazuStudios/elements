@@ -51,9 +51,14 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>common</artifactId>
+            <artifactId>common-util</artifactId>
             <version>${project.version}</version>
             <classifier>sources</classifier>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rest-api</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.gwt.inject</groupId>
@@ -120,11 +125,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rest-api</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey</groupId>
