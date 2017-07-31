@@ -237,7 +237,7 @@ public class MongoMatchDao implements MatchDao {
     @Override
     public List<MatchTimeDelta> getDeltasForPlayerAfter(String playerId, long timeStamp) {
 
-x        final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
+        final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
         final Query<MongoMatchDelta> matchTimeDeltaQuery = getDatastore().createQuery(MongoMatchDelta.class);
 
         matchTimeDeltaQuery.order(ascending("_id.sequence")).and(

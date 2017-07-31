@@ -5,6 +5,8 @@ import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 import org.mongodb.morphia.utils.IndexType;
 
+import java.sql.Timestamp;
+
 import static java.lang.Math.max;
 import static java.lang.System.currentTimeMillis;
 
@@ -75,7 +77,7 @@ public class MongoMatchDelta {
         private int sequence;
 
         @Property
-        private long timeStamp;
+        private Timestamp timeStamp;
 
         public Key() {}
 
@@ -88,6 +90,10 @@ public class MongoMatchDelta {
         }
 
         public Key(ObjectId match, int sequence, long timeStamp) {
+            this(match, sequence, new Timestamp(timeStamp));
+        }
+
+        public Key(ObjectId match, int sequence, Timestamp timeStamp) {
             this.match = match;
             this.sequence = sequence;
             this.timeStamp = timeStamp;
@@ -101,7 +107,7 @@ public class MongoMatchDelta {
             return sequence;
         }
 
-        public long getTimeStamp() {
+        public Timestamp getTimeStamp() {
             return timeStamp;
         }
 
@@ -115,7 +121,7 @@ public class MongoMatchDelta {
             // but for our purposes will have to do.  If separate hosts write diffs and the clocks are
             // slightly off this will just adjust to ensure that the write happens at the same time because
             // the sequence (which always moves forward) will ultimately be the tiebreaker.
-            final long timeStamp = max(currentTimeMillis(), getTimeStamp());
+            final long timeStamp = max(currentTimeMillis(), getTimeStamp().getTime());
             return new Key(getMatch(), getSequence() + 1, timeStamp);
         }
 
@@ -129,7 +135,7 @@ public class MongoMatchDelta {
             // but for our purposes will have to do.  If separate hosts write diffs and the clocks are
             // slightly off this will just adjust to ensure that the write happens at the same time because
             // the sequence (which always moves forward) will ultimately be the tiebreaker.
-            return new Key(getMatch(), getSequence() + 1, max(timeStamp, getTimeStamp()));
+            return new Key(getMatch(), getSequence() + 1, max(timeStamp, getTimeStamp().getTime()));
         }
 
         @Override
@@ -140,15 +146,15 @@ public class MongoMatchDelta {
             Key key = (Key) o;
 
             if (getSequence() != key.getSequence()) return false;
-            if (getTimeStamp() != key.getTimeStamp()) return false;
-            return getMatch() != null ? getMatch().equals(key.getMatch()) : key.getMatch() == null;
+            if (getMatch() != null ? !getMatch().equals(key.getMatch()) : key.getMatch() != null) return false;
+            return getTimeStamp() != null ? getTimeStamp().equals(key.getTimeStamp()) : key.getTimeStamp() == null;
         }
 
         @Override
         public int hashCode() {
             int result = getMatch() != null ? getMatch().hashCode() : 0;
             result = 31 * result + getSequence();
-            result = 31 * result + (int) (getTimeStamp() ^ (getTimeStamp() >>> 32));
+            result = 31 * result + (getTimeStamp() != null ? getTimeStamp().hashCode() : 0);
             return result;
         }
 
