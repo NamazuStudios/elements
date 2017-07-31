@@ -16,8 +16,7 @@ import static java.lang.System.currentTimeMillis;
     @Index(fields = @Field(value = "_id.match")),
     @Index(fields = @Field(value = "_id.sequence", type = IndexType.ASC)),
     @Index(fields = @Field(value = "_id.sequence", type = IndexType.DESC)),
-    @Index(fields = @Field(value = "_id.timeStamp"), options = @IndexOptions(expireAfterSeconds = MongoMatchDelta.MATCH_DELTA_EXPIRATION_SECONDS)),
-    @Index(fields = @Field(value = "snapshot.player"))
+    @Index(fields = @Field(value = "_id.timeStamp"), options = @IndexOptions(expireAfterSeconds = MongoMatchDelta.MATCH_DELTA_EXPIRATION_SECONDS))
 })
 public class MongoMatchDelta {
 
@@ -35,7 +34,7 @@ public class MongoMatchDelta {
     @Property
     private TimeDelta.Operation operation;
 
-    @Embedded()
+    @Embedded
     private MongoMatchSnapshot snapshot;
 
     public Key getKey() {

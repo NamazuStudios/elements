@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Reference;
 
@@ -10,12 +11,14 @@ import java.sql.Timestamp;
  */
 public class MongoMatchSnapshot {
 
+    @Indexed
     @Reference
     private MongoProfile player;
 
     @Reference
     private MongoProfile opponent;
 
+    @Indexed
     @Property
     private Timestamp lastUpdatedTimestamp;
 

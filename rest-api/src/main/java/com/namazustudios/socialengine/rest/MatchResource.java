@@ -118,9 +118,10 @@ public class MatchResource {
             @ApiParam(XHttpHeaders.X_REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
             final Long longPollTimeout) {
 
-        if (longPollTimeout == null) {
-            final List<TimeDelta<String, Match>> timeDelta = getMatchService().getDeltas(timeStamp);
-            asyncResponse.resume(timeDelta);
+        final List<TimeDelta<String, Match>> timeDeltaList = getMatchService().getDeltas(timeStamp);
+
+        if (longPollTimeout == null || !timeDeltaList.isEmpty()) {
+            asyncResponse.resume(timeDeltaList);
         } else {
 
             final Topic.Subscription subscription = getMatchService().waitForDeltas(
@@ -164,9 +165,10 @@ public class MatchResource {
             @ApiParam(XHttpHeaders.X_REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
             final Long longPollTimeout) {
 
-        if (longPollTimeout == null) {
-            final List<TimeDelta<String, Match>> timeDelta = getMatchService().getDeltasForMatch(timeStamp, matchId);
-            asyncResponse.resume(timeDelta);
+        final List<TimeDelta<String, Match>> timeDeltaList = getMatchService().getDeltasForMatch(timeStamp, matchId);
+
+        if (longPollTimeout == null || !timeDeltaList.isEmpty()) {
+            asyncResponse.resume(timeDeltaList);
         } else {
 
             final Topic.Subscription subscription = getMatchService().waitForDeltas(

@@ -15,7 +15,9 @@ public class ObjectIdConverter implements CustomConverter {
     public Object convert(
             final Object existingDestinationFieldValue, final Object sourceFieldValue,
             final Class<?> destinationClass, final Class<?> sourceClass) {
-        if (sourceClass == ObjectId.class && destinationClass == String.class) {
+        if (sourceClass == ObjectId.class && destinationClass == ObjectId.class) {
+            return sourceFieldValue;
+        } else if (sourceClass == ObjectId.class && destinationClass == String.class) {
             return sourceFieldValue == null ? null : ((ObjectId) sourceFieldValue).toHexString();
         } else if (sourceClass == String.class && destinationClass == ObjectId.class) {
             return sourceFieldValue == null ? null : new ObjectId((String)sourceFieldValue);

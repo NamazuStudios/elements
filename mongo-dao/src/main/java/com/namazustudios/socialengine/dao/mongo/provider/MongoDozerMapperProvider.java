@@ -61,6 +61,10 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("id", "key.match", customConverter(ObjectIdConverter.class))
                 .fields("timeStamp", "key.timeStamp");
 
+            mapping(MongoMatch.class, MongoMatchSnapshot.class)
+                .fields("player.objectId", "player.objectId", customConverter(ObjectIdConverter.class))
+                .fields("opponent.objectId", "opponent.objectId", customConverter(ObjectIdConverter.class));
+
             }
         };
 
