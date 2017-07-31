@@ -209,8 +209,15 @@ public class UserMatchService implements MatchService {
     }
 
     private Match redactOpponentUser(final Match match) {
-        match.getOpponent().setUser(null);
+
+        final Profile opponent = match.getOpponent();
+
+        if (opponent != null) {
+            match.getOpponent().setUser(null);
+        }
+
         return match;
+
     }
 
     private TimeDelta<String, Match> redactOpponentUser(final TimeDelta<String, Match> stringMatchTimeDelta) {

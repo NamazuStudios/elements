@@ -1,15 +1,14 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.common.collect.Streams;
-import com.mongodb.DuplicateKeyException;
 import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
-import com.namazustudios.socialengine.dao.mongo.model.MongoMatch;
-import com.namazustudios.socialengine.dao.mongo.model.MongoMatchDelta;
-import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
-import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
-import com.namazustudios.socialengine.exception.*;
+import com.namazustudios.socialengine.dao.mongo.model.*;
+import com.namazustudios.socialengine.exception.BadQueryException;
+import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.match.Match;
@@ -32,6 +31,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static java.lang.System.currentTimeMillis;
 import static org.mongodb.morphia.query.Sort.ascending;
 
 /**
@@ -151,22 +151,20 @@ public class MongoMatchDao implements MatchDao {
 
         final MongoMatch mongoMatch = getDozerMapper().map(match, MongoMatch.class);
 
-        final Timestamp now = new Timestamp(System.currentTimeMillis());
+        final Timestamp now = new Timestamp(currentTimeMillis());
         mongoMatch.setLastUpdatedTimestamp(now);
 
-        try {
-            getDatastore().save(mongoMatch);
-            getObjectIndex().index(mongoMatch);
-        } catch (DuplicateKeyException ex) {
-            throw new DuplicateException(ex);
-        }
+        getMongoDBUtils().perform(ds -> ds.save(mongoMatch));
+        getObjectIndex().index(mongoMatch);
 
         final MongoMatchDelta mongoMatchDelta = new MongoMatchDelta();
         final MongoMatchDelta.Key mongoMatchDeltaKey = new MongoMatchDelta.Key(mongoMatch);
 
         mongoMatchDelta.setKey(mongoMatchDeltaKey);
         mongoMatchDelta.setOperation(MatchTimeDelta.Operation.CREATED);
-        mongoMatchDelta.setSnapshot(mongoMatch);
+
+        final MongoMatchSnapshot mongoMatchSnapshot = getDozerMapper().map(mongoMatch, MongoMatchSnapshot.class);
+        mongoMatchDelta.setSnapshot(mongoMatchSnapshot);
 
         getMongoDBUtils().perform(ds -> ds.save(mongoMatchDelta));
 

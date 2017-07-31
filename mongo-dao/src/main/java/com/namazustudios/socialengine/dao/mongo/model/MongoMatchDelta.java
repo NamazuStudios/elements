@@ -35,8 +35,8 @@ public class MongoMatchDelta {
     @Property
     private TimeDelta.Operation operation;
 
-    @Embedded
-    private MongoMatch snapshot;
+    @Embedded()
+    private MongoMatchSnapshot snapshot;
 
     public Key getKey() {
         return key;
@@ -54,11 +54,11 @@ public class MongoMatchDelta {
         this.operation = operation;
     }
 
-    public MongoMatch getSnapshot() {
+    public MongoMatchSnapshot getSnapshot() {
         return snapshot;
     }
 
-    public void setSnapshot(MongoMatch snapshot) {
+    public void setSnapshot(MongoMatchSnapshot snapshot) {
         this.snapshot = snapshot;
     }
 
@@ -77,6 +77,8 @@ public class MongoMatchDelta {
 
         @Property
         private long timeStamp;
+
+        public Key() {}
 
         public Key(MongoMatch match) {
             this(match.getObjectId(), 0, currentTimeMillis());
@@ -129,6 +131,26 @@ public class MongoMatchDelta {
             // slightly off this will just adjust to ensure that the write happens at the same time because
             // the sequence (which always moves forward) will ultimately be the tiebreaker.
             return new Key(getMatch(), getSequence() + 1, max(timeStamp, getTimeStamp()));
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Key)) return false;
+
+            Key key = (Key) o;
+
+            if (getSequence() != key.getSequence()) return false;
+            if (getTimeStamp() != key.getTimeStamp()) return false;
+            return getMatch() != null ? getMatch().equals(key.getMatch()) : key.getMatch() == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = getMatch() != null ? getMatch().hashCode() : 0;
+            result = 31 * result + getSequence();
+            result = 31 * result + (int) (getTimeStamp() ^ (getTimeStamp() >>> 32));
+            return result;
         }
 
     }

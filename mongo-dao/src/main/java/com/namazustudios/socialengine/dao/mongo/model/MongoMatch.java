@@ -19,10 +19,9 @@ import java.sql.Timestamp;
         processors = ObjectIdProcessor.class))
 @SearchableDocument(
         fields = {
-                @SearchableField(name = "gameId",    path = "/gameId"),
                 @SearchableField(name = "lastUpdatedTimestamp", path = "/lastUpdatedTimestamp"),
                 @SearchableField(name = "playerId",  path = "/player/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class),
-                @SearchableField(name = "opponentId",  path = "/player/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class)
+                @SearchableField(name = "opponentId",  path = "/opponent/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class)
         })
 @Entity(value = "match", noClassnameStored = true)
 public class MongoMatch {
@@ -31,11 +30,11 @@ public class MongoMatch {
     private ObjectId objectId;
 
     @Indexed
-    @Property
+    @Reference
     private MongoProfile player;
 
     @Indexed
-    @Property
+    @Reference
     private MongoProfile opponent;
 
     @Indexed
