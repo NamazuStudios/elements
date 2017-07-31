@@ -273,7 +273,7 @@ public class MongoMatchUtils {
 
     public MongoMatchDelta getLatestDelta(final ObjectId objectId) {
         final Query<MongoMatchDelta> matchTimeDeltaQuery = getDatastore().createQuery(MongoMatchDelta.class);
-        matchTimeDeltaQuery.order(descending("sequence")).criteria("_id.match").equal(objectId);
+        matchTimeDeltaQuery.order(descending("_id.sequence")).criteria("_id.match").equal(objectId);
         return matchTimeDeltaQuery.get();
     }
 

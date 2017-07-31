@@ -59,6 +59,7 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(MatchTimeDelta.class, MongoMatchDelta.class)
                 .fields("id", "key.match", customConverter(ObjectIdConverter.class))
+                .fields("snapshot.id", "key.match", customConverter(ObjectIdConverter.class))
                 .fields("timeStamp", "key.timeStamp");
 
             mapping(MongoMatch.class, MongoMatchSnapshot.class)

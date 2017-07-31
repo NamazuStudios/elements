@@ -222,6 +222,7 @@ public class MatchResource {
                 "will cancel any pending request for a match.  If a game is currently being played " +
                 "agaist the match, the server may reject the request to delete the match until the game " +
                 "concludes.")
+    @Produces(MediaType.APPLICATION_JSON)
     public void deleteMatch(@PathParam("matchId") final String matchId) {
         getMatchService().deleteMatch(matchId);
     }
