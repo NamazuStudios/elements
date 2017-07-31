@@ -66,6 +66,8 @@
                         <argument>--build-arg</argument>
                         <argument>REST_WAR=target/lib/rest-war-${project.version}.war</argument>
                         <argument>--tag</argument>
+                        <argument>${project.artifactId}:latest</argument>
+                        <argument>--tag</argument>
                         <argument>${project.artifactId}:${project.version}</argument>
                     </arguments>
                 </configuration>

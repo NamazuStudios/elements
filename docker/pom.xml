@@ -13,7 +13,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <modules>
-        <module>standalone</module>
+        <module>standalone-dev</module>
         <module>namazu-socialengine-ui</module>
         <module>namazu-socialengine-api</module>
         <module>namazu-socialengine-setup</module>

@@ -1,0 +1,57 @@
+
+# A docker-compose file which incorporates all necessary services that SocialEngine needs
+# to run in development mode.  This does not include and security and exposes all ports
+# the outside world such that the user may connected to the various underlying services.
+#
+# This could be used as a base for a production deployment, but deploying as-is is not
+# recommended for the above reasons.
+
+version: "3.3"
+services:
+
+  redis:
+    image: redis:4.0.1
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "6379:6379"
+
+  mongo:
+    image: mongo:3.0.15
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "27101:27101"
+
+  api:
+    image: namazu-socialengine-api:latest
+    deploy:
+      replicas: 1
+    links:
+      - redis
+      - mongo
+    networks:
+      - socialengine
+    ports:
+      - "8080:8081"
+
+  ui:
+    image: namazu-socialengine-ui:latest
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "8080:8080"
+
+  setup:
+    image: namazu-socialengine-setup:latest
+    deploy:
+      replicas: 1
+
+networks:
+  socialengine:
