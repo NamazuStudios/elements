@@ -4,4 +4,3 @@ ARG SETUP_JAR
 
 RUN mkdir -p "/opt/socialengine"
 COPY $SETUP_JAR /opt/socialengine/setup.jar
-CMD ["java -jar /opt/socialengine/setup.jar"]

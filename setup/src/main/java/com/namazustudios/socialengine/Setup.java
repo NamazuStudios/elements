@@ -142,7 +142,8 @@ public class Setup {
     private enum SupportedCommand {
 
         ADD_USER("add-user", AddUser.class),
-        UPDATE_USER("update-user", UpdateUser.class);
+        UPDATE_USER("update-user", UpdateUser.class),
+        DUMP_DEFAULT_PROPERTIES("dump-default-properties", DumpDefaultProperties.class);
 
         public final String commandName;
         public final Class<? extends Command> commandType;

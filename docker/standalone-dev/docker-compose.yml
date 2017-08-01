@@ -25,10 +25,17 @@ services:
     networks:
       - socialengine
     ports:
-      - "27101:27101"
+      - "27017:27017"
+
+  setup:
+    build:
+      context: ./setup
+    deploy:
+      replicas: 1
 
   api:
-    image: namazu-socialengine-api:latest
+    build:
+      context: ./api
     deploy:
       replicas: 1
     links:
@@ -37,21 +44,17 @@ services:
     networks:
       - socialengine
     ports:
-      - "8080:8081"
+      - "8081:8080"
 
   ui:
-    image: namazu-socialengine-ui:latest
+    build:
+      context: ./ui
     deploy:
       replicas: 1
     networks:
       - socialengine
     ports:
       - "8080:8080"
-
-  setup:
-    image: namazu-socialengine-setup:latest
-    deploy:
-      replicas: 1
 
 networks:
   socialengine:
