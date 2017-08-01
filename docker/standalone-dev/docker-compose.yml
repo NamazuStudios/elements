@@ -30,6 +30,8 @@ services:
   setup:
     build:
       context: ./setup
+    networks:
+      - socialengine
     depends_on:
       - mongo
     links:
@@ -37,33 +39,33 @@ services:
     deploy:
       replicas: 1
 
-#  api:
-#    build:
-#      context: ./api
-#    depends_on:
-#      - mongo
-#      - redis
-#    deploy:
-#      replicas: 1
-#    links:
-#      - redis
-#      - mongo
-#    networks:
-#      - socialengine
-#    ports:
-#      - "8081:8080"
-#
-#  ui:
-#    build:
-#      context: ./ui
-#    depends_on:
-#      - api
-#    deploy:
-#      replicas: 1
-#    networks:
-#      - socialengine
-#    ports:
-#      - "8080:8080"
+  api:
+    build:
+      context: ./api
+    depends_on:
+      - mongo
+      - redis
+    deploy:
+      replicas: 1
+    links:
+      - redis
+      - mongo
+    networks:
+      - socialengine
+    ports:
+      - "8081:8080"
+
+  ui:
+    build:
+      context: ./ui
+    depends_on:
+      - api
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "8080:8080"
 
 networks:
   socialengine:
