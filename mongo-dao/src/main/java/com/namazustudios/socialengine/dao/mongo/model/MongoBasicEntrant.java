@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
 import java.util.Date;
@@ -12,7 +13,7 @@ import java.util.Map;
 public class MongoBasicEntrant {
 
     @Id
-    private Object objectId;
+    private ObjectId objectId;
 
     @Property
     private String salutation;
@@ -33,11 +34,11 @@ public class MongoBasicEntrant {
     @Reference
     private Map<String, MongoShortLink> shortLinksByCampaign;
 
-    public Object getObjectId() {
+    public ObjectId getObjectId() {
         return objectId;
     }
 
-    public void setObjectId(Object objectId) {
+    public void setObjectId(ObjectId objectId) {
         this.objectId = objectId;
     }
 
