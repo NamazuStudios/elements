@@ -1,10 +1,9 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -19,6 +18,8 @@ import java.util.stream.Collectors;
  * Created by patricktwohig on 4/3/15.
  */
 public class MongoClientProvider implements Provider<MongoClient> {
+
+    private static final Logger logger = LoggerFactory.getLogger(MongoClientProvider.class);
 
     public static final int DEFAULT_MONGO_PORT = 27017;
 
@@ -49,6 +50,8 @@ public class MongoClientProvider implements Provider<MongoClient> {
 
             final String host = uri.getHost();
             final int port = uri.getPort() < 0 ? DEFAULT_MONGO_PORT : uri.getPort();
+
+            logger.info("Adding {}:{} to Mongo address list ({}).", host, port, uri);
 
             return new ServerAddress(host, port);
 

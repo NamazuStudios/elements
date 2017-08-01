@@ -6,7 +6,7 @@
 # This could be used as a base for a production deployment, but deploying as-is is not
 # recommended for the above reasons.
 
-version: "3.3"
+version: '3'
 services:
 
   redis:
@@ -19,7 +19,7 @@ services:
       - "6379:6379"
 
   mongo:
-    image: mongo:3.0.15
+    image: mongo:3.4.6
     deploy:
       replicas: 1
     networks:
@@ -30,31 +30,40 @@ services:
   setup:
     build:
       context: ./setup
-    deploy:
-      replicas: 1
-
-  api:
-    build:
-      context: ./api
-    deploy:
-      replicas: 1
-    links:
-      - redis
+    depends_on:
       - mongo
-    networks:
-      - socialengine
-    ports:
-      - "8081:8080"
-
-  ui:
-    build:
-      context: ./ui
+    links:
+      - mongo
     deploy:
       replicas: 1
-    networks:
-      - socialengine
-    ports:
-      - "8080:8080"
+
+#  api:
+#    build:
+#      context: ./api
+#    depends_on:
+#      - mongo
+#      - redis
+#    deploy:
+#      replicas: 1
+#    links:
+#      - redis
+#      - mongo
+#    networks:
+#      - socialengine
+#    ports:
+#      - "8081:8080"
+#
+#  ui:
+#    build:
+#      context: ./ui
+#    depends_on:
+#      - api
+#    deploy:
+#      replicas: 1
+#    networks:
+#      - socialengine
+#    ports:
+#      - "8080:8080"
 
 networks:
   socialengine:

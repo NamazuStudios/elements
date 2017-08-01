@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
@@ -71,7 +72,7 @@ public class Setup {
         }
 
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
-        defaultConfigurationSupplier = new DefaultConfigurationSupplier();
+        defaultConfigurationSupplier = new DefaultConfigurationSupplier(Setup.class.getClassLoader());
 
         final FacebookBuiltinPermissionsSupplier facebookBuiltinPermissionsSupplier;
         facebookBuiltinPermissionsSupplier = new FacebookBuiltinPermissionsSupplier();
@@ -79,6 +80,7 @@ public class Setup {
         final Injector injector = Guice.createInjector(
                 new ConfigurationModule(defaultConfigurationSupplier),
                 new FacebookBuiltinPermissionsModule(facebookBuiltinPermissionsSupplier),
+                new MongoCoreModule(),
                 new MongoDaoModule(),
                 new MongoSearchModule(),
                 new ValidationModule(),
