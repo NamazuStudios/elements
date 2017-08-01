@@ -5,10 +5,7 @@ import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.model.User;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Property;
+import org.mongodb.morphia.annotations.*;
 
 /**
  * Created by patricktwohig on 3/31/15.
@@ -32,32 +29,32 @@ public class MongoUser {
     @Id
     private ObjectId objectId;
 
-    @Property("name")
-    @Indexed(unique=true)
+    @Property
+    @Indexed(options = @IndexOptions(unique = true))
     private String name;
 
-    @Property("email")
-    @Indexed(unique = true)
+    @Property
+    @Indexed(options = @IndexOptions(unique = true))
     private String email;
 
-    @Property("hash_algorithm")
+    @Property
     private String hashAlgorithm;
 
-    @Property("salt")
+    @Property
     private byte[] salt;
 
-    @Property("password_hash")
+    @Property
     private byte[] passwordHash;
 
-    @Property("level")
+    @Property
     private User.Level level;
 
-    @Property("active")
     @Indexed
+    @Property
     private boolean active;
 
-    @Property("facebookId")
-    @Indexed(unique = true, sparse = true)
+    @Property
+    @Indexed(options = @IndexOptions(unique = true, sparse = true))
     private String facebookId;
 
     public ObjectId getObjectId() {

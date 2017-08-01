@@ -26,10 +26,7 @@ package com.namazustudios.socialengine.dao.mongo.model;
         }
 )
 @Indexes({
-        @Index(fields = @Field("name")),
-        @Index(fields = @Field("platform")),
-        @Index(fields = @Field("parent")),
-        @Index(fields = {@Field("platform"), @Field("parent"), @Field("name") }, unique = true),
+        @Index(fields = {@Field("platform"), @Field("parent"), @Field("name") }, options = @IndexOptions(unique = true)),
 })
 @Entity(value = "application_configuration", noClassnameStored = true)
 public class MongoApplicationConfiguration {
@@ -37,15 +34,19 @@ public class MongoApplicationConfiguration {
     @Id
     private ObjectId objectId;
 
+    @Indexed
     @Property("name")
     private String uniqueIdentifier;
 
+    @Indexed
     @Reference("parent")
     private MongoApplication parent;
 
+    @Indexed
     @Property("platform")
     private Platform platform;
 
+    @Indexed
     @Property("active")
     private boolean active;
 

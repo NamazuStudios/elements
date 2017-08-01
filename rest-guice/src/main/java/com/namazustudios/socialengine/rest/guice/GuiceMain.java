@@ -32,13 +32,13 @@ public class GuiceMain extends GuiceServletContextListener {
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         servletContext = servletContextEvent.getServletContext();
         super.contextInitialized(servletContextEvent);
-        servletContext.setAttribute(GuiceResourceConfig.INJECOR_ATTRIBUTE_NAME, injector);
+        servletContext.setAttribute(GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME, injector);
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
         super.contextDestroyed(servletContextEvent);
-        servletContext.removeAttribute(GuiceResourceConfig.INJECOR_ATTRIBUTE_NAME);
+        servletContext.removeAttribute(GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME);
         servletContext = null;
         injector = null;
     }
@@ -65,6 +65,7 @@ public class GuiceMain extends GuiceServletContextListener {
                 }
             },
             new ServicesModule(),
+            new RedisServicesModule(),
             new SecurityModule(),
             new MongoCoreModule(),
             new MongoDaoModule(),

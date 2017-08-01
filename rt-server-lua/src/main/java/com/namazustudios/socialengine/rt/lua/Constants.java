@@ -80,7 +80,7 @@ public interface Constants {
 
     /**
      * Exposes the instance of {@link IocResolver} which the underlying script can use to resolve dependencies
-     * such as other instances of {@link Resource}, {@link EdgeServer}, and {@link InternalServer}.
+     * such as other instances of {@link Resource}.
      */
     String IOC_INSTANCE = "ioc";
 

@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.User;
+import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
@@ -70,17 +71,17 @@ public class MongoFacebookUserDao implements FacebookUserDao {
         try {
             mongoUser = getMongoConcurrentUtils().performOptimisticUpsert(query, (datastore, toUpsert) -> {
 
-                if (toUpsert.getObjectId() != null) {
-                    user.setId(toUpsert.getObjectId().toHexString());
+                if (toUpsert.getObjectId() == null) {
+                    toUpsert.setObjectId(new ObjectId());
                 }
+
+                user.setId(toUpsert.getObjectId().toHexString());
 
                 if (!toUpsert.isActive()) {
                     toUpsert.setActive(true);
                     getDozerMapper().map(user, toUpsert);
                     getMongoPasswordUtils().scramblePassword(toUpsert);
                 }
-
-                return toUpsert;
 
             });
         } catch (MongoConcurrentUtils.ConflictException e) {

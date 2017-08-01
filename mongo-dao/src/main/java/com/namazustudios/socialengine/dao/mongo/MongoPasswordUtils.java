@@ -50,8 +50,8 @@ public class MongoPasswordUtils {
         digest.update(passwordBytes);
 
         operations.set("salt", salt);
-        operations.set("password_hash", digest.digest());
-        operations.set("hash_algorithm", digest.getAlgorithm());
+        operations.set("passwordHash", digest.digest());
+        operations.set("hashAlgorithm", digest.getAlgorithm());
 
     }
 
@@ -73,10 +73,10 @@ public class MongoPasswordUtils {
 
         tmp = new byte[SALT_LENGTH];
         secureRandom.nextBytes(tmp);
-        operations.set("password_hash", tmp);
+        operations.set("passwordHash", tmp);
 
         final MessageDigest digest = getMessageDigestProvider().get();
-        operations.set("hash_algorithm", digest.getAlgorithm());
+        operations.set("hashAlgorithm", digest.getAlgorithm());
 
     }
 

@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.exception.NotImplementedException;
 
 import java.lang.reflect.Proxy;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,6 +35,25 @@ public class Services {
                 throw new ForbiddenException();
             }
         ));
+    }
+
+    private static final ConcurrentMap<Class<?>, Object> unimplementedServices = new ConcurrentHashMap<>();
+
+    /**
+     * Gets a proxy that always throws an instance of {@link NotImplementedException}.  This uses the {@link Proxy}
+     * method builtin to the JDK.  As such, this will not work properly with non-interface types.
+     *
+     * @param cls the service type {@link Class}.
+     * @param <T> the service proxy instance.
+     *
+     * @return a proxy instance of the service type
+     */
+    public static <T> T unimplemented(final Class<T> cls) {
+        return (T) unimplementedServices.computeIfAbsent(cls, c ->
+                newProxyInstance(Services.class.getClassLoader(), new Class[]{c}, (p,m,a) -> {
+                            throw new NotImplementedException();
+                        }
+                ));
     }
 
 }

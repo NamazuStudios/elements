@@ -11,7 +11,7 @@ import org.mongodb.morphia.annotations.Property;
 public class MongoSteamEntrant extends MongoBasicEntrant {
 
 
-    @Property("steam_id")
+    @Property
     @Indexed(unique = true)
     private String steamId;
 

@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -16,7 +16,7 @@ public class SimpleRequestHeader implements RequestHeader {
 
     private String path;
 
-    private Map<String, String> headers;
+    private Map<String, List<String> > headers;
 
     @Override
     public int getSequence() {
@@ -46,11 +46,11 @@ public class SimpleRequestHeader implements RequestHeader {
     }
 
     @Override
-    public Map<String, String> getHeaders() {
+    public Map<String, List<String>> getHeaders() {
         return headers;
     }
 
-    public void setHeaders(Map<String, String> headers) {
+    public void setHeaders(Map<String, List<String> > headers) {
         this.headers = headers;
     }
 

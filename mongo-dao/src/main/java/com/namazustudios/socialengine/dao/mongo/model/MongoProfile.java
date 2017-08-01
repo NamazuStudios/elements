@@ -24,15 +24,15 @@ import org.mongodb.morphia.annotations.*;
     })
 @Entity(value = "profile", noClassnameStored = true)
 @Indexes({
-    @Index(fields = @Field("active")),
-    @Index(fields = {@Field("user"), @Field("application")}, unique = true)
+    @Index(fields = {@Field("user"), @Field("application")}, options = @IndexOptions(unique = true))
 })
 public class MongoProfile {
 
     @Id
     private ObjectId objectId;
 
-    @Property("active")
+    @Indexed
+    @Property
     private boolean active;
 
     @Reference
@@ -41,10 +41,10 @@ public class MongoProfile {
     @Reference
     private MongoApplication application;
 
-    @Property("imageUrl")
+    @Property
     private String imageUrl;
 
-    @Property("displayName")
+    @Property
     private String displayName;
 
     public ObjectId getObjectId() {

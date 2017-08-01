@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.mina;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.exception.BaseException;
+import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.handler.ClientRequestHandler;
 import com.namazustudios.socialengine.rt.handler.Handler;

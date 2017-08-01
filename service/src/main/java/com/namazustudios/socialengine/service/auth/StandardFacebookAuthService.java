@@ -37,7 +37,7 @@ import static java.lang.Math.min;
     @FacebookPermission("email"),
     @FacebookPermission("public_profile")
 })
-public class DefaultFacebookAuthService implements FacebookAuthService {
+public class StandardFacebookAuthService implements FacebookAuthService {
 
 
     private static final String FIELDS_PARAMETER_VALUE = Joiner.on(",")

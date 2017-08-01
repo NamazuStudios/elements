@@ -13,29 +13,15 @@
     <packaging>pom</packaging>
 
     <groupId>com.namazustudios.socialengine</groupId>
-    <artifactId>standalone</artifactId>
+    <artifactId>namazu-socialengine-ui</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <description>Generates a Docker image for a debug standalone version of SocialEngine.</description>
-
     <dependencies>
-        <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rest-war</artifactId>
-            <version>${project.version}</version>
-            <type>war</type>
-        </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>web-ui-war</artifactId>
             <version>${project.version}</version>
             <type>war</type>
-        </dependency>
-        <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>setup</artifactId>
-            <version>${project.version}</version>
-            <classifier>jar-with-dependencies</classifier>
         </dependency>
     </dependencies>
 
@@ -78,13 +64,11 @@
                         <argument>build</argument>
                         <argument>${project.basedir}</argument>
                         <argument>--build-arg</argument>
-                        <argument>REST_WAR=target/lib/rest-war-${project.version}.war</argument>
-                        <argument>--build-arg</argument>
                         <argument>WEB_UI_WAR=target/lib/web-ui-war-${project.version}.war</argument>
-                        <argument>--build-arg</argument>
-                        <argument>SETUP_JAR=target/lib/setup-${project.version}-jar-with-dependencies.jar</argument>
                         <argument>--tag</argument>
-                        <argument>socialengine-standalone:${project.version}</argument>
+                        <argument>${project.artifactId}:latest</argument>
+                        <argument>--tag</argument>
+                        <argument>${project.artifactId}:${project.version}</argument>
                     </arguments>
                 </configuration>
             </plugin>

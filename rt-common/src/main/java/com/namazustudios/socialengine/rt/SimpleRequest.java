@@ -1,8 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by patricktwohig on 7/26/15.
@@ -62,7 +60,7 @@ public class SimpleRequest implements Request {
 
         final SimpleRequestHeader simpleRequestHeader = new SimpleRequestHeader();
 
-        final Map<String, String> simpleRequestHeaderMap = new HashMap<String, String >();
+        final Map<String, List<String> > simpleRequestHeaderMap = new HashMap<>();
 
         /**
          * Creates a new builder for {@link SimpleResponse}
@@ -151,7 +149,7 @@ public class SimpleRequest implements Request {
          * @return this object
          */
         public Builder header(final String key, final String value) {
-            simpleRequestHeaderMap.put(key, value);
+            simpleRequestHeaderMap.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
             return this;
         }
 

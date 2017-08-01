@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.mongodb.MongoException;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
@@ -10,6 +11,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
 /**
  * A class that helps reduce the boilerplate code when atomic operations are necessary.
@@ -77,6 +79,20 @@ public class MongoConcurrentUtils {
 
     }
 
+    public <ReturnT> ReturnT performOptimisticInsert(final CriticalOperation<ReturnT> criticalOperation) throws ConflictException {
+        return performOptimistic(ds -> {
+            try {
+                return criticalOperation.attempt(ds);
+            } catch (MongoException ex) {
+                if (ex.getCode() == 11000) {
+                    throw new ContentionException(ex);
+                } else {
+                    throw ex;
+                }
+            }
+        });
+    }
+
     /**
      * Attempts to complete the given criticalOperation and, in the event of a failure,
      * attempts to rety the criticalOperation several times until giving up.
@@ -116,9 +132,8 @@ public class MongoConcurrentUtils {
      * Given a {@link Query<ModelT>} object, this will attempt to find a single entity and execute
      * an atomic update.
      *
-     * The result of the query, or a freshly created instance, is passed to
-     * {@link MongoConcurrentUtils.CriticalOperationWithModel#attempt(AdvancedDatastore, Object)}
-     * just before attempting the write.
+     * The result of the query, or a freshly created instance, is passed to the second argument of the
+     * supplied {@link BiConsumer} just before attempting the write to perform any updates or modifications.
      *
      * Before attempting an update, a snapshot of the object is taken using {@link Datastore#queryByExample(Object)}
      * to ensure that the object can be updated completely (or not at all).
@@ -127,14 +142,15 @@ public class MongoConcurrentUtils {
      *
      * @param query the query to find the objects
      * @param operation the operation to execute
+     * @return a freshly fetched database snapshot of the model as it was inserted or updated.
      *
-     * @throws IllegalArgumentException if the query does not return a single result
-     * @throws ContentionException if the atomic operation fails
+     * @throws IllegalArgumentException if the query does not return a single result or the key was interefered with while updating
+     * @throws ContentionException if the atomic operation fails because the object was mutated
      *
      */
-    public <ReturnT, ModelT> ReturnT performOptimisticUpsert(
+    public <ModelT> ModelT performOptimisticUpsert(
             final Query<ModelT> query,
-            final CriticalOperationWithModel<ReturnT, ModelT> operation) throws ConflictException {
+            final BiConsumer<AdvancedDatastore, ModelT> operation) throws ConflictException {
 
         return performOptimistic(datastore -> {
 
@@ -161,7 +177,7 @@ public class MongoConcurrentUtils {
             }
 
             final Query<ModelT> qbe = datastore.queryByExample(model);
-            final ReturnT out = operation.attempt(datastore, model);
+            operation.accept(datastore, model);
 
             if (key != null && !Objects.equals(key, datastore.getKey(model))) {
 
@@ -176,11 +192,13 @@ public class MongoConcurrentUtils {
 
             final UpdateResults result = datastore.updateFirst(qbe, model, true);
 
-            if (!(result.getUpdatedCount() == 1 || result.getInsertedCount() == 1)) {
+            if (result.getInsertedCount() == 1) {
+                return datastore.get(query.getEntityClass(), result.getNewId());
+            } else if (result.getUpdatedCount() == 1) {
+                return datastore.getByKey(query.getEntityClass(), key);
+            } else {
                 throw new ContentionException();
             }
-
-            return out;
 
         });
     }
@@ -205,30 +223,9 @@ public class MongoConcurrentUtils {
     }
 
     /**
-     * A basic a atomic operation.  The operation is supplied with a
-     * {@link org.mongodb.morphia.Datastore} instance which is used to handel the atomic
-     * operation.
-     *
-     * @param <ReturnT> the operation
-     */
-    public interface CriticalOperationWithModel<ReturnT, ModelT> {
-
-        /**
-         * Defines the logic for hte operation.
-         *
-         * @param datastore the datastore
-         * @param model the model to edit
-         *
-         * @return the return type
-         */
-        ReturnT attempt(final AdvancedDatastore datastore, final ModelT model) throws ContentionException;
-
-    }
-
-    /**
      * General exception type for a failure of an Optimistic operation.
      */
-    public class OptimistcException extends Exception {
+    public static class OptimistcException extends Exception {
 
         public OptimistcException() {}
 
@@ -254,7 +251,7 @@ public class MongoConcurrentUtils {
      * Thrown when the operation fails.  In the event an {@link MongoConcurrentUtils.CriticalOperation}
      * fails because the object has changed, this exception may be raised to re-attempt the operation.
      */
-    public class ConflictException extends OptimistcException {
+    public static class ConflictException extends OptimistcException {
 
         public ConflictException() {}
 
@@ -279,7 +276,7 @@ public class MongoConcurrentUtils {
      * Thrown when there is too much contention over a particular resource.  If an optimistic exception
      * fails too many times then this exception is raised.
      */
-    public class ContentionException extends  OptimistcException {
+    public static class ContentionException extends  OptimistcException {
 
         public ContentionException() {}
 

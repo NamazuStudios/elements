@@ -59,6 +59,11 @@ public interface Constants {
     String CORS_ALLOWED_ORIGINS = "com.namazustudios.socialengine.cors.allowed.origins";
 
     /**
+     * The async request timeout limit.
+     */
+    String ASYNC_TIMEOUT_LIMIT = "com.namazustudios.socialengine.async.timeout.limit";
+
+    /**
      * Defines some useful regex patterns.
      */
     interface Regexp {

@@ -14,6 +14,7 @@ public class DefaultJXPathContextProvider implements JXPathContextProvider {
     @Override
     public JXPathContext get(Object rootObject) {
         final JXPathContext jxPathContext = JXPathContext.newContext(rootObject);
+        jxPathContext.setLenient(true);
         jxPathContext.getVariables().declareVariable(ROOT_OBJECT_NAME, rootObject);
         return jxPathContext;
     }

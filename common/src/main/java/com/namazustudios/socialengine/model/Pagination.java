@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by patricktwohig on 3/25/15.
@@ -51,6 +52,14 @@ public class Pagination<T> {
 
     public void setApproximation(boolean approximation) {
         this.approximation = approximation;
+    }
+
+    public static <U> Pagination<U> from(final Stream<U> uStream) {
+        final Pagination<U> uPagination = new Pagination<>();
+        final List<U> objects = uStream.collect(Collectors.toList());
+        uPagination.setObjects(objects);
+        uPagination.setTotal(objects.size());
+        return uPagination;
     }
 
     public <U> Pagination<U> transform(final Function<T, U> function) {

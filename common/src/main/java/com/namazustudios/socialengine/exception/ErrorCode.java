@@ -38,6 +38,11 @@ public enum  ErrorCode {
     OVERLOAD,
 
     /**
+     * The particular feature is not implemented or is currently unavailable.
+     */
+    NOT_IMPLEMENTED,
+
+    /**
      * Some other exception.
      */
     UNKNOWN

@@ -36,7 +36,7 @@ public class ConfigurationModule extends AbstractModule {
         install(new URIConverter());
 
         final Properties properties = propertiesSupplier.get();
-        logger.info("Using configuration properties " + properties);
+        logger.info("Using configuration properties {} from {}", properties, propertiesSupplier.getClass().getName());
         bindProperties(binder(), properties);
 
         final Multibinder<URI> corsAllowedOriginsMultibinder;

@@ -1,0 +1,29 @@
+
+# A docker-compose file which incorporates just the third-party services required
+# to make SocialEngine run.  This does not actually make containers for actual
+# social engine services.  This exposes ports so that the local machine may access
+# the local instances.
+
+version: '3'
+services:
+
+  redis:
+    image: redis:4.0.1
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "6379:6379"
+
+  mongo:
+    image: mongo:3.4.6
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "27017:27017"
+
+networks:
+  socialengine:

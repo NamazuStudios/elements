@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -49,6 +50,6 @@ public interface RequestHeader {
      *
      * @return the mapping of headers.
      */
-    Map<String, String> getHeaders();
+    Map<String, List<String>> getHeaders();
 
 }

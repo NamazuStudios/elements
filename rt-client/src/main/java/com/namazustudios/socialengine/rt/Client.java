@@ -1,9 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.exception.NotFoundException;
-
-import java.io.IOException;
-
 /**
  * The main interface for the {@link Client}.
  *

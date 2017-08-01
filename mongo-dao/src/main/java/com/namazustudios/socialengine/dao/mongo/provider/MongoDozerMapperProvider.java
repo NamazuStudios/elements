@@ -4,6 +4,8 @@ import com.namazustudios.socialengine.dao.mongo.converter.ObjectIdConverter;
 import com.namazustudios.socialengine.dao.mongo.model.*;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.*;
+import com.namazustudios.socialengine.model.match.Match;
+import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import com.namazustudios.socialengine.model.profile.Profile;
 import org.dozer.DozerBeanMapper;
 import org.dozer.Mapper;
@@ -51,6 +53,18 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(Profile.class, MongoProfile.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                 .fields("application.id", "application.objectId", customConverter(ObjectIdConverter.class));
+
+            mapping(Match.class, MongoMatch.class)
+                .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+
+            mapping(MatchTimeDelta.class, MongoMatchDelta.class)
+                .fields("id", "key.match", customConverter(ObjectIdConverter.class))
+                .fields("snapshot.id", "key.match", customConverter(ObjectIdConverter.class))
+                .fields("timeStamp", "key.timeStamp");
+
+            mapping(MongoMatch.class, MongoMatchSnapshot.class)
+                .fields("player.objectId", "player.objectId", customConverter(ObjectIdConverter.class))
+                .fields("opponent.objectId", "opponent.objectId", customConverter(ObjectIdConverter.class));
 
             }
         };

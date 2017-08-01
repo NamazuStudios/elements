@@ -12,7 +12,7 @@ import com.namazustudios.socialengine.fts.SearchException;
 import com.namazustudios.socialengine.fts.TopDocsSearchResult;
 import com.namazustudios.socialengine.model.Pagination;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.min;
 import static java.util.stream.StreamSupport.stream;
 
 /**
@@ -30,7 +31,7 @@ import static java.util.stream.StreamSupport.stream;
  */
 public class MongoDBUtils {
 
-    private Datastore datastore;
+    private AdvancedDatastore datastore;
 
     private ObjectIndex objectIndex;
 
@@ -44,7 +45,7 @@ public class MongoDBUtils {
      * @param <T> the expected return type
      * @return the object retured by the supplied operation
      */
-    public <T> T perform(final Function<Datastore, T> operation) {
+    public <T> T perform(final Function<AdvancedDatastore, T> operation) {
         try {
             return operation.apply(getDatastore());
         } catch (MongoCommandException ex) {
@@ -73,8 +74,8 @@ public class MongoDBUtils {
 
     /**
      * Transforms the given {@link Query} to the resulting {@link Pagination}.
-     *
-     * @param query the query
+            *
+            * @param query the query
      * @param offset the offset
      * @param count the count
      * @param function the function to transform the values
@@ -91,7 +92,7 @@ public class MongoDBUtils {
         pagination.setOffset(offset);
         pagination.setTotal((int) query.count());
 
-        final int limit = Math.min(queryMaxResults, count);
+        final int limit = min(queryMaxResults, count);
 
         final Iterable<ModelT> userIterable;
 
@@ -175,12 +176,12 @@ public class MongoDBUtils {
         }
     }
 
-    public Datastore getDatastore() {
+    public AdvancedDatastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(Datastore datastore) {
+    public void setDatastore(AdvancedDatastore datastore) {
         this.datastore = datastore;
     }
 

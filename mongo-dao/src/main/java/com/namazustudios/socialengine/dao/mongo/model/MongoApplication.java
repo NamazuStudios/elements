@@ -26,22 +26,21 @@ import org.mongodb.morphia.annotations.*;
 )
 @Entity(value = "application", noClassnameStored = true)
 @Indexes({
-        @Index(fields = @Field("active")),
-        @Index(fields =@Field("name"), unique = true)
+        @Index(fields = @Field("name"), options = @IndexOptions(unique = true))
 })
 public class MongoApplication {
 
     @Id
     private ObjectId objectId;
 
-    @Property("name")
+    @Property
     private String name;
 
-    @Property("description")
+    @Property
     private String description;
 
     @Indexed
-    @Property("active")
+    @Property
     private boolean active;
 
     public ObjectId getObjectId() {

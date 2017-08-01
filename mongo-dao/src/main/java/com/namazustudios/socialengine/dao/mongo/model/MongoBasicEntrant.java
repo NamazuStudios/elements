@@ -1,11 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
-import org.mongodb.morphia.Key;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Property;
-import org.mongodb.morphia.annotations.Reference;
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.annotations.*;
 
 import java.util.Date;
 import java.util.Map;
@@ -17,32 +13,32 @@ import java.util.Map;
 public class MongoBasicEntrant {
 
     @Id
-    private Object objectId;
+    private ObjectId objectId;
 
-    @Property("salutation")
+    @Property
     private String salutation;
 
-    @Property("first_name")
+    @Property
     private String firstName;
 
-    @Property("last_name")
+    @Property
     private String lastName;
 
-    @Property("email")
-    @Indexed(unique = true)
+    @Property
+    @Indexed(options = @IndexOptions(unique = true))
     private String email;
 
-    @Property("birthday")
+    @Property
     private Date birthday;
 
-    @Reference("short_links_by_campaign")
+    @Reference
     private Map<String, MongoShortLink> shortLinksByCampaign;
 
-    public Object getObjectId() {
+    public ObjectId getObjectId() {
         return objectId;
     }
 
-    public void setObjectId(Object objectId) {
+    public void setObjectId(ObjectId objectId) {
         this.objectId = objectId;
     }
 

@@ -10,7 +10,7 @@ import org.mongodb.morphia.annotations.*;
 @Entity(value = "application_configuration", noClassnameStored = true)
 public class MongoPSNApplicationConfiguration extends MongoApplicationConfiguration {
 
-    @Property("client_secret")
+    @Property
     private String clientSecret;
 
     public String getClientSecret() {
