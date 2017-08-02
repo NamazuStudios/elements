@@ -1,11 +1,9 @@
-package com.namazustudios.socialengine.rest.security;
-
-import javax.ws.rs.BadRequestException;
+package com.namazustudios.socialengine.exception;
 
 /**
  * Created by patricktwohig on 6/26/17.
  */
-public class AuthorizationHeaderParseException extends BadRequestException {
+public class AuthorizationHeaderParseException extends InvalidDataException {
 
     public AuthorizationHeaderParseException() {
     }

@@ -40,6 +40,7 @@
         <module>rt-guice-example</module>
         <module>rt-client</module>
         <module>docker</module>
+        <module>code-serve</module>
     </modules>
 
     <properties>

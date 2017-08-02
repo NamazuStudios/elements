@@ -1,17 +1,31 @@
-package com.namazustudios.socialengine.rest.security;
+package com.namazustudios.socialengine.security;
 
 import com.google.common.base.Splitter;
+import com.namazustudios.socialengine.exception.AuthorizationHeaderParseException;
 
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
-import static com.namazustudios.socialengine.rest.XHttpHeaders.AUTH_TYPE_FACEBOOK;
 import static java.util.regex.Pattern.compile;
 
 /**
  * Created by patricktwohig on 6/26/17.
  */
 public class AuthorizationHeader {
+
+    public static final String AUTH_HEADER = "Authorization";
+
+    /**
+     * Used in conjunction with the standard Authorization header.  This is used to
+     * trigger an attempt to authorize the user via HTTP Basic auth
+     */
+    public static final String AUTH_TYPE_BASIC = "Basic";
+
+    /**
+     * Used in conjunction with the standard Authorization header.  This is used to
+     * trigger an attempt to authorize the user via Facebook OAuth tokens.
+     */
+    public static final String AUTH_TYPE_FACEBOOK = "Facebook";
 
     private static final Pattern WHITESPACE = compile("\\s");
 
@@ -56,6 +70,16 @@ public class AuthorizationHeader {
         }
 
         return new FacebookAuthorizationHeader(credentials);
+
+    }
+
+    public BasicAuthorizationHeader asBasicHeader(final String encoding) {
+
+        if (!AUTH_TYPE_BASIC.equals(getType())) {
+            throw new AuthorizationHeaderParseException(getType() + " not suitable for Facebook");
+        }
+
+        return new BasicAuthorizationHeader(encoding, credentials);
 
     }
 
