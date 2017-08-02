@@ -2,7 +2,9 @@ package com.namazustudios.socialengine.codeserve;
 
 import com.namazustudios.socialengine.exception.AuthorizationHeaderParseException;
 import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.security.AuthorizationHeader;
 import com.namazustudios.socialengine.security.BasicAuthorizationHeader;
 import com.namazustudios.socialengine.service.ApplicationService;
@@ -27,6 +29,8 @@ public class ServletRepositoryResolver implements RepositoryResolver<HttpServlet
     private AuthService authService;
 
     private ApplicationService applicationService;
+
+    private ApplicationRepositoryResolver applicationRepositoryResolver;
 
     @Override
     public Repository open(HttpServletRequest req, String name) throws
@@ -73,7 +77,21 @@ public class ServletRepositoryResolver implements RepositoryResolver<HttpServlet
             ServiceNotAuthorizedException,
             ServiceNotEnabledException,
             ServiceMayNotContinueException{
-        return null;
+
+        final Application application;
+
+        try {
+            application = getApplicationService().getApplication(name);
+        } catch (NotFoundException ex) {
+            throw new RepositoryNotFoundException(name);
+        }
+
+        try {
+            return getApplicationRepositoryResolver().resolve(application);
+        } catch (Exception e) {
+            throw new ServiceMayNotContinueException(e);
+        }
+
     }
 
     public AuthService getAuthService() {
@@ -92,6 +110,15 @@ public class ServletRepositoryResolver implements RepositoryResolver<HttpServlet
     @Inject
     public void setApplicationService(ApplicationService applicationService) {
         this.applicationService = applicationService;
+    }
+
+    public ApplicationRepositoryResolver getApplicationRepositoryResolver() {
+        return applicationRepositoryResolver;
+    }
+
+    @Inject
+    public void setApplicationRepositoryResolver(ApplicationRepositoryResolver applicationRepositoryResolver) {
+        this.applicationRepositoryResolver = applicationRepositoryResolver;
     }
 
 }
