@@ -13,6 +13,9 @@ import static java.util.regex.Pattern.compile;
  */
 public class AuthorizationHeader {
 
+    /**
+     * Constant for the Authorization header.
+     */
     public static final String AUTH_HEADER = "Authorization";
 
     /**

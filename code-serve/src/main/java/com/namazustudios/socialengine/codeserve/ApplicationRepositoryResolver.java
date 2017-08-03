@@ -10,9 +10,16 @@ import org.eclipse.jgit.lib.Repository;
 public interface ApplicationRepositoryResolver {
 
     /**
-     * Gets the {@link Repository} for the supplied {@link Application}.
-     * @param application
-     * @return
+     * Gets the {@link Repository} for the supplied {@link Application}.  This simply returns
+     * the instance of {@link Repository}.  It safe ot assume this method will be called after
+     * the necessary security checks, therefore any security checking in this method would
+     * be redundant.
+     *
+     * If no {@link Repository} exists, this must create the repository.
+     *
+     * @param application the {@link Application}
+     * @return the {@link Repository}, never null
+     *
      */
     Repository resolve(Application application) throws Exception;
 

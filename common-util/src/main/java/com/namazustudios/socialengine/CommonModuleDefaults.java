@@ -1,14 +1,11 @@
-package com.namazustudios.socialengine.rest;
-
-import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.ModuleDefaults;
+package com.namazustudios.socialengine;
 
 import java.util.Properties;
 
 /**
  * Created by patricktwohig on 5/25/17.
  */
-public class RestApiModuleDefaults implements ModuleDefaults {
+public class CommonModuleDefaults implements ModuleDefaults {
 
     @Override
     public Properties get() {
@@ -23,4 +20,5 @@ public class RestApiModuleDefaults implements ModuleDefaults {
         defaultProperties.setProperty(Constants.ASYNC_TIMEOUT_LIMIT, Integer.toString(0));
         return defaultProperties;
     }
+
 }

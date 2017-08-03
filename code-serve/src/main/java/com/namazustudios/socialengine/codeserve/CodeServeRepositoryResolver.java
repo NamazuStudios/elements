@@ -24,7 +24,7 @@ import static com.namazustudios.socialengine.model.User.Level.SUPERUSER;
 /**
  * Created by patricktwohig on 8/1/17.
  */
-public class ServletRepositoryResolver implements RepositoryResolver<HttpServletRequest> {
+public class CodeServeRepositoryResolver implements RepositoryResolver<HttpServletRequest> {
 
     private AuthService authService;
 
@@ -43,9 +43,10 @@ public class ServletRepositoryResolver implements RepositoryResolver<HttpServlet
     }
 
     private void authorize(final HttpServletRequest req, final String name) throws
-            ServiceMayNotContinueException,
+            RepositoryNotFoundException,
             ServiceNotAuthorizedException,
-            RepositoryNotFoundException {
+            ServiceNotEnabledException,
+            ServiceMayNotContinueException {
 
         final String header = req.getHeader(AuthorizationHeader.AUTH_HEADER);
 
@@ -88,6 +89,11 @@ public class ServletRepositoryResolver implements RepositoryResolver<HttpServlet
 
         try {
             return getApplicationRepositoryResolver().resolve(application);
+        } catch (RepositoryNotFoundException   |
+                 ServiceNotAuthorizedException |
+                 ServiceNotEnabledException    |
+                 ServiceMayNotContinueException ex) {
+            throw ex;
         } catch (Exception e) {
             throw new ServiceMayNotContinueException(e);
         }

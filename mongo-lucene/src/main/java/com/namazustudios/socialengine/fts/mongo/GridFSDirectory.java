@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.fts.mongo;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.gridfs.GridFS;
@@ -9,12 +7,12 @@ import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import org.apache.lucene.store.*;
 import org.bson.Document;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * An implementation of {@link Directory} which stores the index in a single
@@ -60,12 +58,11 @@ public class GridFSDirectory extends BaseDirectory {
 
         checkOpen();
 
-        return Lists.transform(indexGridFSbucket.find(new BasicDBObject()), new Function<GridFSDBFile, String>() {
-            @Override
-            public String apply(GridFSDBFile input) {
-                return input.getFilename();
-            }
-        }).toArray(new String[]{});
+        return indexGridFSbucket.find(new BasicDBObject())
+            .stream()
+            .map( input -> input.getFilename())
+            .collect(Collectors.toList())
+            .toArray(new String[]{});
 
     }
 

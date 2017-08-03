@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.guice;
 import com.google.common.base.Splitter;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
+import org.nnsoft.guice.rocoto.converters.FileConverter;
 import org.nnsoft.guice.rocoto.converters.URIConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ public class ConfigurationModule extends AbstractModule {
     protected void configure() {
 
         install(new URIConverter());
+        install(new FileConverter());
 
         final Properties properties = propertiesSupplier.get();
         logger.info("Using configuration properties {} from {}", properties, propertiesSupplier.getClass().getName());
