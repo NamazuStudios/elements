@@ -78,6 +78,8 @@ public class AuthorizationHeader {
 
     public BasicAuthorizationHeader asBasicHeader(final String encoding) {
 
+
+
         if (!AUTH_TYPE_BASIC.equals(getType())) {
             throw new AuthorizationHeaderParseException(getType() + " not suitable for Facebook");
         }

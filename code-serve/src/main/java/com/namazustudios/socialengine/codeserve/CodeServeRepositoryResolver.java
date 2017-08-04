@@ -1,14 +1,9 @@
 package com.namazustudios.socialengine.codeserve;
 
-import com.namazustudios.socialengine.exception.AuthorizationHeaderParseException;
-import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.security.AuthorizationHeader;
-import com.namazustudios.socialengine.security.BasicAuthorizationHeader;
 import com.namazustudios.socialengine.service.ApplicationService;
-import com.namazustudios.socialengine.service.AuthService;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.ServiceMayNotContinueException;
@@ -17,6 +12,7 @@ import org.eclipse.jgit.transport.resolver.ServiceNotAuthorizedException;
 import org.eclipse.jgit.transport.resolver.ServiceNotEnabledException;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
 
 import static com.namazustudios.socialengine.model.User.Level.SUPERUSER;
@@ -26,7 +22,7 @@ import static com.namazustudios.socialengine.model.User.Level.SUPERUSER;
  */
 public class CodeServeRepositoryResolver implements RepositoryResolver<HttpServletRequest> {
 
-    private AuthService authService;
+    private Provider<User> userProvider;
 
     private ApplicationService applicationService;
 
@@ -38,38 +34,14 @@ public class CodeServeRepositoryResolver implements RepositoryResolver<HttpServl
             ServiceNotAuthorizedException,
             ServiceNotEnabledException,
             ServiceMayNotContinueException {
-        authorize(req, name);
-        return getRepositoryForApplication(name);
-    }
 
-    private void authorize(final HttpServletRequest req, final String name) throws
-            RepositoryNotFoundException,
-            ServiceNotAuthorizedException,
-            ServiceNotEnabledException,
-            ServiceMayNotContinueException {
+        final User user = getUserProvider().get();
 
-        final String header = req.getHeader(AuthorizationHeader.AUTH_HEADER);
-
-        if (header == null) {
-            throw new ServiceNotAuthorizedException();
+        if (SUPERUSER.equals(user.getLevel())) {
+            return getRepositoryForApplication(name);
         }
 
-        try {
-
-            final BasicAuthorizationHeader basicAuthHeader;
-            basicAuthHeader = new AuthorizationHeader(header).asBasicHeader(req.getCharacterEncoding());
-
-            final User user = getAuthService().loginUser(basicAuthHeader.getUsername(), basicAuthHeader.getPassword());
-
-            if (!SUPERUSER.equals(user.getLevel())) {
-                throw new RepositoryNotFoundException(name);
-            }
-
-        } catch (AuthorizationHeaderParseException ex) {
-            throw new ServiceMayNotContinueException(ex);
-        } catch (ForbiddenException ex) {
-            throw new ServiceMayNotContinueException(ex);
-        }
+        throw new RepositoryNotFoundException(name);
 
     }
 
@@ -100,13 +72,13 @@ public class CodeServeRepositoryResolver implements RepositoryResolver<HttpServl
 
     }
 
-    public AuthService getAuthService() {
-        return authService;
+    public Provider<User> getUserProvider() {
+        return userProvider;
     }
 
     @Inject
-    public void setAuthService(AuthService authService) {
-        this.authService = authService;
+    public void setUserProvider(Provider<User> userProvider) {
+        this.userProvider = userProvider;
     }
 
     public ApplicationService getApplicationService() {

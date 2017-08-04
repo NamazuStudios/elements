@@ -16,6 +16,11 @@ import static java.util.regex.Pattern.compile;
  */
 public class BasicAuthorizationHeader {
 
+    /**
+     * Constant for the default character encoding of the credentials (UTF-8)
+     */
+    public static final String DEFAULT_ENCODING = "UTF-8";
+
     private static final Pattern SEPARATOR = compile(":");
 
     private final String username;
@@ -28,7 +33,7 @@ public class BasicAuthorizationHeader {
 
         try {
             final byte[] decoded = Base64.decode(header);
-            credentials = new String(decoded, encoding);
+            credentials = new String(decoded, encoding == null ? DEFAULT_ENCODING : encoding);
         } catch (Base64DecodingException e) {
             throw new AuthorizationHeaderParseException(e);
         } catch (UnsupportedEncodingException e) {
