@@ -8,6 +8,7 @@ import org.eclipse.jgit.transport.ServiceMayNotContinueException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
+import java.util.function.Consumer;
 
 /**
  * This loads an instance of {@link Repository} from a place on the filesystem.
@@ -21,15 +22,17 @@ public class FileSystemApplicationRepositoryResolver implements ApplicationRepos
     private File gitStorageDirectory;
 
     @Override
-    public Repository resolve(final Application application) throws Exception {
+    public Repository resolve(final Application application, Consumer<Repository> onCreate) throws Exception {
 
         final File repositoryDirectory = getStorageDirectoryForApplication(application);
         final FileRepository fileRepository = new FileRepository(repositoryDirectory);
 
         if (!fileRepository.getConfig().getFile().exists()) {
             fileRepository.create(true);
+            onCreate.accept(fileRepository);
         }
 
+        fileRepository.incrementOpen();
         return fileRepository;
 
     }

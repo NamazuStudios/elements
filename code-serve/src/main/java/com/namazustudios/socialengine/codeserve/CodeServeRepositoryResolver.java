@@ -10,6 +10,8 @@ import org.eclipse.jgit.transport.ServiceMayNotContinueException;
 import org.eclipse.jgit.transport.resolver.RepositoryResolver;
 import org.eclipse.jgit.transport.resolver.ServiceNotAuthorizedException;
 import org.eclipse.jgit.transport.resolver.ServiceNotEnabledException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -21,6 +23,8 @@ import static com.namazustudios.socialengine.model.User.Level.SUPERUSER;
  * Created by patricktwohig on 8/1/17.
  */
 public class CodeServeRepositoryResolver implements RepositoryResolver<HttpServletRequest> {
+
+    private static final Logger logger = LoggerFactory.getLogger(CodeServeRepositoryResolver.class);
 
     private Provider<User> userProvider;
 
@@ -60,7 +64,11 @@ public class CodeServeRepositoryResolver implements RepositoryResolver<HttpServl
         }
 
         try {
-            return getApplicationRepositoryResolver().resolve(application);
+            return getApplicationRepositoryResolver().resolve(application, r -> {
+                // This serves as a placeholder to do things such as setup the repository with a
+                // default set of files.
+                logger.info("Created repository for application {}", application.getId());
+            });
         } catch (RepositoryNotFoundException   |
                  ServiceNotAuthorizedException |
                  ServiceNotEnabledException    |

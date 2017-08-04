@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.codeserve;
 import com.namazustudios.socialengine.model.application.Application;
 import org.eclipse.jgit.lib.Repository;
 
+import java.util.function.Consumer;
+
 /**
  * Created by patricktwohig on 8/1/17.
  */
@@ -18,9 +20,10 @@ public interface ApplicationRepositoryResolver {
      * If no {@link Repository} exists, this must create the repository.
      *
      * @param application the {@link Application}
+     * @param onCreate
      * @return the {@link Repository}, never null
      *
      */
-    Repository resolve(Application application) throws Exception;
+    Repository resolve(Application application, Consumer<Repository> onCreate) throws Exception;
 
 }

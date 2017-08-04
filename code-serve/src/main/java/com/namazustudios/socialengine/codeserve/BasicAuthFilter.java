@@ -1,7 +1,11 @@
 package com.namazustudios.socialengine.codeserve;
 
-import com.namazustudios.socialengine.exception.*;
+import com.namazustudios.socialengine.exception.AuthorizationHeaderParseException;
+import com.namazustudios.socialengine.exception.BaseException;
+import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.exception.UnauthorizedException;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.security.AuthenticatedRequest;
 import com.namazustudios.socialengine.security.AuthorizationHeader;
 import com.namazustudios.socialengine.security.BasicAuthorizationHeader;
 import com.namazustudios.socialengine.service.AuthService;
@@ -44,8 +48,8 @@ public class BasicAuthFilter implements Filter {
         final HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
 
         try {
-            authorize(httpServletRequest);
-            filterChain.doFilter(servletRequest, servletResponse);
+            final HttpServletRequest authorized = authorize(httpServletRequest);
+            filterChain.doFilter(authorized, servletResponse);
         } catch (UnauthorizedException ex) {
             final int status = map(ex);
             httpServletResponse.setHeader(WWW_AUTHENTICATE, AUTH_TYPE_BASIC);
@@ -55,29 +59,32 @@ public class BasicAuthFilter implements Filter {
             final int status = map(ex);
             httpServletResponse.setStatus(status);
             logger.info("Request failed ex: {}", ex.getCode(), ex);
-        } catch (Exception ex) {
-            logger.error("", ex);
         }
 
     }
 
-    private void authorize(final HttpServletRequest httpServletRequest) {
+    private HttpServletRequest authorize(final HttpServletRequest httpServletRequest) {
 
-        final String header = httpServletRequest.getHeader(AuthorizationHeader.AUTH_HEADER);
+        final String authHeaderValue = httpServletRequest.getHeader(AuthorizationHeader.AUTH_HEADER);
 
-        if (header == null) {
+        if (authHeaderValue == null) {
             throw new UnauthorizedException();
         }
+
+        final AuthorizationHeader authorizationHeader;
         final BasicAuthorizationHeader basicAuthHeader;
 
         try {
-            basicAuthHeader = new AuthorizationHeader(header).asBasicHeader(httpServletRequest.getCharacterEncoding());
+            authorizationHeader = new AuthorizationHeader(authHeaderValue);
+            basicAuthHeader = authorizationHeader.asBasicHeader(httpServletRequest.getCharacterEncoding());
         } catch (AuthorizationHeaderParseException ex) {
             throw new ForbiddenException(ex);
         }
 
         final User user = getAuthService().loginUser(basicAuthHeader.getUsername(), basicAuthHeader.getPassword());
         httpServletRequest.setAttribute(User.USER_ATTRIBUTE, user);
+
+        return new AuthenticatedRequest(httpServletRequest, authorizationHeader);
 
     }
 

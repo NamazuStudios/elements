@@ -68,7 +68,6 @@
             <version>${jgit.version}</version>
         </dependency>
 
-
         <!--
             This shoudln't be in the war file, but rather should be handled by
             the container itself.  However, Jetty seems to have issues using slf4j
@@ -80,7 +79,6 @@
             <artifactId>slf4j-simple</artifactId>
             <version>${slf4j.version}</version>
         </dependency>
-
 
     </dependencies>
 
