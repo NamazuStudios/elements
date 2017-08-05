@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.application;
 
+import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
@@ -7,6 +8,8 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.service.ApplicationService;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+import java.net.URI;
 
 /**
  * {@link ApplicationService} implemented for when the current user has {@link User.Level#SUPERUSER} access.
@@ -15,37 +18,63 @@ import javax.inject.Inject;
  */
 public class SuperUserApplicationService implements ApplicationService {
 
-    @Inject
+    private URI codeServeUrl;
+
     private ApplicationDao applicationDao;
 
     @Override
     public Application createApplication(Application application) {
-        return applicationDao.createOrUpdateInactiveApplication(application);
+        return addCodeServeUrl(getApplicationDao().createOrUpdateInactiveApplication(application));
     }
 
     @Override
     public Pagination<Application> getApplications(int offset, int count) {
-        return applicationDao.getActiveApplications(offset, count);
+        return getApplicationDao().getActiveApplications(offset, count).transform(this::addCodeServeUrl);
     }
 
     @Override
     public Pagination<Application> getApplications(int offset, int count, String search) {
-        return applicationDao.getActiveApplications(offset, count, search);
+        return getApplicationDao().getActiveApplications(offset, count, search).transform(this::addCodeServeUrl);
     }
 
     @Override
     public Application getApplication(String nameOrId) {
-        return applicationDao.getActiveApplication(nameOrId);
+        return addCodeServeUrl(getApplicationDao().getActiveApplication(nameOrId));
     }
 
     @Override
     public Application updateApplication(String nameOrId, Application application) {
-        return applicationDao.updateActiveApplication(nameOrId, application);
+        return addCodeServeUrl(applicationDao.updateActiveApplication(nameOrId, application));
     }
 
     @Override
     public void deleteApplication(String nameOrId) {
         applicationDao.softDeleteApplication(nameOrId);
+    }
+
+    private Application addCodeServeUrl(final Application application) {
+        final URI base = getCodeServeUrl();
+        final URI repositoryRoot = base.resolve(application.getName());
+        application.setScriptRepoUrl(repositoryRoot.toString());
+        return application;
+    }
+
+    public ApplicationDao getApplicationDao() {
+        return applicationDao;
+    }
+
+    @Inject
+    public void setApplicationDao(ApplicationDao applicationDao) {
+        this.applicationDao = applicationDao;
+    }
+
+    public URI getCodeServeUrl() {
+        return codeServeUrl;
+    }
+
+    @Inject
+    public void setCodeServeUrl(@Named(Constants.CODE_SERVE_URL) URI codeServeUrl) {
+        this.codeServeUrl = codeServeUrl;
     }
 
 }

@@ -64,6 +64,11 @@ public interface Constants {
     String ASYNC_TIMEOUT_LIMIT = "com.namazustudios.socialengine.async.timeout.limit";
 
     /**
+     * The async request timeout limit.
+     */
+    String CODE_SERVE_URL = "com.namazustudios.socialengine.code.serve.url";
+
+    /**
      * Defines some useful regex patterns.
      */
     interface Regexp {
