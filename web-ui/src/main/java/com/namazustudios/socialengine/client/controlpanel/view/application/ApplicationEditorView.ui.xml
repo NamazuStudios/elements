@@ -49,7 +49,7 @@
                             </b:FormGroup>
 
                             <b:FormGroup ui:field="applicationScriptRepoUrlFormGroup">
-                                <b:FormLabel for="scriptRepoUrl">Application Description</b:FormLabel>
+                                <b:FormLabel for="scriptRepoUrl">Application Repository</b:FormLabel>
                                 <b:TextBox placeholder="(repo url)" ui:field="scriptRepoUrlTextBox"/>
                             </b:FormGroup>
 
