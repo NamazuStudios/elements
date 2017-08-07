@@ -2,13 +2,12 @@ package com.namazustudios.socialengine.security;
 
 import com.google.common.base.Splitter;
 import com.namazustudios.socialengine.exception.AuthorizationHeaderParseException;
-import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
-import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
+import static java.util.Base64.getDecoder;
 import static java.util.regex.Pattern.compile;
 
 /**
@@ -32,9 +31,9 @@ public class BasicAuthorizationHeader {
         final String credentials;
 
         try {
-            final byte[] decoded = Base64.decode(header);
+            final byte[] decoded = getDecoder().decode(header);
             credentials = new String(decoded, encoding == null ? DEFAULT_ENCODING : encoding);
-        } catch (Base64DecodingException e) {
+        } catch (IllegalArgumentException e) {
             throw new AuthorizationHeaderParseException(e);
         } catch (UnsupportedEncodingException e) {
             throw new AuthorizationHeaderParseException(e);

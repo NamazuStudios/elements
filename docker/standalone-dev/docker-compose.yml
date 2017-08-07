@@ -39,22 +39,6 @@ services:
     deploy:
       replicas: 1
 
-  api:
-    build:
-      context: ./api
-    depends_on:
-      - mongo
-      - redis
-    deploy:
-      replicas: 1
-    links:
-      - redis
-      - mongo
-    networks:
-      - socialengine
-    ports:
-      - "8081:8080"
-
   ui:
     build:
       context: ./ui
@@ -67,5 +51,42 @@ services:
     ports:
       - "8080:8080"
 
+  api:
+    build:
+      context: ./api
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - mongo
+      - redis
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "8081:8080"
+
+  code-serve:
+    build:
+      context: ./code-serve
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - mongo
+      - redis
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "8082:8080"
+    volumes:
+      - script-repos:/opt/socialengine/script-repos
+
 networks:
   socialengine:
+
+volumes:
+  script-repos:

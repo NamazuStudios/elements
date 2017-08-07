@@ -44,12 +44,12 @@ public class SuperUserApplicationService implements ApplicationService {
 
     @Override
     public Application updateApplication(String nameOrId, Application application) {
-        return addCodeServeUrl(applicationDao.updateActiveApplication(nameOrId, application));
+        return addCodeServeUrl(getApplicationDao().updateActiveApplication(nameOrId, application));
     }
 
     @Override
     public void deleteApplication(String nameOrId) {
-        applicationDao.softDeleteApplication(nameOrId);
+        getApplicationDao().softDeleteApplication(nameOrId);
     }
 
     private Application addCodeServeUrl(final Application application) {

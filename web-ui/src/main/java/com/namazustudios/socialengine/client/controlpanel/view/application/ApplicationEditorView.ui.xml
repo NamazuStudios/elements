@@ -48,6 +48,11 @@
                                 <b:Label ui:field="descriptionWarningLabel" visible="false" text="Description Not Valid" type="DANGER"/>
                             </b:FormGroup>
 
+                            <b:FormGroup ui:field="applicationScriptRepoUrlFormGroup">
+                                <b:FormLabel for="scriptRepoUrl">Application Description</b:FormLabel>
+                                <b:TextBox placeholder="(repo url)" ui:field="scriptRepoUrlTextBox"/>
+                            </b:FormGroup>
+
                             <b:Button ui:field="create">Submit</b:Button>
 
                         </b:FieldSet>

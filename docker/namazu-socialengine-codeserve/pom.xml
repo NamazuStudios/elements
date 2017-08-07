@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <artifactId>docker</artifactId>
+        <groupId>com.namazustudios.socialengine</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>pom</packaging>
+
+    <groupId>com.namazustudios.socialengine</groupId>
+    <artifactId>namazu-socialengine-code-serve</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>code-serve-war</artifactId>
+            <version>${project.version}</version>
+            <type>war</type>
+        </dependency>
+    </dependencies>
+
+    <build>
+
+        <plugins>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeScope>runtime</includeScope>
+                            <overWriteReleases>false</overWriteReleases>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>${exec.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>my-exec</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <inherited>false</inherited>
+                    </execution>
+                </executions>
+                <configuration>
+                    <workingDirectory>${project.basedir}</workingDirectory>
+                    <executable>docker</executable>
+                    <arguments>
+                        <argument>build</argument>
+                        <argument>${project.basedir}</argument>
+                        <argument>--build-arg</argument>
+                        <argument>CODE_SERVE_WAR=target/lib/code-serve-war-${project.version}.war</argument>
+                        <argument>--tag</argument>
+                        <argument>${project.artifactId}:latest</argument>
+                        <argument>--tag</argument>
+                        <argument>${project.artifactId}:${project.version}</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+        </plugins>
+
+    </build>
+
+</project>
