@@ -8,12 +8,6 @@ package com.namazustudios.socialengine.rest;
 public interface XHttpHeaders {
 
     /**
-     * Used in conjunction with the standard Authorization header.  This is used to
-     * trigger an attempt to authorize the user via Facebook OAuth tokens.
-     */
-    String AUTH_TYPE_FACEBOOK = "Facebook";
-
-    /**
      * Used to trigger a Long-Polling type of requests.  This requests that the server
      * wait on a response until certain conditions trigger a response.  The server
      * will make its best effort attempt to wait until either the response is ready

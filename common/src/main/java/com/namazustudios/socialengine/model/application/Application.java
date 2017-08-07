@@ -26,6 +26,8 @@ public class Application {
 
     private String description;
 
+    private String scriptRepoUrl;
+
     /**
      * The globally-unique identifier.
      *
@@ -81,6 +83,24 @@ public class Application {
         this.description = description;
     }
 
+    /**
+     * Gets script repo URL.
+     *
+     * @return the script repo URL
+     */
+    public String getScriptRepoUrl() {
+        return scriptRepoUrl;
+    }
+
+    /**
+     * Sets the script repo URL.
+     *
+     * @param scriptRepoUrl the script repo URL
+     */
+    public void setScriptRepoUrl(String scriptRepoUrl) {
+        this.scriptRepoUrl = scriptRepoUrl;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -90,7 +110,9 @@ public class Application {
 
         if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
-        return getDescription() != null ? getDescription().equals(that.getDescription()) : that.getDescription() == null;
+        if (getDescription() != null ? !getDescription().equals(that.getDescription()) : that.getDescription() != null)
+            return false;
+        return getScriptRepoUrl() != null ? getScriptRepoUrl().equals(that.getScriptRepoUrl()) : that.getScriptRepoUrl() == null;
     }
 
     @Override
@@ -98,6 +120,7 @@ public class Application {
         int result = getId() != null ? getId().hashCode() : 0;
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
+        result = 31 * result + (getScriptRepoUrl() != null ? getScriptRepoUrl().hashCode() : 0);
         return result;
     }
 

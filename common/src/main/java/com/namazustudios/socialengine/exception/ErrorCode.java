@@ -18,6 +18,11 @@ public enum  ErrorCode {
     FORBIDDEN,
 
     /**
+     * Access to a given resource is unauthorized.
+     */
+    UNAUTHORIZED,
+
+    /**
      * Indicates an invalid parameter was passed to the API
      */
     INVALID_PARAMETER,

@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rest.security;
+package com.namazustudios.socialengine.service.auth;
 
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InternalException;
@@ -7,12 +7,13 @@ import com.namazustudios.socialengine.service.UserAuthenticationMethod;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.container.ContainerRequestContext;
 
 import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
 
 /**
- * Uses a property on the {@link ContainerRequestContext} to supply the {@link User}.
+ * Uses a property on the {@link HttpServletRequest} to supply the {@link User}.  The auhenticated
+ * user is set to the request using {@link HttpServletRequest#setAttribute(String, Object)} using
+ * {@link User#USER_ATTRIBUTE} as the key.
  *
  * Created by patricktwohig on 6/26/17.
  */

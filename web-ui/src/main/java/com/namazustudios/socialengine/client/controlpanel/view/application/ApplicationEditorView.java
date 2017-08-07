@@ -74,6 +74,10 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
     Label descriptionWarningLabel;
 
     @UiField
+    @Path("scriptRepoUrl")
+    TextBox scriptRepoUrlTextBox;
+
+    @UiField
     CellTable<ApplicationConfiguration> applicationConfigurationCellTable;
 
     @UiField
@@ -247,6 +251,8 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
         configurationsTableRow.setVisible(false);
         addConfigurationDropDownRow.setVisible(false);
+
+        scriptRepoUrlTextBox.setEnabled(false);
 
     }
 

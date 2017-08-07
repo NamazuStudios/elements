@@ -1,14 +1,11 @@
-package com.namazustudios.socialengine.rest;
-
-import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.ModuleDefaults;
+package com.namazustudios.socialengine;
 
 import java.util.Properties;
 
 /**
  * Created by patricktwohig on 5/25/17.
  */
-public class RestApiModuleDefaults implements ModuleDefaults {
+public class CommonModuleDefaults implements ModuleDefaults {
 
     @Override
     public Properties get() {
@@ -21,6 +18,8 @@ public class RestApiModuleDefaults implements ModuleDefaults {
         defaultProperties.setProperty(Constants.API_OUTSIDE_URL, "http://localhost:8080/api/rest");
         defaultProperties.setProperty(Constants.CORS_ALLOWED_ORIGINS, "http://localhost:8888, http://127.0.0.1:8888");
         defaultProperties.setProperty(Constants.ASYNC_TIMEOUT_LIMIT, Integer.toString(0));
+        defaultProperties.setProperty(Constants.CODE_SERVE_URL, "http://localhost:8080/git/code-serve");
         return defaultProperties;
     }
+
 }

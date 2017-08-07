@@ -1,9 +1,12 @@
 package com.namazustudios.socialengine.rest.security;
 
+import com.namazustudios.socialengine.exception.AuthorizationHeaderParseException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.FacebookSession;
+import com.namazustudios.socialengine.security.AuthorizationHeader;
+import com.namazustudios.socialengine.security.FacebookAuthorizationHeader;
 import com.namazustudios.socialengine.service.FacebookAuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +18,7 @@ import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 
-import static com.namazustudios.socialengine.rest.XHttpHeaders.AUTH_TYPE_FACEBOOK;
+import static com.namazustudios.socialengine.security.AuthorizationHeader.AUTH_TYPE_FACEBOOK;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 
 /**
