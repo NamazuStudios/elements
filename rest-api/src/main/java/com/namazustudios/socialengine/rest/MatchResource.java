@@ -13,6 +13,7 @@ import com.namazustudios.socialengine.service.Topic;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -39,7 +40,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
                   "this allows two separate players (as represented by their profiles) to participate in a " +
                   "game.  Note, this API only provides matching.  The players must separately create a game " +
                   "from the match.  A match only provides a token which can be used to create a game which will " +
-                  "be private among the two players involved.")
+                  "be private among the two players involved.",
+    authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
 @Path("match")
 public class MatchResource {
 
