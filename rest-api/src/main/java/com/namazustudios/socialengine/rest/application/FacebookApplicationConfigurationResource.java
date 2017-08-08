@@ -42,7 +42,7 @@ public class FacebookApplicationConfigurationResource {
     @ApiOperation(
             value = "Gets a Facebook Application Configuration",
             notes = "Gets a single Facebook application based on unique name or ID.")
-    public FacebookApplicationConfiguration getIosApplicationConfiguration(
+    public FacebookApplicationConfiguration getFacebookApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId) {
         return getFacebookApplicationConfigurationService().getApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
@@ -61,7 +61,7 @@ public class FacebookApplicationConfigurationResource {
     @ApiOperation(
             value = "Creates a new Facebook ApplicationConfiguration",
             notes = "Creates a new Facebook ApplicationConfiguration with the specific ID or application.")
-    public FacebookApplicationConfiguration createIosApplicationConfiguration(
+    public FacebookApplicationConfiguration createFacebookApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             final FacebookApplicationConfiguration facebookApplicationConfiguration) {
 
@@ -122,7 +122,7 @@ public class FacebookApplicationConfigurationResource {
     @ApiOperation(
             value = "Deletes a Facebook ApplicationConfiguration",
             notes = "Deletes an existing Facebook Application profile if it is known to the server.")
-    public void deleteIosApplicationConfiguration(
+    public void deleteFacebookApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId) {
         getFacebookApplicationConfigurationService().deleteApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);

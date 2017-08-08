@@ -4,7 +4,6 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 
 /**
@@ -19,7 +18,6 @@ public class Match {
     @ApiModelProperty("The unique ID of the match.")
     private String id;
 
-    @NotNull
     @ApiModelProperty("The player requesting the match.  If not specified, then the current profile will be inferred.")
     private Profile player;
 

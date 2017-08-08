@@ -19,8 +19,6 @@ public class FacebookSession {
 
     private Application application;
 
-    private String appSecretProof;
-
     private String userAccessToken;
 
     public User getUser() {
@@ -37,14 +35,6 @@ public class FacebookSession {
 
     public void setUserAccessToken(String userAccessToken) {
         this.userAccessToken = userAccessToken;
-    }
-
-    public String getAppSecretProof() {
-        return appSecretProof;
-    }
-
-    public void setAppSecretProof(String appSecretProof) {
-        this.appSecretProof = appSecretProof;
     }
 
     public Profile getProfile() {
@@ -74,8 +64,6 @@ public class FacebookSession {
         if (getProfile() != null ? !getProfile().equals(that.getProfile()) : that.getProfile() != null) return false;
         if (getApplication() != null ? !getApplication().equals(that.getApplication()) : that.getApplication() != null)
             return false;
-        if (getAppSecretProof() != null ? !getAppSecretProof().equals(that.getAppSecretProof()) : that.getAppSecretProof() != null)
-            return false;
         return getUserAccessToken() != null ? getUserAccessToken().equals(that.getUserAccessToken()) : that.getUserAccessToken() == null;
     }
 
@@ -84,7 +72,6 @@ public class FacebookSession {
         int result = getUser() != null ? getUser().hashCode() : 0;
         result = 31 * result + (getProfile() != null ? getProfile().hashCode() : 0);
         result = 31 * result + (getApplication() != null ? getApplication().hashCode() : 0);
-        result = 31 * result + (getAppSecretProof() != null ? getAppSecretProof().hashCode() : 0);
         result = 31 * result + (getUserAccessToken() != null ? getUserAccessToken().hashCode() : 0);
         return result;
     }

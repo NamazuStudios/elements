@@ -61,7 +61,7 @@ public class UserMatchService implements MatchService {
         final Profile profile = getCurrentProfileSupplier().get();
 
         if (match.getPlayer() == null) {
-            match.setOpponent(profile);
+            match.setPlayer(profile);
         } else if (!Objects.equals(profile, match.getPlayer())) {
             throw new ForbiddenException("player must match current profile");
         } else if (match.getOpponent() != null) {

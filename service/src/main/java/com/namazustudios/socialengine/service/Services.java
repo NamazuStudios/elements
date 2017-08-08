@@ -32,7 +32,7 @@ public class Services {
     public static <T> T forbidden(final Class<T> cls) {
         return (T) forbiddenServices.computeIfAbsent(cls, c ->
             newProxyInstance(Services.class.getClassLoader(), new Class[]{c}, (p,m,a) -> {
-                throw new ForbiddenException();
+                throw new ForbiddenException("user not logged in or credentials not supplied");
             }
         ));
     }
@@ -51,7 +51,7 @@ public class Services {
     public static <T> T unimplemented(final Class<T> cls) {
         return (T) unimplementedServices.computeIfAbsent(cls, c ->
                 newProxyInstance(Services.class.getClassLoader(), new Class[]{c}, (p,m,a) -> {
-                            throw new NotImplementedException();
+                            throw new NotImplementedException("not implemented");
                         }
                 ));
     }

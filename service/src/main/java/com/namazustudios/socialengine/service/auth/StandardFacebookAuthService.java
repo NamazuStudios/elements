@@ -82,7 +82,6 @@ public class StandardFacebookAuthService implements FacebookAuthService {
                 facebookSession.setUser(user);
                 facebookSession.setProfile(profile);
                 facebookSession.setApplication(facebookApplicationConfiguration.getParent());
-                facebookSession.setAppSecretProof(appsecretProof);
                 facebookSession.setUserAccessToken(facebookOAuthAccessToken);
 
                 return facebookSession;
@@ -148,7 +147,6 @@ public class StandardFacebookAuthService implements FacebookAuthService {
             facebookSession.setUser(user);
             facebookSession.setProfile(profile);
             facebookSession.setApplication(facebookApplicationConfiguration.getParent());
-            facebookSession.setAppSecretProof(appsecretProof);
             facebookSession.setUserAccessToken(longLivedAccessToken.getAccessToken());
 
             return facebookSession;
