@@ -100,7 +100,7 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
         final MongoFacebookApplicationConfiguration mongoFacebookApplicationConfiguration = query.get();
 
         if (mongoFacebookApplicationConfiguration == null) {
-            throw new NotFoundException("application profile " + applicationConfigurationNameOrId + " not found.");
+            throw new NotFoundException("application configuration " + applicationConfigurationNameOrId + " not found.");
         }
 
         return getBeanMapper().map(mongoFacebookApplicationConfiguration, FacebookApplicationConfiguration.class);
