@@ -63,19 +63,16 @@ public abstract class AbstractLuaResource extends AbstractResource {
     /**
      * Redirects the print function to the logger returned by {@link #getScriptLog()}.
      */
-    private final JavaFunction printToScriptLog = new JavaFunction() {
-        @Override
-        public int invoke(LuaState luaState) {
-            try (final StackProtector stackProtector = new StackProtector(luaState)) {
-                final StringBuffer stringBuffer = new StringBuffer();
+    private final JavaFunction printToScriptLog = luaState -> {
+        try (final StackProtector stackProtector = new StackProtector(luaState)) {
+            final StringBuffer stringBuffer = new StringBuffer();
 
-                for (int i = 1; i <= luaState.getTop(); ++i) {
-                    stringBuffer.append(luaState.toJavaObject(i, String.class));
-                }
-
-                getScriptLog().info("{}", stringBuffer.toString());
-                return stackProtector.setAbsoluteIndex(0);
+            for (int i = 1; i <= luaState.getTop(); ++i) {
+                stringBuffer.append(luaState.toJavaObject(i, String.class));
             }
+
+            getScriptLog().info("{}", stringBuffer.toString());
+            return stackProtector.setAbsoluteIndex(0);
         }
     };
 

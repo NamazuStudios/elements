@@ -1,4 +1,7 @@
-package com.namazustudios.socialengine.model.application;
+package com.namazustudios.socialengine.model.manifest;
+
+import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.model.application.Operation;
 
 import java.util.List;
 import java.util.Map;
