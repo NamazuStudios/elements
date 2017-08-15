@@ -8,6 +8,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
+import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -133,6 +134,15 @@ public final class Path implements Comparable<Path> {
      */
     public String toNormalizedPathString() {
         return toNormalizedPathString(PATH_SEPARATOR);
+    }
+
+    /**
+     * Returns the String representation of this Path as a file system path.
+     *
+     * @return the string representation
+     */
+    public String toFileSystemPathString() {
+        return toNormalizedPathString(File.pathSeparator);
     }
 
     /**

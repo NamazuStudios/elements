@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -17,7 +16,11 @@ public interface AssetLoader extends AutoCloseable {
 
     /**
      * Closes the {@link AssetLoader} and cleaning up any resources.  Any open {@link InputStream}
-     * instances may be closed.
+     * instances may be closed, but this is not a guarantee.  All resources open *should* be closed
+     * before closing this {@link AssetLoader}.  Using resources after closing this instance, or
+     * closing this instance while resources are open should be considered undefined behavior.
+     *
+     * Invoking this method twice on the same object should also be considered undefined behavior.
      */
     @Override
     void close();
@@ -26,9 +29,9 @@ public interface AssetLoader extends AutoCloseable {
      * Reads an asset as a String.  {@link #open(Path)}
      *
      * @param pathString the path string
-     * @return
+     * @return an {@link InputStream} used to read the underlying asset
      */
-    default InputStream open(final String pathString) throws IOException {
+    default InputStream open(final String pathString) {
         final Path path = new Path(pathString);
         return open(path);
     }
@@ -39,6 +42,6 @@ public interface AssetLoader extends AutoCloseable {
      * @param path the {@link Path} to the file.
      * @return an {@link InputStream}
      */
-    InputStream open(Path path) throws IOException;
+    InputStream open(Path path);
 
 }
