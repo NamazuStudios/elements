@@ -11,10 +11,6 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <properties>
-        <jgit.version>4.8.0.201706111038-r</jgit.version>
-    </properties>
-
     <groupId>com.namazustudios.socialengine</groupId>
     <artifactId>code-serve</artifactId>
     <version>1.0-SNAPSHOT</version>

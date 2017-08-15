@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -27,7 +28,7 @@ public interface AssetLoader extends AutoCloseable {
      * @param pathString the path string
      * @return
      */
-    default InputStream open(final String pathString) {
+    default InputStream open(final String pathString) throws IOException {
         final Path path = new Path(pathString);
         return open(path);
     }
@@ -38,6 +39,6 @@ public interface AssetLoader extends AutoCloseable {
      * @param path the {@link Path} to the file.
      * @return an {@link InputStream}
      */
-    InputStream open(Path path);
+    InputStream open(Path path) throws IOException;
 
 }

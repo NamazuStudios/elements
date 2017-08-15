@@ -125,14 +125,25 @@ public final class Path implements Comparable<Path> {
     }
 
     /**
-     * Returns the normalized path string.  NOte that {@link #toString()} does not return
+     * Returns the normalized path string.  Note that {@link #toString()} does not return
      * a properly formatted path.  But rather a path useful for debugging and logging information.
      * To get the normalzied path, this method must be used.
      *
      * @return the normalized path as a string
      */
     public String toNormalizedPathString() {
-        return Util.pathFromComponents(components);
+        return toNormalizedPathString(PATH_SEPARATOR);
+    }
+
+    /**
+     * Returns the normalized path string.  NOte that {@link #toString()} does not return
+     * a properly formatted path.  But rather a path useful for debugging and logging information.
+     * To get the normalzied path, this method must be used.
+     *
+     * @return the normalized path as a string
+     */
+    public String toNormalizedPathString(final String separator) {
+        return Util.pathFromComponents(components, separator);
     }
 
     @Override
@@ -227,20 +238,31 @@ public final class Path implements Comparable<Path> {
 
         /**
          * Joins the given string components together to build a path string from
-         * the given componenets.
+         * the given components.
          *
          * @param pathComponents
          * @return the string
          */
         public static String pathFromComponents(final List<String> pathComponents) {
+            return pathFromComponents(pathComponents, PATH_SEPARATOR);
+        }
+
+        /**
+         * Joins the given string components together to build a path string from
+         * the given components.
+         *
+         * @param pathComponents
+         * @return the string
+         */
+        public static String pathFromComponents(final List<String> pathComponents, final String separator) {
 
             for (final String pathComponent : pathComponents) {
-                if (pathComponent.contains(PATH_SEPARATOR)) {
-                    throw new IllegalArgumentException("Path components must not contain " + PATH_SEPARATOR);
+                if (pathComponent.contains(separator)) {
+                    throw new IllegalArgumentException("Path components must not contain " + separator);
                 }
             }
 
-            final StringBuilder stringBuilder = Joiner.on(PATH_SEPARATOR)
+            final StringBuilder stringBuilder = Joiner.on(separator)
                     .skipNulls()
                     .appendTo(new StringBuilder("/"), pathComponents);
 
