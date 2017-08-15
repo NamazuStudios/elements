@@ -1,8 +1,7 @@
 package com.namazustudios.socialengine.rt.handler;
 
-import com.namazustudios.socialengine.exception.InvalidParameterException;
-import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +86,7 @@ public class SimpleHandlerRequestDispatcher implements HandlerRequestDispatcher 
             } else if (clientRequestHandler.getPayloadType().isAssignableFrom(request.getPayload().getClass())) {
                 clientRequestHandler.handle(handlerClientSession, request, receiver);
             } else {
-                throw new InvalidParameterException("Method " + request.getHeader().getMethod() + " " +
+                throw new BadRequestException("Method " + request.getHeader().getMethod() + " " +
                         "at path " + request.getHeader().getPath()  + " " +
                         "does not handle payload (" + request.getPayload() + ") " +
                         "of type " + request.getPayload().getClass());

@@ -1,13 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.namazustudios.socialengine.exception.BaseException;
-import com.namazustudios.socialengine.exception.ErrorCode;
+import com.namazustudios.socialengine.rt.exception.BaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 /**
  * A singleton instance of {@link ExceptionMapper} which defines the default
@@ -25,20 +20,6 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
 
     private static final DefaultExceptionMapper INSTANCE = new DefaultExceptionMapper();
 
-    /**
-     * Maps the {@link ErrorCode} enum to the {@link ResponseCode} type.
-     */
-    public static final Map<ErrorCode, ResponseCode> RESPONSE_STATUS_MAP = Maps.immutableEnumMap(
-        new ImmutableMap.Builder<ErrorCode, ResponseCode>()
-                .put(ErrorCode.DUPLICATE, ResponseCode.BAD_REQUEST_FATAL)
-                .put(ErrorCode.FORBIDDEN, ResponseCode.FAILED_AUTH_FATAL)
-                .put(ErrorCode.INVALID_DATA, ResponseCode.BAD_REQUEST_FATAL)
-                .put(ErrorCode.NOT_FOUND, ResponseCode.PATH_NOT_FOUND)
-                .put(ErrorCode.OVERLOAD, ResponseCode.TOO_BUSY_FATAL)
-                .put(ErrorCode.INVALID_PARAMETER, ResponseCode.BAD_REQUEST_FATAL)
-                .put(ErrorCode.UNKNOWN, ResponseCode.INTERNAL_ERROR_FATAL)
-        .build());
-
     private DefaultExceptionMapper() {}
 
     @Override
@@ -54,7 +35,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
         try {
             throw throwable;
         } catch (BaseException bex) {
-            code = RESPONSE_STATUS_MAP.get(bex.getCode());
+            code = bex.getResponseCode();
             code = code == null ? ResponseCode.INTERNAL_ERROR_FATAL : code;
             LOG.warn("Caught exception handling request {}.", request, bex);
         } catch (Throwable th) {

@@ -25,7 +25,12 @@ public enum ResponseCode {
     /**
      * A particular path could not be found.
      */
-    PATH_NOT_FOUND,
+    RESOURCE_NOT_FOUND,
+
+    /**
+     * Indicates that we were trying to insert or create a duplicate resource.
+     */
+    DUPLICATE_RESOURCE,
 
     /**
      * A particular metohd could not be found at the requested path.

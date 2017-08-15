@@ -1,8 +1,7 @@
 package com.namazustudios.socialengine.rt.worker;
 
-import com.namazustudios.socialengine.exception.InvalidParameterException;
-import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +53,7 @@ public class SimpleInternalRequestDispatcher implements InternalRequestDispatche
             } else if (workerRequestHandler.getClass().isAssignableFrom(request.getPayload().getClass())) {
                 workerRequestHandler.handle(request, receiver);
             } else {
-                throw new InvalidParameterException("Method " + request.getHeader().getPath() + " " +
+                throw new BadRequestException("Method " + request.getHeader().getPath() + " " +
                         "at path " + request.getHeader().getPath() +
                         "does not handle payload (" + request.getPayload() + ") " +
                         "of type " + request.getPayload().getClass());

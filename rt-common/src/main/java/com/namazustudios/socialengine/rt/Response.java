@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import javax.validation.Payload;
-
 /**
  * Created by patricktwohig on 7/27/15.
  */

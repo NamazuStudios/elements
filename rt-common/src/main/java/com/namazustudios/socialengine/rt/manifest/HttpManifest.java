@@ -1,17 +1,14 @@
-package com.namazustudios.socialengine.model.manifest;
-
-import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.model.application.Operation;
+package com.namazustudios.socialengine.rt.manifest;
 
 import java.util.List;
 import java.util.Map;
 
 /**
+ * Contains a listing of all {@link Operation}
+ *
  * Created by patricktwohig on 8/9/17.
  */
-public class HttpApplicationManifest {
-
-    private Application application;
+public class HttpManifest {
 
     private List<Operation> operationList;
 
@@ -20,14 +17,6 @@ public class HttpApplicationManifest {
     private List<String> consumes;
 
     private Map<String, String> methods;
-
-    public Application getApplication() {
-        return application;
-    }
-
-    public void setApplication(Application application) {
-        this.application = application;
-    }
 
     public List<Operation> getOperationList() {
         return operationList;

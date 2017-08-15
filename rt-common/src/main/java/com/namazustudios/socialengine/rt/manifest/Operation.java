@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.application;
+package com.namazustudios.socialengine.rt.manifest;
 
 /**
  * Created by patricktwohig on 8/9/17.
@@ -6,8 +6,6 @@ package com.namazustudios.socialengine.model.application;
 public class Operation {
 
     private String path;
-
-    
 
     public String getPath() {
         return path;

@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.dao.rt;
 
 import com.namazustudios.socialengine.dao.ManifestDao;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.model.manifest.HttpApplicationManifest;
+import com.namazustudios.socialengine.rt.manifest.HttpManifest;
 
 /**
  * Created by patricktwohig on 8/14/17.
@@ -10,7 +10,7 @@ import com.namazustudios.socialengine.model.manifest.HttpApplicationManifest;
 public class LuaManifestDao implements ManifestDao {
 
     @Override
-    public HttpApplicationManifest getHttpManifestForApplication(Application application) {
+    public HttpManifest getHttpManifestForApplication(Application application) {
         return null;
     }
 

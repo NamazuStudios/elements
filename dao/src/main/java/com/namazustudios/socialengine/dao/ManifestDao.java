@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao;
 
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.model.manifest.HttpApplicationManifest;
+import com.namazustudios.socialengine.rt.manifest.HttpManifest;
 
 /**
  * Created by patricktwohig on 8/14/17.
@@ -9,12 +9,12 @@ import com.namazustudios.socialengine.model.manifest.HttpApplicationManifest;
 public interface ManifestDao {
 
     /**
-     * Loads the {@link HttpApplicationManifest} for the supplied {@link Application} instance.
+     * Loads the {@link HttpManifest} for the supplied {@link Application} instance.
      *
-     * @param application the {@link Application} for which to load the {@link HttpApplicationManifest}.
+     * @param application the {@link Application} for which to load the {@link HttpManifest}.
      *
-     * @return the {@link HttpApplicationManifest}
+     * @return the {@link HttpManifest}
      */
-    HttpApplicationManifest getHttpManifestForApplication(Application application);
+    HttpManifest getHttpManifestForApplication(Application application);
 
 }

@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.rt.handler;
 
-import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.Container;
+import com.namazustudios.socialengine.rt.Request;
+import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 
 /**
  *
@@ -25,7 +27,7 @@ public interface Handler extends Resource {
      * @param method the method name
      * @return the handler for the given method, never null
      *
-     * @throws {@link NotFoundException} if the method cannot be found.
+     * @throws {@link MethodNotFoundException} if the method cannot be found.
      */
     ClientRequestHandler getHandler(final String method);
 

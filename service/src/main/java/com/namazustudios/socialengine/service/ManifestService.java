@@ -1,13 +1,13 @@
 package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.model.manifest.HttpApplicationManifest;
+import com.namazustudios.socialengine.rt.manifest.HttpManifest;
 
 /**
  * Created by patricktwohig on 8/13/17.
  */
 public interface ManifestService {
 
-    HttpApplicationManifest getHttpManifestForApplication(Application application);
+    HttpManifest getHttpManifestForApplication(Application application);
 
 }

@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.exception;
 
-import com.namazustudios.socialengine.exception.BaseException;
-import com.namazustudios.socialengine.exception.ErrorCode;
+import com.namazustudios.socialengine.rt.ResponseCode;
 
 /**
  * Created by patricktwohig on 9/30/15.
@@ -27,8 +26,8 @@ public class CorruptEnvelopeException extends BaseException {
     }
 
     @Override
-    public ErrorCode getCode() {
-        return ErrorCode.INVALID_DATA;
+    public ResponseCode getResponseCode() {
+        return ResponseCode.BAD_REQUEST_RETRY;
     }
 
 }
