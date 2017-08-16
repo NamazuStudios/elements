@@ -70,6 +70,11 @@
             <artifactId>cron-utils</artifactId>
             <version>${cron.utils.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.dozermapper</groupId>
+            <artifactId>dozer-core</artifactId>
+            <version>${dozer.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

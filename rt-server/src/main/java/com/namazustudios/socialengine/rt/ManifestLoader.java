@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
+import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 
 /**
  * Cooperates with the {@link AssetLoader} to load manifest instances such as {@link HttpManifest}.  This is used
@@ -13,6 +14,13 @@ import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
  * Created by patricktwohig on 8/14/17.
  */
 public interface ManifestLoader extends AutoCloseable {
+
+    /**
+     * Gets the {@link ModelManifest} instance.
+     *
+     * @return the {@link ModelManifest}
+     */
+    ModelManifest getModelManifest();
 
     /**
      * Gets the manifest for the HTTP mappings, if available.
