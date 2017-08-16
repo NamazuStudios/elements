@@ -1,53 +1,32 @@
 package com.namazustudios.socialengine.rt.manifest;
 
-import java.util.List;
 import java.util.Map;
 
 /**
- * Contains a listing of all {@link Operation}
+ * Contains a listing of all {@link HttpOperation}
  *
  * Created by patricktwohig on 8/9/17.
  */
 public class HttpManifest {
 
-    private List<Operation> operationList;
+    private Map<String, HttpModule> modulesByName;
 
-    private List<String> produces;
-
-    private List<String> consumes;
-
-    private Map<String, String> methods;
-
-    public List<Operation> getOperationList() {
-        return operationList;
+    /**
+     * Gets a mapping of {@link HttpModule} instances by their associated name.
+     *
+     * @return the mapping of {@link HttpModule} by name
+     */
+    public Map<String, HttpModule> getModulesByName() {
+        return modulesByName;
     }
 
-    public void setOperationList(List<Operation> operationList) {
-        this.operationList = operationList;
-    }
-
-    public List<String> getProduces() {
-        return produces;
-    }
-
-    public void setProduces(List<String> produces) {
-        this.produces = produces;
-    }
-
-    public List<String> getConsumes() {
-        return consumes;
-    }
-
-    public void setConsumes(List<String> consumes) {
-        this.consumes = consumes;
-    }
-
-    public Map<String, String> getMethods() {
-        return methods;
-    }
-
-    public void setMethods(Map<String, String> methods) {
-        this.methods = methods;
+    /**
+     * Sets a mapping of {@link HttpModule} instances by their associated name.
+     *
+     * @param modulesByName the mapping of {@link HttpModule} by name
+     */
+    public void setModulesByName(Map<String, HttpModule> modulesByName) {
+        this.modulesByName = modulesByName;
     }
 
 }

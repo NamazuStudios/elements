@@ -7,38 +7,109 @@
 
 -- This table determines the HTTP mapping of methods to Lua modules.  Modules not specified here
 -- will not be mapped to HTTP method calls.
+
+
+-- A model definition object includes a definition of what an object looks like.  The types
+-- correspond to the pre-defined lua types.  They key in the table is the name of the field
+-- and the value is the type of value (eg, string, number).  In the cases of complex types,
+-- the type a table indicating the type and referenced module object must be used.
+
+-- A simple example model which contains primitives
+
+namazu.model.foo_model = {
+
+    -- Example string type named "foo_string"
+    foo_string = "string",
+
+    -- Example number type nmaed "foo_number"
+    foo_number = "number",
+
+    -- Example boolean type named "foo_boolean"
+    foo_boolean = "boolean",
+
+}
+
+-- A complex model which contains a reference to a foo_model object as
+-- well as a reference to an array of foo_model objects.
+
+namazu.model.bar_model = {
+
+    bar_object = {
+        type = "object",
+        model = "foo_model"
+    },
+
+    bar_array = {
+        type = "array",
+        model = "foo_model"
+    }
+
+}
+
+-- The table containing the HTTP method manifest.
+
 namazu.http = {
 
-    -- Operations may be specified.  The key is the name of the API.
+    -- The simple hello world operation
 
     hello_world = {
-
-        -- The path the server will resolve the module.  Wildcards may be used to match several
-        -- paths.  The methods will recieve the full request object.
-        path = "/hello_world/*",
-
-        -- Specifies the content type which will be both consumed and produced by the particular
-        -- module.  The first entry in in the list is used as the default when the request is
-        -- devoid of either hte Content-Type or the Accept header.
-
-        consumes = { "application/json" },
-        produces = { "application/json" },
 
         -- Source code of the module, relative to the project root.  This is optional and by
         -- default will map to the name of the operation set.  You may specify other modules
         -- consistent with Lua's "require" keyword such as "foo.bar" to indicate that the
-        -- module's code resides in foo/bar.lua
+        -- module's code resides in foo/bar.lua.
         module = "hello_world",
 
-        -- The methods to call in the module when servicing a request.  This is optional and if
-        -- unspecified, then then the container will attempt to call a method in the module
-        -- with the name matching the HTTP verb.  Unmapped method will simply map to a 404
+        -- The operations contained in the module.  This maps the request/respons metadata to various
+        -- Lua script methods based on the nature of the request/response.
 
-        methods = {
-            GET    = "get",
-            PUT    = "put",
-            POST   = "post",
-            DELETE = "delete"
+        operations = {
+
+            get_hello_world = {
+
+                -- The corresponding HTTP verb.  Must be one of GET, POST, PUT, DELETE, HEAD, OPTIONS
+
+                verb = "GET",
+
+                -- The path the server will resolve the module.  The path parameters encapsulated in the
+                -- {} notation and will be used as wildcard-style matching.  This example will match
+                -- any path under /hello_world/ and capture the remaining path componenet in the
+                -- foo path parameter.
+
+                path = "/hello_world/{foo}",
+
+                -- The lua method to call in the module when servicing the request.  This will include
+                -- the get module.
+
+                method = "get",
+
+                -- Specifies the content which will be produced and consumed by the operation.  The consumer
+                -- will consume a model of the supplied type when the content type is provided.  If the request
+                -- is devoid of content type, then the first mapping in the table is used.
+
+                consumes = {
+                    {
+
+                        -- Specifies the content-type to match the incoming requests
+                        type = "application/json",
+
+                        -- Specifies the model which will be used to service the request
+                        model = namazu.model.foo_model,
+
+                        -- Specifies any additional headers required for matching
+                        headers = {"X-MyExampleHeader" }
+                    }
+                },
+
+                produces = {
+                    {
+                        type = "application/json",
+                        model = namazu.model.foo_model,
+                        headers = {"X-MyExampleHeader"}
+                    }
+                },
+
+            }
         }
 
     }

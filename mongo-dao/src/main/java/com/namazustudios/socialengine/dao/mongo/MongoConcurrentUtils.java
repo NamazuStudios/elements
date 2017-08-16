@@ -99,7 +99,7 @@ public class MongoConcurrentUtils {
      *
      * @param criticalOperation the criticalOperation to attempt
      * @param <ReturnT> the type to return
-     * @return the return fields from the Operation
+     * @return the return fields from the HttpOperation
      *
      */
     public <ReturnT> ReturnT performOptimistic(final CriticalOperation<ReturnT> criticalOperation) throws ConflictException {
