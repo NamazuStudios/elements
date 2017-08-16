@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.dao.rt;
 
 import com.namazustudios.socialengine.dao.ManifestDao;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.rt.manifest.HttpManifest;
+import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 
 /**
  * Created by patricktwohig on 8/14/17.

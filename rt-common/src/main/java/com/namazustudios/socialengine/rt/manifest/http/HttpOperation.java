@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.manifest;
+package com.namazustudios.socialengine.rt.manifest.http;
 
 import java.util.List;
 

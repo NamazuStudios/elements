@@ -1,35 +1,36 @@
-package com.namazustudios.socialengine.rt.manifest;
+package com.namazustudios.socialengine.rt.manifest.http;
+
+import com.namazustudios.socialengine.rt.manifest.model.Model;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by patricktwohig on 8/15/17.
  */
 public class HttpContent {
 
-    private String content;
+    private String type;
 
-    private Map<String, Object> model;
+    private Model model;
 
     private List<String> headers;
 
     /**
-     * Gets the content type.
+     * Gets the type type.
      *
-     * @return the content type.
+     * @return the type type.
      */
-    public String getContent() {
-        return content;
+    public String getType() {
+        return type;
     }
 
     /**
      * Sets the desired "Content-Type"
      *
-     * @param content the content type
+     * @param type the type type
      */
-    public void setContent(String content) {
-        this.content = content;
+    public void setType(String type) {
+        this.type = type;
     }
 
     /**
@@ -37,7 +38,7 @@ public class HttpContent {
      *
      * @return the model defintion
      */
-    public Map<String, Object> getModel() {
+    public Model getModel() {
         return model;
     }
 
@@ -46,7 +47,7 @@ public class HttpContent {
      *
      * @param model the model definition
      */
-    public void setModel(Map<String, Object> model) {
+    public void setModel(Model model) {
         this.model = model;
     }
 

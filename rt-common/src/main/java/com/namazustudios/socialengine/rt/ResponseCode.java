@@ -76,9 +76,19 @@ public enum ResponseCode {
     ASSET_NOT_FOUND,
 
     /**
-     * Indicates that the server encountered an unknown or worker error.
+     * Indicates that the manifest was not found.
      */
-    INTERNAL_ERROR_FATAL;
+    MANIFEST_NOT_FOUND,
+
+    /**
+     * Indicates that the server encountered an unknown error.
+     */
+    INTERNAL_ERROR_FATAL,
+
+    /**
+     * Indicates the server encountered a bad manifest and the
+     */
+    INTERNAL_ERROR_BAD_MANIFEST_FATAL;
 
     /**
      * Gets the actual code as returned by {@link ResponseHeader#getCode()}.

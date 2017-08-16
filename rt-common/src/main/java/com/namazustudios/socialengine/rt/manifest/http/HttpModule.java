@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.manifest;
+package com.namazustudios.socialengine.rt.manifest.http;
 
 import java.util.Map;
 
@@ -12,7 +12,8 @@ public class HttpModule {
     private Map<String, HttpOperation> operationsByName;
 
     /**
-     * Gets the name fo the module.
+     * Gets the name fo the module.  This typically names the language-specific type or class name
+     * which is used to load the underlying logic.
      *
      * @return the name of the module
      */

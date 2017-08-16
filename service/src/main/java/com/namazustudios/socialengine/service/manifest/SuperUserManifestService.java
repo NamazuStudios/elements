@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.service.manifest;
 
 import com.namazustudios.socialengine.dao.ManifestDao;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.rt.manifest.HttpManifest;
+import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.service.ManifestService;
 
 import javax.inject.Inject;

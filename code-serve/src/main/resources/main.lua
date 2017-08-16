@@ -16,39 +16,45 @@
 
 -- A simple example model which contains primitives
 
-namazu.model.foo_model = {
+manifest.model.foo = {
 
-    -- Example string type named "foo_string"
-    foo_string = "string",
+    -- Example string type named "string"
+    string_property = {
+        type = "string"
+    },
 
     -- Example number type nmaed "foo_number"
-    foo_number = "number",
+    number_property = {
+        type = "number"
+    },
 
     -- Example boolean type named "foo_boolean"
-    foo_boolean = "boolean",
+    boolean_property = {
+        type = "boolean"
+    }
 
 }
 
 -- A complex model which contains a reference to a foo_model object as
 -- well as a reference to an array of foo_model objects.
 
-namazu.model.bar_model = {
+manifest.model.bar = {
 
-    bar_object = {
+    object_property = {
         type = "object",
-        model = "foo_model"
+        model = "foo"
     },
 
-    bar_array = {
+    array_property = {
         type = "array",
-        model = "foo_model"
+        model = "foo"
     }
 
 }
 
 -- The table containing the HTTP method manifest.
 
-namazu.http = {
+manifest.http = {
 
     -- The simple hello world operation
 
