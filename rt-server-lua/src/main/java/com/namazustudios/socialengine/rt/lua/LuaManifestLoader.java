@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.lua;
 
+import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaException;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.AssetLoader;
@@ -24,8 +25,6 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class LuaManifestLoader implements ManifestLoader {
 
-    private static final Logger logger = LoggerFactory.getLogger(LuaManifestLoader.class);
-
     public static final String MAIN_MANIFEST = "main.lua";
 
     public static final String MANIFEST_TABLE = "manifest";
@@ -33,6 +32,12 @@ public class LuaManifestLoader implements ManifestLoader {
     public static final String MODEL_TABLE = "model";
 
     public static final String HTTP_TABLE = "http";
+
+    private static final Logger logger = LoggerFactory.getLogger(LuaManifestLoader.class);
+
+    private static final Logger scriptLogger = LoggerFactory.getLogger(MAIN_MANIFEST);
+
+    private static final JavaFunction print = new ScriptLogger(s -> scriptLogger.info("{}", s));
 
     private AssetLoader assetLoader;
 
@@ -99,17 +104,26 @@ public class LuaManifestLoader implements ManifestLoader {
     }
 
     private <T> T load(final Class<T> tClass, String table) {
-        loadStateIfNecessary();
+        loadAndRunIfNecessary();
         final Map<?, ?> tableMap = mapFromTable(table);
         return getDozerMapper().map(tableMap, tClass);
     }
 
-    private void loadStateIfNecessary() {
+    private void loadAndRunIfNecessary() {
         if (luaState == null) {
             try (final InputStream inputStream = getAssetLoader().open(MAIN_MANIFEST)) {
+
                 luaState = getLuaStateProvider().get();
+
                 createManifestTables();
+                setupFunctionOverrides();
+
                 luaState.load(inputStream, MAIN_MANIFEST, "bt");
+                scriptLogger.info("Loaded Script: {}", MAIN_MANIFEST);
+
+                luaState.call(0, 0);
+                scriptLogger.info("Executed Script: {}", MAIN_MANIFEST);
+
             } catch (IOException ex) {
                 logger.error("Caught IO exception reading manifest {}.", MAIN_MANIFEST, ex);
                 throw new InternalException(ex);
@@ -118,6 +132,11 @@ public class LuaManifestLoader implements ManifestLoader {
                 throw new BadManifestException(ex);
             }
         }
+    }
+
+    private void setupFunctionOverrides() {
+        luaState.pushJavaFunction(print);
+        luaState.setGlobal(Constants.PRINT_FUNCTION);
     }
 
     private void createManifestTables() {

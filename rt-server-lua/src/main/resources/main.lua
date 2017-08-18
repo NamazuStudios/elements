@@ -117,18 +117,26 @@ manifest.http = {
                         type = "application/json",
 
                         -- Specifies the model which will be used to service the request
-                        model = namazu.model.foo_model,
+                        model = manifest.model.foo,
 
-                        -- Specifies any additional headers required for matching
-                        headers = {"X-MyExampleHeader" }
+                        -- Specifies any additional headers this request may consume
+                        headers = { "X-MyExampleHeader" }
+
                     }
                 },
 
                 produces = {
                     {
+
+                        -- Specifie the content-type to match the incoming requests
                         type = "application/json",
-                        model = namazu.model.foo_model,
-                        headers = {"X-MyExampleHeader"}
+
+                        -- Specifies the model which will be used to service the request
+                        model = manifest.model.foo,
+
+                        -- Specifies any additional headers this request may produce
+                        headers = { "X-MyExampleHeader" }
+
                     }
                 },
 

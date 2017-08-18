@@ -28,7 +28,7 @@ import java.util.Map;
  */
 public abstract class AbstractLuaResource extends AbstractResource {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractLuaResource.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractLuaResource.class);
 
     /**
      * Simplifies the file name for the sake of better error reporting.
@@ -58,23 +58,12 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
     private final ClasspathModuleLoader classpathModuleLoader;
 
-    private Logger scriptLog = LOG;
+    private Logger scriptLog = logger;
 
     /**
      * Redirects the print function to the logger returned by {@link #getScriptLog()}.
      */
-    private final JavaFunction printToScriptLog = luaState -> {
-        try (final StackProtector stackProtector = new StackProtector(luaState)) {
-            final StringBuffer stringBuffer = new StringBuffer();
-
-            for (int i = 1; i <= luaState.getTop(); ++i) {
-                stringBuffer.append(luaState.toJavaObject(i, String.class));
-            }
-
-            getScriptLog().info("{}", stringBuffer.toString());
-            return stackProtector.setAbsoluteIndex(0);
-        }
-    };
+    private final JavaFunction printToScriptLog = new ScriptLogger(s -> logger.info("{}", s));
 
     /**
      * Creates an instance of {@link AbstractLuaResource} with the given {@link LuaState}
