@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rt.lua;
 
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaState;
-import com.namazustudios.socialengine.exception.InternalException;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 
 import java.io.IOException;
 import java.io.InputStream;

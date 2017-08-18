@@ -29,11 +29,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.nebula2d</groupId>
             <artifactId>jnlua</artifactId>
             <version>${jnlua.version}</version>
@@ -72,11 +67,6 @@
             <version>${cron.utils.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github.dozermapper</groupId>
-            <artifactId>dozer-core</artifactId>
-            <version>${dozer.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.scijava</groupId>
             <artifactId>native-lib-loader</artifactId>
             <version>${native.lib.loader.version}</version>
@@ -85,12 +75,6 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>${testng.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-            <version>${commons.logging.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

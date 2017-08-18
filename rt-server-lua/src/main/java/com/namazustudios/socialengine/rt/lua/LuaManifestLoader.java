@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.rt.exception.BadManifestException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
-import org.dozer.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +16,6 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -43,8 +41,6 @@ public class LuaManifestLoader implements ManifestLoader {
 
     private Provider<LuaState> luaStateProvider;
 
-    private Mapper dozerMapper;
-
     private final Object lock = new Object();
 
     private final AtomicReference<HttpManifest> httpManifestAtomicReference = new AtomicReference<>();
@@ -58,13 +54,13 @@ public class LuaManifestLoader implements ManifestLoader {
     @Override
     public ModelManifest getModelManifest() {
         final ModelManifest modelManifest = modelManifestAtomicReference.get();
-        return modelManifest == null ? loadIfNecessary(modelManifestAtomicReference, ModelManifest.class, MODEL_TABLE) : modelManifest;
+        return modelManifest == null ? loadIfNecessary(modelManifestAtomicReference, MODEL_TABLE, ModelManifest.class) : modelManifest;
     }
 
     @Override
     public HttpManifest getHttpManifest() {
         final HttpManifest httpManifest = httpManifestAtomicReference.get();
-        return httpManifest == null ? loadIfNecessary(httpManifestAtomicReference, HttpManifest.class, HTTP_TABLE) : httpManifest;
+        return httpManifest == null ? loadIfNecessary(httpManifestAtomicReference, HTTP_TABLE, HttpManifest.class) : httpManifest;
     }
 
     @Override
@@ -84,17 +80,15 @@ public class LuaManifestLoader implements ManifestLoader {
         }
     }
 
-    private <T> T loadIfNecessary(final AtomicReference<T> tAtomicReference, final Class<T> tClass, final String table) {
+    private <T> T loadIfNecessary(final AtomicReference<T> tAtomicReference, final String table, Class<T> tClass) {
         synchronized (lock) {
 
-            if (closed) {
-                throw new IllegalStateException("already closed");
-            }
+            loadAndRunIfNecessary();
 
             T t = tAtomicReference.get();
 
             if (t == null) {
-                t = load(tClass, table);
+                t = fromManifestTable(table, tClass);
                 tAtomicReference.compareAndSet(null, t);
             }
 
@@ -103,14 +97,10 @@ public class LuaManifestLoader implements ManifestLoader {
         }
     }
 
-    private <T> T load(final Class<T> tClass, String table) {
-        loadAndRunIfNecessary();
-        final Map<?, ?> tableMap = mapFromTable(table);
-        return getDozerMapper().map(tableMap, tClass);
-    }
-
     private void loadAndRunIfNecessary() {
-        if (luaState == null) {
+        if (closed) {
+            throw new IllegalStateException("already closed");
+        } else if (luaState == null) {
             try (final InputStream inputStream = getAssetLoader().open(MAIN_MANIFEST)) {
 
                 luaState = getLuaStateProvider().get();
@@ -159,11 +149,11 @@ public class LuaManifestLoader implements ManifestLoader {
         }
     }
 
-    private Map<?, ?> mapFromTable(final String table) {
+    private <T> T fromManifestTable(final String table, final Class<T> tClass) {
         try (final StackProtector s = new StackProtector(luaState)){
             luaState.getGlobal(MANIFEST_TABLE);
             luaState.getField(-1, table);
-            return luaState.toJavaObject(-1, Map.class);
+            return luaState.toJavaObject(-1, tClass);
         } catch (ClassCastException | LuaException ex) {
             logger.error("Caught exception reading manifest {}.", MAIN_MANIFEST, ex);
             throw new BadManifestException(ex);
@@ -186,15 +176,6 @@ public class LuaManifestLoader implements ManifestLoader {
     @Inject
     public void setLuaStateProvider(Provider<LuaState> luaStateProvider) {
         this.luaStateProvider = luaStateProvider;
-    }
-
-    public Mapper getDozerMapper() {
-        return dozerMapper;
-    }
-
-    @Inject
-    public void setDozerMapper(Mapper dozerMapper) {
-        this.dozerMapper = dozerMapper;
     }
 
 }
