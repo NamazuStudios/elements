@@ -7,6 +7,8 @@ public class Property {
 
     private String name;
 
+    private String description;
+
     private Type type;
 
     private String model;
@@ -27,6 +29,24 @@ public class Property {
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    /**
+     * Gets the description of this {@link Property}.
+     *
+     * @return the description
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * Sets the description of this {@link Property}.
+     *
+     * @param description the description
+     */
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     /**

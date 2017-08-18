@@ -63,6 +63,11 @@
             <version>${swagger.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-server</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-jersey2-jaxrs</artifactId>
             <version>${swagger.version}</version>

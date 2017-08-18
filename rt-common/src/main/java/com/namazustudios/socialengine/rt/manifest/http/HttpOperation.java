@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.manifest.http;
 
+import com.namazustudios.socialengine.rt.ParameterizedPath;
+
 import java.util.List;
 
 /**
@@ -13,7 +15,7 @@ public class HttpOperation {
 
     private HttpVerb verb;
 
-    private String path;
+    private ParameterizedPath path;
 
     private String method;
 
@@ -45,7 +47,7 @@ public class HttpOperation {
      *
      * @return the path
      */
-    public String getPath() {
+    public ParameterizedPath getPath() {
         return path;
     }
 
@@ -54,7 +56,7 @@ public class HttpOperation {
      *
      * @param path the path
      */
-    public void setPath(String path) {
+    public void setPath(ParameterizedPath path) {
         this.path = path;
     }
 

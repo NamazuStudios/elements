@@ -25,6 +25,11 @@ public class SuperUserApplicationService implements ApplicationService {
     private ApplicationDao applicationDao;
 
     @Override
+    public Pagination<Application> getApplications() {
+        return getApplicationDao().getActiveApplications();
+    }
+
+    @Override
     public Application createApplication(Application application) {
         return addCodeServeUrl(getApplicationDao().createOrUpdateInactiveApplication(application));
     }

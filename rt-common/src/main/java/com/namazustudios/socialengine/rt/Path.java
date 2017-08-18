@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -12,6 +11,8 @@ import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Represents the path scheme for use in the server.
@@ -30,7 +31,10 @@ public final class Path implements Comparable<Path> {
      */
     public static final String WILDCARD = "*";
 
-    private static final Pattern VALID_PATH = Pattern.compile("[\\w*]+");
+    /**
+     * A {@link Pattern} to match valid path components.
+     */
+    public static final Pattern VALID_PATH_COMPONENT = Pattern.compile("[\\.\\w*]+");
 
     private final List<String> components;
 
@@ -38,6 +42,7 @@ public final class Path implements Comparable<Path> {
     // compareTo method should compare.
     private final int maxCompareIndex;
 
+    // A boolean value to indicate if the path is a wildcard path.
     private final boolean wildcard;
 
     /**
@@ -71,10 +76,10 @@ public final class Path implements Comparable<Path> {
 
         wildcard = idx >= 0;
         maxCompareIndex = wildcard ? idx : components.size();
-        this.components = new ImmutableList.Builder<String>().addAll(components).build();
+        this.components = unmodifiableList(components);
 
         this.components.forEach(c -> {
-            if (!VALID_PATH.matcher(c).matches()) {
+            if (!VALID_PATH_COMPONENT.matcher(c).matches()) {
                 throw new IllegalArgumentException(c + " has invalid characters");
             }
         });
@@ -272,11 +277,7 @@ public final class Path implements Comparable<Path> {
                 }
             }
 
-            final StringBuilder stringBuilder = Joiner.on(separator)
-                    .skipNulls()
-                    .appendTo(new StringBuilder("/"), pathComponents);
-
-            return stringBuilder.toString();
+            return Joiner.on(separator).skipNulls().join(pathComponents);
 
         }
 

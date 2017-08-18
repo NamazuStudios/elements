@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rest;
 import com.namazustudios.socialengine.model.BasicEntrantProfile;
 import com.namazustudios.socialengine.model.SocialCampaignEntry;
 import com.namazustudios.socialengine.model.SteamEntrantProfile;
+import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.SocialCampaignService;
 import com.namazustudios.socialengine.ValidationHelper;
 import io.swagger.annotations.Api;

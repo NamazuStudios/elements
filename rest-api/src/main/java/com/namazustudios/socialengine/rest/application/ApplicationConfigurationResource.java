@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rest.application;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
-import com.namazustudios.socialengine.rest.EnhancedApiListingResource;
+import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.ApplicationConfigurationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

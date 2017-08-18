@@ -21,6 +21,13 @@ public interface ApplicationService {
     Application createApplication(final Application application);
 
     /**
+     * Lists all {@link Application} instances avaiable to the current user.
+     *
+     * @return a {@link Pagination<Application>} for all available instances.
+     */
+    Pagination<Application> getApplications();
+
+    /**
      * Gets the applications registered in the databse given the offset and count.
      *
      * @param offset the offset

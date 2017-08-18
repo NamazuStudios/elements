@@ -9,6 +9,8 @@ public class Model {
 
     private String name;
 
+    private String description;
+
     private Map<String, Property> properties;
 
     /**
@@ -27,6 +29,24 @@ public class Model {
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    /**
+     * Gets the description of this {@link Model}.
+     *
+     * @return the description
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * Sets the description of this model.
+     *
+     * @param description the description
+     */
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     /**

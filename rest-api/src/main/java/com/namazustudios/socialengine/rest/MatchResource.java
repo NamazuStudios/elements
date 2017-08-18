@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.TimeDelta;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchTimeDelta;
+import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.MatchService;
 import com.namazustudios.socialengine.service.Topic;
 import io.swagger.annotations.Api;

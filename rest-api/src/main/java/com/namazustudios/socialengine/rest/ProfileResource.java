@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.ProfileService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

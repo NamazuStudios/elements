@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rest.application;
 
 import com.namazustudios.socialengine.model.application.IosApplicationConfiguration;
-import com.namazustudios.socialengine.rest.EnhancedApiListingResource;
+import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.IosApplicationConfigurationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

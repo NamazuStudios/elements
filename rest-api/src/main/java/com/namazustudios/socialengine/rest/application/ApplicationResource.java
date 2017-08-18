@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.rest.EnhancedApiListingResource;
+import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.ApplicationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

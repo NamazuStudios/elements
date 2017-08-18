@@ -18,19 +18,28 @@
 
 manifest.model.foo = {
 
-    -- Example string type named "string"
-    string_property = {
-        type = "string"
-    },
+    description = "Example Simple (Foo) Object",
 
-    -- Example number type nmaed "foo_number"
-    number_property = {
-        type = "number"
-    },
+    properties = {
 
-    -- Example boolean type named "foo_boolean"
-    boolean_property = {
-        type = "boolean"
+        -- Example string type named "string"
+        string_property = {
+            description = "An example string Property.",
+            type = "string"
+        },
+
+        -- Example number type nmaed "foo_number"
+        number_property = {
+            description = "An example number Property.",
+            type = "number"
+        },
+
+        -- Example boolean type named "foo_boolean"
+        boolean_property = {
+            description = "An example boolean Property.",
+            type = "boolean"
+        }
+
     }
 
 }
@@ -40,14 +49,22 @@ manifest.model.foo = {
 
 manifest.model.bar = {
 
-    object_property = {
-        type = "object",
-        model = "foo"
-    },
+    description = "Example Complex (Bar) Object",
 
-    array_property = {
-        type = "array",
-        model = "foo"
+    properties = {
+
+        object_property = {
+            description = "An example object property",
+            type = "object",
+            model = "foo"
+        },
+
+        array_property = {
+            description = "An example array property",
+            type = "array",
+            model = "foo"
+        }
+
     }
 
 }

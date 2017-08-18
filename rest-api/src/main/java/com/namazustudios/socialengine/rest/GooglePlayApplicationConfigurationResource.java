@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.model.application.GooglePlayApplicationConfiguration;
+import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.GooglePlayApplicationConfigurationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

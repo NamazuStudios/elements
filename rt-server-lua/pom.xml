@@ -17,8 +17,9 @@
     <name>rt-server-lua</name>
 
     <properties>
-        <cron.utils.version>3.1.1</cron.utils.version>
         <jnlua.version>1.0.4</jnlua.version>
+        <cron.utils.version>3.1.1</cron.utils.version>
+        <native.lib.loader.version>2.2.0</native.lib.loader.version>
     </properties>
 
     <dependencies>
@@ -74,6 +75,17 @@
             <groupId>com.github.dozermapper</groupId>
             <artifactId>dozer-core</artifactId>
             <version>${dozer.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scijava</groupId>
+            <artifactId>native-lib-loader</artifactId>
+            <version>${native.lib.loader.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${testng.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.model;
 import io.swagger.annotations.ApiModel;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -12,7 +13,7 @@ import java.util.stream.Stream;
  * Created by patricktwohig on 3/25/15.
  */
 @ApiModel
-public class Pagination<T> {
+public class Pagination<T> implements Iterable<T> {
 
     private int offset;
 
@@ -78,6 +79,11 @@ public class Pagination<T> {
 
         return tPagination;
 
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return getObjects().iterator();
     }
 
     @Override
