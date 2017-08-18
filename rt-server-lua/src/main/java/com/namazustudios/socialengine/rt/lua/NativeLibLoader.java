@@ -1,12 +1,8 @@
 package com.namazustudios.socialengine.rt.lua;
 
 import com.naef.jnlua.NativeSupport;
-import com.namazustudios.socialengine.rt.exception.InternalException;
+import org.scijava.nativelib.NativeLibraryUtil;
 import org.scijava.nativelib.NativeLoader;
-
-import java.io.IOException;
-
-import static org.scijava.nativelib.NativeLoader.loadLibrary;
 
 /**
  * Implementation of {@link com.naef.jnlua.NativeSupport.Loader} which unpacks the
@@ -17,10 +13,6 @@ import static org.scijava.nativelib.NativeLoader.loadLibrary;
 public class NativeLibLoader implements NativeSupport.Loader {
     @Override
     public void load() {
-        try {
-            loadLibrary("jnlua");
-        } catch (IOException e) {
-            throw new InternalException(e);
-        }
+        NativeLibraryUtil.loadNativeLibrary(NativeLibLoader.class, "jnlua");
     }
 }
