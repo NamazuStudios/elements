@@ -77,6 +77,11 @@
             <version>${testng.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>commons-jxpath</groupId>
+            <artifactId>commons-jxpath</artifactId>
+            <version>${jxpath.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

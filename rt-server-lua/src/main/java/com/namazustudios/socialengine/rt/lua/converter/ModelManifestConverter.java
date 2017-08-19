@@ -15,7 +15,7 @@ public class ModelManifestConverter extends AbstractMapConverter<ModelManifest> 
     }
 
     @Override
-    protected ModelManifest convertLua2Java(Map<?, ?> map) {
+    public ModelManifest convertLua2Java(Map<?, ?> map) {
         return super.convertLua2Java(map);
     }
 

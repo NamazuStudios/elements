@@ -81,7 +81,7 @@ manifest.http = {
         -- default will map to the name of the operation set.  You may specify other modules
         -- consistent with Lua's "require" keyword such as "foo.bar" to indicate that the
         -- module's code resides in foo/bar.lua.
-        module = "hello_world",
+        module = "example.hello_world",
 
         -- The operations contained in the module.  This maps the request/respons metadata to various
         -- Lua script methods based on the nature of the request/response.
@@ -107,14 +107,12 @@ manifest.http = {
                 method = "get",
 
                 -- Specifies the content which will be produced and consumed by the operation.  The consumer
-                -- will consume a model of the supplied type when the content type is provided.  If the request
-                -- is devoid of content type, then the first mapping in the table is used.
+                -- will consume a model of the supplied type when the content type is provided.
 
                 consumes = {
-                    {
 
-                        -- Specifies the content-type to match the incoming requests
-                        type = "application/json",
+                    -- Specifies the content-type to match the incoming requests
+                    ["application/json"] = {
 
                         -- Specifies the model which will be used to service the request
                         model = manifest.model.foo,
@@ -126,10 +124,9 @@ manifest.http = {
                 },
 
                 produces = {
-                    {
 
-                        -- Specifie the content-type to match the incoming requests
-                        type = "application/json",
+                    -- Specifies the content-type to match to the
+                    ["application/json"] = {
 
                         -- Specifies the model which will be used to service the request
                         model = manifest.model.foo,
@@ -138,6 +135,7 @@ manifest.http = {
                         headers = { "X-MyExampleHeader" }
 
                     }
+
                 },
 
             }

@@ -1,8 +1,9 @@
 package com.namazustudios.socialengine.rt.manifest.http;
 
 import com.namazustudios.socialengine.rt.ParameterizedPath;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 
-import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a single operation performed over an HTTP request.  This contains a
@@ -13,15 +14,35 @@ import java.util.List;
  */
 public class HttpOperation {
 
+    private String name;
+
     private HttpVerb verb;
 
     private ParameterizedPath path;
 
     private String method;
 
-    private List<HttpContent> produces;
+    private Map<String, HttpContent> producesContentByType;
 
-    private List<HttpContent> consumes;
+    private Map<String, HttpContent> consumesContentByType;
+
+    /**
+     * The name of the operation.
+     *
+     * @return the {@link String} representing the name of the operation
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Sets the name of the operation.
+     *
+     * @param name the {@link String} representing the name of the operation
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
 
     /**
      * Gets the associated {@link HttpVerb} associated with the request.
@@ -84,18 +105,18 @@ public class HttpOperation {
      *
      * @return a list of {@link HttpContent}
      */
-    public List<HttpContent> getProduces() {
-        return produces;
+    public Map<String, HttpContent> getProducesContentByType() {
+        return producesContentByType;
     }
 
     /**
      * Sets a listing of {@link HttpContent} instances which specify how
      * the operation produces content.
      *
-     * @param produces  a list of {@link HttpContent}
+     * @param producesContentByType  a list of {@link HttpContent}
      */
-    public void setProduces(List<HttpContent> produces) {
-        this.produces = produces;
+    public void setProducesContentByType(Map<String, HttpContent> producesContentByType) {
+        this.producesContentByType = producesContentByType;
     }
 
     /**
@@ -104,18 +125,48 @@ public class HttpOperation {
      *
      * @return a list of {@link HttpContent}
      */
-    public List<HttpContent> getConsumes() {
-        return consumes;
+    public Map<String, HttpContent> getConsumesContentByType() {
+        return consumesContentByType;
     }
 
     /**
      * Gets a listing of {@link HttpContent} instances which specify how
      * the operation consumes content.
      *
-     * @param consumes a list of {@link HttpContent}
+     * @param consumesContentByType a list of {@link HttpContent}
      */
-    public void setConsumes(List<HttpContent> consumes) {
-        this.consumes = consumes;
+    public void setConsumesContentByType(Map<String, HttpContent> consumesContentByType) {
+        this.consumesContentByType = consumesContentByType;
+    }
+
+    /**
+     * Returns the {@link HttpContent} instance for which {@link HttpContent#isDefaultContent()} returns true
+     * in the values providded by {@link #getConsumesContentByType()}
+     *
+     * @return the default {@link HttpContent}
+     */
+    public HttpContent getDefaultConsumedContent() {
+        return getConsumesContentByType()
+            .values()
+            .stream()
+            .filter(c -> c.isDefaultContent())
+            .findFirst()
+            .orElseThrow(() -> new InternalException("No default Content Type Found for " + getName()));
+    }
+
+    /**
+     * Returns the {@link HttpContent} instance for which {@link HttpContent#isDefaultContent()} returns true
+     * in the values providded by {@link #getProducesContentByType()}
+     *
+     * @return the default {@link HttpContent}
+     */
+    public HttpContent getDefaultProducedContent() {
+        return getProducesContentByType()
+            .values()
+            .stream()
+            .filter(c -> c.isDefaultContent())
+            .findFirst()
+            .orElseThrow(() -> new InternalException("No default Content Type Found for " + getName()));
     }
 
 }

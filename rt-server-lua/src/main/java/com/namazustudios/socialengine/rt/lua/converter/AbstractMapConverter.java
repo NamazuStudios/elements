@@ -31,12 +31,17 @@ public abstract class AbstractMapConverter<JavaT> implements TypedConverter<Java
         defaultConverter.convertJavaObject(luaState, map);
     }
 
-    protected Map<?,?> convertJava2Lua(JavaT object) {
+    public Map<?,?> convertJava2Lua(JavaT object) {
         throw new UnsupportedOperationException("Conversion Java -> Lua not supported for " + getConvertedType());
     }
 
-    protected JavaT convertLua2Java(Map<?,?> map) {
+    public JavaT convertLua2Java(Map<?,?> map) {
         throw new UnsupportedOperationException("Conversion Lua -> Java not supported for " + getConvertedType());
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "{" + "convertedType=" + getConvertedType() + '}';
     }
 
 }

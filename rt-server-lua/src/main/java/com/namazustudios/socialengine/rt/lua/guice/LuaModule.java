@@ -24,7 +24,6 @@ public class LuaModule extends PrivateModule {
 
         expose(ManifestLoader.class);
 
-
     }
 
 }

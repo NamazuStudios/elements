@@ -15,6 +15,8 @@ public class HttpContent {
 
     private List<String> headers;
 
+    private boolean defaultContent;
+
     /**
      * Gets the type type.
      *
@@ -67,6 +69,26 @@ public class HttpContent {
      */
     public void setHeaders(List<String> headers) {
         this.headers = headers;
+    }
+
+    /**
+     * Returns true if the content type is the default content type.  If only
+     * one is specified, then this will always return the default content type.
+     *
+     * @return true  if this is the default http content.
+     */
+    public boolean isDefaultContent() {
+        return defaultContent;
+    }
+
+    /**
+     * Set to true if the content type is the default content type.  If only
+     * one is specified, then this will always return the default content type.
+     *
+     * @@param defaultContent true  if this is the default http content.
+     */
+    public void setDefaultContent(boolean defaultContent) {
+        this.defaultContent = defaultContent;
     }
 
 }

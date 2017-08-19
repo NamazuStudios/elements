@@ -5,13 +5,13 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.unmodifiableList;
 
 /**
@@ -34,7 +34,7 @@ public final class Path implements Comparable<Path> {
     /**
      * A {@link Pattern} to match valid path components.
      */
-    public static final Pattern VALID_PATH_COMPONENT = Pattern.compile("[\\.\\w*]+");
+    public static final Pattern VALID_PATH_COMPONENT = Pattern.compile("[\\p{Print}]+");
 
     private final List<String> components;
 
@@ -62,7 +62,7 @@ public final class Path implements Comparable<Path> {
      *
      */
     public Path(final Path parent, final Path path) {
-        this(Lists.newArrayList(Iterables.concat(parent.getComponents(), path.getComponents())));
+        this(newArrayList(Iterables.concat(parent.getComponents(), path.getComponents())));
     }
 
     /**
