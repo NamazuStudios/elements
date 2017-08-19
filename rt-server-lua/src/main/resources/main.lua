@@ -115,7 +115,7 @@ manifest.http = {
                     ["application/json"] = {
 
                         -- Specifies the model which will be used to service the request
-                        model = manifest.model.foo,
+                        model = "foo",
 
                         -- Specifies any additional headers this request may consume
                         headers = { "X-MyExampleHeader" }
@@ -129,7 +129,7 @@ manifest.http = {
                     ["application/json"] = {
 
                         -- Specifies the model which will be used to service the request
-                        model = manifest.model.foo,
+                        model = "foo",
 
                         -- Specifies any additional headers this request may produce
                         headers = { "X-MyExampleHeader" }

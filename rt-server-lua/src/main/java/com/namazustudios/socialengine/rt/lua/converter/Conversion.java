@@ -47,8 +47,26 @@ public interface Conversion<T> {
      * @param defaultValue the default value
      * @return a Conversion<T> which will succeed or, if not valid, defer to the default value
      */
-    default Conversion<T> orElse(T defaultValue) {
-        return asMappedBy(t -> isValid() ? t : defaultValue, t -> true);
+    default Conversion<T> orElse(final T defaultValue) {
+        return new Conversion<T>() {
+
+            @Override
+            public T get() {
+                return isValid() ? Conversion.this.get() : defaultValue;
+            }
+
+            @Override
+            public Object invalid() {
+                return Conversion.this.invalid();
+            }
+
+            @Override
+            public boolean isValid() {
+                return Conversion.this.isValid();
+            }
+
+        };
+
     }
 
     /**

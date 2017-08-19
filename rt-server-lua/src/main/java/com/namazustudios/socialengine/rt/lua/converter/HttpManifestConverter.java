@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.exception.BadManifestException;
 import com.namazustudios.socialengine.rt.manifest.http.*;
 
+import javax.inject.Inject;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -38,11 +39,11 @@ public class HttpManifestConverter extends AbstractMapConverter<HttpManifest> {
 
     public static final String CONSUMES_KEY = "consumes";
 
-    public static final String TYPE_KEY = "type";
-
     public static final String HEADERS_KEY = "headers";
 
     public static final String MODEL_KEY = "model";
+
+    private ModelManifestConverter modelManifestConverter;
 
     @Override
     public Class<HttpManifest> getConvertedType() {
@@ -176,7 +177,7 @@ public class HttpManifestConverter extends AbstractMapConverter<HttpManifest> {
 
         final String type = Conversion.from(key)
             .asCastTo(String.class)
-            .orThrow(v -> new BadManifestException("Expected string for in '" + context + "': "))
+            .orThrow(v -> new BadManifestException("Expected string for key in '" + context + "': "))
             .get();
 
         final Map<?, Conversion<?>> contentConversionMap = Conversion.fromMap(
@@ -191,18 +192,34 @@ public class HttpManifestConverter extends AbstractMapConverter<HttpManifest> {
                 .orThrow(v -> new BadManifestException("Expected table for headers in '" + context + "': " + v))
                 .get().values());
 
+        final String model = contentConversionMap
+                .get(MODEL_KEY)
+                .asCastTo(String.class)
+                .orThrow(v -> new BadManifestException("Expected string for model in '" + context + "': "))
+                .get();
+
         final List<String> headers = headerConversionCollection
             .stream()
             .map(c -> c.asCastTo(String.class)
-                       .orThrow(v -> new BadManifestException("Expected string for headres in '" + context + "': " + v))
+                       .orThrow(v -> new BadManifestException("Expected string for headers in '" + context + "': " + v))
                        .get())
             .collect(Collectors.toList());
 
         final HttpContent httpContent = new HttpContent();
         httpContent.setType(type);
+        httpContent.setModel(model);
         httpContent.setHeaders(headers);
         return httpContent;
 
+    }
+
+    public ModelManifestConverter getModelManifestConverter() {
+        return modelManifestConverter;
+    }
+
+    @Inject
+    public void setModelManifestConverter(ModelManifestConverter modelManifestConverter) {
+        this.modelManifestConverter = modelManifestConverter;
     }
 
 }

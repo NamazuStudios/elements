@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt.manifest.http;
 
-import com.namazustudios.socialengine.rt.manifest.model.Model;
-
 import java.util.List;
 
 /**
@@ -11,7 +9,7 @@ public class HttpContent {
 
     private String type;
 
-    private Model model;
+    private String model;
 
     private List<String> headers;
 
@@ -40,7 +38,7 @@ public class HttpContent {
      *
      * @return the model defintion
      */
-    public Model getModel() {
+    public String getModel() {
         return model;
     }
 
@@ -49,7 +47,7 @@ public class HttpContent {
      *
      * @param model the model definition
      */
-    public void setModel(Model model) {
+    public void setModel(String model) {
         this.model = model;
     }
 
