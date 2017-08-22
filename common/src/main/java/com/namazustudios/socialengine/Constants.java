@@ -69,6 +69,18 @@ public interface Constants {
     String CODE_SERVE_URL = "com.namazustudios.socialengine.code.serve.url";
 
     /**
+     * The storage directory for the git repositories shared among instances that need to have
+     * access to git repositories.
+     */
+    String GIT_STORAGE_DIRECTORY = "com.namazustudios.socialengine.git.storage.directory";
+
+    /**
+     * The HTTP tunneling root URL.  This is the base URL where the http rt-http service
+     * services requests.
+     */
+    String HTTP_TUNNEL_URL = "com.namazustudios.socialengine.git.http.tunnel.url";
+
+    /**
      * Defines some useful regex patterns.
      */
     interface Regexp {

@@ -76,6 +76,7 @@ public class LuaManifestLoader implements ManifestLoader {
             }
 
             closed = true;
+            getAssetLoader().close();
 
         }
     }

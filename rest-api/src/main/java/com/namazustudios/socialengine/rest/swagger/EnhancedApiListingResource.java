@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rest.swagger;
 
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.http.HttpModule;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
@@ -9,6 +8,7 @@ import com.namazustudios.socialengine.rt.manifest.model.Model;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.model.Property;
 import com.namazustudios.socialengine.service.ApplicationService;
+import com.namazustudios.socialengine.service.ManifestService;
 import io.swagger.annotations.ApiKeyAuthDefinition;
 import io.swagger.annotations.SecurityDefinition;
 import io.swagger.annotations.SwaggerDefinition;
@@ -27,7 +27,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.Map;
-import java.util.function.Function;
 
 import static com.google.common.collect.Streams.stream;
 import static io.swagger.models.Scheme.forValue;
@@ -55,15 +54,15 @@ public class EnhancedApiListingResource extends ApiListingResource {
 
     private URI apiOutsideUrl;
 
-    private ApplicationService applicationService;
+    private ManifestService manifestService;
 
-    private Function<com.namazustudios.socialengine.model.application.Application, ManifestLoader> applicationManifestLoaderFunction;
+    private ApplicationService applicationService;
 
     @Override
     protected Swagger process(Application app, ServletContext servletContext, ServletConfig sc, HttpHeaders headers, UriInfo uriInfo) {
         final Swagger swagger = super.process(app, servletContext, sc, headers, uriInfo);
         appendHostInformation(swagger);
-        appendManifests(swagger);
+//        appendManifests(swagger);
         return swagger;
     }
 
@@ -105,14 +104,10 @@ public class EnhancedApiListingResource extends ApiListingResource {
             final Swagger swagger,
             final com.namazustudios.socialengine.model.application.Application application) {
 
-        // Gets the loader for the application
-
-        final ManifestLoader manifestLoader = getApplicationManifestLoaderFunction().apply(application);
-
-        final ModelManifest modelManifest = manifestLoader.getModelManifest();
+        final ModelManifest modelManifest = getManifestService().getModelManifestForApplication(application);
         appendModelManifest(swagger, modelManifest);
 
-        final HttpManifest httpManifest = manifestLoader.getHttpManifest();
+        final HttpManifest httpManifest = getManifestService().getHttpManifestForApplication(application);
         appendHttpManifest(swagger, httpManifest, modelManifest);
 
     }
@@ -177,13 +172,13 @@ public class EnhancedApiListingResource extends ApiListingResource {
         this.applicationService = applicationService;
     }
 
-    public Function<com.namazustudios.socialengine.model.application.Application, ManifestLoader> getApplicationManifestLoaderFunction() {
-        return applicationManifestLoaderFunction;
+    public ManifestService getManifestService() {
+        return manifestService;
     }
 
-    @Inject
-    public void setApplicationManifestLoaderFunction(Function<com.namazustudios.socialengine.model.application.Application, ManifestLoader> applicationManifestLoaderFunction) {
-        this.applicationManifestLoaderFunction = applicationManifestLoaderFunction;
+//    @Inject
+    public void setManifestService(ManifestService manifestService) {
+        this.manifestService = manifestService;
     }
 
 }

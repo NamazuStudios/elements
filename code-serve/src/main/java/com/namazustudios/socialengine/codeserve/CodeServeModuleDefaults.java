@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.ModuleDefaults;
 
 import java.util.Properties;
 
-import static com.namazustudios.socialengine.codeserve.FileSystemApplicationRepositoryResolver.GIT_STORAGE_DIRECTORY;
+import static com.namazustudios.socialengine.Constants.GIT_STORAGE_DIRECTORY;
 
 /**
  * Module defaults for the code server.

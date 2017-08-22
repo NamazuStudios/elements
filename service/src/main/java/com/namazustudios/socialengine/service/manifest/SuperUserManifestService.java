@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.service.manifest;
 import com.namazustudios.socialengine.dao.ManifestDao;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
+import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.service.ManifestService;
 
 import javax.inject.Inject;
@@ -19,6 +20,11 @@ public class SuperUserManifestService implements ManifestService {
         return getManifestDao().getHttpManifestForApplication(application);
     }
 
+    @Override
+    public ModelManifest getModelManifestForApplication(Application application) {
+        return getManifestDao().getModelManifestForApplication(application);
+    }
+
     public ManifestDao getManifestDao() {
         return manifestDao;
     }
@@ -27,5 +33,6 @@ public class SuperUserManifestService implements ManifestService {
     public void setManifestDao(ManifestDao manifestDao) {
         this.manifestDao = manifestDao;
     }
+
 
 }

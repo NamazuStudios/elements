@@ -80,7 +80,7 @@ public class LuaManifestLoaderTest {
 
         @Provides
         public AssetLoader assetLoader() {
-            return new FileAssetLoader(workingDirectory);
+            return new FileAssetLoader(workingDirectory).getReferenceCountedView();
         }
 
     }
