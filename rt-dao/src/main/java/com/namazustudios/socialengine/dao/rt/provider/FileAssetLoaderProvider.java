@@ -4,6 +4,8 @@ import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.FileAssetLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -17,9 +19,15 @@ import java.util.function.Function;
  */
 public class FileAssetLoaderProvider implements Provider<Function<Application, AssetLoader>> {
 
+    private static final Logger logger = LoggerFactory.getLogger(FileAssetLoaderProvider.class);
+
     private Provider<GitLoader> gitLoaderProvider;
 
     private final ConcurrentMap<File, AssetLoader> loaderCache = new ConcurrentHashMap<>();
+
+    public FileAssetLoaderProvider() {
+        logger.info("Using File AssetLoader provider.");
+    }
 
     @Override
     public Function<Application, AssetLoader> get() {

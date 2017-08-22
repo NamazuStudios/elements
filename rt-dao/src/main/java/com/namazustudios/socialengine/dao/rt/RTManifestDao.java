@@ -13,12 +13,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
+import static java.lang.Runtime.getRuntime;
+
 /**
+ * Loads the various Manifest instances directly from the underlying RT Services.
+ *
  * Created by patricktwohig on 8/14/17.
  */
-public class LuaManifestDao implements ManifestDao {
+public class RTManifestDao implements ManifestDao {
 
-    private static final Logger logger = LoggerFactory.getLogger(LuaManifestDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(RTManifestDao.class);
 
     private Function<Application, ManifestLoader> applicationManifestLoaderFunction;
 
@@ -26,21 +30,22 @@ public class LuaManifestDao implements ManifestDao {
 
     @Override
     public HttpManifest getHttpManifestForApplication(final Application application) {
-
-        return null;
+        final ManifestLoader manifestLoader = getLoaderForApplication(application);
+        return manifestLoader.getHttpManifest();
     }
 
     @Override
     public ModelManifest getModelManifestForApplication(final Application application) {
-        return null;
+        final ManifestLoader manifestLoader = getLoaderForApplication(application);
+        return manifestLoader.getModelManifest();
     }
 
     private ManifestLoader getLoaderForApplication(final Application application) {
         return loaderCache.computeIfAbsent(application.getId(), applicationId -> {
             final ManifestLoader manifestLoader = getApplicationManifestLoaderFunction().apply(application);
-            final Thread shutdownHook = new Thread(manifestLoader::close);
-            Runtime.getRuntime().addShutdownHook(shutdownHook);
-            logger.info("Creating manifest loader for {} ({})", application.getName(), application.getId());
+            final Thread closeOnShutdown = new Thread(manifestLoader::close);
+            getRuntime().addShutdownHook(closeOnShutdown);
+            logger.info("Creating manifest loader for {} ({}).", application.getName(), application.getId());
             return manifestLoader;
         });
     }

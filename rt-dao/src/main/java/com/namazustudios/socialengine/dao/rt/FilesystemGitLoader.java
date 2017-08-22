@@ -29,6 +29,10 @@ import static java.lang.String.join;
  * A special class which will load an {@link Application}'s code to a local temporary directory where
  * it can be processed and run.
  *
+ * The source of the {@link org.eclipse.jgit.lib.Repository} is a path on the file system, and therefore
+ * it clones from a git repository stored elsewhere on disk.  This is specified using the
+ * {@link Constants#GIT_STORAGE_DIRECTORY} configuration parameter.
+ *
  * Created by patricktwohig on 8/19/17.
  */
 public class FilesystemGitLoader implements GitLoader {

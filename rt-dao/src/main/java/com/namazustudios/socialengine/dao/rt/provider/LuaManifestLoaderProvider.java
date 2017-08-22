@@ -5,6 +5,8 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -13,11 +15,17 @@ import java.util.function.Function;
 /**
  * Created by patricktwohig on 8/19/17.
  */
-public class ManifestLoaderProvider implements Provider<Function<Application, ManifestLoader>> {
+public class LuaManifestLoaderProvider implements Provider<Function<Application, ManifestLoader>> {
+
+    private static final Logger logger = LoggerFactory.getLogger(LuaManifestLoaderProvider.class);
 
     private Provider<LuaState> luaStateProvider;
 
     private Provider<Function<Application, AssetLoader>> applicationAssetLoaderFunctionProvider;
+
+    public LuaManifestLoaderProvider() {
+        logger.info("Using Lua Manifest Loader Provider.");
+    }
 
     @Override
     public Function<Application, ManifestLoader> get() {
