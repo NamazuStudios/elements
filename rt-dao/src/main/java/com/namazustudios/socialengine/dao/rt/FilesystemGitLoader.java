@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.rt;
 
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.exception.InternalException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
@@ -84,9 +85,13 @@ public class FilesystemGitLoader implements GitLoader {
 
     private void cloneIfNecessary(final Application application, final File codeDirectory) {
 
-        final File gitDirectory = new File(getGitStorageDirectory(), application.getId());
+        final File gitDirectory = new File(getGitStorageDirectory(), application.getId()).getAbsoluteFile();
 
-        try (final FileRepository repository = new FileRepository(gitDirectory)) {
+        if (!gitDirectory.isDirectory()) {
+            throw new NotFoundException("git directory not found for application: " + application.getId());
+        }
+
+        try (final FileRepository repository = new FileRepository(codeDirectory)) {
 
             if (!repository.getConfig().getFile().exists()) {
                 clone(application, codeDirectory);
@@ -109,7 +114,7 @@ public class FilesystemGitLoader implements GitLoader {
 
     private CloneCommand openCloneCommand(final Application application, final File destinationDirectory) {
 
-        final File gitDirectory = new File(getGitStorageDirectory(), application.getId());
+        final File gitDirectory = new File(getGitStorageDirectory(), application.getId()).getAbsoluteFile();
         final String prefix = format("%s (%s) git", application.getName(), application.getId());
 
         return Git.cloneRepository()
@@ -117,6 +122,7 @@ public class FilesystemGitLoader implements GitLoader {
             .setGitDir(gitDirectory)
             .setDirectory(destinationDirectory)
             .setCloneSubmodules(true)
+            .setCloneAllBranches(true)
             .setCallback(new CloneCommand.Callback() {
 
                 @Override

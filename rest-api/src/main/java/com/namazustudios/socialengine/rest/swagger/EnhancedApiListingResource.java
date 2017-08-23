@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rest.swagger;
 
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.http.HttpModule;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
@@ -17,6 +19,8 @@ import io.swagger.models.ModelImpl;
 import io.swagger.models.Scheme;
 import io.swagger.models.Swagger;
 import io.swagger.models.properties.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -49,6 +53,8 @@ import static java.util.Arrays.asList;
     )
 )
 public class EnhancedApiListingResource extends ApiListingResource {
+
+    private static final Logger logger = LoggerFactory.getLogger(EnhancedApiListingResource.class);
 
     public static final String FACBOOK_OAUTH_KEY = "facebook_oauth";
 
@@ -96,20 +102,29 @@ public class EnhancedApiListingResource extends ApiListingResource {
     }
 
     private void appendManifests(final Swagger swagger) {
-        stream(getApplicationService().getApplications())
-            .forEach(app -> appendManifests(swagger, app));
+        try {
+            stream(getApplicationService().getApplications()).forEach(app -> appendManifests(swagger, app));
+        } catch (ForbiddenException ex) {
+            logger.info("User forbidden from accessing extended APIs: {}", ex.getMessage());
+            logger.debug("Exception Detail.", ex);
+        }
     }
 
     private void appendManifests(
             final Swagger swagger,
             final com.namazustudios.socialengine.model.application.Application application) {
+        try {
 
-        final ModelManifest modelManifest = getManifestService().getModelManifestForApplication(application);
-        appendModelManifest(swagger, modelManifest);
+            final ModelManifest modelManifest = getManifestService().getModelManifestForApplication(application);
+            appendModelManifest(swagger, modelManifest);
 
-        final HttpManifest httpManifest = getManifestService().getHttpManifestForApplication(application);
-        appendHttpManifest(swagger, httpManifest, modelManifest);
+            final HttpManifest httpManifest = getManifestService().getHttpManifestForApplication(application);
+            appendHttpManifest(swagger, httpManifest, modelManifest);
 
+        } catch (NotFoundException ex) {
+            logger.info("User forbidden from accessing extended APIs for application {}: {}", application.getName(), ex.getMessage());
+            logger.debug("Exception Detail.", ex);
+        }
     }
 
     private void appendModelManifest(final Swagger swagger, final ModelManifest modelManifest) {
