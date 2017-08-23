@@ -31,7 +31,6 @@ import static org.testng.Assert.assertTrue;
 @Guice(modules = GitBootstrapDaoTest.Module.class)
 public class GitBootstrapDaoTest {
 
-
     private File storageDirectory;
 
     private GitBootstrapDao gitBootstrapDao;

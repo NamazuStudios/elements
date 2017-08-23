@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.dao.rt;
 
 import com.namazustudios.socialengine.dao.ManifestDao;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.rt.Bootstrapper;
 import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
@@ -24,8 +23,6 @@ import static java.lang.Runtime.getRuntime;
 public class RTManifestDao implements ManifestDao {
 
     private static final Logger logger = LoggerFactory.getLogger(RTManifestDao.class);
-
-    private Function<Application, Bootstrapper> applicationBootstrapperFunction;
 
     private Function<Application, ManifestLoader> applicationManifestLoaderFunction;
 
@@ -51,15 +48,6 @@ public class RTManifestDao implements ManifestDao {
             logger.info("Creating manifest loader for {} ({}).", application.getName(), application.getId());
             return manifestLoader;
         });
-    }
-
-    public Function<Application, Bootstrapper> getApplicationBootstrapperFunction() {
-        return applicationBootstrapperFunction;
-    }
-
-    @Inject
-    public void setApplicationBootstrapperFunction(Function<Application, Bootstrapper> applicationBootstrapperFunction) {
-        this.applicationBootstrapperFunction = applicationBootstrapperFunction;
     }
 
     public Function<Application, ManifestLoader> getApplicationManifestLoaderFunction() {
