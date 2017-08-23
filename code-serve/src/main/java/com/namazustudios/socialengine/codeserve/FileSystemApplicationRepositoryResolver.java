@@ -44,7 +44,7 @@ public class FileSystemApplicationRepositoryResolver implements ApplicationRepos
 
         final File repositoryDirectory = getBareStorageDirectory(getGitStorageDirectory(), application);
 
-        if (!repositoryDirectory.mkdirs()) {
+        if (!repositoryDirectory.exists() && !repositoryDirectory.mkdirs()) {
             throw new ServiceMayNotContinueException("cannot create " + repositoryDirectory.getAbsolutePath());
         } else if (!repositoryDirectory.isDirectory()) {
             throw new ServiceMayNotContinueException(repositoryDirectory.getAbsolutePath() + " is not a directory.");

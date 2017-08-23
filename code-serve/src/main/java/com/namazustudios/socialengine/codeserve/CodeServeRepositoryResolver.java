@@ -67,7 +67,7 @@ public class CodeServeRepositoryResolver implements RepositoryResolver<HttpServl
         }
 
         try {
-            logger.info("Creating repository for application {}", application.getId());
+            logger.info("Resolving repository for application {}", application.getId());
             return getApplicationRepositoryResolver().resolve(application, r -> {
 
                 logger.info("Created repository for application {} ({})", application.getName(), application.getId());
