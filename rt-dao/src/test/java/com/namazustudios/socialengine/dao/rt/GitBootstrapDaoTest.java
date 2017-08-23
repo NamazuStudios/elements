@@ -20,6 +20,7 @@ import java.io.File;
 import java.util.UUID;
 import java.util.function.Function;
 
+import static com.google.common.io.Files.fileTreeTraverser;
 import static com.namazustudios.socialengine.Constants.GIT_STORAGE_DIRECTORY;
 import static com.namazustudios.socialengine.dao.rt.FilesystemGitLoader.getBareStorageDirectory;
 import static org.testng.Assert.assertTrue;
@@ -68,7 +69,10 @@ public class GitBootstrapDaoTest {
 
     @AfterTest
     public void destroyTestDirectory() {
-        getStorageDirectory().deleteOnExit();
+        fileTreeTraverser()
+            .postOrderTraversal(getStorageDirectory())
+            .filter(f -> f.isFile() || f.isDirectory())
+            .forEach(f -> f.delete());
     }
 
     public File getStorageDirectory() {
@@ -90,8 +94,6 @@ public class GitBootstrapDaoTest {
     }
 
     public static class Module extends AbstractModule {
-
-
         @Override
         protected void configure() {
 

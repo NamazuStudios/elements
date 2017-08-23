@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.rt;
 
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.ShutdownHooks;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
@@ -30,6 +31,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import static com.google.common.io.Files.fileTreeTraverser;
 import static java.lang.String.format;
 import static java.lang.String.join;
 
@@ -46,6 +48,8 @@ import static java.lang.String.join;
 public class FilesystemGitLoader implements GitLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(FilesystemGitLoader.class);
+
+    private static final ShutdownHooks hooks = new ShutdownHooks(FilesystemGitLoader.class);
 
     private File gitStorageDirectory;
 
@@ -139,9 +143,17 @@ public class FilesystemGitLoader implements GitLoader {
         final File codeDirectory;
 
         try {
-            final String prefix = format("%s.%s", applicationId, GIT_SUFFIX);
-            codeDirectory = Files.createTempDirectory(prefix).toFile();
-            codeDirectory.deleteOnExit();
+
+            final String prefix = format("%s.%s-", applicationId, GIT_SUFFIX);
+            codeDirectory = Files.createTempDirectory(prefix).toFile().getAbsoluteFile();
+
+            hooks.add(codeDirectory, () -> {
+                fileTreeTraverser()
+                    .postOrderTraversal(codeDirectory)
+                    .filter(f -> f.isFile() || f.isDirectory())
+                    .forEach(f -> f.delete());
+            });
+
         } catch (IOException ex) {
             throw new InternalException(ex);
         }

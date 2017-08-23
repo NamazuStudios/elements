@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.rt;
 
+import com.namazustudios.socialengine.ShutdownHooks;
 import com.namazustudios.socialengine.dao.ManifestDao;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.ManifestLoader;
@@ -13,8 +14,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
-import static java.lang.Runtime.getRuntime;
-
 /**
  * Loads the various Manifest instances directly from the underlying RT Services.
  *
@@ -23,6 +22,8 @@ import static java.lang.Runtime.getRuntime;
 public class RTManifestDao implements ManifestDao {
 
     private static final Logger logger = LoggerFactory.getLogger(RTManifestDao.class);
+
+    private static final ShutdownHooks hooks = new ShutdownHooks(RTManifestDao.class);
 
     private Function<Application, ManifestLoader> applicationManifestLoaderFunction;
 
@@ -43,8 +44,7 @@ public class RTManifestDao implements ManifestDao {
     private ManifestLoader getLoaderForApplication(final Application application) {
         return loaderCache.computeIfAbsent(application.getId(), applicationId -> {
             final ManifestLoader manifestLoader = getApplicationManifestLoaderFunction().apply(application);
-            final Thread closeOnShutdown = new Thread(manifestLoader::close);
-            getRuntime().addShutdownHook(closeOnShutdown);
+            hooks.add(manifestLoader, manifestLoader::close);
             logger.info("Creating manifest loader for {} ({}).", application.getName(), application.getId());
             return manifestLoader;
         });

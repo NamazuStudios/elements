@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.rt.provider;
 
+import com.namazustudios.socialengine.ShutdownHooks;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.AssetLoader;
@@ -21,6 +22,8 @@ public class FileAssetLoaderProvider implements Provider<Function<Application, A
 
     private static final Logger logger = LoggerFactory.getLogger(FileAssetLoaderProvider.class);
 
+    private static final ShutdownHooks hooks = new ShutdownHooks(FileAssetLoaderProvider.class);
+
     private Provider<GitLoader> gitLoaderProvider;
 
     private final ConcurrentMap<File, AssetLoader> loaderCache = new ConcurrentHashMap<>();
@@ -38,8 +41,9 @@ public class FileAssetLoaderProvider implements Provider<Function<Application, A
     }
 
     private AssetLoader computeAssetLoader(final File file) {
-        final FileAssetLoader fileAssetLoader = new FileAssetLoader(file);
-        return fileAssetLoader.getReferenceCountedView(loader -> loaderCache.remove(file));
+        final AssetLoader assetLoader = new FileAssetLoader(file).getReferenceCountedView();
+        hooks.add(assetLoader, assetLoader::close);
+        return assetLoader;
     }
 
     public Provider<GitLoader> getGitLoaderProvider() {

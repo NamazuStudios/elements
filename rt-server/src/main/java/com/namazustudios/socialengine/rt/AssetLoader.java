@@ -86,7 +86,7 @@ public interface AssetLoader extends AutoCloseable {
     default AssetLoader getReferenceCountedView(final Consumer<AssetLoader> onFinalClose) {
 
         final AssetLoader instance = this;
-        final AtomicInteger refCount = new AtomicInteger(0);
+        final AtomicInteger refCount = new AtomicInteger(1);
         final Logger logger = LoggerFactory.getLogger(instance.getClass());
 
         return new AssetLoader() {

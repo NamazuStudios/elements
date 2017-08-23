@@ -18,15 +18,13 @@ public class FileAssetLoader implements AssetLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(FileAssetLoader.class);
 
+
+
     private final File rootDirectory;
 
     private final AtomicBoolean open = new AtomicBoolean(true);
 
     private final AtomicInteger openStreams = new AtomicInteger();
-
-    public FileAssetLoader(final java.nio.file.Path path) {
-        this(path.toFile());
-    }
 
     public FileAssetLoader(final File rootDirectory) {
 
