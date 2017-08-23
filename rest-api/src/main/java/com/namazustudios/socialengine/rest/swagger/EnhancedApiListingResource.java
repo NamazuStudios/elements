@@ -62,7 +62,7 @@ public class EnhancedApiListingResource extends ApiListingResource {
     protected Swagger process(Application app, ServletContext servletContext, ServletConfig sc, HttpHeaders headers, UriInfo uriInfo) {
         final Swagger swagger = super.process(app, servletContext, sc, headers, uriInfo);
         appendHostInformation(swagger);
-//        appendManifests(swagger);
+        appendManifests(swagger);
         return swagger;
     }
 
@@ -176,7 +176,7 @@ public class EnhancedApiListingResource extends ApiListingResource {
         return manifestService;
     }
 
-//    @Inject
+    @Inject
     public void setManifestService(ManifestService manifestService) {
         this.manifestService = manifestService;
     }

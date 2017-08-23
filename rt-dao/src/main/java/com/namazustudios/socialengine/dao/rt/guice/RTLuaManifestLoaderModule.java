@@ -11,7 +11,7 @@ import java.util.function.Function;
 /**
  * Created by patricktwohig on 8/22/17.
  */
-public class LuaManifestLoaderModule extends AbstractModule {
+public class RTLuaManifestLoaderModule extends AbstractModule {
 
     @Override
     protected void configure() {

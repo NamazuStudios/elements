@@ -11,8 +11,6 @@ public class RTDaoModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new GitLoaderModule());
-        install(new LuaManifestLoaderModule());
         bind(ManifestDao.class).to(RTManifestDao.class);
     }
 
