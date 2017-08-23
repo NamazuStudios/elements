@@ -106,8 +106,6 @@ public class GitBootstrapDaoTest {
 
             bind(new TypeLiteral<Function<Application, Bootstrapper>>(){}).toInstance(a -> new LuaBootstrapper());
 
-            bind(UUID.class).toInstance(UUID.randomUUID());
-
         }
     }
 }

@@ -17,7 +17,7 @@ public class ShutdownHooks {
     private final AtomicReference<Action> actions;
 
     public ShutdownHooks(final Class<?> aClass) {
-        actions = new AtomicReference<>(() -> logger.info("Cleaning up for {}", aClass.getName()));
+        actions = new AtomicReference<>(() -> logger.info("Running cleanup hooks up for {}", aClass.getName()));
         final Thread thread = new Thread(() -> actions.get().perform());
         getRuntime().addShutdownHook(thread);
     }
@@ -43,9 +43,9 @@ public class ShutdownHooks {
                     logger.error("Caught cleanup exception.", ex);
                 }
 
-                logger.error("Cleaning up {}", context);
+                logger.info("Cleaning up {}", context);
                 next.perform();
-                logger.error("Cleanted up {}", context);
+                logger.info("Cleaned up {}", context);
 
             };
         }
