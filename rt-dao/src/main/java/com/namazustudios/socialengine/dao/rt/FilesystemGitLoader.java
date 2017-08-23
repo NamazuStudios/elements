@@ -10,6 +10,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.AnyObjectId;
+import org.eclipse.jgit.lib.Ref;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
@@ -50,6 +52,24 @@ public class FilesystemGitLoader implements GitLoader {
     private final ConcurrentMap<String, Lock> applicationIdLockConcurrentMap = new ConcurrentHashMap<>();
 
     private final ConcurrentMap<String, File> applicationIdFileConcurrentMap = new ConcurrentHashMap<>();
+
+    /**
+     *
+     * Used by the {@link GitLoader} instances to determine the bare storage directory for a
+     * particular {@link Application}.  This derives the path in a unique and consistent
+     * manner.
+     *
+     * @param parent the parent directory as expressed by a {@link File}
+     * @param application the {@link Application}
+     *
+     * @return a {@link File} representing the bare storage directory for the {@link Application}
+     *
+     */
+    public static File getBareStorageDirectory(final File parent, final Application application) {
+        final String directoryName = format("%s.%s", application.getId(), GIT_SUFFIX);
+        final File gitDirectory = new File(parent, directoryName);
+        return gitDirectory.getAbsoluteFile();
+    }
 
     @Override
     public void performInGit(final Application application,
@@ -148,8 +168,15 @@ public class FilesystemGitLoader implements GitLoader {
 
     private void clone(final Application application, final File destinationDirectory) {
         try (final Git git = openCloneCommand(application, destinationDirectory).call()) {
-            git.checkout().setName(MAIN_BRANCH).call();
-            git.submoduleInit();
+
+            final List<Ref> branches = git.branchList().call();
+            logger.info("Branches available [{}]", join(","), branches);
+
+            if (branches.stream().anyMatch(b -> DEFAULT_MAIN_BRANCH.equals(b.getName()))) {
+                git.checkout().setName(DEFAULT_MAIN_BRANCH).call();
+                git.submoduleInit();
+            }
+
         } catch (GitAPIException ex) {
             throw new InternalException(ex);
         }
@@ -167,7 +194,7 @@ public class FilesystemGitLoader implements GitLoader {
 
         return Git.cloneRepository()
             .setURI(gitDirectory.toURI().toString())
-            .setBranch(MAIN_BRANCH)
+            .setBranch(DEFAULT_MAIN_BRANCH)
             .setDirectory(destinationDirectory)
             .setCloneSubmodules(true)
             .setCloneAllBranches(true)
@@ -193,9 +220,7 @@ public class FilesystemGitLoader implements GitLoader {
     }
 
     private File getBareStorageDirectory(final Application application) {
-        final String directoryName = format("%s.%s", application.getId(), GIT_SUFFIX);
-        final File gitDirectory = new File(getGitStorageDirectory(), directoryName);
-        return gitDirectory.getAbsoluteFile();
+        return getBareStorageDirectory(getGitStorageDirectory(), application);
     }
 
     public File getGitStorageDirectory() {

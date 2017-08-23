@@ -15,9 +15,13 @@ import java.util.function.Function;
 public interface GitLoader {
 
     /**
-     * The main branch from which to fetch the code.
+     * The main branch from which to fetch the code.  The underlying {@link GitLoader} will
+     * ignore all other branches, except this one, when fetching code.  It should be noted
+     * that this may become obsolte if application configuration allows for specific
+     * branches or commits to be used as the reference for the {@link Application} that is
+     * associated with the code.
      */
-    String MAIN_BRANCH = "master";
+    String DEFAULT_MAIN_BRANCH = "master";
 
     /**
      * The git directory suffix.
@@ -36,7 +40,7 @@ public interface GitLoader {
 
     /**
      * Gets the code directory for the supplied {@Link Application} and clones if necessary.  This will
-     * ensure that the latest branch, as specified by {@link #MAIN_BRANCH} is checked out and current.
+     * ensure that the latest branch, as specified by {@link #DEFAULT_MAIN_BRANCH} is checked out and current.
      *
      * The returned {@link File} will likely be a temporary live copy of the code backing the {@link Application}.
      *

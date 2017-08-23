@@ -45,14 +45,14 @@ public class CodeServeRepositoryResolver implements RepositoryResolver<HttpServl
         final User user = getUserProvider().get();
 
         if (SUPERUSER.equals(user.getLevel())) {
-            return getRepositoryForApplication(name);
+            return getRepositoryForApplication(user, name);
         }
 
         throw new RepositoryNotFoundException(name);
 
     }
 
-    private Repository getRepositoryForApplication(final String name) throws
+    private Repository getRepositoryForApplication(final User user, final String name) throws
             RepositoryNotFoundException,
             ServiceNotAuthorizedException,
             ServiceNotEnabledException,
@@ -73,7 +73,7 @@ public class CodeServeRepositoryResolver implements RepositoryResolver<HttpServl
                 logger.info("Created repository for application {} ({})", application.getName(), application.getId());
 
                 logger.info("Bootstrapping application repository {} ({})", application.getName(), application.getId());
-                getBootstrapDao().bootstrap(application);
+                getBootstrapDao().bootstrap(user, application);
 
                 logger.info("Bootstrapped application repository {} ({})", application.getName(), application.getId());
 

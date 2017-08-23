@@ -11,7 +11,7 @@ import javax.inject.Named;
 import java.io.File;
 import java.util.function.Consumer;
 
-import static java.lang.String.format;
+import static com.namazustudios.socialengine.dao.rt.FilesystemGitLoader.getBareStorageDirectory;
 
 /**
  * This loads an instance of {@link Repository} from a place on the filesystem.
@@ -40,14 +40,11 @@ public class FileSystemApplicationRepositoryResolver implements ApplicationRepos
 
     }
 
-    final File getStorageDirectoryForApplication(final Application application) throws ServiceMayNotContinueException {
+    private final File getStorageDirectoryForApplication(final Application application) throws ServiceMayNotContinueException {
 
-        final File absoluteStorageRoot = getGitStorageDirectory().getAbsoluteFile();
+        final File repositoryDirectory = getBareStorageDirectory(getGitStorageDirectory(), application);
 
-        final String dirName = format("%s.%s", application.getId(), GIT_DIR_SUFFIX);
-        final File repositoryDirectory = new File(absoluteStorageRoot, dirName);
-
-        if (!repositoryDirectory.isDirectory() && !repositoryDirectory.mkdirs()) {
+        if (!repositoryDirectory.mkdirs()) {
             throw new ServiceMayNotContinueException("cannot create " + repositoryDirectory.getAbsolutePath());
         } else if (!repositoryDirectory.isDirectory()) {
             throw new ServiceMayNotContinueException(repositoryDirectory.getAbsolutePath() + " is not a directory.");

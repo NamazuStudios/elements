@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 
 /**
@@ -14,8 +15,9 @@ public interface BootstrapDao {
      * Calling this must ensure that the subsequent calls to get manifest instances will return
      * a non-null object with the minimal information to use the {@link Application}.
      *
+     * @param user
      * @param application the {@link Application} to bootstrap.
      */
-    void bootstrap(Application application);
+    void bootstrap(User user, Application application);
 
 }
