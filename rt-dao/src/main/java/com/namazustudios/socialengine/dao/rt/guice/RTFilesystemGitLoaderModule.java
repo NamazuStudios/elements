@@ -13,7 +13,7 @@ import java.util.function.Function;
 /**
  * Created by patricktwohig on 8/22/17.
  */
-public class RTGitLoaderModule extends AbstractModule {
+public class RTFilesystemGitLoaderModule extends AbstractModule {
 
     @Override
     protected void configure() {

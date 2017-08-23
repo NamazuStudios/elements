@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.rt.Path;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -15,13 +16,17 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -47,9 +52,47 @@ public class FilesystemGitLoader implements GitLoader {
     private final ConcurrentMap<String, File> applicationIdFileConcurrentMap = new ConcurrentHashMap<>();
 
     @Override
+    public void performInGit(final Application application,
+                             final BiConsumer<Git, Function<Path, OutputStream>> gitConsumer) {
+
+        final Lock lock = lockFor(application);
+
+        try {
+            lock.lock();
+            doPerformInGit(application, gitConsumer);
+        } finally {
+            lock.unlock();
+        }
+
+    }
+
+    private void doPerformInGit(final Application application,
+                                final BiConsumer<Git, Function<Path, OutputStream>> gitConsumer) {
+
+        final File codeDirectory = getCodeDirectory(application);
+
+        final Function<Path, OutputStream> stringOutputStreamFunction = path -> {
+            try {
+                final File file = new File(codeDirectory, path.toFileSystemPathString());
+                return new FileOutputStream(file);
+            } catch (IOException ex) {
+                throw new InternalException(ex);
+            }
+        };
+
+        try (final Git git = Git.open(codeDirectory)) {
+            gitConsumer.accept(git, stringOutputStreamFunction);
+        } catch (IOException ex) {
+            throw new InternalException(ex);
+        }
+
+    }
+
+
+    @Override
     public File getCodeDirectory(final Application application) {
 
-        final Lock lock = applicationIdLockConcurrentMap.computeIfAbsent(application.getId(), k -> new ReentrantLock());
+        final Lock lock = lockFor(application);
 
         try {
             lock.lock();
@@ -58,6 +101,10 @@ public class FilesystemGitLoader implements GitLoader {
             lock.unlock();
         }
 
+    }
+
+    private Lock lockFor(final Application application) {
+        return applicationIdLockConcurrentMap.computeIfAbsent(application.getId(), k -> new ReentrantLock());
     }
 
     private File doGetCodeDirectory(final Application application) {
@@ -85,13 +132,9 @@ public class FilesystemGitLoader implements GitLoader {
 
     private void cloneIfNecessary(final Application application, final File codeDirectory) {
 
-        final File gitDirectory = new File(getGitStorageDirectory(), application.getId()).getAbsoluteFile();
-
-        if (!gitDirectory.isDirectory()) {
-            throw new NotFoundException("git directory not found for application: " + application.getId());
-        }
-
         try (final FileRepository repository = new FileRepository(codeDirectory)) {
+
+            repository.incrementOpen();
 
             if (!repository.getConfig().getFile().exists()) {
                 clone(application, codeDirectory);
@@ -114,12 +157,17 @@ public class FilesystemGitLoader implements GitLoader {
 
     private CloneCommand openCloneCommand(final Application application, final File destinationDirectory) {
 
-        final File gitDirectory = new File(getGitStorageDirectory(), application.getId()).getAbsoluteFile();
+        final File gitDirectory = getBareStorageDirectory(application);
+
+        if (!gitDirectory.isDirectory()) {
+            throw new NotFoundException("git directory not found for application: " + application.getId());
+        }
+
         final String prefix = format("%s (%s) git", application.getName(), application.getId());
 
         return Git.cloneRepository()
+            .setURI(gitDirectory.toURI().toString())
             .setBranch(MAIN_BRANCH)
-            .setGitDir(gitDirectory)
             .setDirectory(destinationDirectory)
             .setCloneSubmodules(true)
             .setCloneAllBranches(true)
@@ -142,6 +190,12 @@ public class FilesystemGitLoader implements GitLoader {
 
             });
 
+    }
+
+    private File getBareStorageDirectory(final Application application) {
+        final String directoryName = format("%s.%s", application.getId(), GIT_SUFFIX);
+        final File gitDirectory = new File(getGitStorageDirectory(), directoryName);
+        return gitDirectory.getAbsoluteFile();
     }
 
     public File getGitStorageDirectory() {

@@ -50,6 +50,11 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-dao</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>service</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -63,19 +68,18 @@
             <artifactId>org.eclipse.jgit.http.server</artifactId>
             <version>${jgit.version}</version>
         </dependency>
-
-        <!--
-            This shoudln't be in the war file, but rather should be handled by
-            the container itself.  However, Jetty seems to have issues using slf4j
-            when configured so I'm leaving this in here.
-        -->
-
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>${slf4j.version}</version>
+            <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${testng.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.codeserve;
 
+import com.namazustudios.socialengine.dao.BootstrapDao;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
@@ -27,6 +28,8 @@ public class CodeServeRepositoryResolver implements RepositoryResolver<HttpServl
     private static final Logger logger = LoggerFactory.getLogger(CodeServeRepositoryResolver.class);
 
     private Provider<User> userProvider;
+
+    private BootstrapDao bootstrapDao;
 
     private ApplicationService applicationService;
 
@@ -64,10 +67,16 @@ public class CodeServeRepositoryResolver implements RepositoryResolver<HttpServl
         }
 
         try {
+            logger.info("Creating repository for application {}", application.getId());
             return getApplicationRepositoryResolver().resolve(application, r -> {
-                // This serves as a placeholder to do things such as setup the repository with a
-                // default set of files.
-                logger.info("Created repository for application {}", application.getId());
+
+                logger.info("Created repository for application {} ({})", application.getName(), application.getId());
+
+                logger.info("Bootstrapping application repository {} ({})", application.getName(), application.getId());
+                getBootstrapDao().bootstrap(application);
+
+                logger.info("Bootstrapped application repository {} ({})", application.getName(), application.getId());
+
             });
         } catch (RepositoryNotFoundException   |
                  ServiceNotAuthorizedException |
@@ -75,9 +84,19 @@ public class CodeServeRepositoryResolver implements RepositoryResolver<HttpServl
                  ServiceMayNotContinueException ex) {
             throw ex;
         } catch (Exception e) {
+            logger.error("Caught unexpected exception.", e);
             throw new ServiceMayNotContinueException(e);
         }
 
+    }
+
+    public BootstrapDao getBootstrapDao() {
+        return bootstrapDao;
+    }
+
+    @Inject
+    public void setBootstrapDao(BootstrapDao bootstrapDao) {
+        this.bootstrapDao = bootstrapDao;
     }
 
     public Provider<User> getUserProvider() {
