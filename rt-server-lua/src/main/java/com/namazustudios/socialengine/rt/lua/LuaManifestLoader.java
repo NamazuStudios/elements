@@ -16,7 +16,6 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by patricktwohig on 8/15/17.
@@ -43,24 +42,18 @@ public class LuaManifestLoader implements ManifestLoader {
 
     private final Object lock = new Object();
 
-    private final AtomicReference<HttpManifest> httpManifestAtomicReference = new AtomicReference<>();
-
-    private final AtomicReference<ModelManifest> modelManifestAtomicReference = new AtomicReference<>();
-
     private boolean closed = false;
 
     private LuaState luaState = null;
 
     @Override
     public ModelManifest getModelManifest() {
-        final ModelManifest modelManifest = modelManifestAtomicReference.get();
-        return modelManifest == null ? loadIfNecessary(modelManifestAtomicReference, MODEL_TABLE, ModelManifest.class) : modelManifest;
+        return loadIfNecessaryAndFetchFromManifestTable(MODEL_TABLE, ModelManifest.class);
     }
 
     @Override
     public HttpManifest getHttpManifest() {
-        final HttpManifest httpManifest = httpManifestAtomicReference.get();
-        return httpManifest == null ? loadIfNecessary(httpManifestAtomicReference, HTTP_TABLE, HttpManifest.class) : httpManifest;
+        return loadIfNecessaryAndFetchFromManifestTable(HTTP_TABLE, HttpManifest.class);
     }
 
     @Override
@@ -81,20 +74,10 @@ public class LuaManifestLoader implements ManifestLoader {
         }
     }
 
-    private <T> T loadIfNecessary(final AtomicReference<T> tAtomicReference, final String table, Class<T> tClass) {
+    private <T> T loadIfNecessaryAndFetchFromManifestTable(final String table, Class<T> tClass) {
         synchronized (lock) {
-
             loadAndRunIfNecessary();
-
-            T t = tAtomicReference.get();
-
-            if (t == null) {
-                t = fromManifestTable(table, tClass);
-                tAtomicReference.compareAndSet(null, t);
-            }
-
-            return t;
-
+            return fromManifestTable(table, tClass);
         }
     }
 

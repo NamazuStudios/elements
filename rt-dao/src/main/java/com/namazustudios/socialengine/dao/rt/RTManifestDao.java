@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
@@ -19,6 +20,7 @@ import java.util.function.Function;
  *
  * Created by patricktwohig on 8/14/17.
  */
+@Singleton
 public class RTManifestDao implements ManifestDao {
 
     private static final Logger logger = LoggerFactory.getLogger(RTManifestDao.class);

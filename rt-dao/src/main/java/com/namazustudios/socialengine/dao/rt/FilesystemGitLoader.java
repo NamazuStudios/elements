@@ -9,9 +9,11 @@ import com.namazustudios.socialengine.rt.Path;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.AnyObjectId;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +48,8 @@ import static java.lang.String.join;
  * Created by patricktwohig on 8/19/17.
  */
 public class FilesystemGitLoader implements GitLoader {
+
+    private static final String GIT_DIRECTORY = ".git";
 
     private static final Logger logger = LoggerFactory.getLogger(FilesystemGitLoader.class);
 
@@ -132,13 +136,13 @@ public class FilesystemGitLoader implements GitLoader {
     }
 
     private File doGetCodeDirectory(final Application application) {
-        final File codeDirectory;
-        codeDirectory = applicationIdFileConcurrentMap.computeIfAbsent(application.getId(), k -> computeCodeDirectory(k));
-        cloneIfNecessary(application, codeDirectory);
-        return codeDirectory;
+        final File workTree;
+        workTree = applicationIdFileConcurrentMap.computeIfAbsent(application.getId(), k -> computeWorkTreeDirectory(k));
+        cloneIfNecessary(application, workTree);
+        return workTree;
     }
 
-    private File computeCodeDirectory(final String applicationId) {
+    private File computeWorkTreeDirectory(final String applicationId) {
 
         final File codeDirectory;
 
@@ -162,16 +166,21 @@ public class FilesystemGitLoader implements GitLoader {
 
     }
 
-    private void cloneIfNecessary(final Application application, final File codeDirectory) {
+    private void cloneIfNecessary(final Application application, final File workTree) {
 
-        try (final FileRepository repository = new FileRepository(codeDirectory)) {
+        final FileRepositoryBuilder fileRepositoryBuilder = new FileRepositoryBuilder()
+            .setWorkTree(workTree)
+            .setGitDir(new File(workTree, GIT_DIRECTORY))
+            .setMustExist(true);
 
-            repository.incrementOpen();
-
-            if (!repository.getConfig().getFile().exists()) {
-                clone(application, codeDirectory);
-            }
-
+        try (final Repository repository = fileRepositoryBuilder.build()) {
+            logger.info("Found {} for application {} ({}) at {}.",
+                repository,
+                application.getName(),
+                application.getId(),
+                workTree.getAbsolutePath());
+        } catch (RepositoryNotFoundException ex) {
+            clone(application, workTree);
         } catch (IOException ex) {
             throw new InternalException(ex);
         }

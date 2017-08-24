@@ -11,7 +11,7 @@ public class RTDaoModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(ManifestDao.class).to(RTManifestDao.class);
+        bind(ManifestDao.class).to(RTManifestDao.class).asEagerSingleton();
     }
 
 }
