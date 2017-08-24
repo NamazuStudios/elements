@@ -23,6 +23,8 @@ import static java.lang.String.format;
  */
 public class SuperUserApplicationService implements ApplicationService {
 
+    private static final String GIT_PREFIX = "git";
+
     private static final String CONFIG_PARAM = "config";
 
     private URI codeServeUrl;
@@ -78,7 +80,7 @@ public class SuperUserApplicationService implements ApplicationService {
     }
 
     private void addCodeServeUrl(final Application application) {
-        final URI base = appendPath(getCodeServeUrl(), application.getName());
+        final URI base = appendPath(getCodeServeUrl(), GIT_PREFIX, application.getName());
         final URI repositoryRoot = base.resolve(application.getName());
         application.setScriptRepoUrl(repositoryRoot.toString());
     }

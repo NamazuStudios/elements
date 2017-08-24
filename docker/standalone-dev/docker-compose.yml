@@ -66,6 +66,8 @@ services:
       - socialengine
     ports:
       - "8081:8080"
+    volumes:
+      - script-repos:/opt/socialengine/script-repos
 
   code-serve:
     build:
