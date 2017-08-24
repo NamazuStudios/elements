@@ -22,6 +22,10 @@ public class SuperUserApplicationService implements ApplicationService {
 
     private URI codeServeUrl;
 
+    private URI httpTunnelUrl;
+
+    private URI apiOutsiudeUrl;
+
     private ApplicationDao applicationDao;
 
     @Override
@@ -31,27 +35,27 @@ public class SuperUserApplicationService implements ApplicationService {
 
     @Override
     public Application createApplication(Application application) {
-        return addCodeServeUrl(getApplicationDao().createOrUpdateInactiveApplication(application));
+        return addPrivilegedUrls(getApplicationDao().createOrUpdateInactiveApplication(application));
     }
 
     @Override
     public Pagination<Application> getApplications(int offset, int count) {
-        return getApplicationDao().getActiveApplications(offset, count).transform(this::addCodeServeUrl);
+        return getApplicationDao().getActiveApplications(offset, count).transform(this::addPrivilegedUrls);
     }
 
     @Override
     public Pagination<Application> getApplications(int offset, int count, String search) {
-        return getApplicationDao().getActiveApplications(offset, count, search).transform(this::addCodeServeUrl);
+        return getApplicationDao().getActiveApplications(offset, count, search).transform(this::addPrivilegedUrls);
     }
 
     @Override
     public Application getApplication(String nameOrId) {
-        return addCodeServeUrl(getApplicationDao().getActiveApplication(nameOrId));
+        return addPrivilegedUrls(getApplicationDao().getActiveApplication(nameOrId));
     }
 
     @Override
     public Application updateApplication(String nameOrId, Application application) {
-        return addCodeServeUrl(getApplicationDao().updateActiveApplication(nameOrId, application));
+        return addPrivilegedUrls(getApplicationDao().updateActiveApplication(nameOrId, application));
     }
 
     @Override
@@ -59,11 +63,28 @@ public class SuperUserApplicationService implements ApplicationService {
         getApplicationDao().softDeleteApplication(nameOrId);
     }
 
-    private Application addCodeServeUrl(final Application application) {
+    private Application addPrivilegedUrls(final Application application) {
+        addCodeServeUrl(application);
+        addHttpTunnelUrl(application);
+        addDocumentationUrl(application);
+        return application;
+    }
+
+    private void addCodeServeUrl(final Application application) {
         final URI base = appendPath(getCodeServeUrl(), application.getName());
         final URI repositoryRoot = base.resolve(application.getName());
         application.setScriptRepoUrl(repositoryRoot.toString());
-        return application;
+    }
+
+    private void addHttpTunnelUrl(final Application application) {
+        final URI base = appendPath(getHttpTunnelUrl(), application.getName());
+        final URI httpTunnelEndpointUrl = base.resolve(application.getName());
+        application.setHttpTunnelEndpointUrl(httpTunnelEndpointUrl.toString());
+    }
+
+    private void addDocumentationUrl(final Application application) {
+        final URI documentationUrl = appendPath(getApiOutsiudeUrl(), "application", application.getId(), "swagger.json");
+        application.setHttpDocumentationUrl(documentationUrl.toString());
     }
 
     public ApplicationDao getApplicationDao() {
@@ -82,6 +103,24 @@ public class SuperUserApplicationService implements ApplicationService {
     @Inject
     public void setCodeServeUrl(@Named(Constants.CODE_SERVE_URL) URI codeServeUrl) {
         this.codeServeUrl = codeServeUrl;
+    }
+
+    public URI getHttpTunnelUrl() {
+        return httpTunnelUrl;
+    }
+
+    @Inject
+    public void setHttpTunnelUrl(@Named(Constants.HTTP_TUNNEL_URL) URI httpTunnelUrl) {
+        this.httpTunnelUrl = httpTunnelUrl;
+    }
+
+    public URI getApiOutsiudeUrl() {
+        return apiOutsiudeUrl;
+    }
+
+    @Inject
+    public void setApiOutsiudeUrl(@Named(Constants.API_OUTSIDE_URL) URI apiOutsiudeUrl) {
+        this.apiOutsiudeUrl = apiOutsiudeUrl;
     }
 
 }

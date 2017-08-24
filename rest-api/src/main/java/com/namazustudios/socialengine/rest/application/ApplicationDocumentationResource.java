@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rest.application;
 
-import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
@@ -14,7 +14,6 @@ import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.model.Property;
 import com.namazustudios.socialengine.service.ApplicationService;
 import com.namazustudios.socialengine.service.ManifestService;
-import com.namazustudios.socialengine.util.URIs;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -26,7 +25,6 @@ import io.swagger.models.properties.*;
 import org.glassfish.jersey.internal.util.Producer;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -55,8 +53,6 @@ import static java.util.Arrays.asList;
 @Path("application/{applicationNameOrId}")
 public class ApplicationDocumentationResource {
 
-    private URI httpTunnelUrl;
-
     private ManifestService manifestService;
 
     private ApplicationService applicationService;
@@ -80,7 +76,13 @@ public class ApplicationDocumentationResource {
 
     private void appendHostInformation(final Swagger swagger, final Application application) {
 
-        final URI uri = URIs.appendPath(getHttpTunnelUrl(), application.getName());
+        final URI uri;
+
+        try {
+            uri = new URI(application.getHttpTunnelEndpointUrl());
+        } catch (URISyntaxException ex) {
+            throw new InternalException(ex);
+        }
 
         final StringBuilder hostStringBuilder = new StringBuilder();
 
@@ -274,19 +276,6 @@ public class ApplicationDocumentationResource {
         response.setSchema(type);
         response.setHeaders(content.getHeaders().stream().collect(Collectors.toMap(identity(), h -> new StringProperty())));
         return response;
-    }
-
-    public URI getHttpTunnelUrl() {
-        return httpTunnelUrl;
-    }
-
-    public void setHttpTunnelUrl(URI httpTunnelUrl) {
-        this.httpTunnelUrl = httpTunnelUrl;
-    }
-
-    @Inject
-    public void setHttpTunnelUrl(@Named(Constants.HTTP_TUNNEL_URL) String httpTunnelUrl) throws URISyntaxException {
-        setHttpTunnelUrl(new URI(httpTunnelUrl));
     }
 
     public ManifestService getManifestService() {

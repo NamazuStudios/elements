@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.util;
 
+import com.google.common.base.Joiner;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -29,6 +31,11 @@ public interface URIs {
                 throw new IllegalArgumentException(ex);
             }
         }
+    }
+
+    static URI appendPath(final URI base, final String first, final String second, final String ... additional) {
+        final String joined = Joiner.on("/").join(first, second, additional);
+        return appendPath(base, joined);
     }
 
 }
