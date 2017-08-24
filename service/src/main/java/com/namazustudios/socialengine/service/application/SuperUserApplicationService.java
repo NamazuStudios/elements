@@ -74,7 +74,6 @@ public class SuperUserApplicationService implements ApplicationService {
         addCodeServeUrl(application);
         addHttpTunnelUrl(application);
         addDocumentationUrl(application);
-        addDocumentationUiUrl(application);
         return application;
     }
 
@@ -91,12 +90,13 @@ public class SuperUserApplicationService implements ApplicationService {
     }
 
     private void addDocumentationUrl(final Application application) {
-        final URI documentationUrl = appendPath(getApiOutsideUrl(), "application", application.getId(), "swagger.json");
-        application.setHttpDocumentationUrl(documentationUrl.toString());
+        final URI httpDocumentationUrl = appendPath(getApiOutsideUrl(), "application", application.getId(), "swagger.json");
+        application.setHttpDocumentationUrl(httpDocumentationUrl.toString());
+        addDocumentationUiUrl(httpDocumentationUrl, application);
     }
 
-    private void addDocumentationUiUrl(final Application application) {
-        final String encoded = urlFragmentEscaper().escape(application.getHttpDocumentationUrl());
+    private void addDocumentationUiUrl(final URI httpDocumentationUrl, final Application application) {
+        final String encoded = urlFragmentEscaper().escape(httpDocumentationUrl.toString());
         final String fragment = format("%s=%s", CONFIG_PARAM, encoded);
         final URI documentationUiUri = appendOrReplaceQuery(getDocOutsideUrl(), fragment);
         application.setHttpDocumentationUiUrl(documentationUiUri.toString());
