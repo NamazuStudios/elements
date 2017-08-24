@@ -20,8 +20,6 @@ import static com.namazustudios.socialengine.dao.rt.FilesystemGitLoader.getBareS
  */
 public class FileSystemApplicationRepositoryResolver implements ApplicationRepositoryResolver {
 
-    private static final String GIT_DIR_SUFFIX = "git";
-
     private File gitStorageDirectory;
 
     @Override

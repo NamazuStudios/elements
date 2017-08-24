@@ -5,6 +5,7 @@ import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.dao.rt.provider.LuaManifestLoaderProvider;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.ManifestLoader;
+import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 
 import java.util.function.Function;
 
@@ -15,7 +16,17 @@ public class RTLuaManifestLoaderModule extends AbstractModule {
 
     @Override
     protected void configure() {
+
+        install(new LuaModule() {
+            @Override
+            protected void configureFeatures() {
+                exposeLuaState();
+                enableBasicConverters();
+            }
+        });
+
         bind(new TypeLiteral<Function<Application, ManifestLoader>>(){}).toProvider(LuaManifestLoaderProvider.class);
+
     }
 
 }
