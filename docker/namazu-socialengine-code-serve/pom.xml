@@ -13,7 +13,7 @@
     <packaging>pom</packaging>
 
     <groupId>com.namazustudios.socialengine</groupId>
-    <artifactId>namazu-socialengine-codeserve</artifactId>
+    <artifactId>namazu-socialengine-code-serve</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>
