@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao.rt;
 
-import com.namazustudios.socialengine.ModuleDefaults;
+import com.namazustudios.socialengine.config.ModuleDefaults;
 
 import java.util.Properties;
 

@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.config;
 
 import java.util.Properties;
 import java.util.function.Supplier;

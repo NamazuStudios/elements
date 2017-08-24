@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rest.application;
 
-import com.namazustudios.socialengine.ValidationHelper;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;

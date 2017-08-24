@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.common.collect.Streams;
-import com.namazustudios.socialengine.ValidationHelper;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
 import com.namazustudios.socialengine.dao.mongo.model.*;

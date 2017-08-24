@@ -1,4 +1,6 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.config;
+
+import com.namazustudios.socialengine.Constants;
 
 import java.util.Properties;
 

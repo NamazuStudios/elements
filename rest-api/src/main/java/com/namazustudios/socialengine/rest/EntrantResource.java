@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.model.SocialCampaignEntry;
 import com.namazustudios.socialengine.model.SteamEntrantProfile;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.SocialCampaignService;
-import com.namazustudios.socialengine.ValidationHelper;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;

@@ -1,8 +1,7 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.util;
 
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.ValidationFailureException;
-import org.omg.CORBA.DynAnyPackage.Invalid;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolation;

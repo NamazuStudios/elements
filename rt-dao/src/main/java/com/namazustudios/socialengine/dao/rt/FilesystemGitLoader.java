@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.rt;
 
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.ShutdownHooks;
+import com.namazustudios.socialengine.util.ShutdownHooks;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;

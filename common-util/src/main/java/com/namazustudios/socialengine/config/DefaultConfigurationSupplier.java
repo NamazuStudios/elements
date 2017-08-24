@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.config;
 
 import org.reflections.Reflections;
 import org.slf4j.Logger;

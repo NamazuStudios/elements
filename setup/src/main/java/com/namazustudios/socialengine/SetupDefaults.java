@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine;
 
+import com.namazustudios.socialengine.config.ModuleDefaults;
+
 import java.util.Properties;
 
 /**

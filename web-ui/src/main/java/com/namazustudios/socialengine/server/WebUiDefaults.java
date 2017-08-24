@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.server;
 
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.ModuleDefaults;
+import com.namazustudios.socialengine.config.ModuleDefaults;
 
 import java.util.Properties;
 

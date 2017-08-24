@@ -6,7 +6,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.mongodb.DuplicateKeyException;
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.ValidationHelper;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.SocialCampaignDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoSocialCampaign;
 import com.namazustudios.socialengine.exception.DuplicateException;

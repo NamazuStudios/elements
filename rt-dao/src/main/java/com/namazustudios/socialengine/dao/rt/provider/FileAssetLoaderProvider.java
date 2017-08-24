@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao.rt.provider;
 
-import com.namazustudios.socialengine.ShutdownHooks;
+import com.namazustudios.socialengine.util.ShutdownHooks;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.AssetLoader;

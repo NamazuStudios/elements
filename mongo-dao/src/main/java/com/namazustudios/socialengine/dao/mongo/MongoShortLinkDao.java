@@ -4,7 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.io.BaseEncoding;
 import com.mongodb.WriteResult;
-import com.namazustudios.socialengine.ValidationHelper;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.ShortLinkDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoShortLink;
 import com.namazustudios.socialengine.exception.BadQueryException;
