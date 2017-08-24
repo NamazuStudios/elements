@@ -38,4 +38,18 @@ public interface URIs {
         return appendPath(base, joined);
     }
 
+    static URI appendOrReplaceQuery(final URI base, final String query) {
+        try {
+            return new URI(base.getScheme(),
+                    base.getUserInfo(),
+                    base.getHost(),
+                    base.getPort(),
+                    base.getPath()  + "/",
+                    query,
+                    base.getFragment());
+        } catch (URISyntaxException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+    }
+
 }

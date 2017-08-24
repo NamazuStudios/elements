@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rest.application;
 
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.rt.ParameterizedPath;
@@ -50,7 +51,7 @@ import static java.util.Arrays.asList;
                 "an application may be deployed on both Android and iOS.  One application profile" +
                 "each for Android and iOS would be required.",
         authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
-@Path("application/{applicationNameOrId}")
+@Path("application/{applicationNameOrId}/swagger.json")
 public class ApplicationDocumentationResource {
 
     private ManifestService manifestService;
@@ -58,7 +59,6 @@ public class ApplicationDocumentationResource {
     private ApplicationService applicationService;
 
     @GET
-    @Path("swagger.json")
     @Produces({MediaType.APPLICATION_JSON})
     @ApiOperation(value = "The swagger definition in either JSON or YAML", hidden = true)
     public Swagger getJsonDocumentation(@PathParam("applicationNameOrId") final String applicationNameOrId) {
@@ -69,9 +69,16 @@ public class ApplicationDocumentationResource {
     private Swagger generateSwagger(final String applicationNameOrId) {
         final Swagger swagger = new Swagger();
         final Application application = getApplicationService().getApplication(applicationNameOrId);
+
+        if (application.getHttpTunnelEndpointUrl() == null) {
+            throw new NotFoundException();
+        }
+
         appendHostInformation(swagger, application);
         appendHttpManifests(swagger, application);
+
         return swagger;
+
     }
 
     private void appendHostInformation(final Swagger swagger, final Application application) {

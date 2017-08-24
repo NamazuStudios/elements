@@ -54,6 +54,11 @@ public interface Constants {
     String API_OUTSIDE_URL = "com.namazustudios.socialengine.api.url";
 
     /**
+     * The web API root.  This is the full outside URL of the API endpoint.
+     */
+    String DOC_OUTSIDE_URL = "com.namazustudios.socialengine.doc.url";
+
+    /**
      * The allowed CORS origins for the request.
      */
     String CORS_ALLOWED_ORIGINS = "com.namazustudios.socialengine.cors.allowed.origins";

@@ -36,6 +36,8 @@ public class Application {
 
     private String httpDocumentationUrl;
 
+    private String httpDocumentationUiUrl;
+
     private String httpTunnelEndpointUrl;
 
     /**
@@ -112,7 +114,7 @@ public class Application {
     }
 
     /**
-     * Gets the HTTP documentation endpoint for the application if it is availble.  Otherwise null.
+     * Gets the HTTP documentation endpoint for the application if it is available.  Otherwise null.
      *
      * @return the HTTP documentation endpoint
      */
@@ -121,7 +123,7 @@ public class Application {
     }
 
     /**
-     * Gets the HTTP documentation endpoint for the application if it is availble.  Otherwise null.
+     * Sets the HTTP documentation endpoint for the application if it is available.  Otherwise null.
      *
      * @param httpDocumentationUrl  the HTTP documentation endpoint
      */
@@ -130,7 +132,25 @@ public class Application {
     }
 
     /**
-     * Gets the HTTP tunnel endpoint, if this is availble.  Otherwise null.
+     * Gets the HTTP documentation UI URL for the application if it is available.  Otherwise null.
+     *
+     * @return the HTTP documentation UI url
+     */
+    public String getHttpDocumentationUiUrl() {
+        return httpDocumentationUiUrl;
+    }
+
+    /**
+     * Sets the HTTP documentation UI URL for the application if it is available.  Otherwise null.
+     *
+     * @param httpDocumentationUiUrl  the HTTP documentation UI url
+     */
+    public void setHttpDocumentationUiUrl(String httpDocumentationUiUrl) {
+        this.httpDocumentationUiUrl = httpDocumentationUiUrl;
+    }
+
+    /**
+     * Gets the HTTP tunnel endpoint, if this is available.  Otherwise null.
      *
      * @return the HTTP tunnel endpoint
      */
@@ -139,7 +159,7 @@ public class Application {
     }
 
     /**
-     * Sets the HTTP tunnel endpoint, if this is availble.  Otherwise null.
+     * Sets the HTTP tunnel endpoint, if this is available.  Otherwise null.
      *
      * @param httpTunnelEndpointUrl  the HTTP tunnel endpoint
      */

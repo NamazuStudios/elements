@@ -89,6 +89,14 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
     @UiField
     Row addConfigurationDropDownRow;
 
+    @UiField
+    @Ignore
+    Anchor swaggerUiLink;
+
+    @UiField
+    @Ignore
+    Anchor swaggerJsonLink;
+
     @Inject
     private Driver driver;
 
@@ -284,6 +292,12 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
         configurationsTableRow.setVisible(true);
         addConfigurationDropDownRow.setVisible(true);
         applicationConfigurationDataProvider.setParentApplication(application);
+
+        swaggerUiLink.setText("Documentation UI");
+        swaggerUiLink.setHref(application.getHttpDocumentationUiUrl());
+
+        swaggerJsonLink.setText("OpenAPI Specification");
+        swaggerJsonLink.setHref(application.getHttpDocumentationUrl());
 
         final Range range = new Range(0, applicationConfigurationCellTable.getVisibleRange().getLength());
         applicationConfigurationCellTable.setVisibleRangeAndClearData(range, true);

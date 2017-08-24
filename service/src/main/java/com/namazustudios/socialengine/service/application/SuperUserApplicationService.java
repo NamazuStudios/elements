@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.service.application;
 
-import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
@@ -11,7 +10,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.net.URI;
 
+import static com.google.common.net.UrlEscapers.urlFragmentEscaper;
+import static com.namazustudios.socialengine.Constants.*;
+import static com.namazustudios.socialengine.util.URIs.appendOrReplaceQuery;
 import static com.namazustudios.socialengine.util.URIs.appendPath;
+import static java.lang.String.format;
 
 /**
  * {@link ApplicationService} implemented for when the current user has {@link User.Level#SUPERUSER} access.
@@ -20,11 +23,15 @@ import static com.namazustudios.socialengine.util.URIs.appendPath;
  */
 public class SuperUserApplicationService implements ApplicationService {
 
+    private static final String CONFIG_PARAM = "config";
+
     private URI codeServeUrl;
 
     private URI httpTunnelUrl;
 
-    private URI apiOutsiudeUrl;
+    private URI apiOutsideUrl;
+
+    private URI docOutsideUrl;
 
     private ApplicationDao applicationDao;
 
@@ -67,6 +74,7 @@ public class SuperUserApplicationService implements ApplicationService {
         addCodeServeUrl(application);
         addHttpTunnelUrl(application);
         addDocumentationUrl(application);
+        addDocumentationUiUrl(application);
         return application;
     }
 
@@ -83,8 +91,15 @@ public class SuperUserApplicationService implements ApplicationService {
     }
 
     private void addDocumentationUrl(final Application application) {
-        final URI documentationUrl = appendPath(getApiOutsiudeUrl(), "application", application.getId(), "swagger.json");
+        final URI documentationUrl = appendPath(getApiOutsideUrl(), "application", application.getId(), "swagger.json");
         application.setHttpDocumentationUrl(documentationUrl.toString());
+    }
+
+    private void addDocumentationUiUrl(final Application application) {
+        final String encoded = urlFragmentEscaper().escape(application.getHttpDocumentationUrl());
+        final String fragment = format("%s=%s", CONFIG_PARAM, encoded);
+        final URI documentationUiUri = appendOrReplaceQuery(getDocOutsideUrl(), fragment);
+        application.setHttpDocumentationUiUrl(documentationUiUri.toString());
     }
 
     public ApplicationDao getApplicationDao() {
@@ -101,7 +116,7 @@ public class SuperUserApplicationService implements ApplicationService {
     }
 
     @Inject
-    public void setCodeServeUrl(@Named(Constants.CODE_SERVE_URL) URI codeServeUrl) {
+    public void setCodeServeUrl(@Named(CODE_SERVE_URL) URI codeServeUrl) {
         this.codeServeUrl = codeServeUrl;
     }
 
@@ -110,17 +125,26 @@ public class SuperUserApplicationService implements ApplicationService {
     }
 
     @Inject
-    public void setHttpTunnelUrl(@Named(Constants.HTTP_TUNNEL_URL) URI httpTunnelUrl) {
+    public void setHttpTunnelUrl(@Named(HTTP_TUNNEL_URL) URI httpTunnelUrl) {
         this.httpTunnelUrl = httpTunnelUrl;
     }
 
-    public URI getApiOutsiudeUrl() {
-        return apiOutsiudeUrl;
+    public URI getApiOutsideUrl() {
+        return apiOutsideUrl;
     }
 
     @Inject
-    public void setApiOutsiudeUrl(@Named(Constants.API_OUTSIDE_URL) URI apiOutsiudeUrl) {
-        this.apiOutsiudeUrl = apiOutsiudeUrl;
+    public void setApiOutsideUrl(@Named(API_OUTSIDE_URL) URI apiOutsideUrl) {
+        this.apiOutsideUrl = apiOutsideUrl;
+    }
+
+    public URI getDocOutsideUrl() {
+        return docOutsideUrl;
+    }
+
+    @Inject
+    public void setDocOutsideUrl(@Named(DOC_OUTSIDE_URL) URI docOutsideUrl) {
+        this.docOutsideUrl = docOutsideUrl;
     }
 
 }
