@@ -90,6 +90,9 @@ manifest.http = {
 
             get_hello_world = {
 
+                -- Describes the operation which will be relayed to documentation definitions
+                description = "Example Operation",
+
                 -- The corresponding HTTP verb.  Must be one of GET, POST, PUT, DELETE, HEAD, OPTIONS
 
                 verb = "GET",
@@ -105,6 +108,15 @@ manifest.http = {
                 -- the get module.
 
                 method = "get",
+
+                -- Parameters which the request will accept.  Parameters may ony specify simple types.
+
+                parameters = {
+                    foo_number = "number",
+                    bar_number = "number",
+                    foo_string = "string",
+                    bar_string = "string"
+                },
 
                 -- Specifies the content which will be produced and consumed by the operation.  The consumer
                 -- will consume a model of the supplied type when the content type is provided.

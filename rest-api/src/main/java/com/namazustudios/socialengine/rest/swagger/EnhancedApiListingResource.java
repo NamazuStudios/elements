@@ -1,24 +1,14 @@
 package com.namazustudios.socialengine.rest.swagger;
 
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.exception.ForbiddenException;
-import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
-import com.namazustudios.socialengine.rt.manifest.http.HttpModule;
-import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
-import com.namazustudios.socialengine.rt.manifest.model.Model;
-import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
-import com.namazustudios.socialengine.rt.manifest.model.Property;
 import com.namazustudios.socialengine.service.ApplicationService;
 import com.namazustudios.socialengine.service.ManifestService;
 import io.swagger.annotations.ApiKeyAuthDefinition;
 import io.swagger.annotations.SecurityDefinition;
 import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.jaxrs.listing.ApiListingResource;
-import io.swagger.models.ModelImpl;
 import io.swagger.models.Scheme;
 import io.swagger.models.Swagger;
-import io.swagger.models.properties.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,9 +20,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
-import java.util.Map;
 
-import static com.google.common.collect.Streams.stream;
 import static io.swagger.models.Scheme.forValue;
 import static java.util.Arrays.asList;
 
@@ -68,7 +56,6 @@ public class EnhancedApiListingResource extends ApiListingResource {
     protected Swagger process(Application app, ServletContext servletContext, ServletConfig sc, HttpHeaders headers, UriInfo uriInfo) {
         final Swagger swagger = super.process(app, servletContext, sc, headers, uriInfo);
         appendHostInformation(swagger);
-        appendManifests(swagger);
         return swagger;
     }
 
@@ -101,74 +88,6 @@ public class EnhancedApiListingResource extends ApiListingResource {
 
     }
 
-    private void appendManifests(final Swagger swagger) {
-        try {
-            stream(getApplicationService().getApplications()).forEach(app -> appendManifests(swagger, app));
-        } catch (ForbiddenException ex) {
-            logger.info("User forbidden from accessing extended APIs: {}", ex.getMessage());
-            logger.debug("Exception Detail.", ex);
-        }
-    }
-
-    private void appendManifests(
-            final Swagger swagger,
-            final com.namazustudios.socialengine.model.application.Application application) {
-        try {
-
-            final ModelManifest modelManifest = getManifestService().getModelManifestForApplication(application);
-            appendModelManifest(swagger, modelManifest);
-
-            final HttpManifest httpManifest = getManifestService().getHttpManifestForApplication(application);
-            appendHttpManifest(swagger, httpManifest, modelManifest);
-
-        } catch (NotFoundException ex) {
-            logger.info("User forbidden from accessing extended APIs for application {}: {}", application.getName(), ex.getMessage());
-            logger.debug("Exception Detail.", ex);
-        }
-    }
-
-    private void appendModelManifest(final Swagger swagger, final ModelManifest modelManifest) {
-        for (final Model model : modelManifest.getModelsByName().values()) {
-            final ModelImpl swaggerModel = new ModelImpl();
-            swaggerModel.setName(model.getName());
-            swaggerModel.setDescription(model.getDescription());
-            model.getProperties().forEach((name, property) -> swaggerModel.addProperty(name, toSwaggerProperty(property)));
-            swagger.addDefinition(model.getName(), swaggerModel);
-        }
-    }
-
-    private io.swagger.models.properties.Property toSwaggerProperty(final Property property) {
-        switch (property.getType()) {
-            case NUMBER:
-                return new DoubleProperty().description(property.getDescription());
-            case STRING:
-                return new StringProperty().description(property.getDescription());
-            case BOOLEAN:
-                return new BooleanProperty().description(property.getDescription());
-            case ARRAY:
-                return new ArrayProperty(new RefProperty(property.getModel())).description(property.getDescription());
-            case OBJECT:
-                return new RefProperty(property.getModel()).description(property.getDescription());
-            default:
-                throw new IllegalArgumentException("Unsupported property type: " + property.getType());
-        }
-    }
-
-    private void appendHttpManifest(final Swagger swagger,
-                                    final HttpManifest httpManifest,
-                                    final ModelManifest modelManifest) {
-
-        for (final HttpModule httpModule : httpManifest.getModulesByName().values()) {
-
-            final Map<String, HttpOperation> httpOperationsByName = httpModule.getOperationsByName();
-
-            for (final HttpOperation httpOperation : httpOperationsByName.values()) {
-
-            }
-
-        }
-    }
-
     public URI getApiOutsideUrl() {
         return apiOutsideUrl;
     }
@@ -185,15 +104,6 @@ public class EnhancedApiListingResource extends ApiListingResource {
     @Inject
     public void setApplicationService(ApplicationService applicationService) {
         this.applicationService = applicationService;
-    }
-
-    public ManifestService getManifestService() {
-        return manifestService;
-    }
-
-    @Inject
-    public void setManifestService(ManifestService manifestService) {
-        this.manifestService = manifestService;
     }
 
 }

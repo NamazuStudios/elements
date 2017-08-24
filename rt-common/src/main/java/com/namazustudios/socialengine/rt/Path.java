@@ -131,6 +131,26 @@ public final class Path implements Comparable<Path> {
     }
 
     /**
+     * Returns this {@link Path} as an absolute path string.  This is essentially prepending
+     * a '/' character to the result of {@link #toNormalizedPathString()}.
+     *
+     * @return the {@link Path} as represented by an absolute path.
+     */
+    public String toAbsolutePathString() {
+        return '/' + toNormalizedPathString();
+    }
+
+    /**
+     * Returns this {@link Path} as an absolute path string.  This is essentially prepending
+     * a {@link File#pathSeparatorChar} to the result of {@link #toFileSystemPathString()}.
+     *
+     * @return the {@link Path} as represented by an absolute path.
+     */
+    public String toAbsoluteFileString() {
+        return File.pathSeparatorChar + toFileSystemPathString();
+    }
+
+    /**
      * Returns the normalized path string.  Note that {@link #toString()} does not return
      * a properly formatted path.  But rather a path useful for debugging and logging information.
      * To get the normalzied path, this method must be used.

@@ -1,0 +1,310 @@
+package com.namazustudios.socialengine.rest.application;
+
+import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
+import com.namazustudios.socialengine.rt.ParameterizedPath;
+import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
+import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
+import com.namazustudios.socialengine.rt.manifest.http.HttpModule;
+import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
+import com.namazustudios.socialengine.rt.manifest.model.Model;
+import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
+import com.namazustudios.socialengine.rt.manifest.model.Property;
+import com.namazustudios.socialengine.service.ApplicationService;
+import com.namazustudios.socialengine.service.ManifestService;
+import com.namazustudios.socialengine.util.URIs;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
+import io.swagger.models.*;
+import io.swagger.models.parameters.HeaderParameter;
+import io.swagger.models.parameters.Parameter;
+import io.swagger.models.parameters.PathParameter;
+import io.swagger.models.properties.*;
+import org.glassfish.jersey.internal.util.Producer;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import static com.google.common.base.Functions.identity;
+import static io.swagger.models.Scheme.forValue;
+import static java.util.Arrays.asList;
+
+/**
+ * Created by patricktwohig on 8/23/17.
+ */
+@Api(value = "Application Configurations",
+        description =
+                "Manages application profiles.  An application profile is a collection of " +
+                "application metadata for a particular configuration of deployment.  For example, " +
+                "an application may be deployed on both Android and iOS.  One application profile" +
+                "each for Android and iOS would be required.",
+        authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
+@Path("application/{applicationNameOrId}")
+public class ApplicationDocumentationResource {
+
+    private URI httpTunnelUrl;
+
+    private ManifestService manifestService;
+
+    private ApplicationService applicationService;
+
+    @GET
+    @Path("swagger.json")
+    @Produces({MediaType.APPLICATION_JSON})
+    @ApiOperation(value = "The swagger definition in either JSON or YAML", hidden = true)
+    public Swagger getJsonDocumentation(@PathParam("applicationNameOrId") final String applicationNameOrId) {
+        final Swagger swagger = generateSwagger(applicationNameOrId);
+        return swagger;
+    }
+
+    private Swagger generateSwagger(final String applicationNameOrId) {
+        final Swagger swagger = new Swagger();
+        final Application application = getApplicationService().getApplication(applicationNameOrId);
+        appendHostInformation(swagger, application);
+        appendHttpManifests(swagger, application);
+        return swagger;
+    }
+
+    private void appendHostInformation(final Swagger swagger, final Application application) {
+
+        final URI uri = URIs.appendPath(getHttpTunnelUrl(), application.getName());
+
+        final StringBuilder hostStringBuilder = new StringBuilder();
+
+        if (uri.getUserInfo() != null) {
+            hostStringBuilder
+                    .append(uri.getUserInfo())
+                    .append("@");
+        }
+
+        hostStringBuilder.append(uri.getHost());
+
+        if (uri.getPort() >= 0) {
+            hostStringBuilder
+                    .append(":")
+                    .append(uri.getPort());
+        }
+
+        swagger.setHost(hostStringBuilder.toString());
+        swagger.setBasePath(uri.getPath());
+
+        final Scheme scheme = forValue(uri.getScheme());
+
+        if (scheme != null) {
+            swagger.setSchemes(asList(scheme));
+        }
+
+    }
+
+    private void appendHttpManifests(final Swagger swagger, final Application application) {
+
+        final ModelManifest modelManifest = getManifestService().getModelManifestForApplication(application);
+        appendModelManifest(swagger, modelManifest);
+
+        final HttpManifest httpManifest = getManifestService().getHttpManifestForApplication(application);
+        appendHttpManifest(swagger, httpManifest, modelManifest);
+    }
+
+    private void appendModelManifest(final Swagger swagger, final ModelManifest modelManifest) {
+        for (final Model model : modelManifest.getModelsByName().values()) {
+            final ModelImpl swaggerModel = new ModelImpl();
+            swaggerModel.setName(model.getName());
+            swaggerModel.setDescription(model.getDescription());
+            model.getProperties().forEach((name, property) -> swaggerModel.addProperty(name, toSwaggerProperty(property)));
+            swagger.addDefinition(model.getName(), swaggerModel);
+        }
+    }
+
+    private io.swagger.models.properties.Property toSwaggerProperty(final Property property) {
+        switch (property.getType()) {
+            case NUMBER:
+                return new DoubleProperty().description(property.getDescription());
+            case STRING:
+                return new StringProperty().description(property.getDescription());
+            case BOOLEAN:
+                return new BooleanProperty().description(property.getDescription());
+            case ARRAY:
+                return new ArrayProperty(new RefProperty(property.getModel())).description(property.getDescription());
+            case OBJECT:
+                return new RefProperty(property.getModel()).description(property.getDescription());
+            default:
+                throw new IllegalArgumentException("Unsupported property type: " + property.getType());
+        }
+    }
+
+    private void appendHttpManifest(final Swagger swagger,
+                                    final HttpManifest httpManifest,
+                                    final ModelManifest modelManifest) {
+
+        final Map<ParameterizedPath, io.swagger.models.Path> parameterizedPathPathMap = new HashMap<>();
+
+        for (final HttpModule httpModule : httpManifest.getModulesByName().values()) {
+
+            final Map<String, HttpOperation> httpOperationsByName = httpModule.getOperationsByName();
+
+            for (final HttpOperation httpOperation : httpOperationsByName.values()) {
+                final io.swagger.models.Path path = parameterizedPathPathMap.computeIfAbsent(httpOperation.getPath(), this::computePath);
+                resolveOperation(httpOperation, path);
+            }
+
+        }
+
+        parameterizedPathPathMap.forEach((parameterizedPath, swaggerPath) -> {
+            final String pathKey = parameterizedPath.getRaw().toAbsolutePathString();
+            swagger.path(pathKey, swaggerPath);
+        });
+
+    }
+
+    private io.swagger.models.Path computePath(final ParameterizedPath parameterizedPath) {
+
+        final io.swagger.models.Path computed = new io.swagger.models.Path();
+
+        parameterizedPath.getParameters().forEach(parameter -> {
+            final PathParameter pathParameter = new PathParameter();
+            pathParameter.setName(parameter);
+            computed.addParameter(pathParameter);
+        });
+
+        return computed;
+
+    }
+
+    private void resolveOperation(final HttpOperation httpOperation, final io.swagger.models.Path path) {
+        switch (httpOperation.getVerb()) {
+            case GET:
+                resolveOperation(httpOperation, path::getGet, path::get);
+                break;
+            case PUT:
+                resolveOperation(httpOperation, path::getPut, path::put);
+                break;
+            case HEAD:
+                resolveOperation(httpOperation, path::getHead, path::head);
+                break;
+            case POST:
+                resolveOperation(httpOperation, path::getPost, path::post);
+                break;
+            case DELETE:
+                resolveOperation(httpOperation, path::getDelete, path::delete);
+                break;
+            case OPTIONS:
+                resolveOperation(httpOperation, path::getOptions, path::options);
+                break;
+            default:
+                throw new InvalidDataException("Invalid HTTP verb" + httpOperation.getVerb());
+        }
+    }
+
+    private void resolveOperation(final HttpOperation httpOperation,
+                                  final Producer<Operation> operationProducer,
+                                  final Consumer<Operation> operationConsumer) {
+
+        final Operation existing = operationProducer.call();
+
+        if (existing != null) {
+            throw new InvalidDataException("Operation already defined " + httpOperation.getVerb() + " " + httpOperation.getPath().getRaw().toAbsolutePathString());
+        }
+
+        final List<Parameter> parameters = resolveParameters(httpOperation);
+        final List<String> consumes = new ArrayList<>(httpOperation.getConsumesContentByType().keySet());
+        final List<String> produces = new ArrayList<>(httpOperation.getProducesContentByType().keySet());
+        final List<Response> responses = resoveResponses(httpOperation.getProducesContentByType().values());
+
+        final Operation operation = new Operation();
+
+        operation.setConsumes(consumes);
+        operation.setProduces(produces);
+        operation.setParameters(parameters);
+        operation.setOperationId(httpOperation.getName());
+        operation.setDescription(httpOperation.getDescription());
+        operation.setResponses(responses.stream().collect(Collectors.toMap(r -> "200", identity())));
+
+        operationConsumer.accept(operation);
+
+    }
+
+    private List<Parameter> resolveParameters(final HttpOperation httpOperation) {
+        final List<Parameter> parameters = new ArrayList<>();
+
+        httpOperation.getProducesContentByType()
+                .values()
+                .stream()
+                .flatMap(c -> c.getHeaders().stream())
+                .map(header -> {
+                    final HeaderParameter parameter = new HeaderParameter();
+                    parameter.setName(header);
+                    return parameter;
+                }).forEach(parameters::add);
+
+        httpOperation.getParameters()
+                .entrySet()
+                .stream()
+                .map(entry -> {
+                    final PathParameter parameter = new PathParameter();
+                    parameter.setName(entry.getKey());
+                    parameter.setType(entry.getValue().name());
+                    return parameter;
+                }).forEach(parameters::add);
+
+        return parameters;
+    }
+
+    private List<Response> resoveResponses(final Collection<HttpContent> httpContentCollection) {
+        return httpContentCollection.stream()
+            .map(this::resolveResponse)
+            .collect(Collectors.toList());
+    }
+
+    private Response resolveResponse(final HttpContent content) {
+        final Response response = new Response();
+        final RefProperty type = new RefProperty(content.getModel());
+        response.setSchema(type);
+        response.setHeaders(content.getHeaders().stream().collect(Collectors.toMap(identity(), h -> new StringProperty())));
+        return response;
+    }
+
+    public URI getHttpTunnelUrl() {
+        return httpTunnelUrl;
+    }
+
+    public void setHttpTunnelUrl(URI httpTunnelUrl) {
+        this.httpTunnelUrl = httpTunnelUrl;
+    }
+
+    @Inject
+    public void setHttpTunnelUrl(@Named(Constants.HTTP_TUNNEL_URL) String httpTunnelUrl) throws URISyntaxException {
+        setHttpTunnelUrl(new URI(httpTunnelUrl));
+    }
+
+    public ManifestService getManifestService() {
+        return manifestService;
+    }
+
+    @Inject
+    public void setManifestService(ManifestService manifestService) {
+        this.manifestService = manifestService;
+    }
+
+    public ApplicationService getApplicationService() {
+        return applicationService;
+    }
+
+    @Inject
+    public void setApplicationService(ApplicationService applicationService) {
+        this.applicationService = applicationService;
+    }
+
+}

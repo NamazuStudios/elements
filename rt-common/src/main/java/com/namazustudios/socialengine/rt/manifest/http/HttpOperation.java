@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.manifest.http;
 
 import com.namazustudios.socialengine.rt.ParameterizedPath;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.manifest.model.Type;
 
 import java.util.Map;
 
@@ -16,11 +17,15 @@ public class HttpOperation {
 
     private String name;
 
+    private String description;
+
     private HttpVerb verb;
 
     private ParameterizedPath path;
 
     private String method;
+
+    private Map<String, Type> parameters;
 
     private Map<String, HttpContent> producesContentByType;
 
@@ -42,6 +47,24 @@ public class HttpOperation {
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    /**
+     * Gets the description of the operation
+     *
+     * @return the the description
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * Sets the description of the operation
+     *
+     * @param description  the the description
+     */
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     /**
@@ -97,6 +120,24 @@ public class HttpOperation {
      */
     public void setMethod(String method) {
         this.method = method;
+    }
+
+    /**
+     * Gets the parameters this operation accepts by type.
+     *
+     * @return a {@link Map<String, Type>} containing the parameter metadata
+     */
+    public Map<String, Type> getParameters() {
+        return parameters;
+    }
+
+    /**
+     * Sets the parameters this operation accepts by type.
+     *
+     * @param parameters a {@link Map<String, Type>} containing the parameter metadata
+     */
+    public void setParameters(Map<String, Type> parameters) {
+        this.parameters = parameters;
     }
 
     /**

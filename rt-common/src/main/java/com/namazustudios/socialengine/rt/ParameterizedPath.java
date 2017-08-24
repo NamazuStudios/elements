@@ -147,4 +147,19 @@ public final class ParameterizedPath {
         return component.startsWith(OPEN_PARAMETER) && component.endsWith(CLOSE_PARAMETER);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ParameterizedPath)) return false;
+
+        ParameterizedPath that = (ParameterizedPath) o;
+
+        return getRaw().equals(that.getRaw());
+    }
+
+    @Override
+    public int hashCode() {
+        return getRaw().hashCode();
+    }
+
 }

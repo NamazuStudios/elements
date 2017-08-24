@@ -4,13 +4,15 @@ import com.namazustudios.socialengine.rt.ParameterizedPath;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.exception.BadManifestException;
 import com.namazustudios.socialengine.rt.manifest.http.*;
+import com.namazustudios.socialengine.rt.manifest.model.Type;
 
-import javax.inject.Inject;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static java.util.Arrays.stream;
 
 /**
  * Created by patricktwohig on 8/18/17.
@@ -25,7 +27,7 @@ public class HttpManifestConverter extends AbstractMapConverter<HttpManifest> {
 
     /**
      * The name of the lua module specified in the lua code.  Corresponds to the value
-     * of {@link HttpModule#getOperationsByName()} ()}.
+     * of {@link HttpModule#getOperationsByName()}.
      */
     public static final String OPERATIONS_KEY = "operations";
 
@@ -43,7 +45,9 @@ public class HttpManifestConverter extends AbstractMapConverter<HttpManifest> {
 
     public static final String MODEL_KEY = "model";
 
-    private ModelManifestConverter modelManifestConverter;
+    public static final String PARAMETERS_KEY = "parameters";
+
+    public static final String DESCRIPTION_KEY = "description";
 
     @Override
     public Class<HttpManifest> getConvertedType() {
@@ -125,6 +129,11 @@ public class HttpManifestConverter extends AbstractMapConverter<HttpManifest> {
             .orThrow(v -> new BadManifestException("Invalid Parameterized Path: " + v))
             .get();
 
+        final String description = operationConversionMap.get(DESCRIPTION_KEY)
+            .asCastTo(String.class)
+            .orElse("")
+            .get();
+
         final String method = operationConversionMap.get(METHOD_KEY)
             .asCastTo(String.class)
             .orThrow(v -> new BadManifestException("Invalid method HTTP operation method name: " + v))
@@ -132,19 +141,26 @@ public class HttpManifestConverter extends AbstractMapConverter<HttpManifest> {
 
         final Map<?, ?> consumes = operationConversionMap.get(CONSUMES_KEY)
             .asCastTo(Map.class)
-            .orThrow(v -> new BadManifestException("Exepcted table for 'consumes' " + v))
+            .orThrow(v -> new BadManifestException("Expected table for 'consumes' " + v))
             .get();
 
         final Map<?, ?> produces = operationConversionMap.get(PRODUCES_KEY)
             .asCastTo(Map.class)
-            .orThrow(v -> new BadManifestException("Exepcted table list for 'consumes' " + v))
+            .orThrow(v -> new BadManifestException("Expected table list for 'consumes' " + v))
+            .get();
+
+        final Map<?, ?> parametersMap = operationConversionMap.get(PARAMETERS_KEY)
+            .asCastTo(Map.class)
+            .orThrow(v -> new BadManifestException("Expected table for 'parameters' " + v))
             .get();
 
         final HttpOperation httpOperation = new HttpOperation();
         httpOperation.setName(operation);
+        httpOperation.setDescription(description);
         httpOperation.setVerb(verb);
         httpOperation.setPath(parameterizedPath);
         httpOperation.setMethod(method);
+        httpOperation.setParameters(toParametersMap(parametersMap));
         httpOperation.setConsumesContentByType(toContentList(consumes, CONSUMES_KEY));
         httpOperation.setProducesContentByType(toContentList(produces, PRODUCES_KEY));
         return httpOperation;
@@ -213,13 +229,27 @@ public class HttpManifestConverter extends AbstractMapConverter<HttpManifest> {
 
     }
 
-    public ModelManifestConverter getModelManifestConverter() {
-        return modelManifestConverter;
-    }
+    private Map<String, Type> toParametersMap(final Map<?, ?> map) {
+        final Map<String, Type> parameters = new HashMap<>();
 
-    @Inject
-    public void setModelManifestConverter(ModelManifestConverter modelManifestConverter) {
-        this.modelManifestConverter = modelManifestConverter;
+        map.forEach((key, value) -> {
+
+            final String name = Conversion.from(key)
+                .asCastTo(String.class)
+                .orThrow(v -> new BadManifestException("Invalid parameter name: " + v))
+                .get();
+
+            final Type type = Conversion.from(value)
+                .asCastTo(String.class)
+                .asMappedBy(Type::findByValue, v -> stream(Type.values()).anyMatch(e -> e.value.equals(v)))
+                .orThrow(v -> new BadManifestException("Invalid parameter type: " + v))
+                .get();
+
+            parameters.put(name, type);
+
+        });
+
+        return parameters;
     }
 
 }
