@@ -13,6 +13,7 @@ import org.scijava.nativelib.NativeLoader;
 public class NativeLibLoader implements NativeSupport.Loader {
     @Override
     public void load() {
+        NativeLibraryUtil.loadNativeLibrary(NativeLibLoader.class, "lua");
         NativeLibraryUtil.loadNativeLibrary(NativeLibLoader.class, "jnlua");
     }
 }
