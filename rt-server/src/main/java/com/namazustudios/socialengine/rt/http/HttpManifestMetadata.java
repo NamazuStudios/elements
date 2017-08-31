@@ -35,7 +35,8 @@ public interface HttpManifestMetadata {
     /**
      * It is possible that the request matches may {@link HttpOperation} instances, such as when the
      * {@link HttpVerb#OPTIONS} verb is used.  This will enumerate the possible potential {@link HttpOperation}
-     * instances that match the path of the request, as determined by the request URI.
+     * instances that match the attributes of the associated {@link HttpRequest}.  This may consider such
+     * features as the presence of the Accept header, or other matching headers.
      *
      * @return a list of available {@link HttpOperation}s, if any.
      */

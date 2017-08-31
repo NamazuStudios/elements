@@ -25,7 +25,8 @@ public interface HttpResponseService {
      *
      * @param httpRequest
      * @param response
-     * @return
+     *
+     * @return the {@link HttpResponse}, assembled from what's known of the {@link HttpRequest}.
      */
     default HttpResponse assemble(final HttpRequest httpRequest, final Response response) {
         return new HttpResponse() {
@@ -60,6 +61,11 @@ public interface HttpResponseService {
                     @Override
                     public HttpContent getContent() {
                         return httpRequest.getResponseContent();
+                    }
+
+                    @Override
+                    public HttpContent getContentFor(HttpOperation operation) {
+                        return manifestMetadata.getContentFor(operation);
                     }
 
                 };
