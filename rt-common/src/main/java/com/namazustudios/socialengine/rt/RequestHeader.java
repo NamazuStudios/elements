@@ -1,8 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import java.util.List;
-import java.util.Map;
-
 /**
  * The basic request type for the RT Server.  This is compact set of
  * metadata for a single request.  This has some terminology similar to
@@ -14,7 +11,7 @@ import java.util.Map;
  *
  * Created by patricktwohig on 7/24/15.
  */
-public interface RequestHeader {
+public interface RequestHeader extends NamedHeaders {
 
     /**
      * Gets the sequence of the request.  The client, when making the request,
@@ -37,24 +34,5 @@ public interface RequestHeader {
      * @return the path, never null
      */
     String getPath();
-
-    /**
-     * Gets a listing of headers mapped by header name.  A header may be repeated and therefore
-     * the header may not have the
-     *
-     * @return the mapping of headers.
-     */
-    Map<String, List<String>> getHeaders();
-
-    /**
-     * Gets a single header with the supplied name.
-     *
-     * @param header the header
-     * @return the header value, or null if no header is found
-     */
-    default String getHeader(final String header) {
-        final List<String> headers = getHeaders().get(header);
-        return headers == null || headers.isEmpty() ? null : headers.get(0);
-    }
 
 }

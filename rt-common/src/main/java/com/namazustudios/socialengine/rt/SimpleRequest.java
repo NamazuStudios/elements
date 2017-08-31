@@ -60,7 +60,7 @@ public class SimpleRequest implements Request {
 
         final SimpleRequestHeader simpleRequestHeader = new SimpleRequestHeader();
 
-        final Map<String, List<String> > simpleRequestHeaderMap = new HashMap<>();
+        final Map<String, List<Object> > simpleRequestHeaderMap = new LinkedHashMap<>();
 
         /**
          * Creates a new builder for {@link SimpleResponse}

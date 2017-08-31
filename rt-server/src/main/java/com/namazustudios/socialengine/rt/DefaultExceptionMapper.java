@@ -23,6 +23,39 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
     private DefaultExceptionMapper() {}
 
     @Override
+    public void map(final Throwable throwable, final ResponseReceiver responseReceiver) {
+
+        final SimpleExceptionResponsePayload simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();
+        simpleExceptionResponsePayload.setMessage(throwable.getMessage());
+
+        ResponseCode code;
+
+        try {
+            throw throwable;
+        } catch (BaseException bex) {
+            code = bex.getResponseCode();
+            code = code == null ? ResponseCode.INTERNAL_ERROR_FATAL : code;
+        } catch (Error error) {
+            throw error;
+        } catch (Throwable th) {
+            code = ResponseCode.INTERNAL_ERROR_FATAL;
+        }
+
+        final SimpleResponse simpleResponse = SimpleResponse.builder()
+                .code(code)
+                .payload(simpleExceptionResponsePayload)
+                .build();
+
+        try {
+            responseReceiver.receive(simpleResponse);
+        } catch (Exception ex) {
+            LOG.error("Caught exception mapping exception to response.", ex);
+        }
+
+    }
+
+
+    @Override
     public void map(final Throwable throwable,
                     final Request request,
                     final ResponseReceiver responseReceiver) {

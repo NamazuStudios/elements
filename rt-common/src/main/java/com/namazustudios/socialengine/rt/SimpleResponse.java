@@ -1,5 +1,10 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Created by patricktwohig on 7/31/15.
  */
@@ -58,11 +63,14 @@ public class SimpleResponse implements Response {
 
         final SimpleResponseHeader simpleResponseHeader = new SimpleResponseHeader();
 
+        final Map<String, List<Object>> simpleResponseHeaderMap = new LinkedHashMap<>();
+
         /**
          * Creates a new builder for {@link SimpleResponse}
          */
         public Builder() {
             simpleResponse.setResponseHeader(simpleResponseHeader);
+            simpleResponseHeader.setHeaders(simpleResponseHeaderMap);
         }
 
         /**
@@ -148,6 +156,17 @@ public class SimpleResponse implements Response {
          */
         public Builder payload(final Object payload) {
             simpleResponse.setPayload(payload);
+            return this;
+        }
+
+        /**
+         * Appends the header with name and value to the map provided by {@link ResponseHeader#getHeaders()}.
+         *
+         * @param header the header name
+         * @param value the header value
+         */
+        public Builder header(final String header, final Object value) {
+            simpleResponseHeaderMap.computeIfAbsent(header, k -> new ArrayList<>()).add(value);
             return this;
         }
 

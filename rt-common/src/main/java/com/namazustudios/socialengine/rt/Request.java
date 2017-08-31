@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
+import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
 
 /**
  * A Request is a request sent to a particular resource.
@@ -22,7 +23,7 @@ public interface Request {
     /**
      * Gets the payload object for this Request.
      *
-     * @return the paylaod
+     * @return the payload
      */
     Object getPayload();
 
@@ -30,10 +31,24 @@ public interface Request {
      * Converts the underlying payload to the requested type, if the conversion is possible.  If the
      * conversion is not possible, then this may throw an exception indicating so.
      *
+     * The default implementation of this attempts a simple cast.  If that fails, then the
+     * appropriate exception type is raised.
+     *
      * @param cls the requested type
      * @param <T> the requested type
+     * @throws {@link InvalidConversionException} if the conversion isn't possible
      */
-    <T> T getPayload(Class<T> cls);
+    default <T> T getPayload(Class<T> cls) {
+
+        final Object payload = getPayload();
+
+        try {
+            return cls.cast(payload);
+        } catch (ClassCastException ex) {
+            throw new InvalidConversionException(ex);
+        }
+
+    }
 
     /**
      * A type whih validates any instance of {@link Request}.
@@ -62,7 +77,7 @@ public interface Request {
             } else if (requestHeader.getMethod() == null) {
                 throw new BadRequestException("invalid method " + requestHeader.getMethod());
             } else if (requestHeader.getHeaders() == null) {
-                throw new BadRequestException("invalid request headers " + requestHeader.getHeaders());
+                throw new BadRequestException("invalid request simpleResponseHeaderMap " + requestHeader.getHeaders());
             }
 
         }

@@ -230,7 +230,7 @@ public class ApplicationDocumentationResource {
         final List<Parameter> parameters = resolveParameters(httpOperation);
         final List<String> consumes = new ArrayList<>(httpOperation.getConsumesContentByType().keySet());
         final List<String> produces = new ArrayList<>(httpOperation.getProducesContentByType().keySet());
-        final List<Response> responses = resoveResponses(httpOperation.getProducesContentByType().values());
+        final List<Response> responses = resolveResponses(httpOperation.getProducesContentByType().values());
 
         final Operation operation = new Operation();
 
@@ -271,7 +271,7 @@ public class ApplicationDocumentationResource {
         return parameters;
     }
 
-    private List<Response> resoveResponses(final Collection<HttpContent> httpContentCollection) {
+    private List<Response> resolveResponses(final Collection<HttpContent> httpContentCollection) {
         return httpContentCollection.stream()
             .map(this::resolveResponse)
             .collect(Collectors.toList());

@@ -1,13 +1,18 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * Created by patricktwohig on 7/24/15.
  */
 public class SimpleResponseHeader implements ResponseHeader {
 
-    int code;
+    private int code = UNKNOWN_SEQUENCE;
 
-    int sequence;
+    private int sequence;
+
+    private Map<String, List<Object>> headers;
 
     @Override
     public int getCode() {
@@ -28,6 +33,15 @@ public class SimpleResponseHeader implements ResponseHeader {
     }
 
     @Override
+    public Map<String, List<Object>> getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(Map<String, List<Object>> headers) {
+        this.headers = headers;
+    }
+
+    @Override
     public String toString() {
         return "SimpleResponseHeader{" +
                 "code=" + code + "(" + ResponseCode.getDescriptionFromCode(code) +")" +
@@ -43,14 +57,15 @@ public class SimpleResponseHeader implements ResponseHeader {
         SimpleResponseHeader that = (SimpleResponseHeader) o;
 
         if (getCode() != that.getCode()) return false;
-        return getSequence() == that.getSequence();
-
+        if (getSequence() != that.getSequence()) return false;
+        return getHeaders() != null ? getHeaders().equals(that.getHeaders()) : that.getHeaders() == null;
     }
 
     @Override
     public int hashCode() {
         int result = getCode();
         result = 31 * result + getSequence();
+        result = 31 * result + (getHeaders() != null ? getHeaders().hashCode() : 0);
         return result;
     }
 

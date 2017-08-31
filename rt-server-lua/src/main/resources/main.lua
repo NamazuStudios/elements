@@ -138,7 +138,7 @@ manifest.http = {
                         model = "foo",
 
                         -- Specifies any additional headers this request may consume
-                        headers = { "X-MyExampleHeader" }
+                        headers = { "X-MyExampleHeader" },
 
                     }
                 },
@@ -152,7 +152,15 @@ manifest.http = {
                         model = "foo",
 
                         -- Specifies any additional headers this request may produce
-                        headers = { "X-MyExampleHeader" }
+                        headers = { "X-MyExampleHeader" },
+
+                        -- Specifies any options headers, if availble
+
+                        static_headers = {
+                            ["Access-Control-Allow-Origin"] = {
+                                "http://example.com"
+                            }
+                        }
 
                     }
 

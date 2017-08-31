@@ -1,16 +1,27 @@
 package com.namazustudios.socialengine.rt.servlet;
 
+import com.google.common.net.HttpHeaders;
 import com.namazustudios.socialengine.rt.ExceptionMapper;
+import com.namazustudios.socialengine.rt.Response;
+import com.namazustudios.socialengine.rt.handler.Session;
 import com.namazustudios.socialengine.rt.handler.SessionRequestDispatcher;
+import com.namazustudios.socialengine.rt.http.HttpManifestMetadata;
+import com.namazustudios.socialengine.rt.http.HttpRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.servlet.AsyncContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.stream.Collectors;
 
 public class DispatcherServlet extends HttpServlet {
+
+    private static final Logger logger = LoggerFactory.getLogger(DispatcherServlet.class);
 
     private HttpRequestService httpRequestService;
 
@@ -20,46 +31,175 @@ public class DispatcherServlet extends HttpServlet {
 
     private SessionRequestDispatcher sessionRequestDispatcher;
 
-    private ExceptionMapper<Throwable> throwableExceptionMapper;
-
-    @Override
-    protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doHead(req, resp);
-    }
+    private ExceptionMapper.Resolver exceptionMapperResolver;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doGet(req, resp);
+        mapRequestAndPerformAsync(req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPost(req, resp);
+        mapRequestAndPerformAsync(req, resp);
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPut(req, resp);
+        mapRequestAndPerformAsync(req, resp);
     }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doDelete(req, resp);
+        mapRequestAndPerformAsync(req, resp);
     }
 
     @Override
     protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doOptions(req, resp);
-    }
-
-    private void perform() {
 
         try {
 
-        } catch (Throwable th) {
+            final HttpRequest httpRequest;
+            httpRequest = getHttpRequestService().getRequest(req);
+
+            final HttpManifestMetadata manifestMetadata;
+            manifestMetadata = httpRequest.getManifestMetadata();
+
+            if (manifestMetadata.hasOperation()) {
+                performAsync(httpRequest, req, resp);
+            } else {
+
+                final String allow = manifestMetadata.getAvailableOperations()
+                    .stream()
+                    .map(o -> o.getVerb().toString())
+                    .collect(Collectors.joining(","));
+
+                resp.addHeader(HttpHeaders.ALLOW, allow);
+
+                manifestMetadata.getAvailableOperations()
+                    .stream()
+                    .flatMap(o -> o.getConsumesContentByType().keySet().stream())
+                    .forEach(ct -> resp.addHeader(HttpHeaders.ACCEPT, ct));
+
+                manifestMetadata.getAvailableOperations()
+                    .stream()
+                    .flatMap(o -> o.getProducesContentByType().values().stream())
+                    .flatMap(o -> o.getStaticHeaders().entrySet().stream())
+                    .forEach(e -> resp.addHeader(e.getKey(), e.getValue()));
+
+            }
+
+        } catch (Exception ex) {
+            getExceptionMapperResolver()
+                    .getExceptionMapper(ex)
+                    .map(ex, response -> writeRaw(req, response, resp));
+            logger.info("Mapped exception properly.", ex);
+        }
+
+    }
+
+    @Override
+    protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+        final HttpRequest httpRequest;
+
+        try {
+
+            httpRequest = getHttpRequestService().getRequest(req);
+
+            if (httpRequest.getManifestMetadata().hasOperation()) {
+                performAsync(httpRequest, req, resp);
+            } else {
+                super.doHead(req, resp);
+            }
+
+        } catch (Exception ex) {
+            getExceptionMapperResolver()
+                    .getExceptionMapper(ex)
+                    .map(ex, response -> writeRaw(req, response, resp));
+            logger.info("Mapped exception properly.", ex);
+        }
+
+    }
+
+    private void mapRequestAndPerformAsync(final HttpServletRequest httpServletRequest,
+                                           final HttpServletResponse httpServletResponse) {
+
+        final HttpRequest httpRequest;
+
+        try {
+            httpRequest = getHttpRequestService().getRequest(httpServletRequest);
+            performAsync(httpRequest, httpServletRequest, httpServletResponse);
+        } catch (Exception ex) {
+            getExceptionMapperResolver()
+                    .getExceptionMapper(ex)
+                    .map(ex, response -> writeRaw(httpServletRequest, response, httpServletResponse));
+            logger.info("Mapped exception properly.", ex);
+        }
+
+    }
+
+    private void performAsync(final HttpRequest httpRequest,
+                              final HttpServletRequest httpServletRequest,
+                              final HttpServletResponse httpServletResponse) {
+
+        final AsyncContext asyncContext = httpServletRequest.startAsync();
+
+        try {
+
+            final Session session = getHttpSessionService().getSession(httpServletRequest);
+
+            getSessionRequestDispatcher().dispatch(session, httpRequest, response -> {
+                assembleAndWrite(httpRequest, response, httpServletResponse);
+                asyncContext.complete();
+            });
+
+        } catch (Exception ex) {
+            getExceptionMapperResolver()
+                    .getExceptionMapper(ex)
+                    .map(ex, httpRequest, response -> {
+                        assembleAndWrite(httpRequest, response, httpServletResponse);
+                        asyncContext.complete();
+                    });
+            logger.info("Mapped exception properly.", ex);
+        }
+
+    }
+
+    private void assembleAndWrite(final HttpRequest httpRequest,
+                                  final Response response,
+                                  final HttpServletResponse httpServletResponse) {
+        try {
+            getHttpResponseService().assembleAndWrite(httpRequest, response, httpServletResponse);
+        } catch (Exception ex) {
+
+            logger.error("Caught exception writing normal response.", ex);
+
+            try {
+                httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            } catch (IOException e) {
+                logger.error("Caught exception sending error response.", ex);
+            }
 
         }
 
+    }
+
+    private void writeRaw(final HttpServletRequest httpServletRequest,
+                          final Response response,
+                          final HttpServletResponse httpServletResponse) {
+        try {
+            getHttpResponseService().writeRaw(httpServletRequest, response, httpServletResponse);
+        } catch (Exception ex) {
+
+            logger.error("Caught exception writing normal response.", ex);
+
+            try {
+                httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            } catch (IOException e) {
+                logger.error("Caught exception sending error response.", ex);
+            }
+
+        }
     }
 
     public HttpRequestService getHttpRequestService() {
@@ -98,13 +238,13 @@ public class DispatcherServlet extends HttpServlet {
         this.sessionRequestDispatcher = sessionRequestDispatcher;
     }
 
-    public ExceptionMapper<Throwable> getThrowableExceptionMapper() {
-        return throwableExceptionMapper;
+    public ExceptionMapper.Resolver getExceptionMapperResolver() {
+        return exceptionMapperResolver;
     }
 
     @Inject
-    public void setThrowableExceptionMapper(ExceptionMapper<Throwable> throwableExceptionMapper) {
-        this.throwableExceptionMapper = throwableExceptionMapper;
+    public void setExceptionMapperResolver(ExceptionMapper.Resolver exceptionMapperResolver) {
+        this.exceptionMapperResolver = exceptionMapperResolver;
     }
 
 }

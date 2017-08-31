@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.manifest.http;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by patricktwohig on 8/15/17.
@@ -12,6 +13,8 @@ public class HttpContent {
     private String model;
 
     private List<String> headers;
+
+    private Map<String, String> staticHeaders;
 
     private boolean defaultContent;
 
@@ -87,6 +90,28 @@ public class HttpContent {
      */
     public void setDefaultContent(boolean defaultContent) {
         this.defaultContent = defaultContent;
+    }
+
+    /**
+     * Returns static headers which are associated with this {@link HttpContent}.  This can be
+     * used to ensure that certain specific headers are automatically inserted in every response,
+     * or must be present in every request.
+     *
+     * @return a {@link Map<String, String>} of static header values
+     */
+    public Map<String, String> getStaticHeaders() {
+        return staticHeaders;
+    }
+
+    /**
+     * Specifies static headers which are associated with this {@link HttpContent}.  This can be
+     * used to ensure that certain specific headers are automatically inserted in every response,
+     * or must be present in every request.
+     *
+     * @return a {@link Map<String, String>} of static header values
+     */
+    public void setStaticHeaders(Map<String, String> staticHeaders) {
+        this.staticHeaders = staticHeaders;
     }
 
 }

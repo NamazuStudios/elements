@@ -16,7 +16,7 @@ public class SimpleRequestHeader implements RequestHeader {
 
     private String path;
 
-    private Map<String, List<String> > headers;
+    private Map<String, List<Object> > headers;
 
     @Override
     public int getSequence() {
@@ -46,11 +46,11 @@ public class SimpleRequestHeader implements RequestHeader {
     }
 
     @Override
-    public Map<String, List<String>> getHeaders() {
+    public Map<String, List<Object>> getHeaders() {
         return headers;
     }
 
-    public void setHeaders(Map<String, List<String> > headers) {
+    public void setHeaders(Map<String, List<Object> > headers) {
         this.headers = headers;
     }
 
@@ -60,7 +60,7 @@ public class SimpleRequestHeader implements RequestHeader {
                 "sequence=" + sequence +
                 ", method='" + method + '\'' +
                 ", path='" + path + '\'' +
-                ", headers=" + headers +
+                ", simpleResponseHeaderMap=" + headers +
                 '}';
     }
 

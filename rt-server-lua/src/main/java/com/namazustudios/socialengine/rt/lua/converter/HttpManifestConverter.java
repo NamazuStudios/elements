@@ -49,6 +49,8 @@ public class HttpManifestConverter extends AbstractMapConverter<HttpManifest> {
 
     public static final String DESCRIPTION_KEY = "description";
 
+    public static final String STATIC_HEADERS = "static_headers";
+
     @Override
     public Class<HttpManifest> getConvertedType() {
         return HttpManifest.class;
@@ -220,6 +222,8 @@ public class HttpManifestConverter extends AbstractMapConverter<HttpManifest> {
                        .orThrow(v -> new BadManifestException("Expected string for headers in '" + context + "': " + v))
                        .get())
             .collect(Collectors.toList());
+
+        // TODO: Set Static Headers and correct pattern for predefined headers
 
         final HttpContent httpContent = new HttpContent();
         httpContent.setType(type);

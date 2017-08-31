@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
+
 /**
  * Enumeration of the various response codes.  Each code is essentially the
  * ordinal of the enum, which should be fetched using {@link #getCode()}.
@@ -23,9 +25,9 @@ public enum ResponseCode {
     BAD_REQUEST_FATAL,
 
     /**
-     * A particular path could not be found.
+     * The content supplied in the request is
      */
-    RESOURCE_NOT_FOUND,
+    BAD_REQUEST_INVALID_CONTENT,
 
     /**
      * Indicates that we were trying to insert or create a duplicate resource.
@@ -33,9 +35,29 @@ public enum ResponseCode {
     DUPLICATE_RESOURCE,
 
     /**
-     * A particular metohd could not be found at the requested path.
+     * A particular path could not be found.
+     */
+    RESOURCE_NOT_FOUND,
+
+    /**
+     * Indicates that the requested asset is not found.
+     */
+    ASSET_NOT_FOUND,
+
+    /**
+     * Indicates that the manifest was not found.
+     */
+    MANIFEST_NOT_FOUND,
+
+    /**
+     * A particular method could not be found at the requested path.
      */
     METHOD_NOT_FOUND,
+
+    /**
+     * A particular operation, (eg {@link HttpOperation )} could not be found.
+     */
+    OPERATION_NOT_FOUND,
 
     /**
      * Used to relay a not found condition, other than method or path.
@@ -43,22 +65,15 @@ public enum ResponseCode {
     OTHER_NOT_FOUND,
 
     /**
+     * The request was canceled by the user.
+     */
+    USER_CANCELED_FATAL,
+
+    /**
      * Auth failed, the request should be re-attempted with
      * new authentication credentails
      */
     FAILED_AUTH_RETRY,
-
-    /**
-     * The request timed out.  This may not actually sent by the server
-     * but may be supplied by the client to indicate that the request
-     * timed out.
-     */
-    TIMEOUT_RETRY,
-
-    /**
-     * The request was canceled by the user.
-     */
-    USER_CANCELED_FATAL,
 
     /**
      * Auth failed, the request should be abandoned.
@@ -71,14 +86,11 @@ public enum ResponseCode {
     TOO_BUSY_FATAL,
 
     /**
-     * Indicates that the requested asset is not found.
+     * The request timed out.  This may not actually sent by the server
+     * but may be supplied by the client to indicate that the request
+     * timed out.
      */
-    ASSET_NOT_FOUND,
-
-    /**
-     * Indicates that the manifest was not found.
-     */
-    MANIFEST_NOT_FOUND,
+    TIMEOUT_RETRY,
 
     /**
      * Indicates that the server encountered an unknown error.
