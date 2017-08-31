@@ -23,19 +23,19 @@ public interface ClientRequestHandler {
     Class<?> getPayloadType();
 
     /**
-     * Handles the given request from a handlerClientSession.
+     * Handles the given request from a session.
      *
      * In the event the {@link Request#getPayload()} method returns an object that is not compatible
      * with this instance and exception can be raised.  Acceptability can be determined by
      * the usage of {@link Class#isAssignableFrom(Class)}.
      *
-     * @param handlerClientSession the {@link HandlerClientSession} making the request.
+     * @param session the {@link Session} making the request.
      * @param request the {@link Request} object
      * @param responseReceiver the request object
      *
      * @throws {@link BadRequestException} if the return of the {@link Request#getPayload()} method is not suitable.
      *
      */
-    void handle(HandlerClientSession handlerClientSession, Request request, ResponseReceiver responseReceiver);
+    void handle(Session session, Request request, ResponseReceiver responseReceiver);
 
 }

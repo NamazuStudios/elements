@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.rt.ResponseReceiver;
 import com.namazustudios.socialengine.rt.Container;
 import com.namazustudios.socialengine.rt.SimpleResponse;
 import com.namazustudios.socialengine.rt.handler.ClientRequestHandler;
-import com.namazustudios.socialengine.rt.handler.HandlerClientSession;
+import com.namazustudios.socialengine.rt.handler.Session;
 import com.namazustudios.socialengine.rt.handler.Handler;
 
 import javax.inject.Inject;
@@ -41,14 +41,14 @@ public class LuaHandler extends AbstractLuaResource implements Handler {
             }
 
             @Override
-            public void handle(final HandlerClientSession handlerClientSession,
+            public void handle(final Session session,
                                final Request request,
                                final ResponseReceiver responseReceiver) {
                 try (final StackProtector stackProtector = new StackProtector(luaState)){
 
                     pushRequestHandlerFunction(method);
 
-                    luaState.pushJavaObject(handlerClientSession);
+                    luaState.pushJavaObject(session);
                     luaState.pushJavaObject(request.getHeader());
 
                     final Map requestPayload = request.getPayload(Map.class);

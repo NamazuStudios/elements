@@ -93,7 +93,15 @@ manifest.http = {
                 -- Describes the operation which will be relayed to documentation definitions
                 description = "Example Operation",
 
-                -- The corresponding HTTP verb.  Must be one of GET, POST, PUT, DELETE, HEAD, OPTIONS
+                -- The corresponding HTTP verb.  Must be one of GET, POST, PUT, DELETE, HEAD, OPTIONS.
+                -- Note:  If left unspecified, HEAD or OPTIONS will revert to a default behavior.  Thereby
+                -- obviating the need to implement those under normal circumstances.
+                --
+                -- In the case of HEAD, a GET request will execute (if available) and then provide the
+                -- response without the headers.
+                --
+                -- The OPTIONS request will use the operations specified in this manifest file to determine
+                -- what requests are availble wihtout having to provide a specific implementation.
 
                 verb = "GET",
 

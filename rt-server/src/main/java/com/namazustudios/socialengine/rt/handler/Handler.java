@@ -8,12 +8,12 @@ import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 /**
  *
  * An instance of {@link Resource} exists to talk to the outside world.  That is, it is responsible for handling
- * {@link Request} instances from {@link HandlerClientSession} instances.  This is a {@link Resource} and may be
+ * {@link Request} instances from {@link Session} instances.  This is a {@link Resource} and may be
  * represented by a script or similar.
  *
  * {@link Handler} instances are provided by the server and will be accessed by many requests.  The {@link Handler}
  * must be prepared to acccept access via multiple threads at once and must not maintain any stateful information,
- * except what may be provided by the {@link HandlerClientSession}.
+ * except what may be provided by the {@link Session}.
  *
  * The owning {@link Container} will not serialize access to the {@link Handler}, but may use techniques such as
  * {@link ThreadLocal} or caching or multiple instantiations of the same {@link Handler}.

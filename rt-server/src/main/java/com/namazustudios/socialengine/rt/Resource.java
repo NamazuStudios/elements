@@ -80,4 +80,15 @@ public interface Resource extends AutoCloseable {
      */
     Path getCurrentPath();
 
+    /**
+     *
+     *
+     * @param name
+     * @return
+     */
+    default MethodDispatcher getDispatcher(String name) {
+        // TODO Implement this in subclasses.
+        return null;
+    }
+
 }

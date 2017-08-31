@@ -62,7 +62,10 @@ public interface Container<ResourceT extends Resource> {
     }
 
     /**
-     * Shuts down the server.  All resources are removed and then
+     * Shuts down the server.  All resources are removed and then the server is shut down.  Attempting
+     * to invoke any of hte other methods will result in an exception.
+     *
+     * @throws {@link IllegalStateException}
      */
     void shutdown();
 

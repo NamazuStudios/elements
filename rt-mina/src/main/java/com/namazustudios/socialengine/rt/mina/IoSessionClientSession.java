@@ -4,8 +4,8 @@ import com.namazustudios.socialengine.rt.Event;
 import com.namazustudios.socialengine.rt.EventReceiver;
 import com.namazustudios.socialengine.rt.SimpleEvent;
 
-import com.namazustudios.socialengine.rt.handler.AbstractHandlerClientSession;
-import com.namazustudios.socialengine.rt.handler.HandlerClientSession;
+import com.namazustudios.socialengine.rt.handler.AbstractSession;
+import com.namazustudios.socialengine.rt.handler.Session;
 import org.apache.mina.core.session.IoSession;
 
 import javax.inject.Inject;
@@ -13,7 +13,7 @@ import javax.inject.Inject;
 /**
  * Created by patricktwohig on 8/1/15.
  */
-public class IoSessionClientSession extends AbstractHandlerClientSession implements HandlerClientSession {
+public class IoSessionClientSession extends AbstractSession implements Session {
 
     @Inject
     private IoSession ioSession;

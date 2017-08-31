@@ -45,7 +45,7 @@ public class DelegatingCheckedResponseReceiver implements ResponseReceiver, Auto
     public void close()  {
         if (received.compareAndSet(false, true)) {
 
-            final String msg = "HandlerRequestDispatcher failed to generate response.";
+            final String msg = "SessionRequestDispatcher failed to generate response.";
 
             final SimpleExceptionResponsePayload simpleExceptionResponsePayload;
             simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();

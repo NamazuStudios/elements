@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
-import com.sun.media.sound.InvalidDataException;
 
 /**
  * A Request is a request sent to a particular resource.
@@ -28,10 +27,11 @@ public interface Request {
     Object getPayload();
 
     /**
-     * Gets the payoad, cast to the given type.
+     * Converts the underlying payload to the requested type, if the conversion is possible.  If the
+     * conversion is not possible, then this may throw an exception indicating so.
      *
-     * @param cls the type
-     * @param <T>
+     * @param cls the requested type
+     * @param <T> the requested type
      */
     <T> T getPayload(Class<T> cls);
 

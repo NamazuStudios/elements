@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.binder.ScopedBindingBuilder;
-import com.namazustudios.socialengine.rt.handler.HandlerFilter;
+import com.namazustudios.socialengine.rt.handler.Filter;
 
 /**
  * Created by patricktwohig on 9/2/15.
@@ -14,7 +14,7 @@ public interface FilterSequenceBindingBuilder {
      *
      * @return a {@link ScopedBindingBuilder}
      */
-    LinkedBindingBuilder<HandlerFilter> atBeginningOfFilterChain();
+    LinkedBindingBuilder<Filter> atBeginningOfFilterChain();
 
     /**
      * Appends the filter before the filter with the given name.
@@ -23,7 +23,7 @@ public interface FilterSequenceBindingBuilder {
      *
      * @return a {@link ScopedBindingBuilder}
      */
-    LinkedBindingBuilder<HandlerFilter> beforeFilterNamed(String filterName);
+    LinkedBindingBuilder<Filter> beforeFilterNamed(String filterName);
 
     /**
      * Appends the filter after the filter with the given name.
@@ -32,13 +32,13 @@ public interface FilterSequenceBindingBuilder {
      *
      * @return a {@link ScopedBindingBuilder}
      */
-    LinkedBindingBuilder<HandlerFilter> afterFilterNamed(String filterName);
+    LinkedBindingBuilder<Filter> afterFilterNamed(String filterName);
 
     /**
      * Appends the filter to the end of the filter chain.
      *
      * @return a {@link ScopedBindingBuilder}
      */
-    LinkedBindingBuilder<HandlerFilter> atEndOfFilterChain();
+    LinkedBindingBuilder<Filter> atEndOfFilterChain();
 
 }

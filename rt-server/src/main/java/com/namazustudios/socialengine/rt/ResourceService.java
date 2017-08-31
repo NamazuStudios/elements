@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
 
+import com.namazustudios.socialengine.rt.exception.DuplicateException;
+import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +29,7 @@ public interface ResourceService<ResourceT extends Resource> {
      *
      * @param resourceId
      * @return the Resource, never null
-     * @throws {@link NotFoundException} if no resource exists with that particular ID
+     * @throws {@link ResourceNotFoundException} if no resource exists with that particular ID
      */
     ResourceT getResourceWithId(ResourceId resourceId);
 
@@ -37,7 +39,7 @@ public interface ResourceService<ResourceT extends Resource> {
      * @param path the path
      * @return the resource
      *
-     * @throws {@link NotFoundException} if no resource exists at that path
+     * @throws {@link ResourceNotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     ResourceT getResourceAtPath(Path path);
@@ -47,7 +49,7 @@ public interface ResourceService<ResourceT extends Resource> {
      *
      * @param resourceId the resource ID
      * @return the {@link Path}
-     * @throws {@link NotFoundException} if no resource exists at that path
+     * @throws {@link ResourceNotFoundException} if no resource exists at that path
      */
     Path getPathForResourceId(ResourceId resourceId);
 
@@ -105,7 +107,7 @@ public interface ResourceService<ResourceT extends Resource> {
      * Removes a {@link ResourceT} and then immediately closes it.
      *
      * @param path
-     * @throws {@link NotFoundException} if no resource exists at that path
+     * @throws {@link ResourceNotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     default void removeAndCloseResource(final Path path) {
@@ -117,7 +119,7 @@ public interface ResourceService<ResourceT extends Resource> {
      * Removes a {@link ResourceT} and then immediately closes it.
      *
      * @param path
-     * @throws {@link NotFoundException} if no resource exists at that path
+     * @throws {@link ResourceNotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     default void removeAndCloseResource(final String path) {
