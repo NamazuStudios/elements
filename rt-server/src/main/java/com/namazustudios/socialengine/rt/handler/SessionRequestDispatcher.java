@@ -1,6 +1,11 @@
 package com.namazustudios.socialengine.rt.handler;
 
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.ExceptionMapper;
+import com.namazustudios.socialengine.rt.Request;
+import com.namazustudios.socialengine.rt.ResourceService;
+import com.namazustudios.socialengine.rt.Response;
+
+import java.util.function.Consumer;
 
 /**
  *
@@ -11,7 +16,7 @@ import com.namazustudios.socialengine.rt.*;
  * Created by patricktwohig on 7/27/15.
  */
 @FunctionalInterface
-public interface SessionRequestDispatcher {
+public interface SessionRequestDispatcher<RequestT extends Request, ResponseT extends Response> {
 
     /**
      * Handles a request.  This is responsible for finding the appropriate
@@ -28,6 +33,6 @@ public interface SessionRequestDispatcher {
      * @param request the request the request itself
      * @param responseReceiver
      */
-    void dispatch(Session session, Request request, ResponseReceiver responseReceiver);
+    void dispatch(Session session, RequestT request, Consumer<ResponseT> responseReceiver);
 
 }

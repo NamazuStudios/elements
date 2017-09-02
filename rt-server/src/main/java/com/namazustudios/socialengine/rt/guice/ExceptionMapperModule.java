@@ -7,6 +7,8 @@ import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
 import com.namazustudios.socialengine.rt.DefaultExceptionMapper;
 import com.namazustudios.socialengine.rt.ExceptionMapper;
+import com.namazustudios.socialengine.rt.Request;
+import com.namazustudios.socialengine.rt.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +24,7 @@ public class ExceptionMapperModule extends AbstractModule {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExceptionMapperModule.class);
 
-    private final Map<Class<?>, Provider<ExceptionMapper<?>>> exceptionMapperProviders = new LinkedHashMap<>();
+    private final Map<Class<?>, Provider<ExceptionMapper<?, ? ,?>>> exceptionMapperProviders = new LinkedHashMap<>();
 
     @Override
     protected final void configure() {
@@ -66,7 +68,7 @@ public class ExceptionMapperModule extends AbstractModule {
                     final Provider<I> provider = encounter.getProvider(Key.get(type));
 
                     // CAST DAMMIT CAST
-                    exceptionMapperProviders.put((Class<?>)exceptionType, (Provider<ExceptionMapper<?>>) provider);
+                    exceptionMapperProviders.put((Class<?>)exceptionType, (Provider<ExceptionMapper<?, ? , ?>>) provider);
 
                 }
             }
@@ -75,23 +77,23 @@ public class ExceptionMapperModule extends AbstractModule {
         binder().bind(ExceptionMapper.Resolver.class).toInstance(new ExceptionMapper.Resolver() {
 
             @Override
-            public <ExceptionT extends Throwable> ExceptionMapper<ExceptionT> getExceptionMapper(final ExceptionT ex) {
+            public <ExceptionT extends Throwable> ExceptionMapper<ExceptionT, Request, Response> getExceptionMapper(final ExceptionT ex) {
 
                 Class<?> cls = ex.getClass();
 
                 do {
 
-                    final Provider<ExceptionMapper<?>> exceptionMapperProvider = exceptionMapperProviders.get(cls);
+                    final Provider<ExceptionMapper<?, ?, ?>> exceptionMapperProvider = exceptionMapperProviders.get(cls);
 
                     if (exceptionMapperProvider != null) {
-                        return (ExceptionMapper<ExceptionT>) exceptionMapperProvider.get();
+                        return (ExceptionMapper<ExceptionT, Request, Response>) exceptionMapperProvider.get();
                     }
 
                     cls = cls.getSuperclass();
 
                 } while (!Throwable.class.equals(cls));
 
-                return (ExceptionMapper<ExceptionT>) DefaultExceptionMapper.getInstance();
+                return (ExceptionMapper<ExceptionT, Request, Response>) DefaultExceptionMapper.getInstance();
 
             }
         });

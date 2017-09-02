@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.rt.handler.Session;
 import com.namazustudios.socialengine.rt.handler.SessionRequestDispatcher;
 import com.namazustudios.socialengine.rt.http.HttpManifestMetadata;
 import com.namazustudios.socialengine.rt.http.HttpRequest;
+import com.namazustudios.socialengine.rt.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +30,7 @@ public class DispatcherServlet extends HttpServlet {
 
     private HttpSessionService httpSessionService;
 
-    private SessionRequestDispatcher sessionRequestDispatcher;
+    private SessionRequestDispatcher<HttpRequest, HttpResponse> sessionRequestDispatcher;
 
     private ExceptionMapper.Resolver exceptionMapperResolver;
 
@@ -229,12 +230,12 @@ public class DispatcherServlet extends HttpServlet {
         this.httpSessionService = httpSessionService;
     }
 
-    public SessionRequestDispatcher getSessionRequestDispatcher() {
+    public SessionRequestDispatcher<HttpRequest, HttpResponse> getSessionRequestDispatcher() {
         return sessionRequestDispatcher;
     }
 
     @Inject
-    public void setSessionRequestDispatcher(SessionRequestDispatcher sessionRequestDispatcher) {
+    public void setSessionRequestDispatcher(SessionRequestDispatcher<HttpRequest, HttpResponse> sessionRequestDispatcher) {
         this.sessionRequestDispatcher = sessionRequestDispatcher;
     }
 

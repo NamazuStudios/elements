@@ -2,9 +2,11 @@ package com.namazustudios.socialengine.rt.handler;
 
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.RequestHeader;
+import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.ResponseHeader;
-import com.namazustudios.socialengine.rt.ResponseReceiver;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
+
+import java.util.function.Consumer;
 
 /**
  * An instance of ClientRequestHandler is responsible for producing {@link ResponseHeader} objects
@@ -36,6 +38,6 @@ public interface ClientRequestHandler {
      * @throws {@link BadRequestException} if the return of the {@link Request#getPayload()} method is not suitable.
      *
      */
-    void handle(Session session, Request request, ResponseReceiver responseReceiver);
+    void handle(Session session, Request request, Consumer<Response> responseReceiver);
 
 }

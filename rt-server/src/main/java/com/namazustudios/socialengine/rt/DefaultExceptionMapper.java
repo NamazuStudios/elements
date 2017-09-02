@@ -4,6 +4,8 @@ import com.namazustudios.socialengine.rt.exception.BaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.Consumer;
+
 /**
  * A singleton instance of {@link ExceptionMapper} which defines the default
  * behavior for exception mapping when no other exception mapper can be resolved.
@@ -14,7 +16,7 @@ import org.slf4j.LoggerFactory;
  *
  * Created by patricktwohig on 9/30/15.
  */
-public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
+public class DefaultExceptionMapper implements ExceptionMapper<Throwable, Request, Response> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultExceptionMapper.class);
 
@@ -23,7 +25,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
     private DefaultExceptionMapper() {}
 
     @Override
-    public void map(final Throwable throwable, final ResponseReceiver responseReceiver) {
+    public void map(final Throwable throwable, final Consumer<Response> responseReceiver) {
 
         final SimpleExceptionResponsePayload simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();
         simpleExceptionResponsePayload.setMessage(throwable.getMessage());
@@ -47,7 +49,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
                 .build();
 
         try {
-            responseReceiver.receive(simpleResponse);
+            responseReceiver.accept(simpleResponse);
         } catch (Exception ex) {
             LOG.error("Caught exception mapping exception to response.", ex);
         }
@@ -58,7 +60,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
     @Override
     public void map(final Throwable throwable,
                     final Request request,
-                    final ResponseReceiver responseReceiver) {
+                    final Consumer<Response> responseReceiver) {
 
         final SimpleExceptionResponsePayload simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();
         simpleExceptionResponsePayload.setMessage(throwable.getMessage());
@@ -83,7 +85,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
             .build();
 
         try {
-            responseReceiver.receive(simpleResponse);
+            responseReceiver.accept(simpleResponse);
         } catch (Exception ex) {
             LOG.error("Caught exception mapping exception to response.", ex);
         }

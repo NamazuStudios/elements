@@ -18,9 +18,9 @@ public class SimpleEdgeServerModule extends AbstractModule {
                 .to(SimpleHandlerContainer.class)
                 .in(Scopes.SINGLETON);
 
-        binder().bind(SessionRequestDispatcher.class)
-                .to(SimpleSessionRequestDispatcher.class)
-                .in(Scopes.SINGLETON);
+//        binder().bind(SessionRequestDispatcher.class)
+//                .to(SimpleSessionRequestDispatcher.class)
+//                .in(Scopes.SINGLETON);
 
         binder().bind(new TypeLiteral<ResourceService<Handler>>() {})
                 .to(new TypeLiteral<SimpleResourceService<Handler>>() {})

@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.guice;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.inject.*;
 import com.google.inject.binder.LinkedBindingBuilder;
@@ -21,26 +20,23 @@ public abstract class EdgeFilterListModule extends AbstractModule {
 
     @Override
     protected final void configure() {
-        bind(new TypeLiteral<List<Filter>>(){})
-            .toProvider(new Provider<List<Filter>>() {
+        bind(new TypeLiteral<List<Filter>>(){}).toProvider(new Provider<List<Filter>>() {
 
                 @Inject
                 private Injector injector;
 
                 @Override
                 public List<Filter> get() {
-                    return Lists.transform(filterNames, new Function<String, Filter>() {
-                        @Override
-                        public Filter apply(final String input) {
-                            final Key<Filter> edgeFilterKey = Key.get(Filter.class, Names.named(input));
-                            return injector.getInstance(edgeFilterKey);
-                        }
+                    return Lists.transform(filterNames, input -> {
+                        final Key<Filter> edgeFilterKey = Key.get(Filter.class, Names.named(input));
+                        return injector.getInstance(edgeFilterKey);
                     });
                 }
 
             });
 
         configureFilters();
+
     }
 
     /**
@@ -53,16 +49,12 @@ public abstract class EdgeFilterListModule extends AbstractModule {
      *
      * @return an instance of {@link FilterNameBindingBuilder}
      */
-    protected FilterNameBindingBuilder bindEdgeFilter() {
-        return new FilterNameBindingBuilder() {
-            @Override
-            public FilterSequenceBindingBuilder named(final String named) {
-                return bindFilterNamed(named);
-            }
-        };
+    protected FilterNameBindingBuilder bindFilter() {
+        return named -> bindFilterNamed(named);
     }
 
     private FilterSequenceBindingBuilder bindFilterNamed(final String name) {
+
         return new FilterSequenceBindingBuilder() {
 
             @Override
