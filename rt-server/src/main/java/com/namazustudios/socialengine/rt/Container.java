@@ -12,7 +12,7 @@ import java.util.function.Function;
  * Created by patricktwohig on 8/22/15.
  */
 public interface Container {
-
+    
     /**
      * Performs an action against the resource with the provided {@link ResourceId}.
      *

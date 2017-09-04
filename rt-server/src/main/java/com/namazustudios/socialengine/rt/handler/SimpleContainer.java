@@ -50,10 +50,14 @@ public class SimpleContainer implements Container {
             final Lock lock = getLockService().getLock(resource.getId());
 
             try {
+                logger.trace("Locking resource {}", resource.getId());
                 lock.lock();
+                logger.trace("Applying operation for resource {}", resource.getId());
                 return operation.apply(resource);
             } finally {
+                logger.trace("Unlocking resource {}", resource.getId());
                 lock.unlock();
+                logger.trace("Unlocked resource {}", resource.getId());
             }
 
         });
@@ -67,10 +71,14 @@ public class SimpleContainer implements Container {
             final Lock lock = getLockService().getLock(resource.getId());
 
             try {
+                logger.trace("Locking resource ({}): {}", path, resource.getId());
                 lock.lock();
+                logger.trace("Applying operation for resource ({}): {}", path, resource.getId());
                 return operation.apply(resource);
             } finally {
+                logger.trace("Unlocking resource ({}): {}", path, resource.getId());
                 lock.unlock();
+                logger.trace("Unlocked resource ({}): {}", path, resource.getId());
             }
 
         });

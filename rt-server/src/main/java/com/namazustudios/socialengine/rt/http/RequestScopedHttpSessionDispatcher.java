@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.rt.http;
 
-import com.namazustudios.socialengine.rt.Request;
-import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.ResourceService;
-import com.namazustudios.socialengine.rt.Response;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.handler.Filter;
 import com.namazustudios.socialengine.rt.handler.Session;
 import com.namazustudios.socialengine.rt.handler.SessionRequestDispatcher;
@@ -24,6 +21,10 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
 
     private List<Filter> filterList;
 
+    private ResourceLoader resourceLoader;
+
+    private ResourceService resourceService;
+
     @Override
     public void dispatch(final Session session,
                          final HttpRequest request,
@@ -40,9 +41,9 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
 
     private void dispatch(Resource resource, Session session, Request r, Consumer<Response> responseConsumer) {
         resource.getDispatcher(r.getHeader().getMethod())
-            .dispatch(r, session)
-            .forResultType(Response.class)
-            .withConsumer(responseConsumer.andThen(response -> resource.close()));
+                .dispatch(r, session)
+                .forResultType(Response.class)
+                .withConsumer(responseConsumer.andThen(response -> resource.close()));
     }
 
     public List<Filter> getFilterList() {
@@ -52,6 +53,24 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
     @Inject
     public void setFilterList(List<Filter> filterList) {
         this.filterList = filterList;
+    }
+
+    public ResourceLoader getResourceLoader() {
+        return resourceLoader;
+    }
+
+    @Inject
+    public void setResourceLoader(ResourceLoader resourceLoader) {
+        this.resourceLoader = resourceLoader;
+    }
+
+    public ResourceService getResourceService() {
+        return resourceService;
+    }
+
+    @Inject
+    public void setResourceService(ResourceService resourceService) {
+        this.resourceService = resourceService;
     }
 
 }

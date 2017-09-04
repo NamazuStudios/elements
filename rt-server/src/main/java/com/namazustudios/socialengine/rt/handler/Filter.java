@@ -7,11 +7,7 @@ import java.util.Iterator;
 import java.util.function.Consumer;
 
 /**
- * Used to filer requests or maniuplate requests before they ultimately arrive
- * in an instance of {@link ClientRequestHandler}.
- *
- * Note that for the sake of performance, the filter is only available for use
- * by {@link Handler} instances.
+ * Used to filer requests or maniuplate requests before they ultimately arrive in an instance of {@link ClientRequestHandler}.
  *
  * Created by patricktwohig on 7/29/15.
  */

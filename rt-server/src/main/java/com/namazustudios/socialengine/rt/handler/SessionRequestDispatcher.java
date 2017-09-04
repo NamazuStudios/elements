@@ -13,7 +13,7 @@ import java.util.function.Consumer;
  * {@link Filter}, and {@link ExceptionMapper} to process each request exchanged through the RT server.
  *
  * This may accept a specific type of {@link Request}, as specified by the argument RequestT generic argument,
- * but it is the responsiblity of the enclosing container to handle the {@link Response} as it sees fit.
+ * but it is the responsibility of the enclosing container to handle the {@link Response} as it sees fit.
  *
  * Created by patricktwohig on 7/27/15.
  */
@@ -21,15 +21,15 @@ import java.util.function.Consumer;
 public interface SessionRequestDispatcher<RequestT extends Request> {
 
     /**
-     * Handles a request.  This is responsible for finding the appropriate
-     * path handler.  This method does everything it can to avoid all
-     * exceptions, and uses the worker mapping of {@link ExceptionMapper}
-     * instances to relay faults to the clients.
+     * Handles a request.  This is responsible for finding the appropriate path handler.  This method does everything
+     * it can to avoid all exceptions, and uses the worker mapping of {@link ExceptionMapper} instances to relay
+     * faults to the connected client instances.
      *
-     * This ensures that the given {@link Request} is properly handled through
-     * each of the servers's configured {@link Filter} instances and ultimately
-     * ends up in the correct {@link ClientRequestHandler} supplied by the configurd
-     * {@link ResourceService}.
+     * This ensures that the given {@link Request} is properly handled through each of the servers's configured
+     * {@link Filter} instances and ultimately ends up in the correct by the correct {@link ResourceService}.
+     *
+     * It is possible that a {@link Filter} specified in the chain may intercept the {@link RequestT}, in which case
+     * it will never be handed to any particular {@link ResourceService}
      *
      * @param session the session the session making the request
      * @param request the request the request itself
