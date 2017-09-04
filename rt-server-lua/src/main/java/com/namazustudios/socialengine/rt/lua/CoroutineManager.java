@@ -16,7 +16,7 @@ public class CoroutineManager {
 
     private final AbstractLuaResource abstractLuaResource;
 
-    private final Container<?> container;
+    private final Container container;
 
     private final SortedMap<Double, UUID> timerMap = new TreeMap<>();
 
@@ -50,7 +50,7 @@ public class CoroutineManager {
         }
     };
 
-    public CoroutineManager(final AbstractLuaResource abstractLuaResource, final Container<?> container) {
+    public CoroutineManager(final AbstractLuaResource abstractLuaResource, final Container container) {
         this.abstractLuaResource = abstractLuaResource;
         this.container = container;
     }

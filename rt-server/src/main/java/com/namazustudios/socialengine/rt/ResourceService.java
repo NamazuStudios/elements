@@ -22,7 +22,7 @@ import java.util.stream.Stream;
  *
  * Created by patricktwohig on 7/24/15.
  */
-public interface ResourceService<ResourceT extends Resource> {
+public interface ResourceService {
 
     /**
      * Gets a {@link Resource} based on the resource ID.
@@ -31,7 +31,7 @@ public interface ResourceService<ResourceT extends Resource> {
      * @return the Resource, never null
      * @throws {@link ResourceNotFoundException} if no resource exists with that particular ID
      */
-    ResourceT getResourceWithId(ResourceId resourceId);
+    Resource getResourceWithId(ResourceId resourceId);
 
     /**
      * Gets a resource at the given path.
@@ -42,7 +42,7 @@ public interface ResourceService<ResourceT extends Resource> {
      * @throws {@link ResourceNotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    ResourceT getResourceAtPath(Path path);
+    Resource getResourceAtPath(Path path);
 
     /**
      * Given the {@link ResourceId} returns the {@link Path} for the {@link Resource}.
@@ -54,23 +54,23 @@ public interface ResourceService<ResourceT extends Resource> {
     Path getPathForResourceId(ResourceId resourceId);
 
     /**
-     * Adds a {@link ResourceT} to this resource service.
+     * Adds a {@link Resource} to this resource service.
      *
      * @param resource the resource
      *
      * @throws {@link DuplicateException} if a resource at the given path already exists
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    void addResource(Path path, ResourceT resource);
+    void addResource(Path path, Resource resource);
 
     /**
-     * Adds a {@link ResourceT} to this resource service.  Rather than throwing an exception
+     * Adds a {@link Resource} to this resource service.  Rather than throwing an exception
      * if the resource already exists, this will return the existing instance instead.
      *
      * This returns either the newly added instance, or the instance that had already existed.
      *
-     * Note that the given {@link Supplier<ResourceT>} should defer creation.  If you wish to
-     * insert an existing resource, then consider using {@link #addResource(Path, ResourceT)}
+     * Note that the given {@link Supplier<Resource>} should defer creation.  If you wish to
+     * insert an existing resource, then consider using {@link #addResource(Path, Resource)}
      *
      * @param path the path for the {@link Resource} instance
      * @param resourceInitializer the resource initializer to use if the path is absent
@@ -80,50 +80,50 @@ public interface ResourceService<ResourceT extends Resource> {
      * @throws {@link DuplicateException} if a resource at the given path already exists
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    AtomicOperationTuple<ResourceT> addResourceIfAbsent(Path path, Supplier<ResourceT> resourceInitializer);
+    AtomicOperationTuple<Resource> addResourceIfAbsent(Path path, Supplier<Resource> resourceInitializer);
 
     /**
-     * Removes a {@link ResourceT} instance from this resource service.
+     * Removes a {@link Resource} instance from this resource service.
      *
      * @param path the path to the resource
      *
      * @throws {@l  ink ResourceNotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    ResourceT removeResource(Path path);
+    Resource removeResource(Path path);
 
     /**
-     * Removes a {@link ResourceT} instance from this resource service.
+     * Removes a {@link Resource} instance from this resource service.
      *
      * @param path the path as a string
      * @return the removed {@link Resource}
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    default ResourceT removeResource(String path) {
+    default Resource removeResource(String path) {
         return removeResource(new Path(path));
     }
 
     /**
-     * Removes a {@link ResourceT} and then immediately closes it.
+     * Removes a {@link Resource} and then immediately closes it.
      *
      * @param path
      * @throws {@link ResourceNotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     default void removeAndCloseResource(final Path path) {
-        final ResourceT resource = removeResource(path);
+        final Resource resource = removeResource(path);
         resource.close();
     }
 
     /**
-     * Removes a {@link ResourceT} and then immediately closes it.
+     * Removes a {@link Resource} and then immediately closes it.
      *
      * @param path
      * @throws {@link ResourceNotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     default void removeAndCloseResource(final String path) {
-        final ResourceT resource = removeResource(path);
+        final Resource resource = removeResource(path);
         resource.close();
     }
 
@@ -131,7 +131,7 @@ public interface ResourceService<ResourceT extends Resource> {
      * Removes all resources from the resource service.  The stream returned
      * must have already removed all resources.
      */
-    Stream<ResourceT> removeAllResources();
+    Stream<Resource> removeAllResources();
 
     /**
      * Removes all resources from the service and closes them.  ANy exceptions

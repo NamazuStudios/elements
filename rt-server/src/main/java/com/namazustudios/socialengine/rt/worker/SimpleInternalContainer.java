@@ -2,7 +2,7 @@
 //
 //import com.namazustudios.socialengine.rt.Path;
 //import com.namazustudios.socialengine.rt.*;
-//import com.namazustudios.socialengine.rt.handler.SimpleHandlerContainer;
+//import com.namazustudios.socialengine.rt.handler.SimpleContainer;
 //
 //import javax.inject.Inject;
 //import javax.inject.Named;
@@ -76,7 +76,7 @@
 //    }
 //
 //    @Inject
-//    public void setExecutorService(@Named(SimpleHandlerContainer.EXECUTOR_SERVICE) ExecutorService executorService) {
+//    public void setExecutorService(@Named(SimpleContainer.EXECUTOR_SERVICE) ExecutorService executorService) {
 //        this.executorService = executorService;
 //    }
 //

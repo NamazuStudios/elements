@@ -26,7 +26,7 @@
 //        edgeServerPrivateBinder.bind(PathLockFactory.class)
 //                               .toProvider(Providers.guicify(edgeResourceLockFactoryProvider()));
 //
-//        edgeServerPrivateBinder.expose(SimpleHandlerContainer.class);
+//        edgeServerPrivateBinder.expose(SimpleContainer.class);
 //        edgeServerPrivateBinder.expose(new TypeLiteral<Container<Handler>>(){});
 //        edgeServerPrivateBinder.expose(new TypeLiteral<ResourceService<Handler>>(){});
 //
@@ -41,7 +41,7 @@
 //        internalServerBinder.expose(new TypeLiteral<Container<Worker>>(){});
 //
 //        binder().bind(ExecutorService.class)
-//                .annotatedWith(Names.named(SimpleHandlerContainer.EXECUTOR_SERVICE))
+//                .annotatedWith(Names.named(SimpleContainer.EXECUTOR_SERVICE))
 //                .toProvider(Providers.guicify(executorServiceProvider()));
 //
 //    }
@@ -53,7 +53,7 @@
 //     * This defaults to a fixed thread pool with a number of threads one greater than the number of availale
 //     * CPU cores.
 //     *
-//     * @return a {@link javax.inject.Provider} for the {@link SimpleHandlerContainer} and the {@link SimpleInternalContainer}
+//     * @return a {@link javax.inject.Provider} for the {@link SimpleContainer} and the {@link SimpleInternalContainer}
 //     */
 //    protected Provider<ExecutorService> executorServiceProvider() {
 //

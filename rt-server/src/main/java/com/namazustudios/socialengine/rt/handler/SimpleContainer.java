@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.handler;
 
-import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,38 +22,31 @@ import java.util.function.Function;
  *
  * Created by patricktwohig on 8/22/15.
  */
-public class SimpleHandlerContainer implements Container<Handler> {
+public class SimpleContainer implements Container {
+
+    private static final Logger logger = LoggerFactory.getLogger(SimpleContainer.class);
 
     /**
-     * The SimpleHandlerContainer uses an {@link ExecutorService} to process requests and dispatch
+     * The SimpleContainer uses an {@link ExecutorService} to process requests and dispatch
      * events to the various {@link Resource}s.  This names the specific {@link ExecutorService}
      * to use for injectiong using {@link Named}
      */
-    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.AbstractSimpleContainer.executorService";
-    
-    private static final Logger logger = LoggerFactory.getLogger(SimpleHandlerContainer.class);
+    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.handler.SimpleContainer.executorService";
 
-    private ResourceService<Handler> resourceService;
     private LockService lockService;
+
     private ExecutorService executorService;
+
+    private ResourceService resourceService;
 
     @Override
     public void shutdown() {}
 
-    public ResourceService<Handler> getResourceService() {
-        return resourceService;
-    }
-
-    @Inject
-    public void setResourceService(ResourceService<Handler> resourceService) {
-        this.resourceService = resourceService;
-    }
-
     @Override
-    public <T> Future<T> perform(ResourceId resourceId, Function<Handler, T> operation) {
+    public <T> Future<T> perform(final ResourceId resourceId, final Function<Resource, T> operation) {
         return getExecutorService().submit(() -> {
 
-            final Handler resource = getResourceService().getResourceWithId(resourceId);
+            final Resource resource = getResourceService().getResourceWithId(resourceId);
             final Lock lock = getLockService().getLock(resource.getId());
 
             try {
@@ -68,10 +60,10 @@ public class SimpleHandlerContainer implements Container<Handler> {
     }
 
     @Override
-    public <T> Future<T> perform(Path path, Function<Handler, T> operation) {
+    public <T> Future<T> perform(final Path path, final Function<Resource, T> operation) {
         return getExecutorService().submit(() -> {
 
-            final Handler resource = getResourceService().getResourceAtPath(path);
+            final Resource resource = getResourceService().getResourceAtPath(path);
             final Lock lock = getLockService().getLock(resource.getId());
 
             try {
@@ -101,4 +93,14 @@ public class SimpleHandlerContainer implements Container<Handler> {
     public void setLockService(@Named LockService lockService) {
         this.lockService = lockService;
     }
+
+    public ResourceService getResourceService() {
+        return resourceService;
+    }
+
+    @Inject
+    public void setResourceService(ResourceService resourceService) {
+        this.resourceService = resourceService;
+    }
+
 }

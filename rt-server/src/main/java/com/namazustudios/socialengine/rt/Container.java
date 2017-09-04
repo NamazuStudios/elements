@@ -11,7 +11,7 @@ import java.util.function.Function;
  *
  * Created by patricktwohig on 8/22/15.
  */
-public interface Container<ResourceT extends Resource> {
+public interface Container {
 
     /**
      * Performs an action against the resource with the provided {@link ResourceId}.
@@ -21,7 +21,7 @@ public interface Container<ResourceT extends Resource> {
      *
      * @param <T>
      */
-    <T> Future<T> perform(final ResourceId resourceId, Function<ResourceT, T> operation);
+    <T> Future<T> perform(ResourceId resourceId, Function<Resource, T> operation);
 
     /**
      * Performs an action against the resource with the provided ID.
@@ -30,7 +30,7 @@ public interface Container<ResourceT extends Resource> {
      * @param operation the operation to perform
      *
      */
-    default Future<Void> performV(final ResourceId resourceId, final Consumer<ResourceT> operation) {
+    default Future<Void> performV(final ResourceId resourceId, final Consumer<Resource> operation) {
         return perform(resourceId, resource -> {
             operation.accept(resource);
             return null;
@@ -45,7 +45,7 @@ public interface Container<ResourceT extends Resource> {
      *
      * @param <T>
      */
-    <T> Future<T> perform(final Path path, Function<ResourceT, T> operation);
+    <T> Future<T> perform(Path path, Function<Resource, T> operation);
 
     /**
      * Performs an action against the resource with the provided {@link Path}.
@@ -54,7 +54,7 @@ public interface Container<ResourceT extends Resource> {
      * @param operation the operation to perform
      *
      */
-    default Future<Void> performV(final Path path, Consumer<ResourceT> operation) {
+    default Future<Void> performV(final Path path, final Consumer<Resource> operation) {
         return perform(path, resource -> {
             operation.accept(resource);
             return null;
@@ -62,11 +62,11 @@ public interface Container<ResourceT extends Resource> {
     }
 
     /**
-     * Shuts down the server.  All resources are removed and then the server is shut down.  Attempting
-     * to invoke any of hte other methods will result in an exception.
+     * Shuts down the Container.  All resources are removed and then the server is shut down.  Attempting to invoke any
+     * the other methods after invoking this will result in an {@link IllegalStateException}.
      *
      * @throws {@link IllegalStateException}
      */
-    void shutdown();
+    void shutdown() throws IllegalStateException;
 
 }

@@ -3,7 +3,9 @@ package com.namazustudios.socialengine.rt;
 import java.util.UUID;
 
 /**
- * Represents the globally unique ID for a particular {@link Resource}.
+ * Represents the globally unique ID for a particular {@link Resource}.  This is currently backed by
+ * an instance of {@Link UUID}, but the string representation should be considered opaque by users
+ * of this type.
  *
  * Created by patricktwohig on 4/11/17.
  */
