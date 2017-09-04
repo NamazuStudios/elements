@@ -1,31 +1,57 @@
 package com.namazustudios.socialengine.rt.http;
 
+import com.namazustudios.socialengine.rt.Request;
+import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.ResourceService;
+import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.handler.Filter;
 import com.namazustudios.socialengine.rt.handler.Session;
+import com.namazustudios.socialengine.rt.handler.SessionRequestDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
+import javax.inject.Inject;
+import java.util.List;
 import java.util.function.Consumer;
 
-public class RequestScopedHttpSessionDispatcher implements HttpSessionRequestDispatcher {
+/**
+ * Loads an instance of {@link Resource} into the {@link ResourceService}, executes the {@link Request},
+ * collects the {@link Response} and prompty removes and destroys the {@link Resource}.
+ */
+public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatcher<HttpRequest> {
 
     private static final Logger logger = LoggerFactory.getLogger(RequestScopedHttpSessionDispatcher.class);
 
-    private Set<Filter> filterSet;
+    private List<Filter> filterList;
 
     @Override
     public void dispatch(final Session session,
                          final HttpRequest request,
-                         final Consumer<HttpResponse> responseReceiver) {
-
-//        try (final DelegatingCheckedResponseReceiver receiver = new DelegatingCheckedResponseReceiver(request, responseReceiver)) {
-//            executeRootFilterChain(session, request, receiver);
-//        } catch (Exception ex) {
-//            LOG.error("Caught exception processing request {}.", request, ex);
-//        }
-
+                         final Consumer<Response> responseConsumer) {
+        final Resource resource = openForRequest(request);
+        final Filter.Chain chain;
+        chain = Filter.Chain.build(getFilterList(), (s, r, rc) -> dispatch(resource, s, r, rc));
+        chain.next(session, request, responseConsumer);
     }
 
+    private Resource openForRequest(HttpRequest request) {
+        return null;
+    }
+
+    private void dispatch(Resource resource, Session session, Request r, Consumer<Response> responseConsumer) {
+        resource.getDispatcher(r.getHeader().getMethod())
+            .dispatch(r, session)
+            .forResultType(Response.class)
+            .withConsumer(responseConsumer.andThen(response -> resource.close()));
+    }
+
+    public List<Filter> getFilterList() {
+        return filterList;
+    }
+
+    @Inject
+    public void setFilterList(List<Filter> filterList) {
+        this.filterList = filterList;
+    }
 
 }

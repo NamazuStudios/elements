@@ -9,14 +9,16 @@ import java.util.function.Consumer;
 
 /**
  *
- * The logical entry point for the Container.  This combines the functionality
- * of the {@link ResourceService}, {@link Filter}, and {@link ExceptionMapper}
- * to process each request exchanged through the RT server.
+ * The logical entry point for the Container.  This combines the functionality of the {@link ResourceService},
+ * {@link Filter}, and {@link ExceptionMapper} to process each request exchanged through the RT server.
+ *
+ * This may accept a specific type of {@link Request}, as specified by the argument RequestT generic argument,
+ * but it is the responsiblity of the enclosing container to handle the {@link Response} as it sees fit.
  *
  * Created by patricktwohig on 7/27/15.
  */
 @FunctionalInterface
-public interface SessionRequestDispatcher<RequestT extends Request, ResponseT extends Response> {
+public interface SessionRequestDispatcher<RequestT extends Request> {
 
     /**
      * Handles a request.  This is responsible for finding the appropriate
@@ -33,6 +35,6 @@ public interface SessionRequestDispatcher<RequestT extends Request, ResponseT ex
      * @param request the request the request itself
      * @param responseReceiver
      */
-    void dispatch(Session session, RequestT request, Consumer<ResponseT> responseReceiver);
+    void dispatch(Session session, RequestT request, Consumer<Response> responseReceiver);
 
 }

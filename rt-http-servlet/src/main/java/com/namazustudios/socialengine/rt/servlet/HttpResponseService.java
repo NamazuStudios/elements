@@ -1,17 +1,14 @@
 package com.namazustudios.socialengine.rt.servlet;
 
 import com.namazustudios.socialengine.rt.Response;
-import com.namazustudios.socialengine.rt.ResponseHeader;
-import com.namazustudios.socialengine.rt.http.HttpManifestMetadata;
+import com.namazustudios.socialengine.rt.http.CompositeHttpResponse;
 import com.namazustudios.socialengine.rt.http.HttpRequest;
 import com.namazustudios.socialengine.rt.http.HttpResponse;
 import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
-import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.List;
 
 public interface HttpResponseService {
 
@@ -29,64 +26,7 @@ public interface HttpResponseService {
      * @return the {@link HttpResponse}, assembled from what's known of the {@link HttpRequest}.
      */
     default HttpResponse assemble(final HttpRequest httpRequest, final Response response) {
-        return new HttpResponse() {
-
-            @Override
-            public HttpManifestMetadata getManifestMetadata() {
-
-                final HttpManifestMetadata manifestMetadata = httpRequest.getManifestMetadata();
-
-                return new HttpManifestMetadata() {
-
-                    @Override
-                    public HttpManifest getManifest() {
-                        return manifestMetadata.getManifest();
-                    }
-
-                    @Override
-                    public boolean hasOperation() {
-                        return manifestMetadata.hasOperation();
-                    }
-
-                    @Override
-                    public HttpOperation getOperation() {
-                        return manifestMetadata.getOperation();
-                    }
-
-                    @Override
-                    public List<HttpOperation> getAvailableOperations() {
-                        return manifestMetadata.getAvailableOperations();
-                    }
-
-                    @Override
-                    public HttpContent getContent() {
-                        return httpRequest.getResponseContent();
-                    }
-
-                    @Override
-                    public HttpContent getContentFor(HttpOperation operation) {
-                        return manifestMetadata.getContentFor(operation);
-                    }
-
-                };
-            }
-
-            @Override
-            public ResponseHeader getResponseHeader() {
-                return response.getResponseHeader();
-            }
-
-            @Override
-            public Object getPayload() {
-                return response.getPayload();
-            }
-
-            @Override
-            public <T> T getPayload(Class<T> cls) {
-                return response.getPayload(cls);
-            }
-
-        };
+        return new CompositeHttpResponse(httpRequest, response);
     }
 
     /**

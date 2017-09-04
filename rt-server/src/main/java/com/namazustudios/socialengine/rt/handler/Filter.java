@@ -55,7 +55,7 @@ public interface Filter {
          * @param filters the {@link Iterable<Filter>} instance
          * @return a {@link Chain} which walks the supplied {@link Iterable<Filter>}
          */
-        static Chain build(final Iterable<Filter> filters) {
+        static Chain build(final Iterable<Filter> filters, final Chain terminal) {
             return (session, request, responseReceiver) -> {
 
                 final Iterator<Filter> iterator = filters.iterator();
@@ -66,6 +66,8 @@ public interface Filter {
                         if (iterator.hasNext()) {
                             final Filter filter = iterator.next();
                             filter.filter(this, session, request, responseReceiver);
+                        } else {
+                            terminal.next(session, request, responseReceiver);
                         }
                     }
                 };

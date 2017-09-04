@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import java.util.function.Consumer;
-
 /**
  * Dispatches invocations of methods against {@link Resource} instances.  This accepts
  * parameters and then provides a means to handle the response to the invocation.
@@ -9,10 +7,11 @@ import java.util.function.Consumer;
 public interface MethodDispatcher {
 
     /**
-     * Returns an instance of {@link Acceptor}
+     * Returns an instance of {@link ResultAcceptor}
+     *
      * @param parameters
      * @return
      */
-    ResultAcceptor dispatch(Object ... parameters);
+    ResultAcceptor<Object> dispatch(Object ... parameters);
 
 }
