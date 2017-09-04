@@ -9,8 +9,9 @@ import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 import java.util.List;
 
 /**
- * Implements {@link HttpResponse} as generated from a {@link HttpRequest} and an underlying {@link Response}.
- *
+ * Implements {@link HttpResponse} as generated from a {@link HttpRequest} and an underlying {@link Response}.  Most
+ * of the information in the {@link HttpResponse} can be derived from the originating {@link HttpRequest} so this
+ * simply bridges the two together and selectively delegates to each instance as necessary.
  */
 public class CompositeHttpResponse implements HttpResponse {
 
