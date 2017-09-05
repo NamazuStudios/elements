@@ -3,7 +3,7 @@
 //import com.google.common.base.Stopwatch;
 //import com.namazustudios.socialengine.exception.InternalException;
 //import com.namazustudios.socialengine.rt.Constants;
-//import com.namazustudios.socialengine.rt.Container;
+//import com.namazustudios.socialengine.rt.Scheduler;
 //import com.namazustudios.socialengine.rt.ServerContainer;
 //import com.namazustudios.socialengine.rt.handler.Handler;
 //import com.namazustudios.socialengine.rt.worker.Worker;
@@ -30,10 +30,10 @@
 //    private static final int N_THREADS = 5;
 //
 //    @Inject
-//    private Container<Handler> simpleHandlerContainer;
+//    private Scheduler<Handler> simpleHandlerContainer;
 //
 //    @Inject
-//    private Container<Worker> simpleWorkerContainer;
+//    private Scheduler<Worker> simpleWorkerContainer;
 //
 //    @Inject
 //    @Named(Constants.TRANSPORT_RELIABLE)
@@ -46,7 +46,7 @@
 //    private final ExecutorService containerExecutorService = Executors.newFixedThreadPool(N_THREADS, r -> {
 //        final Thread thread = new Thread(r);
 //        thread.setDaemon(true);
-//        thread.setName("Container Thread For: " + r);
+//        thread.setName("Scheduler Thread For: " + r);
 //        return thread;
 //    });
 //

@@ -13,7 +13,7 @@
 //    @Override
 //    protected void configure() {
 //
-//        binder().bind(new TypeLiteral<Container<Worker>>(){})
+//        binder().bind(new TypeLiteral<Scheduler<Worker>>(){})
 //                .to(SimpleInternalContainer.class);
 //
 //        binder().bind(SimpleInternalContainer.class)

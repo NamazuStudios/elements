@@ -22,7 +22,7 @@
 //
 //    private Filter.Chain rootFilterChain;
 //
-//    private Container<Handler> edgeResourceContainer;
+//    private Scheduler<Handler> edgeResourceContainer;
 //
 //    @Override
 //    public void dispatch(final Session session,
@@ -96,12 +96,12 @@
 //
 //    }
 //
-//    public Container<Handler> getEdgeResourceContainer() {
+//    public Scheduler<Handler> getEdgeResourceContainer() {
 //        return edgeResourceContainer;
 //    }
 //
 //    @Inject
-//    public void setEdgeResourceContainer(Container<Handler> edgeResourceContainer) {
+//    public void setEdgeResourceContainer(Scheduler<Handler> edgeResourceContainer) {
 //        this.edgeResourceContainer = edgeResourceContainer;
 //    }
 //

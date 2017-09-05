@@ -5,7 +5,7 @@ import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.AbstractResource;
-import com.namazustudios.socialengine.rt.Container;
+import com.namazustudios.socialengine.rt.Scheduler;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResponseCode;
 import com.namazustudios.socialengine.rt.exception.InternalException;
@@ -78,11 +78,11 @@ public abstract class AbstractLuaResource extends AbstractResource {
     public AbstractLuaResource(final LuaState luaState,
                                final IocResolver iocResolver,
                                final Tabler tabler,
-                               final Container container) {
+                               final Scheduler scheduler) {
         this.luaState = luaState;
         this.iocResolver = iocResolver;
         this.tabler = tabler;
-        coroutineManager = new CoroutineManager(this, container);
+        coroutineManager = new CoroutineManager(this, scheduler);
         classpathModuleLoader = new ClasspathModuleLoader(this);
     }
 

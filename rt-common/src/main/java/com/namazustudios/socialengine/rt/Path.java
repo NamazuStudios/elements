@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
 /**
@@ -313,6 +314,17 @@ public final class Path implements Comparable<Path> {
             return pathFromComponents(pathComponents);
         }
 
+    }
+
+    /**
+     * Converts the supplied components to a {@link Path}.
+     *
+     * @param components the components in the {@link Path}
+     *
+     * @return the {@link Path}
+     */
+    public static Path fromComponents(String ... components) {
+        return new Path(asList(components));
     }
 
 }

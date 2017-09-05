@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.lua;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
-import com.namazustudios.socialengine.rt.Container;
+import com.namazustudios.socialengine.rt.Scheduler;
 
 import java.util.*;
 
@@ -16,12 +16,12 @@ public class CoroutineManager {
 
     private final AbstractLuaResource abstractLuaResource;
 
-    private final Container container;
+    private final Scheduler scheduler;
 
     private final SortedMap<Double, UUID> timerMap = new TreeMap<>();
 
     /**
-     * Creates a new thread managed by the container.  This returns to the calling code
+     * Creates a new thread managed by the scheduler.  This returns to the calling code
      * the thread that was created.
      */
     private final JavaFunction serverStartCoroutine = new JavaFunction() {
@@ -31,7 +31,7 @@ public class CoroutineManager {
 
                 if (!luaState.isFunction(-1)) {
                     abstractLuaResource.dumpStack();
-                    throw new IllegalArgumentException("container.coroutine.create() must be passed a function");
+                    throw new IllegalArgumentException("scheduler.coroutine.create() must be passed a function");
                 }
 
                 final UUID uuid = UUID.randomUUID();
@@ -50,15 +50,15 @@ public class CoroutineManager {
         }
     };
 
-    public CoroutineManager(final AbstractLuaResource abstractLuaResource, final Container container) {
+    public CoroutineManager(final AbstractLuaResource abstractLuaResource, final Scheduler scheduler) {
         this.abstractLuaResource = abstractLuaResource;
-        this.container = container;
+        this.scheduler = scheduler;
     }
 
     public void setup() {
 
-        // Creates a table for container.coroutine.  This houses code for
-        // container-managed coroutines that will automatically be activated
+        // Creates a table for scheduler.coroutine.  This houses code for
+        // scheduler-managed coroutines that will automatically be activated
         // on every update.
         final LuaState luaState = abstractLuaResource.getLuaState();
 
@@ -78,7 +78,7 @@ public class CoroutineManager {
 //        // Slices the map for coroutines which actually need to be run.  That is, all which
 //        // are due to resume within the given time.
 //
-//        final double serverTime = container.getServerTime();
+//        final double serverTime = scheduler.getServerTime();
 //
 //        // Takes a copy of the UUIDs we want ot run
 //        final SortedMap<Double, UUID> toRun = timerMap.headMap(serverTime);

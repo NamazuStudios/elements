@@ -13,8 +13,8 @@ public class SimpleEdgeServerModule extends AbstractModule {
     @Override
     protected void configure() {
 
-//        binder().bind(new TypeLiteral<Container<Handler>>(){})
-//                .to(SimpleContainer.class)
+//        binder().bind(new TypeLiteral<Scheduler<Handler>>(){})
+//                .to(SimpleScheduler.class)
 //                .in(Scopes.SINGLETON);
 //
 ////        binder().bind(SessionRequestDispatcher.class)

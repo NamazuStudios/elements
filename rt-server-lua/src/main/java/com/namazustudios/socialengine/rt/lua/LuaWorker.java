@@ -3,7 +3,7 @@
 //import com.naef.jnlua.LuaState;
 //import com.namazustudios.socialengine.rt.Request;
 //import com.namazustudios.socialengine.rt.ResponseReceiver;
-//import com.namazustudios.socialengine.rt.Container;
+//import com.namazustudios.socialengine.rt.Scheduler;
 //import com.namazustudios.socialengine.rt.SimpleResponse;
 //import com.namazustudios.socialengine.rt.worker.WorkerRequestHandler;
 //import com.namazustudios.socialengine.rt.worker.Worker;
@@ -27,7 +27,7 @@
 //    public LuaWorker(final LuaState luaState,
 //                     final IocResolver iocResolver,
 //                     final Tabler tabler,
-//                     final Container<Worker> internalContainer) {
+//                     final Scheduler<Worker> internalContainer) {
 //        super(luaState, iocResolver, tabler, internalContainer);
 //        this.luaState = luaState;
 //        this.tabler = tabler;

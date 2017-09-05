@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 
 /**
  *
- * The logical entry point for the Container.  This combines the functionality of the {@link ResourceService},
+ * The logical entry point for the Scheduler.  This combines the functionality of the {@link ResourceService},
  * {@link Filter}, and {@link ExceptionMapper} to process each request exchanged through the RT server.
  *
  * This may accept a specific type of {@link Request}, as specified by the argument RequestT generic argument,

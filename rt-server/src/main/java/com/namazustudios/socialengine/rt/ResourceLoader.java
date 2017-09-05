@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
 
 /**
  * Loads instances of {@link Resource} based on {@link Path} instances.  Typically instances of this
@@ -10,28 +10,15 @@ import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 public interface ResourceLoader extends AutoCloseable {
 
     /**
-     * Loads the {@Link Resource} specified by the supplied {@link Path} instance.  The supplied {@link Path}
-     * specifies the source of the underlying {@link Resource}.  A new instance of the {@link Resource} will
-     * be be instantiated and returned.
+     * Loads the {@Link Resource} specified by the supplied module name.  The supplied module name is specific to
+     * the particular implementation of the {@link ResourceLoader}, but should be a unique identifier specifying the
      *
-     * @param path the {@link Path} to the {@link Resource}'s source
+     * @param moduleName the module name
      * @return the {@link Resource} instance, never null
      *
-     * @throws {@link ResourceNotFoundException} if the source for the {@link Resource} cannot be found.
+     * @throws {@link ModuleNotFoundException} if the source for the {@link Resource} cannot be found.
      */
-    Resource load(Path path) throws ResourceNotFoundException;
-
-    /**
-     * Performs the same operation as {@link #load(Path)}, only accepts a {@link String} path, which is
-     * then converted to a {@link Path}.
-     *
-     * @param pathString the {@link Path} string {@see {@link Path#Path(String)}}
-     * @return the {@link Resource}
-     */
-    default Resource load(final String pathString) {
-        final Path path = new Path(pathString);
-        return load(path);
-    }
+    Resource load(final String moduleName) throws ModuleNotFoundException;
 
     /**
      * Closes the {@link ResourceLoader} and cleaning up any resources.  Any open {@link Resource}

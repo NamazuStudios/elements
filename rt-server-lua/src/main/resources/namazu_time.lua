@@ -9,7 +9,7 @@
 
 local namazu_time
 
-local server = namazu_rt.ioc:inject("com.namazustudios.socialengine.rt.Container")
+local server = namazu_rt.ioc:inject("com.namazustudios.socialengine.rt.Scheduler")
 
 local CronParser = java.require "com.cronutils.parser.CronParser"
 local ExecutionTime = java.require "com.cronutils.model.time.ExecutionTime"

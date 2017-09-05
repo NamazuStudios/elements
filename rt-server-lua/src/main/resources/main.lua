@@ -81,6 +81,7 @@ manifest.http = {
         -- default will map to the name of the operation set.  You may specify other modules
         -- consistent with Lua's "require" keyword such as "foo.bar" to indicate that the
         -- module's code resides in foo/bar.lua.
+
         module = "example.hello_world",
 
         -- The operations contained in the module.  This maps the request/respons metadata to various

@@ -37,7 +37,7 @@
 //
 //    private ExceptionMapper.Resolver resolver;
 //
-//    private Container<Handler> handlerContainer;
+//    private Scheduler<Handler> handlerContainer;
 //
 //    @Override
 //    public void messageReceived(final IoSession session, final Object message) throws Exception {
@@ -149,12 +149,12 @@
 //        this.resolver = resolver;
 //    }
 //
-//    public Container<Handler> getHandlerContainer() {
+//    public Scheduler<Handler> getHandlerContainer() {
 //        return handlerContainer;
 //    }
 //
 //    @Inject
-//    public void setHandlerContainer(Container<Handler> handlerContainer) {
+//    public void setHandlerContainer(Scheduler<Handler> handlerContainer) {
 //        this.handlerContainer = handlerContainer;
 //    }
 //

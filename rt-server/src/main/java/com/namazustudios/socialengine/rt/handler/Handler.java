@@ -1,6 +1,6 @@
 //package com.namazustudios.socialengine.rt.handler;
 //
-//import com.namazustudios.socialengine.rt.Container;
+//import com.namazustudios.socialengine.rt.Scheduler;
 //import com.namazustudios.socialengine.rt.Request;
 //import com.namazustudios.socialengine.rt.Resource;
 //import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
@@ -15,7 +15,7 @@
 // * must be prepared to acccept access via multiple threads at once and must not maintain any stateful information,
 // * except what may be provided by the {@link Session}.
 // *
-// * The owning {@link Container} will not serialize access to the {@link Handler}, but may use techniques such as
+// * The owning {@link Scheduler} will not serialize access to the {@link Handler}, but may use techniques such as
 // * {@link ThreadLocal} or caching or multiple instantiations of the same {@link Handler}.
 // *
 // */

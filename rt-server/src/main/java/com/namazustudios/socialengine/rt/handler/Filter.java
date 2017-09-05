@@ -1,13 +1,17 @@
 package com.namazustudios.socialengine.rt.handler;
 
 import com.namazustudios.socialengine.rt.Request;
+import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.Response;
 
 import java.util.Iterator;
 import java.util.function.Consumer;
 
 /**
- * Used to filer requests or maniuplate requests before they ultimately arrive in an instance of {@link ClientRequestHandler}.
+ * Used to filer, modify, or intercept {@link Request} instances before being processed by the underlying
+ * {@link Resource} instances.  The {@link Request} instances are handed through a {@link Chain} where they
+ * execute various {@link Filter}s in sequence before they are finally processed by the destination
+ * {@link Resource}.
  *
  * Created by patricktwohig on 7/29/15.
  */

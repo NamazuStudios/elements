@@ -18,7 +18,7 @@
 //
 //    private ExceptionMapper.Resolver exceptionMapperResolver;
 //
-//    private Container<Worker> internalResourceContainer;
+//    private Scheduler<Worker> internalResourceContainer;
 //
 //    @Override
 //    public void dispatch(final Request request, final ResponseReceiver responseReceiver) {
@@ -84,12 +84,12 @@
 //        this.exceptionMapperResolver = exceptionMapperResolver;
 //    }
 //
-//    public Container<Worker> getInternalResourceContainer() {
+//    public Scheduler<Worker> getInternalResourceContainer() {
 //        return internalResourceContainer;
 //    }
 //
 //    @Inject
-//    public void setInternalResourceContainer(Container<Worker> internalResourceContainer) {
+//    public void setInternalResourceContainer(Scheduler<Worker> internalResourceContainer) {
 //        this.internalResourceContainer = internalResourceContainer;
 //    }
 //

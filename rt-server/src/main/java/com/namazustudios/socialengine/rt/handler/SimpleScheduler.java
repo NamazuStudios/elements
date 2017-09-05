@@ -22,16 +22,16 @@ import java.util.function.Function;
  *
  * Created by patricktwohig on 8/22/15.
  */
-public class SimpleContainer implements Container {
+public class SimpleScheduler implements Scheduler {
 
-    private static final Logger logger = LoggerFactory.getLogger(SimpleContainer.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimpleScheduler.class);
 
     /**
-     * The SimpleContainer uses an {@link ExecutorService} to process requests and dispatch
+     * The SimpleScheduler uses an {@link ExecutorService} to process requests and dispatch
      * events to the various {@link Resource}s.  This names the specific {@link ExecutorService}
      * to use for injectiong using {@link Named}
      */
-    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.handler.SimpleContainer.executorService";
+    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.handler.SimpleScheduler.executorService";
 
     private LockService lockService;
 

@@ -1,14 +1,18 @@
 package com.namazustudios.socialengine.rt.http;
 
 import com.namazustudios.socialengine.rt.exception.OperationNotFoundException;
-import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
-import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
-import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
-import com.namazustudios.socialengine.rt.manifest.http.HttpVerb;
+import com.namazustudios.socialengine.rt.manifest.http.*;
 
 import java.util.List;
 
 public interface HttpManifestMetadata {
+
+    /**
+     * Gets the {@link HttpModule} used to service the related {@link HttpRequest}.
+     *
+     * @return the {@link HttpModule}
+     */
+    HttpModule getModule();
 
     /**
      * Returns the {@link HttpManifest} associated with this request.  This must not be null.

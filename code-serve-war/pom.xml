@@ -26,7 +26,7 @@
 
         <!--
             This shoudln't be in the war file, but rather should be handled by
-            the container itself.  However, Jetty seems to have issues using slf4j
+            the scheduler itself.  However, Jetty seems to have issues using slf4j
             when configured so I'm leaving this in here.
         -->
 

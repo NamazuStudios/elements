@@ -2,7 +2,7 @@
 //
 //import com.namazustudios.socialengine.rt.Path;
 //import com.namazustudios.socialengine.rt.*;
-//import com.namazustudios.socialengine.rt.handler.SimpleContainer;
+//import com.namazustudios.socialengine.rt.handler.SimpleScheduler;
 //
 //import javax.inject.Inject;
 //import javax.inject.Named;
@@ -14,7 +14,7 @@
 ///**
 // * Created by patricktwohig on 8/23/15.
 // */
-//public class SimpleInternalContainer implements Container<Worker> {
+//public class SimpleInternalContainer implements Scheduler<Worker> {
 //
 //    private ResourceService<Worker> resourceService;
 //
@@ -76,7 +76,7 @@
 //    }
 //
 //    @Inject
-//    public void setExecutorService(@Named(SimpleContainer.EXECUTOR_SERVICE) ExecutorService executorService) {
+//    public void setExecutorService(@Named(SimpleScheduler.EXECUTOR_SERVICE) ExecutorService executorService) {
 //        this.executorService = executorService;
 //    }
 //

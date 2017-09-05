@@ -50,6 +50,11 @@ public enum ResponseCode {
     MANIFEST_NOT_FOUND,
 
     /**
+     * A module was not found by the resource loader
+     */
+    MODULE_NOT_FOUND,
+
+    /**
      * A particular method could not be found at the requested path.
      */
     METHOD_NOT_FOUND,
