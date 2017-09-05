@@ -16,7 +16,7 @@ import java.util.function.Consumer;
  *
  * Created by patricktwohig on 9/30/15.
  */
-public class DefaultExceptionMapper implements ExceptionMapper<Throwable, Request, Response> {
+public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultExceptionMapper.class);
 

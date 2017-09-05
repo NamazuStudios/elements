@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.ResponseHeader;
 import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
+import com.namazustudios.socialengine.rt.manifest.http.HttpModule;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 
 import java.util.List;
@@ -34,6 +35,11 @@ public class CompositeHttpResponse implements HttpResponse {
             @Override
             public HttpManifest getManifest() {
                 return manifestMetadata.getManifest();
+            }
+
+            @Override
+            public HttpModule getModule() {
+                return manifestMetadata.getModule();
             }
 
             @Override

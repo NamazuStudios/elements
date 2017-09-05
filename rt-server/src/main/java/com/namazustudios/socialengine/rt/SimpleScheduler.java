@@ -1,6 +1,5 @@
-package com.namazustudios.socialengine.rt.handler;
+package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +30,7 @@ public class SimpleScheduler implements Scheduler {
      * events to the various {@link Resource}s.  This names the specific {@link ExecutorService}
      * to use for injectiong using {@link Named}
      */
-    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.handler.SimpleScheduler.executorService";
+    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.SimpleScheduler.executorService";
 
     private LockService lockService;
 
