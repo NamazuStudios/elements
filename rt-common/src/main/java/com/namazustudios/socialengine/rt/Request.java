@@ -51,35 +51,23 @@ public interface Request {
     }
 
     /**
-     * A type whih validates any instance of {@link Request}.
+     * Checks that the request is valid.  A request is considered valid if the header as well
+     * as it components are not null.
+     *
+     * @throws {@link BadRequestException} if the request is not valid
      */
-    class Validator {
+    default void validate() {
 
-        private Validator() {}
+        final RequestHeader requestHeader = getHeader();
 
-        /**
-         * Checks that the request is valid.  A request is considered valid if the header as well
-         * as it components are not null.
-         *
-         * @param request the request
-         * @throws {@link BadRequestException} if the request is not valid
-         */
-        public static void validate(final Request request) {
-
-            final RequestHeader requestHeader = request.getHeader();
-
-            if(requestHeader == null) {
-                throw new BadRequestException("request header null");
-            } else if (requestHeader.getSequence() < 0) {
-                throw new BadRequestException("unexpected request sequence " + requestHeader.getSequence());
-            } else if (requestHeader.getPath() == null) {
-                throw new BadRequestException("invalid path " + requestHeader.getPath());
-            } else if (requestHeader.getMethod() == null) {
-                throw new BadRequestException("invalid method " + requestHeader.getMethod());
-            } else if (requestHeader.getHeaders() == null) {
-                throw new BadRequestException("invalid request simpleResponseHeaderMap " + requestHeader.getHeaders());
-            }
-
+        if(requestHeader == null) {
+            throw new BadRequestException("request header null");
+        } else if (requestHeader.getSequence() < 0) {
+            throw new BadRequestException("unexpected request sequence " + requestHeader.getSequence());
+        } else if (requestHeader.getPath() == null) {
+            throw new BadRequestException("invalid path " + requestHeader.getPath());
+        } else if (requestHeader.getMethod() == null) {
+            throw new BadRequestException("invalid method " + requestHeader.getMethod());
         }
 
     }

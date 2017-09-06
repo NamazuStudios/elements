@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
 
 import java.util.List;
-import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Represents a listing of custom named simpleResponseHeaderMap.
@@ -11,12 +11,33 @@ import java.util.Map;
 public interface NamedHeaders {
 
     /**
+     * The {@link List<String>} of header names available.
+     *
+     * @return the names of all headers present
+     */
+    List<String> getHeaderNames();
+
+    /**
      * Gets a listing of simpleResponseHeaderMap mapped by header name.  A header may be repeated and therefore
-     * the header may be associated with many values
+     * the header may be associated with many values.  If the name appears in the {@link List<String>} returned
+     * by {@link #getHeaderNames()}, then this must return a non-null value.
+     *
+     *
      *
      * @return the mapping of names to values
      */
-    Map<String, List<Object>> getHeaders();
+    List<Object> getHeaders(String name);
+
+    /**
+     * Gets the raw values of the specified header.
+     *
+     * @param header the header name
+     * @param defaultListSupplier a {@link Supplier<List<Object>>} to provide the {@link List<Object>} if not present
+     * @return the first value of the header, or the default value
+     */
+    default List<Object> getHeadersOrDefault(final String header, final Supplier<List<Object>> defaultListSupplier) {
+        return getHeaderNames().contains(header) ? getHeaders(header) : defaultListSupplier.get();
+    }
 
     /**
      * Gets the raw value of the specified header, fetching the first value in the list
@@ -38,7 +59,7 @@ public interface NamedHeaders {
      * @return the first value of the header, or null
      */
     default Object getHeaderOrDefault(final String header, final Object defaultValue) {
-        final List<Object> headers = getHeaders().get(header);
+        final List<Object> headers = getHeaders(header);
         return headers == null || headers.isEmpty() ? defaultValue : headers.get(0);
     }
 

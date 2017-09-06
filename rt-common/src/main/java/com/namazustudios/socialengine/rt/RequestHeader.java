@@ -17,7 +17,8 @@ public interface RequestHeader extends NamedHeaders {
 
     /**
      * Gets the sequence of the request.  The client, when making the request,
-     * will produce a response with this sequence.
+     * will produce a response with this sequence.  The sequence may be -1 to
+     * indicate that no sequencing is used fo this paticular {@link Request}.
      *
      * @return the sequence
      */

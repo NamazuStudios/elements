@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +14,11 @@ public class SimpleResponseHeader implements ResponseHeader {
     private int sequence;
 
     private Map<String, List<Object>> headers;
+
+    @Override
+    public List<String> getHeaderNames() {
+        return new ArrayList<>(headers.keySet());
+    }
 
     @Override
     public int getCode() {
@@ -33,8 +39,8 @@ public class SimpleResponseHeader implements ResponseHeader {
     }
 
     @Override
-    public Map<String, List<Object>> getHeaders() {
-        return headers;
+    public List<Object> getHeaders(final String name) {
+        return headers.get(name);
     }
 
     public void setHeaders(Map<String, List<Object>> headers) {
@@ -58,14 +64,14 @@ public class SimpleResponseHeader implements ResponseHeader {
 
         if (getCode() != that.getCode()) return false;
         if (getSequence() != that.getSequence()) return false;
-        return getHeaders() != null ? getHeaders().equals(that.getHeaders()) : that.getHeaders() == null;
+        return headers != null ? headers.equals(that.headers) : that.headers == null;
     }
 
     @Override
     public int hashCode() {
         int result = getCode();
         result = 31 * result + getSequence();
-        result = 31 * result + (getHeaders() != null ? getHeaders().hashCode() : 0);
+        result = 31 * result + (headers != null ? headers.hashCode() : 0);
         return result;
     }
 

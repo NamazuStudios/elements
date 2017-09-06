@@ -43,8 +43,7 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
 
         final List<Accept> accepts = httpRequest.get()
             .getHeader()
-            .getHeaders()
-            .getOrDefault(ACCEPT, asList(ANY_TYPE))
+            .getHeadersOrDefault(ACCEPT, () -> asList(ANY_TYPE))
             .stream()
             .flatMap(header -> parseHeader(header.toString()).stream())
             .collect(Collectors.toList());
