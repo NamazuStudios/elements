@@ -20,7 +20,7 @@
 //
 //
 ///**
-// * Allows for client code to manually bind Lua scripts with names.  Once bound, they can
+// * Allows for client code to manually bind Lua scripts with names.  LazyValue bound, they can
 // * be accessed through the {@link GuiceIoCResolver}.
 // *
 // * Created by patricktwohig on 9/1/15.

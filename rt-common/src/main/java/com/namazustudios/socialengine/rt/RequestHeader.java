@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.exception.BadRequestException;
+
 /**
  * The basic request type for the RT Server.  This is compact set of
  * metadata for a single request.  This has some terminology similar to
@@ -34,5 +36,20 @@ public interface RequestHeader extends NamedHeaders {
      * @return the path, never null
      */
     String getPath();
+
+    /**
+     * Returns the value of {@link #getPath()} as a fully parsed {@link Path} object.
+     *
+     * @return the {@link Path} object
+     *
+     * @throws {@link BadRequestException} if the value of {@link #getPath()} does not parse
+     */
+    default Path getParsedPath() throws BadRequestException {
+        try {
+            return new Path(getPath());
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException(ex);
+        }
+    }
 
 }

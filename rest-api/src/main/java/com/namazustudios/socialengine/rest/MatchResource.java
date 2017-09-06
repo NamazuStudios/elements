@@ -37,7 +37,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @Api(
     value = "Matches",
     description = "Drives the matchmaking API.  The matching system is used to match players of " +
-                  "of roughly equal skill based on their past performance record.  Once a Match is made, " +
+                  "of roughly equal skill based on their past performance record.  LazyValue a Match is made, " +
                   "this allows two separate players (as represented by their profiles) to participate in a " +
                   "game.  Note, this API only provides matching.  The players must separately create a game " +
                   "from the match.  A match only provides a token which can be used to create a game which will " +

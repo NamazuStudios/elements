@@ -153,7 +153,7 @@ public interface UserDao {
 
     /**
      * Deletes a user from the database.  In actuality, this isn't a true delete, but
-     * rather just flags the user as inactive.  Once flagged inactive, a user will
+     * rather just flags the user as inactive.  LazyValue flagged inactive, a user will
      * not show up in any results for active users.
      *
      * @param userId the user's id (name or email address)

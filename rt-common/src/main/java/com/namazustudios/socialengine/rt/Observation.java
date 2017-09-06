@@ -9,7 +9,7 @@ package com.namazustudios.socialengine.rt;
 public interface Observation {
 
     /**
-     * Once called, the {@link EventReceiver} associated with this Observation will no longer dispatch
+     * LazyValue called, the {@link EventReceiver} associated with this Observation will no longer dispatch
      * events from the Resource.
      */
     void release();

@@ -79,7 +79,7 @@ public class ShortLinkResource {
     @DELETE
     @Path("{id}")
     @ApiOperation(value = "Deletes a short link.",
-                  notes = "Deletes a short link known to the server.  Once delete, a short link will " +
+                  notes = "Deletes a short link known to the server.  LazyValue delete, a short link will " +
                           "no longer resolve to its address an will be gone from the server permanently.")
     public void delete(@PathParam("id") final String id) {
         shortLinkService.deleteShortLink(id);

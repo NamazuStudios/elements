@@ -245,7 +245,7 @@ public class SimpleResourceService implements ResourceService {
             }
 
             // Attempt to actually lock the resource at the path so we have a chance
-            // to actually carry out our operation.  Once this happens we must
+            // to actually carry out our operation.  LazyValue this happens we must
             // proceed to completely remove the rest of the mapping.
 
             if (!storage.getPathResourceIdMap().replace(path, existing, lock)) {

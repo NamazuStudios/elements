@@ -11,7 +11,7 @@ import java.util.Map;
  * A Resource is essentially a type that is capable primarily of both receiving {@link Request} instances
  * to produce {@link Response} instances.
  *
- * Once a resource is no longer needed, it is necessary to destroy the resource using the {@link AutoCloseable#close()}
+ * LazyValue a resource is no longer needed, it is necessary to destroy the resource using the {@link AutoCloseable#close()}
  * method.
  *
  * Created by patricktwohig on 8/8/15.

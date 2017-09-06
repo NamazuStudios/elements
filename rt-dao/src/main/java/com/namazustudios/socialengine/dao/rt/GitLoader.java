@@ -30,7 +30,7 @@ public interface GitLoader {
 
     /**
      * Opens a {@link Git} instance for the supplied {@link Application} which can be used to manipulate
-     * the various files within the repository.  Once this call returns the supplied {@link Git} instance
+     * the various files within the repository.  LazyValue this call returns the supplied {@link Git} instance
      * will be closed.
      *
      * @param  application the {@link Application} for which to open a {@link Git} instance

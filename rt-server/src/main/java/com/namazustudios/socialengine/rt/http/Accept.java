@@ -8,26 +8,26 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class AcceptableContentType implements Comparable<AcceptableContentType> {
+public class Accept implements Comparable<Accept> {
 
     private final MediaType mediaType;
 
     private final double quality;
 
-    public static List<AcceptableContentType> parseHeader(final String headerValue) {
+    public static List<Accept> parseHeader(final String headerValue) {
 
-        final List<AcceptableContentType> acceptableContentTypeList = new ArrayList<>();
+        final List<Accept> acceptList = new ArrayList<>();
 
         for(final String value : Splitter.on(",").trimResults().split(headerValue)) {
-            final AcceptableContentType acceptableContentType = parse(value);
-            acceptableContentTypeList.add(acceptableContentType);
+            final Accept accept = parse(value);
+            acceptList.add(accept);
         }
 
-        return acceptableContentTypeList;
+        return acceptList;
 
     }
 
-    public static AcceptableContentType parse(final String accepts) {
+    public static Accept parse(final String accepts) {
 
         final Iterator<String> acceptsIterator = Splitter.on(";").trimResults().split(accepts).iterator();
 
@@ -39,13 +39,13 @@ public class AcceptableContentType implements Comparable<AcceptableContentType> 
         final String qualityString = acceptsIterator.hasNext() ? acceptsIterator.next() : "1.0";
 
         if (acceptsIterator.hasNext()) {
-            throw new BadRequestException("Invalid AcceptableContentType header specification " + accepts);
+            throw new BadRequestException("Invalid Accept header specification " + accepts);
         }
 
         try {
             final double quality = Double.parseDouble(qualityString);
             final MediaType mediaType = MediaType.parse(mediaTypeString);
-            return new AcceptableContentType(mediaType, quality);
+            return new Accept(mediaType, quality);
         } catch (NumberFormatException nfe) {
             throw new BadRequestException(nfe);
         } catch (IllegalArgumentException ex) {
@@ -54,7 +54,7 @@ public class AcceptableContentType implements Comparable<AcceptableContentType> 
 
     }
 
-    public AcceptableContentType(final MediaType mediaType, final double quality) {
+    public Accept(final MediaType mediaType, final double quality) {
 
         if (quality < 0 || quality > 1) {
             throw new BadRequestException("quality out of range");
@@ -74,7 +74,7 @@ public class AcceptableContentType implements Comparable<AcceptableContentType> 
     }
 
     @Override
-    public int compareTo(AcceptableContentType o) {
+    public int compareTo(Accept o) {
         return quality >  o.quality ? -1 :
                quality == o.quality ?  0 : 1;
     }
@@ -82,9 +82,9 @@ public class AcceptableContentType implements Comparable<AcceptableContentType> 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof AcceptableContentType)) return false;
+        if (!(o instanceof Accept)) return false;
 
-        AcceptableContentType that = (AcceptableContentType) o;
+        Accept that = (Accept) o;
 
         if (Double.compare(that.getQuality(), getQuality()) != 0) return false;
         return getMediaType().equals(that.getMediaType());

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -57,7 +58,7 @@ public final class ParameterizedPath {
         this.raw = raw;
 
         if (raw.isWildcard()) {
-            throw new IllegalArgumentException(raw + " must not be parameterized");
+            throw new IllegalArgumentException(raw + " must not be wildcard");
         }
 
         final List<String> parameters = getRaw().getComponents()
@@ -136,10 +137,32 @@ public final class ParameterizedPath {
 
         final List<String> components = getRaw().getComponents()
                 .stream()
-                .map(c -> isParameter(c) ? resolver.apply(c) : c)
+                .map(c -> isParameter(c) ? wrapped.apply(c) : c)
                 .collect(toList());
 
         return new Path(components);
+
+    }
+
+    /**
+     * Checks if this {@link ParameterizedPath} matches the supplied {@link Path}.  A {@link Path} matches this
+     * {@link ParameterizedPath} if it has the same number of components and each component is equal to the
+     * patch or corresponds to a parameter.
+     *
+     * @param path the {@link Path}
+     * @return true if this {@link Path} matches
+     */
+    public boolean matches(final Path path) {
+
+        if (path.getComponents().size() != raw.getComponents().size()) {
+            return false;
+        }
+
+        final Iterator<String> pathComponents = path.getComponents().iterator();
+
+        return raw.getComponents()
+            .stream()
+            .allMatch(c -> c.equals(pathComponents.next()) || isParameter(c));
 
     }
 

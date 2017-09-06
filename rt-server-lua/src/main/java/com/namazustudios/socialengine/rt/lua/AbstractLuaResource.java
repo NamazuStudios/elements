@@ -324,7 +324,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
     }
 
     /**
-     * Invokes {@link LuaState#close()} and removes any resources from memory.  Once
+     * Invokes {@link LuaState#close()} and removes any resources from memory.  LazyValue
      * this is called, this resource may not be reused.
      *
      * @see {@link Resource#close()}

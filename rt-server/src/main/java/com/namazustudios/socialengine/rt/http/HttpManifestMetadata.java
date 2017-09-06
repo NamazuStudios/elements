@@ -62,30 +62,4 @@ public interface HttpManifestMetadata {
      */
     List<HttpOperation> getAvailableOperations();
 
-    /**
-     * Gets the requested {@link HttpContent} of this request as determined by the appropriate Content-Type headers.
-     *
-     * If no matching {@link HttpContent} can be determined for this request, then an instance of
-     * {@link InvalidContentTypeException} will be thrown.
-     *
-     * If the associated {@link HttpRequest} does not specify a content, or specifies a range of acceptable content,
-     * then this must prefer the single default {@link HttpContent} as determined by
-     * {@link HttpContent#isDefaultContent()}
-     *
-     * @return the preferred {@link HttpContent}
-     */
-    default HttpContent getPreferredContent() {
-        return getContentFor(getPreferredOperation());
-    }
-
-    /**
-     * Gets the requested {@link HttpContent} of this request as determined by the supplied {@link HttpOperation}.
-     *
-     * If no matching {@link HttpContent} can be determined for this request, then an instance of
-     * {@link InvalidContentTypeException} will be thrown.
-     *
-     * @return the {@link HttpContent} associated, never null
-     */
-    HttpContent getContentFor(HttpOperation operation);
-
 }

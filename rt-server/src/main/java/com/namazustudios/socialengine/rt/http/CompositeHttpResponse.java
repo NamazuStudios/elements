@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.http;
 
 import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.ResponseHeader;
-import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.http.HttpModule;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
@@ -55,16 +54,6 @@ public class CompositeHttpResponse implements HttpResponse {
             @Override
             public List<HttpOperation> getAvailableOperations() {
                 return manifestMetadata.getAvailableOperations();
-            }
-
-            @Override
-            public HttpContent getPreferredContent() {
-                return httpRequest.getResponseContent();
-            }
-
-            @Override
-            public HttpContent getContentFor(HttpOperation operation) {
-                return manifestMetadata.getContentFor(operation);
             }
 
         };

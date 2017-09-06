@@ -26,8 +26,20 @@ public interface NamedHeaders {
      * @return the first value of the header, or null
      */
     default Object getHeader(final String header) {
+        return getHeaderOrDefault(header, null);
+    }
+
+    /**
+     * Gets the raw value of the specified header, fetching the first value in the list
+     * of values associated with the header.
+     *
+     * @param header the header name
+     * @param defaultValue the default value to return if the header is not found
+     * @return the first value of the header, or null
+     */
+    default Object getHeaderOrDefault(final String header, final Object defaultValue) {
         final List<Object> headers = getHeaders().get(header);
-        return headers == null || headers.isEmpty() ? null : headers.get(0);
+        return headers == null || headers.isEmpty() ? defaultValue : headers.get(0);
     }
 
     /**
@@ -40,9 +52,9 @@ public interface NamedHeaders {
      * @return the header value, or null if no header is found
      * @throws {@link InvalidConversionException} if the conversion is not possible.
      */
-    default <T> T getHeader(final String header, Class<T> type) throws InvalidConversionException {
+    default <T> T getAndConvertHeader(final String header, final Class<T> type) throws InvalidConversionException {
 
-        final Object object = getHeader(header, type);
+        final Object object = getHeader(header);
 
         try {
             return type.cast(object);

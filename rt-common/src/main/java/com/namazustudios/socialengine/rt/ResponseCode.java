@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
+import com.namazustudios.socialengine.rt.manifest.http.HttpVerb;
 
 /**
  * Enumeration of the various response codes.  Each code is essentially the
@@ -63,6 +64,21 @@ public enum ResponseCode {
      * A particular operation, (eg {@link HttpOperation )} could not be found.
      */
     OPERATION_NOT_FOUND,
+
+    /**
+     * No {@link HttpOperation} for the particular {@link HttpVerb} could be matched.
+     */
+    VERB_NOT_SUPPORTED,
+
+    /**
+     * No {@link HttpOperation} for the supplied Accept headers is available to service the request.
+     */
+    UNACCEPTABLE_CONTENT,
+
+    /**
+     * No {@link HttpOperation} for the supplied Content-Type header is available to service the request.
+     */
+    UNSUPPORTED_MEDIA_TYPE,
 
     /**
      * Used to relay a not found condition, other than method or path.
