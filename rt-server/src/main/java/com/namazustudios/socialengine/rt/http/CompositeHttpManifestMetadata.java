@@ -118,7 +118,16 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
     }
 
     private HttpModule resolveModule() {
-        return null;
+
+        final HttpOperation operation = getPreferredOperation();
+        final HttpManifest manifest = httpManifest.get();
+
+        return manifest.getModulesByName()
+            .values()
+            .stream()
+            .filter(module -> module.getOperationsByName().containsValue(operation))
+            .findFirst().orElseThrow(() -> new OperationNotFoundException());
+
     }
 
     @Override

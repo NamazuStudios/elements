@@ -45,8 +45,7 @@ public interface HttpManifestMetadata {
      * throw an instance of {@link OperationNotFoundException}.
      *
      * If multiple {@link HttpOperation} instances apply, or no {@link HttpOperation} instances reply, then
-     * this must throw an instance of {@link OperationNotFoundException} as it is unable to determine the
-     * specific {@link HttpOperation} valid for this {@link HttpManifestMetadata}.
+     * this must throw any other number of exception types indicating so.
      *
      * @return the {@link HttpOperation}
      */
