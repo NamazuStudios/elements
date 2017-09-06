@@ -49,7 +49,7 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
                                    final Consumer<Response> responseConsumer) {
 
         final HttpModule httpModule = httpRequest.getManifestMetadata().getModule();
-        final HttpOperation httpOperation = httpRequest.getManifestMetadata().getOperation();
+        final HttpOperation httpOperation = httpRequest.getManifestMetadata().getPreferredOperation();
 
         final Path path = Path.fromComponents("http", "request", randomUUID().toString());
         final Resource resource = getResourceLoader().load(httpModule.getModule());

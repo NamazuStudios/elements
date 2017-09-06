@@ -61,7 +61,7 @@ public interface ResourceService {
      * @throws {@link DuplicateException} if a resource at the given path already exists
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    void addResource(Path path, Resource resource);
+    void    addResource(Path path, Resource resource);
 
     /**
      * Adds a {@link Resource} to this resource service.  Rather than throwing an exception

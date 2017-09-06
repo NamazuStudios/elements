@@ -64,7 +64,7 @@ public class DispatcherServlet extends HttpServlet {
             final HttpManifestMetadata manifestMetadata;
             manifestMetadata = httpRequest.getManifestMetadata();
 
-            if (manifestMetadata.hasOperation()) {
+            if (manifestMetadata.hasSinglePreferredOperation()) {
                 performAsync(httpRequest, req, resp);
             } else {
 
@@ -106,7 +106,7 @@ public class DispatcherServlet extends HttpServlet {
 
             httpRequest = getHttpRequestService().getRequest(req);
 
-            if (httpRequest.getManifestMetadata().hasOperation()) {
+            if (httpRequest.getManifestMetadata().hasSinglePreferredOperation()) {
                 performAsync(httpRequest, req, resp);
             } else {
                 super.doHead(req, resp);

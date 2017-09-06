@@ -5,14 +5,13 @@ import com.namazustudios.socialengine.rt.manifest.http.*;
 
 import java.util.List;
 
+/**
+ * This is collection of the various objects contained in the {@link HttpManifest} combined with information
+ * from the {@link HttpRequest}.  This is responsible for providing the various routing information such that
+ * the underlying services may instantiate {@link com.namazustudios.socialengine.rt.Resource} instances and
+ * resolve the methods to invoke.
+ */
 public interface HttpManifestMetadata {
-
-    /**
-     * Gets the {@link HttpModule} used to service the related {@link HttpRequest}.
-     *
-     * @return the {@link HttpModule}
-     */
-    HttpModule getModule();
 
     /**
      * Returns the {@link HttpManifest} associated with this request.  This must not be null.
@@ -22,19 +21,36 @@ public interface HttpManifestMetadata {
     HttpManifest getManifest();
 
     /**
-     * Returns true if this {@link HttpManifestMetadata} has a valid {@link HttpOperation}.  If this
-     * returns true then {@link #getOperation()} must not throw {@link OperationNotFoundException}.
-     * @return
+     * Gets the {@link HttpModule} used to service the related {@link HttpRequest}.
+     *
+     * @return the {@link HttpModule}
      */
-    boolean hasOperation();
+    HttpModule getModule();
 
     /**
-     * Returns the {@link HttpOperation} associated with this request.  If no operation can
-     * be found, then this will throw an instance of {@link OperationNotFoundException}.
+     *
+     * Returns true if this {@link HttpManifestMetadata} has a valid single {@link HttpOperation}.  If this
+     * returns true then {@link #getPreferredOperation()} must not throw {@link OperationNotFoundException}.
+     *
+     * If this method returns true, then {@link #getPreferredOperation()} must return successfully and not throw
+     * and instance of {@link OperationNotFoundException}.
+     *
+     * @return true if {@link #getPreferredOperation()} can be called without throwing an exception.
+     *
+     */
+    boolean hasSinglePreferredOperation();
+
+    /**
+     * Returns the {@link HttpOperation} associated with this request.  If no operation can be found, then this will
+     * throw an instance of {@link OperationNotFoundException}.
+     *
+     * If multiple {@link HttpOperation} instances apply, or no {@link HttpOperation} instances reply, then
+     * this must throw an instance of {@link OperationNotFoundException} as it is unable to determine the
+     * specific {@link HttpOperation} valid for this {@link HttpManifestMetadata}.
      *
      * @return the {@link HttpOperation}
      */
-    HttpOperation getOperation();
+    HttpOperation getPreferredOperation();
 
     /**
      * It is possible that the request matches may {@link HttpOperation} instances, such as when the
@@ -42,7 +58,7 @@ public interface HttpManifestMetadata {
      * instances that match the attributes of the associated {@link HttpRequest}.  This may consider such
      * features as the presence of the Accept header, or other matching headers.
      *
-     * @return a list of available {@link HttpOperation}s, if any.
+     * @return a list of available {@link HttpOperation}s, if any.  If none match, then an empty list is returned
      */
     List<HttpOperation> getAvailableOperations();
 
@@ -52,10 +68,14 @@ public interface HttpManifestMetadata {
      * If no matching {@link HttpContent} can be determined for this request, then an instance of
      * {@link InvalidContentTypeException} will be thrown.
      *
-     * @return the {@link HttpContent}
+     * If the associated {@link HttpRequest} does not specify a content, or specifies a range of acceptable content,
+     * then this must prefer the single default {@link HttpContent} as determined by
+     * {@link HttpContent#isDefaultContent()}
+     *
+     * @return the preferred {@link HttpContent}
      */
-    default HttpContent getContent() {
-        return getContentFor(getOperation());
+    default HttpContent getPreferredContent() {
+        return getContentFor(getPreferredOperation());
     }
 
     /**

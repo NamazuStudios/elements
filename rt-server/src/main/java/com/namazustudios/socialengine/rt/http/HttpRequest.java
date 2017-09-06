@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
+import com.namazustudios.socialengine.rt.manifest.http.HttpVerb;
 
 /**
  * A type of {@link Request} that contains specific manifest metadata such as the original
@@ -11,6 +12,13 @@ import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
  * type should defer throwing exceptions as long as possible (including at construction time).
  */
 public interface HttpRequest extends Request {
+
+    /**
+     * Gets the {@link HttpVerb} from this {@link HttpRequest}.
+     *
+     * @return the {@link HttpVerb}
+     */
+    HttpVerb getVerb();
 
     /**
      * Returns the known {@link HttpManifestMetadata} for this {@link Request}.  If the appropraite

@@ -43,13 +43,13 @@ public class CompositeHttpResponse implements HttpResponse {
             }
 
             @Override
-            public boolean hasOperation() {
-                return manifestMetadata.hasOperation();
+            public boolean hasSinglePreferredOperation() {
+                return manifestMetadata.hasSinglePreferredOperation();
             }
 
             @Override
-            public HttpOperation getOperation() {
-                return manifestMetadata.getOperation();
+            public HttpOperation getPreferredOperation() {
+                return manifestMetadata.getPreferredOperation();
             }
 
             @Override
@@ -58,7 +58,7 @@ public class CompositeHttpResponse implements HttpResponse {
             }
 
             @Override
-            public HttpContent getContent() {
+            public HttpContent getPreferredContent() {
                 return httpRequest.getResponseContent();
             }
 
