@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.http.HttpVerb;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.function.Supplier;
 
 public class ServletHttpRequest implements HttpRequest {
 
@@ -19,11 +18,10 @@ public class ServletHttpRequest implements HttpRequest {
 
     private final CompositeHttpManifestMetadata compositeHttpManifestMetadata;
 
-    public ServletHttpRequest(final HttpServletRequest httpServletRequest,
-                              final Supplier<HttpManifest> httpManifestSupplier) {
+    public ServletHttpRequest(final HttpServletRequest httpServletRequest, final HttpManifest httpManifest) {
         this.httpServletRequest = httpServletRequest;
         this.servletRequestHeader = new ServletRequestHeader(this, httpServletRequest);
-        this.compositeHttpManifestMetadata = new CompositeHttpManifestMetadata(() -> this, httpManifestSupplier);
+        this.compositeHttpManifestMetadata = new CompositeHttpManifestMetadata(this, httpManifest);
     }
 
     @Override

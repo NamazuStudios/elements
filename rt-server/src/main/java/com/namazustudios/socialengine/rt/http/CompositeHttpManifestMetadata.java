@@ -10,7 +10,6 @@ import com.namazustudios.socialengine.rt.util.LazyValue;
 
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.google.common.net.HttpHeaders.ACCEPT;
@@ -23,25 +22,25 @@ import static java.util.Collections.unmodifiableList;
 
 /**
  * Builds an {@link HttpManifestMetadata} as a composite of an {@link HttpRequest} and a {@link HttpManifest}.  All
- * computation is deferred as each of the methods are called.
+ * computation is deferred as each of the methods are called.  This allows the assocaited {@link HttpRequest} to pass
+ * as far through all
  */
 public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
 
-    private final LazyValue<HttpRequest> httpRequest;
+    private final HttpRequest httpRequest;
 
-    private final LazyValue<HttpManifest> httpManifest;
+    private final HttpManifest httpManifest;
 
     private final LazyValue<HttpModule> httpModule = new LazyValue<>(this::resolveModule);
 
-    public CompositeHttpManifestMetadata(final Supplier<HttpRequest> httpRequestSupplier,
-                                         final Supplier<HttpManifest> httpManifestSupplier) {
-        this.httpRequest = new LazyValue<>(httpRequestSupplier);
-        this.httpManifest = new LazyValue<>(httpManifestSupplier);
+    public CompositeHttpManifestMetadata(final HttpRequest httpRequest, final HttpManifest httpManifest) {
+        this.httpRequest = httpRequest;
+        this.httpManifest = httpManifest;
     }
 
     private List<Accept> getAcceptableContentTypes() {
 
-        final List<Accept> accepts = httpRequest.get()
+        final List<Accept> accepts = httpRequest
             .getHeader()
             .getHeadersOrDefault(ACCEPT, () -> asList(ANY_TYPE))
             .stream()
@@ -103,7 +102,6 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
     private MediaType getContentType() {
 
         final String contentTypeHeader = httpRequest
-            .get()
             .getHeader()
             .getHeaderOrDefault(CONTENT_TYPE, ANY_TYPE)
             .toString();
@@ -119,7 +117,7 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
     private HttpModule resolveModule() {
 
         final HttpOperation operation = getPreferredOperation();
-        final HttpManifest manifest = httpManifest.get();
+        final HttpManifest manifest = httpManifest;
 
         return manifest.getModulesByName()
             .values()
@@ -131,7 +129,7 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
 
     @Override
     public HttpManifest getManifest() {
-        return httpManifest.get();
+        return httpManifest;
     }
 
     @Override
@@ -142,9 +140,9 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
     @Override
     public boolean hasSinglePreferredOperation() {
 
-        final HttpRequest req = httpRequest.get();
+        final HttpRequest req = httpRequest;
 
-        final List<HttpOperation> httpOperationList = httpManifest.get()
+        final List<HttpOperation> httpOperationList = httpManifest
                 .getModulesByName()
                 .values()
                 .stream()
@@ -181,9 +179,9 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
     @Override
     public List<HttpOperation> getAvailableOperations() {
 
-        final HttpRequest req = httpRequest.get();
+        final HttpRequest req = httpRequest;
 
-        final List<HttpOperation> httpOperationList = httpManifest.get()
+        final List<HttpOperation> httpOperationList = httpManifest
                 .getModulesByName()
                 .values()
                 .stream()

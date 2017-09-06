@@ -59,7 +59,7 @@ public class ServletRequestHeader implements RequestHeader {
 
     @Override
     public String getMethod() {
-        return httpRequest.getManifestMetadata().getPreferredOperation().getMethod();
+        return httpServletRequest.getMethod();
     }
 
 }
