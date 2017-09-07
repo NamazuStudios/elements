@@ -100,7 +100,9 @@ public class ServletSession implements Session {
 
     @Override
     public void disconnect() {
-        httpSessionLazyValue.get().invalidate();
+        synchronized (lock) {
+            httpSessionLazyValue.get().invalidate();
+        }
     }
 
 }

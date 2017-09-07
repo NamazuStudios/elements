@@ -12,6 +12,6 @@ public interface HandlerClientSessionObserver {
      *
      * @return true to receive more notifications, false otherwise.
      */
-    boolean observe();
+    void observe();
 
 }

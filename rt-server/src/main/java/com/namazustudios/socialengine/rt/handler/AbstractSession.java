@@ -25,7 +25,6 @@ public abstract class AbstractSession implements Session {
 
         final Observation disconnectObservation = observeDisconnect(() -> {
             serverObservation.release();
-            return false;
         });
 
         return () -> {
@@ -105,13 +104,8 @@ public abstract class AbstractSession implements Session {
         final Iterator<Map.Entry<UUID, HandlerClientSessionObserver>> entryIterator = observers.entrySet().iterator();
 
         while (entryIterator.hasNext()) {
-
             final Map.Entry<UUID, HandlerClientSessionObserver> entry = entryIterator.next();
-
-            if (!entry.getValue().observe()) {
-                entryIterator.remove();
-            }
-
+            entryIterator.remove();
         }
 
     }
