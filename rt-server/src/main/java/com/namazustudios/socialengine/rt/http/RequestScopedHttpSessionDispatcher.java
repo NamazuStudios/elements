@@ -84,7 +84,8 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
 
         getExceptionMapperResolver().protect(request, responseConsumer, () ->
             resource.getDispatcher(httpOperation.getName())
-                    .dispatch(request, session)
+                    // TODO Insert desired payload type from the underlying request.
+                    .dispatch(request, null, session)
                     .forResultType(Response.class)
                     .withConsumer(closingResponseConsumer)).perform();
 

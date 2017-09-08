@@ -210,4 +210,38 @@ public class HttpOperation {
             .orElseThrow(() -> new InternalException("No default Content Type Found for " + getName()));
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof HttpOperation)) return false;
+
+        HttpOperation operation = (HttpOperation) o;
+
+        if (getName() != null ? !getName().equals(operation.getName()) : operation.getName() != null) return false;
+        if (getDescription() != null ? !getDescription().equals(operation.getDescription()) : operation.getDescription() != null)
+            return false;
+        if (getVerb() != operation.getVerb()) return false;
+        if (getPath() != null ? !getPath().equals(operation.getPath()) : operation.getPath() != null) return false;
+        if (getMethod() != null ? !getMethod().equals(operation.getMethod()) : operation.getMethod() != null)
+            return false;
+        if (getParameters() != null ? !getParameters().equals(operation.getParameters()) : operation.getParameters() != null)
+            return false;
+        if (getProducesContentByType() != null ? !getProducesContentByType().equals(operation.getProducesContentByType()) : operation.getProducesContentByType() != null)
+            return false;
+        return getConsumesContentByType() != null ? getConsumesContentByType().equals(operation.getConsumesContentByType()) : operation.getConsumesContentByType() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getName() != null ? getName().hashCode() : 0;
+        result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
+        result = 31 * result + (getVerb() != null ? getVerb().hashCode() : 0);
+        result = 31 * result + (getPath() != null ? getPath().hashCode() : 0);
+        result = 31 * result + (getMethod() != null ? getMethod().hashCode() : 0);
+        result = 31 * result + (getParameters() != null ? getParameters().hashCode() : 0);
+        result = 31 * result + (getProducesContentByType() != null ? getProducesContentByType().hashCode() : 0);
+        result = 31 * result + (getConsumesContentByType() != null ? getConsumesContentByType().hashCode() : 0);
+        return result;
+    }
+
 }

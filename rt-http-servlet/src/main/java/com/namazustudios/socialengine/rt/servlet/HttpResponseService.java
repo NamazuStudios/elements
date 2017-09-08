@@ -2,13 +2,15 @@ package com.namazustudios.socialengine.rt.servlet;
 
 import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.http.CompositeHttpResponse;
+import com.namazustudios.socialengine.rt.http.HttpManifestMetadata;
 import com.namazustudios.socialengine.rt.http.HttpRequest;
 import com.namazustudios.socialengine.rt.http.HttpResponse;
 import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 
-import javax.servlet.http.HttpServletRequest;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 public interface HttpResponseService {
 
@@ -18,7 +20,7 @@ public interface HttpResponseService {
      * which delegates to both the {@link HttpRequest} and the {@link Response}.
      *
      * This selects the appropriate {@link HttpContent} using the {@link HttpOperation} supplied
-     * byt {@link HttpRequest#getResponseContent()}.
+     * byt {@link HttpManifestMetadata#getPreferredResponseContent()}.
      *
      * @param httpRequest
      * @param response
@@ -56,12 +58,22 @@ public interface HttpResponseService {
     void write(HttpResponse toWrite, HttpServletResponse destination);
 
     /**
-     * Writes the supplied {@link HttpResponse} to the supplied {@link HttpServletResponse}.
-     *
-     * @param httpServletRequest httpServletRequest
-     * @param toWrite the {@link HttpResponse} to write
-     * @param destination the {@link HttpServletResponse} to receive
+     * Handles the actual details of writing to the {@link HttpServletResponse}.  Allows for the configuration
+     * of multiple Content-Types associated with a {@link HttpResponse}.
      */
-    void writeRaw(HttpServletRequest httpServletRequest, Response toWrite, HttpServletResponse destination);
+    @FunctionalInterface
+    interface EntityBodyWriter {
+
+        /**
+         * Writes the actual response object to the {@link HttpServletResponse}.
+         *
+         * @param payload the the response object
+         * @param destination t
+         * @throws ServletException
+         * @throws IOException
+         */
+        void writeEntityBody(Object payload, HttpServletResponse destination) throws ServletException, IOException;
+
+    }
 
 }

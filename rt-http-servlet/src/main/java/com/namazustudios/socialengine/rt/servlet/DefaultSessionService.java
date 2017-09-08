@@ -26,9 +26,9 @@ import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
  * {@link HttpSessionListener}.
  */
 @WebListener
-public class ServletSessionService implements HttpSessionService, HttpSessionListener {
+public class DefaultSessionService implements HttpSessionService, HttpSessionListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(ServletSessionService.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultSessionService.class);
 
     private final Multimap<String, HandlerClientSessionObserver> sessionDestroyedObservers = HashMultimap.create();
 
@@ -36,7 +36,7 @@ public class ServletSessionService implements HttpSessionService, HttpSessionLis
         logger.info("Creating thread: {}", r);
         final Thread thread = new Thread(r);
         thread.setDaemon(true);
-        thread.setName(ServletSessionService.class.getName() + " worker thread.");
+        thread.setName(DefaultSessionService.class.getName() + " worker thread.");
         return thread;
     });
 

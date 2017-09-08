@@ -28,15 +28,4 @@ public interface HttpRequest extends Request {
      */
     HttpManifestMetadata getManifestMetadata();
 
-//    /**
-//     * Gets the {@link HttpContent} for a {@link HttpResponse} which matches this request's content.  If
-//     * no matching {@link HttpContent} can be found for this request, then an instance of
-//     * {@link InvalidContentTypeException} must be thrown.
-//     *
-//     * @return the {@link HttpContent}
-//     *
-//     * @throws {@link BadRequestException} if there is not suitable content type available.
-//     */
-//    HttpContent getResponseContent();
-
 }

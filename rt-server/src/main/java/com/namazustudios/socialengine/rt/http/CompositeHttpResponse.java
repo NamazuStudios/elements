@@ -2,11 +2,6 @@ package com.namazustudios.socialengine.rt.http;
 
 import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.ResponseHeader;
-import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
-import com.namazustudios.socialengine.rt.manifest.http.HttpModule;
-import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
-
-import java.util.List;
 
 /**
  * Implements {@link HttpResponse} as generated from a {@link HttpRequest} and an underlying {@link Response}.  Most
@@ -26,37 +21,7 @@ public class CompositeHttpResponse implements HttpResponse {
 
     @Override
     public HttpManifestMetadata getManifestMetadata() {
-
-        final HttpManifestMetadata manifestMetadata = httpRequest.getManifestMetadata();
-
-        return new HttpManifestMetadata() {
-
-            @Override
-            public HttpManifest getManifest() {
-                return manifestMetadata.getManifest();
-            }
-
-            @Override
-            public HttpModule getModule() {
-                return manifestMetadata.getModule();
-            }
-
-            @Override
-            public boolean hasSinglePreferredOperation() {
-                return manifestMetadata.hasSinglePreferredOperation();
-            }
-
-            @Override
-            public HttpOperation getPreferredOperation() {
-                return manifestMetadata.getPreferredOperation();
-            }
-
-            @Override
-            public List<HttpOperation> getAvailableOperations() {
-                return manifestMetadata.getAvailableOperations();
-            }
-
-        };
+        return httpRequest.getManifestMetadata();
     }
 
     @Override

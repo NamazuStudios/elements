@@ -48,4 +48,22 @@ public class HttpModule {
         this.operationsByName = operationsByName;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof HttpModule)) return false;
+
+        HttpModule that = (HttpModule) o;
+
+        if (getModule() != null ? !getModule().equals(that.getModule()) : that.getModule() != null) return false;
+        return getOperationsByName() != null ? getOperationsByName().equals(that.getOperationsByName()) : that.getOperationsByName() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getModule() != null ? getModule().hashCode() : 0;
+        result = 31 * result + (getOperationsByName() != null ? getOperationsByName().hashCode() : 0);
+        return result;
+    }
+
 }

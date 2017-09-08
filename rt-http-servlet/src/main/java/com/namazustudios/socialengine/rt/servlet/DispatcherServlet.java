@@ -56,10 +56,9 @@ public class DispatcherServlet extends HttpServlet {
     @Override
     protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        try {
+        final HttpRequest httpRequest = getHttpRequestService().getRequest(req);
 
-            final HttpRequest httpRequest;
-            httpRequest = getHttpRequestService().getRequest(req);
+        try {
 
             final HttpManifestMetadata manifestMetadata;
             manifestMetadata = httpRequest.getManifestMetadata();
@@ -91,7 +90,7 @@ public class DispatcherServlet extends HttpServlet {
         } catch (Exception ex) {
             getExceptionMapperResolver()
                     .getExceptionMapper(ex)
-                    .map(ex, response -> writeRaw(req, response, resp));
+                    .map(ex, response -> assembleAndWrite(httpRequest, response, resp));
             logger.info("Mapped exception properly.", ex);
         }
 
@@ -100,11 +99,9 @@ public class DispatcherServlet extends HttpServlet {
     @Override
     protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        final HttpRequest httpRequest;
+        final HttpRequest httpRequest = getHttpRequestService().getRequest(req);
 
         try {
-
-            httpRequest = getHttpRequestService().getRequest(req);
 
             if (httpRequest.getManifestMetadata().hasSinglePreferredOperation()) {
                 performAsync(httpRequest, req, resp);
@@ -115,7 +112,7 @@ public class DispatcherServlet extends HttpServlet {
         } catch (Exception ex) {
             getExceptionMapperResolver()
                     .getExceptionMapper(ex)
-                    .map(ex, response -> writeRaw(req, response, resp));
+                    .map(ex, response -> assembleAndWrite(httpRequest, response, resp));
             logger.info("Mapped exception properly.", ex);
         }
 
@@ -124,15 +121,14 @@ public class DispatcherServlet extends HttpServlet {
     private void mapRequestAndPerformAsync(final HttpServletRequest httpServletRequest,
                                            final HttpServletResponse httpServletResponse) {
 
-        final HttpRequest httpRequest;
+        final HttpRequest httpRequest = getHttpRequestService().getRequest(httpServletRequest);;
 
         try {
-            httpRequest = getHttpRequestService().getRequest(httpServletRequest);
             performAsync(httpRequest, httpServletRequest, httpServletResponse);
         } catch (Exception ex) {
             getExceptionMapperResolver()
                     .getExceptionMapper(ex)
-                    .map(ex, response -> writeRaw(httpServletRequest, response, httpServletResponse));
+                    .map(ex, response -> assembleAndWrite(httpRequest, response, httpServletResponse));
             logger.info("Mapped exception properly.", ex);
         }
 
@@ -182,24 +178,6 @@ public class DispatcherServlet extends HttpServlet {
 
         }
 
-    }
-
-    private void writeRaw(final HttpServletRequest httpServletRequest,
-                          final Response response,
-                          final HttpServletResponse httpServletResponse) {
-        try {
-            getHttpResponseService().writeRaw(httpServletRequest, response, httpServletResponse);
-        } catch (Exception ex) {
-
-            logger.error("Caught exception writing normal response.", ex);
-
-            try {
-                httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            } catch (IOException e) {
-                logger.error("Caught exception sending error response.", ex);
-            }
-
-        }
     }
 
     public HttpRequestService getHttpRequestService() {

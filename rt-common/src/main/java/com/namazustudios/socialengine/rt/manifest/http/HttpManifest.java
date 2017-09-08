@@ -29,4 +29,19 @@ public class HttpManifest {
         this.modulesByName = modulesByName;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof HttpManifest)) return false;
+
+        HttpManifest that = (HttpManifest) o;
+
+        return getModulesByName() != null ? getModulesByName().equals(that.getModulesByName()) : that.getModulesByName() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return getModulesByName() != null ? getModulesByName().hashCode() : 0;
+    }
+
 }

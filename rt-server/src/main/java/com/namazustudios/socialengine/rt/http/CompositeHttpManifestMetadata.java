@@ -214,4 +214,16 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
 
     }
 
+    @Override
+    public HttpContent getPreferredRequestContent() {
+        // TODO Implement this
+        return null;
+    }
+
+    @Override
+    public HttpContent getPreferredResponseContent() {
+        // TODO Implement this
+        return null;
+    }
+
 }

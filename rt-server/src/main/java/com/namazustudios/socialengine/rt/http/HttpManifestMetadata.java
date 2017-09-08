@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.http;
 
+import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.rt.exception.OperationNotFoundException;
 import com.namazustudios.socialengine.rt.manifest.http.*;
 
@@ -60,5 +61,26 @@ public interface HttpManifestMetadata {
      * @return a list of available {@link HttpOperation}s, if any.  If none match, then an empty list is returned
      */
     List<HttpOperation> getAvailableOperations();
+
+    /**
+     * Gets the {@link HttpContent} which is the preferred response content for the the assocaited {@link HttpRequest}.
+     * This value is determined by content negotiation and will be used by the serializer to determine the appropriate
+     * way to serialize the response content.
+     *
+     * @return the {@link HttpContent}
+     *
+     * @throws {@link BadRequestException} if there is not suitable content type available.
+     */
+    HttpContent getPreferredRequestContent();
+
+    /**
+     * Gets the {@link HttpContent} which is the preferred response content for the the assocaited {@link HttpRequest}.
+     * This value is determined by content negotiation and will be used by the serializer to determine the appropriate
+     * way to serialize the response content.
+     *
+     * @return the {@link HttpContent}
+     *
+     */
+    HttpContent getPreferredResponseContent();
 
 }
