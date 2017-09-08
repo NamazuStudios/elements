@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.rt.http.HttpRequest;
 import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.http.HttpVerb;
+import com.namazustudios.socialengine.rt.util.LazyValue;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.function.Function;
@@ -21,6 +22,8 @@ public class ServletHttpRequest implements HttpRequest {
     private final CompositeHttpManifestMetadata compositeHttpManifestMetadata;
 
     private final Function<HttpContent, Object> payloadDeserializerFunction;
+
+    private final LazyValue<Object> payloadValue = new LazyValue<>(this::deserializePayload);
 
     public ServletHttpRequest(final HttpServletRequest httpServletRequest,
                               final HttpManifest httpManifest,
@@ -52,6 +55,10 @@ public class ServletHttpRequest implements HttpRequest {
 
     @Override
     public Object getPayload() {
+        return payloadValue.get();
+    }
+
+    private Object deserializePayload() {
         final HttpContent requestContent = getManifestMetadata().getPreferredRequestContent();
         return payloadDeserializerFunction.apply(requestContent);
     }

@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.http.HttpResponse;
 
-import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -18,7 +17,7 @@ public interface PayloadWriter {
      *
      * @param payload the the response object
      * @param stream the output stream
-     * @throws ServletException
+     *
      * @throws IOException
      */
     void write(Object payload, OutputStream stream) throws IOException;

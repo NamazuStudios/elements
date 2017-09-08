@@ -20,6 +20,6 @@ public interface PayloadReader {
      * @param stream the output stream
      * @throws IOException
      */
-    Object writeEntityBody(Class<?> payloadType, InputStream stream) throws IOException;
+    Object read(Class<?> payloadType, InputStream stream) throws IOException;
 
 }
