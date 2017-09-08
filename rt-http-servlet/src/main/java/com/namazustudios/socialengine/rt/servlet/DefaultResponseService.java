@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.servlet;
 
 import com.namazustudios.socialengine.rt.NamedHeaders;
+import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.http.HttpResponse;
 import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
 import org.slf4j.Logger;
@@ -12,11 +13,13 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 
+import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+
 public class DefaultResponseService implements HttpResponseService {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultResponseService.class);
 
-    private Map<String , EntityBodyWriter> writersByContentType;
+    private Map<String , PayloadWriter> writersByContentType;
 
     @Override
     public void write(final HttpResponse toWrite,
@@ -28,15 +31,25 @@ public class DefaultResponseService implements HttpResponseService {
         }
     }
 
-    private void doWrite(final HttpResponse toWrite, final HttpServletResponse destination) throws ServletException, IOException {
+    private void doWrite(final HttpResponse toWrite,
+                         final HttpServletResponse destination) throws ServletException, IOException {
 
         final HttpContent responseContent = toWrite.getManifestMetadata().getPreferredResponseContent();
-        final EntityBodyWriter entityBodyWriter = getWritersByContentType().get(responseContent.getType());
+        final PayloadWriter payloadWriter = getWritersByContentType().get(responseContent.getType());
 
-        if (entityBodyWriter == null) {
-            logger.info("Not write specified for content {}", responseContent);
-            return;
+        if (payloadWriter == null) {
+            logger.info("No writer specified for content {}", responseContent);
+            destination.sendError(SC_INTERNAL_SERVER_ERROR);
+        } else {
+            doWrite(toWrite, destination, responseContent, payloadWriter);
         }
+
+    }
+
+    private void doWrite(final HttpResponse toWrite,
+                         final HttpServletResponse destination,
+                         final HttpContent responseContent,
+                         final PayloadWriter payloadWriter) throws ServletException, IOException {
 
         final Object payload = toWrite.getPayload(responseContent.getPayloadType());
 
@@ -47,7 +60,7 @@ public class DefaultResponseService implements HttpResponseService {
             destination.setStatus(HttpServletResponse.SC_NO_CONTENT);
         } else {
             destination.setStatus(HttpServletResponse.SC_OK);
-            entityBodyWriter.writeEntityBody(payload, destination);
+            payloadWriter.write(payload, destination.getOutputStream());
         }
 
     }
@@ -73,19 +86,19 @@ public class DefaultResponseService implements HttpResponseService {
         logger.error("Caught exception formulating response.", ex);
 
         try {
-            destination.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            destination.sendError(SC_INTERNAL_SERVER_ERROR);
         } catch (IOException $ex) {
             logger.error("Caught exception sending response.", $ex);
         }
 
     }
 
-    public Map<String, EntityBodyWriter> getWritersByContentType() {
+    public Map<String, PayloadWriter> getWritersByContentType() {
         return writersByContentType;
     }
 
     @Inject
-    public void setWritersByContentType(Map<String, EntityBodyWriter> writersByContentType) {
+    public void setWritersByContentType(Map<String, PayloadWriter> writersByContentType) {
         this.writersByContentType = writersByContentType;
     }
 

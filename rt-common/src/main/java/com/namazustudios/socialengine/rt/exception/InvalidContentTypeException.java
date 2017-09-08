@@ -1,12 +1,13 @@
-package com.namazustudios.socialengine.rt.http;
+package com.namazustudios.socialengine.rt.exception;
 
+import com.namazustudios.socialengine.rt.Request;
+import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.ResponseCode;
-import com.namazustudios.socialengine.rt.exception.BaseException;
 import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
 
 /**
  * Specific to {@link HttpContent} processing.  When thrown, this indicates that the {@link HttpContent}
- * cannot be matched between an {@link HttpRequest} and an {@link HttpResponse}.
+ * cannot be matched between an {@link Request} and an {@link Response}.
  */
 public class InvalidContentTypeException extends BaseException {
 

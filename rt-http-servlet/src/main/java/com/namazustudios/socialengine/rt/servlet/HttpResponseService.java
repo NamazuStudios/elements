@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.OutputStream;
 
 public interface HttpResponseService {
 
@@ -56,24 +57,5 @@ public interface HttpResponseService {
      * @param destination the {@link HttpServletResponse} to receive
      */
     void write(HttpResponse toWrite, HttpServletResponse destination);
-
-    /**
-     * Handles the actual details of writing to the {@link HttpServletResponse}.  Allows for the configuration
-     * of multiple Content-Types associated with a {@link HttpResponse}.
-     */
-    @FunctionalInterface
-    interface EntityBodyWriter {
-
-        /**
-         * Writes the actual response object to the {@link HttpServletResponse}.
-         *
-         * @param payload the the response object
-         * @param destination t
-         * @throws ServletException
-         * @throws IOException
-         */
-        void writeEntityBody(Object payload, HttpServletResponse destination) throws ServletException, IOException;
-
-    }
 
 }

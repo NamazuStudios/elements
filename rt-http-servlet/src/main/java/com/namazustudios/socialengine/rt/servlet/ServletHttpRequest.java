@@ -5,10 +5,12 @@ import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.rt.http.CompositeHttpManifestMetadata;
 import com.namazustudios.socialengine.rt.http.HttpManifestMetadata;
 import com.namazustudios.socialengine.rt.http.HttpRequest;
+import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.http.HttpVerb;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.function.Function;
 
 public class ServletHttpRequest implements HttpRequest {
 
@@ -18,10 +20,15 @@ public class ServletHttpRequest implements HttpRequest {
 
     private final CompositeHttpManifestMetadata compositeHttpManifestMetadata;
 
-    public ServletHttpRequest(final HttpServletRequest httpServletRequest, final HttpManifest httpManifest) {
+    private final Function<HttpContent, Object> payloadDeserializerFunction;
+
+    public ServletHttpRequest(final HttpServletRequest httpServletRequest,
+                              final HttpManifest httpManifest,
+                              final Function<HttpContent, Object> payloadDeserializerFunction) {
         this.httpServletRequest = httpServletRequest;
         this.servletRequestHeader = new ServletRequestHeader(this, httpServletRequest);
         this.compositeHttpManifestMetadata = new CompositeHttpManifestMetadata(this, httpManifest);
+        this.payloadDeserializerFunction = payloadDeserializerFunction;
     }
 
     @Override
@@ -45,16 +52,8 @@ public class ServletHttpRequest implements HttpRequest {
 
     @Override
     public Object getPayload() {
-        // TODO Need to implement full content negotiation for response types
-        // as they are needed.  Likely need to defer to the manifest metadata
-        return null;
-    }
-
-    @Override
-    public <T> T getPayload(Class<T> cls) {
-        // TODO Need to implement full content negotiation for response types
-        // as they are needed.  Likely need to defer to the manifest metadata
-        return null;
+        final HttpContent requestContent = getManifestMetadata().getPreferredRequestContent();
+        return payloadDeserializerFunction.apply(requestContent);
     }
 
 }
