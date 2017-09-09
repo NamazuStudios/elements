@@ -1,14 +1,12 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.http.HttpRequest;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
  * Handles the actual details of writing to the {@link OutputStream}.  Allows for multiple content types
- * to be read throughthe {@link Request} and {@link HttpRequest}
+ * to be read throughthe {@link Request} and {@link Request}
  */
 @FunctionalInterface
 public interface PayloadReader {

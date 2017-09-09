@@ -1,13 +1,11 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.http.HttpResponse;
-
 import java.io.IOException;
 import java.io.OutputStream;
 
 /**
  * Handles the actual details of writing to the {@link OutputStream}.  Allows for the configuration
- * of multiple Content-Types associated with a {@link HttpResponse}.
+ * of multiple Content-Types associated with a {@link Response}.
  */
 @FunctionalInterface
 public interface PayloadWriter {

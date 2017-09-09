@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.*;
 import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.name.Names;
+import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.handler.Filter;
 
 import java.util.LinkedList;
@@ -12,9 +13,11 @@ import java.util.ListIterator;
 import java.util.Objects;
 
 /**
+ * Allows for the configuration of {@link Filter}s for servicing {@link Request} instances.
+ *
  * Created by patricktwohig on 9/2/15.
  */
-public abstract class EdgeFilterListModule extends AbstractModule {
+public abstract class FilterModule extends AbstractModule {
 
     private final LinkedList<String> filterNames = new LinkedList<>();
 
