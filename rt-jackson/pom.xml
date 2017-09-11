@@ -9,11 +9,11 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.namazustudios.socialengine.rt</groupId>
+    <groupId>com.namazustudios.socialengine</groupId>
 
     <artifactId>rt-jackson</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>rt-server-jackson</name>
+    <name>rt-jackson</name>
 
     <dependencies>
         <dependency>
@@ -31,7 +31,6 @@
             <artifactId>javax.inject</artifactId>
             <version>${javax.inject.version}</version>
         </dependency>
-
     </dependencies>
 
 </project>

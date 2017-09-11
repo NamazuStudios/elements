@@ -36,10 +36,12 @@
         <module>rt-server</module>
         <module>rt-mina</module>
         <module>rt-server-lua</module>
+        <module>rt-server-lua-guice</module>
         <module>rt-client</module>
         <module>rt-dao</module>
         <module>rt-http-servlet</module>
         <module>rt-jackson</module>
+        <module>rt-jackson-guice</module>
         <module>rt-server-guice</module>
         <module>docker</module>
         <module>code-serve</module>

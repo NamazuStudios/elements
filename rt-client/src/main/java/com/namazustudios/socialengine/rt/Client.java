@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.function.Consumer;
+
 /**
  * The main interface for the {@link Client}.
  *
@@ -19,7 +21,7 @@ public interface Client {
 
     /**
      * Sends the request to the server.  The response will be handed to the given
-     * {@link ResponseReceiver} some time later.  If the request times out, then
+     * {@link Consumer<Response>} some time later.  If the request times out, then
      * a special response will be generated client side indicating the error.
      *
      * @param request the request
@@ -27,7 +29,7 @@ public interface Client {
      *
      * @return an instance of {@link PendingRequest} which can be used to cancel the operation
      */
-    PendingRequest sendRequest(Request request, Class<?> expectedType, ResponseReceiver receiver);
+    PendingRequest sendRequest(Request request, Class<?> expectedType, Consumer<Response> receiver);
 
     /**
      * Subscribes to events at the given path and name, with the given

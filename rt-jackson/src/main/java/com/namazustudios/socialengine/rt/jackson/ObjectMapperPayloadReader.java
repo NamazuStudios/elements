@@ -7,6 +7,9 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Uses an instance of {@linl ObjectMapper} to deserialize the payload from the {@link InputStream}.
+ */
 public class ObjectMapperPayloadReader implements PayloadReader {
 
     private ObjectMapper objectMapper;

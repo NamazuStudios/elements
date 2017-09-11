@@ -10,8 +10,6 @@ import com.namazustudios.socialengine.rt.lua.converter.ModelManifestConverter;
 import com.namazustudios.socialengine.rt.lua.converter.TypedConverter;
 import com.namazustudios.socialengine.rt.lua.provider.LuaStateProvider;
 
-import static com.google.inject.multibindings.Multibinder.newSetBinder;
-
 /**
  * Created by patricktwohig on 8/18/17.
  */
@@ -20,7 +18,7 @@ public class LuaConverterModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        final Multibinder<TypedConverter> multiBinder = newSetBinder(binder(), TypedConverter.class);
+        final Multibinder<TypedConverter> multiBinder = Multibinder.newSetBinder(binder(), TypedConverter.class);
         multiBinder.addBinding().to(HttpManifestConverter.class);
         multiBinder.addBinding().to(ModelManifestConverter.class);
 

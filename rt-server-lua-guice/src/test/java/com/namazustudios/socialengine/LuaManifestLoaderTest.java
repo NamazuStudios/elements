@@ -1,10 +1,15 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.namazustudios.socialengine.rt.AssetLoader;
+import com.namazustudios.socialengine.rt.FileAssetLoader;
+import com.namazustudios.socialengine.rt.ManifestLoader;
+import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
+import org.testng.Assert;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -14,9 +19,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-
-import static com.namazustudios.socialengine.rt.lua.LuaManifestLoader.MAIN_MANIFEST;
-import static org.testng.Assert.assertNotNull;
 
 /**
  * Created by patricktwohig on 8/17/17.
@@ -30,13 +32,13 @@ public class LuaManifestLoaderTest {
     @Test
     public void testLoadModelManifest() {
         final ModelManifest modelManifest = getManifestLoader().getModelManifest();
-        assertNotNull(modelManifest);
+        Assert.assertNotNull(modelManifest);
     }
 
     @Test
     public void testLoadHttpManifest() {
         final HttpManifest httpManifest = getManifestLoader().getHttpManifest();
-        assertNotNull(httpManifest);
+        Assert.assertNotNull(httpManifest);
     }
 
     public ManifestLoader getManifestLoader() {
@@ -57,10 +59,10 @@ public class LuaManifestLoaderTest {
             workingDirectory = Files.createTempDirectory(LuaManifestLoaderTest.class.getSimpleName()).toFile();
             workingDirectory.mkdirs();
 
-            final File manifest = new File(workingDirectory, MAIN_MANIFEST);
+            final File manifest = new File(workingDirectory, LuaManifestLoader.MAIN_MANIFEST);
 
             try (final FileOutputStream fos = new FileOutputStream(manifest);
-                 final InputStream is = getClass().getResourceAsStream("/" + MAIN_MANIFEST)) {
+                 final InputStream is = getClass().getResourceAsStream("/" + LuaManifestLoader.MAIN_MANIFEST)) {
 
                 int count;
                 final byte[] buffer = new byte[1024 * 4];

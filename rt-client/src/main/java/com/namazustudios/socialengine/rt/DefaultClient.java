@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 /**
  * This is the simple client implementation.  This client actually has no knowledge of
@@ -80,7 +81,7 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
     @Override
     public PendingRequest sendRequest(final Request request,
                                       final Class<?> responseType,
-                                      final ResponseReceiver receiver) {
+                                      final Consumer<Response> responseConsumer) {
 
         if (pendingRequests.size() >= maxPendingRequests) {
             throw new TooBusyException(
@@ -95,8 +96,8 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
                 .sequence(sequence)
             .build();
 
-        final SimpleClientPendingRequest simpleClientPendingRequest =
-            new SimpleClientPendingRequest(responseType, receiver);
+        final SimpleClientPendingRequest simpleClientPendingRequest;
+        simpleClientPendingRequest = new SimpleClientPendingRequest(responseType, responseConsumer);
 
         pendingRequests.put(sequence, simpleClientPendingRequest);
         outgoingNetworkOperations.dispatch(simpleRequest);
@@ -118,7 +119,7 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
                     final SimpleResponse simpleResponse = SimpleResponse.builder()
                             .code(ResponseCode.USER_CANCELED_FATAL)
                             .build();
-                    tuple.responseReceiver.receive(simpleResponse);
+                    tuple.responseConsumer.accept(simpleResponse);
                 }
 
             }
@@ -164,7 +165,7 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
             // we just dispose of the response.
             LOG.info("Recieved reponse with no matching request {}.", response);
         } else {
-            simpleClientPendingRequest.responseReceiver.receive(response);
+            simpleClientPendingRequest.responseConsumer.accept(response);
         }
 
     }
@@ -176,14 +177,7 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
         final String name = eventHeader.getName();
         final Iterable<? extends  EventReceiver<?>> eventReceivers = eventService.getEventReceivers(path, name);
 
-        return Iterables.transform(eventReceivers, new Function<EventReceiver<?>, Class<?>>() {
-
-            @Override
-            public Class<?> apply(EventReceiver<?> input) {
-                return input.getEventType();
-            }
-
-        });
+        return Iterables.transform(eventReceivers, (Function<EventReceiver<?>, Class<?>>) input -> input.getEventType());
 
     }
 
@@ -196,19 +190,19 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
 
         private final Class<?> responseType;
 
-        private final ResponseReceiver responseReceiver;
+        private final Consumer<Response> responseConsumer;
 
         public SimpleClientPendingRequest(final Class<?> responseType,
-                                          final ResponseReceiver responseReceiver) {
+                                          final Consumer<Response> responseConsumer) {
 
             if (responseType == null) {
                 throw new IllegalArgumentException("responseType must be non-null");
-            } else if (responseReceiver == null) {
+            } else if (responseConsumer == null) {
                 throw new IllegalArgumentException("responseReceiver must be non-null");
             }
 
             this.responseType = responseType;
-            this.responseReceiver = responseReceiver;
+            this.responseConsumer = responseConsumer;
 
         }
 

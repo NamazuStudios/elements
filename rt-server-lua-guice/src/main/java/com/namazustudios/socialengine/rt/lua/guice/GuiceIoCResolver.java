@@ -4,7 +4,6 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import com.namazustudios.socialengine.rt.lua.AbstractIoCResolver;
-import com.namazustudios.socialengine.rt.lua.IocResolver;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -14,7 +13,6 @@ import javax.inject.Provider;
  */
 public class GuiceIoCResolver extends AbstractIoCResolver {
 
-    @Inject
     private Injector injector;
 
     @Override
@@ -25,18 +23,27 @@ public class GuiceIoCResolver extends AbstractIoCResolver {
     @Override
     public <T> T inject(final Class<T> tClass, final String named) {
         final Key<T> key = Key.get(tClass, Names.named(named));
-        return injector.getInstance(key);
+        return getInjector().getInstance(key);
     }
 
     @Override
     public <T> Provider<T> provider(Class<T> tClass) {
-        return injector.getProvider(tClass);
+        return getInjector().getProvider(tClass);
     }
 
     @Override
     public <T> Provider<T> provider(Class<T> tClass, String named) {
         final Key<T> key = Key.get(tClass, Names.named(named));
-        return injector.getProvider(key);
+        return getInjector().getProvider(key);
+    }
+
+    public Injector getInjector() {
+        return injector;
+    }
+
+    @Inject
+    public void setInjector(Injector injector) {
+        this.injector = injector;
     }
 
 }
