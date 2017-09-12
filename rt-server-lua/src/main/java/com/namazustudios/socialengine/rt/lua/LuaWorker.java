@@ -15,7 +15,7 @@
 ///**
 // * Created by patricktwohig on 8/27/15.
 // */
-//public class LuaWorker extends AbstractLuaResource implements Worker {
+//public class LuaWorker extends LuaResource implements Worker {
 //
 //    private final AtomicInteger retainCount = new AtomicInteger(1);
 //

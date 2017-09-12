@@ -5,16 +5,19 @@ import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Scheduler;
 
-import java.util.*;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
- * A simple class which manages the coroutines for the {@link AbstractLuaResource} instances.
+ * A simple class which manages the coroutines for the {@link LuaResource} instances.
  *
  * Created by patricktwohig on 11/2/15.
  */
 public class CoroutineManager {
 
-    private final AbstractLuaResource abstractLuaResource;
+    private final LuaResource luaResource;
 
     private final Scheduler scheduler;
 
@@ -30,7 +33,7 @@ public class CoroutineManager {
             try (final StackProtector stackProtector = new StackProtector(luaState)) {
 
                 if (!luaState.isFunction(-1)) {
-                    abstractLuaResource.dumpStack();
+                    luaResource.dumpStack();
                     throw new IllegalArgumentException("scheduler.coroutine.create() must be passed a function");
                 }
 
@@ -43,15 +46,15 @@ public class CoroutineManager {
                 luaState.pop(1);
                 timerMap.put(0.0, uuid);
 
-                abstractLuaResource.getScriptLog().info("Created coroutine {}", uuid);
+                luaResource.getScriptLog().info("Created coroutine {}", uuid);
                 return stackProtector.setAbsoluteIndex(1);
 
             }
         }
     };
 
-    public CoroutineManager(final AbstractLuaResource abstractLuaResource, final Scheduler scheduler) {
-        this.abstractLuaResource = abstractLuaResource;
+    public CoroutineManager(final LuaResource luaResource, final Scheduler scheduler) {
+        this.luaResource = luaResource;
         this.scheduler = scheduler;
     }
 
@@ -60,7 +63,7 @@ public class CoroutineManager {
         // Creates a table for scheduler.coroutine.  This houses code for
         // scheduler-managed coroutines that will automatically be activated
         // on every update.
-        final LuaState luaState = abstractLuaResource.getLuaState();
+        final LuaState luaState = luaResource.getLuaState();
 
         try (final StackProtector stackProtector = new StackProtector(luaState)) {
             luaState.getGlobal(Constants.NAMAZU_RT_TABLE);
@@ -71,6 +74,10 @@ public class CoroutineManager {
             luaState.pop(1);
         }
 
+    }
+
+    public void dispatch(final Object[] parameters, final Consumer<Object> resultObjectConsumer) {
+        // TODO Actually dispatch coroutines
     }
 
 //    public void runManagedCoroutines(double deltaTime) {
@@ -84,7 +91,7 @@ public class CoroutineManager {
 //        final SortedMap<Double, UUID> toRun = timerMap.headMap(serverTime);
 //        final List<UUID> toRunUUIDList = new ArrayList<>(toRun.values());
 //
-//        final LuaState luaState = abstractLuaResource.getLuaState();
+//        final LuaState luaState = luaResource.getLuaState();
 //        try (final StackProtector stackProtector = new StackProtector(luaState)) {
 //
 //            luaState.getField(LuaState.REGISTRYINDEX, Constants.SERVER_THREADS_TABLE);
@@ -116,7 +123,7 @@ public class CoroutineManager {
 //                luaState.pop(1);
 //
 //                if (reap) {
-//                    abstractLuaResource.getScriptLog().info("Reaping thread {}.", uuid);
+//                    luaResource.getScriptLog().info("Reaping thread {}.", uuid);
 //                    luaState.pushNil();
 //                    luaState.setField(-2, uuid.toString());
 //                }
@@ -134,7 +141,7 @@ public class CoroutineManager {
     private double runCoroutine(final double deltaTime) {
 
         double sleepTime = 0.0;
-        final LuaState luaState = abstractLuaResource.getLuaState();
+        final LuaState luaState = luaResource.getLuaState();
 
         luaState.pushNumber(deltaTime);
 
@@ -149,7 +156,7 @@ public class CoroutineManager {
             luaState.pop(returnCount);
 
         } catch (LuaRuntimeException ex) {
-            abstractLuaResource.dumpStack(ex);
+            luaResource.dumpStack(ex);
         }
 
         return sleepTime;

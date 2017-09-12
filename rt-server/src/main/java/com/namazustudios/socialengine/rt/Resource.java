@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
+
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * A {@link Resource} is a logical unit of work, which is represented by an instance of this type.  Though all
@@ -81,14 +84,15 @@ public interface Resource extends AutoCloseable {
     Path getCurrentPath();
 
     /**
+     * Returns an instance of {@link MethodDispatcher}, which is used to invoke methods against this {@link Resource}.
+     * The reurned {@link MethodDispatcher} will defer actually invoking the method until the final call in the
+     * chain {@link ResultAcceptor#withConsumer(Consumer)}.
      *
+     * @param name the name of the method
+     * @return the {@link MethodDispatcher}, never null
      *
-     * @param name
-     * @return
+     * @throws {@link MethodNotFoundException} if the method cannot be found
      */
-    default MethodDispatcher getDispatcher(String name) {
-        // TODO Implement this in subclasses.
-        return null;
-    }
+    MethodDispatcher getDispatcher(String name);
 
 }

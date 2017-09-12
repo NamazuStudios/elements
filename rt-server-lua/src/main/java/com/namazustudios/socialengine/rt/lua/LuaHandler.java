@@ -15,7 +15,7 @@
 ///**
 // * Created by patricktwohig on 8/27/15.
 // */
-//public class LuaHandler extends AbstractLuaResource implements Handler {
+//public class LuaHandler extends LuaResource implements Handler {
 //
 //    private final LuaState luaState;
 //

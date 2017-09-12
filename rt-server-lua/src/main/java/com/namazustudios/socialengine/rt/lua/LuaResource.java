@@ -4,15 +4,13 @@ import com.google.common.base.Splitter;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
-import com.namazustudios.socialengine.rt.AbstractResource;
-import com.namazustudios.socialengine.rt.Scheduler;
-import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.ResponseCode;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.io.*;
 import java.util.List;
 import java.util.Map;
@@ -26,9 +24,9 @@ import java.util.Map;
  *
  * Created by patricktwohig on 8/25/15.
  */
-public abstract class AbstractLuaResource extends AbstractResource {
+public class LuaResource extends AbstractResource {
 
-    private static final Logger logger = LoggerFactory.getLogger(AbstractLuaResource.class);
+    private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
 
     /**
      * Simplifies the file name for the sake of better error reporting.
@@ -48,6 +46,8 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
     }
 
+    private final String moduleName;
+
     private final LuaState luaState;
 
     private final IocResolver iocResolver;
@@ -66,7 +66,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
     private final JavaFunction printToScriptLog = new ScriptLogger(s -> logger.info("{}", s));
 
     /**
-     * Creates an instance of {@link AbstractLuaResource} with the given {@link LuaState}
+     * Creates an instance of {@link LuaResource} with the given {@link LuaState}
      * type.j
      *
      * If instantiation fails, it is the responsiblity of the caller to deallocate the {@link LuaState}
@@ -75,10 +75,13 @@ public abstract class AbstractLuaResource extends AbstractResource {
      *
      * @param luaState the luaState
      */
-    public AbstractLuaResource(final LuaState luaState,
-                               final IocResolver iocResolver,
-                               final Tabler tabler,
-                               final Scheduler scheduler) {
+    @Inject
+    public LuaResource(final String moduleName,
+                       final LuaState luaState,
+                       final IocResolver iocResolver,
+                       final Tabler tabler,
+                       final Scheduler scheduler) {
+        this.moduleName = moduleName;
         this.luaState = luaState;
         this.iocResolver = iocResolver;
         this.tabler = tabler;
@@ -135,11 +138,6 @@ public abstract class AbstractLuaResource extends AbstractResource {
         // be the namauz_rt table.
         luaState.newTable();
 
-        // Creates a place for server.request.  This is an empty table which is used to house
-        // request handler functions.
-        luaState.newTable();
-        luaState.setField(-2, Constants.REQUEST_TABLE);
-
         // Creates a place for the init_params.  By default this is just an empty table and
         // will be overridden by a call to this.init()
         luaState.newTable();
@@ -186,54 +184,6 @@ public abstract class AbstractLuaResource extends AbstractResource {
     }
 
     /**
-     * Pushes the request handler function for the given method name.
-     *
-     * Any other intermediate variables are popped on the stack.  The end result of this
-     * call should result in only the requets handler table being pushed.
-     *
-     * @param methodName the method name
-     *
-     * @throws {@link MethodNotFoundException} if methodName name is not found
-     *
-     */
-    protected void pushRequestHandlerFunction(final String methodName) {
-
-        try (final StackProtector stackProtector = new StackProtector(luaState, 1)) {
-
-            luaState.getGlobal(Constants.NAMAZU_RT_TABLE);
-
-            // The first two checks shouldn't fail, unless somebody has seriously
-            // hosed the lua script backing this resource.
-
-            if (!luaState.isTable(-1)) {
-                getScriptLog().error("Unable to find table {}", Constants.NAMAZU_RT_TABLE);
-                throw new MethodNotFoundException(methodName + " doest not exist for " + this);
-            }
-
-            luaState.getField(-1, Constants.REQUEST_TABLE);
-            luaState.remove(-2);  // pops namazu_rt
-
-            if (!luaState.isTable(-1)) {
-                getScriptLog().error("Unable to find table {}.{}", Constants.NAMAZU_RT_TABLE, Constants.REQUEST_TABLE);
-                throw new MethodNotFoundException(methodName + " doest not exist for " + this);
-            }
-
-            // Here's where the failures can be considered "normal" in that somebody could
-            // have just forgotten to define a handler.
-
-            luaState.getField(-1, methodName);
-            luaState.remove(-2); // pops request
-
-            if (!luaState.isFunction(-1)) {
-                getScriptLog().warn("Unable to find function {}.{}.{}", Constants.NAMAZU_RT_TABLE, Constants.REQUEST_TABLE, methodName);
-                throw new MethodNotFoundException(methodName + " doest not exist for " + this);
-            }
-
-        }
-
-    }
-
-    /**
      * Gets a special instance of {@link Logger} which the script can use for script logging.
      *
      * @return the {@link Logger} instance
@@ -250,29 +200,22 @@ public abstract class AbstractLuaResource extends AbstractResource {
     }
 
     /**
-     * Dumps the Lua stack to the log.  The provided message is prepended to the stack trace.
+     * Dumps this {@link Resource}'s {@link LuaState} to the log.
+     *
+     * {@see {@link #dumpStack(LuaState, String)}}.
+     *
      */
     public void dumpStack(final String msg) {
-
-        if (getScriptLog().isErrorEnabled()) {
-
-            final StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append(msg).append("\n");
-
-            for (int i = 1; i <= luaState.getTop(); ++i) {
-                stringBuilder.append("  Element ")
-                        .append(i).append(" ")
-                        .append(luaState.type(i)).append(" ")
-                        .append(luaState.toString(i))
-                        .append('\n');
-            }
-
-            getScriptLog().error("{}", stringBuilder);
-
-        }
-
+        dumpStack(luaState, msg);
     }
 
+    /**
+     * Dumps a specific {@link LuaState}'s stack to the log.  The provided message is logged with the stack tracce
+     * for the supplied {@link LuaState}.  Useful for debugging the stack of a specific coroutine.
+     *
+     * @param luaState the {@link LuaState} object
+     * @param msg the message to log along side the stack trace
+     */
     public void dumpStack(final LuaState luaState, final String msg) {
 
         if (getScriptLog().isErrorEnabled()) {
@@ -296,7 +239,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
 
     /**
-     * Dumps the stack from an instance of {@link LuaRuntimeException}
+     * Dumps the stack from an instance of {@link LuaRuntimeException}.
      *
      * @param lre the exception
      */
@@ -315,7 +258,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
     }
 
     /**
-     * Gets the {@link LuaState} backing this {@link AbstractLuaResource}.
+     * Gets the {@link LuaState} backing this {@link LuaResource}.
      *
      * @return the {@link LuaState} instance
      */
@@ -324,8 +267,8 @@ public abstract class AbstractLuaResource extends AbstractResource {
     }
 
     /**
-     * Invokes {@link LuaState#close()} and removes any resources from memory.  LazyValue
-     * this is called, this resource may not be reused.
+     * Invokes {@link LuaState#close()} and removes any resources from memory.  After this is called, this
+     * {@link LuaResource} may not be reused.
      *
      * @see {@link Resource#close()}
      *
@@ -353,6 +296,54 @@ public abstract class AbstractLuaResource extends AbstractResource {
             luaState.close();
         }
 
+    }
+
+    @Override
+    public MethodDispatcher getDispatcher(final String name) {
+        return params -> consumer -> coroutineManager.dispatch(params, consumer);
+    }
+
+    /**
+     * Pushes the request handler function for the given method name.
+     *
+     * Any other intermediate variables are popped on the stack.  The end result of this
+     * call should result in only the requets handler table being pushed.
+     *
+     * @param methodName the method name
+     *
+     * @throws {@link MethodNotFoundException} if methodName name is not found
+     *
+     */
+    public void pushRequestHandlerFunction(final LuaState luaState, final String methodName) {
+
+        try (final StackProtector stackProtector = new StackProtector(luaState, 1)) {
+
+            // Pushes the module table based on the module name.
+
+            luaState.getGlobal(moduleName);
+
+            if (!luaState.isTable(-1)) {
+                getScriptLog().error("Unable to find table {}", moduleName);
+                throw new MethodNotFoundException(methodName + " doest not exist for " + this);
+            }
+
+            // Pushes the method of the module name
+
+            luaState.getField(-1, methodName);
+            luaState.remove(-2); // pops module name
+
+            if (!luaState.isFunction(-1)) {
+                getScriptLog().warn("Unable to find function {}.{}", moduleName, methodName);
+                throw new MethodNotFoundException(methodName + " doest not exist for " + this);
+            }
+
+        }
+
+    }
+
+    @Override
+    public String toString() {
+        return "LuaResource{" + "moduleName='" + moduleName + '\'' + '}';
     }
 
 }

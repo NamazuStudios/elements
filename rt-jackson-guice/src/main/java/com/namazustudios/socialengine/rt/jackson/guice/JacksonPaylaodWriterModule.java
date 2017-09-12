@@ -10,4 +10,3 @@ public class JacksonPaylaodWriterModule extends AbstractModule {
     }
 
 }
-

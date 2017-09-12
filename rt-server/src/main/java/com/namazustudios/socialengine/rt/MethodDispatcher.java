@@ -4,6 +4,7 @@ package com.namazustudios.socialengine.rt;
  * Dispatches invocations of methods against {@link Resource} instances.  This accepts
  * parameters and then provides a means to handle the response to the invocation.
  */
+@FunctionalInterface
 public interface MethodDispatcher {
 
     /**
@@ -12,6 +13,6 @@ public interface MethodDispatcher {
      * @param parameters
      * @return
      */
-    ResultAcceptor<Object> dispatch(Object ... parameters);
+    ResultAcceptor<Object> dispatch(final Object ... parameters);
 
 }

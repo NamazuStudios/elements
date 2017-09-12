@@ -9,11 +9,14 @@ import java.io.InputStream;
 import java.net.URL;
 
 /**
+ * Allows the {@link LuaState} load scripts from the classpath.  The Lua server packge contains a builtin library
+ * which scripts may use to assist with interfacing with the rest of the system.
+ *
  * Created by patricktwohig on 11/3/15.
  */
 public class ClasspathModuleLoader {
 
-    private final AbstractLuaResource abstractLuaResource;
+    private final LuaResource luaResource;
 
     private final JavaFunction classpathSearcher = new JavaFunction() {
         @Override
@@ -26,7 +29,7 @@ public class ClasspathModuleLoader {
                 }
 
                 final String moduleName = luaState.checkString(-1);
-                final ClassLoader classLoader = AbstractLuaResource.class.getClassLoader();
+                final ClassLoader classLoader = LuaResource.class.getClassLoader();
                 final URL resourceURL = classLoader.getResource(moduleName + ".lua");
 
                 luaState.setTop(0);
@@ -50,8 +53,8 @@ public class ClasspathModuleLoader {
             try (final StackProtector stackProtector = new StackProtector(luaState)) {
 
                 final URL resourceURL = luaState.checkJavaObject(-1, URL.class);
-                final String simpleFileName = AbstractLuaResource.simlifyFileName(resourceURL.getFile());
-                abstractLuaResource.getScriptLog().debug("Loading module from {}", resourceURL);
+                final String simpleFileName = LuaResource.simlifyFileName(resourceURL.getFile());
+                luaResource.getScriptLog().debug("Loading module from {}", resourceURL);
 
                 try (final InputStream inputStream = resourceURL.openStream())  {
                     luaState.load(inputStream, simpleFileName, "bt");
@@ -69,12 +72,12 @@ public class ClasspathModuleLoader {
         }
     };
 
-    public ClasspathModuleLoader(AbstractLuaResource abstractLuaResource) {
-        this.abstractLuaResource = abstractLuaResource;
+    public ClasspathModuleLoader(LuaResource luaResource) {
+        this.luaResource = luaResource;
     }
 
     public void setup() {
-        final LuaState luaState = abstractLuaResource.getLuaState();
+        final LuaState luaState = luaResource.getLuaState();
         try (final StackProtector stackProtector = new StackProtector(luaState)) {
             luaState.getGlobal(Constants.PACKAGE_TABLE);
             luaState.getField(-1, Constants.PACKAGE_SEARCHERS_TABLE);

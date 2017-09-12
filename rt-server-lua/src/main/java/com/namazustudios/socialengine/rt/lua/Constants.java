@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResponseCode;
 
 /**
- * A set of constants used by the {@link AbstractLuaResource} and related classes.
+ * A set of constants used by the {@link LuaResource} and related classes.
  *
  * Created by patricktwohig on 11/2/15.
  */
@@ -56,11 +56,6 @@ public interface Constants {
      * visible to the Lua source code at all.
      */
     String SERVER_THREADS_TABLE = "NAMAZU_RT_SERVER_THREADS";
-
-    /**
-     * The table underneath the namazu_rt table which handles requests.
-     */
-    String REQUEST_TABLE = "request";
 
     /**
      * A key on the services table to expose  an instance of the Resource type to the underlying Lua script.  This

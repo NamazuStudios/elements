@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 public interface ResultAcceptor<T> {
 
     /**
-     *
+     * Calling this methoht will
      *
      * @param tConsumer
      */
