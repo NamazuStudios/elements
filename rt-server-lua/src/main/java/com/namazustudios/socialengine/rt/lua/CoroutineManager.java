@@ -76,7 +76,9 @@ public class CoroutineManager {
 
     }
 
-    public void dispatch(final Object[] parameters, final Consumer<Object> resultObjectConsumer) {
+    public void dispatch(final Object[] parameters,
+                         final Consumer<Object> resultObjectConsumer,
+                         final Consumer<Throwable> throwableConsumer) {
         // TODO Actually dispatch coroutines
     }
 

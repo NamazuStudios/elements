@@ -82,7 +82,7 @@ public class LuaResourceLoader implements ResourceLoader {
     }
 
     @Override
-    public Resource load(final String moduleName) throws ModuleNotFoundException {
+    public Resource load(final String moduleName, final Object ... args) throws ModuleNotFoundException {
         final LuaResource luaResource = luaResourceProvider.get();
 
         return null;
@@ -116,10 +116,26 @@ public class LuaResourceLoader implements ResourceLoader {
      */
     private interface Module {
 
+        /**
+         * The module name.
+         *
+         * @return the module name}
+         */
         String getModuleName();
 
+        /**
+         * Opens a new {@link InputStream} allowing for a direct read of the underlying asset.
+         *
+         * @return an {@link InputStream}
+         */
         InputStream getInputStream();
 
+        /**
+         * Checks if the associated module name exists, useful for avoiding an instance of
+         * {@link ModuleNotFoundException}
+         *
+         * @return true if the module exists, false otherwise
+         */
         boolean exists();
 
     }

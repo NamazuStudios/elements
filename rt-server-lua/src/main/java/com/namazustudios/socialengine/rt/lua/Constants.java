@@ -35,11 +35,6 @@ public interface Constants {
     String RESPONSE_CODE = "response_code";
 
     /**
-     * This is the table name under namazu_rt that defines the init parameters for the script.
-     */
-    String INIT_PARAMS = "init_params";
-
-    /**
      * Constant to designate the server.coroutine table.  This is a set of coroutinee
      * functions managed by the server that are housed internally in the script.  The
      * client code should not interfere with the running co-routines
@@ -52,8 +47,8 @@ public interface Constants {
     String COROUTINE_CREATE_FUNCTION = "create";
 
     /**
-     * A registry table for server threads.  This is stored in the lua registry and is not
-     * visible to the Lua source code at all.
+     * A registry table for server threads.  This is stored in the lua registry and is not visible to the Lua source
+     * code at all.  However, threads managed by the server will be stored here and executed on-demand.
      */
     String SERVER_THREADS_TABLE = "NAMAZU_RT_SERVER_THREADS";
 

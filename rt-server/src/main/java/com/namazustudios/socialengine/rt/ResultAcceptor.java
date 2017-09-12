@@ -10,11 +10,12 @@ import java.util.function.Consumer;
 public interface ResultAcceptor<T> {
 
     /**
-     * Calling this methoht will
+     * Calling calling this method completes the dispatch tho th underlying {@link Resource}'s method and will
+     * place the response of the method call into the provided {@link Consumer<T>}.
      *
-     * @param tConsumer
+     * @param tConsumer the consumer
      */
-    void withConsumer(Consumer<T> tConsumer);
+    void dispatch(Consumer<T> tConsumer, Consumer<Throwable> throwableTConsumer);
 
     /**
      * Returns a {@link ResultAcceptor} for the specified type.  The default implementation
@@ -25,15 +26,13 @@ public interface ResultAcceptor<T> {
      * @param <U> the desired type
      */
     default <U> ResultAcceptor<U> forResultType(final Class<U> uClass) {
-        return uConsumer -> {
-            withConsumer(t -> {
-                try {
-                    uConsumer.accept(uClass.cast(t));
-                } catch (ClassCastException ex) {
-                    throw new InvalidConversionException(ex);
-                }
-            });
-        };
+        return (uConsumer, thConsumer) -> dispatch(t -> {
+            try {
+                uConsumer.accept(uClass.cast(t));
+            } catch (ClassCastException ex) {
+                throw new InvalidConversionException(ex);
+            }
+        }, thConsumer);
     }
 
 }

@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.*;
 import java.util.List;
-import java.util.Map;
 
 /**
  * The abstract {@link Resource} type backed by a Lua script.  This uses the JNLua implentation
@@ -90,15 +89,17 @@ public class LuaResource extends AbstractResource {
     }
 
     /**
+     *
      * Loads and runs a Lua script from the given {@link InputStream} instance.  The name
      * supplied is useful for debugging and should match the name of the file from which
      * the script was loaded.
      *
      * @param inputStream the input stream
-     * @param name the name of the script (useful for debugging)
-     * @throws IOException
+     * @param name the name of the module to debug
+     *
+     * @throws IOException if the loading fails
      */
-    public void loadAndRun(final InputStream inputStream, final String name) throws IOException {
+    public void loadAndRun(final InputStream inputStream, final String name, final Object ... params) throws IOException {
         try (final StackProtector stackProtector = new StackProtector(luaState, 0)) {
 
             luaState.openLibs();
@@ -112,7 +113,11 @@ public class LuaResource extends AbstractResource {
             luaState.load(inputStream, name, "bt");
             getScriptLog().debug("Loaded lua script.", luaState);
 
-            luaState.call(0, 0);
+            for(final Object param : params) {
+                luaState.pushJavaObject(param);
+            }
+
+            luaState.call(params.length, 1);
             getScriptLog().debug("Executed lua script.", luaState);
 
         }
@@ -134,16 +139,11 @@ public class LuaResource extends AbstractResource {
 
     private void setupNamazuRTTable() {
 
-        // Creates a new table to hold the server table functions.  This will ultimately
-        // be the namauz_rt table.
+        // Creates a table for the
         luaState.newTable();
 
-        // Creates a place for the init_params.  By default this is just an empty table and
-        // will be overridden by a call to this.init()
-        luaState.newTable();
-        luaState.setField(-2, Constants.INIT_PARAMS);
-
-        // Creates a place for hte response_code constants.
+        // Creates a place for the response_code constants.  Defining each one where it can be
+        // easily accessed.
         luaState.newTable();
 
         for (final ResponseCode responseCode : ResponseCode.values()) {
@@ -153,8 +153,8 @@ public class LuaResource extends AbstractResource {
 
         luaState.setField(-2, Constants.RESPONSE_CODE);
 
-        // Sets up the services table which references this and the IOC resolver
-        // instance.
+        // Adds this resource object as well as the IoC resolver instance where the script
+        // may have access to all underlying services
 
         luaState.pushJavaObject(this);
         luaState.setField(-2, Constants.THIS_INSTANCE);
@@ -172,15 +172,6 @@ public class LuaResource extends AbstractResource {
         // to the underlying logging system
         luaState.pushJavaFunction(printToScriptLog);
         luaState.setGlobal(Constants.PRINT_FUNCTION);
-    }
-
-    @Override
-    public void init(final Map<String, Object> parameters) {
-        try (final StackProtector stackProtector = new StackProtector(luaState)) {
-            luaState.getGlobal(Constants.NAMAZU_RT_TABLE);
-            tabler.push(luaState, parameters);
-            luaState.setField(-2, Constants.INIT_PARAMS);
-        }
     }
 
     /**
@@ -299,8 +290,8 @@ public class LuaResource extends AbstractResource {
     }
 
     @Override
-    public MethodDispatcher getModuleDispatcher(final String name) {
-        return params -> consumer -> coroutineManager.dispatch(params, consumer);
+    public MethodDispatcher getMethodDispatcher(final String name) {
+        return params -> (consumer, throwableConsumer) -> coroutineManager.dispatch(params, consumer, throwableConsumer);
     }
 
     /**

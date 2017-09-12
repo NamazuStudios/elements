@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 
-import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -30,14 +29,6 @@ public interface Resource extends AutoCloseable {
      * @return the resource's ID
      */
     ResourceId getId();
-
-    /**
-     * Immediately following creation, code using this can pass these parameters to initialize the
-     * resource.  This is completely defined by the resource.
-     *
-     * @param parameters the parameters
-     */
-    void init(final Map<String, Object> parameters);
 
     /**
      * Called when he resource has been added to the {@link ResourceService}.
@@ -86,13 +77,13 @@ public interface Resource extends AutoCloseable {
     /**
      * Returns an instance of {@link MethodDispatcher}, which is used to invoke methods against this {@link Resource}.
      * The reurned {@link MethodDispatcher} will defer actually invoking the method until the final call in the
-     * chain {@link ResultAcceptor#withConsumer(Consumer)}.
+     * chain {@link ResultAcceptor#dispatch(Consumer)}.
      *
      * @param name the name of the method
      * @return the {@link MethodDispatcher}, never null
      *
      * @throws {@link MethodNotFoundException} if the method cannot be found
      */
-    MethodDispatcher getModuleDispatcher(String name);
+    MethodDispatcher getMethodDispatcher(String name);
 
 }

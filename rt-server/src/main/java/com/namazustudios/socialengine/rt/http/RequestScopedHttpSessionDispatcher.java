@@ -82,11 +82,14 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
             }
         };
 
-        getExceptionMapperResolver().protect(request, responseConsumer, () ->
-            resource.getModuleDispatcher(httpOperation.getName())
-                    .params(request.getPayload(), request, session)
-                    .forResultType(Response.class)
-                    .withConsumer(closingResponseConsumer)).perform();
+        final Consumer<Throwable> handler = ex -> getExceptionMapperResolver()
+                .getExceptionMapper(ex)
+                .map(ex, request, responseConsumer);
+
+        resource.getMethodDispatcher(httpOperation.getName())
+                .params(request.getPayload(), request, session)
+                .forResultType(Response.class)
+                .dispatch(closingResponseConsumer, handler);
 
     }
 
