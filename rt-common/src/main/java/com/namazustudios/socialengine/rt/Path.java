@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.namazustudios.socialengine.rt.Path.Util.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
@@ -52,7 +53,7 @@ public final class Path implements Comparable<Path> {
      * @param path
      */
     public Path(final String path) {
-        this(Util.componentsFromPath(path));
+        this(componentsFromPath(path));
     }
 
     /**
@@ -179,7 +180,7 @@ public final class Path implements Comparable<Path> {
      * @return the normalized path as a string
      */
     public String toNormalizedPathString(final String separator) {
-        return Util.pathFromComponents(components, separator);
+        return pathFromComponents(components, separator);
     }
 
     @Override
@@ -337,6 +338,30 @@ public final class Path implements Comparable<Path> {
      */
     public static Path fromComponents(String ... components) {
         return new Path(asList(components));
+    }
+
+    /**
+     * Converts the supplied string representation of he {@link Path} using {@link #PATH_SEPARATOR} as the
+     * separator.
+     *
+     * @param pathString the components in the {@link Path}
+     *
+     * @return the fully formed {@link Path}
+     */
+    public static Path fromPathString(final String pathString) {
+        return fromPathString(pathString, PATH_SEPARATOR);
+    }
+
+    /**
+     * Converts the supplied string representation of he {@link Path} with the supplied separator string.
+     *
+     * @param pathString the components in the {@link Path}
+     * @param pathString the separator string
+     *
+     * @return the fully formed {@link Path}
+     */
+    public static Path fromPathString(final String pathString, final String separator) {
+        return new Path(componentsFromPath(pathString, separator));
     }
 
 }

@@ -7,6 +7,7 @@ import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
+import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,11 +52,7 @@ public class LuaResource extends AbstractResource {
 
     private final IocResolver iocResolver;
 
-    private final Tabler tabler;
-
     private final CoroutineManager coroutineManager;
-
-    private final ClasspathModuleLoader classpathModuleLoader;
 
     private Logger scriptLog = logger;
 
@@ -78,14 +75,11 @@ public class LuaResource extends AbstractResource {
     public LuaResource(final String moduleName,
                        final LuaState luaState,
                        final IocResolver iocResolver,
-                       final Tabler tabler,
                        final Scheduler scheduler) {
         this.moduleName = moduleName;
         this.luaState = luaState;
         this.iocResolver = iocResolver;
-        this.tabler = tabler;
         coroutineManager = new CoroutineManager(this, scheduler);
-        classpathModuleLoader = new ClasspathModuleLoader(this);
     }
 
     /**
@@ -108,7 +102,6 @@ public class LuaResource extends AbstractResource {
 
             setupScriptGlobals();
             coroutineManager.setup();
-            classpathModuleLoader.setup();
 
             luaState.load(inputStream, name, "bt");
             getScriptLog().debug("Loaded lua script.", luaState);
@@ -328,6 +321,26 @@ public class LuaResource extends AbstractResource {
                 throw new MethodNotFoundException(methodName + " doest not exist for " + this);
             }
 
+        }
+
+    }
+
+    /**
+     * Installs the {@link Builtin} module to this {@link LuaResource} such that the underlying code may make use of it
+     * using the require function.
+     *
+     * @param builtin the {@link Builtin} to install
+     */
+    public void installBuiltin(final Builtin builtin) {
+
+        final LuaState luaState = getLuaState();
+
+        try (final StackProtector stackProtector = new StackProtector(luaState)) {
+            luaState.getGlobal(Constants.PACKAGE_TABLE);
+            luaState.getField(-1, Constants.PACKAGE_SEARCHERS_TABLE);
+            luaState.pushJavaFunction(builtin.getSearcher());
+            luaState.rawSet(-2, luaState.rawLen(-1) + 1);
+            luaState.pop(2);
         }
 
     }

@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.lua.guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-import com.namazustudios.socialengine.rt.lua.AbstractIoCResolver;
+import com.namazustudios.socialengine.rt.lua.IocResolver;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -11,7 +11,7 @@ import javax.inject.Provider;
 /**
  * Created by patricktwohig on 9/1/15.
  */
-public class GuiceIoCResolver extends AbstractIoCResolver {
+public class GuiceIoCResolver implements IocResolver {
 
     private Injector injector;
 

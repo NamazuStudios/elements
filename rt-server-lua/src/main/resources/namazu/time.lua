@@ -15,16 +15,6 @@ local CronParser = java.require "com.cronutils.parser.CronParser"
 local ExecutionTime = java.require "com.cronutils.model.time.ExecutionTime"
 local DateTime = java.require "org.joda.time.DateTime"
 
--- Returns the current server time in seconds
-function namazu_time.server_time()
-    return server:getServerTime();
-end
-
--- Returns the time since the UNIX epoch in seconds.
-function namazu_time.time_since_epoch()
-    return server:getTimeSinceEpoch();
-end
-
 -- Returns the amount of time until the next triggering of the given cron
 -- expression.  This value is expressed in seconds.
 function namazu_time.until_next(cronExpression)
