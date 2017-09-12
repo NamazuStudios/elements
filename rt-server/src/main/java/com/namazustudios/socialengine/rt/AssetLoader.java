@@ -1,8 +1,11 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.exception.AssetNotFoundException;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -35,6 +38,39 @@ public interface AssetLoader extends AutoCloseable {
      */
     @Override
     void close();
+
+    /**
+     * Checks if the asset with the supplied {@link Path} exists, using the string-representation of the path.
+     *
+     * @param pathString the {@link Path} string as passed to {@link Path#Path(String)}.
+     * @return
+     */
+    default boolean exists(final String pathString) {
+        final Path path = new Path(pathString);
+        return exists(path);
+    }
+
+    /**
+     * Checks if the asset with the supplied {@link Path} exists.  The default implementation of this paticular
+     * method attempts to open an {@link InputStream} to the {@link Path} and will return true if it is successful.
+     * If an instance of {@link AssetNotFoundException} is thrown, then this will return false.  All other exceptions
+     * will be forwarded/rethrown.
+     *
+     * The default implementation is supposed to ease implementation, but subclasses should implemet this to avoid
+     * the exception throw/catch overhead.
+     *
+     * @param path the {@link Path}
+     * @return true if the asset at the {@link Path} exists, false otherwise.
+     */
+    default boolean exists(final Path path) {
+        try (final InputStream inputStream = open(path)) {
+            return true;
+        } catch (IOException ex) {
+            throw new InternalException(ex);
+        } catch (AssetNotFoundException ex) {
+            return false;
+        }
+    }
 
     /**
      * Reads an asset as a String.  {@link #open(Path)}
@@ -112,6 +148,11 @@ public interface AssetLoader extends AutoCloseable {
                     logger.info("{} decremented reference count {}", instance, count);
                 }
 
+            }
+
+            @Override
+            public boolean exists(Path path) {
+                return instance.exists(path);
             }
 
             @Override

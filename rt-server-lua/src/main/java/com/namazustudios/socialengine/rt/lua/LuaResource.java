@@ -299,7 +299,7 @@ public class LuaResource extends AbstractResource {
     }
 
     @Override
-    public MethodDispatcher getDispatcher(final String name) {
+    public MethodDispatcher getModuleDispatcher(final String name) {
         return params -> consumer -> coroutineManager.dispatch(params, consumer);
     }
 

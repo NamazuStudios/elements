@@ -13,6 +13,6 @@ public interface MethodDispatcher {
      * @param parameters
      * @return
      */
-    ResultAcceptor<Object> dispatch(final Object ... parameters);
+    ResultAcceptor<Object> params(final Object ... parameters);
 
 }

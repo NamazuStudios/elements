@@ -93,6 +93,6 @@ public interface Resource extends AutoCloseable {
      *
      * @throws {@link MethodNotFoundException} if the method cannot be found
      */
-    MethodDispatcher getDispatcher(String name);
+    MethodDispatcher getModuleDispatcher(String name);
 
 }

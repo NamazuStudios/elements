@@ -271,6 +271,18 @@ public final class Path implements Comparable<Path> {
                 .splitToList(path);
         }
 
+        /**
+         * Gets the path components from the given path.
+         *
+         * @param path the path
+         * @return the components
+         */
+        public static List<String> componentsFromPath(final String path, final String separator) {
+            return Splitter.on(separator)
+                    .omitEmptyStrings()
+                    .trimResults()
+                    .splitToList(path);
+        }
 
         /**
          * Joins the given string components together to build a path string from
