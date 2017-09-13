@@ -46,12 +46,6 @@ public interface Constants {
     String COROUTINE_CREATE_FUNCTION = "create";
 
     /**
-     * A registry table for server threads.  This is stored in the lua registry and is not visible to the Lua source
-     * code at all.  However, threads managed by the server will be stored here and executed on-demand.
-     */
-    String SERVER_THREADS_TABLE = "NAMAZU_RT_SERVER_THREADS";
-
-    /**
      * The "package" table.  See the Lua manual for what this is used for.
      */
     String PACKAGE_TABLE = "package";

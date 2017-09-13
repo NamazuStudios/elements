@@ -4,17 +4,14 @@ import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.lua.Constants;
 
+import javax.inject.Inject;
 import java.io.InputStream;
 
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
 
 public class AssetLoaderBuiltin implements Builtin {
 
-    private final AssetLoader assetLoader;
-
-    public AssetLoaderBuiltin(AssetLoader assetLoader) {
-        this.assetLoader = assetLoader;
-    }
+    private AssetLoader assetLoader;
 
     @Override
     public Module getModuleNamed(final String moduleName) {
@@ -30,16 +27,25 @@ public class AssetLoaderBuiltin implements Builtin {
 
             @Override
             public InputStream getInputStream() {
-                return assetLoader.open(modulePath);
+                return getAssetLoader().open(modulePath);
             }
 
             @Override
             public boolean exists() {
-                return assetLoader.exists(modulePath);
+                return getAssetLoader().exists(modulePath);
             }
 
         };
 
+    }
+
+    public AssetLoader getAssetLoader() {
+        return assetLoader;
+    }
+
+    @Inject
+    public void setAssetLoader(AssetLoader assetLoader) {
+        this.assetLoader = assetLoader;
     }
 
 }

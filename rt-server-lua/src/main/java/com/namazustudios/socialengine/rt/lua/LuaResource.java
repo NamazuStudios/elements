@@ -6,7 +6,6 @@ import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.AbstractResource;
 import com.namazustudios.socialengine.rt.MethodDispatcher;
 import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.Scheduler;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
@@ -36,8 +35,6 @@ public class LuaResource extends AbstractResource {
 
     private final LuaState luaState;
 
-    private final CoroutineManager coroutineManager;
-
     private Logger scriptLog = logger;
 
     /**
@@ -56,9 +53,8 @@ public class LuaResource extends AbstractResource {
      * @param luaState the luaState
      */
     @Inject
-    public LuaResource(final LuaState luaState, final Scheduler scheduler) {
+    public LuaResource(final LuaState luaState) {
         this.luaState = luaState;
-        coroutineManager = new CoroutineManager(this, scheduler);
         installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
     }
 
@@ -81,7 +77,6 @@ public class LuaResource extends AbstractResource {
             scriptLog = LoggerFactory.getLogger(name);
 
             setupScriptGlobals();
-            coroutineManager.setup();
 
             luaState.load(inputStream, name, "bt");
             getScriptLog().debug("Loaded lua script.", luaState);
@@ -247,7 +242,7 @@ public class LuaResource extends AbstractResource {
 
     @Override
     public MethodDispatcher getMethodDispatcher(final String name) {
-        return params -> (consumer, throwableConsumer) -> coroutineManager.dispatch(params, consumer, throwableConsumer);
+        return params -> (consumer, throwableConsumer) -> {};
     }
 
     /**

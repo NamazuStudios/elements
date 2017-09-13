@@ -22,12 +22,18 @@ public class LuaResourceLoader implements ResourceLoader {
 
     private Provider<IocResolver> iocResolverProvider;
 
+    private Provider<ClasspathBuiltin> classpathBuiltinProvider;
+
+    private Provider<AssetLoaderBuiltin> assetLoaderBuiltinProvider;
+
+    private Provider<ResponseCodeBuiltin> responseCodeBuiltinProvider;
+
     @Override
     public Resource load(final String moduleName, final Object ... args) throws ModuleNotFoundException {
         final LuaResource luaResource = getLuaResourceProvider().get();
-        luaResource.installBuiltin(new ClasspathBuiltin());
-        luaResource.installBuiltin(new AssetLoaderBuiltin(getAssetLoader()));
-        luaResource.installBuiltin(new ResponseCodeBuiltin());
+        luaResource.installBuiltin(getClasspathBuiltinProvider().get());
+        luaResource.installBuiltin(getAssetLoaderBuiltinProvider().get());
+        luaResource.installBuiltin(getResponseCodeBuiltinProvider().get());
         luaResource.installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, getIocResolverProvider().get()));
         return luaResource;
     }
@@ -62,6 +68,33 @@ public class LuaResourceLoader implements ResourceLoader {
     @Inject
     public void setIocResolverProvider(Provider<IocResolver> iocResolverProvider) {
         this.iocResolverProvider = iocResolverProvider;
+    }
+
+    public Provider<AssetLoaderBuiltin> getAssetLoaderBuiltinProvider() {
+        return assetLoaderBuiltinProvider;
+    }
+
+    @Inject
+    public void setAssetLoaderBuiltinProvider(Provider<AssetLoaderBuiltin> assetLoaderBuiltinProvider) {
+        this.assetLoaderBuiltinProvider = assetLoaderBuiltinProvider;
+    }
+
+    public Provider<ResponseCodeBuiltin> getResponseCodeBuiltinProvider() {
+        return responseCodeBuiltinProvider;
+    }
+
+    @Inject
+    public void setResponseCodeBuiltinProvider(Provider<ResponseCodeBuiltin> responseCodeBuiltinProvider) {
+        this.responseCodeBuiltinProvider = responseCodeBuiltinProvider;
+    }
+
+    public Provider<ClasspathBuiltin> getClasspathBuiltinProvider() {
+        return classpathBuiltinProvider;
+    }
+
+    @Inject
+    public void setClasspathBuiltinProvider(Provider<ClasspathBuiltin> classpathBuiltinProvider) {
+        this.classpathBuiltinProvider = classpathBuiltinProvider;
     }
 
 }

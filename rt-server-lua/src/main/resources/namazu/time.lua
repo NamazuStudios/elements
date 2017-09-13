@@ -7,7 +7,7 @@
 --
 -- A set of functions useful for manipulating and processing time.
 
-local time
+local time = {}
 
 local CronParser = java.require "com.cronutils.parser.CronParser"
 local ExecutionTime = java.require "com.cronutils.model.time.ExecutionTime"

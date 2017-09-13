@@ -1,31 +1,29 @@
-package com.namazustudios.socialengine.rt.lua.builtin;
+package com.namazustudios.socialengine.rt.lua.builtin.coroutine;
 
 import com.naef.jnlua.JavaFunction;
-import com.namazustudios.socialengine.rt.ResponseCode;
 import com.namazustudios.socialengine.rt.lua.StackProtector;
+import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ResponseCodeBuiltin implements Builtin {
+public class YieldInstructionBuiltin implements Builtin {
 
-    private static final Logger logger = LoggerFactory.getLogger(ResponseCodeBuiltin.class);
+    private static final Logger logger = LoggerFactory.getLogger(YieldInstructionBuiltin.class);
 
-    public static final String RESPONSE_CODE_MODULE = "namazu.response.code";
+    public static final String MODULE_NAME = "namazu.yield.instruction";
 
     @Override
     public Module getModuleNamed(final String moduleName) {
         return new Module() {
-
             @Override
             public String getChunkName() {
-                return RESPONSE_CODE_MODULE;
+                return MODULE_NAME;
             }
 
             @Override
             public boolean exists() {
-                return RESPONSE_CODE_MODULE.equals(moduleName);
+                return MODULE_NAME.equals(moduleName);
             }
-
         };
     }
 
@@ -40,9 +38,9 @@ public class ResponseCodeBuiltin implements Builtin {
                 luaState.setTop(0);
                 luaState.newTable();
 
-                for (final ResponseCode responseCode : ResponseCode.values()) {
-                    luaState.pushInteger(responseCode.getCode());
-                    luaState.setField(-2, responseCode.toString());
+                for (final YieldInstruction yieldInstruction : YieldInstruction.values()) {
+                    luaState.pushJavaObject(yieldInstruction);
+                    luaState.setField(-2, yieldInstruction.toString());
                 }
 
                 return stackProtector.setAbsoluteIndex(1);
