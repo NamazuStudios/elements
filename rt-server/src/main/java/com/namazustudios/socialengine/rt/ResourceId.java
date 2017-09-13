@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 /**
@@ -9,15 +10,23 @@ import java.util.UUID;
  *
  * Created by patricktwohig on 4/11/17.
  */
-public class ResourceId {
+public class ResourceId implements Serializable {
 
     private final UUID uuid;
 
+    /**
+     * Creates a new unique {@link ResourceId}.
+     */
     public ResourceId() {
         uuid = UUID.randomUUID();
     }
 
-    private String asString() {
+    /**
+     * Returns the string representation of this {@link ResourceId}
+     *
+     * @return the string representation
+     */
+    public String asString() {
         return uuid.toString();
     }
 
@@ -38,9 +47,7 @@ public class ResourceId {
 
     @Override
     public String toString() {
-        return "ResourceId{" +
-                "uuid=" + uuid +
-                '}';
+        return uuid.toString();
     }
-}
 
+}

@@ -22,6 +22,7 @@ import java.util.stream.Stream;
  *
  * Created by patricktwohig on 7/24/15.
  */
+@Proxyable
 public interface ResourceService {
 
     /**

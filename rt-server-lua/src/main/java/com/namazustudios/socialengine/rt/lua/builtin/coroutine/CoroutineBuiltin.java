@@ -2,8 +2,8 @@ package com.namazustudios.socialengine.rt.lua.builtin.coroutine;
 
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaState;
-import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.Scheduler;
+import com.namazustudios.socialengine.rt.TaskId;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
 import com.namazustudios.socialengine.rt.lua.StackProtector;
@@ -11,7 +11,6 @@ import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 
 import java.util.function.Consumer;
 
-import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class CoroutineBuiltin implements Builtin {
@@ -38,10 +37,10 @@ public class CoroutineBuiltin implements Builtin {
                 throw new IllegalArgumentException("namazu.coroutine.start must be supplied a coroutine");
             }
 
-            final String uuid = randomUUID().toString();
+            final TaskId taskId = new TaskId();
             luaState.getField(LuaState.REGISTRYINDEX, COROUTINES_TABLE);
             luaState.pushValue(0);
-            luaState.setField(-2, uuid);
+            luaState.setField(-2, taskId.asString());
             luaState.pop(0);
 
             final int returned = luaState.resume(0, luaState.getTop() - 1);
@@ -53,16 +52,16 @@ public class CoroutineBuiltin implements Builtin {
 
             switch (instruction) {
                 case FOR:
-                    scheduleFor(uuid, luaState);
+                    scheduleFor(taskId, luaState);
                     break;
                 case UNTIL:
-                    scheduleUntil(uuid, luaState);
+                    scheduleUntil(taskId, luaState);
                     break;
                 case IMMEDIATE:
-                    scheduleImmediate(uuid);
+                    scheduleImmediate(taskId);
                     break;
                 case UNTIL_NEXT_CRON:
-                    scheduleUntilNextCron(uuid, luaState);
+                    scheduleUntilNextCron(taskId, luaState);
                     break;
                 default:
                     throw new InternalException("unknown enum value " + instruction);
@@ -85,39 +84,35 @@ public class CoroutineBuiltin implements Builtin {
         }
     };
 
-    private void scheduleImmediate(final String uuid) {
-        getScheduler().performV(getLuaResource().getId(), r -> resume(uuid, r));
+    private void scheduleImmediate(final TaskId taskId) {
+        getScheduler().resumeTask(getLuaResource().getId(), taskId);
     }
 
-    private void scheduleUntil(final String uuid, final LuaState luaState) {
+    private void scheduleUntil(final TaskId taskId, final LuaState luaState) {
         final long delay = delayUntilMilliseconds(luaState);
-        getScheduler().performAfterDelayV(getLuaResource().getId(), delay, MILLISECONDS, r -> resume(uuid, r));
+        getScheduler().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
     }
 
     private long delayUntilMilliseconds(final LuaState luaState) {
         return 0;
     }
 
-    private void scheduleFor(final String uuid, final LuaState luaState) {
+    private void scheduleFor(final TaskId taskId, final LuaState luaState) {
         final long delay = delayForMilliseconds(luaState);
-        getScheduler().performAfterDelayV(getLuaResource().getId(), delay, MILLISECONDS, r -> resume(uuid, r));
+        getScheduler().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
     }
 
     private long delayForMilliseconds(final LuaState luaState) {
         return 0;
     }
 
-    private void scheduleUntilNextCron(final String uuid, final LuaState luaState) {
+    private void scheduleUntilNextCron(final TaskId taskId, final LuaState luaState) {
         final long delay = delayUntilNextCronMilliseconds(luaState);
-        getScheduler().performAfterDelayV(getLuaResource().getId(), delay, MILLISECONDS, r -> resume(uuid, r));
+        getScheduler().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
     }
 
     private long delayUntilNextCronMilliseconds(final LuaState luaState) {
         return 0;
-    }
-
-    private void resume(final String uuid, final Resource resource) {
-
     }
 
     @Override

@@ -5,19 +5,17 @@ import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 import java.util.function.Consumer;
 
 /**
- * A {@link Resource} is a logical unit of work, which is represented by an instance of this type.  Though all
- * {@link Resource} isntances are designed to hold a particular it of logic, and many have functional similarities,
- * they differ in usage wildy.  The purpose of the {@link Resource} interface is to pool together the similarties
- * therein.
+ * A {@link Resource} is a logical unit of work, which is represented by an instance of this type.  It essentially
+ * contains a set of handler methods, which can be invoked using the {@link #getMethodDispatcher(String)} method as well
+ * as keep running tasks, as represented by {@link TaskId}.
  *
- * A Resource is essentially a type that is capable primarily of both receiving {@link Request} instances
- * to produce {@link Response} instances.
- *
- * LazyValue a resource is no longer needed, it is necessary to destroy the resource using the {@link AutoCloseable#close()}
- * method.
+ * This interface is meant to be implemented directly or, for clustered configurations, a proxy to a remote
+ * {@link Resource}.  Therefore, it is necessary to restrict the methods and return values on this interface to objects
+ * and types which can be serialized (ie plain-old-data), or can be used as proxies themselves.
  *
  * Created by patricktwohig on 8/8/15.
  */
+@Proxyable
 public interface Resource extends AutoCloseable {
 
     /**
@@ -31,53 +29,9 @@ public interface Resource extends AutoCloseable {
     ResourceId getId();
 
     /**
-     * Called when he resource has been added to the {@link ResourceService}.
-     *
-     * This method must be thread safe.
-     *
-     * @param path the path
-     */
-    void onAdd(Path path);
-
-    /**
-     * Called when the resource has been moved to a new path.  In the event
-     * of an exception the {@link ResourceService} guarantees that the state
-     * of the program remains consistent.
-     *
-     * This method must be thread safe.
-     *
-     * @param oldPath the old path
-     * @param newPath the new path
-     *
-     */
-    void onMove(Path oldPath, Path newPath);
-
-    /**
-     * Called when the resource has been removed by the {@link ResourceService}.
-     *
-     * This method must be thread safe.
-     *
-     * @param path the path
-     */
-    void onRemove(Path path);
-
-    /**
-     * Closes and destroys this Resource.  A resource, once destroyed, cannot
-     * be used again.
-     */
-    void close();
-
-    /**
-     * Returns this resource's current path.
-     *
-     * @return the current path.
-     */
-    Path getCurrentPath();
-
-    /**
      * Returns an instance of {@link MethodDispatcher}, which is used to invoke methods against this {@link Resource}.
      * The reurned {@link MethodDispatcher} will defer actually invoking the method until the final call in the
-     * chain {@link ResultAcceptor#dispatch(Consumer)}.
+     * chain {@link ResultAcceptor#dispatch(Consumer, Consumer)}.
      *
      * @param name the name of the method
      * @return the {@link MethodDispatcher}, never null
@@ -85,5 +39,19 @@ public interface Resource extends AutoCloseable {
      * @throws {@link MethodNotFoundException} if the method cannot be found
      */
     MethodDispatcher getMethodDispatcher(String name);
+
+    /**
+     * Resumes a suspended task, accepting the task id.  The task will be resumed as soon as possible.  This method
+     * must succeed at the scheduling process, or else throw an exception.  Note that this does not guarantee successful
+     * execution of the task, but rather successful scheduling.
+     *
+     * @param taskId the {@link TaskId} if the running task
+     */
+    void resume(final TaskId taskId);
+
+    /**
+     * Closes and destroys this Resource.  A resource, once destroyed, cannot be used again.
+     */
+    void close();
 
 }

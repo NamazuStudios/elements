@@ -14,6 +14,7 @@ import java.util.function.Function;
  *
  * Created by patricktwohig on 8/22/15.
  */
+@Proxyable
 public interface Scheduler {
     
     /**
@@ -22,7 +23,7 @@ public interface Scheduler {
      * @param resourceId the id of the resource
      * @param operation the operation to perform
      *
-     * @param <T>
+     * @return {@link Future<T>} which can be used to monitor the status of the request
      */
     <T> Future<T> perform(ResourceId resourceId, Function<Resource, T> operation);
 
@@ -32,7 +33,9 @@ public interface Scheduler {
      * @param resourceId the id of the resource
      * @param operation the operation to perform
      *
-     */
+     * @return {@link Future<Void>} which can be used to monitor the status of the request
+     *
+     * */
     default Future<Void> performV(final ResourceId resourceId, final Consumer<Resource> operation) {
         return perform(resourceId, resource -> {
             operation.accept(resource);
@@ -46,6 +49,8 @@ public interface Scheduler {
      * @param path the path of the resource
      * @param operation the operation to perform
      *
+     * @return {@link Future<T>} which can be used to monitor the status of the request
+     *
      * @param <T>
      */
     <T> Future<T> perform(Path path, Function<Resource, T> operation);
@@ -56,6 +61,7 @@ public interface Scheduler {
      * @param path the path of the resource
      * @param operation the operation to perform
      *
+     * @return {@link Future<Void>} which can be used to monitor the status of the request
      */
     default Future<Void> performV(final Path path, final Consumer<Resource> operation) {
         return perform(path, resource -> {
@@ -75,26 +81,60 @@ public interface Scheduler {
      *
      * @param <T>
      *
-     * @return
+     * @return {@link Future<T>} which can be used to monitor the status of the request
      */
     <T> Future<T> performAfterDelay(ResourceId resourceId, long time, TimeUnit timeUnit, Function<Resource, T> operation);
 
     /**
      * Invoke {@link #performAfterDelay(ResourceId, long, TimeUnit, Function)} with a {@link Consumer<Resource>}
-     * instead of a {@link Function<Resource, T>}.
+     * instead of a {@link Function<Resource, ?>}.
      *
      * @param resourceId the id of the resource
      * @param time the time value to delay
      * @param timeUnit the units of the time value
      * @param operation the operation to perform
      *
-     * @return
+     * @return {@link Future<Void>} which can be used to monitor the status of the request
      */
-    default Future<Void> performAfterDelayV(ResourceId resourceId, long time, TimeUnit timeUnit, Consumer<Resource> operation) {
+    default Future<Void> performAfterDelayV(final ResourceId resourceId,
+                                            final long time,
+                                            final TimeUnit timeUnit,
+                                            final Consumer<Resource> operation) {
         return performAfterDelay(resourceId, time, timeUnit, resource -> {
             operation.accept(resource);
             return null;
         });
+    }
+
+    /**
+     * Resumes the task associated with the supplied {@link TaskId}.  This allows for the specification of a delay
+     * after a specified period of time.
+     *
+     * @param resourceId the {@link ResourceId}
+     * @param taskId the {@link TaskId} of the task
+     *
+     * @return {@link Future<Void>} which can be used to monitor the status of the request
+     */
+    default Future<Void> resumeTask(final ResourceId resourceId, final TaskId taskId) {
+        return performV(resourceId, r -> r.resume(taskId));
+    }
+
+    /**
+     * Resumes the task associated with the supplied {@link TaskId}.  This allows for the specification of a delay
+     * after a specified period of time.
+     *
+     * @param resourceId the {@link ResourceId}
+     * @param time the time delay
+     * @param timeUnit the {@link TimeUnit} instance designating the time units of measure
+     * @param taskId the {@link TaskId} of the task
+     *
+     * @return {@link Future<Void>} which can be used to monitor the status of the request
+     */
+    default Future<Void> resumeTaskAfterDelay(final ResourceId resourceId,
+                                              final long time,
+                                              final TimeUnit timeUnit,
+                                              final TaskId taskId) {
+        return performAfterDelayV(resourceId, time, timeUnit, r -> r.resume(taskId));
     }
 
     /**

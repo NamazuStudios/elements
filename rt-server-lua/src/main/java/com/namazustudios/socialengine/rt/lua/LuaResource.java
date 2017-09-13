@@ -3,10 +3,7 @@ package com.namazustudios.socialengine.rt.lua;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
-import com.namazustudios.socialengine.rt.AbstractResource;
-import com.namazustudios.socialengine.rt.MethodDispatcher;
-import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.Scheduler;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
@@ -29,11 +26,13 @@ import java.io.StringWriter;
  *
  * Created by patricktwohig on 8/25/15.
  */
-public class LuaResource extends AbstractResource {
+public class LuaResource implements Resource {
 
     public static final String RESOURCE_BUILTIN = "namazu.resource.this";
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
+
+    private final ResourceId resourceId = new ResourceId();
 
     private final LuaState luaState;
 
@@ -64,6 +63,11 @@ public class LuaResource extends AbstractResource {
         installBuiltin(coroutineBuiltin);
     }
 
+    @Override
+    public ResourceId getId() {
+        return resourceId;
+    }
+
     /**
      *
      * Loads and runs a Lua script from the given {@link InputStream} instance.  The name
@@ -79,7 +83,6 @@ public class LuaResource extends AbstractResource {
         try (final StackProtector stackProtector = new StackProtector(luaState, 0)) {
 
             luaState.openLibs();
-
             scriptLog = LoggerFactory.getLogger(name);
 
             setupScriptGlobals();
@@ -228,6 +231,11 @@ public class LuaResource extends AbstractResource {
     @Override
     public MethodDispatcher getMethodDispatcher(final String name) {
         return params -> (consumer, throwableConsumer) -> coroutineBuiltin.startCoroutine(params, consumer, throwableConsumer);
+    }
+
+    @Override
+    public void resume(TaskId taskId) {
+        // TODO Implement this.
     }
 
     /**

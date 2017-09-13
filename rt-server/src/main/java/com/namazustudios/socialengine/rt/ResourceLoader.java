@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
  * work in conjunction with a {@link AssetLoader} to load the raw bytes from storage and then into
  * memory.
  */
+@Proxyable
 public interface ResourceLoader extends AutoCloseable {
 
     /**

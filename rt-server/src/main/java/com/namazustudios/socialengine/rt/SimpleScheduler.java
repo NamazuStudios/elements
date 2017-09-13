@@ -5,10 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Function;
 
@@ -44,44 +41,50 @@ public class SimpleScheduler implements Scheduler {
 
     @Override
     public <T> Future<T> perform(final ResourceId resourceId, final Function<Resource, T> operation) {
-        return getScheduledExecutorService().submit(() -> {
-
-            final Resource resource = getResourceService().getResourceWithId(resourceId);
-            final Lock lock = getLockService().getLock(resource.getId());
-
-            try {
-                logger.trace("Locking resource {}", resource.getId());
-                lock.lock();
-                logger.trace("Applying operation for resource {}", resource.getId());
-                return operation.apply(resource);
-            } finally {
-                logger.trace("Unlocking resource {}", resource.getId());
-                lock.unlock();
-                logger.trace("Unlocked resource {}", resource.getId());
-            }
-
-        });
+        return getScheduledExecutorService().submit(protectedCallable(resourceId, operation));
     }
 
     @Override
     public <T> Future<T> perform(final Path path, final Function<Resource, T> operation) {
-        return getScheduledExecutorService().submit(() -> {
+        return getScheduledExecutorService().submit(protectedCallable(path, operation));
+    }
 
+    @Override
+    public <T> Future<T> performAfterDelay(final ResourceId resourceId,
+                                           final long time, final TimeUnit timeUnit,
+                                           final Function<Resource, T> operation) {
+        return getScheduledExecutorService().schedule(protectedCallable(resourceId, operation), time, timeUnit);
+    }
+
+    private <T> Callable<T> protectedCallable(final ResourceId resourceId, final Function<Resource, T> operation) {
+        return () -> {
+            final Resource resource = getResourceService().getResourceWithId(resourceId);
+            return performProtected(resource, operation);
+        };
+    }
+
+    private <T> Callable<T> protectedCallable(final Path path, final Function<Resource, T> operation) {
+        return () -> {
             final Resource resource = getResourceService().getResourceAtPath(path);
-            final Lock lock = getLockService().getLock(resource.getId());
+            return performProtected(resource, operation);
+        };
+    }
 
-            try {
-                logger.trace("Locking resource ({}): {}", path, resource.getId());
-                lock.lock();
-                logger.trace("Applying operation for resource ({}): {}", path, resource.getId());
-                return operation.apply(resource);
-            } finally {
-                logger.trace("Unlocking resource ({}): {}", path, resource.getId());
-                lock.unlock();
-                logger.trace("Unlocked resource ({}): {}", path, resource.getId());
-            }
+    private <T> T performProtected(final Resource resource, final Function<Resource, T> operation) {
 
-        });
+        final Lock lock = getLockService().getLock(resource.getId());
+
+        try {
+            logger.trace("Locking resource {}", resource.getId());
+            lock.lock();
+            logger.trace("Applying operation for resource {}", resource.getId());
+            return operation.apply(resource);
+        } finally {
+            logger.trace("Unlocking resource {}", resource.getId());
+            lock.unlock();
+            logger.trace("Unlocked resource {}", resource.getId());
+        }
+
     }
 
     public ScheduledExecutorService getScheduledExecutorService() {
