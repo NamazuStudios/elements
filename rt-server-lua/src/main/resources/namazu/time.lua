@@ -7,9 +7,7 @@
 --
 -- A set of functions useful for manipulating and processing time.
 
-local namazu_time
-
-local server = namazu_rt.ioc:inject("com.namazustudios.socialengine.rt.Scheduler")
+local time
 
 local CronParser = java.require "com.cronutils.parser.CronParser"
 local ExecutionTime = java.require "com.cronutils.model.time.ExecutionTime"
@@ -17,7 +15,7 @@ local DateTime = java.require "org.joda.time.DateTime"
 
 -- Returns the amount of time until the next triggering of the given cron
 -- expression.  This value is expressed in seconds.
-function namazu_time.until_next(cronExpression)
+function time.until_next(cronExpression)
     parser = CronParser:new()
     cron = parser:parse(cronExpression)
     executionTime = ExecutionTime:forCron(cron)
@@ -25,4 +23,4 @@ function namazu_time.until_next(cronExpression)
     return getMillis:getMillis() / 1000;
 end
 
-return namazu_time;
+return time

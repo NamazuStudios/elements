@@ -2,11 +2,11 @@ package com.namazustudios.socialengine.rt.lua.builtin;
 
 import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.lua.Constants;
 
 import java.io.InputStream;
-import java.util.List;
 
-import static com.namazustudios.socialengine.rt.Path.Util.componentsFromPath;
+import static com.namazustudios.socialengine.rt.Path.fromPathString;
 
 public class AssetLoaderBuiltin implements Builtin {
 
@@ -19,13 +19,12 @@ public class AssetLoaderBuiltin implements Builtin {
     @Override
     public Module getModuleNamed(final String moduleName) {
 
-        final List<String> components = componentsFromPath(moduleName, ".");
-        final Path modulePath = new Path(components);
+        final Path modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
 
         return new Builtin.Module() {
 
             @Override
-            public String getModuleName() {
+            public String getChunkName() {
                 return moduleName;
             }
 

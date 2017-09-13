@@ -56,9 +56,6 @@ public interface AssetLoader extends AutoCloseable {
      * If an instance of {@link AssetNotFoundException} is thrown, then this will return false.  All other exceptions
      * will be forwarded/rethrown.
      *
-     * The default implementation is supposed to ease implementation, but subclasses should implemet this to avoid
-     * the exception throw/catch overhead.
-     *
      * @param path the {@link Path}
      * @return true if the asset at the {@link Path} exists, false otherwise.
      */

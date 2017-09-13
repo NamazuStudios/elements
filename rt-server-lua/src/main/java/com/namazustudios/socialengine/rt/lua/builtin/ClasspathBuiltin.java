@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.lua.builtin;
 
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.lua.Constants;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
 
 import java.io.IOException;
@@ -18,19 +19,27 @@ import static com.namazustudios.socialengine.rt.Path.fromPathString;
  */
 public class ClasspathBuiltin implements Builtin {
 
-    public static final String LUA_FILE_EXT = ".lua";
+    private final ClassLoader classLoader;
+
+    public ClasspathBuiltin() {
+        this(LuaResource.class.getClassLoader());
+    }
+
+    public ClasspathBuiltin(ClassLoader classLoader) {
+        this.classLoader = classLoader;
+    }
 
     @Override
     public Module getModuleNamed(final String moduleName) {
 
-        final Path path = fromPathString(moduleName, ".");
-        final ClassLoader classLoader = LuaResource.class.getClassLoader();
-        final URL resource = classLoader.getResource(path.toNormalizedPathString() + LUA_FILE_EXT);
+        final Path modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
+        final URL resource = classLoader.getResource(modulePath.toNormalizedPathString());
 
         return new Module() {
+
             @Override
-            public String getModuleName() {
-                return moduleName;
+            public String getChunkName() {
+                return resource == null ? moduleName : resource.toExternalForm();
             }
 
             @Override

@@ -11,13 +11,13 @@
 
 local Path = java.require("com.namazustudios.socialengine.rt.Path")
 
-local namazu_util = {}
+local util = {}
 
 -- Returns a Path object.  This can accept a single string, which will be parsed out accordingly.  Alternatively,
 -- this accepts variadic arguments which will specify the individual components of the Path.  See the constructor
 -- for Path for more information.
 
-function namazu_util.path(...)
+function util.path(...)
     if (#arg == 1) then
         return Path:new(table[1])
     else
@@ -25,4 +25,4 @@ function namazu_util.path(...)
     end
 end
 
-return namazu_util
+return util

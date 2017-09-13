@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.lua;
 
-import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResponseCode;
 
 /**
@@ -53,13 +52,6 @@ public interface Constants {
     String SERVER_THREADS_TABLE = "NAMAZU_RT_SERVER_THREADS";
 
     /**
-     * A key on the services table to expose  an instance of the Resource type to the underlying Lua script.  This
-     * allows the underlying script to perform functions such as getting the current path, or posting
-     * events to subscribers.
-     */
-    String THIS_INSTANCE = "resource";
-
-    /**
      * The "package" table.  See the Lua manual for what this is used for.
      */
     String PACKAGE_TABLE = "package";
@@ -70,9 +62,8 @@ public interface Constants {
     String PACKAGE_SEARCHERS_TABLE = "searchers";
 
     /**
-     * Exposes the instance of {@link IocResolver} which the underlying script can use to resolve dependencies
-     * such as other instances of {@link Resource}.
+     * The lua source file extension "lua"
      */
-    String IOC_INSTANCE = "ioc";
+    String LUA_FILE_EXT = "lua";
 
 }

@@ -7,6 +7,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -27,6 +28,11 @@ public final class Path implements Comparable<Path> {
      * The path separator.  Literal value "/"
      */
     public static final String PATH_SEPARATOR = "/";
+
+    /**
+     * The extension separator.
+     */
+    public static final String EXTENSION_SEPARATOR = ".";
 
     /**
      * The wildcard character.  Literal value "*"
@@ -99,6 +105,41 @@ public final class Path implements Comparable<Path> {
      */
     public Path append(final Path otherPath) {
         return new Path(this, otherPath);
+    }
+
+    /**
+     * Appends an extension using the {@link #EXTENSION_SEPARATOR}.
+     *
+     * {@see {@link #appendExtension(String, String)}}
+     *
+     * @param extension the extension
+     *
+     * @return a new {@link Path}, applying the supplied extension
+     */
+    public Path appendExtension(final String extension) {
+        return appendExtension(extension, EXTENSION_SEPARATOR);
+    }
+
+    /**
+     * Appends an extension to this {@link Path}, using the supplied separator.  The final resulting {@link Path} is
+     * the result of appending the separator and the extension to the last component of the string.
+     *
+     * @param extension the extension
+     * @param separator the separator
+     *
+     * @return a new {@link Path}, applying the supplied extension
+     */
+    public Path appendExtension(final String extension, final String separator) {
+
+        final List<String> components = new ArrayList<>(this.components);
+
+        if (!components.isEmpty()) {
+            final String last = components.remove(components.size() - 1);
+            components.add(last + separator + extension);
+        }
+
+        return new Path(components);
+
     }
 
     /**

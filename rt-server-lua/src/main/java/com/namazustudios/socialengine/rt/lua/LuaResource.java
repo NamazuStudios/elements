@@ -1,19 +1,23 @@
 package com.namazustudios.socialengine.rt.lua;
 
-import com.google.common.base.Splitter;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.AbstractResource;
+import com.namazustudios.socialengine.rt.MethodDispatcher;
+import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.Scheduler;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
+import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.io.*;
-import java.util.List;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 /**
  * The abstract {@link Resource} type backed by a Lua script.  This uses the JNLua implentation
@@ -26,31 +30,11 @@ import java.util.List;
  */
 public class LuaResource extends AbstractResource {
 
+    public static final String RESOURCE_BUILTIN = "namazu.resource.this";
+
     private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
 
-    /**
-     * Simplifies the file name for the sake of better error reporting.
-     *
-     * @param fileName the fileName
-     * @return the simplified file name.
-     */
-    public static String simlifyFileName(final String fileName) {
-
-        final List<String> pathComponents = Splitter.on(File.separator)
-                                                    .trimResults()
-                                                    .omitEmptyStrings()
-                                                    .splitToList(fileName);
-
-        final int listSize = pathComponents.size();
-        return listSize == 0 ? fileName : pathComponents.get(listSize - 1);
-
-    }
-
-    private final String moduleName;
-
     private final LuaState luaState;
-
-    private final IocResolver iocResolver;
 
     private final CoroutineManager coroutineManager;
 
@@ -72,14 +56,10 @@ public class LuaResource extends AbstractResource {
      * @param luaState the luaState
      */
     @Inject
-    public LuaResource(final String moduleName,
-                       final LuaState luaState,
-                       final IocResolver iocResolver,
-                       final Scheduler scheduler) {
-        this.moduleName = moduleName;
+    public LuaResource(final LuaState luaState, final Scheduler scheduler) {
         this.luaState = luaState;
-        this.iocResolver = iocResolver;
         coroutineManager = new CoroutineManager(this, scheduler);
+        installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
     }
 
     /**
@@ -135,25 +115,8 @@ public class LuaResource extends AbstractResource {
         // Creates a table for the
         luaState.newTable();
 
-        // Creates a place for the response_code constants.  Defining each one where it can be
-        // easily accessed.
-        luaState.newTable();
-
-        for (final ResponseCode responseCode : ResponseCode.values()) {
-            luaState.pushInteger(responseCode.getCode());
-            luaState.setField(-2, responseCode.toString());
-        }
-
-        luaState.setField(-2, Constants.RESPONSE_CODE);
-
         // Adds this resource object as well as the IoC resolver instance where the script
         // may have access to all underlying services
-
-        luaState.pushJavaObject(this);
-        luaState.setField(-2, Constants.THIS_INSTANCE);
-
-        luaState.pushJavaObject(iocResolver);
-        luaState.setField(-2, Constants.IOC_INSTANCE);
 
         // Finally sets the server table to be in the global space
         luaState.setGlobal(Constants.NAMAZU_RT_TABLE);
@@ -288,44 +251,6 @@ public class LuaResource extends AbstractResource {
     }
 
     /**
-     * Pushes the request handler function for the given method name.
-     *
-     * Any other intermediate variables are popped on the stack.  The end result of this
-     * call should result in only the requets handler table being pushed.
-     *
-     * @param methodName the method name
-     *
-     * @throws {@link MethodNotFoundException} if methodName name is not found
-     *
-     */
-    public void pushRequestHandlerFunction(final LuaState luaState, final String methodName) {
-
-        try (final StackProtector stackProtector = new StackProtector(luaState, 1)) {
-
-            // Pushes the module table based on the module name.
-
-            luaState.getGlobal(moduleName);
-
-            if (!luaState.isTable(-1)) {
-                getScriptLog().error("Unable to find table {}", moduleName);
-                throw new MethodNotFoundException(methodName + " doest not exist for " + this);
-            }
-
-            // Pushes the method of the module name
-
-            luaState.getField(-1, methodName);
-            luaState.remove(-2); // pops module name
-
-            if (!luaState.isFunction(-1)) {
-                getScriptLog().warn("Unable to find function {}.{}", moduleName, methodName);
-                throw new MethodNotFoundException(methodName + " doest not exist for " + this);
-            }
-
-        }
-
-    }
-
-    /**
      * Installs the {@link Builtin} module to this {@link LuaResource} such that the underlying code may make use of it
      * using the require function.
      *
@@ -343,11 +268,6 @@ public class LuaResource extends AbstractResource {
             luaState.pop(2);
         }
 
-    }
-
-    @Override
-    public String toString() {
-        return "LuaResource{" + "moduleName='" + moduleName + '\'' + '}';
     }
 
 }
