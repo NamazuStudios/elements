@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -58,6 +59,39 @@ public interface Scheduler {
      */
     default Future<Void> performV(final Path path, final Consumer<Resource> operation) {
         return perform(path, resource -> {
+            operation.accept(resource);
+            return null;
+        });
+    }
+
+    /**
+     * Performs the supplied {@link Function<Resource, T>} after a specified delay.  The delay is calculated using the
+     * supplied time and {@link TimeUnit}.
+     *
+     * @param resourceId the id of the resource
+     * @param time the time value to delay
+     * @param timeUnit the units of the time value
+     * @param operation the operation to perform
+     *
+     * @param <T>
+     *
+     * @return
+     */
+    <T> Future<T> performAfterDelay(ResourceId resourceId, long time, TimeUnit timeUnit, Function<Resource, T> operation);
+
+    /**
+     * Invoke {@link #performAfterDelay(ResourceId, long, TimeUnit, Function)} with a {@link Consumer<Resource>}
+     * instead of a {@link Function<Resource, T>}.
+     *
+     * @param resourceId the id of the resource
+     * @param time the time value to delay
+     * @param timeUnit the units of the time value
+     * @param operation the operation to perform
+     *
+     * @return
+     */
+    default Future<Void> performAfterDelayV(ResourceId resourceId, long time, TimeUnit timeUnit, Consumer<Resource> operation) {
+        return performAfterDelay(resourceId, time, timeUnit, resource -> {
             operation.accept(resource);
             return null;
         });

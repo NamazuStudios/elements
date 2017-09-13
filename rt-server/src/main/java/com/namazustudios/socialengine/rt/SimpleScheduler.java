@@ -8,6 +8,7 @@ import javax.inject.Named;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Function;
 
@@ -34,16 +35,16 @@ public class SimpleScheduler implements Scheduler {
 
     private LockService lockService;
 
-    private ExecutorService executorService;
-
     private ResourceService resourceService;
+
+    private ScheduledExecutorService scheduledExecutorService;
 
     @Override
     public void shutdown() {}
 
     @Override
     public <T> Future<T> perform(final ResourceId resourceId, final Function<Resource, T> operation) {
-        return getExecutorService().submit(() -> {
+        return getScheduledExecutorService().submit(() -> {
 
             final Resource resource = getResourceService().getResourceWithId(resourceId);
             final Lock lock = getLockService().getLock(resource.getId());
@@ -64,7 +65,7 @@ public class SimpleScheduler implements Scheduler {
 
     @Override
     public <T> Future<T> perform(final Path path, final Function<Resource, T> operation) {
-        return getExecutorService().submit(() -> {
+        return getScheduledExecutorService().submit(() -> {
 
             final Resource resource = getResourceService().getResourceAtPath(path);
             final Lock lock = getLockService().getLock(resource.getId());
@@ -83,13 +84,13 @@ public class SimpleScheduler implements Scheduler {
         });
     }
 
-    public ExecutorService getExecutorService() {
-        return executorService;
+    public ScheduledExecutorService getScheduledExecutorService() {
+        return scheduledExecutorService;
     }
 
     @Inject
-    public void setExecutorService(@Named(EXECUTOR_SERVICE) ExecutorService executorService) {
-        this.executorService = executorService;
+    public void setScheduledExecutorService(@Named(EXECUTOR_SERVICE) ScheduledExecutorService scheduledExecutorService) {
+        this.scheduledExecutorService = scheduledExecutorService;
     }
 
     public LockService getLockService() {

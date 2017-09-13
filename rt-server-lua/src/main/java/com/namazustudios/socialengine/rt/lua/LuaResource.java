@@ -6,9 +6,11 @@ import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.AbstractResource;
 import com.namazustudios.socialengine.rt.MethodDispatcher;
 import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.Scheduler;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
+import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +44,8 @@ public class LuaResource extends AbstractResource {
      */
     private final JavaFunction printToScriptLog = new ScriptLogger(s -> logger.info("{}", s));
 
+    private final CoroutineBuiltin coroutineBuiltin;
+
     /**
      * Creates an instance of {@link LuaResource} with the given {@link LuaState}
      * type.j
@@ -53,9 +57,11 @@ public class LuaResource extends AbstractResource {
      * @param luaState the luaState
      */
     @Inject
-    public LuaResource(final LuaState luaState) {
+    public LuaResource(final LuaState luaState, final Scheduler scheduler) {
         this.luaState = luaState;
+        this.coroutineBuiltin = new CoroutineBuiltin(this, scheduler);
         installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
+        installBuiltin(coroutineBuiltin);
     }
 
     /**
@@ -93,29 +99,8 @@ public class LuaResource extends AbstractResource {
 
     private void setupScriptGlobals() {
         try (final StackProtector stackProtector = new StackProtector(luaState, 0)) {
-            setupServerCoroutineTable();
-            setupNamazuRTTable();
             setupFunctionOverrides();
         }
-    }
-
-    private void setupServerCoroutineTable() {
-        // Places a table in the registry to hold the currently running threads.
-        luaState.newTable();
-        luaState.setField(LuaState.REGISTRYINDEX, Constants.SERVER_THREADS_TABLE);
-    }
-
-    private void setupNamazuRTTable() {
-
-        // Creates a table for the
-        luaState.newTable();
-
-        // Adds this resource object as well as the IoC resolver instance where the script
-        // may have access to all underlying services
-
-        // Finally sets the server table to be in the global space
-        luaState.setGlobal(Constants.NAMAZU_RT_TABLE);
-
     }
 
     private void setupFunctionOverrides() {
@@ -242,7 +227,7 @@ public class LuaResource extends AbstractResource {
 
     @Override
     public MethodDispatcher getMethodDispatcher(final String name) {
-        return params -> (consumer, throwableConsumer) -> {};
+        return params -> (consumer, throwableConsumer) -> coroutineBuiltin.startCoroutine(params, consumer, throwableConsumer);
     }
 
     /**
