@@ -12,7 +12,7 @@ public enum YieldInstruction {
      * expressed in the time since the unix epoch: January 1, 1970.  The units may be specified, but the default
      * value is in seconds.
      */
-    UNTIL,
+    UNTIL_TIME,
 
     /**
      * Indicates that the should parse the second argument as a cron string.  The coroutine will resume when at the

@@ -5,11 +5,11 @@ import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class YieldInstructionBuiltin implements Builtin {
+public class ResumeReasonBuiltin implements Builtin {
 
-    private static final Logger logger = LoggerFactory.getLogger(YieldInstructionBuiltin.class);
+    private static final Logger logger = LoggerFactory.getLogger(ResumeReasonBuiltin.class);
 
-    public static final String MODULE_NAME =CoroutineBuiltin.MODULE_NAME + ".yieldinstruction";
+    public static final String MODULE_NAME = CoroutineBuiltin.MODULE_NAME + ".resumereason";
 
     @Override
     public Module getModuleNamed(final String moduleName) {
@@ -37,9 +37,9 @@ public class YieldInstructionBuiltin implements Builtin {
             luaState.setTop(0);
             luaState.newTable();
 
-            for (final YieldInstruction yieldInstruction : YieldInstruction.values()) {
-                luaState.pushJavaObject(yieldInstruction.toString());
-                luaState.setField(-2, yieldInstruction.toString());
+            for (final ResumeReason resumeReason : ResumeReason.values()) {
+                luaState.pushJavaObject(resumeReason.toString());
+                luaState.setField(-2, resumeReason.toString());
             }
 
             return 1;

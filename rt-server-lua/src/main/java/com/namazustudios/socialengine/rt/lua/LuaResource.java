@@ -5,10 +5,13 @@ import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.AssetNotFoundException;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
+import com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReasonBuiltin;
+import com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstructionBuiltin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,12 +47,14 @@ public class LuaResource implements Resource {
 
     private final CoroutineBuiltin coroutineBuiltin;
 
-    private Logger scriptLog = logger;
+    private final LogAssist logAssist;
 
     /**
      * Redirects the print function to the logger returned by {@link #getScriptLog()}.
      */
     private final JavaFunction printToScriptLog = new ScriptLogger(s -> logger.info("{}", s));
+
+    private Logger scriptLog = logger;
 
     /**
      * Creates an instance of {@link LuaResource} with the given {@link LuaState}
@@ -65,8 +70,11 @@ public class LuaResource implements Resource {
     public LuaResource(final LuaState luaState, final Scheduler scheduler) {
         this.luaState = luaState;
         this.coroutineBuiltin = new CoroutineBuiltin(this, scheduler);
+        this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
         installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
         installBuiltin(coroutineBuiltin);
+        installBuiltin(new YieldInstructionBuiltin());
+        installBuiltin(new ResumeReasonBuiltin());
     }
 
     @Override
@@ -85,9 +93,7 @@ public class LuaResource implements Resource {
      *
      * @throws IOException if the loading fails
      */
-    public void loadModuleAndInitialize(final AssetLoader assetLoader,
-                                        final String moduleName,
-                                        final Object ... params) throws IOException {
+    public void loadModuleAndInitialize(final AssetLoader assetLoader, final String moduleName, final Object ... params) {
 
         final LuaState luaState = getLuaState();
         final Path modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
@@ -95,12 +101,16 @@ public class LuaResource implements Resource {
         luaState.openLibs();
         setupFunctionOverrides();
 
-        scriptLog = LoggerFactory.getLogger(modulePath.toNormalizedPathString());
-
         try (final InputStream inputStream = assetLoader.open(modulePath)) {
+            // We substitute the logger for the name of the file we actually are trying to open.
+            scriptLog = LoggerFactory.getLogger(modulePath.toNormalizedPathString());
             luaState.load(inputStream, moduleName, "bt");
             scriptLog.info("Loaded script {}", moduleName);
+        } catch (IOException ex) {
+            logAssist.error("Failed to load script.", ex);
+            throw new InternalException(ex);
         } catch (AssetNotFoundException ex) {
+            logAssist.error("Module not found: " + moduleName, ex);
             throw new ModuleNotFoundException(ex);
         } finally {
             luaState.setTop(0);
@@ -125,52 +135,6 @@ public class LuaResource implements Resource {
         luaState.pushJavaFunction(printToScriptLog);
         luaState.setGlobal(Constants.PRINT_FUNCTION);
     }
-
-    /**
-     * Dumps the Lua stack to the log.
-     */
-    public void dumpStack() {
-        dumpStack("Lua Stack:");
-    }
-
-    /**
-     * Dumps this {@link Resource}'s {@link LuaState} to the log.
-     *
-     * {@see {@link #dumpStack(LuaState, String)}}.
-     *
-     */
-    public void dumpStack(final String msg) {
-        dumpStack(luaState, msg);
-    }
-
-    /**
-     * Dumps a specific {@link LuaState}'s stack to the log.  The provided message is logged with the stack tracce
-     * for the supplied {@link LuaState}.  Useful for debugging the stack of a specific coroutine.
-     *
-     * @param luaState the {@link LuaState} object
-     * @param msg the message to log along side the stack trace
-     */
-    public void dumpStack(final LuaState luaState, final String msg) {
-
-        if (getScriptLog().isErrorEnabled()) {
-
-            final StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append(msg).append("\n");
-
-            for (int i = 1; i <= luaState.getTop(); ++i) {
-                stringBuilder.append("  Element ")
-                        .append(i).append(" ")
-                        .append(luaState.type(i)).append(" ")
-                        .append(luaState.toString(i))
-                        .append('\n');
-            }
-
-            getScriptLog().error("{}", stringBuilder);
-
-        }
-
-    }
-
 
     /**
      * Dumps the stack from an instance of {@link LuaRuntimeException}.
@@ -228,6 +192,9 @@ public class LuaResource implements Resource {
             luaState.getField(-1, Constants.PACKAGE_SEARCHERS_TABLE);
             luaState.pushJavaFunction(builtin.getSearcher());
             luaState.rawSet(-2, luaState.rawLen(-1) + 1);
+        } catch (final Throwable th){
+            logAssist.error("Failed to install builtin: " + builtin, th);
+            throw th;
         } finally {
             luaState.setTop(0);
         }

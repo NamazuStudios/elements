@@ -163,13 +163,13 @@ public class CoroutineBuiltin implements Builtin {
                                          final LuaState luaState) {
 
         final YieldInstruction instruction;
-        instruction = luaState.getTop() > 1 ? luaState.checkJavaObject(0, YieldInstruction.class) : IMMEDIATE;
+        instruction = luaState.getTop() > 1 ? luaState.checkEnum(0, YieldInstruction.values()) : IMMEDIATE;
 
         switch (instruction) {
             case FOR:
                 scheduleFor(taskId, luaState);
                 break;
-            case UNTIL:
+            case UNTIL_TIME:
                 scheduleUntil(taskId, luaState);
                 break;
             case IMMEDIATE:
@@ -218,7 +218,7 @@ public class CoroutineBuiltin implements Builtin {
     }
 
     private TimeUnit timeUnit(final LuaState luaState) {
-        return luaState.getTop() > 2 ? luaState.checkJavaObject(2, TimeUnit.class) : TimeUnit.SECONDS;
+        return luaState.getTop() > 2 ? luaState.checkEnum(2, TimeUnit.values()) : TimeUnit.SECONDS;
     }
 
     private void scheduleUntilNextCron(final TaskId taskId, final LuaState luaState) {
