@@ -71,10 +71,11 @@ public interface Builtin {
 
         return luaState -> {
 
-            final Module module = luaState.checkJavaObject(-1, Module.class);
+            final String name = luaState.checkString(1);
+            final Module module = luaState.checkJavaObject(2, Module.class);
 
             final String chunkName = module.getChunkName();
-            logger.info("Loading builtin module {} ", chunkName);
+            logger.info("Loading builtin module {} -> {} ", name, chunkName);
 
             try (final InputStream inputStream = module.getInputStream()) {
                 luaState.load(inputStream, module.getChunkName(), "bt");

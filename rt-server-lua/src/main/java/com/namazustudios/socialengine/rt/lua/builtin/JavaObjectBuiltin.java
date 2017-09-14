@@ -37,8 +37,9 @@ public class JavaObjectBuiltin<T> implements Builtin {
     @Override
     public JavaFunction getLoader() {
         return luaState -> {
-            final Module module = luaState.checkJavaObject(-1, Module.class);
-            logger.info("Loading module {}", module.getChunkName());
+            final String name = luaState.checkString(1);
+            final Module module = luaState.checkJavaObject(2, Module.class);
+            logger.info("Loading module {} - {}", name, module.getChunkName());
             luaState.setTop(0);
             luaState.pushJavaObject(getObject());
             return 1;

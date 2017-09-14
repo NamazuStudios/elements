@@ -4,6 +4,8 @@ import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.exception.AssetNotFoundException;
+import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
@@ -16,6 +18,9 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import static com.naef.jnlua.LuaState.REGISTRYINDEX;
+import static com.namazustudios.socialengine.rt.Path.fromPathString;
+
 /**
  * The abstract {@link Resource} type backed by a Lua script.  This uses the JNLua implentation
  * to drive the script.
@@ -27,6 +32,8 @@ import java.io.StringWriter;
  */
 public class LuaResource implements Resource {
 
+    public static final String MODULE = "namazu.module";
+
     public static final String RESOURCE_BUILTIN = "namazu.resource.this";
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
@@ -35,14 +42,14 @@ public class LuaResource implements Resource {
 
     private final LuaState luaState;
 
+    private final CoroutineBuiltin coroutineBuiltin;
+
     private Logger scriptLog = logger;
 
     /**
      * Redirects the print function to the logger returned by {@link #getScriptLog()}.
      */
     private final JavaFunction printToScriptLog = new ScriptLogger(s -> logger.info("{}", s));
-
-    private final CoroutineBuiltin coroutineBuiltin;
 
     /**
      * Creates an instance of {@link LuaResource} with the given {@link LuaState}
@@ -73,44 +80,50 @@ public class LuaResource implements Resource {
      * supplied is useful for debugging and should match the name of the file from which
      * the script was loaded.
      *
-     * @param inputStream the input stream
-     * @param name the name of the module to debug
+     * @param moduleName the name of the module
+     * @param params the parameters to pass to the underlying {@link Resource}
      *
      * @throws IOException if the loading fails
      */
-    public void loadAndRun(final InputStream inputStream, final String name, final Object ... params) throws IOException {
+    public void loadModuleAndInitialize(final AssetLoader assetLoader,
+                                        final String moduleName,
+                                        final Object ... params) throws IOException {
+
+        final LuaState luaState = getLuaState();
+        final Path modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
 
         luaState.openLibs();
-        scriptLog = LoggerFactory.getLogger(name);
-
         setupFunctionOverrides();
 
-        luaState.load(inputStream, name, "bt");
-        getScriptLog().debug("Loaded lua script.", luaState);
+        scriptLog = LoggerFactory.getLogger(modulePath.toNormalizedPathString());
 
-        for(final Object param : params) {
-            luaState.pushJavaObject(param);
+        try (final InputStream inputStream = assetLoader.open(modulePath)) {
+            luaState.load(inputStream, moduleName, "bt");
+            scriptLog.info("Loaded script {}", moduleName);
+        } catch (AssetNotFoundException ex) {
+            throw new ModuleNotFoundException(ex);
+        } finally {
+            luaState.setTop(0);
+        }
+
+        for (final Object object : params) {
+            luaState.pushJavaObject(object);
         }
 
         luaState.call(params.length, 1);
-        getScriptLog().debug("Executed lua script.", luaState);
+
+        if (luaState.isNil(-1)) {
+            throw new ModuleNotFoundException("got nil module for " + moduleName);
+        }
+
+        luaState.setField(REGISTRYINDEX, MODULE);
 
     }
 
     private void setupFunctionOverrides() {
-        // Lastly we hijack the standard lua print function to redirect
-        // to the underlying logging system
+        // Lastly we hijack the standard lua print function to redirect to the Logger
         luaState.pushJavaFunction(printToScriptLog);
         luaState.setGlobal(Constants.PRINT_FUNCTION);
-    }
-
-    /**
-     * Gets a special instance of {@link Logger} which the script can use for script logging.
-     *
-     * @return the {@link Logger} instance
-     */
-    public Logger getScriptLog() {
-        return scriptLog;
     }
 
     /**
@@ -179,15 +192,6 @@ public class LuaResource implements Resource {
     }
 
     /**
-     * Gets the {@link LuaState} backing this {@link LuaResource}.
-     *
-     * @return the {@link LuaState} instance
-     */
-    public LuaState getLuaState() {
-        return luaState;
-    }
-
-    /**
      * Invokes {@link LuaState#close()} and removes any resources from memory.  After this is called, this
      * {@link LuaResource} may not be reused.
      *
@@ -205,7 +209,7 @@ public class LuaResource implements Resource {
     }
 
     @Override
-    public void resume(final TaskId taskId) {
+    public void resume(final TaskId taskId, final double elapsedTime) {
         // TODO Implement this.
     }
 
@@ -228,6 +232,24 @@ public class LuaResource implements Resource {
             luaState.setTop(0);
         }
 
+    }
+
+    /**
+     * Gets the {@link LuaState} backing this {@link LuaResource}.
+     *
+     * @return the {@link LuaState} instance
+     */
+    public LuaState getLuaState() {
+        return luaState;
+    }
+
+    /**
+     * Gets a special instance of {@link Logger} which the script can use for script logging.
+     *
+     * @return the {@link Logger} instance
+     */
+    public Logger getScriptLog() {
+        return scriptLog;
     }
 
 }

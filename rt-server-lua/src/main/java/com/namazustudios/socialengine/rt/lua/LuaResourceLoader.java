@@ -35,6 +35,7 @@ public class LuaResourceLoader implements ResourceLoader {
         luaResource.installBuiltin(getAssetLoaderBuiltinProvider().get());
         luaResource.installBuiltin(getResponseCodeBuiltinProvider().get());
         luaResource.installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, getIocResolverProvider().get()));
+        luaResource.loadModuleAndInitialize(getAssetLoader(), moduleName, args);
         return luaResource;
     }
 

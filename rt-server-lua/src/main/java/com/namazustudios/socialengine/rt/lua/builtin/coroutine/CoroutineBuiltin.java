@@ -41,7 +41,7 @@ public class CoroutineBuiltin implements Builtin {
 
     public static final String MODULE_NAME = "namazu.coroutine";
 
-    public static final String COROUTINES_TABLE = "NAMAZU_THREADS";
+    public static final String COROUTINES_TABLE = "namazu.threads";
 
     public static final String START = "start";
 
@@ -262,8 +262,9 @@ public class CoroutineBuiltin implements Builtin {
     public JavaFunction getLoader() {
         return luaState -> {
 
-            final Module module = luaState.checkJavaObject(1, Module.class);
-            logger.info("Loading module {}", module.getChunkName());
+            final String name = luaState.checkString(1);
+            final Module module = luaState.checkJavaObject(2, Module.class);
+            logger.info("Loading module {} - {}", name, module.getChunkName());
 
             // This sets up the table which tracks and manages active tasks.
 
