@@ -8,17 +8,19 @@ import com.cronutils.model.time.ExecutionTime;
 import com.cronutils.parser.CronParser;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaState;
+import com.naef.jnlua.LuaType;
 import com.namazustudios.socialengine.rt.Scheduler;
 import com.namazustudios.socialengine.rt.TaskId;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.threeten.bp.Duration;
 import org.threeten.bp.ZonedDateTime;
 import org.threeten.bp.temporal.ChronoUnit;
 
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import static com.cronutils.model.time.ExecutionTime.forCron;
 import static com.naef.jnlua.LuaState.REGISTRYINDEX;
@@ -30,6 +32,8 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class CoroutineBuiltin implements Builtin {
+
+    private static final Logger logger = LoggerFactory.getLogger(CoroutineBuiltin.class);
 
     private static final long TIME_UNIT_CORRECTION_FACTOR_L = 10000;
 
@@ -63,9 +67,7 @@ public class CoroutineBuiltin implements Builtin {
      */
     private final JavaFunction start = luaState ->  {
 
-        if (!luaState.isThread(1)) {
-            throw new IllegalArgumentException("namazu.coroutine.start must be supplied a coroutine");
-        }
+        luaState.checkType(1, LuaType.THREAD);
 
         final TaskId taskId = new TaskId();
 
@@ -74,7 +76,7 @@ public class CoroutineBuiltin implements Builtin {
         luaState.setField(-2, taskId.asString());
         luaState.pop(1);
 
-        return resume(taskId, luaState) + 1;
+        return resume(taskId, luaState);
 
     };
 
@@ -84,52 +86,77 @@ public class CoroutineBuiltin implements Builtin {
         // we must accept the ID of the task, so we can look up the coroutine that's associated with the
         // specified task ID.
 
-        final TaskId taskId = new TaskId(luaState.checkString(0));
+        final TaskId taskId = new TaskId(luaState.checkString(1));
         luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
         luaState.getField(-1, taskId.toString());
 
         if (!luaState.isThread(-1)) {
-            throw new InternalException("no such task: " + taskId);
+            throw new InternalException("no such task " + taskId + " instead got " + luaState.typeName(-1));
         }
 
-        luaState.pushValue(1);
-        luaState.replace(0);
-        luaState.pop(1);
+        luaState.replace(1);  // Pops the thread
+        luaState.pop(1);      // Replaces the first index
 
-        return resume(taskId, luaState) + 1;
+        return resume(taskId, luaState);
 
     };
 
     private int resume(final TaskId taskId, final LuaState luaState) {
 
-        final int returned = luaState.resume(0, luaState.getTop() - 1);
+        try {
 
-        luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
-        luaState.getField(-1, taskId.toString());
+            // Push the thread (first argument), then insert it at the beginning of the stack.  This is so we don't
+            // have to deal with querying the coroutine again.
 
-        final int status = luaState.status(-1);
-        luaState.pop(2);
+            luaState.pushValue(1);
+            luaState.insert(1);
 
-        if (status == YIELD) {
+            // Execute the coroutine, in using the second value on the stack after having inserted it
 
-            // If we yielded, then we start looking for the yield instructions.  If the yield instructions fail at any
-            // point then we simply throw an exception.  If we did not yield, we simply capture the return values and
-            // leave the return values on the stack.  We catch any yielding values and we simply process them and
-            // wipe the stack clean.
+            final int returned = luaState.resume(2, luaState.getTop());
 
-            processYieldInstruction(taskId, luaState);
-            luaState.setTop(0);
-            return 0;
-        } else {
+            // Check the status of the coroutine.  If it is a yield, then we process the yield instructions, and
+            // throw an exception if the yield parameters are incorrect.
 
-            // If the coroutine wasn't yielded because it finished normally, then we simply take what's on the stack
-            // and return it to the caller.  The caller then will collect the values that are returned.  Of course
-            // any exceptions shoudl be caught.
+            if (luaState.status(1) == YIELD) {
 
-            return returned;
+                // If we yielded, then we start looking for the yield instructions.  If the yield instructions fail at
+                // any point then we simply throw an exception.  If we did not yield, we simply capture the return
+                // values and leave the return values on the stack.  We catch any yielding values and we simply process
+                // them and wipe the stack clean.
 
+                processYieldInstruction(taskId, luaState);
+                luaState.setTop(1);
+                luaState.pushString(taskId.toString());
+                luaState.replace(1);
+
+                return 0;
+
+            } else {
+
+                // If the coroutine wasn't yielded because it finished normally, then we simply take what's on the stack
+                // and return it to the caller.  The caller then will collect the values that are returned.
+
+                cleanup(taskId, luaState);
+                luaState.pushString(taskId.toString());
+                luaState.replace(1);
+
+                return returned;
+
+            }
+
+        } catch (Throwable th) {
+            // All exceptions will clean up the coroutine such that it will no longer be in the table.
+            cleanup(taskId, luaState);
+            throw th;
         }
 
+    }
+
+    private void cleanup(final TaskId taskId, final LuaState luaState) {
+        luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
+        luaState.pushNil();
+        luaState.setField(-2, taskId.toString());
     }
 
     private void processYieldInstruction(final TaskId taskId,
@@ -233,7 +260,28 @@ public class CoroutineBuiltin implements Builtin {
 
     @Override
     public JavaFunction getLoader() {
-        return null;
+        return luaState -> {
+
+            final Module module = luaState.checkJavaObject(1, Module.class);
+            logger.info("Loading module {}", module.getChunkName());
+
+            // This sets up the table which tracks and manages active tasks.
+
+            luaState.newTable();
+            luaState.setField(REGISTRYINDEX, COROUTINES_TABLE);
+
+            // The actual function table
+            luaState.newTable();
+
+            luaState.pushJavaFunction(start);
+            luaState.setField(-2, START);
+
+            luaState.pushJavaFunction(resume);
+            luaState.setField(-2, RESUME);
+
+            return 1;
+
+        };
     }
 
     public Scheduler getScheduler() {
@@ -242,12 +290,6 @@ public class CoroutineBuiltin implements Builtin {
 
     public LuaResource getLuaResource() {
         return luaResource;
-    }
-
-    public void startCoroutine(final Object[] params,
-                               final Consumer<Object> consumer,
-                               final Consumer<Throwable> throwableConsumer) {
-        // TODO Implement this
     }
 
 }

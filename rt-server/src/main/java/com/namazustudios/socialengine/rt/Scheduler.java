@@ -1,10 +1,15 @@
 package com.namazustudios.socialengine.rt;
 
+import com.google.common.base.Stopwatch;
+
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 import java.util.function.Function;
+
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * The Scheduler is the main entry point dispatching requests and operations to the various {@link Resource} instances
@@ -116,7 +121,15 @@ public interface Scheduler {
      * @return {@link Future<Void>} which can be used to monitor the status of the request
      */
     default Future<Void> resumeTask(final ResourceId resourceId, final TaskId taskId) {
-        return performV(resourceId, r -> r.resume(taskId));
+
+        final Stopwatch stopwatch = Stopwatch.createStarted();
+
+        return performV(resourceId, r -> {
+            double nanos = stopwatch.elapsed(NANOSECONDS);
+            double nanosPerSecond = NANOSECONDS.convert(1, SECONDS);
+            r.resume(taskId, nanosPerSecond / nanos);
+        });
+
     }
 
     /**
@@ -134,7 +147,15 @@ public interface Scheduler {
                                               final long time,
                                               final TimeUnit timeUnit,
                                               final TaskId taskId) {
-        return performAfterDelayV(resourceId, time, timeUnit, r -> r.resume(taskId));
+
+        final Stopwatch stopwatch = Stopwatch.createStarted();
+
+        return performAfterDelayV(resourceId, time, timeUnit, r -> {
+            double nanos = stopwatch.elapsed(NANOSECONDS);
+            double nanosPerSecond = NANOSECONDS.convert(1, SECONDS);
+            r.resume(taskId, nanosPerSecond / nanos);
+        });
+
     }
 
     /**
