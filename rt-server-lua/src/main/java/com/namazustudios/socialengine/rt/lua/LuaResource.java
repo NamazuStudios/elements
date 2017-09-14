@@ -20,8 +20,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static com.naef.jnlua.LuaState.REGISTRYINDEX;
+import static com.naef.jnlua.LuaState.YIELD;
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
 
 /**
@@ -41,6 +46,13 @@ public class LuaResource implements Resource {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
 
+    /**
+     * Redirects the print function to the logger returned by {@link #getScriptLog()}.
+     */
+    private final JavaFunction printToScriptLog = new ScriptLogger(s -> logger.info("{}", s));
+
+    private final Map<TaskId, PendingTask> taskIdPendingTaskMap = new HashMap<>();
+
     private final ResourceId resourceId = new ResourceId();
 
     private final LuaState luaState;
@@ -48,11 +60,6 @@ public class LuaResource implements Resource {
     private final CoroutineBuiltin coroutineBuiltin;
 
     private final LogAssist logAssist;
-
-    /**
-     * Redirects the print function to the logger returned by {@link #getScriptLog()}.
-     */
-    private final JavaFunction printToScriptLog = new ScriptLogger(s -> logger.info("{}", s));
 
     private Logger scriptLog = logger;
 
@@ -169,12 +176,82 @@ public class LuaResource implements Resource {
 
     @Override
     public MethodDispatcher getMethodDispatcher(final String name) {
-        return params -> (consumer, throwableConsumer) -> null;
+        return params -> (consumer, throwableConsumer) -> {
+            try {
+
+                final LuaState luaState = getLuaState();
+
+                luaState.getGlobal("require");
+                luaState.pushString(CoroutineBuiltin.MODULE_NAME);
+                luaState.call(1, 1);
+
+                luaState.getField(-1, CoroutineBuiltin.START);
+                for (Object param : params) luaState.pushJavaObject(param);
+
+                luaState.call(params.length, 3);
+
+                final String taskId = luaState.checkString(-3);                        // task id
+                final int status = luaState.checkInteger(-2);                          // thread status
+                final Object result = luaState.checkJavaObject(-1, Object.class);      // the return value
+
+                if (status == YIELD) {
+                    final PendingTask pendingTask = new PendingTask(consumer, throwableConsumer);
+                    taskIdPendingTaskMap.put(new TaskId(taskId), pendingTask);
+                } else {
+                    consumer.accept(result);
+                }
+
+                return new TaskId(taskId);
+
+            } finally {
+                luaState.setTop(0);
+            }
+        };
     }
 
     @Override
     public void resume(final TaskId taskId, final double elapsedTime) {
-        // TODO Implement this.
+
+        final PendingTask pendingTask = taskIdPendingTaskMap.get(taskId);
+
+        if (pendingTask == null) {
+            throw new InternalException("no pending task with id " + taskId);
+        }
+
+        try {
+
+            final LuaState luaState = getLuaState();
+
+            luaState.getGlobal("require");
+            luaState.pushString(CoroutineBuiltin.MODULE_NAME);
+            luaState.call(1, 1);
+
+            luaState.getField(-1, CoroutineBuiltin.RESUME);
+            luaState.pushString(taskId.asString());
+            luaState.pushNumber(elapsedTime);
+            luaState.pushString(TimeUnit.SECONDS.toString());
+            luaState.call(3, 3);
+
+            final String taskIdString = luaState.checkString(-3);                        // task id
+            final int status = luaState.checkInteger(-2);                                // thread status
+            final Object result = luaState.checkJavaObject(-1, Object.class);            // the return value
+
+            if (!taskId.asString().equals(taskIdString)) {
+                getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
+                throw new IllegalStateException("task ID mismatch");
+            } else if (status == YIELD) {
+                getScriptLog().info("Task {} yielded.  Resuming later.", taskId);
+            } else {
+                pendingTask.resultConsumer.accept(result);
+            }
+
+        } catch (Throwable th) {
+            getScriptLog().error("Caught exception resuming task {}.", taskId, th);
+            pendingTask.throwableConsumer.accept(th);
+        } finally {
+            luaState.setTop(0);
+        }
+
     }
 
     /**
@@ -219,4 +296,16 @@ public class LuaResource implements Resource {
         return scriptLog;
     }
 
+    private static class PendingTask {
+
+        private final Consumer<Object> resultConsumer;
+
+        private final Consumer<Throwable> throwableConsumer;
+
+        public PendingTask(Consumer<Object> resultConsumer, Consumer<Throwable> throwableConsumer) {
+            this.resultConsumer = resultConsumer;
+            this.throwableConsumer = throwableConsumer;
+        }
+
+    }
 }
