@@ -48,7 +48,7 @@ public class CoroutineBuiltin implements Builtin {
     private final LuaResource luaResource;
 
     private final Scheduler scheduler;
-    
+
     public CoroutineBuiltin(final LuaResource luaResource, final Scheduler scheduler) {
         this.luaResource = luaResource;
         this.scheduler = scheduler;
