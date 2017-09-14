@@ -11,11 +11,13 @@ public interface ResultAcceptor<T> {
 
     /**
      * Calling calling this method completes the dispatch tho th underlying {@link Resource}'s method and will
-     * place the response of the method call into the provided {@link Consumer<T>}.
+     * place the response of the method call into the provided {@link Consumer<T>}.  Calling this should kick off a new
+     * task.
      *
      * @param tConsumer the consumer
+     * @return the {@link TaskId} of the task associated with servicing the invocation
      */
-    void dispatch(Consumer<T> tConsumer, Consumer<Throwable> throwableTConsumer);
+    TaskId dispatch(Consumer<T> tConsumer, Consumer<Throwable> throwableTConsumer);
 
     /**
      * Returns a {@link ResultAcceptor} for the specified type.  The default implementation

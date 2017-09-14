@@ -44,8 +44,8 @@ public interface Resource extends AutoCloseable {
      * Resumes a suspended task, accepting the task id.  The task will be resumed as soon as possible.  This method
      * must succeed at the scheduling process, or else throw an exception.  Note that this does not guarantee successful
      * execution of the task, but rather successful scheduling.
+     *  @param taskId the {@link TaskId} if the running task
      *
-     * @param taskId the {@link TaskId} if the running task
      */
     void resume(final TaskId taskId);
 

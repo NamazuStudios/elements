@@ -4,7 +4,6 @@ import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
@@ -80,30 +79,22 @@ public class LuaResource implements Resource {
      * @throws IOException if the loading fails
      */
     public void loadAndRun(final InputStream inputStream, final String name, final Object ... params) throws IOException {
-        try (final StackProtector stackProtector = new StackProtector(luaState, 0)) {
 
-            luaState.openLibs();
-            scriptLog = LoggerFactory.getLogger(name);
+        luaState.openLibs();
+        scriptLog = LoggerFactory.getLogger(name);
 
-            setupScriptGlobals();
+        setupFunctionOverrides();
 
-            luaState.load(inputStream, name, "bt");
-            getScriptLog().debug("Loaded lua script.", luaState);
+        luaState.load(inputStream, name, "bt");
+        getScriptLog().debug("Loaded lua script.", luaState);
 
-            for(final Object param : params) {
-                luaState.pushJavaObject(param);
-            }
-
-            luaState.call(params.length, 1);
-            getScriptLog().debug("Executed lua script.", luaState);
-
+        for(final Object param : params) {
+            luaState.pushJavaObject(param);
         }
-    }
 
-    private void setupScriptGlobals() {
-        try (final StackProtector stackProtector = new StackProtector(luaState, 0)) {
-            setupFunctionOverrides();
-        }
+        luaState.call(params.length, 1);
+        getScriptLog().debug("Executed lua script.", luaState);
+
     }
 
     private void setupFunctionOverrides() {
@@ -205,36 +196,16 @@ public class LuaResource implements Resource {
      */
     @Override
     public void close() {
-
-        try (final StackProtector stackProtector = new StackProtector(luaState)) {
-
-            luaState.getGlobal(Constants.NAMAZU_RT_TABLE);   // Pushes namazu_rt
-            luaState.getField(-1, Constants.CLOSE_FUNCTION); // pushes close() (if it exists)
-            luaState.remove(-2);                             // pops namazu_rt
-
-            if (!luaState.isNil(-1) && !luaState.isFunction(-1)) {
-                getScriptLog().warn("{}.{} is not a function.", Constants.NAMAZU_RT_TABLE, Constants.CLOSE_FUNCTION);
-            } else if (luaState.isFunction(-1)) {
-                luaState.call(0,0);
-            }
-
-        } catch (final Exception ex) {
-            dumpStack();
-            getScriptLog().error("Caught exception invoking script {}() function", Constants.CLOSE_FUNCTION, ex);
-            throw new InternalException(ex);
-        } finally {
-            luaState.close();
-        }
-
+        getLuaState().close();
     }
 
     @Override
     public MethodDispatcher getMethodDispatcher(final String name) {
-        return params -> (consumer, throwableConsumer) -> coroutineBuiltin.startCoroutine(params, consumer, throwableConsumer);
+        return params -> (consumer, throwableConsumer) -> null;
     }
 
     @Override
-    public void resume(TaskId taskId) {
+    public void resume(final TaskId taskId) {
         // TODO Implement this.
     }
 
@@ -248,12 +219,13 @@ public class LuaResource implements Resource {
 
         final LuaState luaState = getLuaState();
 
-        try (final StackProtector stackProtector = new StackProtector(luaState)) {
+        try {
             luaState.getGlobal(Constants.PACKAGE_TABLE);
             luaState.getField(-1, Constants.PACKAGE_SEARCHERS_TABLE);
             luaState.pushJavaFunction(builtin.getSearcher());
             luaState.rawSet(-2, luaState.rawLen(-1) + 1);
-            luaState.pop(2);
+        } finally {
+            luaState.setTop(0);
         }
 
     }

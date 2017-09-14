@@ -5,7 +5,6 @@ import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
-import com.namazustudios.socialengine.rt.lua.StackProtector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,28 +39,22 @@ public interface Builtin {
      */
     default JavaFunction getSearcher() {
         return luaState -> {
-            try (final StackProtector stackProtector = new StackProtector(luaState)) {
 
-                if (!luaState.isString(-1)) {
-                    luaState.pushString("module name must be a string");
-                    return 1;
-                }
+            final String moduleName = luaState.checkString(1);
+            final Module module = getModuleNamed(moduleName);
 
-                final String moduleName = luaState.checkString(-1);
-                final Module module = getModuleNamed(moduleName);
+            luaState.setTop(0);
 
-                luaState.setTop(0);
-
-                if (module != null && module.exists()) {
-                    luaState.pushJavaFunction(getLoader());
-                    luaState.pushJavaObject(module);
-                    return stackProtector.setAbsoluteIndex(2);
-                } else {
-                    luaState.pushString(moduleName + " not found");
-                    return stackProtector.setAbsoluteIndex(1);
-                }
-
+            if (module != null && module.exists()) {
+                luaState.pushJavaFunction(getLoader());
+                luaState.pushJavaObject(module);
+                luaState.setTop(2);
+                return 2;
+            } else {
+                luaState.pushString(moduleName + " not found");
+                return 1;
             }
+
         };
     }
 
@@ -77,31 +70,30 @@ public interface Builtin {
         final Logger logger = LoggerFactory.getLogger(getClass());
 
         return luaState -> {
-            try (final StackProtector stackProtector = new StackProtector(luaState)) {
 
-                final Module module = luaState.checkJavaObject(-1, Module.class);
+            final Module module = luaState.checkJavaObject(-1, Module.class);
 
-                final String chunkName = module.getChunkName();
-                logger.info("Loading builtin module {} ", chunkName);
+            final String chunkName = module.getChunkName();
+            logger.info("Loading builtin module {} ", chunkName);
 
-                try (final InputStream inputStream = module.getInputStream()) {
-                    luaState.load(inputStream, module.getChunkName(), "bt");
-                } catch (IOException ex) {
-                    throw new InternalException(ex);
-                }
-
-                logger.info("Successfully parsed builtin module {} ", chunkName);
-
-                luaState.setTop(0);
-                luaState.call(0, 1);
-
-                logger.info("Successfully executed module code {} ", chunkName);
-
-                return stackProtector.setAbsoluteIndex(1);
-
+            try (final InputStream inputStream = module.getInputStream()) {
+                luaState.load(inputStream, module.getChunkName(), "bt");
+            } catch (IOException ex) {
+                throw new InternalException(ex);
             }
+
+            logger.info("Successfully parsed builtin module {} ", chunkName);
+
+            luaState.setTop(0);
+            luaState.call(0, 1);
+
+            logger.info("Successfully executed module code {} ", chunkName);
+
+            return 1;
+
         };
-    };
+
+    }
 
     /**
      * An internal interface to represent a module.  Returns what is needed by the loader {@link JavaFunction} to

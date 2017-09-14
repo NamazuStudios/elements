@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.lua.builtin;
 
 import com.naef.jnlua.JavaFunction;
 import com.namazustudios.socialengine.rt.ResponseCode;
-import com.namazustudios.socialengine.rt.lua.StackProtector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,22 +31,20 @@ public class ResponseCodeBuiltin implements Builtin {
     @Override
     public JavaFunction getLoader() {
         return luaState -> {
-            try (final StackProtector stackProtector = new StackProtector(luaState)) {
 
-                final Module module = luaState.checkJavaObject(-1, Module.class);
-                logger.info("Loading module {}", module.getChunkName());
+            final Module module = luaState.checkJavaObject(1, Module.class);
+            logger.info("Loading module {}", module.getChunkName());
 
-                luaState.setTop(0);
-                luaState.newTable();
+            luaState.setTop(0);
+            luaState.newTable();
 
-                for (final ResponseCode responseCode : ResponseCode.values()) {
-                    luaState.pushInteger(responseCode.getCode());
-                    luaState.setField(-2, responseCode.toString());
-                }
-
-                return stackProtector.setAbsoluteIndex(1);
-
+            for (final ResponseCode responseCode : ResponseCode.values()) {
+                luaState.pushInteger(responseCode.getCode());
+                luaState.setField(-2, responseCode.toString());
             }
+
+            return 1;
+
         };
     }
 

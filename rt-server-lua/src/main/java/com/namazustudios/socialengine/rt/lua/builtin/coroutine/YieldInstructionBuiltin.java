@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.builtin.coroutine;
 
 import com.naef.jnlua.JavaFunction;
-import com.namazustudios.socialengine.rt.lua.StackProtector;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,22 +29,20 @@ public class YieldInstructionBuiltin implements Builtin {
     @Override
     public JavaFunction getLoader() {
         return luaState -> {
-            try (final StackProtector stackProtector = new StackProtector(luaState)) {
 
-                final Module module = luaState.checkJavaObject(-1, Module.class);
-                logger.info("Loading module {}", module.getChunkName());
+            final Module module = luaState.checkJavaObject(1, Module.class);
+            logger.info("Loading module {}", module.getChunkName());
 
-                luaState.setTop(0);
-                luaState.newTable();
+            luaState.setTop(0);
+            luaState.newTable();
 
-                for (final YieldInstruction yieldInstruction : YieldInstruction.values()) {
-                    luaState.pushJavaObject(yieldInstruction);
-                    luaState.setField(-2, yieldInstruction.toString());
-                }
-
-                return stackProtector.setAbsoluteIndex(1);
-
+            for (final YieldInstruction yieldInstruction : YieldInstruction.values()) {
+                luaState.pushJavaObject(yieldInstruction);
+                luaState.setField(-2, yieldInstruction.toString());
             }
+
+            return 1;
+
         };
     }
 

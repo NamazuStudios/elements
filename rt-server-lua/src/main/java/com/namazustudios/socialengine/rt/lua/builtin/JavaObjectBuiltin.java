@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
 import com.naef.jnlua.JavaFunction;
-import com.namazustudios.socialengine.rt.lua.StackProtector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,13 +37,11 @@ public class JavaObjectBuiltin<T> implements Builtin {
     @Override
     public JavaFunction getLoader() {
         return luaState -> {
-            try (final StackProtector stackProtector = new StackProtector(luaState)) {
-                final Module module = luaState.checkJavaObject(-1, Module.class);
-                logger.info("Loading module {}", module.getChunkName());
-                luaState.setTop(0);
-                luaState.pushJavaObject(getObject());
-                return stackProtector.setAbsoluteIndex(1);
-            }
+            final Module module = luaState.checkJavaObject(-1, Module.class);
+            logger.info("Loading module {}", module.getChunkName());
+            luaState.setTop(0);
+            luaState.pushJavaObject(getObject());
+            return 1;
         };
     }
 

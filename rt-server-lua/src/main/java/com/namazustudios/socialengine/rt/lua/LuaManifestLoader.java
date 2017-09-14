@@ -114,29 +114,27 @@ public class LuaManifestLoader implements ManifestLoader {
     }
 
     private void createManifestTables() {
-        try (final StackProtector s = new StackProtector(luaState)) {
 
-            // manifest
-            luaState.newTable();
+        // manifest
+        luaState.newTable();
 
-            // manifest.http
-            luaState.newTable();
-            luaState.setField(-2, HTTP_TABLE);
+        // manifest.http
+        luaState.newTable();
+        luaState.setField(-2, HTTP_TABLE);
 
-            // manifest.model
-            luaState.newTable();
-            luaState.setField(-2, MODEL_TABLE);
+        // manifest.model
+        luaState.newTable();
+        luaState.setField(-2, MODEL_TABLE);
 
-            // Sets manifest to global table.
-            luaState.setGlobal(MANIFEST_TABLE);
+        // Sets manifest to global table.
+        luaState.setGlobal(MANIFEST_TABLE);
 
-        }
     }
 
     private <T> T fromManifestTable(final String table, final Class<T> tClass) {
-        try (final StackProtector s = new StackProtector(luaState)){
+        try {
             luaState.getGlobal(MANIFEST_TABLE);
-            luaState.getField(-1, table);
+            luaState.getField(1, table);
             return luaState.toJavaObject(-1, tClass);
         } catch (ClassCastException | LuaException ex) {
             logger.error("Caught exception reading manifest {}.", MAIN_MANIFEST, ex);
