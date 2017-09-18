@@ -21,6 +21,11 @@ public class AnonApplicationService implements ApplicationService {
     }
 
     @Override
+    public Pagination<Application> getApplications() {
+        throw new ForbiddenException();
+    }
+
+    @Override
     public Pagination<Application> getApplications(int offset, int count) {
         throw new ForbiddenException();
     }

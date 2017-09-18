@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.exception.TooBusyException;
+import com.namazustudios.socialengine.rt.exception.ContentionException;
+import com.namazustudios.socialengine.rt.exception.DuplicateException;
+import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
         final ResourceT resource = storageAtomicReference.get().getResources().get(resourceId);
 
         if (resource == null) {
-            throw new NotFoundException("Resource not found: " + resourceId);
+            throw new ResourceNotFoundException("Resource not found: " + resourceId);
         }
 
         return resource;
@@ -62,7 +62,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
             final ResourceId resourceId = storage.getPathResourceIdMap().get(path);
 
             if (resourceId == null) {
-                throw new NotFoundException("Resource at path not found: " + path);
+                throw new ResourceNotFoundException("Resource at path not found: " + path);
             } else if (pathLockFactory.isLock(resourceId)) {
                 throw new LockedException();
             }
@@ -70,7 +70,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
             final ResourceT resource = storage.getResources().get(resourceId);
 
             if (resource == null) {
-                throw new NotFoundException("Resource at path not found: " + path);
+                throw new ResourceNotFoundException("Resource at path not found: " + path);
             }
 
             return resource;
@@ -85,7 +85,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
         final Path path = storageAtomicReference.get().getResourceIdPathMap().get(resourceId);
 
         if (path == null) {
-            throw new NotFoundException("No path for resource with ID: " + resourceId);
+            throw new ResourceNotFoundException("No path for resource with ID: " + resourceId);
         }
 
         return path;
@@ -199,7 +199,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                     final ResourceT resource = storage.getResources().get(existing);
 
                     if (resource == null) {
-                        // Since this method implies addition, throwing a NotFoundException
+                        // Since this method implies addition, throwing a ResourceNotFoundException
                         // here doesn't make sense.  This could be happening because it's
                         // in the process of being removed or added.  In this case we aren't
                         // certain so we must force the cycle to reattempt.
@@ -237,7 +237,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                 // If we can't find something, then we know that there's simply
                 // nothing here.  It may be in the process of being destroyed
                 // or removed, but it may not.
-                throw new NotFoundException("No resource at path: " + path);
+                throw new ResourceNotFoundException("No resource at path: " + path);
             } else if (getPathLockFactory().isLock(existing)) {
                 // Path is locked elsewhere.  We don't touch this resource because
                 // we don't want to interfere with another ongoing operation.
@@ -259,7 +259,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
             final ResourceT resource = storage.getResources().get(existing);
 
             if (resource == null) {
-                throw new NotFoundException("No resource at path: " + path);
+                throw new DuplicateException("No resource at path: " + path);
             }
 
             // Removes the mapping from both places as wlel as the temporary lock
@@ -305,7 +305,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
             }
         }
 
-        throw new TooBusyException();
+        throw new ContentionException();
 
     }
 
@@ -321,7 +321,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
             }
         }
 
-        throw new TooBusyException();
+        throw new ContentionException();
 
     }
 

@@ -59,6 +59,9 @@ public class BasicAuthFilter implements Filter {
             final int status = map(ex);
             httpServletResponse.setStatus(status);
             logger.info("Request failed ex: {}", ex.getCode(), ex);
+        } catch (Exception ex) {
+            logger.error("Internal Error", ex);
+            httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
 
     }

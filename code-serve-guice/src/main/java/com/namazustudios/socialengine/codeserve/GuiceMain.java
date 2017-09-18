@@ -2,10 +2,12 @@ package com.namazustudios.socialengine.codeserve;
 
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
-import com.namazustudios.socialengine.DefaultConfigurationSupplier;
+import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
+import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
+import com.namazustudios.socialengine.dao.rt.guice.RTGitBootstrapModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import org.apache.bval.guice.ValidationModule;
 
@@ -49,6 +51,8 @@ public class GuiceMain extends GuiceServletContextListener {
             new ValidationModule(),
             new GitSecurityModule(),
             new GitServletModule(),
+            new RTFilesystemGitLoaderModule(),
+            new RTGitBootstrapModule(),
             new FileSystemCodeServeModule()
         );
 

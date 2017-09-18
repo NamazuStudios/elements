@@ -1,10 +1,10 @@
 package com.namazustudios.socialengine.rt.handler;
 
-import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.RequestHeader;
 import com.namazustudios.socialengine.rt.ResponseHeader;
 import com.namazustudios.socialengine.rt.ResponseReceiver;
+import com.namazustudios.socialengine.rt.exception.BadRequestException;
 
 /**
  * An instance of ClientRequestHandler is responsible for producing {@link ResponseHeader} objects
@@ -33,7 +33,7 @@ public interface ClientRequestHandler {
      * @param request the {@link Request} object
      * @param responseReceiver the request object
      *
-     * @throws {@link InvalidDataException} if the return of the {@link Request#getPayload()} method is not suitable.
+     * @throws {@link BadRequestException} if the return of the {@link Request#getPayload()} method is not suitable.
      *
      */
     void handle(HandlerClientSession handlerClientSession, Request request, ResponseReceiver responseReceiver);

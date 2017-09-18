@@ -16,10 +16,6 @@
     <version>1.0-SNAPSHOT</version>
     <name>lucene-fts</name>
 
-    <properties>
-        <jxpath.version>1.3</jxpath.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>commons-jxpath</groupId>

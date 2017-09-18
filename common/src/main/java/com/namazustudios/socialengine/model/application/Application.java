@@ -18,6 +18,12 @@ import javax.validation.constraints.Pattern;
 @ApiModel
 public class Application {
 
+    /**
+     * Used as the key for the application attribute where appropriate.  This is equivalent
+     * to the FQN of the {@link Application} class.
+     */
+    public static final String APPLICATION_ATTRIUTE = Application.class.getName();
+
     private String id;
 
     @NotNull
@@ -27,6 +33,12 @@ public class Application {
     private String description;
 
     private String scriptRepoUrl;
+
+    private String httpDocumentationUrl;
+
+    private String httpDocumentationUiUrl;
+
+    private String httpTunnelEndpointUrl;
 
     /**
      * The globally-unique identifier.
@@ -101,33 +113,58 @@ public class Application {
         this.scriptRepoUrl = scriptRepoUrl;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Application)) return false;
-
-        Application that = (Application) o;
-
-        if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
-        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
-        if (getDescription() != null ? !getDescription().equals(that.getDescription()) : that.getDescription() != null)
-            return false;
-        return getScriptRepoUrl() != null ? getScriptRepoUrl().equals(that.getScriptRepoUrl()) : that.getScriptRepoUrl() == null;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
-        result = 31 * result + (getScriptRepoUrl() != null ? getScriptRepoUrl().hashCode() : 0);
-        return result;
+    /**
+     * Gets the HTTP documentation endpoint for the application if it is available.  Otherwise null.
+     *
+     * @return the HTTP documentation endpoint
+     */
+    public String getHttpDocumentationUrl() {
+        return httpDocumentationUrl;
     }
 
     /**
-     * Used as the key for the application attribute where appropriate.  This is equivalent
-     * to the FQN of the {@link Application} class.
+     * Sets the HTTP documentation endpoint for the application if it is available.  Otherwise null.
+     *
+     * @param httpDocumentationUrl  the HTTP documentation endpoint
      */
-    public static final String APPLICATION_ATTRIUTE = Application.class.getName();
+    public void setHttpDocumentationUrl(String httpDocumentationUrl) {
+        this.httpDocumentationUrl = httpDocumentationUrl;
+    }
+
+    /**
+     * Gets the HTTP documentation UI URL for the application if it is available.  Otherwise null.
+     *
+     * @return the HTTP documentation UI url
+     */
+    public String getHttpDocumentationUiUrl() {
+        return httpDocumentationUiUrl;
+    }
+
+    /**
+     * Sets the HTTP documentation UI URL for the application if it is available.  Otherwise null.
+     *
+     * @param httpDocumentationUiUrl  the HTTP documentation UI url
+     */
+    public void setHttpDocumentationUiUrl(String httpDocumentationUiUrl) {
+        this.httpDocumentationUiUrl = httpDocumentationUiUrl;
+    }
+
+    /**
+     * Gets the HTTP tunnel endpoint, if this is available.  Otherwise null.
+     *
+     * @return the HTTP tunnel endpoint
+     */
+    public String getHttpTunnelEndpointUrl() {
+        return httpTunnelEndpointUrl;
+    }
+
+    /**
+     * Sets the HTTP tunnel endpoint, if this is available.  Otherwise null.
+     *
+     * @param httpTunnelEndpointUrl  the HTTP tunnel endpoint
+     */
+    public void setHttpTunnelEndpointUrl(String httpTunnelEndpointUrl) {
+        this.httpTunnelEndpointUrl = httpTunnelEndpointUrl;
+    }
 
 }

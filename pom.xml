@@ -39,6 +39,7 @@
         <module>rt-server-lua</module>
         <module>rt-guice-example</module>
         <module>rt-client</module>
+        <module>rt-dao</module>
         <module>docker</module>
         <module>code-serve</module>
         <module>code-serve-guice</module>
@@ -76,6 +77,8 @@
         <bval.guice.version>0.5</bval.guice.version>
         <commons.logging.version>1.2</commons.logging.version>
         <restfb.version>2.0.0-rc.2</restfb.version>
+        <jgit.version>4.8.0.201706111038-r</jgit.version>
+        <jxpath.version>1.3</jxpath.version>
     </properties>
 
     <dependencies>

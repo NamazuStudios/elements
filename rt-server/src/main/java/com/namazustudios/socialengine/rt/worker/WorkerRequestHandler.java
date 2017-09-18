@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.rt.worker;
 
-import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.ResponseReceiver;
+import com.namazustudios.socialengine.rt.exception.BadRequestException;
 
 /**
  * Used by {@link Worker} instances to handle {@link Request}s.
@@ -29,7 +29,7 @@ public interface WorkerRequestHandler {
      * @param request the {@link Request} object
      * @param responseReceiver the request object
      *
-     * @throws {@link InvalidDataException} if the return of the {@link Request#getPayload()} method is not suitable.
+     * @throws {@link BadRequestException} if the return of the {@link Request#getPayload()} method is not suitable.
      *
      */
     void handle(Request request, ResponseReceiver responseReceiver);

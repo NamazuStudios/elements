@@ -25,8 +25,7 @@ public interface RequestHeader {
     int getSequence();
 
     /**
-     * The method of the resource.  Note that unlke HTTP this is completely
-     * user-defined.
+     * The method of the resource to invoke.
      *
      * @return the method, never null
      */
@@ -40,16 +39,22 @@ public interface RequestHeader {
     String getPath();
 
     /**
-     * Gets a listing of headers mapped by header name.  Note that only one
-     * header name may be used.  Header names may also be reordered.  There
-     * is no guarantee that a header be in a particular order.
-     *
-     * Headers are specific for the particular request and are user-defined.
-     * They may not be transmitted as strings, but must always be represented
-     * as such.
+     * Gets a listing of headers mapped by header name.  A header may be repeated and therefore
+     * the header may not have the
      *
      * @return the mapping of headers.
      */
     Map<String, List<String>> getHeaders();
+
+    /**
+     * Gets a single header with the supplied name.
+     *
+     * @param header the header
+     * @return the header value, or null if no header is found
+     */
+    default String getHeader(final String header) {
+        final List<String> headers = getHeaders().get(header);
+        return headers == null || headers.isEmpty() ? null : headers.get(0);
+    }
 
 }

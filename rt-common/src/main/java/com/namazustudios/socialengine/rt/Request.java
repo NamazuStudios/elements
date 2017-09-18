@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.exception.InvalidDataException;
-import org.omg.CORBA.DynAnyPackage.Invalid;
+import com.namazustudios.socialengine.rt.exception.BadRequestException;
+import com.sun.media.sound.InvalidDataException;
 
 /**
  * A Request is a request sent to a particular resource.
@@ -47,22 +47,22 @@ public interface Request {
          * as it components are not null.
          *
          * @param request the request
-         * @throws InvalidDataException if the request is not valid
+         * @throws {@link BadRequestException} if the request is not valid
          */
         public static void validate(final Request request) {
 
             final RequestHeader requestHeader = request.getHeader();
 
             if(requestHeader == null) {
-                throw new InvalidDataException("request header null");
+                throw new BadRequestException("request header null");
             } else if (requestHeader.getSequence() < 0) {
-                throw new InvalidDataException("unexpected request sequence " + requestHeader.getSequence());
+                throw new BadRequestException("unexpected request sequence " + requestHeader.getSequence());
             } else if (requestHeader.getPath() == null) {
-                throw new InvalidDataException("invalid path " + requestHeader.getPath());
+                throw new BadRequestException("invalid path " + requestHeader.getPath());
             } else if (requestHeader.getMethod() == null) {
-                throw new InvalidDataException("invalid method " + requestHeader.getMethod());
+                throw new BadRequestException("invalid method " + requestHeader.getMethod());
             } else if (requestHeader.getHeaders() == null) {
-                throw new InvalidDataException("invalid request headers " + requestHeader.getHeaders());
+                throw new BadRequestException("invalid request headers " + requestHeader.getHeaders());
             }
 
         }

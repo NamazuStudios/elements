@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.mongodb.MongoCommandException;
-import com.namazustudios.socialengine.ValidationHelper;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
 import com.namazustudios.socialengine.exception.*;
@@ -22,6 +22,8 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by patricktwohig on 7/10/15.
@@ -75,6 +77,26 @@ public class MongoApplicationDao implements ApplicationDao {
 
         objectIndex.index(mongoApplication);
         return transform(mongoApplication);
+
+    }
+
+    @Override
+    public Pagination<Application> getActiveApplications() {
+
+        final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
+        query.filter("active = ", true);
+
+        final List<Application> applicationList = query.asList()
+            .stream()
+            .map(this::transform)
+            .collect(Collectors.toList());
+
+        final Pagination<Application> applicationPagination = new Pagination<>();
+        applicationPagination.setApproximation(false);
+        applicationPagination.setObjects(applicationList);
+        applicationPagination.setTotal(applicationList.size());
+
+        return applicationPagination;
 
     }
 

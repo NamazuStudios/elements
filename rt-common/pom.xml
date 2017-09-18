@@ -27,11 +27,6 @@
             <version>${guava.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.javolution</groupId>
             <artifactId>javolution</artifactId>
             <version>${javolution.version}</version>

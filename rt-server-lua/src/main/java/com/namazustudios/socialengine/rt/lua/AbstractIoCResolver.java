@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.lua;
 
-import com.namazustudios.socialengine.exception.InternalException;
+
+import com.namazustudios.socialengine.rt.exception.InternalException;
 
 import javax.inject.Provider;
 

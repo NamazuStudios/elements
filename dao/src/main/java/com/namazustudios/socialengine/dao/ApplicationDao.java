@@ -23,6 +23,13 @@ public interface ApplicationDao {
     Application createOrUpdateInactiveApplication(final Application application);
 
     /**
+     * Gets all active applications.
+     *
+     * @return a {@link Pagination<Application>} of all active {@link Application} instances
+     */
+    Pagination<Application> getActiveApplications();
+
+    /**
      * Gets the active applications registered in the databse given the offset and count.
      *
      * @param offset the offset

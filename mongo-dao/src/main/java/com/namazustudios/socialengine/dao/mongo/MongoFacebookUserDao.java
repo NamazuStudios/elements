@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.common.base.Strings;
-import com.namazustudios.socialengine.ValidationHelper;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.FacebookUserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.InvalidDataException;

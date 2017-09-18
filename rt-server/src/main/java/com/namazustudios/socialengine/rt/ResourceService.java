@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.NotFoundException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,7 +85,7 @@ public interface ResourceService<ResourceT extends Resource> {
      *
      * @param path the path to the resource
      *
-     * @throws {@l  ink NotFoundException} if no resource exists at that path
+     * @throws {@l  ink ResourceNotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     ResourceT removeResource(Path path);

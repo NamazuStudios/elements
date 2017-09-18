@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.namazustudios.socialengine.ValidationHelper;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.PSNApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
 import com.namazustudios.socialengine.dao.mongo.model.MongoPSNApplicationConfiguration;

@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rest.application.FacebookSessionResource;
 import com.namazustudios.socialengine.rest.application.PSNApplicationConfigurationResource;
 import com.namazustudios.socialengine.rest.security.HttpSessionResource;
 import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
+import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;

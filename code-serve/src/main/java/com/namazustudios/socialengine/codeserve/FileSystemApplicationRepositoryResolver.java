@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.codeserve;
 
+import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.model.application.Application;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Repository;
@@ -10,14 +11,14 @@ import javax.inject.Named;
 import java.io.File;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.dao.rt.FilesystemGitLoader.getBareStorageDirectory;
+
 /**
  * This loads an instance of {@link Repository} from a place on the filesystem.
  *
  * Created by patricktwohig on 8/2/17.
  */
 public class FileSystemApplicationRepositoryResolver implements ApplicationRepositoryResolver {
-
-    public static final String GIT_STORAGE_DIRECTORY = "com.namazustudios.socialengine.git.storage.directory";
 
     private File gitStorageDirectory;
 
@@ -37,12 +38,11 @@ public class FileSystemApplicationRepositoryResolver implements ApplicationRepos
 
     }
 
-    final File getStorageDirectoryForApplication(final Application application) throws ServiceMayNotContinueException {
+    private final File getStorageDirectoryForApplication(final Application application) throws ServiceMayNotContinueException {
 
-        final File absoluteStorageRoot = getGitStorageDirectory().getAbsoluteFile();
-        final File repositoryDirectory = new File(absoluteStorageRoot, application.getId());
+        final File repositoryDirectory = getBareStorageDirectory(getGitStorageDirectory(), application);
 
-        if (!repositoryDirectory.isDirectory() && !repositoryDirectory.mkdirs()) {
+        if (!repositoryDirectory.exists() && !repositoryDirectory.mkdirs()) {
             throw new ServiceMayNotContinueException("cannot create " + repositoryDirectory.getAbsolutePath());
         } else if (!repositoryDirectory.isDirectory()) {
             throw new ServiceMayNotContinueException(repositoryDirectory.getAbsolutePath() + " is not a directory.");
@@ -57,7 +57,7 @@ public class FileSystemApplicationRepositoryResolver implements ApplicationRepos
     }
 
     @Inject
-    public void setGitStorageDirectory(@Named(GIT_STORAGE_DIRECTORY) File gitStorageDirectory) {
+    public void setGitStorageDirectory(@Named(Constants.GIT_STORAGE_DIRECTORY) File gitStorageDirectory) {
         this.gitStorageDirectory = gitStorageDirectory;
     }
 

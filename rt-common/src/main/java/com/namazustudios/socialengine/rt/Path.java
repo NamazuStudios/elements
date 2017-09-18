@@ -3,14 +3,16 @@ package com.namazustudios.socialengine.rt;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 
+import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Represents the path scheme for use in the server.
@@ -29,7 +31,10 @@ public final class Path implements Comparable<Path> {
      */
     public static final String WILDCARD = "*";
 
-    private static final Pattern VALID_PATH = Pattern.compile("[\\w*]+");
+    /**
+     * A {@link Pattern} to match valid path components.
+     */
+    public static final Pattern VALID_PATH_COMPONENT = Pattern.compile("[\\p{Print}]+");
 
     private final List<String> components;
 
@@ -37,6 +42,7 @@ public final class Path implements Comparable<Path> {
     // compareTo method should compare.
     private final int maxCompareIndex;
 
+    // A boolean value to indicate if the path is a wildcard path.
     private final boolean wildcard;
 
     /**
@@ -56,7 +62,7 @@ public final class Path implements Comparable<Path> {
      *
      */
     public Path(final Path parent, final Path path) {
-        this(Lists.newArrayList(Iterables.concat(parent.getComponents(), path.getComponents())));
+        this(newArrayList(Iterables.concat(parent.getComponents(), path.getComponents())));
     }
 
     /**
@@ -70,10 +76,10 @@ public final class Path implements Comparable<Path> {
 
         wildcard = idx >= 0;
         maxCompareIndex = wildcard ? idx : components.size();
-        this.components = new ImmutableList.Builder<String>().addAll(components).build();
+        this.components = unmodifiableList(components);
 
         this.components.forEach(c -> {
-            if (!VALID_PATH.matcher(c).matches()) {
+            if (!VALID_PATH_COMPONENT.matcher(c).matches()) {
                 throw new IllegalArgumentException(c + " has invalid characters");
             }
         });
@@ -125,14 +131,54 @@ public final class Path implements Comparable<Path> {
     }
 
     /**
-     * Returns the normalized path string.  NOte that {@link #toString()} does not return
+     * Returns this {@link Path} as an absolute path string.  This is essentially prepending
+     * a '/' character to the result of {@link #toNormalizedPathString()}.
+     *
+     * @return the {@link Path} as represented by an absolute path.
+     */
+    public String toAbsolutePathString() {
+        return '/' + toNormalizedPathString();
+    }
+
+    /**
+     * Returns this {@link Path} as an absolute path string.  This is essentially prepending
+     * a {@link File#pathSeparatorChar} to the result of {@link #toFileSystemPathString()}.
+     *
+     * @return the {@link Path} as represented by an absolute path.
+     */
+    public String toAbsoluteFileString() {
+        return File.pathSeparatorChar + toFileSystemPathString();
+    }
+
+    /**
+     * Returns the normalized path string.  Note that {@link #toString()} does not return
      * a properly formatted path.  But rather a path useful for debugging and logging information.
      * To get the normalzied path, this method must be used.
      *
      * @return the normalized path as a string
      */
     public String toNormalizedPathString() {
-        return Util.pathFromComponents(components);
+        return toNormalizedPathString(PATH_SEPARATOR);
+    }
+
+    /**
+     * Returns the String representation of this Path as a file system path.
+     *
+     * @return the string representation
+     */
+    public String toFileSystemPathString() {
+        return toNormalizedPathString(File.pathSeparator);
+    }
+
+    /**
+     * Returns the normalized path string.  NOte that {@link #toString()} does not return
+     * a properly formatted path.  But rather a path useful for debugging and logging information.
+     * To get the normalzied path, this method must be used.
+     *
+     * @return the normalized path as a string
+     */
+    public String toNormalizedPathString(final String separator) {
+        return Util.pathFromComponents(components, separator);
     }
 
     @Override
@@ -227,24 +273,31 @@ public final class Path implements Comparable<Path> {
 
         /**
          * Joins the given string components together to build a path string from
-         * the given componenets.
+         * the given components.
          *
          * @param pathComponents
          * @return the string
          */
         public static String pathFromComponents(final List<String> pathComponents) {
+            return pathFromComponents(pathComponents, PATH_SEPARATOR);
+        }
+
+        /**
+         * Joins the given string components together to build a path string from
+         * the given components.
+         *
+         * @param pathComponents
+         * @return the string
+         */
+        public static String pathFromComponents(final List<String> pathComponents, final String separator) {
 
             for (final String pathComponent : pathComponents) {
-                if (pathComponent.contains(PATH_SEPARATOR)) {
-                    throw new IllegalArgumentException("Path components must not contain " + PATH_SEPARATOR);
+                if (pathComponent.contains(separator)) {
+                    throw new IllegalArgumentException("Path components must not contain " + separator);
                 }
             }
 
-            final StringBuilder stringBuilder = Joiner.on(PATH_SEPARATOR)
-                    .skipNulls()
-                    .appendTo(new StringBuilder("/"), pathComponents);
-
-            return stringBuilder.toString();
+            return Joiner.on(separator).skipNulls().join(pathComponents);
 
         }
 

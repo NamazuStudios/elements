@@ -41,7 +41,8 @@ public interface Constants {
 
     /**
      * Constant to designate the server.coroutine table.  This is a set of coroutinee
-     * functions managed by the server.
+     * functions managed by the server that are housed internally in the script.  The
+     * client code should not interfere with the running co-routines
      */
     String COROUTINE_TABLE = "coroutine";
 

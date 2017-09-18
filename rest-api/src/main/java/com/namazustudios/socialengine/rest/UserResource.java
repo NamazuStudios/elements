@@ -1,12 +1,13 @@
 package com.namazustudios.socialengine.rest;
 
 import com.google.common.base.Strings;
-import com.namazustudios.socialengine.ValidationHelper;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

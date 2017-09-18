@@ -25,7 +25,12 @@ public enum ResponseCode {
     /**
      * A particular path could not be found.
      */
-    PATH_NOT_FOUND,
+    RESOURCE_NOT_FOUND,
+
+    /**
+     * Indicates that we were trying to insert or create a duplicate resource.
+     */
+    DUPLICATE_RESOURCE,
 
     /**
      * A particular metohd could not be found at the requested path.
@@ -66,9 +71,24 @@ public enum ResponseCode {
     TOO_BUSY_FATAL,
 
     /**
-     * Indicates that the server encountered an unknown or worker error.
+     * Indicates that the requested asset is not found.
      */
-    INTERNAL_ERROR_FATAL;
+    ASSET_NOT_FOUND,
+
+    /**
+     * Indicates that the manifest was not found.
+     */
+    MANIFEST_NOT_FOUND,
+
+    /**
+     * Indicates that the server encountered an unknown error.
+     */
+    INTERNAL_ERROR_FATAL,
+
+    /**
+     * Indicates the server encountered a bad manifest and the
+     */
+    INTERNAL_ERROR_BAD_MANIFEST_FATAL;
 
     /**
      * Gets the actual code as returned by {@link ResponseHeader#getCode()}.

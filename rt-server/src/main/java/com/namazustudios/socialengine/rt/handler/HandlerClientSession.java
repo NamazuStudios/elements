@@ -98,5 +98,4 @@ public interface HandlerClientSession {
      */
     void disconnect();
 
-
 }

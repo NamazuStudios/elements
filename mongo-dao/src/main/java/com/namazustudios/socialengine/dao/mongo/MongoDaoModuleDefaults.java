@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.namazustudios.socialengine.ModuleDefaults;
+import com.namazustudios.socialengine.config.ModuleDefaults;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDatabaseProvider;
 

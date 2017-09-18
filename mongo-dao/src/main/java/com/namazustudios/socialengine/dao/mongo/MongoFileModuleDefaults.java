@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.namazustudios.socialengine.ModuleDefaults;
+import com.namazustudios.socialengine.config.ModuleDefaults;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoGridFSFileDaoProvider;
 
 import java.util.Properties;

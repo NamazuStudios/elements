@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.ValidationHelper;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.*;

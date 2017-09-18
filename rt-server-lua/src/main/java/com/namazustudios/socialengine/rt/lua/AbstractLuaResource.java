@@ -4,12 +4,12 @@ import com.google.common.base.Splitter;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
-import com.namazustudios.socialengine.exception.InternalException;
-import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.AbstractResource;
 import com.namazustudios.socialengine.rt.Container;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResponseCode;
+import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,7 @@ import java.util.Map;
  */
 public abstract class AbstractLuaResource extends AbstractResource {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractLuaResource.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractLuaResource.class);
 
     /**
      * Simplifies the file name for the sake of better error reporting.
@@ -58,26 +58,12 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
     private final ClasspathModuleLoader classpathModuleLoader;
 
-    private Logger scriptLog = LOG;
+    private Logger scriptLog = logger;
 
     /**
      * Redirects the print function to the logger returned by {@link #getScriptLog()}.
      */
-    private final JavaFunction printToScriptLog = new JavaFunction() {
-        @Override
-        public int invoke(LuaState luaState) {
-            try (final StackProtector stackProtector = new StackProtector(luaState)) {
-                final StringBuffer stringBuffer = new StringBuffer();
-
-                for (int i = 1; i <= luaState.getTop(); ++i) {
-                    stringBuffer.append(luaState.toJavaObject(i, String.class));
-                }
-
-                getScriptLog().info("{}", stringBuffer.toString());
-                return stackProtector.setAbsoluteIndex(0);
-            }
-        }
-    };
+    private final JavaFunction printToScriptLog = new ScriptLogger(s -> logger.info("{}", s));
 
     /**
      * Creates an instance of {@link AbstractLuaResource} with the given {@link LuaState}
@@ -207,7 +193,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
      *
      * @param methodName the method name
      *
-     * @throws {@link NotFoundException} if methodName name is not found
+     * @throws {@link MethodNotFoundException} if methodName name is not found
      *
      */
     protected void pushRequestHandlerFunction(final String methodName) {
@@ -221,7 +207,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
             if (!luaState.isTable(-1)) {
                 getScriptLog().error("Unable to find table {}", Constants.NAMAZU_RT_TABLE);
-                throw new NotFoundException(methodName + " doest not exist for " + this);
+                throw new MethodNotFoundException(methodName + " doest not exist for " + this);
             }
 
             luaState.getField(-1, Constants.REQUEST_TABLE);
@@ -229,7 +215,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
             if (!luaState.isTable(-1)) {
                 getScriptLog().error("Unable to find table {}.{}", Constants.NAMAZU_RT_TABLE, Constants.REQUEST_TABLE);
-                throw new NotFoundException(methodName + " doest not exist for " + this);
+                throw new MethodNotFoundException(methodName + " doest not exist for " + this);
             }
 
             // Here's where the failures can be considered "normal" in that somebody could
@@ -240,7 +226,7 @@ public abstract class AbstractLuaResource extends AbstractResource {
 
             if (!luaState.isFunction(-1)) {
                 getScriptLog().warn("Unable to find function {}.{}.{}", Constants.NAMAZU_RT_TABLE, Constants.REQUEST_TABLE, methodName);
-                throw new NotFoundException(methodName + " doest not exist for " + this);
+                throw new MethodNotFoundException(methodName + " doest not exist for " + this);
             }
 
         }

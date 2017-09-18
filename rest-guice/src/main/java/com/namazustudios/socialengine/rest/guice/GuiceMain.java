@@ -4,11 +4,14 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.DefaultConfigurationSupplier;
-import com.namazustudios.socialengine.FacebookBuiltinPermissionsSupplier;
+import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
+import com.namazustudios.socialengine.config.FacebookBuiltinPermissionsSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
+import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
+import com.namazustudios.socialengine.dao.rt.guice.RTLuaManifestLoaderModule;
+import com.namazustudios.socialengine.dao.rt.guice.RTDaoModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import org.apache.bval.guice.ValidationModule;
@@ -70,6 +73,9 @@ public class GuiceMain extends GuiceServletContextListener {
             new MongoCoreModule(),
             new MongoDaoModule(),
             new MongoSearchModule(),
+            new RTFilesystemGitLoaderModule(),
+            new RTLuaManifestLoaderModule(),
+            new RTDaoModule(),
             new ValidationModule()
         );
 

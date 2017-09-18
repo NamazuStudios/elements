@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.server.guice;
 
 import com.google.inject.AbstractModule;
-import com.namazustudios.socialengine.DefaultConfigurationSupplier;
+import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 
 import java.util.Properties;
 import java.util.function.Supplier;

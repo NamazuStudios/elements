@@ -1,11 +1,14 @@
 package com.namazustudios.socialengine.rt.lua;
 
 import com.google.inject.Inject;
-import com.namazustudios.socialengine.exception.InternalException;
-import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 
 import javax.inject.Provider;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 
 /**
@@ -21,7 +24,7 @@ public class EdgeResourceProviders {
      *
      * @param classpathLocation the classpath location
      * @return the Provider instance
-     * @throws NotFoundException if the script can't be found at that location
+     * @throws ResourceNotFoundException if the script can't be found at that location
      */
     public static Provider<LuaHandler> classpathProviderForScript(final String classpathLocation) {
 
@@ -29,7 +32,7 @@ public class EdgeResourceProviders {
         final URL resoureURL = classLoader.getResource(classpathLocation);
 
         if (resoureURL == null) {
-            throw new NotFoundException("Resource at location does not exist: " + classpathLocation);
+            throw new ResourceNotFoundException("Resource at location does not exist: " + classpathLocation);
         }
 
         return new Provider<LuaHandler>() {
@@ -64,7 +67,7 @@ public class EdgeResourceProviders {
      *
      * @param file the file location
      * @return the Provider instance
-     * @throws NotFoundException if the script can't be found at that location
+     * @throws ResourceNotFoundException if the script can't be found at that location
      */
     public static Provider<LuaHandler> filesystemProviderForScript(final File file) {
 
@@ -72,7 +75,7 @@ public class EdgeResourceProviders {
             // This just opens to check the file.  No actual reading
             // of the file needs to happen.
         } catch (IOException ex) {
-            throw new NotFoundException(ex);
+            throw new ResourceNotFoundException(ex);
         }
 
         return new Provider<LuaHandler>() {
@@ -90,7 +93,7 @@ public class EdgeResourceProviders {
                     luaEdgeResource.loadAndRun(inputStream, simplifiedFileName);
                 } catch (IOException ex) {
                     luaEdgeResource.close();
-                    throw new NotFoundException(ex);
+                    throw new ResourceNotFoundException(ex);
                 }
 
                 return luaEdgeResource;

@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.guice;
 
-import com.google.inject.AbstractModule;
+import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.namazustudios.socialengine.Constants;
@@ -29,41 +29,53 @@ import java.util.function.Function;
  *
  * Created by patricktwohig on 4/3/15.
  */
-public class MongoDaoModule extends AbstractModule {
+public class MongoDaoModule extends PrivateModule {
 
     @Override
     protected void configure() {
 
-        binder().bind(UserDao.class).to(MongoUserDao.class);
-        binder().bind(ProfileDao.class).to(MongoProfileDao.class);
-        binder().bind(FacebookUserDao.class).to(MongoFacebookUserDao.class);
-        binder().bind(SocialCampaignDao.class).to(MongoSocialCampaignDao.class);
-        binder().bind(ShortLinkDao.class).to(MongoShortLinkDao.class);
-        binder().bind(ApplicationDao.class).to(MongoApplicationDao.class);
-        binder().bind(ApplicationConfigurationDao.class).to(MongoApplicationConfigurationDao.class);
-        binder().bind(IosApplicationConfigurationDao.class).to(MongoIosApplicationConfigurationDao.class);
-        binder().bind(GooglePlayApplicationConfigurationDao.class).to(MongoGoogePlayApplicationConfigurationDao.class);
-        binder().bind(FacebookApplicationConfigurationDao.class).to(MongoFacebookApplicationConfigurationDao.class);
-        binder().bind(MatchDao.class).to(MongoMatchDao.class);
+        bind(UserDao.class).to(MongoUserDao.class);
+        bind(ProfileDao.class).to(MongoProfileDao.class);
+        bind(FacebookUserDao.class).to(MongoFacebookUserDao.class);
+        bind(SocialCampaignDao.class).to(MongoSocialCampaignDao.class);
+        bind(ShortLinkDao.class).to(MongoShortLinkDao.class);
+        bind(ApplicationDao.class).to(MongoApplicationDao.class);
+        bind(ApplicationConfigurationDao.class).to(MongoApplicationConfigurationDao.class);
+        bind(IosApplicationConfigurationDao.class).to(MongoIosApplicationConfigurationDao.class);
+        bind(GooglePlayApplicationConfigurationDao.class).to(MongoGoogePlayApplicationConfigurationDao.class);
+        bind(FacebookApplicationConfigurationDao.class).to(MongoFacebookApplicationConfigurationDao.class);
+        bind(MatchDao.class).to(MongoMatchDao.class);
 
-        binder().bind(Datastore.class)
-                .toProvider(MongoAdvancedDatastoreProvider.class)
-                .asEagerSingleton();
+        bind(Datastore.class)
+            .toProvider(MongoAdvancedDatastoreProvider.class)
+            .asEagerSingleton();
 
-        binder().bind(AdvancedDatastore.class)
-                .toProvider(MongoAdvancedDatastoreProvider.class)
-                .asEagerSingleton();
+        bind(AdvancedDatastore.class)
+            .toProvider(MongoAdvancedDatastoreProvider.class)
+            .asEagerSingleton();
 
-        binder().bind(MessageDigest.class)
-                .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
-                .toProvider(PasswordDigestProvider.class);
+        bind(MessageDigest.class)
+            .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
+            .toProvider(PasswordDigestProvider.class);
 
-        binder().bind(Mapper.class)
-                .toProvider(MongoDozerMapperProvider.class)
-                .asEagerSingleton();
+        bind(Mapper.class)
+            .toProvider(MongoDozerMapperProvider.class)
+            .asEagerSingleton();
 
-        binder().bind(new TypeLiteral<Function< MatchingAlgorithm, Matchmaker>>(){})
-                .toProvider(MongoMatchmakerFunctionProvider.class);
+        bind(new TypeLiteral<Function< MatchingAlgorithm, Matchmaker>>(){})
+            .toProvider(MongoMatchmakerFunctionProvider.class);
+
+        expose(UserDao.class);
+        expose(ProfileDao.class);
+        expose(FacebookUserDao.class);
+        expose(SocialCampaignDao.class);
+        expose(ShortLinkDao.class);
+        expose(ApplicationDao.class);
+        expose(ApplicationConfigurationDao.class);
+        expose(IosApplicationConfigurationDao.class);
+        expose(GooglePlayApplicationConfigurationDao.class);
+        expose(FacebookApplicationConfigurationDao.class);
+        expose(MatchDao.class);
 
     }
 

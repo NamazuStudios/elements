@@ -1,10 +1,10 @@
 package com.namazustudios.socialengine.rt.worker;
 
-import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.Container;
 import com.namazustudios.socialengine.rt.LockService;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 
 /**
  * A Worker is a type of {@link Resource} which is intented to live for a period of time in the
@@ -28,7 +28,7 @@ public interface Worker extends Resource {
      * @param method the method name
      * @return the handler for the given method, never null
      *
-     * @throws {@link NotFoundException} if the method cannot be found.
+     * @throws {@link MethodNotFoundException} if the method cannot be found.
      */
     WorkerRequestHandler getHandler(final String method);
 

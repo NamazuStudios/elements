@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rest.guice;
 
 import com.google.inject.Injector;
-import com.namazustudios.socialengine.rest.EnhancedApiListingResource;
+import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.server.ResourceConfig;

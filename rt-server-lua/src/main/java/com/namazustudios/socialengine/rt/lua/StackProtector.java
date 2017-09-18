@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
  */
 public class StackProtector implements AutoCloseable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StackProtector.class);
+    private static final Logger logger = LoggerFactory.getLogger(StackProtector.class);
 
     private final LuaState luaState;
 
@@ -25,22 +25,22 @@ public class StackProtector implements AutoCloseable {
     public StackProtector(final LuaState luaState, final int absoluteIndex) {
         this.luaState = luaState;
         this.absoluteIndex = absoluteIndex;
-        LOG.trace("Stack top {} -> {}", luaState.getTop(), absoluteIndex);
+        logger.trace("Stack top {} -> {}", luaState.getTop(), absoluteIndex);
     }
 
     public int adjustAbsoluteIndex(final int delta) {
-        LOG.trace("Setting stack top {} -> {}", absoluteIndex, delta + absoluteIndex);
+        logger.trace("Setting stack top {} -> {}", absoluteIndex, delta + absoluteIndex);
         return absoluteIndex = Math.max(0, delta + absoluteIndex);
     }
 
     public int setAbsoluteIndex(final int absoluteIndex) {
-        LOG.trace("Setting stack top {} -> {}", this.absoluteIndex, absoluteIndex);
+        logger.trace("Setting stack top {} -> {}", this.absoluteIndex, absoluteIndex);
         return this.absoluteIndex = Math.max(0, absoluteIndex);
     }
 
     @Override
     public void close() {
-        LOG.trace("Restoring Lua stack {} -> {}", luaState.getTop(), absoluteIndex);
+        logger.trace("Restoring Lua stack {} -> {}", luaState.getTop(), absoluteIndex);
         luaState.setTop(absoluteIndex);
     }
 
