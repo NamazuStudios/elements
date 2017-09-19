@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.lua.converter.mixin;
+package com.namazustudios.socialengine.rt.lua.converter.jackson;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

@@ -1,13 +1,13 @@
-package com.namazustudios.socialengine.rt.lua.converter.mixin;
+package com.namazustudios.socialengine.rt.lua.converter.jackson;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonRootName;
 import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
 
 import java.util.Map;
 
-@JsonRootName("name")
 public interface HttpOperationMixin {
+
+    String getName();
 
     @JsonProperty("produces")
     Map<String, HttpContent> getProducesContentByType();
