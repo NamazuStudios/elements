@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.lua;
 
 import com.naef.jnlua.JavaFunction;
-import com.naef.jnlua.LuaRuntimeException;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.AssetNotFoundException;
@@ -18,8 +17,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +25,7 @@ import java.util.function.Consumer;
 import static com.naef.jnlua.LuaState.REGISTRYINDEX;
 import static com.naef.jnlua.LuaState.YIELD;
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
+import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReason.SCHEDULER;
 
 /**
  * The abstract {@link Resource} type backed by a Lua script.  This uses the JNLua implentation
@@ -90,17 +88,16 @@ public class LuaResource implements Resource {
     }
 
     /**
-     *
-     * Loads and runs a Lua script from the given {@link InputStream} instance.  The name
-     * supplied is useful for debugging and should match the name of the file from which
-     * the script was loaded.
+     * Loads the main module of the script.  This should correspond to a module name as by the parameters of the
+     * {@link ResourceLoader#load(String, Object...)}.  The resource internally uses a table in the registry to
+     * store the module execution as not to pollute any of the global state.
      *
      * @param moduleName the name of the module
      * @param params the parameters to pass to the underlying {@link Resource}
      *
      * @throws IOException if the loading fails
      */
-    public void loadModuleAndInitialize(final AssetLoader assetLoader, final String moduleName, final Object ... params) {
+    public void loadModule(final AssetLoader assetLoader, final String moduleName, final Object ... params) {
 
         final LuaState luaState = getLuaState();
         final Path modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
@@ -109,7 +106,8 @@ public class LuaResource implements Resource {
         setupFunctionOverrides();
 
         try (final InputStream inputStream = assetLoader.open(modulePath)) {
-            // We substitute the logger for the name of the file we actually are trying to open.
+            // We substitute the logger for the name of the file we actually are trying to open.  This way the
+            // actual logger reads the name of the source file.
             scriptLog = LoggerFactory.getLogger(modulePath.toNormalizedPathString());
             luaState.load(inputStream, moduleName, "bt");
             scriptLog.info("Loaded script {}", moduleName);
@@ -141,25 +139,6 @@ public class LuaResource implements Resource {
         // Lastly we hijack the standard lua print function to redirect to the Logger
         luaState.pushJavaFunction(printToScriptLog);
         luaState.setGlobal(Constants.PRINT_FUNCTION);
-    }
-
-    /**
-     * Dumps the stack from an instance of {@link LuaRuntimeException}.
-     *
-     * @param lre the exception
-     */
-    public void dumpStack(final LuaRuntimeException lre) {
-
-        getScriptLog().error("Exception running script.", lre);
-
-        try (final StringWriter stringWriter = new StringWriter();
-             final PrintWriter printWriter = new PrintWriter(stringWriter) ) {
-            lre.printLuaStackTrace(printWriter);
-            getScriptLog().error("Lua Stack Trace {} ", stringWriter.getBuffer().toString());
-        } catch (IOException ex) {
-            getScriptLog().error("Caught exception writing Lua stack trace", lre);
-        }
-
     }
 
     /**
@@ -203,7 +182,10 @@ public class LuaResource implements Resource {
 
                 return new TaskId(taskId);
 
-            } finally {
+            } catch (Throwable th) {
+                logAssist.error("Error dispatching method", th);
+                throw th;
+            }finally {
                 luaState.setTop(0);
             }
         };
@@ -227,7 +209,7 @@ public class LuaResource implements Resource {
             luaState.call(1, 1);
 
             luaState.getField(-1, CoroutineBuiltin.RESUME);
-            luaState.pushString(taskId.asString());
+            luaState.pushString(SCHEDULER.toString());
             luaState.pushNumber(elapsedTime);
             luaState.pushString(TimeUnit.SECONDS.toString());
             luaState.call(3, 3);
@@ -308,4 +290,5 @@ public class LuaResource implements Resource {
         }
 
     }
+
 }
