@@ -1,8 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.converter;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.namazustudios.socialengine.rt.lua.converter.jackson.ManifestJacksonModule;
+import com.namazustudios.socialengine.rt.lua.converter.jackson.HttpManifestJacksonModule;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 
 import java.util.HashMap;
@@ -16,8 +15,7 @@ public class HttpManifestConverter extends AbstractMapConverter<HttpManifest> {
     private final ObjectMapper objectMapper;
     {
         objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new ManifestJacksonModule());
-        objectMapper.configure(DeserializationFeature.UNWRAP_ROOT_VALUE, true);
+        objectMapper.registerModule(new HttpManifestJacksonModule());
     }
 
     @Override

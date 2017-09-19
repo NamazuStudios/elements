@@ -6,9 +6,9 @@ import com.namazustudios.socialengine.rt.manifest.http.HttpModule;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 
-public class ManifestJacksonModule extends SimpleModule {
+public class HttpManifestJacksonModule extends SimpleModule {
 
-    public ManifestJacksonModule() {
+    public HttpManifestJacksonModule() {
         addSerializer(Type.class, new TypeSerializer());
         addDeserializer(Type.class, new TypeDeserializer());
         setMixInAnnotation(HttpModule.class, HttpModuleMixin.class);
