@@ -251,10 +251,11 @@ public class ApplicationDocumentationResource {
         httpOperation.getProducesContentByType()
                 .values()
                 .stream()
-                .flatMap(c -> c.getHeaders().stream())
-                .map(header -> {
+                .flatMap(c -> c.getHeaders().entrySet().stream())
+                .map(e -> {
                     final HeaderParameter parameter = new HeaderParameter();
-                    parameter.setName(header);
+                    parameter.setName(e.getKey());
+                    parameter.setProperty(toSwaggerProperty(e.getValue()));
                     return parameter;
                 }).forEach(parameters::add);
 
@@ -278,11 +279,19 @@ public class ApplicationDocumentationResource {
     }
 
     private Response resolveResponse(final HttpContent content) {
+
+        final Map<String, io.swagger.models.properties.Property> headerPropertyMap = content
+            .getHeaders()
+            .entrySet()
+            .stream()
+            .collect(Collectors.toMap(e -> e.getKey(), e -> toSwaggerProperty(e.getValue())));
+
         final Response response = new Response();
         final RefProperty type = new RefProperty(content.getModel());
         response.setSchema(type);
-        response.setHeaders(content.getHeaders().stream().collect(Collectors.toMap(identity(), h -> new StringProperty())));
+        response.setHeaders(headerPropertyMap);
         return response;
+
     }
 
     public ManifestService getManifestService() {

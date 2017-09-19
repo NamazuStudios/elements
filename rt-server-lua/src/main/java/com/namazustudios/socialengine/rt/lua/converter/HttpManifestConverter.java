@@ -1,8 +1,14 @@
 package com.namazustudios.socialengine.rt.lua.converter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.namazustudios.socialengine.rt.ParameterizedPath;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.exception.BadManifestException;
+import com.namazustudios.socialengine.rt.lua.converter.mixin.HttpContentMixin;
+import com.namazustudios.socialengine.rt.lua.converter.mixin.HttpModuleMixin;
+import com.namazustudios.socialengine.rt.lua.converter.mixin.HttpOperationMixin;
+import com.namazustudios.socialengine.rt.lua.converter.mixin.TypeDeserializer;
 import com.namazustudios.socialengine.rt.manifest.http.*;
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 
@@ -58,10 +64,26 @@ public class HttpManifestConverter extends AbstractMapConverter<HttpManifest> {
 
     @Override
     public HttpManifest convertLua2Java(Map<?, ?> map) {
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.addMixIn(HttpModule.class, HttpModuleMixin.class);
+        objectMapper.addMixIn(HttpOperation.class, HttpOperationMixin.class);
+        objectMapper.addMixIn(HttpContent.class, HttpContentMixin.class);
+
+        final SimpleModule typeDeserializerModule = new SimpleModule();
+        typeDeserializerModule.addDeserializer(Type.class, new TypeDeserializer());
+        objectMapper.registerModule(typeDeserializerModule);
+
+        final Map<String, Object> manifestMap = new HashMap<>();
+        manifestMap.put("modulesByName", map);
+
+        final HttpManifest manifest = objectMapper.convertValue(manifestMap, HttpManifest.class);
+
         final Map<String, HttpModule> modulesByName = toModulesByName(map);
         final HttpManifest httpManifest = new HttpManifest();
         httpManifest.setModulesByName(modulesByName);
         return httpManifest;
+
     }
 
     private Map<String, HttpModule> toModulesByName(final Map<?, ?> map) {
@@ -228,7 +250,7 @@ public class HttpManifestConverter extends AbstractMapConverter<HttpManifest> {
         final HttpContent httpContent = new HttpContent();
         httpContent.setType(type);
         httpContent.setModel(model);
-        httpContent.setHeaders(headers);
+//        httpContent.setHeaders(headers);
         return httpContent;
 
     }

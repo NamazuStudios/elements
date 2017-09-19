@@ -75,14 +75,12 @@ manifest.http = {
 
     -- The simple hello world operation
 
-    hello_world = {
+    -- Source code of the module, relative to the project root.  The key of the module map is the name of the module
+    -- as it would be passed to require.  In this case it will load example/hello_world.lua for this particular module
+    -- when in the process of servicing the request
 
-        -- Source code of the module, relative to the project root.  This is optional and by
-        -- default will map to the name of the operation set.  You may specify other modules
-        -- consistent with Lua's "require" keyword such as "foo.bar" to indicate that the
-        -- module's code resides in foo/bar.lua.
+    ["example.hello_world"] = {
 
-        module = "example.hello_world",
 
         -- The operations contained in the module.  This maps the request/respons metadata to various
         -- Lua script methods based on the nature of the request/response.
@@ -139,7 +137,24 @@ manifest.http = {
                         model = "foo",
 
                         -- Specifies any additional headers this request may consume
-                        headers = { "X-MyExampleHeader" },
+                        headers = {
+
+                            ["X-MyExampleStringHeader"] = {
+                                description = "An example string header",
+                                type = "string",
+                            },
+
+                            ["X-MyExampleNumberHeader"] = {
+                                description = "An example number header",
+                                type = "string",
+                            },
+
+                            ["X-MyExampleBooleanHeader"] = {
+                                description = "An example boolean header",
+                                type = "string",
+                            }
+
+                        }
 
                     }
                 },
@@ -152,15 +167,28 @@ manifest.http = {
                         -- Specifies the model which will be used to service the request
                         model = "foo",
 
-                        -- Specifies any additional headers this request may produce
-                        headers = { "X-MyExampleHeader" },
+                        -- Specifies any additional headers this request may consume
+                        headers = {
+                            ["X-MyExampleStringHeader"] = {
+                                description = "An example string header",
+                                type = "string",
+                            },
+
+                            ["X-MyExampleNumberHeader"] = {
+                                description = "An example number header",
+                                type = "string",
+                            },
+
+                            ["X-MyExampleBooleanHeader"] = {
+                                description = "An example boolean header",
+                                type = "string",
+                            }
+                        },
 
                         -- Specifies any options headers, if availble
 
                         static_headers = {
-                            ["Access-Control-Allow-Origin"] = {
-                                "http://example.com"
-                            }
+                            ["Access-Control-Allow-Origin"] = "http://example.com"
                         }
 
                     }

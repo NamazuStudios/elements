@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.manifest.http;
 
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.Response;
+import com.namazustudios.socialengine.rt.manifest.model.Property;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +16,7 @@ public class HttpContent {
 
     private String model;
 
-    private List<String> headers;
+    private Map<String, Property> headers;
 
     private Map<String, String> staticHeaders;
 
@@ -64,7 +65,7 @@ public class HttpContent {
      *
      * @return a {@link List <String>} indicating the headers
      */
-    public List<String> getHeaders() {
+    public Map<String, Property> getHeaders() {
         return headers;
     }
 
@@ -73,7 +74,7 @@ public class HttpContent {
      *
      * @param headers  a {@link List<String>} indicating the headers
      */
-    public void setHeaders(List<String> headers) {
+    public void setHeaders(Map<String, Property> headers) {
         this.headers = headers;
     }
 

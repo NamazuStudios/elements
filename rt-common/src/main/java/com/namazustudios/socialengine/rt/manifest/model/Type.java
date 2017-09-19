@@ -48,12 +48,12 @@ public enum Type {
      * @param value the value
      * @return the {@link Type} instance
      *
-     * @throws {@link BadManifestException} if the type was not supported
+     * @throws {@link IllegalArgumentException} if the type was not supported
      */
     public static Type findByValue(final String value) {
         return stream(values())
             .filter(t -> t.value.equals(value))
-            .findFirst().orElseThrow(() -> new BadManifestException(value + "type not supported."));
+            .findFirst().orElseThrow(() -> new IllegalArgumentException(value + "type not supported."));
     }
 
 }
