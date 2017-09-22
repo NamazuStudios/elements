@@ -15,9 +15,9 @@ import java.util.Map;
 
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 
-public class DefaultResponseService implements HttpResponseService {
+public class DefaultHttpResponseService implements HttpResponseService {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultResponseService.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultHttpResponseService.class);
 
     private Map<String , PayloadWriter> writersByContentType;
 

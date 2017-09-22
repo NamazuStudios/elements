@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.servlet;
 
+import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.UnacceptableContentException;
@@ -11,17 +12,16 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Map;
-import java.util.function.Supplier;
 
 public class DefaultHttpRequestService implements HttpRequestService {
 
-    private Supplier<HttpManifest> httpManifestSupplier;
+    private ManifestLoader manifestLoader;
 
     private Map<String, PayloadReader> paylaodReadersByContentType;
 
     @Override
     public HttpRequest getRequest(final HttpServletRequest req) {
-        final HttpManifest httpManifest = getHttpManifestSupplier().get();
+        final HttpManifest httpManifest = getManifestLoader().getHttpManifest();
         return new ServletHttpRequest(req, httpManifest, c -> deserialize(c, req));
     }
 
@@ -44,13 +44,13 @@ public class DefaultHttpRequestService implements HttpRequestService {
 
     }
 
-    public Supplier<HttpManifest> getHttpManifestSupplier() {
-        return httpManifestSupplier;
+    public ManifestLoader getManifestLoader() {
+        return manifestLoader;
     }
 
     @Inject
-    public void setHttpManifestSupplier(Supplier<HttpManifest> httpManifestSupplier) {
-        this.httpManifestSupplier = httpManifestSupplier;
+    public void setManifestLoader(ManifestLoader manifestLoader) {
+        this.manifestLoader = manifestLoader;
     }
 
     public Map<String, PayloadReader> getPaylaodReadersByContentType() {

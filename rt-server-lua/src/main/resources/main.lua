@@ -146,12 +146,12 @@ manifest.http = {
 
                             ["X-MyExampleNumberHeader"] = {
                                 description = "An example number header",
-                                type = "string",
+                                type = "number",
                             },
 
                             ["X-MyExampleBooleanHeader"] = {
                                 description = "An example boolean header",
-                                type = "string",
+                                type = "boolean",
                             }
 
                         }
@@ -185,7 +185,9 @@ manifest.http = {
                             }
                         },
 
-                        -- Specifies any options headers, if availble
+                        -- Specifies any options headers, if availble.  These will be sent with the
+                        -- response as-is.  This is useful for performing operations such as CORS or
+                        -- similar responses.
 
                         static_headers = {
                             ["Access-Control-Allow-Origin"] = "http://example.com"

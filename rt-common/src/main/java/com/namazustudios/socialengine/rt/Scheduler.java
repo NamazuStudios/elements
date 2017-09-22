@@ -4,7 +4,6 @@ import com.google.common.base.Stopwatch;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -14,8 +13,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 /**
  * The Scheduler is the main entry point dispatching requests and operations to the various {@link Resource} instances
  * contained in the underlying services.  This allows for both immediate and timed dispatches of various operations
- * to {@link Resource} instances and is responsible for coordinating and serializing access through the {@link Lock}
- * instances obtained via the {@link PathLockFactory}.
+ * to {@link Resource} instances and is responsible for coordinating and serializing access to each {@link Resource}.
  *
  * Created by patricktwohig on 8/22/15.
  */

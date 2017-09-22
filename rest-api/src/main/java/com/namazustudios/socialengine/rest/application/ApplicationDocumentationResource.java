@@ -67,6 +67,7 @@ public class ApplicationDocumentationResource {
     }
 
     private Swagger generateSwagger(final String applicationNameOrId) {
+
         final Swagger swagger = new Swagger();
         final Application application = getApplicationService().getApplication(applicationNameOrId);
 
@@ -124,7 +125,7 @@ public class ApplicationDocumentationResource {
         appendModelManifest(swagger, modelManifest);
 
         final HttpManifest httpManifest = getManifestService().getHttpManifestForApplication(application);
-        appendHttpManifest(swagger, httpManifest, modelManifest);
+        appendHttpManifest(swagger, httpManifest);
     }
 
     private void appendModelManifest(final Swagger swagger, final ModelManifest modelManifest) {
@@ -155,8 +156,7 @@ public class ApplicationDocumentationResource {
     }
 
     private void appendHttpManifest(final Swagger swagger,
-                                    final HttpManifest httpManifest,
-                                    final ModelManifest modelManifest) {
+                                    final HttpManifest httpManifest) {
 
         final Map<ParameterizedPath, io.swagger.models.Path> parameterizedPathPathMap = new HashMap<>();
 

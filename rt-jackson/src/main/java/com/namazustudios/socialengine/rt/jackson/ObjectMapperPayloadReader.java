@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.jackson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.rt.PayloadReader;
 
-import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -23,7 +22,6 @@ public class ObjectMapperPayloadReader implements PayloadReader {
         return objectMapper;
     }
 
-    @Inject
     public void setObjectMapper(final ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }

@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt.manifest.model;
 
-import com.namazustudios.socialengine.rt.exception.BadManifestException;
-
 import static java.util.Arrays.stream;
 
 /**
@@ -12,17 +10,17 @@ import static java.util.Arrays.stream;
 public enum Type {
 
     /**
-     * The string type
+     * The string type.  Generally expressed as a {@link String}.
      */
     STRING("string"),
 
     /**
-     * The number type.
+     * The number type.  Generally expressed as a {@link Double} or primitive Java double.
      */
     NUMBER("number"),
 
     /**
-     * The boolean type
+     * The boolean type.  Generally expressed as a {@link Boolean} or primitive Java boolean.
      */
     BOOLEAN("boolean"),
 

@@ -89,8 +89,8 @@ public class DispatcherServlet extends HttpServlet {
 
         } catch (Exception ex) {
             getExceptionMapperResolver()
-                    .getExceptionMapper(ex)
-                    .map(ex, response -> assembleAndWrite(httpRequest, response, resp));
+                .getExceptionMapper(ex)
+                .map(ex, response -> assembleAndWrite(httpRequest, response, resp));
             logger.info("Mapped exception properly.", ex);
         }
 
