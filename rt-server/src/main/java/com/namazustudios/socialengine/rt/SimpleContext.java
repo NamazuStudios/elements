@@ -11,6 +11,9 @@ public class SimpleContext implements Context {
     private ResourceService resourceService;
 
     @Override
+    public void start() {}
+
+    @Override
     public void shutdown() {
         getScheduler().shutdown();
         getResourceService().removeAndCloseAllResources();

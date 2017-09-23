@@ -1,19 +1,28 @@
 package com.namazustudios.socialengine.appserve;
 
 import com.google.inject.Injector;
+import com.google.inject.servlet.GuiceFilter;
+import com.namazustudios.socialengine.appserve.guice.DispatcherModule;
+import com.namazustudios.socialengine.appserve.guice.GuiceMain;
 import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.service.ApplicationService;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
 import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.servlet.DispatcherType;
+import java.util.EnumSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import static java.util.EnumSet.allOf;
 
 public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
 
@@ -21,29 +30,63 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     private final ConcurrentMap<String, Injector> applicationInjectorMap = new ConcurrentHashMap<>();
 
-    private DeploymentManager deploymentManager;
-
     private Injector injector;
+
+    private DeploymentManager deploymentManager;
 
     private ApplicationService applicationService;
 
     @Override
     public ContextHandler createContextHandler(App app) throws Exception {
+
+        final Application application = getApplicationService().getApplication(app.getOriginId());
+
+        final Injector injector = injectFor(application.getId());
+        final Context context = injector.getInstance(Context.class);
+        context.start();
+
+        final ServletContextHandler servletContextHandler = new ServletContextHandler();
+
+        servletContextHandler.addEventListener(new GuiceMain(getInjector()));
+        servletContextHandler.addFilter(GuiceFilter.class, "/*", allOf(DispatcherType.class));
+
         return null;
+
+    }
+
+    private Injector injectFor(final String appId) {
+        return applicationInjectorMap.computeIfAbsent(appId, k -> getInjector().createChildInjector(new DispatcherModule()));
     }
 
     @Override
     protected void doStart() throws Exception {
-        getApplicationService().getApplications().getObjects().forEach(this::start);
+        getApplicationService().getApplications().getObjects().forEach(this::deploy);
     }
 
-    private void start(final Application application) {
-
+    private void deploy(final Application application) {
+        try {
+            final App app = new App(getDeploymentManager(), this, application.getId());
+            getDeploymentManager().addApp(app);
+        } catch (Exception ex) {
+            logger.error("Failed to deploy applciation {} ", application.getName(), ex);
+        }
     }
 
     @Override
     protected void doStop() throws Exception {
-        super.doStop();
+        applicationInjectorMap
+            .values()
+            .stream()
+            .map(i -> i.getInstance(Context.class))
+            .forEach(this::shutdown);
+    }
+
+    private void shutdown(final Context context) {
+        try {
+            context.shutdown();
+        } catch (Exception ex) {
+            logger.error("Failed to stop context.", ex);
+        }
     }
 
     public Injector getInjector() {

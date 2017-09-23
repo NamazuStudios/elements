@@ -12,7 +12,7 @@ import com.namazustudios.socialengine.rt.jackson.guice.JacksonPaylaodWriterModul
 import com.namazustudios.socialengine.rt.jackson.guice.JacksonPayloadReaderModule;
 import com.namazustudios.socialengine.rt.servlet.*;
 
-public class DispatcherServletModule extends PrivateModule {
+public class DispatcherModule extends PrivateModule {
 
     @Override
     protected void configure() {
@@ -22,7 +22,7 @@ public class DispatcherServletModule extends PrivateModule {
         install(new JacksonPayloadReaderModule());
         install(new JacksonPaylaodWriterModule());
 
-        bind(HttpSessionService.class).to(DefaultHttpSessionService.class);
+        bind(HttpSessionService.class).to(DefaultHttpSessionService.class).asEagerSingleton();
         bind(HttpRequestService.class).to(DefaultHttpRequestService.class);
         bind(HttpResponseService.class).to(DefaultHttpResponseService.class);
         bind(new TypeLiteral<SessionRequestDispatcher<HttpRequest>>(){}).to(RequestScopedHttpSessionDispatcher.class);

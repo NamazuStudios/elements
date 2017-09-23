@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.rt.handler.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Singleton;
 import javax.servlet.annotation.WebListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -25,6 +26,7 @@ import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
  * {@link Session#observeIdle(HandlerClientSessionObserver)} by following the callbacks supplied to
  * {@link HttpSessionListener}.
  */
+@Singleton
 @WebListener
 public class DefaultHttpSessionService implements HttpSessionService, HttpSessionListener {
 
