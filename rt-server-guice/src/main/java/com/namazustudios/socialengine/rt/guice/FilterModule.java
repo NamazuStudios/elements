@@ -17,7 +17,7 @@ import java.util.Objects;
  *
  * Created by patricktwohig on 9/2/15.
  */
-public abstract class FilterModule extends AbstractModule {
+public class FilterModule extends AbstractModule {
 
     private final LinkedList<String> filterNames = new LinkedList<>();
 
@@ -43,9 +43,9 @@ public abstract class FilterModule extends AbstractModule {
     }
 
     /**
-     * Called to configure the filters fo the application.
+     * Called to configure the filters for the application.  Leave as-is to install no filters.
      */
-    protected abstract void configureFilters();
+    protected void configureFilters() {};
 
     /**
      * Binds an {@link Filter} to be added ot the server's filter chain.

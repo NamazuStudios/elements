@@ -8,7 +8,6 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
-import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -59,7 +58,6 @@ public class DispatcherServletLoader extends GuiceServletContextListener {
     @Override
     protected Injector getInjector() {
         return injector = containerInjector.createChildInjector(
-            new LuaModule(),
             new DispatcherModule(),
             new DispatcherServletMappings(),
             new FileAssetLoaderModule(assetRootDirectory),

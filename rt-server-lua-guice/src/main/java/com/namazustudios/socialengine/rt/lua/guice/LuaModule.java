@@ -6,6 +6,7 @@ import com.naef.jnlua.LuaState;
 import com.naef.jnlua.NativeSupport;
 import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.ResourceLoader;
+import com.namazustudios.socialengine.rt.lua.IocResolver;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
 import com.namazustudios.socialengine.rt.lua.NativeLibLoader;
 
@@ -17,6 +18,7 @@ public class LuaModule extends PrivateModule {
     @Override
     protected final void configure() {
         NativeSupport.getInstance().setLoader(new NativeLibLoader());
+        bind(IocResolver.class).to(GuiceIoCResolver.class);
         configureFeatures();
     }
 
