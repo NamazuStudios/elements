@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class SimpleContext implements Context {
 
@@ -10,6 +11,8 @@ public class SimpleContext implements Context {
 
     private ResourceService resourceService;
 
+    private AssetLoader rootAssetLoader;
+
     @Override
     public void start() {}
 
@@ -18,6 +21,7 @@ public class SimpleContext implements Context {
         getScheduler().shutdown();
         getResourceService().removeAndCloseAllResources();
         getResourceLoader().close();
+        getRootAssetLoader().close();
     }
 
     public Scheduler getScheduler() {
@@ -45,6 +49,15 @@ public class SimpleContext implements Context {
     @Inject
     public void setResourceService(ResourceService resourceService) {
         this.resourceService = resourceService;
+    }
+
+    public AssetLoader getRootAssetLoader() {
+        return rootAssetLoader;
+    }
+
+    @Inject
+    public void setRootAssetLoader(@Named(AssetLoader.ROOT) AssetLoader rootAssetLoader) {
+        this.rootAssetLoader = rootAssetLoader;
     }
 
 }

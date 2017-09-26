@@ -2,14 +2,16 @@ package com.namazustudios.socialengine.appserve;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.namazustudios.socialengine.appserve.guice.FileSystemGitLoaderModule;
 import com.namazustudios.socialengine.appserve.guice.ServerModule;
 import com.namazustudios.socialengine.appserve.guice.ServicesModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
+import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import org.apache.bval.guice.ValidationModule;
-import org.mortbay.jetty.Server;
+import org.eclipse.jetty.server.Server;
 
 public class Main {
 
@@ -24,6 +26,7 @@ public class Main {
             new MongoDaoModule(),
             new ValidationModule(),
             new MongoSearchModule(),
+            new FileSystemGitLoaderModule(),
             new ConfigurationModule(defaultConfigurationSupplier)
         );
 

@@ -101,7 +101,7 @@ public class SimpleScheduler implements Scheduler {
     }
 
     @Inject
-    public void setLockService(@Named LockService lockService) {
+    public void setLockService(LockService lockService) {
         this.lockService = lockService;
     }
 

@@ -28,6 +28,8 @@ import java.util.function.IntUnaryOperator;
  */
 public interface AssetLoader extends AutoCloseable {
 
+    String ROOT = "com.namazustudios.socialengine.rt.AssetLoader.ROOT";
+
     /**
      * Closes the {@link AssetLoader} and cleaning up any resources.  Any open {@link InputStream}
      * instances may be closed, but this is not a guarantee.  All resources open <b>should</b> be closed
@@ -119,7 +121,7 @@ public interface AssetLoader extends AutoCloseable {
     default AssetLoader getReferenceCountedView(final Consumer<AssetLoader> onFinalClose) {
 
         final AssetLoader instance = this;
-        final AtomicInteger refCount = new AtomicInteger(1);
+        final AtomicInteger refCount = new AtomicInteger(0);
         final Logger logger = LoggerFactory.getLogger(instance.getClass());
 
         return new AssetLoader() {

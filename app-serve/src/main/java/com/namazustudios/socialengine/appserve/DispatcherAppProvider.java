@@ -3,7 +3,8 @@ package com.namazustudios.socialengine.appserve;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.appserve.guice.DispatcherModule;
-import com.namazustudios.socialengine.appserve.guice.GuiceMain;
+import com.namazustudios.socialengine.appserve.guice.DispatcherServletLoader;
+import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.service.ApplicationService;
@@ -18,7 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.DispatcherType;
-import java.util.EnumSet;
+import java.io.File;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -36,6 +37,8 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     private ApplicationService applicationService;
 
+    private GitLoader gitLoader;
+
     @Override
     public ContextHandler createContextHandler(App app) throws Exception {
 
@@ -46,11 +49,13 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         context.start();
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
+        final File codeDiretory = getGitLoader().getCodeDirectory(application);
 
-        servletContextHandler.addEventListener(new GuiceMain(getInjector()));
+        servletContextHandler.setContextPath(application.getName());
+        servletContextHandler.addEventListener(new DispatcherServletLoader(getInjector(), codeDiretory));
         servletContextHandler.addFilter(GuiceFilter.class, "/*", allOf(DispatcherType.class));
 
-        return null;
+        return servletContextHandler;
 
     }
 
@@ -114,6 +119,15 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     @Override
     public void setDeploymentManager(DeploymentManager deploymentManager) {
         this.deploymentManager = deploymentManager;
+    }
+
+    public GitLoader getGitLoader() {
+        return gitLoader;
+    }
+
+    @Inject
+    public void setGitLoader(GitLoader gitLoader) {
+        this.gitLoader = gitLoader;
     }
 
 }

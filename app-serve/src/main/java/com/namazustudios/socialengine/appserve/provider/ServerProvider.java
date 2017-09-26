@@ -3,7 +3,10 @@ package com.namazustudios.socialengine.appserve.provider;
 import com.namazustudios.socialengine.Constants;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
-import org.mortbay.jetty.Server;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.server.handler.HandlerCollection;
+import org.eclipse.jetty.server.handler.RequestLogHandler;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -17,15 +20,25 @@ public class ServerProvider implements Provider<Server> {
 
     private Provider<DeploymentManager> deploymentManagerProvider;
 
-
     @Override
     public Server get() {
+
         final int port = getServerPortProvider().get();
         final Server server = new Server(port);
         final AppProvider dispatcherAppProvider = getAppProviderProvider().get();
         final DeploymentManager deploymentManager = getDeploymentManagerProvider().get();
+
+        final HandlerCollection mainHandler = new HandlerCollection();
+        mainHandler.addHandler(new RequestLogHandler());
+
+        final ContextHandlerCollection contextHandlerCollection = new ContextHandlerCollection();
+        deploymentManager.setContexts(contextHandlerCollection);
+        mainHandler.addHandler(contextHandlerCollection);
+
         deploymentManager.addAppProvider(dispatcherAppProvider);
-        server.getContainer().addBean(deploymentManager);
+        server.addBean(deploymentManager);
+        server.setHandler(mainHandler);
+
         return server;
     }
 

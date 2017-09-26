@@ -5,6 +5,7 @@ import com.naef.jnlua.Converter;
 import com.naef.jnlua.LuaState;
 import com.naef.jnlua.NativeSupport;
 import com.namazustudios.socialengine.rt.ManifestLoader;
+import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
 import com.namazustudios.socialengine.rt.lua.NativeLibLoader;
 
@@ -55,8 +56,9 @@ public class LuaModule extends PrivateModule {
      * externally.
      */
     protected final void enableManifestLoaderFeature() {
-        install(new LuaManifestLoaderModule());
+        install(new LuaLoaderModule());
         expose(ManifestLoader.class);
+        expose(ResourceLoader.class);
     }
 
 }

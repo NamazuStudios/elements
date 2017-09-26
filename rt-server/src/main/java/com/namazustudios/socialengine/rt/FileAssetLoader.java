@@ -18,8 +18,6 @@ public class FileAssetLoader implements AssetLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(FileAssetLoader.class);
 
-
-
     private final File rootDirectory;
 
     private final AtomicBoolean open = new AtomicBoolean(true);
