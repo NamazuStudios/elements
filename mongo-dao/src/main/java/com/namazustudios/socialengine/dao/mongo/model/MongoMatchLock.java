@@ -1,11 +1,12 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Property;
+import org.mongodb.morphia.annotations.*;
 
+import java.sql.Timestamp;
 import java.util.UUID;
+
+import static java.lang.System.currentTimeMillis;
 
 /**
  * A document type which locks a {@link MongoMatch} instance.  The {@link ObjectId} used with instance is acquired from
@@ -24,9 +25,9 @@ public class MongoMatchLock {
     @Id
     private ObjectId playerMatchId;
 
-//    @Property
-//    @Indexed(options = @IndexOptions(expireAfterSeconds = PENDING_MATCH_TIMEOUT_SECONDS))
-//    private Timestamp timestamp = new Timestamp(currentTimeMillis());
+    @Property
+    @Indexed(options = @IndexOptions(expireAfterSeconds = PENDING_MATCH_TIMEOUT_SECONDS))
+    private Timestamp timestamp = new Timestamp(currentTimeMillis());
 
     @Property
     private String lockUuid;
@@ -46,13 +47,13 @@ public class MongoMatchLock {
         this.playerMatchId = playerMatchId;
     }
 
-//    public Timestamp getTimestamp() {
-//        return timestamp;
-//    }
-//
-//    public void setTimestamp(Timestamp timestamp) {
-//        this.timestamp = timestamp;
-//    }
+    public Timestamp getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Timestamp timestamp) {
+        this.timestamp = timestamp;
+    }
 
     public String getLockUuid() {
         return lockUuid;
