@@ -1,10 +1,9 @@
 package com.namazustudios.socialengine.rest.application;
 
-import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
-import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.FacebookApplicationConfigurationService;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -14,12 +13,14 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.Objects;
 
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.FACBOOK_OAUTH_KEY;
+
 /**
  * Created by patricktwohig on 6/14/17.
  */
 @Api(value = "Facebook Application Configuration",
      description = "Operations for the management of ApplictionConfiguration instances for Facebook Applications.",
-     authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
+     authorizations = {@Authorization(FACBOOK_OAUTH_KEY)})
 @Path("application/{applicationNameOrId}/configuration/facebook")
 public class FacebookApplicationConfigurationResource {
 
