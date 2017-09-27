@@ -186,7 +186,6 @@ public class MongoProfileDao implements ProfileDao {
 
         validate(profile);
 
-        final ObjectId objectId = getMongoDBUtils().parse(profile.getId());
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
         final MongoUser user = getMongoUserFromProfile(profile);
@@ -194,7 +193,6 @@ public class MongoProfileDao implements ProfileDao {
 
         query.and(
             query.criteria("active").equal(false),
-            query.criteria("_id").equal(objectId),
             query.criteria("user").equal(user),
             query.criteria("application").equal(application)
         );
