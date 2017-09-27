@@ -19,6 +19,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -184,7 +185,7 @@ public class MongoMatchUtils {
             throw new NoSuitableMatchException("player or opponent already matched");
         }
 
-        final long now = currentTimeMillis();
+        final Timestamp now = new Timestamp(currentTimeMillis());
 
         final UpdateOperations<MongoMatch> playerUpdateOperations;
         playerUpdateOperations = getDatastore().createUpdateOperations(MongoMatch.class);
@@ -192,8 +193,8 @@ public class MongoMatchUtils {
         final UpdateOperations<MongoMatch> oppponentUpdateOperations;
         oppponentUpdateOperations = getDatastore().createUpdateOperations(MongoMatch.class);
 
-        playerUpdateOperations.set("opponent", opponentMatch).set("lastUpdatedTimestamp", now);
-        oppponentUpdateOperations.set("opponent", playerMatch).set("lastUpdatedTimestamp", now);
+        playerUpdateOperations.set("opponent", opponentMatch.getPlayer()).set("lastUpdatedTimestamp", now);
+        oppponentUpdateOperations.set("opponent", playerMatch.getPlayer()).set("lastUpdatedTimestamp", now);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
             .upsert(false)
