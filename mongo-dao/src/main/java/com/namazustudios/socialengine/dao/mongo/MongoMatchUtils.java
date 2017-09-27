@@ -155,6 +155,8 @@ public class MongoMatchUtils {
         try {
             return doAttempt(playerMatch, opponentMatch);
         } finally {
+
+            getDatastore().delete(mongoMatchList.get(0));
             final Query<MongoMatchLock> query = getDatastore().createQuery(MongoMatchLock.class);
             query.field("_id").hasAnyOf(mongoMatchList);
             getDatastore().delete(query);

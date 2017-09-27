@@ -23,7 +23,6 @@ import org.apache.bval.guice.ValidationModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -64,11 +63,6 @@ public class MongoFIFOMatchmakerIntegrationTest {
 
     private MongodExecutable mongodExecutable;
 
-    @BeforeTest
-    public void insertMatches() {
-        System.out.println("Hello World!");
-    }
-
     @Test
     public void testMatch() {
 
@@ -94,7 +88,8 @@ public class MongoFIFOMatchmakerIntegrationTest {
         final Matchmaker.SuccessfulMatchTuple successfulMatchTuple;
         successfulMatchTuple = getMatchDao().getMatchmaker(FIFO).attemptToFindOpponent(matchb);
 
-        assertEquals(successfulMatchTuple.getPlayerMatch().getPlayer(), profilea);
+        // Cross validates that the matches were made properly
+        crossValidateMatch(successfulMatchTuple, profileb, profilea);
 
     }
 
@@ -126,6 +121,21 @@ public class MongoFIFOMatchmakerIntegrationTest {
         final Match match = new Match();
         match.setPlayer(profile);
         return match;
+    }
+
+    private void crossValidateMatch(final Matchmaker.SuccessfulMatchTuple successfulMatchTuple,
+                                    final Profile player,
+                                    final Profile opponent) {
+
+        final Match playerMatch = successfulMatchTuple.getPlayerMatch();
+        final Match opponentMatch = successfulMatchTuple.getOpponentMatch();
+
+        assertEquals(playerMatch.getPlayer(), player);
+        assertEquals(playerMatch.getOpponent(), opponent);
+
+        assertEquals(opponentMatch.getPlayer(), opponent);
+        assertEquals(opponentMatch.getOpponent(), player);
+
     }
 
     @AfterClass

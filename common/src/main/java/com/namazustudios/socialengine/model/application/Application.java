@@ -167,4 +167,36 @@ public class Application {
         this.httpTunnelEndpointUrl = httpTunnelEndpointUrl;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Application)) return false;
+
+        Application that = (Application) o;
+
+        if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
+        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
+        if (getDescription() != null ? !getDescription().equals(that.getDescription()) : that.getDescription() != null)
+            return false;
+        if (getScriptRepoUrl() != null ? !getScriptRepoUrl().equals(that.getScriptRepoUrl()) : that.getScriptRepoUrl() != null)
+            return false;
+        if (getHttpDocumentationUrl() != null ? !getHttpDocumentationUrl().equals(that.getHttpDocumentationUrl()) : that.getHttpDocumentationUrl() != null)
+            return false;
+        if (getHttpDocumentationUiUrl() != null ? !getHttpDocumentationUiUrl().equals(that.getHttpDocumentationUiUrl()) : that.getHttpDocumentationUiUrl() != null)
+            return false;
+        return getHttpTunnelEndpointUrl() != null ? getHttpTunnelEndpointUrl().equals(that.getHttpTunnelEndpointUrl()) : that.getHttpTunnelEndpointUrl() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getId() != null ? getId().hashCode() : 0;
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
+        result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
+        result = 31 * result + (getScriptRepoUrl() != null ? getScriptRepoUrl().hashCode() : 0);
+        result = 31 * result + (getHttpDocumentationUrl() != null ? getHttpDocumentationUrl().hashCode() : 0);
+        result = 31 * result + (getHttpDocumentationUiUrl() != null ? getHttpDocumentationUiUrl().hashCode() : 0);
+        result = 31 * result + (getHttpTunnelEndpointUrl() != null ? getHttpTunnelEndpointUrl().hashCode() : 0);
+        return result;
+    }
+
 }
