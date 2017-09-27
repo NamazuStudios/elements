@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.appserve.guice;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
+import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.guice.ExceptionMapperModule;
 import com.namazustudios.socialengine.rt.guice.FilterModule;
 import com.namazustudios.socialengine.rt.guice.SimpleServicesModule;
@@ -14,15 +15,26 @@ import com.namazustudios.socialengine.rt.jackson.guice.JacksonPayloadReaderModul
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.servlet.*;
 
+import java.io.File;
+
 public class DispatcherModule extends PrivateModule {
+
+    private final File assetRootDirectory;
+
+    public DispatcherModule(final File assetRootDirectory) {
+        this.assetRootDirectory = assetRootDirectory;
+    }
 
     @Override
     protected void configure() {
 
         install(new LuaModule());
+        install(new FileAssetLoaderModule(assetRootDirectory));
+
         install(new FilterModule());
         install(new ExceptionMapperModule());
         install(new SimpleServicesModule());
+
         install(new JacksonPayloadReaderModule());
         install(new JacksonPaylaodWriterModule());
 
@@ -32,6 +44,7 @@ public class DispatcherModule extends PrivateModule {
         bind(new TypeLiteral<SessionRequestDispatcher<HttpRequest>>(){}).to(RequestScopedHttpSessionDispatcher.class);
         bind(DispatcherServlet.class).in(Scopes.SINGLETON);
 
+        expose(Context.class);
         expose(DispatcherServlet.class);
 
     }

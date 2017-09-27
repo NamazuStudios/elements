@@ -2,7 +2,9 @@ package com.namazustudios.socialengine.rt;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
+@Singleton
 public class SimpleContext implements Context {
 
     private Scheduler scheduler;

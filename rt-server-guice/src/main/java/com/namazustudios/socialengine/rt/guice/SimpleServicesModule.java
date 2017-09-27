@@ -22,6 +22,7 @@ public class SimpleServicesModule extends AbstractModule {
     @Override
     protected void configure() {
 
+        bind(Context.class).to(SimpleContext.class).asEagerSingleton();
         bind(Scheduler.class).to(SimpleScheduler.class).asEagerSingleton();
         bind(LockService.class).to(SimpleLockService.class).asEagerSingleton();
         bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();

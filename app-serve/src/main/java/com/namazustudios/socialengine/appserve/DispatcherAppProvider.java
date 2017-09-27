@@ -44,23 +44,26 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         final Application application = getApplicationService().getApplication(app.getOriginId());
 
-        final Injector injector = injectFor(application.getId());
+        final Injector injector = injectFor(application);
         final Context context = injector.getInstance(Context.class);
         context.start();
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
-        final File codeDiretory = getGitLoader().getCodeDirectory(application);
 
+        servletContextHandler.addEventListener(new DispatcherServletLoader(injector));
         servletContextHandler.setContextPath(application.getName());
-        servletContextHandler.addEventListener(new DispatcherServletLoader(getInjector(), codeDiretory));
         servletContextHandler.addFilter(GuiceFilter.class, "/*", allOf(DispatcherType.class));
 
         return servletContextHandler;
 
     }
 
-    private Injector injectFor(final String appId) {
-        return applicationInjectorMap.computeIfAbsent(appId, k -> getInjector().createChildInjector(new DispatcherModule()));
+    private Injector injectFor(final Application application) {
+        return applicationInjectorMap.computeIfAbsent(application.getId(), k -> {
+            final File codeDiretory = getGitLoader().getCodeDirectory(application);
+            final DispatcherModule dispatcherModule = new DispatcherModule(codeDiretory);
+            return getInjector().createChildInjector(dispatcherModule);
+        });
     }
 
     @Override

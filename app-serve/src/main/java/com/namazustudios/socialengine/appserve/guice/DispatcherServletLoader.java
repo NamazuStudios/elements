@@ -12,14 +12,11 @@ import com.google.inject.spi.TypeListener;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.annotation.WebListener;
-import java.io.File;
 import java.util.EventListener;
 
 public class DispatcherServletLoader extends GuiceServletContextListener {
 
     private final Injector containerInjector;
-
-    private final File assetRootDirectory;
 
     private Injector injector;
 
@@ -39,9 +36,8 @@ public class DispatcherServletLoader extends GuiceServletContextListener {
         return cls.isAnnotationPresent(WebListener.class) && EventListener.class.isAssignableFrom(cls);
     }
 
-    public DispatcherServletLoader(final Injector containerInjector, final File assetRootDirectory) {
+    public DispatcherServletLoader(final Injector containerInjector) {
         this.containerInjector = containerInjector;
-        this.assetRootDirectory = assetRootDirectory;
     }
 
     @Override
@@ -58,9 +54,7 @@ public class DispatcherServletLoader extends GuiceServletContextListener {
     @Override
     protected Injector getInjector() {
         return injector = containerInjector.createChildInjector(
-            new DispatcherModule(),
             new DispatcherServletMappings(),
-            new FileAssetLoaderModule(assetRootDirectory),
             new AbstractModule() {
                 @Override
                 protected void configure() {
