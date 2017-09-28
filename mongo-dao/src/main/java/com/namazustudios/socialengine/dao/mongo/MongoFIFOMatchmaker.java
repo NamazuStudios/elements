@@ -40,8 +40,8 @@ public class MongoFIFOMatchmaker implements Matchmaker {
         query
             .order(Sort.ascending("lastUpdatedTimestamp"))
             .and(
-                query.criteria("_id").notEqual(mongoMatch),
-                query.criteria("opponent").notEqual(null)
+                query.criteria("player").notEqual(mongoMatch.getPlayer()),
+                query.criteria("opponent").doesNotExist()
             );
 
         final FindOptions findOptions = new FindOptions().limit(maxCandidatesToConsider);

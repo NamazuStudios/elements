@@ -62,8 +62,10 @@ public class MongoDaoModule extends PrivateModule {
             .toProvider(MongoDozerMapperProvider.class)
             .asEagerSingleton();
 
-        bind(new TypeLiteral<Function< MatchingAlgorithm, Matchmaker>>(){})
+        bind(new TypeLiteral<Function<MatchingAlgorithm, Matchmaker>>(){})
             .toProvider(MongoMatchmakerFunctionProvider.class);
+
+
 
         expose(UserDao.class);
         expose(ProfileDao.class);

@@ -4,12 +4,16 @@ import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
 import java.sql.Timestamp;
+import java.util.UUID;
 
 import static java.lang.System.currentTimeMillis;
 
 /**
- * A document type which represents a pending match.  These objects effectively lock two matches
- * for a brief period of time while the server completes the match.
+ * A document type which locks a {@link MongoMatch} instance.  The {@link ObjectId} used with instance is acquired from
+ * the {@link MongoMatch#getObjectId()}, however stored in a separate collection.  Additionally this contains a randomly
+ * assigned {@link UUID} and a timestamp.
+ *
+ * The {@link UUID} guarantees that only the creator of the {@link MongoMatchLock} can destroy it
  *
  * Created by patricktwohig on 7/27/17.
  */
@@ -25,10 +29,14 @@ public class MongoMatchLock {
     @Indexed(options = @IndexOptions(expireAfterSeconds = PENDING_MATCH_TIMEOUT_SECONDS))
     private Timestamp timestamp = new Timestamp(currentTimeMillis());
 
+    @Property
+    private String lockUuid;
+
     public MongoMatchLock() {}
 
-    public MongoMatchLock(ObjectId playerMatchId) {
+    public MongoMatchLock(final ObjectId playerMatchId) {
         this.playerMatchId = playerMatchId;
+        this.lockUuid = UUID.randomUUID().toString();
     }
 
     public ObjectId getPlayerMatchId() {
@@ -45,6 +53,14 @@ public class MongoMatchLock {
 
     public void setTimestamp(Timestamp timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getLockUuid() {
+        return lockUuid;
+    }
+
+    public void setLockUuid(String lockUuid) {
+        this.lockUuid = lockUuid;
     }
 
 }
