@@ -51,7 +51,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
 
         servletContextHandler.addEventListener(new DispatcherServletLoader(injector));
-        servletContextHandler.setContextPath(application.getName());
+        servletContextHandler.setContextPath("/" + application.getName());
         servletContextHandler.addFilter(GuiceFilter.class, "/*", allOf(DispatcherType.class));
 
         return servletContextHandler;

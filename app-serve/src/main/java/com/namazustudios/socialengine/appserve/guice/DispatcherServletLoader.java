@@ -18,8 +18,6 @@ public class DispatcherServletLoader extends GuiceServletContextListener {
 
     private final Injector containerInjector;
 
-    private Injector injector;
-
     private ServletContext servletContext;
 
     private final TypeListener typeListener = new TypeListener() {
@@ -42,18 +40,19 @@ public class DispatcherServletLoader extends GuiceServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
+        servletContext = servletContextEvent.getServletContext();
         super.contextInitialized(servletContextEvent);
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
         super.contextDestroyed(servletContextEvent);
-        injector = null;
+        servletContext = null;
     }
 
     @Override
     protected Injector getInjector() {
-        return injector = containerInjector.createChildInjector(
+        return containerInjector.createChildInjector(
             new DispatcherServletMappings(),
             new AbstractModule() {
                 @Override
