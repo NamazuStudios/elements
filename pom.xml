@@ -37,7 +37,6 @@
         <module>rt-server</module>
         <module>rt-mina</module>
         <module>rt-server-lua</module>
-        <module>rt-guice-example</module>
         <module>rt-client</module>
         <module>rt-dao</module>
         <module>docker</module>

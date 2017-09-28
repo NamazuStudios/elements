@@ -20,7 +20,8 @@ import javax.inject.Inject;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.model.application.Platform.PSN_PS4;
 import static com.namazustudios.socialengine.model.application.Platform.PSN_VITA;
-import static org.testng.collections.Lists.newArrayList;
+import static java.util.Arrays.asList;
+
 
 /**
  * Created by patricktwohig on 5/25/17.
@@ -54,7 +55,7 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
         query.and(
             query.criteria("active").equal(false),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").in(newArrayList(PSN_PS4, PSN_VITA)),
+            query.criteria("platform").in(asList(PSN_PS4, PSN_VITA)),
             query.criteria("uniqueIdentifier").equal(psnApplicationConfiguration.getNpIdentifier())
         );
 
@@ -91,7 +92,7 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").in(newArrayList(PSN_VITA, PSN_PS4))
+            query.criteria("platform").in(asList(PSN_VITA, PSN_PS4))
         );
 
         try {
@@ -125,7 +126,7 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").in(newArrayList(PSN_VITA, PSN_PS4))
+            query.criteria("platform").in(asList(PSN_VITA, PSN_PS4))
         );
 
         try {
@@ -173,7 +174,7 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").in(newArrayList(PSN_VITA, PSN_PS4))
+            query.criteria("platform").in(asList(PSN_VITA, PSN_PS4))
         );
 
         try {
