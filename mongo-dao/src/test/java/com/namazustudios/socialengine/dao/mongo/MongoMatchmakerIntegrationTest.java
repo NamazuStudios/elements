@@ -1,53 +1,33 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.google.inject.AbstractModule;
-import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.*;
-import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
-import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
-import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
-import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.match.Match;
+import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
-import de.flapdoodle.embed.mongo.MongodStarter;
-import de.flapdoodle.embed.mongo.config.IMongodConfig;
-import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
-import de.flapdoodle.embed.mongo.config.Net;
-import de.flapdoodle.embed.mongo.distribution.Version;
-import org.apache.bval.guice.ValidationModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Properties;
+import java.util.Iterator;
+import java.util.stream.Collectors;
 
-import static com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvider.MONGO_DB_URLS;
 import static com.namazustudios.socialengine.model.User.Level.USER;
 import static com.namazustudios.socialengine.model.match.MatchingAlgorithm.FIFO;
-import static de.flapdoodle.embed.mongo.MongodStarter.getDefaultInstance;
-import static de.flapdoodle.embed.process.runtime.Network.localhostIsIPv6;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static org.testng.Assert.assertEquals;
 import static org.testng.AssertJUnit.fail;
 
-@Test
-@Guice(modules = MongoFIFOMatchmakerIntegrationTest.Module.class)
-public class MongoFIFOMatchmakerIntegrationTest {
+@Guice(modules = IntegrationTestModule.class)
+public class MongoMatchmakerIntegrationTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(MongoFIFOMatchmakerIntegrationTest.class);
-
-    private static final int TEST_MONGO_PORT = 45000;
-
-    private static final String TEST_BIND_IP = "localhost";
+    private static final Logger logger = LoggerFactory.getLogger(MongoMatchmakerIntegrationTest.class);
 
     private ApplicationDao applicationDao;
 
@@ -63,8 +43,19 @@ public class MongoFIFOMatchmakerIntegrationTest {
 
     private MongodExecutable mongodExecutable;
 
-    @Test
-    public void testMatch() {
+    @DataProvider
+    public static Iterator<Object[]> matchingAlgorithms() {
+        return asList(MatchingAlgorithm.values())
+            .stream()
+            .map(algo -> new Object[]{algo})
+            .collect(Collectors.toList())
+            .iterator();
+    }
+
+    @Test(dataProvider = "matchingAlgorithms")
+    public void testMatch(final MatchingAlgorithm matchingAlgorithm) {
+
+        logger.info("Testing matching algorithm {}", matchingAlgorithm);
 
         final Application application = getApplicationDao().createOrUpdateInactiveApplication(makeMockApplication());
 
@@ -77,7 +68,7 @@ public class MongoFIFOMatchmakerIntegrationTest {
         final Match matcha = getMatchDao().createMatchAndLogDelta(makeMockMatch(profilea)).getMatch();
 
         try {
-            getMatchDao().getMatchmaker(FIFO).attemptToFindOpponent(matcha);
+            getMatchDao().getMatchmaker(matchingAlgorithm).attemptToFindOpponent(matcha);
             fail("Matched when not matches were expected.");
         } catch (NoSuitableMatchException ex) {
             logger.info("Caught expected exception.");
@@ -205,50 +196,6 @@ public class MongoFIFOMatchmakerIntegrationTest {
     @Inject
     public void setFacebookApplicationConfigurationDao(FacebookApplicationConfigurationDao facebookApplicationConfigurationDao) {
         this.facebookApplicationConfigurationDao = facebookApplicationConfigurationDao;
-    }
-
-    public static class Module extends AbstractModule {
-
-        @Override
-        protected void configure() {
-
-            try {
-                final MongodExecutable executable = mongodExecutable();
-                bind(MongodExecutable.class).toInstance(executable);
-                bind(MongodProcess.class).toInstance(executable.start());
-            } catch (IOException e) {
-                addError(e);
-                return;
-            }
-
-            final DefaultConfigurationSupplier defaultConfigurationSupplier;
-            defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-
-            install(new ConfigurationModule(() -> {
-                final Properties properties = defaultConfigurationSupplier.get();
-                properties.put(MONGO_DB_URLS, format("mongo://%s:%d", TEST_BIND_IP, TEST_MONGO_PORT));
-                return properties;
-            }));
-
-            install(new MongoDaoModule());
-            install(new MongoCoreModule());
-            install(new MongoSearchModule());
-            install(new ValidationModule());
-
-        }
-
-        public MongodExecutable mongodExecutable() throws IOException {
-
-            final IMongodConfig config = new MongodConfigBuilder()
-                .version(Version.V3_4_1)
-                .net(new Net(TEST_BIND_IP, TEST_MONGO_PORT, localhostIsIPv6()))
-                .build();
-
-            final MongodStarter starter = getDefaultInstance();
-            return starter.prepare(config);
-
-        }
-
     }
 
 }
