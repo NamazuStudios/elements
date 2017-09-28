@@ -7,6 +7,8 @@ import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.util.stream.Stream.concat;
+
 /**
  * Created by patricktwohig on 8/18/17.
  */
@@ -37,6 +39,14 @@ public class HttpManifestConverter extends AbstractMapConverter<HttpManifest> {
             .stream()
             .flatMap(module -> module.getOperationsByName().entrySet().stream())
             .forEach(e -> e.getValue().setName(e.getKey()));
+
+        httpManifest.getModulesByName()
+                .values()
+                .stream()
+                .flatMap(module -> module.getOperationsByName().values().stream())
+                .flatMap(operation -> concat(operation.getConsumesContentByType().entrySet().stream(),
+                                             operation.getProducesContentByType().entrySet().stream()))
+                .forEach(e -> {e.getValue().setType(e.getKey()); e.getValue().setPayloadType(Map.class);} );
 
         return httpManifest;
 
