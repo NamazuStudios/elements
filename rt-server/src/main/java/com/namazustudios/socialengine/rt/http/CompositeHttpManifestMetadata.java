@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.http.HttpModule;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 import com.namazustudios.socialengine.rt.util.LazyValue;
+import com.sun.tools.internal.ws.wsdl.document.http.HTTPOperation;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -17,6 +18,7 @@ import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import static com.google.common.net.MediaType.ANY_TYPE;
 import static com.namazustudios.socialengine.rt.http.Accept.parseHeader;
 import static java.util.Arrays.asList;
+import static java.util.Arrays.fill;
 import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
 
@@ -54,25 +56,23 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
     }
 
     private boolean isAcceptable(final List<Accept> accepts, final HttpOperation operation) {
-
-        final Predicate<HttpContent> acceptable = content -> {
-
-            final MediaType producedMediaType;
-
-            try {
-                producedMediaType = MediaType.parse(content.getType());
-            } catch (IllegalArgumentException ex) {
-                throw new BadRequestException(ex);
-            }
-
-            return accepts.stream().anyMatch(accepted -> producedMediaType.is(accepted.getMediaType()));
-
-        };
-
         return operation.getProducesContentByType()
             .values()
             .stream()
-            .anyMatch(acceptable);
+            .anyMatch(c -> isAcceptable(accepts, c));
+    }
+
+    private boolean isAcceptable(final List<Accept> accepts, final HttpContent httpContent) {
+
+        final MediaType producedMediaType;
+
+        try {
+            producedMediaType = MediaType.parse(httpContent.getType());
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException(ex);
+        }
+
+        return accepts.stream().anyMatch(accepted -> producedMediaType.is(accepted.getMediaType()));
 
     }
 
@@ -88,7 +88,7 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
                 throw new BadRequestException(ex);
             }
 
-            return contentType.is(consumedMediaType);
+            return consumedMediaType.is(contentType);
 
         };
 
@@ -117,9 +117,8 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
     private HttpModule resolveModule() {
 
         final HttpOperation operation = getPreferredOperation();
-        final HttpManifest manifest = httpManifest;
 
-        return manifest.getModulesByName()
+        return httpManifest.getModulesByName()
             .values()
             .stream()
             .filter(module -> module.getOperationsByName().containsValue(operation))
@@ -216,14 +215,75 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
 
     @Override
     public HttpContent getPreferredRequestContent() {
-        // TODO Implement this
-        return null;
+
+        final MediaType contentType = getContentType();
+        final HttpOperation preferredOperation = getPreferredOperation();
+
+        final List<HttpContent> preferredContentList = preferredOperation
+            .getConsumesContentByType()
+            .values()
+            .stream()
+            .filter(c -> MediaType.parse(c.getType()).is(contentType))
+            .collect(Collectors.toList());
+
+        if (preferredContentList.size() > 1) {
+            preferredContentList.removeIf(c -> !c.isDefaultContent());
+        }
+
+        if (preferredContentList.size() != 1) {
+
+            final String matching = "[" + preferredOperation
+                .getConsumesContentByType()
+                .keySet()
+                .stream()
+                .collect(Collectors.joining(",")) + "]";
+
+            throw new InternalException(contentType + " matches multiple request content types" + matching);
+
+        }
+
+        return preferredContentList.get(0);
+
     }
 
     @Override
     public HttpContent getPreferredResponseContent() {
-        // TODO Implement this
-        return null;
+
+        final List<Accept> accepts = getAcceptableContentTypes();
+        final HttpOperation preferredOperation = getPreferredOperation();
+
+        final List<HttpContent> preferredContentList = preferredOperation
+                .getConsumesContentByType()
+                .values()
+                .stream()
+                .filter(c -> isAcceptable(accepts, c))
+                .collect(Collectors.toList());
+
+        if (preferredContentList.size() > 1) {
+            preferredContentList.removeIf(c -> !c.isDefaultContent());
+        }
+
+        if (preferredContentList.size() != 1) {
+
+            final String acceptableTypes = "[" + httpRequest
+                    .getHeader()
+                    .getHeadersOrDefault(ACCEPT, () -> asList(ANY_TYPE))
+                    .stream()
+                    .map(o -> o.toString())
+                    .collect(Collectors.joining(",")) + "]";
+
+            final String matching = "[" + preferredOperation
+                    .getConsumesContentByType()
+                    .keySet()
+                    .stream()
+                    .collect(Collectors.joining(",")) + "]";
+
+            throw new InternalException(acceptableTypes + " matches multiple response types " + matching);
+
+        }
+
+        return preferredContentList.get(0);
+
     }
 
 }
