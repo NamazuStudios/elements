@@ -73,13 +73,18 @@ public class LuaResource implements Resource {
      */
     @Inject
     public LuaResource(final LuaState luaState, final Scheduler scheduler) {
+
         this.luaState = luaState;
         this.coroutineBuiltin = new CoroutineBuiltin(this, scheduler);
         this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
+
+        luaState.openLibs();
+        setupFunctionOverrides();
         installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
         installBuiltin(coroutineBuiltin);
         installBuiltin(new YieldInstructionBuiltin());
         installBuiltin(new ResumeReasonBuiltin());
+
     }
 
     @Override
@@ -101,9 +106,6 @@ public class LuaResource implements Resource {
 
         final LuaState luaState = getLuaState();
         final Path modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
-
-        luaState.openLibs();
-        setupFunctionOverrides();
 
         try (final InputStream inputStream = assetLoader.open(modulePath)) {
             // We substitute the logger for the name of the file we actually are trying to open.  This way the

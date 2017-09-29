@@ -210,13 +210,12 @@ public final class Path implements Comparable<Path> {
      * @return the string representation
      */
     public String toFileSystemPathString() {
-        return toNormalizedPathString(File.pathSeparator);
+        return toNormalizedPathString(File.separator);
     }
 
     /**
-     * Returns the normalized path string.  NOte that {@link #toString()} does not return
-     * a properly formatted path.  But rather a path useful for debugging and logging information.
-     * To get the normalzied path, this method must be used.
+     * Returns the normalized path string.  Note that {@link #toString()} does not return a properly formatted path.
+     * But rather a path useful for debugging and logging information.
      *
      * @return the normalized path as a string
      */

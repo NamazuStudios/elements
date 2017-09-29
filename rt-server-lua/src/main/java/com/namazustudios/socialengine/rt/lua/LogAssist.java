@@ -4,6 +4,8 @@ import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Resource;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -105,6 +107,13 @@ public class LogAssist {
 
         return stringBuilder.toString();
 
+    }
+
+    public List<String> getStack() {
+        final List<String> stack = new ArrayList<>();
+        final LuaState luaState = luaStateSupplier.get();
+        for (int i = 1; i <= luaState.getTop(); ++i) stack.add(luaState.type(i) + " - " + luaState.toString(i));
+        return stack;
     }
 
 }
