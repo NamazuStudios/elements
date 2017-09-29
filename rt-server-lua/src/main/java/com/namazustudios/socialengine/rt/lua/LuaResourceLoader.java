@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.lua;
 
+import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceLoader;
@@ -30,13 +31,22 @@ public class LuaResourceLoader implements ResourceLoader {
 
     @Override
     public Resource load(final String moduleName, final Object ... args) throws ModuleNotFoundException {
+
         final LuaResource luaResource = getLuaResourceProvider().get();
-        luaResource.installBuiltin(getClasspathBuiltinProvider().get());
-        luaResource.installBuiltin(getAssetLoaderBuiltinProvider().get());
-        luaResource.installBuiltin(getResponseCodeBuiltinProvider().get());
-        luaResource.installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, getIocResolverProvider().get()));
-        luaResource.loadModule(getAssetLoader(), moduleName, args);
-        return luaResource;
+
+        try {
+            final IocResolver iocResolver = getIocResolverProvider().get();
+            luaResource.installBuiltin(getClasspathBuiltinProvider().get());
+            luaResource.installBuiltin(getAssetLoaderBuiltinProvider().get());
+            luaResource.installBuiltin(getResponseCodeBuiltinProvider().get());
+            luaResource.installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
+            luaResource.loadModule(getAssetLoader(), moduleName, args);
+            return luaResource;
+        } catch (Throwable th) {
+            luaResource.close();
+            throw th;
+        }
+
     }
 
     @Override

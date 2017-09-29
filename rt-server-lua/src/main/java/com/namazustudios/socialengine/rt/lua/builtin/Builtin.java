@@ -43,6 +43,9 @@ public interface Builtin {
             final String moduleName = luaState.checkString(1);
             final Module module = getModuleNamed(moduleName);
 
+            final Logger logger = LoggerFactory.getLogger(getClass());
+            logger.info("searching for {} ", moduleName);
+
             luaState.setTop(0);
 
             if (module != null && module.exists()) {

@@ -73,18 +73,23 @@ public class LuaResource implements Resource {
      */
     @Inject
     public LuaResource(final LuaState luaState, final Scheduler scheduler) {
+        try {
 
-        this.luaState = luaState;
-        this.coroutineBuiltin = new CoroutineBuiltin(this, scheduler);
-        this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
+            this.luaState = luaState;
+            this.coroutineBuiltin = new CoroutineBuiltin(this, scheduler);
+            this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
 
-        luaState.openLibs();
-        setupFunctionOverrides();
-        installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
-        installBuiltin(coroutineBuiltin);
-        installBuiltin(new YieldInstructionBuiltin());
-        installBuiltin(new ResumeReasonBuiltin());
+            luaState.openLibs();
+            setupFunctionOverrides();
+            installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
+            installBuiltin(coroutineBuiltin);
+            installBuiltin(new YieldInstructionBuiltin());
+            installBuiltin(new ResumeReasonBuiltin());
 
+        } catch (Throwable th) {
+            luaState.close();
+            throw th;
+        }
     }
 
     @Override
@@ -119,21 +124,24 @@ public class LuaResource implements Resource {
         } catch (AssetNotFoundException ex) {
             logAssist.error("Module not found: " + moduleName, ex);
             throw new ModuleNotFoundException(ex);
+        }
+
+        try {
+
+            for (final Object object : params) {
+                luaState.pushJavaObject(object);
+            }
+
+            luaState.call(params.length, 1);
+
+            if (luaState.isNil(-1)) {
+                throw new ModuleNotFoundException("got nil module for " + moduleName);
+            }
+
+            luaState.setField(REGISTRYINDEX, MODULE);
         } finally {
             luaState.setTop(0);
         }
-
-        for (final Object object : params) {
-            luaState.pushJavaObject(object);
-        }
-
-        luaState.call(params.length, 1);
-
-        if (luaState.isNil(-1)) {
-            throw new ModuleNotFoundException("got nil module for " + moduleName);
-        }
-
-        luaState.setField(REGISTRYINDEX, MODULE);
 
     }
 
@@ -249,10 +257,14 @@ public class LuaResource implements Resource {
         final LuaState luaState = getLuaState();
 
         try {
+
             luaState.getGlobal(Constants.PACKAGE_TABLE);
             luaState.getField(-1, Constants.PACKAGE_SEARCHERS_TABLE);
+
+            final int index = luaState.rawLen(-1) + 1;
             luaState.pushJavaFunction(builtin.getSearcher());
-            luaState.rawSet(-2, luaState.rawLen(-1) + 1);
+            luaState.rawSet(-2, index);
+
         } catch (final Throwable th){
             logAssist.error("Failed to install builtin: " + builtin, th);
             throw th;

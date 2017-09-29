@@ -4,6 +4,8 @@ import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.lua.Constants;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +20,8 @@ import static com.namazustudios.socialengine.rt.Path.fromPathString;
  * Created by patricktwohig on 11/3/15.
  */
 public class ClasspathBuiltin implements Builtin {
+
+    private static final Logger logger = LoggerFactory.getLogger(ClasspathBuiltin.class);
 
     private final ClassLoader classLoader;
 
@@ -44,6 +48,7 @@ public class ClasspathBuiltin implements Builtin {
 
             @Override
             public InputStream getInputStream() throws IOException {
+                logger.info("Opening resource {}", resource);
                 return resource.openStream();
             }
 
