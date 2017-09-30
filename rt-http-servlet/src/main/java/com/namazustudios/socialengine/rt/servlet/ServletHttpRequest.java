@@ -12,32 +12,34 @@ import com.namazustudios.socialengine.rt.util.LazyValue;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class ServletHttpRequest implements HttpRequest {
 
-    private final HttpServletRequest httpServletRequest;
 
     private final ServletRequestHeader servletRequestHeader;
 
     private final CompositeHttpManifestMetadata compositeHttpManifestMetadata;
 
+    private final Supplier<HttpServletRequest> httpServletRequestSupplier;
+
     private final Function<HttpContent, Object> payloadDeserializerFunction;
 
     private final LazyValue<Object> payloadValue = new LazyValue<>(this::deserializePayload);
 
-    public ServletHttpRequest(final HttpServletRequest httpServletRequest,
-                              final HttpManifest httpManifest,
+    public ServletHttpRequest(final HttpManifest httpManifest,
+                              final Supplier<HttpServletRequest> httpServletRequestSupplier,
                               final Function<HttpContent, Object> payloadDeserializerFunction) {
-        this.httpServletRequest = httpServletRequest;
-        this.servletRequestHeader = new ServletRequestHeader(this, httpServletRequest);
-        this.compositeHttpManifestMetadata = new CompositeHttpManifestMetadata(this, httpManifest);
+        this.httpServletRequestSupplier = httpServletRequestSupplier;
         this.payloadDeserializerFunction = payloadDeserializerFunction;
+        this.compositeHttpManifestMetadata = new CompositeHttpManifestMetadata(this, httpManifest);
+        this.servletRequestHeader = new ServletRequestHeader(httpServletRequestSupplier);
     }
 
     @Override
     public HttpVerb getVerb() {
         try {
-            return HttpVerb.valueOf(httpServletRequest.getMethod());
+            return HttpVerb.valueOf(httpServletRequestSupplier.get().getMethod());
         } catch (IllegalArgumentException ex) {
             throw new BadRequestException(ex);
         }

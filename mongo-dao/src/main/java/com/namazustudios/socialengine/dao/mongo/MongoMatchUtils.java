@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoMatchLock;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.exception.TooBusyException;
+import com.namazustudios.socialengine.model.TimeDelta;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import org.bson.types.ObjectId;
@@ -264,6 +265,7 @@ public class MongoMatchUtils {
 
                 final MongoMatchDelta toInsert = new MongoMatchDelta();
                 toInsert.setKey(latestDelta.getKey().nextInSequence(mongoMatch.getLastUpdatedTimestamp().getTime()));
+                toInsert.setOperation(TimeDelta.Operation.UPDATED);
                 ds.insert(toInsert);
 
                 return toInsert;

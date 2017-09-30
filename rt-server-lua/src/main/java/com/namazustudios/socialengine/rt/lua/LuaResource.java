@@ -113,20 +113,12 @@ public class LuaResource implements Resource {
         final Path modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
 
         try (final InputStream inputStream = assetLoader.open(modulePath)) {
+
             // We substitute the logger for the name of the file we actually are trying to open.  This way the
             // actual logger reads the name of the source file.
             scriptLog = LoggerFactory.getLogger(modulePath.toNormalizedPathString());
             luaState.load(inputStream, moduleName, "bt");
             scriptLog.info("Loaded script {}", moduleName);
-        } catch (IOException ex) {
-            logAssist.error("Failed to load script.", ex);
-            throw new InternalException(ex);
-        } catch (AssetNotFoundException ex) {
-            logAssist.error("Module not found: " + moduleName, ex);
-            throw new ModuleNotFoundException(ex);
-        }
-
-        try {
 
             for (final Object object : params) {
                 luaState.pushJavaObject(object);
@@ -139,6 +131,13 @@ public class LuaResource implements Resource {
             }
 
             luaState.setField(REGISTRYINDEX, MODULE);
+
+        } catch (IOException ex) {
+            logAssist.error("Failed to load script.", ex);
+            throw new InternalException(ex);
+        } catch (AssetNotFoundException ex) {
+            logAssist.error("Module not found: " + moduleName, ex);
+            throw new ModuleNotFoundException(ex);
         } finally {
             luaState.setTop(0);
         }

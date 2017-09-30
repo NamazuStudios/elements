@@ -9,14 +9,15 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static java.util.Collections.list;
 
 public class ServletRequestHeader implements RequestHeader {
 
-    private final HttpRequest httpRequest;
+    private final String path;
 
-    private final HttpServletRequest httpServletRequest;
+    private final Supplier<HttpServletRequest> httpServletRequestSupplier;
 
     private static List<Object> objectList(final Enumeration<?> enumeration) {
         final List<Object> objectList = new ArrayList<>();
@@ -24,26 +25,29 @@ public class ServletRequestHeader implements RequestHeader {
         return objectList;
     }
 
-    public ServletRequestHeader(final HttpRequest httpRequest, final HttpServletRequest httpServletRequest) {
-        this.httpRequest = httpRequest;
-        this.httpServletRequest = httpServletRequest;
+    public ServletRequestHeader(final Supplier<HttpServletRequest> httpServletRequestSupplier) {
+        final HttpServletRequest httpServletRequest = httpServletRequestSupplier.get();
+        final String requestUri = httpServletRequest.getRequestURI();
+        final String contextPath = httpServletRequest.getContextPath();
+        this.path = requestUri.substring(contextPath.length());
+        this.httpServletRequestSupplier = httpServletRequestSupplier;
     }
 
     @Override
     public List<String> getHeaderNames() {
-        return list(httpServletRequest.getHeaderNames());
+        return list(httpServletRequestSupplier.get().getHeaderNames());
     }
 
     @Override
     public List<Object> getHeaders(final String name) {
-        final Enumeration<String> headers = httpServletRequest.getHeaders(name);
+        final Enumeration<String> headers = httpServletRequestSupplier.get().getHeaders(name);
         return headers != null && headers.hasMoreElements() ? objectList(headers) : null;
     }
 
     @Override
     public int getSequence() {
         try {
-            final String header = httpServletRequest.getHeader(XHttpHeaders.RT_SEQUENCE);
+            final String header = httpServletRequestSupplier.get().getHeader(XHttpHeaders.RT_SEQUENCE);
             return header == null ? -1 : Integer.parseInt(header);
         } catch (NumberFormatException nfe) {
             throw new BadRequestException(nfe);
@@ -52,14 +56,12 @@ public class ServletRequestHeader implements RequestHeader {
 
     @Override
     public String getPath() {
-        final String requestUri = httpServletRequest.getRequestURI();
-        final String contextPath = httpServletRequest.getContextPath();
-        return requestUri.substring(contextPath.length());
+        return path;
     }
 
     @Override
     public String getMethod() {
-        return httpServletRequest.getMethod();
+        return httpServletRequestSupplier.get().getMethod();
     }
 
 }

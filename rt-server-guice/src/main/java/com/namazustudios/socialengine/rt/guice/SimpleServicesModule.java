@@ -2,11 +2,15 @@ package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.SimpleScheduler.EXECUTOR_SERVICE;
+import static java.lang.String.format;
 import static java.util.concurrent.Executors.newScheduledThreadPool;
 
 /**
@@ -28,9 +32,18 @@ public class SimpleServicesModule extends AbstractModule {
         bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();
         bind(PathLockFactory.class).to(SimplePathLockFactory.class).asEagerSingleton();
 
+        final AtomicInteger threadCount = new AtomicInteger();
+        final Logger logger = LoggerFactory.getLogger(EXECUTOR_SERVICE);
+
         bind(ScheduledExecutorService.class)
             .annotatedWith(named(EXECUTOR_SERVICE))
-            .toProvider(() -> newScheduledThreadPool(CORE_POOL_SIZE));
+            .toProvider(() -> newScheduledThreadPool(CORE_POOL_SIZE, r -> {
+                    final Thread thread = new Thread(r);
+                    thread.setDaemon(true);
+                    thread.setUncaughtExceptionHandler((t , e) -> logger.error("Scheduler Exception in {}", t, e));
+                    thread.setName(format("%s - Thread %d", EXECUTOR_SERVICE, threadCount.incrementAndGet()));
+                    return thread;
+                }));
 
     }
 

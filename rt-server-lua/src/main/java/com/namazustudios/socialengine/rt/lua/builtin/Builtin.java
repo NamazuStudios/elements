@@ -81,19 +81,19 @@ public interface Builtin {
             logger.info("Loading builtin module {} -> {} ", name, chunkName);
 
             try (final InputStream inputStream = module.getInputStream()) {
+
                 luaState.load(inputStream, module.getChunkName(), "bt");
+                logger.info("Successfully parsed builtin module {} ", chunkName);
+
+                luaState.call(0, 1);
+                logger.info("Successfully executed module code {} ", chunkName);
+
+                return 1;
+
             } catch (IOException ex) {
+                logger.info("Caught exception loading builtin module {}.", module.getChunkName(), ex);
                 throw new InternalException(ex);
             }
-
-            logger.info("Successfully parsed builtin module {} ", chunkName);
-
-            luaState.setTop(0);
-            luaState.call(0, 1);
-
-            logger.info("Successfully executed module code {} ", chunkName);
-
-            return 1;
 
         };
 

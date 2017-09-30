@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model;
 
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -80,6 +81,7 @@ public abstract class TimeDelta<IdentifierT, ModelT> {
     /**
      * The operation which modified the object.
      */
+    @ApiModel
     public enum Operation {
 
         /**

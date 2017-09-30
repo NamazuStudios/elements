@@ -86,11 +86,27 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
                 .getExceptionMapper(ex)
                 .map(ex, request, responseConsumer);
 
-        resource.getMethodDispatcher(httpOperation.getName())
-                .params(request.getPayload(), request, session)
-                .forResultType(Response.class)
-                .dispatch(closingResponseConsumer, handler);
+        try {
+            resource.getMethodDispatcher(httpOperation.getName())
+                    .params(request.getPayload(), request, session)
+                    .forResultType(Response.class)
+                    .dispatch(closingResponseConsumer, handler);
+        } catch (Throwable th) {
+            logRequestFailure(request, th);
+            handler.accept(th);
+            throw th;
+        }
 
+    }
+
+    private void logRequestFailure(final Request request, final Throwable th) {
+        try {
+            logger.error("Error with request {} {}",
+                    request.getHeader().getMethod(),
+                    request.getHeader().getParsedPath().toNormalizedPathString(), th);
+        } catch (Exception ex) {
+            logger.error("Error with request {} {}", ex);
+        }
     }
 
     public List<Filter> getFilterList() {

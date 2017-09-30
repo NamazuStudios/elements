@@ -118,6 +118,7 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
 
         final HttpOperation operation = getPreferredOperation();
 
+
         return httpManifest.getModulesByName()
             .values()
             .stream()

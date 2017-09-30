@@ -79,6 +79,9 @@ public class SimpleScheduler implements Scheduler {
             lock.lock();
             logger.trace("Applying operation for resource {}", resource.getId());
             return operation.apply(resource);
+        } catch (Throwable th) {
+            logger.error("Caught exception in protected operation {}", operation, th);
+            throw th;
         } finally {
             logger.trace("Unlocking resource {}", resource.getId());
             lock.unlock();

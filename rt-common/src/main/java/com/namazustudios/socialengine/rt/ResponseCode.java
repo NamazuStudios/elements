@@ -4,9 +4,8 @@ import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 import com.namazustudios.socialengine.rt.manifest.http.HttpVerb;
 
 /**
- * Enumeration of the various response codes.  Each code is essentially the
- * ordinal of the enum, which should be fetched using {@link #getCode()}.
- *
+ * Enumeration of the various response codes.  Each code is essentially the ordinal of the enum, which should be fetched
+ * using {@link #getCode()}.
  */
 public enum ResponseCode {
 
@@ -26,7 +25,7 @@ public enum ResponseCode {
     BAD_REQUEST_FATAL,
 
     /**
-     * The content supplied in the request is
+     * The content supplied in the request has invalid content or payload.
      */
     BAD_REQUEST_INVALID_CONTENT,
 

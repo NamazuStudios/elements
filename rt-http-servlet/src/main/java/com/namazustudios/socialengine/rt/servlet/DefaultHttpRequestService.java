@@ -9,9 +9,12 @@ import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 
 import javax.inject.Inject;
+import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class DefaultHttpRequestService implements HttpRequestService {
 
@@ -20,9 +23,33 @@ public class DefaultHttpRequestService implements HttpRequestService {
     private Map<String, PayloadReader> paylaodReadersByContentType;
 
     @Override
-    public HttpRequest getRequest(final HttpServletRequest req) {
+    public HttpRequest getRequest(HttpServletRequest req) {
+
         final HttpManifest httpManifest = getManifestLoader().getHttpManifest();
-        return new ServletHttpRequest(req, httpManifest, c -> deserialize(c, req));
+
+        final Supplier<HttpServletRequest> httpServletRequestSupplier;
+        httpServletRequestSupplier = () -> req;
+
+        final Function<HttpContent, Object> payloadDeserializerFunction;
+        payloadDeserializerFunction = content -> deserialize(content, req);
+
+        return new ServletHttpRequest(httpManifest, httpServletRequestSupplier, payloadDeserializerFunction);
+
+    }
+
+    @Override
+    public HttpRequest getAsyncRequest(final AsyncContext asyncContext) {
+
+        final HttpManifest httpManifest = getManifestLoader().getHttpManifest();
+
+        final Supplier<HttpServletRequest> httpServletRequestSupplier;
+        httpServletRequestSupplier = () -> (HttpServletRequest)asyncContext.getRequest();
+
+        final Function<HttpContent, Object> payloadDeserializerFunction;
+        payloadDeserializerFunction = content -> deserialize(content, httpServletRequestSupplier.get());
+
+        return new ServletHttpRequest(httpManifest, httpServletRequestSupplier, payloadDeserializerFunction);
+
     }
 
     private Object deserialize(final HttpContent httpContent, final HttpServletRequest req) {

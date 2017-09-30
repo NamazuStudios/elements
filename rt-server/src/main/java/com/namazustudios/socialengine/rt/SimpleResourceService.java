@@ -13,6 +13,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static java.lang.Thread.yield;
+
 /**
  * A generic {@link ResourceService} which can take any type of {@link Resource}.
  *
@@ -300,7 +302,7 @@ public class SimpleResourceService implements ResourceService {
             try {
                 return supplier.get();
             } catch (LockedException ex) {
-                Thread.yield();
+                yield();
                 continue;
             }
         }
@@ -309,14 +311,14 @@ public class SimpleResourceService implements ResourceService {
 
     }
 
-    private <T> T doOptimisticV(final Runnable runnable) {
+    private void doOptimisticV(final Runnable runnable) {
 
         for (int i = 0; i < RETRY_COUNT; ++i) {
             try {
                 runnable.run();
-                break;
+                return;
             } catch (LockedException ex) {
-                Thread.yield();
+                yield();
                 continue;
             }
         }
