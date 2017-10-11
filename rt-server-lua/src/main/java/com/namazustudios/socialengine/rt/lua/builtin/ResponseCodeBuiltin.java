@@ -40,7 +40,7 @@ public class ResponseCodeBuiltin implements Builtin {
             luaState.newTable();
 
             for (final ResponseCode responseCode : ResponseCode.values()) {
-                luaState.pushString(responseCode.toString());
+                luaState.pushInteger(responseCode.ordinal());
                 luaState.setField(-2, responseCode.toString());
             }
 

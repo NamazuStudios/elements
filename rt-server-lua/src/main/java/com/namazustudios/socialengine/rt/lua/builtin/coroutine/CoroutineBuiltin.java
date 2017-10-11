@@ -32,6 +32,7 @@ import static java.lang.Math.max;
 import static java.lang.StrictMath.round;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 public class CoroutineBuiltin implements Builtin {
 
@@ -49,7 +50,7 @@ public class CoroutineBuiltin implements Builtin {
 
     public static final String RESUME = "resume";
 
-    public static final CronDefinition CRON_DEFINITION = CronDefinitionBuilder.instanceDefinitionFor(CronType.CRON4J);
+    public static final CronDefinition CRON_DEFINITION = CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ);
 
     private final LuaResource luaResource;
 
@@ -258,14 +259,15 @@ public class CoroutineBuiltin implements Builtin {
             throw new IllegalArgumentException("time value must be specified");
         }
 
-        final String expression = luaState.checkString(1);
+        final String expression = luaState.checkString(2);
         final CronParser cronParser = new CronParser(CRON_DEFINITION);
         final Cron cron = cronParser.parse(expression);
 
         final ExecutionTime executionTime = forCron(cron);
         final Duration duration = executionTime.timeToNextExecution(ZonedDateTime.now()).get();
+        final long nanos = duration.get(ChronoUnit.NANOS);
 
-        return duration.get(ChronoUnit.MILLIS);
+        return MILLISECONDS.convert(nanos, NANOSECONDS);
 
     }
 

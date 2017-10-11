@@ -1,24 +1,24 @@
 package com.namazustudios.socialengine.rt.servlet;
 
-import com.google.common.net.HttpHeaders;
 import com.namazustudios.socialengine.rt.ExceptionMapper;
 import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.handler.Session;
 import com.namazustudios.socialengine.rt.handler.SessionRequestDispatcher;
-import com.namazustudios.socialengine.rt.http.HttpManifestMetadata;
 import com.namazustudios.socialengine.rt.http.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.AsyncContext;
+import javax.servlet.AsyncEvent;
+import javax.servlet.AsyncListener;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class DispatcherServlet extends HttpServlet {
 
@@ -133,13 +133,51 @@ public class DispatcherServlet extends HttpServlet {
 
         final Session session = getHttpSessionService().getSession(httpServletRequest);
         final HttpRequest httpRequest = getHttpRequestService().getAsyncRequest(asyncContext);
-
-        final Consumer<Response> responseConsumer = response -> {
-            assembleAndWrite(httpRequest, response, httpServletResponse);
-            asyncContext.complete();
-        };
+        final Consumer<Response> responseConsumer = getConsumer(asyncContext, httpRequest, httpServletResponse);
 
         performAsync(httpRequest, session, responseConsumer);
+
+    }
+
+    private Consumer<Response> getConsumer(final AsyncContext asyncContext,
+                                           final HttpRequest httpRequest,
+                                           final HttpServletResponse httpServletResponse) {
+
+        final AtomicBoolean complete = new AtomicBoolean();
+
+        asyncContext.addListener(new AsyncListener() {
+
+            @Override
+            public void onComplete(AsyncEvent event) throws IOException {
+                logger.info("Completed request.");
+                complete.set(true);
+            }
+
+            @Override
+            public void onTimeout(AsyncEvent event) throws IOException {
+                logger.info("Request timed out.");
+                complete.set(true);
+            }
+
+            @Override
+            public void onError(AsyncEvent event) throws IOException {
+                logger.error("Error in AsyncContext.", event.getThrowable());
+                complete.set(true);
+            }
+
+            @Override
+            public void onStartAsync(AsyncEvent event) throws IOException {
+                logger.info("Started AsyncRequest {}", event.getAsyncContext());
+            }
+
+        });
+
+        return response -> {
+            if (!complete.getAndSet(true)) {
+                assembleAndWrite(httpRequest, response, httpServletResponse);
+                asyncContext.complete();
+            }
+        };
 
     }
 
