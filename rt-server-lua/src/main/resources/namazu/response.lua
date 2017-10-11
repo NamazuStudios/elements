@@ -9,8 +9,6 @@ namazu_response.code = require "namazu.response.code"
 
 local function forumulate_headers(code, headers, sequence)
 
-    print "Formulating headers."
-
     headers = headers and headers or {}
     sequence = sequence and sequence or ResponseHeader.UNKNOWN_SEQUENCE
 
@@ -62,8 +60,6 @@ end
 -- default values.
 
 function namazu_response.formulate(code, payload, headers, sequence)
-
-    print "Formulating response"
 
     headers = forumulate_headers(code, headers, sequence)
 

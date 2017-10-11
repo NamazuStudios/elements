@@ -140,7 +140,9 @@ public class LuaResource implements Resource {
             logAssist.error("Module not found: " + moduleName, ex);
             throw new ModuleNotFoundException(ex);
         } finally {
-            luaState.setTop(0);
+            if (luaState.isOpen()) {
+                luaState.setTop(0);
+            }
         }
 
     }
@@ -208,8 +210,11 @@ public class LuaResource implements Resource {
             logAssist.error("Error dispatching method: " + name, th);
             throw th;
         } finally {
-            luaState.setTop(0);
+            if (luaState.isOpen()) {
+                luaState.setTop(0);
+            }
         }
+
     };
 }
 
