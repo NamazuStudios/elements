@@ -22,17 +22,6 @@ public interface HttpRequestService {
     HttpRequest getRequest(final HttpServletRequest req);
 
     /**
-     * Starts an {@link AsyncContext} from the provided {@link HttpServletRequest} if it is not started and derives an
-     * {@link HttpRequest} from it.
-     *
-     * @param req the {@link HttpServletRequest}
-     * @return the {@link HttpRequest}
-     */
-    default HttpRequest getAsyncRequest(final HttpServletRequest req) {
-        return getAsyncRequest(req.isAsyncStarted() ? req.getAsyncContext() : req.startAsync());
-    }
-
-    /**
      * Translates the provide {@link AsyncContext} to an instance of {@link HttpRequest}.  The provided
      * {@link AsyncContext} must have been started from an {@link HttpServletRequest} for this to function properly.
      *

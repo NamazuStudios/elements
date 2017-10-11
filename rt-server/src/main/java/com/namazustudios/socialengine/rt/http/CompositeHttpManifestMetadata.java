@@ -2,10 +2,7 @@ package com.namazustudios.socialengine.rt.http;
 
 import com.google.common.net.MediaType;
 import com.namazustudios.socialengine.rt.exception.*;
-import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
-import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
-import com.namazustudios.socialengine.rt.manifest.http.HttpModule;
-import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
+import com.namazustudios.socialengine.rt.manifest.http.*;
 import com.namazustudios.socialengine.rt.util.LazyValue;
 import com.sun.tools.internal.ws.wsdl.document.http.HTTPOperation;
 
@@ -17,6 +14,9 @@ import static com.google.common.net.HttpHeaders.ACCEPT;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import static com.google.common.net.MediaType.ANY_TYPE;
 import static com.namazustudios.socialengine.rt.http.Accept.parseHeader;
+import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.GET;
+import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.HEAD;
+import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.OPTIONS;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.fill;
 import static java.util.Collections.sort;
@@ -194,7 +194,39 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
             throw new OperationNotFoundException("no operation for path " + req.getHeader().getPath());
         }
 
-        httpOperationList.removeIf(op -> !op.getVerb().equals(req.getVerb()));
+        // A few edge cases for the OPTIONS and the HEAD
+
+        switch (req.getVerb()) {
+
+            case OPTIONS:
+
+                // If we have an explicit options request, then we filter out everything that's not an options request.
+                // Otherwise, we advertise all of the available operations that may be handled.
+
+                if (httpOperationList.stream().anyMatch(op -> op.getVerb().equals(OPTIONS))) {
+                    httpOperationList.removeIf(op -> !op.getVerb().equals(OPTIONS));
+                }
+
+                break;
+
+            case HEAD:
+
+                // If we have an explicit HEAD request, then we filter out everything that's not explicitly defined
+                // by the
+
+                if (httpOperationList.stream().anyMatch(op -> op.getVerb().equals(HEAD))) {
+                    httpOperationList.stream().anyMatch(op -> !op.getVerb().equals(HEAD));
+                } else {
+                    httpOperationList.removeIf(op -> !op.getVerb().equals(GET));
+                }
+
+                break;
+
+            default:
+                // We search directly for the requested HTTP verb
+                httpOperationList.removeIf(op -> !op.getVerb().equals(req.getVerb()));
+                break;
+        }
 
         if (httpOperationList.isEmpty()) {
             throw new VerbNotSupportedException("no operation for verb " + req.getVerb());

@@ -1,9 +1,11 @@
 package com.namazustudios.socialengine.rt.servlet;
 
+import com.google.common.net.HttpHeaders;
 import com.namazustudios.socialengine.rt.ExceptionMapper;
 import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.handler.Session;
 import com.namazustudios.socialengine.rt.handler.SessionRequestDispatcher;
+import com.namazustudios.socialengine.rt.http.HttpManifestMetadata;
 import com.namazustudios.socialengine.rt.http.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DispatcherServlet extends HttpServlet {
 
@@ -58,43 +62,32 @@ public class DispatcherServlet extends HttpServlet {
     protected void doOptions(final HttpServletRequest httpServletRequest,
                              final HttpServletResponse httpServletResponse) throws ServletException, IOException {
 
-//        final HttpRequest httpRequest = getHttpRequestService().getRequest(httpServletRequest);
-//        final HttpManifestMetadata manifestMetadata = httpRequest.getManifestMetadata();
-//
-//        if (manifestMetadata.hasSinglePreferredOperation()) {
-//            try {
-//                final HttpRequest asyncHttpServletRequest = getHttpRequestService().getAsyncRequest(httpServletRequest);
-//                performAsync(asyncHttpServletRequest, httpServletRequest.getAsyncContext());
-//            } catch (Exception ex) {
-//                logger.info("Mapping exception for {} {}", httpServletRequest.getMethod(), httpServletRequest.getRequestURI());
-//
-//                getExceptionMapperResolver()
-//                        .getExceptionMapper(ex)
-//                        .map(ex, response -> assembleAndWrite(httpRequest, response, httpServletResponse));
-//
-//                logger.info("Mapped exception properly.", ex);
-//            }
-//        } else {
-//
-//            final String allow = manifestMetadata.getAvailableOperations()
-//                .stream()
-//                .map(o -> o.getVerb().toString())
-//                .collect(Collectors.joining(","));
-//
-//            httpServletResponse.addHeader(HttpHeaders.ALLOW, allow);
-//
-//            manifestMetadata.getAvailableOperations()
-//                .stream()
-//                .flatMap(o -> o.getConsumesContentByType().keySet().stream())
-//                .forEach(ct -> httpServletResponse.addHeader(HttpHeaders.ACCEPT, ct));
-//
-//            manifestMetadata.getAvailableOperations()
-//                .stream()
-//                .flatMap(o -> o.getProducesContentByType().values().stream())
-//                .flatMap(o -> o.getStaticHeaders().entrySet().stream())
-//                .forEach(e -> httpServletResponse.addHeader(e.getKey(), e.getValue()));
-//
-//        }
+        final HttpRequest httpRequest = getHttpRequestService().getRequest(httpServletRequest);
+        final HttpManifestMetadata manifestMetadata = httpRequest.getManifestMetadata();
+
+        if (manifestMetadata.hasSinglePreferredOperation()) {
+            mapRequestAndPerformAsync(httpServletRequest, httpServletResponse);
+        } else {
+
+            final String allow = manifestMetadata.getAvailableOperations()
+                .stream()
+                .map(o -> o.getVerb().toString())
+                .collect(Collectors.joining(","));
+
+            httpServletResponse.addHeader(HttpHeaders.ALLOW, allow);
+
+            manifestMetadata.getAvailableOperations()
+                .stream()
+                .flatMap(o -> o.getConsumesContentByType().keySet().stream())
+                .forEach(ct -> httpServletResponse.addHeader(HttpHeaders.ACCEPT, ct));
+
+            manifestMetadata.getAvailableOperations()
+                .stream()
+                .flatMap(o -> o.getProducesContentByType().values().stream())
+                .flatMap(o -> o.getStaticHeaders() == null ? Stream.empty() : o.getStaticHeaders().entrySet().stream())
+                .forEach(e -> httpServletResponse.addHeader(e.getKey(), e.getValue()));
+
+        }
 
     }
 
@@ -102,27 +95,14 @@ public class DispatcherServlet extends HttpServlet {
     protected void doHead(final HttpServletRequest httpServletRequest,
                           final HttpServletResponse httpServletResponse) throws ServletException, IOException {
 
-//        final HttpRequest httpRequest = getHttpRequestService().getRequest(httpServletRequest);
-//
-//        if (httpRequest.getManifestMetadata().hasSinglePreferredOperation()) {
-//            try {
-//                final HttpRequest asyncHttpServletRequest = getHttpRequestService().getAsyncRequest(httpServletRequest);
-//                performAsync(asyncHttpServletRequest, httpServletRequest.getAsyncContext());
-//            } catch (Exception ex) {
-//
-//                logger.info("Mapping exception for {} {}", httpServletRequest.getMethod(), httpServletRequest.getRequestURI());
-//
-//                getExceptionMapperResolver()
-//                        .getExceptionMapper(ex)
-//                        .map(ex, response -> assembleAndWrite(httpRequest, response, httpServletResponse));
-//
-//                httpServletRequest.getAsyncContext().complete();
-//                logger.info("Mapped exception properly.", ex);
-//
-//            }
-//        } else {
-//            super.doHead(httpServletRequest, httpServletResponse);
-//        }
+        final HttpRequest httpRequest = getHttpRequestService().getRequest(httpServletRequest);
+        final HttpManifestMetadata manifestMetadata = httpRequest.getManifestMetadata();
+
+        if (manifestMetadata.hasSinglePreferredOperation()) {
+            mapRequestAndPerformAsync(httpServletRequest, httpServletResponse);
+        } else {
+            super.doHead(httpServletRequest, httpServletResponse);
+        }
 
     }
 
