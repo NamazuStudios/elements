@@ -113,6 +113,7 @@ public class LuaResource implements Resource {
         final LuaState luaState = getLuaState();
         final Path modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
 
+
         try (final InputStream inputStream = assetLoader.open(modulePath)) {
 
             // We substitute the logger for the name of the file we actually are trying to open.  This way the
@@ -170,6 +171,7 @@ public class LuaResource implements Resource {
         return params -> (consumer, throwableConsumer) -> {
 
             final LuaState luaState = getLuaState();
+            FinalOperation finalOperation = () -> luaState.setTop(0);
 
             try {
 
@@ -201,7 +203,7 @@ public class LuaResource implements Resource {
                     final PendingTask pendingTask = new PendingTask(consumer, throwableConsumer);
                     taskIdPendingTaskMap.put(new TaskId(taskId), pendingTask);
                 } else {
-                    consumer.accept(result);
+                    finalOperation = finalOperation.andThen(() -> consumer.accept(result));
                 }
 
             return new TaskId(taskId);
@@ -210,9 +212,7 @@ public class LuaResource implements Resource {
             logAssist.error("Error dispatching method: " + name, th);
             throw th;
         } finally {
-            if (luaState.isOpen()) {
-                luaState.setTop(0);
-            }
+            finalOperation.perform();
         }
 
     };
@@ -227,9 +227,10 @@ public class LuaResource implements Resource {
             throw new InternalException("no pending task with id " + taskId);
         }
 
-        try {
+        final LuaState luaState = getLuaState();
+        FinalOperation finalOperation = () -> luaState.setTop(0);
 
-            final LuaState luaState = getLuaState();
+        try {
 
             luaState.getGlobal("require");
             luaState.pushString(CoroutineBuiltin.MODULE_NAME);
@@ -253,16 +254,14 @@ public class LuaResource implements Resource {
             } else if (status == YIELD) {
                 getScriptLog().info("Task {} yielded.  Resuming later.", taskId);
             } else {
-                pendingTask.resultConsumer.accept(result);
+                finalOperation = finalOperation.andThen(() -> pendingTask.resultConsumer.accept(result));
             }
 
         } catch (Throwable th) {
             getScriptLog().error("Caught exception resuming task {}.", taskId, th);
             pendingTask.throwableConsumer.accept(th);
         } finally {
-            if (luaState.isOpen()) {
-                luaState.setTop(0);
-            }
+            finalOperation.perform();
         }
 
     }
@@ -322,6 +321,23 @@ public class LuaResource implements Resource {
         public PendingTask(Consumer<Object> resultConsumer, Consumer<Throwable> throwableConsumer) {
             this.resultConsumer = resultConsumer;
             this.throwableConsumer = throwableConsumer;
+        }
+
+    }
+
+    @FunctionalInterface
+    private interface FinalOperation {
+
+        void perform();
+
+        default FinalOperation andThen(final FinalOperation next) {
+            return () -> {
+                try {
+                    perform();
+                } finally {
+                    next.perform();
+                }
+            };
         }
 
     }
