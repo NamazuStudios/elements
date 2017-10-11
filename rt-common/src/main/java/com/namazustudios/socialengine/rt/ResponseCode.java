@@ -3,6 +3,9 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 import com.namazustudios.socialengine.rt.manifest.http.HttpVerb;
 
+import static java.lang.String.format;
+import static java.util.Arrays.stream;
+
 /**
  * Enumeration of the various response codes.  Each code is essentially the ordinal of the enum, which should be fetched
  * using {@link #getCode()}.
@@ -10,9 +13,12 @@ import com.namazustudios.socialengine.rt.manifest.http.HttpVerb;
 public enum ResponseCode {
 
     /**
-     * The response was okay.
+     * The response was okay.  The only {@link ResponseCode} with a code value of 0.
      */
-    OK,
+    OK {
+        @Override
+        public int getCode() { return 0; }
+    },
 
     /**
      * The request was bad, malformed but could be re-attempted.
@@ -120,7 +126,24 @@ public enum ResponseCode {
     /**
      * Indicates the server encountered a bad manifest and the
      */
-    INTERNAL_ERROR_BAD_MANIFEST_FATAL;
+    INTERNAL_ERROR_BAD_MANIFEST_FATAL,
+
+    /**
+     * Indicates a custom response code.  A custom code is any code that is not masked by the
+     * {@link #SYSTEM_RESERVED_MASK}.
+     */
+    CUSTOM,
+
+    /**
+     * Indicates an unknown code.  A code is {@link #UNKNOWN} when it is masked by the {@link #SYSTEM_RESERVED_MASK} but
+     * cannot be identified using {@link #getCode()}.
+     */
+    UNKNOWN;
+
+    /**
+     * Masks {@link ResponseCode} values that are considered reserved by the system.
+     */
+    public static final int SYSTEM_RESERVED_MASK = 0x7FFF0000 << 16;
 
     /**
      * Gets the actual code as returned by {@link ResponseHeader#getCode()}.
@@ -128,18 +151,39 @@ public enum ResponseCode {
      * @return the response code
      */
     public int getCode() {
-        return ordinal();
+        return ordinal() << 16;
     }
 
     /**
-     * Returns a human readable description of the code.
+     * Gets the code for the value.
      *
-     * @param code the code.
+     * @param code the {@link ResponseCode} for the provided code value.
+     *
+     * @return
+     */
+    public static ResponseCode getCodeForValue(final int code) {
+        return stream(values())
+            .filter(c -> c.getCode() == code)
+            .findFirst().orElse(isReserved(code) ? UNKNOWN : CUSTOM);
+    }
+
+    /**
+     * Checks if the supplied
+     * @param code
+     * @return
+     */
+    public static boolean isReserved(final int code) {
+        return code == 0 || ((SYSTEM_RESERVED_MASK & code) != 0);
+    }
+
+    /**
+     * Returns a human readable description of the code.  This should always return a value.
+     *
+     * @param code the code
      * @return the description of the code
      */
     public static String getDescriptionFromCode(final int code) {
-        final ResponseCode[] values = values();
-        return (code < values.length) ? (values[code].toString()) : String.format("CUSTOM(%d)", code);
+        return format("%s (%x)", getCodeForValue(code), code);
     }
 
 }

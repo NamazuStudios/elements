@@ -5,10 +5,7 @@ import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
-import com.namazustudios.socialengine.rt.lua.builtin.AssetLoaderBuiltin;
-import com.namazustudios.socialengine.rt.lua.builtin.ClasspathBuiltin;
-import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
-import com.namazustudios.socialengine.rt.lua.builtin.ResponseCodeBuiltin;
+import com.namazustudios.socialengine.rt.lua.builtin.*;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -29,6 +26,8 @@ public class LuaResourceLoader implements ResourceLoader {
 
     private Provider<ResponseCodeBuiltin> responseCodeBuiltinProvider;
 
+    private Provider<HttpStatusBuiltin> httpStatusBuiltinProvider;
+
     @Override
     public Resource load(final String moduleName, final Object ... args) throws ModuleNotFoundException {
 
@@ -39,6 +38,7 @@ public class LuaResourceLoader implements ResourceLoader {
             luaResource.installBuiltin(getClasspathBuiltinProvider().get());
             luaResource.installBuiltin(getAssetLoaderBuiltinProvider().get());
             luaResource.installBuiltin(getResponseCodeBuiltinProvider().get());
+            luaResource.installBuiltin(getHttpStatusBuiltinProvider().get());
             luaResource.installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
             luaResource.loadModule(getAssetLoader(), moduleName, args);
             return luaResource;
@@ -106,6 +106,15 @@ public class LuaResourceLoader implements ResourceLoader {
     @Inject
     public void setClasspathBuiltinProvider(Provider<ClasspathBuiltin> classpathBuiltinProvider) {
         this.classpathBuiltinProvider = classpathBuiltinProvider;
+    }
+
+    public Provider<HttpStatusBuiltin> getHttpStatusBuiltinProvider() {
+        return httpStatusBuiltinProvider;
+    }
+
+    @Inject
+    public void setHttpStatusBuiltinProvider(Provider<HttpStatusBuiltin> httpStatusBuiltinProvider) {
+        this.httpStatusBuiltinProvider = httpStatusBuiltinProvider;
     }
 
 }
