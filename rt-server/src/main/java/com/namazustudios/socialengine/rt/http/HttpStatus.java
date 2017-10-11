@@ -55,7 +55,7 @@ public enum HttpStatus {
 
     private final int code;
 
-    private HttpStatus(int code) {
+    HttpStatus(int code) {
         this.code = code;
     }
 

@@ -7,8 +7,16 @@ import static java.lang.String.format;
 import static java.util.Arrays.stream;
 
 /**
- * Enumeration of the various response codes.  Each code is essentially the ordinal of the enum, which should be fetched
- * using {@link #getCode()}.
+ * Enumeration of the various server reserved response codes.  Each code is is essentially the ordinal of the enum, as
+ * determined by {@link #ordinal()}, or'd with the {@link #SYSTEM_RESERVED_MASK}.  Client code shall not use error codes
+ * that are masked by the {@link #SYSTEM_RESERVED_MASK} or this may interfere with remapping of errors.
+ *
+ * The only exception to the {@link #SYSTEM_RESERVED_MASK} is the {@link #OK} status, with a value of 0 to universally
+ * indicate that there is no error.
+ *
+ * These codes may be mapped to other status codes (such as HTTP status codes), but are used to provide more
+ * fine-grained information as to what exactly has failed internally.  Client code is free to use their own custom
+ * response code format, so long as it does not conflict with any of the {@link #SYSTEM_RESERVED_MASK}.
  */
 public enum ResponseCode {
 
@@ -66,7 +74,7 @@ public enum ResponseCode {
     METHOD_NOT_FOUND,
 
     /**
-     * A particular operation, (eg {@link HttpOperation )} could not be found.
+     * A particular operation, (eg {@link HttpOperation}) could not be found.
      */
     OPERATION_NOT_FOUND,
 
@@ -112,9 +120,8 @@ public enum ResponseCode {
     TOO_BUSY_FATAL,
 
     /**
-     * The request timed out.  This may not actually sent by the server
-     * but may be supplied by the client to indicate that the request
-     * timed out.
+     * The request timed out.  This may not actually sent by the server but may be supplied by the client to indicate
+     * that the request timed out.
      */
     TIMEOUT_RETRY,
 
@@ -143,7 +150,7 @@ public enum ResponseCode {
     /**
      * Masks {@link ResponseCode} values that are considered reserved by the system.
      */
-    public static final int SYSTEM_RESERVED_MASK = 0x7FFF0000 << 16;
+    public static final int SYSTEM_RESERVED_MASK = 0x7FFF0000;
 
     /**
      * Gets the actual code as returned by {@link ResponseHeader#getCode()}.
@@ -155,11 +162,20 @@ public enum ResponseCode {
     }
 
     /**
+     * Gets a descriptive string representing this {@link ResponseCode}.
+     *
+     * @return the {@link ResponseCode}
+     */
+    public String getDescription() {
+        return format("%s (%x)", toString(), getCode());
+    }
+
+    /**
      * Gets the code for the value.
      *
      * @param code the {@link ResponseCode} for the provided code value.
      *
-     * @return
+     * @return the {@link ResponseCode}
      */
     public static ResponseCode getCodeForValue(final int code) {
         return stream(values())
@@ -183,7 +199,7 @@ public enum ResponseCode {
      * @return the description of the code
      */
     public static String getDescriptionFromCode(final int code) {
-        return format("%s (%x)", getCodeForValue(code), code);
+        return getCodeForValue(code).getDescription();
     }
 
 }
