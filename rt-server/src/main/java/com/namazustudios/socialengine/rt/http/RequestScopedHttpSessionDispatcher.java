@@ -87,7 +87,7 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
                 .map(ex, request, responseConsumer);
 
         try {
-            resource.getMethodDispatcher(httpOperation.getName())
+            resource.getMethodDispatcher(httpOperation.getMethod())
                     .params(request.getPayload(), request, session)
                     .forResultType(Response.class)
                     .dispatch(closingResponseConsumer, handler);

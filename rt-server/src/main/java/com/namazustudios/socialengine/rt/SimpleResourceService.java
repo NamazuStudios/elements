@@ -334,7 +334,7 @@ public class SimpleResourceService implements ResourceService {
 
         private final ConcurrentNavigableMap<Path, ResourceId> pathResourceIdMap = new ConcurrentSkipListMap<>();
 
-        private final ConcurrentNavigableMap<ResourceId, Path> resourceIdPathMap = new ConcurrentSkipListMap<>();
+        private final ConcurrentMap<ResourceId, Path> resourceIdPathMap = new ConcurrentHashMap<>();
 
         public ConcurrentMap<ResourceId, T> getResources() {
             return resources;
@@ -344,7 +344,7 @@ public class SimpleResourceService implements ResourceService {
             return pathResourceIdMap;
         }
 
-        public ConcurrentNavigableMap<ResourceId, Path> getResourceIdPathMap() {
+        public ConcurrentMap<ResourceId, Path> getResourceIdPathMap() {
             return resourceIdPathMap;
         }
 

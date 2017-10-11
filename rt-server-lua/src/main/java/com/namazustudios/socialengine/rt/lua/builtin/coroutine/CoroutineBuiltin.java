@@ -12,6 +12,7 @@ import com.naef.jnlua.LuaType;
 import com.namazustudios.socialengine.rt.Scheduler;
 import com.namazustudios.socialengine.rt.TaskId;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.lua.LogAssist;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import static com.cronutils.model.time.ExecutionTime.forCron;
 import static com.naef.jnlua.LuaState.REGISTRYINDEX;
 import static com.naef.jnlua.LuaState.YIELD;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstruction.IMMEDIATE;
+import static java.lang.Math.log;
 import static java.lang.Math.max;
 import static java.lang.StrictMath.round;
 import static java.lang.System.currentTimeMillis;
@@ -67,53 +69,66 @@ public class CoroutineBuiltin implements Builtin {
      */
     private final JavaFunction start = luaState ->  {
 
-        luaState.checkType(1, LuaType.THREAD);
+        final LogAssist logAssist = new LogAssist(getLuaResource()::getScriptLog, () -> luaState);
 
-        final TaskId taskId = new TaskId();
+        try {
 
-        luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
-        luaState.pushValue(1);
-        luaState.setField(-2, taskId.asString());
-        luaState.pop(1);
+            luaState.checkType(1, LuaType.THREAD);
 
-        return resume(taskId, luaState);
+            final TaskId taskId = new TaskId();
+
+            luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
+            luaState.pushValue(1);
+            luaState.setField(-2, taskId.asString());
+            luaState.pop(1);
+
+            return resume(taskId, luaState, logAssist);
+
+        } catch (Throwable th) {
+            logAssist.error("Could not start coroutine.", th);
+            throw th;
+        }
 
     };
 
     private final JavaFunction resume = luaState ->  {
 
-        // Calculate the task id from the first argument passed in.  Instead of accepting a coroutine
-        // we must accept the ID of the task, so we can look up the coroutine that's associated with the
-        // specified task ID.
-
-        final TaskId taskId = new TaskId(luaState.checkString(1));
-        luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
-        luaState.getField(-1, taskId.toString());
-
-        if (!luaState.isThread(-1)) {
-            throw new InternalException("no such task " + taskId + " instead got " + luaState.typeName(-1));
-        }
-
-        luaState.replace(1);  // Pops the thread
-        luaState.pop(1);      // Replaces the first index
-
-        return resume(taskId, luaState);
-
-    };
-
-    private int resume(final TaskId taskId, final LuaState luaState) {
+        final LogAssist logAssist = new LogAssist(getLuaResource()::getScriptLog, () -> luaState);
 
         try {
 
-            // Push the thread (first argument), then insert it at the beginning of the stack.  This is so we don't
-            // have to deal with querying the coroutine again.
+            // Calculate the task id from the first argument passed in.  Instead of accepting a coroutine
+            // we must accept the ID of the task, so we can look up the coroutine that's associated with the
+            // specified task ID.
 
-            luaState.pushValue(1);
-            luaState.insert(1);
+            final TaskId taskId = new TaskId(luaState.checkString(1));
+            luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
+            luaState.getField(-1, taskId.toString());
 
-            // Execute the coroutine, in using the second value on the stack after having inserted it
+            if (!luaState.isThread(-1)) {
+                throw new InternalException("no such task " + taskId + " instead got " + luaState.typeName(-1));
+            }
 
-            final int returned = luaState.resume(2, luaState.getTop());
+            luaState.replace(1);  // Pops the thread
+            luaState.pop(1);      // Replaces the first index
+
+            return resume(taskId, luaState, logAssist);
+
+        } catch (Throwable th) {
+            logAssist.error("Could not start coroutine.", th);
+            throw th;
+        }
+
+    };
+
+    private int resume(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
+
+        try {
+
+            // Execute the coroutine/thread.  Remember, if the thread is not in the right state, this may cause
+            // the thread to fail.  This shouldn't happen because it should be deregistered.
+
+            final int returned = luaState.resume(1, luaState.getTop() - 1);
 
             // Check the status of the coroutine.  If it is a yield, then we process the yield instructions, and
             // throw an exception if the yield parameters are incorrect.
@@ -125,7 +140,7 @@ public class CoroutineBuiltin implements Builtin {
                 // values and leave the return values on the stack.  We catch any yielding values and we simply process
                 // them and wipe the stack clean.
 
-                processYieldInstruction(taskId, luaState);
+                processYieldInstruction(taskId, luaState, logAssist);
                 luaState.setTop(1);
                 luaState.pushString(taskId.toString());
                 luaState.replace(1);
@@ -159,24 +174,23 @@ public class CoroutineBuiltin implements Builtin {
         luaState.setField(-2, taskId.toString());
     }
 
-    private void processYieldInstruction(final TaskId taskId,
-                                         final LuaState luaState) {
+    private void processYieldInstruction(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
 
         final YieldInstruction instruction;
         instruction = luaState.getTop() > 1 ? luaState.checkEnum(0, YieldInstruction.values()) : IMMEDIATE;
 
         switch (instruction) {
             case FOR:
-                scheduleFor(taskId, luaState);
+                scheduleFor(taskId, luaState, logAssist);
                 break;
             case UNTIL_TIME:
-                scheduleUntil(taskId, luaState);
+                scheduleUntil(taskId, luaState, logAssist);
                 break;
             case IMMEDIATE:
-                scheduleImmediate(taskId);
+                scheduleImmediate(taskId, logAssist);
                 break;
             case UNTIL_NEXT:
-                scheduleUntilNextCron(taskId, luaState);
+                scheduleUntilNextCron(taskId, luaState, logAssist);
                 break;
             default:
                 throw new InternalException("unknown enum value " + instruction);
@@ -184,11 +198,11 @@ public class CoroutineBuiltin implements Builtin {
 
     }
 
-    private void scheduleImmediate(final TaskId taskId) {
+    private void scheduleImmediate(final TaskId taskId, final LogAssist logAssist) {
         getScheduler().resumeTask(getLuaResource().getId(), taskId);
     }
 
-    private void scheduleUntil(final TaskId taskId, final LuaState luaState) {
+    private void scheduleUntil(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = delayUntilMilliseconds(luaState);
         getScheduler().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
     }
@@ -199,7 +213,7 @@ public class CoroutineBuiltin implements Builtin {
         return max(0, value - now);
     }
 
-    private void scheduleFor(final TaskId taskId, final LuaState luaState) {
+    private void scheduleFor(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = timeValueInMilliseconds(luaState);
         getScheduler().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
     }
@@ -221,7 +235,7 @@ public class CoroutineBuiltin implements Builtin {
         return luaState.getTop() > 2 ? luaState.checkEnum(2, TimeUnit.values()) : TimeUnit.SECONDS;
     }
 
-    private void scheduleUntilNextCron(final TaskId taskId, final LuaState luaState) {
+    private void scheduleUntilNextCron(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = delayUntilNextCronMilliseconds(luaState);
         getScheduler().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
     }

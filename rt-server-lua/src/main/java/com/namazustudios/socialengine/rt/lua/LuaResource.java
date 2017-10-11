@@ -5,6 +5,7 @@ import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.AssetNotFoundException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
@@ -44,11 +45,6 @@ public class LuaResource implements Resource {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
 
-    /**
-     * Redirects the print function to the logger returned by {@link #getScriptLog()}.
-     */
-    private final JavaFunction printToScriptLog = new ScriptLogger(s -> logger.info("{}", s));
-
     private final Map<TaskId, PendingTask> taskIdPendingTaskMap = new HashMap<>();
 
     private final ResourceId resourceId = new ResourceId();
@@ -60,6 +56,11 @@ public class LuaResource implements Resource {
     private final LogAssist logAssist;
 
     private Logger scriptLog = logger;
+
+    /**
+     * Redirects the print function to the logger returned by {@link #getScriptLog()}.
+     */
+    private final JavaFunction printToScriptLog = new ScriptLogger(s -> scriptLog.info("{}", s));
 
     /**
      * Creates an instance of {@link LuaResource} with the given {@link LuaState}
@@ -165,18 +166,30 @@ public class LuaResource implements Resource {
     @Override
     public MethodDispatcher getMethodDispatcher(final String name) {
         return params -> (consumer, throwableConsumer) -> {
-            try {
 
-                final LuaState luaState = getLuaState();
+            final LuaState luaState = getLuaState();
+
+            try {
 
                 luaState.getGlobal("require");
                 luaState.pushString(CoroutineBuiltin.MODULE_NAME);
                 luaState.call(1, 1);
-
                 luaState.getField(-1, CoroutineBuiltin.START);
+                luaState.remove(-2);
+
+                luaState.getField(REGISTRYINDEX, MODULE);
+                luaState.getField(-1, name);
+                luaState.remove(-2);
+
+                if (!luaState.isFunction(-1)){
+                    getScriptLog().error("No such method {}", name);
+                    throw new MethodNotFoundException("No such method: " + name);
+                }
+
+                luaState.newThread();
                 for (Object param : params) luaState.pushJavaObject(param);
 
-                luaState.call(params.length, 3);
+                luaState.call(params.length + 1, 3);
 
                 final String taskId = luaState.checkString(-3);                        // task id
                 final int status = luaState.checkInteger(-2);                          // thread status
@@ -192,9 +205,9 @@ public class LuaResource implements Resource {
                 return new TaskId(taskId);
 
             } catch (Throwable th) {
-                logAssist.error("Error dispatching method", th);
+                logAssist.error("Error dispatching method: " + name, th);
                 throw th;
-            }finally {
+            } finally {
                 luaState.setTop(0);
             }
         };

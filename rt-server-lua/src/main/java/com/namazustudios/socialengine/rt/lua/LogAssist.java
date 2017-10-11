@@ -86,7 +86,7 @@ public class LogAssist {
      * @param <ThrowableT>
      * @return
      */
-    <ThrowableT extends Throwable>
+    public <ThrowableT extends Throwable>
     ThrowableT error(final String message, final ThrowableT throwable) {
         final LuaState luaState = luaStateSupplier.get();
         if (luaState != null) dumpStackError(luaState, message, throwable);
