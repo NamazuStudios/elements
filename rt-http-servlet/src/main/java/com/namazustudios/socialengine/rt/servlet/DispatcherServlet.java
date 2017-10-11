@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class DispatcherServlet extends HttpServlet {
@@ -57,43 +58,43 @@ public class DispatcherServlet extends HttpServlet {
     protected void doOptions(final HttpServletRequest httpServletRequest,
                              final HttpServletResponse httpServletResponse) throws ServletException, IOException {
 
-        final HttpRequest httpRequest = getHttpRequestService().getRequest(httpServletRequest);
-        final HttpManifestMetadata manifestMetadata = httpRequest.getManifestMetadata();
-
-        if (manifestMetadata.hasSinglePreferredOperation()) {
-            try {
-                final HttpRequest asyncHttpServletRequest = getHttpRequestService().getAsyncRequest(httpServletRequest);
-                performAsync(asyncHttpServletRequest, httpServletRequest.getAsyncContext());
-            } catch (Exception ex) {
-                logger.info("Mapping exception for {} {}", httpServletRequest.getMethod(), httpServletRequest.getRequestURI());
-
-                getExceptionMapperResolver()
-                        .getExceptionMapper(ex)
-                        .map(ex, response -> assembleAndWrite(httpRequest, response, httpServletResponse));
-
-                logger.info("Mapped exception properly.", ex);
-            }
-        } else {
-
-            final String allow = manifestMetadata.getAvailableOperations()
-                .stream()
-                .map(o -> o.getVerb().toString())
-                .collect(Collectors.joining(","));
-
-            httpServletResponse.addHeader(HttpHeaders.ALLOW, allow);
-
-            manifestMetadata.getAvailableOperations()
-                .stream()
-                .flatMap(o -> o.getConsumesContentByType().keySet().stream())
-                .forEach(ct -> httpServletResponse.addHeader(HttpHeaders.ACCEPT, ct));
-
-            manifestMetadata.getAvailableOperations()
-                .stream()
-                .flatMap(o -> o.getProducesContentByType().values().stream())
-                .flatMap(o -> o.getStaticHeaders().entrySet().stream())
-                .forEach(e -> httpServletResponse.addHeader(e.getKey(), e.getValue()));
-
-        }
+//        final HttpRequest httpRequest = getHttpRequestService().getRequest(httpServletRequest);
+//        final HttpManifestMetadata manifestMetadata = httpRequest.getManifestMetadata();
+//
+//        if (manifestMetadata.hasSinglePreferredOperation()) {
+//            try {
+//                final HttpRequest asyncHttpServletRequest = getHttpRequestService().getAsyncRequest(httpServletRequest);
+//                performAsync(asyncHttpServletRequest, httpServletRequest.getAsyncContext());
+//            } catch (Exception ex) {
+//                logger.info("Mapping exception for {} {}", httpServletRequest.getMethod(), httpServletRequest.getRequestURI());
+//
+//                getExceptionMapperResolver()
+//                        .getExceptionMapper(ex)
+//                        .map(ex, response -> assembleAndWrite(httpRequest, response, httpServletResponse));
+//
+//                logger.info("Mapped exception properly.", ex);
+//            }
+//        } else {
+//
+//            final String allow = manifestMetadata.getAvailableOperations()
+//                .stream()
+//                .map(o -> o.getVerb().toString())
+//                .collect(Collectors.joining(","));
+//
+//            httpServletResponse.addHeader(HttpHeaders.ALLOW, allow);
+//
+//            manifestMetadata.getAvailableOperations()
+//                .stream()
+//                .flatMap(o -> o.getConsumesContentByType().keySet().stream())
+//                .forEach(ct -> httpServletResponse.addHeader(HttpHeaders.ACCEPT, ct));
+//
+//            manifestMetadata.getAvailableOperations()
+//                .stream()
+//                .flatMap(o -> o.getProducesContentByType().values().stream())
+//                .flatMap(o -> o.getStaticHeaders().entrySet().stream())
+//                .forEach(e -> httpServletResponse.addHeader(e.getKey(), e.getValue()));
+//
+//        }
 
     }
 
@@ -101,91 +102,56 @@ public class DispatcherServlet extends HttpServlet {
     protected void doHead(final HttpServletRequest httpServletRequest,
                           final HttpServletResponse httpServletResponse) throws ServletException, IOException {
 
-        final HttpRequest httpRequest = getHttpRequestService().getRequest(httpServletRequest);
-
-        if (httpRequest.getManifestMetadata().hasSinglePreferredOperation()) {
-            try {
-                final HttpRequest asyncHttpServletRequest = getHttpRequestService().getAsyncRequest(httpServletRequest);
-                performAsync(asyncHttpServletRequest, httpServletRequest.getAsyncContext());
-            } catch (Exception ex) {
-
-                logger.info("Mapping exception for {} {}", httpServletRequest.getMethod(), httpServletRequest.getRequestURI());
-
-                getExceptionMapperResolver()
-                        .getExceptionMapper(ex)
-                        .map(ex, response -> assembleAndWrite(httpRequest, response, httpServletResponse));
-
-                httpServletRequest.getAsyncContext().complete();
-                logger.info("Mapped exception properly.", ex);
-
-            }
-        } else {
-            super.doHead(httpServletRequest, httpServletResponse);
-        }
+//        final HttpRequest httpRequest = getHttpRequestService().getRequest(httpServletRequest);
+//
+//        if (httpRequest.getManifestMetadata().hasSinglePreferredOperation()) {
+//            try {
+//                final HttpRequest asyncHttpServletRequest = getHttpRequestService().getAsyncRequest(httpServletRequest);
+//                performAsync(asyncHttpServletRequest, httpServletRequest.getAsyncContext());
+//            } catch (Exception ex) {
+//
+//                logger.info("Mapping exception for {} {}", httpServletRequest.getMethod(), httpServletRequest.getRequestURI());
+//
+//                getExceptionMapperResolver()
+//                        .getExceptionMapper(ex)
+//                        .map(ex, response -> assembleAndWrite(httpRequest, response, httpServletResponse));
+//
+//                httpServletRequest.getAsyncContext().complete();
+//                logger.info("Mapped exception properly.", ex);
+//
+//            }
+//        } else {
+//            super.doHead(httpServletRequest, httpServletResponse);
+//        }
 
     }
 
     private void mapRequestAndPerformAsync(final HttpServletRequest httpServletRequest,
                                            final HttpServletResponse httpServletResponse) {
 
-        final HttpRequest httpRequest = getHttpRequestService().getAsyncRequest(httpServletRequest);;
+        final AsyncContext asyncContext = httpServletRequest.startAsync();
 
-        try {
-            performAsync(httpRequest, httpServletRequest.getAsyncContext());
-        } catch (Exception ex) {
+        final Session session = getHttpSessionService().getSession(httpServletRequest);
+        final HttpRequest httpRequest = getHttpRequestService().getAsyncRequest(asyncContext);
 
-            logger.info("Mapping exception for {} {}", httpServletRequest.getMethod(), httpServletRequest.getRequestURI());
+        final Consumer<Response> responseConsumer = response -> {
+            assembleAndWrite(httpRequest, response, httpServletResponse);
+            asyncContext.complete();
+        };
 
-            getExceptionMapperResolver()
-                .getExceptionMapper(ex)
-                .map(ex, response -> {
-                    assembleAndWrite(httpRequest, response, httpServletResponse);
-                    httpServletRequest.getAsyncContext().complete();
-                    logger.info("Mapped exception properly.", ex);
-                });
-
-        }
+        performAsync(httpRequest, session, responseConsumer);
 
     }
 
-    private void performAsync(final HttpRequest httpRequest, final AsyncContext asyncContext) {
-
-        final HttpServletRequest httpServletRequest = (HttpServletRequest) asyncContext.getRequest();
-
+    private void performAsync(final HttpRequest httpRequest,
+                              final Session session,
+                              final Consumer<Response> responseConsumer) {
         try {
-
-            final Session session = getHttpSessionService().getSession(httpServletRequest);
-
-            getSessionRequestDispatcher().dispatch(session, httpRequest, response -> {
-
-                final HttpServletResponse httpServletResponse;
-                httpServletResponse = (HttpServletResponse) asyncContext.getResponse();
-
-                assembleAndWrite(httpRequest, response, httpServletResponse);
-                asyncContext.complete();
-
-            });
-
+            getSessionRequestDispatcher().dispatch(session, httpRequest, responseConsumer);
         } catch (Exception ex) {
-
-            logger.info("Mapping exception for {} {}", httpServletRequest.getMethod(), httpServletRequest.getRequestURI());
-
-            getExceptionMapperResolver()
-                .getExceptionMapper(ex)
-                .map(ex, httpRequest, response -> {
-
-                    final HttpServletResponse httpServletResponse;
-                    httpServletResponse = (HttpServletResponse) asyncContext.getResponse();
-
-                    assembleAndWrite(httpRequest, response, httpServletResponse);
-                    asyncContext.complete();
-
-                    logger.info("Mapped exception properly.", ex);
-
-                });
-
+            logger.info("Mapping exception for {} {}", httpRequest.getVerb(), httpRequest.getHeader().getPath());
+            getExceptionMapperResolver().getExceptionMapper(ex).map(ex, responseConsumer);
         }
-
     }
 
     private void assembleAndWrite(final HttpRequest httpRequest,

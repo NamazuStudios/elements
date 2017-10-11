@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.servlet;
 
+import com.google.common.net.HttpHeaders;
 import com.namazustudios.socialengine.rt.NamedHeaders;
 import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.http.HttpResponse;
@@ -13,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 
+import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 
 public class DefaultHttpResponseService implements HttpResponseService {
@@ -55,6 +57,7 @@ public class DefaultHttpResponseService implements HttpResponseService {
 
         setStaticHeaders(responseContent, destination);
         setResponseHeaders(toWrite, destination);
+        destination.setHeader(CONTENT_TYPE, responseContent.getType());
 
         if (payload == null) {
             destination.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -66,8 +69,10 @@ public class DefaultHttpResponseService implements HttpResponseService {
     }
 
     private void setStaticHeaders(final HttpContent responseContent, final HttpServletResponse destination) {
-        for (final Map.Entry<String, String> entry : responseContent.getStaticHeaders().entrySet()) {
-            destination.addHeader(entry.getKey(), entry.getValue());
+        if (responseContent.getStaticHeaders() != null) {
+            for (final Map.Entry<String, String> entry : responseContent.getStaticHeaders().entrySet()) {
+                destination.addHeader(entry.getKey(), entry.getValue());
+            }
         }
     }
 

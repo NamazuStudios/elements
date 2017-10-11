@@ -254,7 +254,7 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
         final HttpOperation preferredOperation = getPreferredOperation();
 
         final List<HttpContent> preferredContentList = preferredOperation
-                .getConsumesContentByType()
+                .getProducesContentByType()
                 .values()
                 .stream()
                 .filter(c -> isAcceptable(accepts, c))

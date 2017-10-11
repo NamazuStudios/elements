@@ -5,9 +5,11 @@ import com.naef.jnlua.Converter;
 import com.naef.jnlua.LuaState;
 import com.naef.jnlua.NativeSupport;
 import com.namazustudios.socialengine.rt.ManifestLoader;
+import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.lua.IocResolver;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
+import com.namazustudios.socialengine.rt.lua.LuaResourceLoader;
 import com.namazustudios.socialengine.rt.lua.NativeLibLoader;
 
 /**
@@ -43,6 +45,7 @@ public class LuaModule extends PrivateModule {
     protected final void enableAllFeatures() {
         enableBasicConverters();
         enableManifestLoaderFeature();
+        enableLuaResourceLoaderFeature();
     }
 
     /**
@@ -53,13 +56,20 @@ public class LuaModule extends PrivateModule {
     }
 
     /**
-     * Enables configures this {@link LuaModule} to bind and provide the {@link LuaManifestLoader}.  If
-     * left blank, then this will not provide the feature and it will be necessary to provide one
-     * externally.
+     * Enables configures this {@link LuaModule} to bind and provide the {@link LuaManifestLoader}.  If not called, then
+     * this will not provide the feature and it will be necessary to provide one externally.
      */
     protected final void enableManifestLoaderFeature() {
-        install(new LuaLoaderModule());
+        bind(ManifestLoader.class).to(LuaManifestLoader.class);
         expose(ManifestLoader.class);
+    }
+
+    /**
+     * Enables configures this {@link LuaModule} to bind and provide the {@link LuaResourceLoader}.  If not called, then
+     * this will not provide the feature and it will be necessary to provide one externally.
+     */
+    protected final void enableLuaResourceLoaderFeature() {
+        bind(ResourceLoader.class).to(LuaResourceLoader.class);
         expose(ResourceLoader.class);
     }
 

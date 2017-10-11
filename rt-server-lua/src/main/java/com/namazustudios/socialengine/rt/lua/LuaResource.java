@@ -202,16 +202,16 @@ public class LuaResource implements Resource {
                     consumer.accept(result);
                 }
 
-                return new TaskId(taskId);
+            return new TaskId(taskId);
 
-            } catch (Throwable th) {
-                logAssist.error("Error dispatching method: " + name, th);
-                throw th;
-            } finally {
-                luaState.setTop(0);
-            }
-        };
-    }
+        } catch (Throwable th) {
+            logAssist.error("Error dispatching method: " + name, th);
+            throw th;
+        } finally {
+            luaState.setTop(0);
+        }
+    };
+}
 
     @Override
     public void resume(final TaskId taskId, final double elapsedTime) {

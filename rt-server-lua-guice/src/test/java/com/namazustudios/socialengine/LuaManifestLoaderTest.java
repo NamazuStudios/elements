@@ -77,7 +77,13 @@ public class LuaManifestLoaderTest {
 
         @Override
         protected void configure() {
-            install(new LuaModule());
+            install(new LuaModule() {
+                @Override
+                protected void configureFeatures() {
+                    enableBasicConverters();
+                    enableManifestLoaderFeature();
+                }
+            });
         }
 
         @Provides
