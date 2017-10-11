@@ -156,7 +156,7 @@ public class CoroutineBuiltin implements Builtin {
                 luaState.pushString(taskId.toString());
                 luaState.replace(1);
 
-                return returned;
+                return returned + 1;
 
             }
 
@@ -172,6 +172,7 @@ public class CoroutineBuiltin implements Builtin {
         luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
         luaState.pushNil();
         luaState.setField(-2, taskId.toString());
+        luaState.pop(1);
     }
 
     private void processYieldInstruction(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {

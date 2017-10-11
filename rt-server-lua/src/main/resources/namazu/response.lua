@@ -61,7 +61,7 @@ end
 -- Except for code, every argument is optional.  If not pecified, payload, headers, and sequence will be inferred using
 -- default values.
 
-function namazu_response.forumulate(code, payload, headers, sequence)
+function namazu_response.formulate(code, payload, headers, sequence)
 
     print "Formulating response"
 
