@@ -234,12 +234,14 @@ public class LuaResource implements Resource {
             luaState.getGlobal("require");
             luaState.pushString(CoroutineBuiltin.MODULE_NAME);
             luaState.call(1, 1);
-
             luaState.getField(-1, CoroutineBuiltin.RESUME);
+            luaState.remove(1);
+
+            luaState.pushString(taskId.asString());
             luaState.pushString(SCHEDULER.toString());
             luaState.pushNumber(elapsedTime);
             luaState.pushString(TimeUnit.SECONDS.toString());
-            luaState.call(3, 3);
+            luaState.call(4, 3);
 
             final String taskIdString = luaState.checkString(1);                        // task id
             final int status = luaState.checkInteger(2);                                // thread status
@@ -258,7 +260,9 @@ public class LuaResource implements Resource {
             getScriptLog().error("Caught exception resuming task {}.", taskId, th);
             pendingTask.throwableConsumer.accept(th);
         } finally {
-            luaState.setTop(0);
+            if (luaState.isOpen()) {
+                luaState.setTop(0);
+            }
         }
 
     }

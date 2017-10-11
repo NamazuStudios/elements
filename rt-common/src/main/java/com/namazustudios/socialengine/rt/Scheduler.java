@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -123,9 +124,9 @@ public interface Scheduler {
         final Stopwatch stopwatch = Stopwatch.createStarted();
 
         return performV(resourceId, r -> {
-            double nanos = stopwatch.elapsed(NANOSECONDS);
-            double nanosPerSecond = NANOSECONDS.convert(1, SECONDS);
-            r.resume(taskId, nanosPerSecond / nanos);
+            double mills = stopwatch.elapsed(MILLISECONDS);
+            double secondsPerMills = MILLISECONDS.convert(1, SECONDS);
+            r.resume(taskId, secondsPerMills / mills);
         });
 
     }
@@ -149,9 +150,9 @@ public interface Scheduler {
         final Stopwatch stopwatch = Stopwatch.createStarted();
 
         return performAfterDelayV(resourceId, time, timeUnit, r -> {
-            double nanos = stopwatch.elapsed(NANOSECONDS);
-            double nanosPerSecond = NANOSECONDS.convert(1, SECONDS);
-            r.resume(taskId, nanosPerSecond / nanos);
+            double mills = stopwatch.elapsed(MILLISECONDS);
+            double secondsPerMills = MILLISECONDS.convert(1, SECONDS);
+            r.resume(taskId, secondsPerMills / mills);
         });
 
     }

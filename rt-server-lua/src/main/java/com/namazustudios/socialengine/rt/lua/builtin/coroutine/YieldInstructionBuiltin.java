@@ -9,7 +9,7 @@ public class YieldInstructionBuiltin implements Builtin {
 
     private static final Logger logger = LoggerFactory.getLogger(YieldInstructionBuiltin.class);
 
-    public static final String MODULE_NAME =CoroutineBuiltin.MODULE_NAME + ".yieldinstruction";
+    public static final String MODULE_NAME = CoroutineBuiltin.MODULE_NAME + ".yieldinstruction";
 
     @Override
     public Module getModuleNamed(final String moduleName) {

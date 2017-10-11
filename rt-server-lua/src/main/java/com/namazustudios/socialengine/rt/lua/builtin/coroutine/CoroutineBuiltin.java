@@ -141,6 +141,7 @@ public class CoroutineBuiltin implements Builtin {
                 // If we yielded, then we start looking for the yield instructions and process them.  If the yield
                 // instructions weren't passed properly, an exception will result.
 
+                luaState.remove(1);
                 processYieldInstruction(taskId, luaState, logAssist);
 
                 // Now that all instructions are processed, we return the status and the task id.
@@ -188,7 +189,7 @@ public class CoroutineBuiltin implements Builtin {
     private void processYieldInstruction(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
 
         final YieldInstruction instruction;
-        instruction = luaState.getTop() > 1 ? luaState.checkEnum(0, YieldInstruction.values()) : IMMEDIATE;
+        instruction = luaState.getTop() > 0 ? luaState.checkEnum(1, YieldInstruction.values()) : IMMEDIATE;
 
         switch (instruction) {
             case FOR:
@@ -236,14 +237,14 @@ public class CoroutineBuiltin implements Builtin {
         }
 
         final TimeUnit timeUnit = timeUnit(luaState);
-        final double value = luaState.checkNumber(1) * TIME_UNIT_CORRECTION_FACTOR_D;
+        final double value = luaState.checkNumber(2) * TIME_UNIT_CORRECTION_FACTOR_D;
 
         return MILLISECONDS.convert(round(value), timeUnit) / TIME_UNIT_CORRECTION_FACTOR_L;
 
     }
 
     private TimeUnit timeUnit(final LuaState luaState) {
-        return luaState.getTop() > 2 ? luaState.checkEnum(2, TimeUnit.values()) : TimeUnit.SECONDS;
+        return luaState.getTop() > 2 ? luaState.checkEnum(3, TimeUnit.values()) : TimeUnit.SECONDS;
     }
 
     private void scheduleUntilNextCron(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
