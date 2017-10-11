@@ -130,33 +130,43 @@ public class CoroutineBuiltin implements Builtin {
 
             final int returned = luaState.resume(1, luaState.getTop() - 1);
 
-            // Check the status of the coroutine.  If it is a yield, then we process the yield instructions, and
-            // throw an exception if the yield parameters are incorrect.
+            // Check the status of the coroutine.  If it is a yield, then we process the yield instructions which will
+            // reschedule the task if necessary.  If there's a successful completion, then we collect the results
+            // of the method and push them on the stack.
 
-            if (luaState.status(1) == YIELD) {
+            final int status = luaState.status(1);
 
-                // If we yielded, then we start looking for the yield instructions.  If the yield instructions fail at
-                // any point then we simply throw an exception.  If we did not yield, we simply capture the return
-                // values and leave the return values on the stack.  We catch any yielding values and we simply process
-                // them and wipe the stack clean.
+            if (status == YIELD) {
+
+                // If we yielded, then we start looking for the yield instructions and process them.  If the yield
+                // instructions weren't passed properly, an exception will result.
 
                 processYieldInstruction(taskId, luaState, logAssist);
-                luaState.setTop(1);
-                luaState.pushString(taskId.toString());
-                luaState.replace(1);
 
-                return 0;
+                // Now that all instructions are processed, we return the status and the task id.
+
+                luaState.setTop(0);
+                luaState.pushString(taskId.toString());
+                luaState.pushInteger(status);
+
+                return 2;
 
             } else {
 
-                // If the coroutine wasn't yielded because it finished normally, then we simply take what's on the stack
-                // and return it to the caller.  The caller then will collect the values that are returned.
-
+                luaState.remove(1);
                 cleanup(taskId, luaState);
-                luaState.pushString(taskId.toString());
-                luaState.replace(1);
 
-                return returned + 1;
+                // If the coroutine wasn't yielded because it finished normally, then we simply take what's on the stack
+                // and return it to the caller.  The caller then will collect the values that are returned.  However,
+                // we do prepend the task ID and status so the caller can make sense of the execution result.
+
+                luaState.pushInteger(status);
+                luaState.insert(1);
+
+                luaState.pushString(taskId.toString());
+                luaState.insert(1);
+
+                return returned + 2;
 
             }
 

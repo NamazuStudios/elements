@@ -191,9 +191,9 @@ public class LuaResource implements Resource {
 
                 luaState.call(params.length + 1, 3);
 
-                final String taskId = luaState.checkString(-3);                        // task id
-                final int status = luaState.checkInteger(-2);                          // thread status
-                final Object result = luaState.checkJavaObject(-1, Object.class);      // the return value
+                final String taskId = luaState.checkString(1);                        // task id
+                final int status = luaState.checkInteger(2);                          // thread status
+                final Object result = luaState.checkJavaObject(3, Object.class);      // the return value
 
                 if (status == YIELD) {
                     final PendingTask pendingTask = new PendingTask(consumer, throwableConsumer);
@@ -236,9 +236,9 @@ public class LuaResource implements Resource {
             luaState.pushString(TimeUnit.SECONDS.toString());
             luaState.call(3, 3);
 
-            final String taskIdString = luaState.checkString(-3);                        // task id
-            final int status = luaState.checkInteger(-2);                                // thread status
-            final Object result = luaState.checkJavaObject(-1, Object.class);            // the return value
+            final String taskIdString = luaState.checkString(1);                        // task id
+            final int status = luaState.checkInteger(2);                                // thread status
+            final Object result = luaState.checkJavaObject(3, Object.class);            // the return value
 
             if (!taskId.asString().equals(taskIdString)) {
                 getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
