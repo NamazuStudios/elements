@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
+import com.google.common.collect.ImmutableSet;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.lua.Constants;
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Set;
 
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
 
@@ -20,7 +22,11 @@ import static com.namazustudios.socialengine.rt.Path.fromPathString;
  * Created by patricktwohig on 11/3/15.
  */
 public class ClasspathBuiltin implements Builtin {
-    
+
+    private static final Set<Path> EXCLUSIONS = new ImmutableSet.Builder<Path>()
+            .add(new Path("example/*"))
+        .build();
+
     private static final Logger logger = LoggerFactory.getLogger(ClasspathBuiltin.class);
 
     private final ClassLoader classLoader;
@@ -37,6 +43,8 @@ public class ClasspathBuiltin implements Builtin {
     public Module getModuleNamed(final String moduleName) {
 
         final Path modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
+        final boolean excluded = EXCLUSIONS.stream().anyMatch(p -> p.matches(modulePath));
+
         final URL resource = classLoader.getResource(modulePath.toNormalizedPathString());
 
         return new Module() {
@@ -54,7 +62,7 @@ public class ClasspathBuiltin implements Builtin {
 
             @Override
             public boolean exists() {
-                return resource != null;
+                return !excluded && resource != null;
             }
 
         };

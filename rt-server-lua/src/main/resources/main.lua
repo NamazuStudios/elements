@@ -221,7 +221,7 @@ manifest.http = {
                 -- any path under /hello_world/ and capture the remaining path componenet in the
                 -- foo path parameter.
 
-                path = "/hello_world/{foo}",
+                path = "/hello_world_async/{foo}",
 
                 -- The lua method to call in the module when servicing the request.  This will include
                 -- the get module.

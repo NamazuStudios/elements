@@ -105,8 +105,16 @@ public class FilesystemGitLoader implements GitLoader {
 
         final Function<Path, OutputStream> stringOutputStreamFunction = path -> {
             try {
+
                 final File file = new File(codeDirectory, path.toFileSystemPathString());
+                final File parent = file.getParentFile();
+
+                if (!parent.exists()) {
+                    parent.mkdirs();
+                }
+
                 return new FileOutputStream(file);
+
             } catch (IOException ex) {
                 throw new InternalException(ex);
             }
