@@ -13,6 +13,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static java.lang.Thread.yield;
+
 /**
  * A generic {@link ResourceService} which can take any type of {@link Resource}.
  *
@@ -26,20 +28,20 @@ import java.util.stream.Stream;
  *
  * Created by patricktwohig on 8/4/15.
  */
-public class SimpleResourceService<ResourceT extends Resource> implements ResourceService<ResourceT> {
+public class SimpleResourceService implements ResourceService {
 
     private static final int RETRY_COUNT = 5;
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleResourceService.class);
 
-    private final AtomicReference<Storage<ResourceT>> storageAtomicReference = new AtomicReference<>(new Storage());
+    private final AtomicReference<Storage<Resource>> storageAtomicReference = new AtomicReference<>(new Storage());
 
     private PathLockFactory pathLockFactory;
 
     @Override
-    public ResourceT getResourceWithId(final ResourceId resourceId) {
+    public Resource getResourceWithId(final ResourceId resourceId) {
 
-        final ResourceT resource = storageAtomicReference.get().getResources().get(resourceId);
+        final Resource resource = storageAtomicReference.get().getResources().get(resourceId);
 
         if (resource == null) {
             throw new ResourceNotFoundException("Resource not found: " + resourceId);
@@ -50,7 +52,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
     }
 
     @Override
-    public ResourceT getResourceAtPath(final Path path) {
+    public Resource getResourceAtPath(final Path path) {
 
         if (path.isWildcard()) {
             throw new IllegalArgumentException("Cannot fetch single resource with wildcard path " + path);
@@ -58,7 +60,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
         return doOptimistic(() -> {
 
-            final Storage<ResourceT> storage = storageAtomicReference.get();
+            final Storage<Resource> storage = storageAtomicReference.get();
             final ResourceId resourceId = storage.getPathResourceIdMap().get(path);
 
             if (resourceId == null) {
@@ -67,7 +69,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                 throw new LockedException();
             }
 
-            final ResourceT resource = storage.getResources().get(resourceId);
+            final Resource resource = storage.getResources().get(resourceId);
 
             if (resource == null) {
                 throw new ResourceNotFoundException("Resource at path not found: " + path);
@@ -92,7 +94,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
     }
 
     @Override
-    public void addResource(final Path path, final ResourceT resource) {
+    public void addResource(final Path path, final Resource resource) {
 
         if (path.isWildcard()) {
             throw new IllegalArgumentException("Cannot add resources with wildcard path.");
@@ -102,7 +104,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
         doOptimisticV(() -> {
 
-            final Storage<ResourceT> storage = storageAtomicReference.get();
+            final Storage<Resource> storage = storageAtomicReference.get();
 
             try {
 
@@ -143,9 +145,9 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
     }
 
     @Override
-    public AtomicOperationTuple<ResourceT> addResourceIfAbsent(
+    public AtomicOperationTuple<Resource> addResourceIfAbsent(
             final Path path,
-            final Supplier<ResourceT> resourceInitializer) {
+            final Supplier<Resource> resourceInitializer) {
 
         if (path.isWildcard()) {
             throw new IllegalArgumentException("Cannot add resources with wildcard path.");
@@ -155,7 +157,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
         return doOptimistic(() -> {
 
-            final Storage<ResourceT> storage = storageAtomicReference.get();
+            final Storage<Resource> storage = storageAtomicReference.get();
 
             try {
 
@@ -172,7 +174,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                     // Success! We inserted a new value into the map because we actually managed to lock
                     // the path and fetch the path.  Now it's time to insmert the value that's supplied
                     // into the
-                    final ResourceT resource = resourceInitializer.get();
+                    final Resource resource = resourceInitializer.get();
 
                     if (storage.getResources().putIfAbsent(resource.getId(), resource) != null) {
                         // If that failed then we are attempting to insert this to separate paths.  This should
@@ -196,7 +198,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
                     // appropriately.  No need to dig further, and no need to invoke the
                     // supplier (and risk creating heavy resources).
 
-                    final ResourceT resource = storage.getResources().get(existing);
+                    final Resource resource = storage.getResources().get(existing);
 
                     if (resource == null) {
                         // Since this method implies addition, throwing a ResourceNotFoundException
@@ -219,7 +221,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
     }
 
     @Override
-    public ResourceT removeResource(final Path path) {
+    public Resource removeResource(final Path path) {
 
         if (path.isWildcard()) {
             throw new IllegalArgumentException("Cannot add resources with wildcard path.");
@@ -229,7 +231,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
         return doOptimistic(() -> {
 
-            final Storage<ResourceT> storage = storageAtomicReference.get();
+            final Storage<Resource> storage = storageAtomicReference.get();
 
             final ResourceId existing = storage.getPathResourceIdMap().get(path);
 
@@ -245,7 +247,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
             }
 
             // Attempt to actually lock the resource at the path so we have a chance
-            // to actually carry out our operation.  Once this happens we must
+            // to actually carry out our operation.  LazyValue this happens we must
             // proceed to completely remove the rest of the mapping.
 
             if (!storage.getPathResourceIdMap().replace(path, existing, lock)) {
@@ -256,7 +258,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
             // So at this point we know the existing value is valid and we also know
             // that this should map to an existing value.
-            final ResourceT resource = storage.getResources().get(existing);
+            final Resource resource = storage.getResources().get(existing);
 
             if (resource == null) {
                 throw new DuplicateException("No resource at path: " + path);
@@ -276,7 +278,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
     }
 
     @Override
-    public Stream<ResourceT> removeAllResources() {
+    public Stream<Resource> removeAllResources() {
         // Removes everything and replaces with completely new structures
         // in one atomic swap.  The Remaining values will dealt with
         // appropriately through the returned stream.  However, this method
@@ -300,7 +302,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
             try {
                 return supplier.get();
             } catch (LockedException ex) {
-                Thread.yield();
+                yield();
                 continue;
             }
         }
@@ -309,14 +311,14 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
     }
 
-    private <T> T doOptimisticV(final Runnable runnable) {
+    private void doOptimisticV(final Runnable runnable) {
 
         for (int i = 0; i < RETRY_COUNT; ++i) {
             try {
                 runnable.run();
-                break;
+                return;
             } catch (LockedException ex) {
-                Thread.yield();
+                yield();
                 continue;
             }
         }
@@ -332,7 +334,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
 
         private final ConcurrentNavigableMap<Path, ResourceId> pathResourceIdMap = new ConcurrentSkipListMap<>();
 
-        private final ConcurrentNavigableMap<ResourceId, Path> resourceIdPathMap = new ConcurrentSkipListMap<>();
+        private final ConcurrentMap<ResourceId, Path> resourceIdPathMap = new ConcurrentHashMap<>();
 
         public ConcurrentMap<ResourceId, T> getResources() {
             return resources;
@@ -342,7 +344,7 @@ public class SimpleResourceService<ResourceT extends Resource> implements Resour
             return pathResourceIdMap;
         }
 
-        public ConcurrentNavigableMap<ResourceId, Path> getResourceIdPathMap() {
+        public ConcurrentMap<ResourceId, Path> getResourceIdPathMap() {
             return resourceIdPathMap;
         }
 

@@ -101,7 +101,7 @@ public interface Topic<T> {
     Topic<T> getSubtopicNamed(String name);
 
     /**
-     * Represents a subscription.  Once {@link #close()} has been invoked the associated
+     * Represents a subscription.  LazyValue {@link #close()} has been invoked the associated
      * {@link Consumer} will no longer receive any further calls to to its {@link Consumer#accept(Object)}
      * method.
      */

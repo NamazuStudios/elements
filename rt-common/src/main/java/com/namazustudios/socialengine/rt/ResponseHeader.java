@@ -12,7 +12,12 @@ package com.namazustudios.socialengine.rt;
  *
  * Created by patricktwohig on 7/24/15.
  */
-public interface ResponseHeader {
+public interface ResponseHeader extends NamedHeaders {
+
+    /**
+     * Denotes an unknown sequence.
+     */
+    int UNKNOWN_SEQUENCE = -1;
 
     /**
      * Gets the response code.
@@ -22,7 +27,8 @@ public interface ResponseHeader {
     int getCode();
 
     /**
-     * Gets the sequence of the response.
+     * Gets the sequence of the response.  Or returns any predefined sequence error
+     * code if the sequence has been disrupted or can't be determined.
      *
      * @return the sequence
      */

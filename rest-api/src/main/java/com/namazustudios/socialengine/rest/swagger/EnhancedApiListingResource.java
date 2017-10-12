@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rest.swagger;
 
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.service.ApplicationService;
-import com.namazustudios.socialengine.service.ManifestService;
 import io.swagger.annotations.ApiKeyAuthDefinition;
 import io.swagger.annotations.SecurityDefinition;
 import io.swagger.annotations.SwaggerDefinition;
@@ -47,8 +46,6 @@ public class EnhancedApiListingResource extends ApiListingResource {
     public static final String FACBOOK_OAUTH_KEY = "facebook_oauth";
 
     private URI apiOutsideUrl;
-
-    private ManifestService manifestService;
 
     private ApplicationService applicationService;
 

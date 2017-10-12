@@ -60,7 +60,7 @@ public class SimpleRequest implements Request {
 
         final SimpleRequestHeader simpleRequestHeader = new SimpleRequestHeader();
 
-        final Map<String, List<String> > simpleRequestHeaderMap = new HashMap<>();
+        final Map<String, List<Object> > simpleRequestHeaderMap = new LinkedHashMap<>();
 
         /**
          * Creates a new builder for {@link SimpleResponse}
@@ -85,8 +85,17 @@ public class SimpleRequest implements Request {
                 simpleRequestHeader.setMethod(request.getHeader().getMethod());
                 simpleRequestHeader.setSequence(request.getHeader().getSequence());
 
-                if (request.getHeader().getHeaders() != null) {
-                    simpleRequestHeader.setHeaders(new LinkedHashMap<>(request.getHeader().getHeaders()));
+                if (request.getHeader().getHeaderNames() != null) {
+
+                    final LinkedHashMap<String, List<Object>> headers = new LinkedHashMap<>();
+
+                    for (final String header : request.getHeader().getHeaderNames()) {
+                        final List<Object> value = request.getHeader().getHeaders(header);
+                        headers.put(header, new ArrayList<>(value));
+                    }
+
+                    simpleRequestHeader.setHeaders(headers);
+
                 }
 
             }

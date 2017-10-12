@@ -17,4 +17,9 @@ public class SimpleLockService implements LockService {
         return resourceIdLockMap.computeIfAbsent(resourceId, rid -> new ReentrantLock());
     }
 
+    @Override
+    public void delete(ResourceId resourceId) {
+        resourceIdLockMap.remove(resourceId);
+    }
+
 }

@@ -16,10 +16,10 @@ public interface PathLockFactory {
     ResourceId createLock();
 
     /**
-     * Returns true if the given resource is a lock resource.  Passing in an instance
-     * not returned by {@link #createLock()} is undefined behavior.
+     * Returns true if the given resource is a lock resource.  Passing in an instance not returned by
+     * {@link #createLock()} is undefined behavior.
      *
-     * @param resource the resource
+     * @param resource the {@link ResourceId}, may be null becuase "null" is not a lock (or anything for that matter)
      *
      * @return true if the resource is a lock
      */

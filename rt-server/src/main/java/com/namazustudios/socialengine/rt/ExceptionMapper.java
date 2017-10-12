@@ -1,26 +1,46 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.function.Consumer;
+
 /**
- * Generates an instance of {@link Response} as the result
- * of any user code throwing an exception.  If no exception
- * handler is available to catch the exception, then the
- * server container handles the exception with default behavior.
+ * Generates an instance of {@link Response} as the result of any user code throwing an exception.  If no exception
+ * handler is available to catch the exception, then the server container handles the exception with default behavior.
+ *
+ *
  *
  * Created by patricktwohig on 7/29/15.
  */
 public interface ExceptionMapper<ExceptionT extends Throwable> {
 
     /**
-     * Maps the given {@link Exception} to a custom {@link Response} and then supplies
-     * the response to the given {@link ResponseReceiver}.  This method must not throw
-     * an exception, even if delivering the response failed.
+     * Maps the given {@link Exception} to a custom {@link Response} and then supplies the response to the given
+     * {@link Consumer <Response>}.
+     *
+     * It is not recommended that this method throw an exception, but rather log and write the appropriate
+     * exception type to the {@link Consumer<Response>}.
+     *
+     * @param exception the exception the exception
+     * @param responseConsumer the response the response
+     *
+     */
+    void map(ExceptionT exception, Consumer<Response> responseConsumer);
+
+    /**
+     * Performs the same task as {@link #map(Throwable, Consumer<Response>)}, except that it may
+     * provide a more enhanced mapping by accepting the {@link Request} instance that caused the
+     * exception.
+     *
+     * The default implementation simply elides the {@link Request} and hands the rest on to
+     * it's sister method.
      *
      * @param exception the exception the exception
      * @param request the request the request
-     * @param responseReceiver the response the response
+     * @param responseConsumer the response the response
      *
      */
-    void map(ExceptionT exception, Request request, ResponseReceiver responseReceiver);
+    default void map(final ExceptionT exception, final Request request, final Consumer<Response> responseConsumer) {
+        map(exception, responseConsumer);
+    }
 
     /**
      * Resolves an {@link ExceptionMapper} for hte given {@link Exception} type.
@@ -28,9 +48,9 @@ public interface ExceptionMapper<ExceptionT extends Throwable> {
     interface Resolver {
 
         /**
-         * Returns and {@link ExceptionMapper} for the given {@link Exception} type.  If the type
-         * cannot be mapped by a user-defined {@link ExceptionMapper}, then this must return the
-         * {@link DefaultExceptionMapper} instance as obtained by {@link DefaultExceptionMapper#getInstance()}.
+         * Returns and {@link ExceptionMapper} for the given {@link Exception} type.  If the type cannot be mapped by a
+         * user-defined {@link ExceptionMapper}, then this must return the {@link DefaultExceptionMapper} instance as
+         * obtained by {@link DefaultExceptionMapper#getInstance()}.
          *
          * Under no circumstances is it appropriate to return null.
          *
@@ -40,6 +60,37 @@ public interface ExceptionMapper<ExceptionT extends Throwable> {
          * @return the {@link ExceptionMapper}, never null
          */
         <ExceptionT extends Throwable> ExceptionMapper<ExceptionT> getExceptionMapper(ExceptionT ex);
+
+        /**
+         * Performs the provided {@link Runnable} within a try/catch.
+         *
+         * @param request
+         * @param responseConsumer
+         * @param runnable
+         */
+        default ProtectedOperation protect(final Request request,
+                                           final Consumer<Response> responseConsumer,
+                                           final ProtectedOperation runnable) {
+            return () -> {
+                try {
+                    runnable.perform();
+                } catch (Throwable ex) {
+                    getExceptionMapper(ex).map(ex, request, responseConsumer);
+                }
+            };
+        }
+
+        @FunctionalInterface
+        interface ProtectedOperation {
+
+            void perform();
+
+            default void performAndFinally(final Runnable runnable) {
+                perform();
+                runnable.run();
+            };
+
+        }
 
     }
 

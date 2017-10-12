@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
-import com.sun.media.sound.InvalidDataException;
+import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
 
 /**
  * A Request is a request sent to a particular resource.
@@ -23,48 +23,51 @@ public interface Request {
     /**
      * Gets the payload object for this Request.
      *
-     * @return the paylaod
+     * @return the payload
      */
     Object getPayload();
 
     /**
-     * Gets the payoad, cast to the given type.
+     * Converts the underlying payload to the requested type, if the conversion is possible.  If the
+     * conversion is not possible, then this may throw an exception indicating so.
      *
-     * @param cls the type
-     * @param <T>
+     * The default implementation of this attempts a simple cast.  If that fails, then the
+     * appropriate exception type is raised.
+     *
+     * @param cls the requested type
+     * @param <T> the requested type
+     * @throws {@link InvalidConversionException} if the conversion isn't possible
      */
-    <T> T getPayload(Class<T> cls);
+    default <T> T getPayload(Class<T> cls) {
+
+        final Object payload = getPayload();
+
+        try {
+            return cls.cast(payload);
+        } catch (ClassCastException ex) {
+            throw new InvalidConversionException(ex);
+        }
+
+    }
 
     /**
-     * A type whih validates any instance of {@link Request}.
+     * Checks that the request is valid.  A request is considered valid if the header as well
+     * as it components are not null.
+     *
+     * @throws {@link BadRequestException} if the request is not valid
      */
-    class Validator {
+    default void validate() {
 
-        private Validator() {}
+        final RequestHeader requestHeader = getHeader();
 
-        /**
-         * Checks that the request is valid.  A request is considered valid if the header as well
-         * as it components are not null.
-         *
-         * @param request the request
-         * @throws {@link BadRequestException} if the request is not valid
-         */
-        public static void validate(final Request request) {
-
-            final RequestHeader requestHeader = request.getHeader();
-
-            if(requestHeader == null) {
-                throw new BadRequestException("request header null");
-            } else if (requestHeader.getSequence() < 0) {
-                throw new BadRequestException("unexpected request sequence " + requestHeader.getSequence());
-            } else if (requestHeader.getPath() == null) {
-                throw new BadRequestException("invalid path " + requestHeader.getPath());
-            } else if (requestHeader.getMethod() == null) {
-                throw new BadRequestException("invalid method " + requestHeader.getMethod());
-            } else if (requestHeader.getHeaders() == null) {
-                throw new BadRequestException("invalid request headers " + requestHeader.getHeaders());
-            }
-
+        if(requestHeader == null) {
+            throw new BadRequestException("request header null");
+        } else if (requestHeader.getSequence() < 0) {
+            throw new BadRequestException("unexpected request sequence " + requestHeader.getSequence());
+        } else if (requestHeader.getPath() == null) {
+            throw new BadRequestException("invalid path " + requestHeader.getPath());
+        } else if (requestHeader.getMethod() == null) {
+            throw new BadRequestException("invalid method " + requestHeader.getMethod());
         }
 
     }

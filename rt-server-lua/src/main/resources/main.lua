@@ -75,13 +75,12 @@ manifest.http = {
 
     -- The simple hello world operation
 
-    hello_world = {
+    -- Source code of the module, relative to the project root.  The key of the module map is the name of the module
+    -- as it would be passed to require.  In this case it will load example/hello_world.lua for this particular module
+    -- when in the process of servicing the request
 
-        -- Source code of the module, relative to the project root.  This is optional and by
-        -- default will map to the name of the operation set.  You may specify other modules
-        -- consistent with Lua's "require" keyword such as "foo.bar" to indicate that the
-        -- module's code resides in foo/bar.lua.
-        module = "example.hello_world",
+    ["example.hello_world"] = {
+
 
         -- The operations contained in the module.  This maps the request/respons metadata to various
         -- Lua script methods based on the nature of the request/response.
@@ -93,7 +92,15 @@ manifest.http = {
                 -- Describes the operation which will be relayed to documentation definitions
                 description = "Example Operation",
 
-                -- The corresponding HTTP verb.  Must be one of GET, POST, PUT, DELETE, HEAD, OPTIONS
+                -- The corresponding HTTP verb.  Must be one of GET, POST, PUT, DELETE, HEAD, OPTIONS.
+                -- Note:  If left unspecified, HEAD or OPTIONS will revert to a default behavior.  Thereby
+                -- obviating the need to implement those under normal circumstances.
+                --
+                -- In the case of HEAD, a GET request will execute (if available) and then provide the
+                -- response without the headers.
+                --
+                -- The OPTIONS request will use the operations specified in this manifest file to determine
+                -- what requests are availble wihtout having to provide a specific implementation.
 
                 verb = "GET",
 
@@ -130,7 +137,24 @@ manifest.http = {
                         model = "foo",
 
                         -- Specifies any additional headers this request may consume
-                        headers = { "X-MyExampleHeader" }
+                        headers = {
+
+                            ["X-MyExampleStringHeader"] = {
+                                description = "An example string header",
+                                type = "string",
+                            },
+
+                            ["X-MyExampleNumberHeader"] = {
+                                description = "An example number header",
+                                type = "number",
+                            },
+
+                            ["X-MyExampleBooleanHeader"] = {
+                                description = "An example boolean header",
+                                type = "boolean",
+                            }
+
+                        }
 
                     }
                 },
@@ -143,14 +167,150 @@ manifest.http = {
                         -- Specifies the model which will be used to service the request
                         model = "foo",
 
-                        -- Specifies any additional headers this request may produce
-                        headers = { "X-MyExampleHeader" }
+                        -- Specifies any additional headers this request may consume
+                        headers = {
+                            ["X-MyExampleStringHeader"] = {
+                                description = "An example string header",
+                                type = "string",
+                            },
+
+                            ["X-MyExampleNumberHeader"] = {
+                                description = "An example number header",
+                                type = "string",
+                            },
+
+                            ["X-MyExampleBooleanHeader"] = {
+                                description = "An example boolean header",
+                                type = "string",
+                            }
+                        },
+
+                        -- Specifies any options headers, if availble.  These will be sent with the
+                        -- response as-is.  This is useful for performing operations such as CORS or
+                        -- similar responses.
+
+                        static_headers = {
+                            ["Access-Control-Allow-Origin"] = "http://example.com"
+                        }
+
+                    }
+
+                },
+
+            },
+
+            get_async_hello_world = {
+
+                -- Describes the operation which will be relayed to documentation definitions
+                description = "Example Operation",
+
+                -- The corresponding HTTP verb.  Must be one of GET, POST, PUT, DELETE, HEAD, OPTIONS.
+                -- Note:  If left unspecified, HEAD or OPTIONS will revert to a default behavior.  Thereby
+                -- obviating the need to implement those under normal circumstances.
+                --
+                -- In the case of HEAD, a GET request will execute (if available) and then provide the
+                -- response without the headers.
+                --
+                -- The OPTIONS request will use the operations specified in this manifest file to determine
+                -- what requests are availble wihtout having to provide a specific implementation.
+
+                verb = "GET",
+
+                -- The path the server will resolve the module.  The path parameters encapsulated in the
+                -- {} notation and will be used as wildcard-style matching.  This example will match
+                -- any path under /hello_world/ and capture the remaining path componenet in the
+                -- foo path parameter.
+
+                path = "/hello_world_async/{foo}",
+
+                -- The lua method to call in the module when servicing the request.  This will include
+                -- the get module.
+
+                method = "get_async",
+
+                -- Parameters which the request will accept.  Parameters may ony specify simple types.
+
+                parameters = {
+                    foo_number = "number",
+                    bar_number = "number",
+                    foo_string = "string",
+                    bar_string = "string"
+                },
+
+                -- Specifies the content which will be produced and consumed by the operation.  The consumer
+                -- will consume a model of the supplied type when the content type is provided.
+
+                consumes = {
+
+                    -- Specifies the content-type to match the incoming requests
+                    ["application/json"] = {
+
+                        -- Specifies the model which will be used to service the request
+                        model = "foo",
+
+                        -- Specifies any additional headers this request may consume
+                        headers = {
+
+                            ["X-MyExampleStringHeader"] = {
+                                description = "An example string header",
+                                type = "string",
+                            },
+
+                            ["X-MyExampleNumberHeader"] = {
+                                description = "An example number header",
+                                type = "number",
+                            },
+
+                            ["X-MyExampleBooleanHeader"] = {
+                                description = "An example boolean header",
+                                type = "boolean",
+                            }
+
+                        }
+
+                    }
+                },
+
+                produces = {
+
+                    -- Specifies the content-type to match to the
+                    ["application/json"] = {
+
+                        -- Specifies the model which will be used to service the request
+                        model = "foo",
+
+                        -- Specifies any additional headers this request may consume
+                        headers = {
+                            ["X-MyExampleStringHeader"] = {
+                                description = "An example string header",
+                                type = "string",
+                            },
+
+                            ["X-MyExampleNumberHeader"] = {
+                                description = "An example number header",
+                                type = "string",
+                            },
+
+                            ["X-MyExampleBooleanHeader"] = {
+                                description = "An example boolean header",
+                                type = "string",
+                            }
+                        },
+
+                        -- Specifies any options headers, if availble.  These will be sent with the
+                        -- response as-is.  This is useful for performing operations such as CORS or
+                        -- similar responses.
+
+                        static_headers = {
+                            ["Access-Control-Allow-Origin"] = "http://example.com"
+                        }
 
                     }
 
                 },
 
             }
+
         }
 
     }

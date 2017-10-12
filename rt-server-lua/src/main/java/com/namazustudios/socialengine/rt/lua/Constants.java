@@ -1,10 +1,9 @@
 package com.namazustudios.socialengine.rt.lua;
 
-import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResponseCode;
 
 /**
- * A set of constants used by the {@link AbstractLuaResource} and related classes.
+ * A set of constants used by the {@link LuaResource} and related classes.
  *
  * Created by patricktwohig on 11/2/15.
  */
@@ -35,11 +34,6 @@ public interface Constants {
     String RESPONSE_CODE = "response_code";
 
     /**
-     * This is the table name under namazu_rt that defines the init parameters for the script.
-     */
-    String INIT_PARAMS = "init_params";
-
-    /**
      * Constant to designate the server.coroutine table.  This is a set of coroutinee
      * functions managed by the server that are housed internally in the script.  The
      * client code should not interfere with the running co-routines
@@ -52,24 +46,6 @@ public interface Constants {
     String COROUTINE_CREATE_FUNCTION = "create";
 
     /**
-     * A registry table for server threads.  This is stored in the lua registry and is not
-     * visible to the Lua source code at all.
-     */
-    String SERVER_THREADS_TABLE = "NAMAZU_RT_SERVER_THREADS";
-
-    /**
-     * The table underneath the namazu_rt table which handles requests.
-     */
-    String REQUEST_TABLE = "request";
-
-    /**
-     * A key on the services table to expose  an instance of the Resource type to the underlying Lua script.  This
-     * allows the underlying script to perform functions such as getting the current path, or posting
-     * events to subscribers.
-     */
-    String THIS_INSTANCE = "resource";
-
-    /**
      * The "package" table.  See the Lua manual for what this is used for.
      */
     String PACKAGE_TABLE = "package";
@@ -80,9 +56,8 @@ public interface Constants {
     String PACKAGE_SEARCHERS_TABLE = "searchers";
 
     /**
-     * Exposes the instance of {@link IocResolver} which the underlying script can use to resolve dependencies
-     * such as other instances of {@link Resource}.
+     * The lua source file extension "lua"
      */
-    String IOC_INSTANCE = "ioc";
+    String LUA_FILE_EXT = "lua";
 
 }

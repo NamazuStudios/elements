@@ -29,9 +29,8 @@ public interface GitLoader {
     String GIT_SUFFIX = "git";
 
     /**
-     * Opens a {@link Git} instance for the supplied {@link Application} which can be used to manipulate
-     * the various files within the repository.  Once this call returns the supplied {@link Git} instance
-     * will be closed.
+     * Opens a {@link Git} instance for the supplied {@link Application} which can be used to manipulate the various
+     * files within the repository.  When call returns the supplied {@link Git} instance will be closed.
      *
      * @param  application the {@link Application} for which to open a {@link Git} instance
      * @param gitConsumer consumes an instance of {@link Git} which will be used to perform the desired actions

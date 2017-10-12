@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import java.util.List;
-import java.util.Map;
+import com.namazustudios.socialengine.rt.exception.BadRequestException;
 
 /**
  * The basic request type for the RT Server.  This is compact set of
@@ -14,11 +13,12 @@ import java.util.Map;
  *
  * Created by patricktwohig on 7/24/15.
  */
-public interface RequestHeader {
+public interface RequestHeader extends NamedHeaders {
 
     /**
      * Gets the sequence of the request.  The client, when making the request,
-     * will produce a response with this sequence.
+     * will produce a response with this sequence.  The sequence may be -1 to
+     * indicate that no sequencing is used fo this paticular {@link Request}.
      *
      * @return the sequence
      */
@@ -39,22 +39,18 @@ public interface RequestHeader {
     String getPath();
 
     /**
-     * Gets a listing of headers mapped by header name.  A header may be repeated and therefore
-     * the header may not have the
+     * Returns the value of {@link #getPath()} as a fully parsed {@link Path} object.
      *
-     * @return the mapping of headers.
-     */
-    Map<String, List<String>> getHeaders();
-
-    /**
-     * Gets a single header with the supplied name.
+     * @return the {@link Path} object
      *
-     * @param header the header
-     * @return the header value, or null if no header is found
+     * @throws {@link BadRequestException} if the value of {@link #getPath()} does not parse
      */
-    default String getHeader(final String header) {
-        final List<String> headers = getHeaders().get(header);
-        return headers == null || headers.isEmpty() ? null : headers.get(0);
+    default Path getParsedPath() throws BadRequestException {
+        try {
+            return new Path(getPath());
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException(ex);
+        }
     }
 
 }

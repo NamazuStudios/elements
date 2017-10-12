@@ -67,6 +67,7 @@ public class ApplicationDocumentationResource {
     }
 
     private Swagger generateSwagger(final String applicationNameOrId) {
+
         final Swagger swagger = new Swagger();
         final Application application = getApplicationService().getApplication(applicationNameOrId);
 
@@ -124,7 +125,7 @@ public class ApplicationDocumentationResource {
         appendModelManifest(swagger, modelManifest);
 
         final HttpManifest httpManifest = getManifestService().getHttpManifestForApplication(application);
-        appendHttpManifest(swagger, httpManifest, modelManifest);
+        appendHttpManifest(swagger, httpManifest);
     }
 
     private void appendModelManifest(final Swagger swagger, final ModelManifest modelManifest) {
@@ -155,8 +156,7 @@ public class ApplicationDocumentationResource {
     }
 
     private void appendHttpManifest(final Swagger swagger,
-                                    final HttpManifest httpManifest,
-                                    final ModelManifest modelManifest) {
+                                    final HttpManifest httpManifest) {
 
         final Map<ParameterizedPath, io.swagger.models.Path> parameterizedPathPathMap = new HashMap<>();
 
@@ -230,7 +230,7 @@ public class ApplicationDocumentationResource {
         final List<Parameter> parameters = resolveParameters(httpOperation);
         final List<String> consumes = new ArrayList<>(httpOperation.getConsumesContentByType().keySet());
         final List<String> produces = new ArrayList<>(httpOperation.getProducesContentByType().keySet());
-        final List<Response> responses = resoveResponses(httpOperation.getProducesContentByType().values());
+        final List<Response> responses = resolveResponses(httpOperation.getProducesContentByType().values());
 
         final Operation operation = new Operation();
 
@@ -251,10 +251,11 @@ public class ApplicationDocumentationResource {
         httpOperation.getProducesContentByType()
                 .values()
                 .stream()
-                .flatMap(c -> c.getHeaders().stream())
-                .map(header -> {
+                .flatMap(c -> c.getHeaders().entrySet().stream())
+                .map(e -> {
                     final HeaderParameter parameter = new HeaderParameter();
-                    parameter.setName(header);
+                    parameter.setName(e.getKey());
+                    parameter.setProperty(toSwaggerProperty(e.getValue()));
                     return parameter;
                 }).forEach(parameters::add);
 
@@ -271,18 +272,26 @@ public class ApplicationDocumentationResource {
         return parameters;
     }
 
-    private List<Response> resoveResponses(final Collection<HttpContent> httpContentCollection) {
+    private List<Response> resolveResponses(final Collection<HttpContent> httpContentCollection) {
         return httpContentCollection.stream()
             .map(this::resolveResponse)
             .collect(Collectors.toList());
     }
 
     private Response resolveResponse(final HttpContent content) {
+
+        final Map<String, io.swagger.models.properties.Property> headerPropertyMap = content
+            .getHeaders()
+            .entrySet()
+            .stream()
+            .collect(Collectors.toMap(e -> e.getKey(), e -> toSwaggerProperty(e.getValue())));
+
         final Response response = new Response();
         final RefProperty type = new RefProperty(content.getModel());
         response.setSchema(type);
-        response.setHeaders(content.getHeaders().stream().collect(Collectors.toMap(identity(), h -> new StringProperty())));
+        response.setHeaders(headerPropertyMap);
         return response;
+
     }
 
     public ManifestService getManifestService() {

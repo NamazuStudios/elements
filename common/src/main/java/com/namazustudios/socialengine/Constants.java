@@ -86,6 +86,11 @@ public interface Constants {
     String HTTP_TUNNEL_URL = "com.namazustudios.socialengine.git.http.tunnel.url";
 
     /**
+     * Used to specify the port that the http tunnel will run against.
+     */
+    String HTTP_TUNNEL_PORT = "com.namazustudios.socialengine.git.http.tunnel.port";
+
+    /**
      * Defines some useful regex patterns.
      */
     interface Regexp {

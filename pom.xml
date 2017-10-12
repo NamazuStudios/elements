@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.namazustudios.socialengine</groupId>
@@ -37,13 +36,19 @@
         <module>rt-server</module>
         <module>rt-mina</module>
         <module>rt-server-lua</module>
+        <module>rt-server-lua-guice</module>
         <module>rt-client</module>
         <module>rt-dao</module>
+        <module>rt-http-servlet</module>
+        <module>rt-jackson</module>
+        <module>rt-jackson-guice</module>
+        <module>rt-server-guice</module>
         <module>docker</module>
         <module>code-serve</module>
         <module>code-serve-guice</module>
         <module>code-serve-war</module>
-    </modules>
+        <module>app-serve</module>
+  </modules>
 
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>

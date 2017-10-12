@@ -38,12 +38,16 @@ import static java.lang.String.format;
 import static java.lang.String.join;
 
 /**
- * A special class which will load an {@link Application}'s code to a local temporary directory where
- * it can be processed and run.
+ * A special class which will load an {@link Application}'s code to a local temporary directory where it can be
+ * processed and run.
  *
- * The source of the {@link org.eclipse.jgit.lib.Repository} is a path on the file system, and therefore
- * it clones from a git repository stored elsewhere on disk.  This is specified using the
- * {@link Constants#GIT_STORAGE_DIRECTORY} configuration parameter.
+ * The source of the {@link org.eclipse.jgit.lib.Repository} is a path on the file system, and therefore it clones from
+ * a git repository stored elsewhere on disk.  This is specified using the {@link Constants#GIT_STORAGE_DIRECTORY}
+ * configuration parameter.
+ *
+ * Note that the {@link GitLoader} interface essentially calls for unpacking of the {@link Application} code to a
+ * local directory.  The designation "Filesystem" refers to the source of the repository as opposed to the destination
+ * of the working directory.
  *
  * Created by patricktwohig on 8/19/17.
  */
@@ -101,8 +105,16 @@ public class FilesystemGitLoader implements GitLoader {
 
         final Function<Path, OutputStream> stringOutputStreamFunction = path -> {
             try {
+
                 final File file = new File(codeDirectory, path.toFileSystemPathString());
+                final File parent = file.getParentFile();
+
+                if (!parent.exists()) {
+                    parent.mkdirs();
+                }
+
                 return new FileOutputStream(file);
+
             } catch (IOException ex) {
                 throw new InternalException(ex);
             }

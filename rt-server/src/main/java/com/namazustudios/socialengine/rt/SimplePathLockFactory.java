@@ -14,7 +14,7 @@ public class SimplePathLockFactory implements PathLockFactory {
 
     @Override
     public boolean isLock(ResourceId resourceId) {
-        return Objects.equals(LockingId.class, resourceId.getClass());
+        return resourceId != null && Objects.equals(LockingId.class, resourceId.getClass());
     }
 
     private static class LockingId extends ResourceId {}

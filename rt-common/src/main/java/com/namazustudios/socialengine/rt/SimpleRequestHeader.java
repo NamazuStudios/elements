@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +17,12 @@ public class SimpleRequestHeader implements RequestHeader {
 
     private String path;
 
-    private Map<String, List<String> > headers;
+    private Map<String, List<Object> > headers;
+
+    @Override
+    public List<String> getHeaderNames() {
+        return new ArrayList<>(headers.keySet());
+    }
 
     @Override
     public int getSequence() {
@@ -46,11 +52,11 @@ public class SimpleRequestHeader implements RequestHeader {
     }
 
     @Override
-    public Map<String, List<String>> getHeaders() {
-        return headers;
+    public List<Object> getHeaders(final String name) {
+        return headers.get(name);
     }
 
-    public void setHeaders(Map<String, List<String> > headers) {
+    public void setHeaders(Map<String, List<Object> > headers) {
         this.headers = headers;
     }
 
@@ -60,7 +66,7 @@ public class SimpleRequestHeader implements RequestHeader {
                 "sequence=" + sequence +
                 ", method='" + method + '\'' +
                 ", path='" + path + '\'' +
-                ", headers=" + headers +
+                ", simpleResponseHeaderMap=" + headers +
                 '}';
     }
 
@@ -74,8 +80,7 @@ public class SimpleRequestHeader implements RequestHeader {
         if (getSequence() != that.getSequence()) return false;
         if (getMethod() != null ? !getMethod().equals(that.getMethod()) : that.getMethod() != null) return false;
         if (getPath() != null ? !getPath().equals(that.getPath()) : that.getPath() != null) return false;
-        return !(getHeaders() != null ? !getHeaders().equals(that.getHeaders()) : that.getHeaders() != null);
-
+        return headers != null ? headers.equals(that.headers) : that.headers == null;
     }
 
     @Override
@@ -83,7 +88,7 @@ public class SimpleRequestHeader implements RequestHeader {
         int result = getSequence();
         result = 31 * result + (getMethod() != null ? getMethod().hashCode() : 0);
         result = 31 * result + (getPath() != null ? getPath().hashCode() : 0);
-        result = 31 * result + (getHeaders() != null ? getHeaders().hashCode() : 0);
+        result = 31 * result + (headers != null ? headers.hashCode() : 0);
         return result;
     }
 

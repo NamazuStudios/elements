@@ -22,18 +22,9 @@ public interface LockService {
      */
     Lock getLock(final ResourceId resourceId);
 
-//    /**
-//     * Creates and returns the {@link Lock} instance provided the {@link ResourceId}.
-//     *
-//     * @param resourceId the resource ID
-//     * @return the {@link Lock}
-//     * @throws {@link DuplicateException} if a lock alrady exists for hte provide {@link ResourceId}
-//     */
-//    Lock create(final ResourceId resourceId);
-//
-//    /**
-//     * Deletes the lock with the given {@link ResourceId}
-//     */
-//    void delete(final ResourceId);
+    /**
+     * Deletes the lock with the given {@link ResourceId}
+     */
+    void delete(final ResourceId resourceId);
 
 }

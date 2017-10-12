@@ -18,18 +18,17 @@ public class ScriptLogger implements JavaFunction {
 
     @Override
     public int invoke(final LuaState luaState) {
-        try (final StackProtector stackProtector = new StackProtector(luaState)) {
 
-            final StringBuffer stringBuffer = new StringBuffer();
+        final StringBuffer stringBuffer = new StringBuffer();
 
-            for (int i = 1; i <= luaState.getTop(); ++i) {
-                stringBuffer.append(luaState.toJavaObject(i, String.class));
-            }
-
-            messageConsumer.accept(stringBuffer.toString());
-            return stackProtector.setAbsoluteIndex(0);
-
+        for (int i = 1; i <= luaState.getTop(); ++i) {
+            stringBuffer.append(luaState.toJavaObject(i, String.class));
         }
+
+        messageConsumer.accept(stringBuffer.toString());
+        luaState.setTop(0);
+        return 0;
+
     }
 
 }

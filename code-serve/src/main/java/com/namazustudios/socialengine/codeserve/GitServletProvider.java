@@ -35,4 +35,3 @@ public class GitServletProvider implements Provider<GitServlet> {
     }
 
 }
-

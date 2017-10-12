@@ -19,6 +19,7 @@
         <module>namazu-socialengine-api</module>
         <module>namazu-socialengine-setup</module>
         <module>namazu-socialengine-code-serve</module>
+        <module>namazu-socialengine-app-serve</module>
     </modules>
 
     <properties>

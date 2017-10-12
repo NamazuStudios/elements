@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt.manifest.model;
 
-import com.namazustudios.socialengine.rt.exception.BadManifestException;
-
 import static java.util.Arrays.stream;
 
 /**
@@ -12,17 +10,17 @@ import static java.util.Arrays.stream;
 public enum Type {
 
     /**
-     * The string type
+     * The string type.  Generally expressed as a {@link String}.
      */
     STRING("string"),
 
     /**
-     * The number type.
+     * The number type.  Generally expressed as a {@link Double} or primitive Java double.
      */
     NUMBER("number"),
 
     /**
-     * The boolean type
+     * The boolean type.  Generally expressed as a {@link Boolean} or primitive Java boolean.
      */
     BOOLEAN("boolean"),
 
@@ -48,12 +46,12 @@ public enum Type {
      * @param value the value
      * @return the {@link Type} instance
      *
-     * @throws {@link BadManifestException} if the type was not supported
+     * @throws {@link IllegalArgumentException} if the type was not supported
      */
     public static Type findByValue(final String value) {
         return stream(values())
             .filter(t -> t.value.equals(value))
-            .findFirst().orElseThrow(() -> new BadManifestException(value + "type not supported."));
+            .findFirst().orElseThrow(() -> new IllegalArgumentException(value + "type not supported."));
     }
 
 }

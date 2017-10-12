@@ -7,11 +7,14 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.namazustudios.socialengine.rt.Path.Util.*;
+import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
 /**
@@ -25,6 +28,11 @@ public final class Path implements Comparable<Path> {
      * The path separator.  Literal value "/"
      */
     public static final String PATH_SEPARATOR = "/";
+
+    /**
+     * The extension separator.
+     */
+    public static final String EXTENSION_SEPARATOR = ".";
 
     /**
      * The wildcard character.  Literal value "*"
@@ -51,7 +59,7 @@ public final class Path implements Comparable<Path> {
      * @param path
      */
     public Path(final String path) {
-        this(Util.componentsFromPath(path));
+        this(componentsFromPath(path));
     }
 
     /**
@@ -97,6 +105,41 @@ public final class Path implements Comparable<Path> {
      */
     public Path append(final Path otherPath) {
         return new Path(this, otherPath);
+    }
+
+    /**
+     * Appends an extension using the {@link #EXTENSION_SEPARATOR}.
+     *
+     * {@see {@link #appendExtension(String, String)}}
+     *
+     * @param extension the extension
+     *
+     * @return a new {@link Path}, applying the supplied extension
+     */
+    public Path appendExtension(final String extension) {
+        return appendExtension(extension, EXTENSION_SEPARATOR);
+    }
+
+    /**
+     * Appends an extension to this {@link Path}, using the supplied separator.  The final resulting {@link Path} is
+     * the result of appending the separator and the extension to the last component of the string.
+     *
+     * @param extension the extension
+     * @param separator the separator
+     *
+     * @return a new {@link Path}, applying the supplied extension
+     */
+    public Path appendExtension(final String extension, final String separator) {
+
+        final List<String> components = new ArrayList<>(this.components);
+
+        if (!components.isEmpty()) {
+            final String last = components.remove(components.size() - 1);
+            components.add(last + separator + extension);
+        }
+
+        return new Path(components);
+
     }
 
     /**
@@ -167,18 +210,17 @@ public final class Path implements Comparable<Path> {
      * @return the string representation
      */
     public String toFileSystemPathString() {
-        return toNormalizedPathString(File.pathSeparator);
+        return toNormalizedPathString(File.separator);
     }
 
     /**
-     * Returns the normalized path string.  NOte that {@link #toString()} does not return
-     * a properly formatted path.  But rather a path useful for debugging and logging information.
-     * To get the normalzied path, this method must be used.
+     * Returns the normalized path string.  Note that {@link #toString()} does not return a properly formatted path.
+     * But rather a path useful for debugging and logging information.
      *
      * @return the normalized path as a string
      */
     public String toNormalizedPathString(final String separator) {
-        return Util.pathFromComponents(components, separator);
+        return pathFromComponents(components, separator);
     }
 
     @Override
@@ -270,6 +312,18 @@ public final class Path implements Comparable<Path> {
                 .splitToList(path);
         }
 
+        /**
+         * Gets the path components from the given path.
+         *
+         * @param path the path
+         * @return the components
+         */
+        public static List<String> componentsFromPath(final String path, final String separator) {
+            return Splitter.on(separator)
+                    .omitEmptyStrings()
+                    .trimResults()
+                    .splitToList(path);
+        }
 
         /**
          * Joins the given string components together to build a path string from
@@ -313,6 +367,41 @@ public final class Path implements Comparable<Path> {
             return pathFromComponents(pathComponents);
         }
 
+    }
+
+    /**
+     * Converts the supplied components to a {@link Path}.
+     *
+     * @param components the components in the {@link Path}
+     *
+     * @return the {@link Path}
+     */
+    public static Path fromComponents(String ... components) {
+        return new Path(asList(components));
+    }
+
+    /**
+     * Converts the supplied string representation of he {@link Path} using {@link #PATH_SEPARATOR} as the
+     * separator.
+     *
+     * @param pathString the components in the {@link Path}
+     *
+     * @return the fully formed {@link Path}
+     */
+    public static Path fromPathString(final String pathString) {
+        return fromPathString(pathString, PATH_SEPARATOR);
+    }
+
+    /**
+     * Converts the supplied string representation of he {@link Path} with the supplied separator string.
+     *
+     * @param pathString the components in the {@link Path}
+     * @param pathString the separator string
+     *
+     * @return the fully formed {@link Path}
+     */
+    public static Path fromPathString(final String pathString, final String separator) {
+        return new Path(componentsFromPath(pathString, separator));
     }
 
 }
