@@ -18,7 +18,7 @@
 
     <properties>
         <jnlua.version>1.0.4</jnlua.version>
-        <cron.utils.version>6.0.2</cron.utils.version>
+        <quartz.version>2.3.0</quartz.version>
         <native.lib.loader.version>2.2.0</native.lib.loader.version>
     </properties>
 
@@ -50,9 +50,9 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>com.cronutils</groupId>
-            <artifactId>cron-utils</artifactId>
-            <version>${cron.utils.version}</version>
+            <groupId>org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
+            <version>${quartz.version}</version>
         </dependency>
         <dependency>
             <groupId>org.scijava</groupId>

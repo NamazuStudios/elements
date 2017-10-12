@@ -1,11 +1,5 @@
 package com.namazustudios.socialengine.rt.lua.builtin.coroutine;
 
-import com.cronutils.model.Cron;
-import com.cronutils.model.CronType;
-import com.cronutils.model.definition.CronDefinition;
-import com.cronutils.model.definition.CronDefinitionBuilder;
-import com.cronutils.model.time.ExecutionTime;
-import com.cronutils.parser.CronParser;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaState;
 import com.naef.jnlua.LuaType;
@@ -15,24 +9,21 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
+import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.threeten.bp.Duration;
-import org.threeten.bp.ZonedDateTime;
-import org.threeten.bp.temporal.ChronoUnit;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import static com.cronutils.model.time.ExecutionTime.forCron;
 import static com.naef.jnlua.LuaState.REGISTRYINDEX;
 import static com.naef.jnlua.LuaState.YIELD;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstruction.IMMEDIATE;
-import static java.lang.Math.log;
 import static java.lang.Math.max;
 import static java.lang.StrictMath.round;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 public class CoroutineBuiltin implements Builtin {
 
@@ -49,8 +40,6 @@ public class CoroutineBuiltin implements Builtin {
     public static final String START = "start";
 
     public static final String RESUME = "resume";
-
-    public static final CronDefinition CRON_DEFINITION = CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ);
 
     private final LuaResource luaResource;
 
@@ -260,14 +249,16 @@ public class CoroutineBuiltin implements Builtin {
         }
 
         final String expression = luaState.checkString(2);
-        final CronParser cronParser = new CronParser(CRON_DEFINITION);
-        final Cron cron = cronParser.parse(expression);
+        final CronExpression cronExpression;
 
-        final ExecutionTime executionTime = forCron(cron);
-        final Duration duration = executionTime.timeToNextExecution(ZonedDateTime.now()).get();
-        final long nanos = duration.get(ChronoUnit.NANOS);
+        try {
+            cronExpression = new CronExpression(expression);
+        } catch (ParseException ex) {
+            throw new InternalException(ex);
+        }
 
-        return MILLISECONDS.convert(nanos, NANOSECONDS);
+        final Date when = cronExpression.getNextValidTimeAfter(new Date());
+        return max(0l, when.getTime() - currentTimeMillis());
 
     }
 

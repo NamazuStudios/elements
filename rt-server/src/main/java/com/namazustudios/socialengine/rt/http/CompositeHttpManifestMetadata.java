@@ -4,7 +4,6 @@ import com.google.common.net.MediaType;
 import com.namazustudios.socialengine.rt.exception.*;
 import com.namazustudios.socialengine.rt.manifest.http.*;
 import com.namazustudios.socialengine.rt.util.LazyValue;
-import com.sun.tools.internal.ws.wsdl.document.http.HTTPOperation;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -18,14 +17,12 @@ import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.GET;
 import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.HEAD;
 import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.OPTIONS;
 import static java.util.Arrays.asList;
-import static java.util.Arrays.fill;
 import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
 
 /**
  * Builds an {@link HttpManifestMetadata} as a composite of an {@link HttpRequest} and a {@link HttpManifest}.  All
- * computation is deferred as each of the methods are called.  This allows the assocaited {@link HttpRequest} to pass
- * as far through all
+ * computation is deferred as each of the methods are called.
  */
 public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
 

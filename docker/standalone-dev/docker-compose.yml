@@ -87,6 +87,24 @@ services:
     volumes:
       - script-repos:/opt/socialengine/script-repos
 
+  app-serve:
+    build:
+      context: ./app-serve
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - mongo
+      - redis
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "8083:8080"
+    volumes:
+      - script-repos:/opt/socialengine/script-repos
+
 networks:
   socialengine:
 
