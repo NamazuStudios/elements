@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.appserve.guice.FileSystemGitLoaderModule;
 import com.namazustudios.socialengine.appserve.guice.ServerModule;
 import com.namazustudios.socialengine.appserve.guice.ServicesModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
+import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
@@ -21,6 +22,7 @@ public class Main {
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
         final Injector injector = Guice.createInjector(
+            new MongoCoreModule(),
             new ServerModule(),
             new ServicesModule(),
             new MongoDaoModule(),
