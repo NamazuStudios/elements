@@ -124,9 +124,9 @@ public interface Scheduler {
         final Stopwatch stopwatch = Stopwatch.createStarted();
 
         return performV(resourceId, r -> {
-            double mills = stopwatch.elapsed(MILLISECONDS);
-            double secondsPerMills = MILLISECONDS.convert(1, SECONDS);
-            r.resume(taskId, secondsPerMills / mills);
+            final double mills = stopwatch.elapsed(MILLISECONDS);
+            final double secondsPerMills = MILLISECONDS.convert(1, SECONDS);
+            r.resume(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
         });
 
     }
@@ -150,9 +150,9 @@ public interface Scheduler {
         final Stopwatch stopwatch = Stopwatch.createStarted();
 
         return performAfterDelayV(resourceId, time, timeUnit, r -> {
-            double mills = stopwatch.elapsed(MILLISECONDS);
-            double secondsPerMills = MILLISECONDS.convert(1, SECONDS);
-            r.resume(taskId, secondsPerMills / mills);
+            final double mills = stopwatch.elapsed(MILLISECONDS);
+            final double secondsPerMills = MILLISECONDS.convert(1, SECONDS);
+            r.resume(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
         });
 
     }

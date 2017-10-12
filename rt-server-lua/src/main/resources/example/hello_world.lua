@@ -30,17 +30,21 @@ function hello_world.get_async(payload, request, session)
     }
 
     print "Yielding immediately"
-    coroutine.yield("IMMEDIATE")
+    reason, elapsed, units = coroutine.yield("IMMEDIATE")
+    print(reason, " yielded for ", elapsed, " ", units)
 
     print "Yielding for one second"
-    coroutine.yield("FOR", 1, "SECONDS")
+    reason, elapsed, units = coroutine.yield("FOR", 1, "SECONDS")
+    print(reason, " yielded for ", elapsed, " ", units)
 
     time = os.time() + 1
     print("Yielding until ", time, " (in seconds)")
-    coroutine.yield("UNTIL_TIME", time, "SECONDS")
+    reason, elapsed, units = coroutine.yield("UNTIL_TIME", time, "SECONDS")
+    print(reason, " yielded for ", elapsed, " ", units)
 
     print("Yielding until cron next cron for \"* * * ? * *\" (once every second)")
-    coroutine.yield("UNTIL_NEXT", "* * * ? * *")
+    reason, elapsed, units = coroutine.yield("UNTIL_NEXT", "* * * ? * *")
+    print(reason, " yielded for ", elapsed, " ", units)
 
     print("Sending OK Response")
 
