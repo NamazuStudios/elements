@@ -10,7 +10,7 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTLuaManifestLoaderModule;
+import com.namazustudios.socialengine.dao.rt.guice.RTGitApplicationModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTDaoModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
@@ -74,8 +74,8 @@ public class GuiceMain extends GuiceServletContextListener {
             new MongoDaoModule(),
             new MongoSearchModule(),
             new RTFilesystemGitLoaderModule(),
-            new RTLuaManifestLoaderModule(),
             new RTDaoModule(),
+            new RTGitApplicationModule(),
             new ValidationModule()
         );
 
