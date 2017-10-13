@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine;
 
+import com.google.common.io.ByteStreams;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.namazustudios.socialengine.rt.AssetLoader;
@@ -18,7 +19,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
+
+import static java.nio.file.Files.createTempDirectory;
 
 /**
  * Created by patricktwohig on 8/17/17.
@@ -55,22 +57,20 @@ public class LuaManifestLoaderTest {
         private final File workingDirectory;
 
         public Module() throws IOException {
-
-            workingDirectory = Files.createTempDirectory(LuaManifestLoaderTest.class.getSimpleName()).toFile();
+            workingDirectory = createTempDirectory(LuaManifestLoaderTest.class.getSimpleName()).toFile();
             workingDirectory.mkdirs();
+            copyTestFile(LuaManifestLoader.MAIN_MANIFEST);
+            copyTestFile("example/model.lua");
+        }
 
-            final File manifest = new File(workingDirectory, LuaManifestLoader.MAIN_MANIFEST);
+        private void copyTestFile(final String file) throws IOException {
 
-            try (final FileOutputStream fos = new FileOutputStream(manifest);
-                 final InputStream is = getClass().getResourceAsStream("/" + LuaManifestLoader.MAIN_MANIFEST)) {
+            final File destination = new File(workingDirectory, file);
+            destination.getParentFile().mkdirs();
 
-                int count;
-                final byte[] buffer = new byte[1024 * 4];
-
-                while ((count = is.read(buffer)) >= 0) {
-                    fos.write(buffer, 0, count);
-                }
-
+            try (final FileOutputStream fos = new FileOutputStream(destination);
+                 final InputStream is = getClass().getResourceAsStream("/" + file)) {
+                ByteStreams.copy(is, fos);
             }
 
         }

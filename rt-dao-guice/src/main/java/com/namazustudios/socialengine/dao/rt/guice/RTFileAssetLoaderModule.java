@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.appserve.guice;
+package com.namazustudios.socialengine.dao.rt.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
@@ -9,22 +9,18 @@ import java.io.File;
 
 import static com.namazustudios.socialengine.rt.AssetLoader.*;
 
-public class FileAssetLoaderModule extends AbstractModule {
+public class RTFileAssetLoaderModule extends AbstractModule {
 
     private final FileAssetLoader fileAssetLoader;
 
-    public FileAssetLoaderModule(File rootDirectory) {
+    public RTFileAssetLoaderModule(final File rootDirectory) {
         this.fileAssetLoader = new FileAssetLoader(rootDirectory);
     }
 
     @Override
     protected void configure() {
-
-        bind(AssetLoader.class).annotatedWith(Names.named(ROOT)).toInstance(fileAssetLoader);
-
-        final AssetLoader view = fileAssetLoader.getReferenceCountedView();
-        bind(AssetLoader.class).toProvider(view::getReferenceCountedView);
-
+        final AssetLoader rootAssetLoader = fileAssetLoader.getReferenceCountedView();
+        bind(AssetLoader.class).toProvider(rootAssetLoader::getReferenceCountedView);
     }
 
 }

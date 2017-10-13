@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
+import com.namazustudios.socialengine.rt.lua.builtin.BuiltinManager;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReasonBuiltin;
@@ -55,6 +56,8 @@ public class LuaResource implements Resource {
 
     private final LogAssist logAssist;
 
+    private final BuiltinManager builtinManager;
+
     private Logger scriptLog = logger;
 
     /**
@@ -79,13 +82,14 @@ public class LuaResource implements Resource {
             this.luaState = luaState;
             this.coroutineBuiltin = new CoroutineBuiltin(this, scheduler);
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
+            this.builtinManager = new BuiltinManager(this::getLuaState, this::getScriptLog);
 
             luaState.openLibs();
             setupFunctionOverrides();
-            installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
-            installBuiltin(coroutineBuiltin);
-            installBuiltin(new YieldInstructionBuiltin());
-            installBuiltin(new ResumeReasonBuiltin());
+            getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
+            getBuiltinManager().installBuiltin(coroutineBuiltin);
+            getBuiltinManager().installBuiltin(new YieldInstructionBuiltin());
+            getBuiltinManager().installBuiltin(new ResumeReasonBuiltin());
 
         } catch (Throwable th) {
             luaState.close();
@@ -267,31 +271,12 @@ public class LuaResource implements Resource {
     }
 
     /**
-     * Installs the {@link Builtin} module to this {@link LuaResource} such that the underlying code may make use of it
-     * using the require function.
+     * Gets the {@link BuiltinManager} used by this {@link LuaResource}.
      *
-     * @param builtin the {@link Builtin} to install
+     * @return the {@link BuiltinManager}
      */
-    public void installBuiltin(final Builtin builtin) {
-
-        final LuaState luaState = getLuaState();
-
-        try {
-
-            luaState.getGlobal(Constants.PACKAGE_TABLE);
-            luaState.getField(-1, Constants.PACKAGE_SEARCHERS_TABLE);
-
-            final int index = luaState.rawLen(-1) + 1;
-            luaState.pushJavaFunction(builtin.getSearcher());
-            luaState.rawSet(-2, index);
-
-        } catch (final Throwable th){
-            logAssist.error("Failed to install builtin: " + builtin, th);
-            throw th;
-        } finally {
-            luaState.setTop(0);
-        }
-
+    public BuiltinManager getBuiltinManager() {
+        return builtinManager;
     }
 
     /**

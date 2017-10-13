@@ -58,7 +58,7 @@ public class SimpleContext implements Context {
     }
 
     @Inject
-    public void setRootAssetLoader(@Named(AssetLoader.ROOT) AssetLoader rootAssetLoader) {
+    public void setRootAssetLoader(AssetLoader rootAssetLoader) {
         this.rootAssetLoader = rootAssetLoader;
     }
 

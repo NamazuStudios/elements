@@ -35,11 +35,11 @@ public class LuaResourceLoader implements ResourceLoader {
 
         try {
             final IocResolver iocResolver = getIocResolverProvider().get();
-            luaResource.installBuiltin(getClasspathBuiltinProvider().get());
-            luaResource.installBuiltin(getAssetLoaderBuiltinProvider().get());
-            luaResource.installBuiltin(getResponseCodeBuiltinProvider().get());
-            luaResource.installBuiltin(getHttpStatusBuiltinProvider().get());
-            luaResource.installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
+            luaResource.getBuiltinManager().installBuiltin(getClasspathBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(getAssetLoaderBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(getHttpStatusBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
             luaResource.loadModule(getAssetLoader(), moduleName, args);
             return luaResource;
         } catch (Throwable th) {
