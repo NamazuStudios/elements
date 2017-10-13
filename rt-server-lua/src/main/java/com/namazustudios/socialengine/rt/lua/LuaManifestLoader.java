@@ -7,6 +7,8 @@ import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.exception.BadManifestException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.lua.builtin.AssetLoaderBuiltin;
+import com.namazustudios.socialengine.rt.lua.builtin.BuiltinManager;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import org.slf4j.Logger;
@@ -40,11 +42,15 @@ public class LuaManifestLoader implements ManifestLoader {
 
     private Provider<LuaState> luaStateProvider;
 
+    private Provider<AssetLoaderBuiltin> assetLoaderBuiltinProvider;
+
     private final Object lock = new Object();
 
     private boolean closed = false;
 
     private LuaState luaState = null;
+
+    private final BuiltinManager builtinManager = new BuiltinManager(() -> luaState, () -> scriptLogger);
 
     @Override
     public ModelManifest getModelManifest() {
@@ -88,6 +94,7 @@ public class LuaManifestLoader implements ManifestLoader {
             try (final InputStream inputStream = getAssetLoader().open(MAIN_MANIFEST)) {
 
                 luaState = getLuaStateProvider().get();
+                builtinManager.installBuiltin(getAssetLoaderBuiltinProvider().get());
 
                 createManifestTables();
                 setupFunctionOverrides();
@@ -158,6 +165,15 @@ public class LuaManifestLoader implements ManifestLoader {
     @Inject
     public void setLuaStateProvider(Provider<LuaState> luaStateProvider) {
         this.luaStateProvider = luaStateProvider;
+    }
+
+    public Provider<AssetLoaderBuiltin> getAssetLoaderBuiltinProvider() {
+        return assetLoaderBuiltinProvider;
+    }
+
+    @Inject
+    public void setAssetLoaderBuiltinProvider(Provider<AssetLoaderBuiltin> assetLoaderBuiltinProvider) {
+        this.assetLoaderBuiltinProvider = assetLoaderBuiltinProvider;
     }
 
 }

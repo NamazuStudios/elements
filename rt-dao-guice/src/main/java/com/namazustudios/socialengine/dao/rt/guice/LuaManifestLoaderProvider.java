@@ -1,10 +1,11 @@
-package com.namazustudios.socialengine.dao.rt.provider;
+package com.namazustudios.socialengine.dao.rt.guice;
 
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
+import com.namazustudios.socialengine.rt.lua.builtin.AssetLoaderBuiltin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +22,8 @@ public class LuaManifestLoaderProvider implements Provider<Function<Application,
 
     private Provider<LuaState> luaStateProvider;
 
+    private Provider<AssetLoaderBuiltin> assetLoaderBuiltinProvider;
+
     private Provider<Function<Application, AssetLoader>> applicationAssetLoaderFunctionProvider;
 
     public LuaManifestLoaderProvider() {
@@ -36,6 +39,7 @@ public class LuaManifestLoaderProvider implements Provider<Function<Application,
 
             luaManifestLoader.setAssetLoader(assetLoader);
             luaManifestLoader.setLuaStateProvider(getLuaStateProvider());
+            luaManifestLoader.setAssetLoaderBuiltinProvider(getAssetLoaderBuiltinProvider());
 
             return luaManifestLoader;
 
@@ -58,6 +62,15 @@ public class LuaManifestLoaderProvider implements Provider<Function<Application,
     @Inject
     public void setApplicationAssetLoaderFunctionProvider(Provider<Function<Application, AssetLoader>> applicationAssetLoaderFunctionProvider) {
         this.applicationAssetLoaderFunctionProvider = applicationAssetLoaderFunctionProvider;
+    }
+
+    public Provider<AssetLoaderBuiltin> getAssetLoaderBuiltinProvider() {
+        return assetLoaderBuiltinProvider;
+    }
+
+    @Inject
+    public void setAssetLoaderBuiltinProvider(Provider<AssetLoaderBuiltin> assetLoaderBuiltinProvider) {
+        this.assetLoaderBuiltinProvider = assetLoaderBuiltinProvider;
     }
 
 }

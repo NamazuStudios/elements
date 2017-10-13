@@ -1,14 +1,17 @@
 package com.namazustudios.socialengine.dao.rt;
 
+import com.google.common.io.Files;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
+import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Bootstrapper;
 import com.namazustudios.socialengine.rt.lua.LuaBootstrapper;
 import org.eclipse.jgit.api.Git;
 import org.nnsoft.guice.rocoto.converters.FileConverter;
+import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -46,8 +49,8 @@ public class GitBootstrapDaoTest {
         application.setId(uuid.toString());
         application.setName("Mock Application");
 
-        final File repositoryDirectory = getBareStorageDirectory(getStorageDirectory(), application);
-        assertTrue(repositoryDirectory.mkdirs());
+        final File repositoryDirectory = FilesystemGitLoader.getBareStorageDirectory(getStorageDirectory(), application);
+        Assert.assertTrue(repositoryDirectory.mkdirs());
 
         Git.init()
            .setBare(true)
@@ -69,7 +72,7 @@ public class GitBootstrapDaoTest {
 
     @AfterTest
     public void destroyTestDirectory() {
-        fileTreeTraverser()
+        Files.fileTreeTraverser()
             .postOrderTraversal(getStorageDirectory())
             .filter(f -> f.isFile() || f.isDirectory())
             .forEach(f -> f.delete());
@@ -80,7 +83,7 @@ public class GitBootstrapDaoTest {
     }
 
     @Inject
-    public void setStorageDirectory(@Named(GIT_STORAGE_DIRECTORY) File storageDirectory) {
+    public void setStorageDirectory(@Named(Constants.GIT_STORAGE_DIRECTORY) File storageDirectory) {
         this.storageDirectory = storageDirectory;
     }
 
@@ -101,7 +104,7 @@ public class GitBootstrapDaoTest {
             bind(GitLoader.class).to(FilesystemGitLoader.class);
 
             bindConstant()
-                .annotatedWith(Names.named(GIT_STORAGE_DIRECTORY))
+                .annotatedWith(Names.named(Constants.GIT_STORAGE_DIRECTORY))
                 .to("test-repositores");
 
             bind(new TypeLiteral<Function<Application, Bootstrapper>>(){}).toInstance(a -> new LuaBootstrapper());

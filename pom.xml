@@ -48,6 +48,7 @@
         <module>code-serve-guice</module>
         <module>code-serve-war</module>
         <module>app-serve</module>
+        <module>rt-dao-guice</module>
   </modules>
 
     <properties>

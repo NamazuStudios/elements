@@ -41,7 +41,7 @@ public class FileAssetLoaderProvider implements Provider<Function<Application, A
     }
 
     private AssetLoader computeAssetLoader(final File file) {
-        final AssetLoader assetLoader = new FileAssetLoader(file).getReferenceCountedView();
+        final AssetLoader assetLoader = new FileAssetLoader(file);
         hooks.add(assetLoader, assetLoader::close);
         return assetLoader;
     }

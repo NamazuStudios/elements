@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.dao.rt.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
-import com.namazustudios.socialengine.dao.rt.provider.LuaManifestLoaderProvider;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
