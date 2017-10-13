@@ -94,6 +94,7 @@ public class LuaManifestLoader implements ManifestLoader {
             try (final InputStream inputStream = getAssetLoader().open(MAIN_MANIFEST)) {
 
                 luaState = getLuaStateProvider().get();
+                luaState.openLibs();
                 builtinManager.installBuiltin(getAssetLoaderBuiltinProvider().get());
 
                 createManifestTables();

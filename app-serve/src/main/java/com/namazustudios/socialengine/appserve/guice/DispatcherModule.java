@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.appserve.guice;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
+import com.namazustudios.socialengine.dao.rt.guice.RTFileAssetLoaderModule;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.guice.ExceptionMapperModule;
 import com.namazustudios.socialengine.rt.guice.FilterModule;
@@ -29,7 +30,7 @@ public class DispatcherModule extends PrivateModule {
     protected void configure() {
 
         install(new LuaModule());
-        install(new FileAssetLoaderModule(assetRootDirectory));
+        install(new RTFileAssetLoaderModule(assetRootDirectory));
 
         install(new FilterModule());
         install(new ExceptionMapperModule());
