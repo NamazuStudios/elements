@@ -5,6 +5,7 @@ import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
+import com.namazustudios.socialengine.rt.lua.LogAssist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +52,6 @@ public interface Builtin {
             if (module != null && module.exists()) {
                 luaState.pushJavaFunction(getLoader());
                 luaState.pushJavaObject(module);
-                luaState.setTop(2);
                 return 2;
             } else {
                 luaState.pushString(moduleName + " not found");
@@ -74,6 +74,8 @@ public interface Builtin {
 
         return luaState -> {
 
+            final LogAssist logAssist = new LogAssist(() -> logger, () -> luaState);
+
             final String name = luaState.checkString(1);
             final Module module = luaState.checkJavaObject(2, Module.class);
 
@@ -91,6 +93,7 @@ public interface Builtin {
                 return 1;
 
             } catch (IOException ex) {
+                logAssist.error("Caught exception loading builtin.", ex);
                 logger.info("Caught exception loading builtin module {}.", module.getChunkName(), ex);
                 throw new InternalException(ex);
             }

@@ -54,4 +54,4 @@ example_model.bar = {
 
 }
 
-return example_model;
+return example_model
