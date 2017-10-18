@@ -19,7 +19,7 @@ function hello_world.get_all(payload, request, session)
     -- Since this method returns a sequence of values, then this is specified as a pagination of values.  The pagination
     -- accepts a table of values
 
-    response_pagination = pagination.of_sequence(0, 2, response_payload, response_payload)
+    response_pagination = pagination.of(0, 2, {response_payload, response_payload})
 
     -- It is possible to formulate a response using either the reserved built-in status codes or the HTTP status codes.
     -- This references the builtin status codes and allows the container to map to HTTP

@@ -14,17 +14,16 @@
 -- and the value is the type of value (eg, string, number).  In the cases of complex types,
 -- the type a table indicating the type and referenced module object must be used.
 
-local pagination = require "namazu.manifest.pagination"
+local pagination = require "namazu.pagination"
 
 -- A simple example model which contains primitives
 
 local example_model = require "example.model"
 
 manifest.model.foo = example_model.foo
-manifest.model.foo_pagination = pagination.of("foo")
+manifest.model.foo_pagination = pagination.manifest_for("foo")
 
 manifest.model.bar = example_model.bar
-
 
 -- Some tables that are used as resuseable examples
 

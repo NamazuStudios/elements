@@ -10,21 +10,40 @@ local table = require "table"
 
 local pagination = {}
 
-function pagination.of_table(offset, total, objects)
-
-    objects_sequence = table.unpack(3)
-
+function pagination.of(offset, total, objects)
     return {
-        offset = offset,
-        total = total,
-        objects = objects
+        ["offset"] = offset,
+        ["total"] = total,
+        ["objects"] = objects
     }
-
 end
 
-function pagination.of_sequence(offset, total, ...)
-    objects_table = table.pack(arg, ...)
-    return pagination.of_table(offset, total, objects_table)
+function pagination.manifest_for(model)
+    return {
+
+        description = "Pagination of " .. model,
+
+        properties = {
+
+            offset = {
+                description = "The starting offset in the dataset of " .. model .. " objects",
+                type = "number"
+            },
+
+            total = {
+                description = "The total number of " .. model .. " objects in the dataset",
+                type = "number"
+            },
+
+            objects = {
+                description = "The list of " .. model .. " objects",
+                type = "array",
+                model = model
+            }
+
+        }
+
+    }
 end
 
 return pagination
