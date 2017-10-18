@@ -3,8 +3,30 @@ local os = require "os"
 local coroutine = require "coroutine"
 local namazu_response = require "namazu.response"
 local http_status = require "namazu.http.status"
+local pagination = require "namazu.pagination"
+
 
 local hello_world = {}
+
+function hello_world.get_all(payload, request, session)
+
+    response_payload = {
+        string_property  = "Hello World!",
+        number_property  = 4.2,
+        boolean_property = false
+    }
+
+    -- Since this method returns a sequence of values, then this is specified as a pagination of values.  The pagination
+    -- accepts a table of values
+
+    response_pagination = pagination.of_sequence(0, 2, response_payload, response_payload)
+
+    -- It is possible to formulate a response using either the reserved built-in status codes or the HTTP status codes.
+    -- This references the builtin status codes and allows the container to map to HTTP
+
+    return namazu_response.formulate(namazu_response.code.OK, response_pagination)
+
+end
 
 function hello_world.get(payload, request, session)
 

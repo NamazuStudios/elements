@@ -99,12 +99,12 @@ manifest.http = {
                 -- any path under /hello_world/ and capture the remaining path componenet in the
                 -- foo path parameter.
 
-                path = "/hello_world/{foo}",
+                path = "/hello_world",
 
                 -- The lua method to call in the module when servicing the request.  This will include
                 -- the get module.
 
-                method = "get",
+                method = "get_all",
 
                 -- Parameters which the request will accept.  Parameters may ony specify simple types.
 
