@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.lua;
 
+import com.google.common.net.MediaType;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaException;
 import com.naef.jnlua.LuaState;
@@ -9,6 +10,7 @@ import com.namazustudios.socialengine.rt.exception.BadManifestException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.builtin.AssetLoaderBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.BuiltinManager;
+import com.namazustudios.socialengine.rt.lua.builtin.ClasspathBuiltin;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import org.slf4j.Logger;
@@ -43,6 +45,8 @@ public class LuaManifestLoader implements ManifestLoader {
     private Provider<LuaState> luaStateProvider;
 
     private Provider<AssetLoaderBuiltin> assetLoaderBuiltinProvider;
+
+    private Provider<ClasspathBuiltin> classpathBuiltinProvider;
 
     private final Object lock = new Object();
 
@@ -95,6 +99,8 @@ public class LuaManifestLoader implements ManifestLoader {
 
                 luaState = getLuaStateProvider().get();
                 luaState.openLibs();
+
+                builtinManager.installBuiltin(getClasspathBuiltinProvider().get());
                 builtinManager.installBuiltin(getAssetLoaderBuiltinProvider().get());
 
                 createManifestTables();
@@ -175,6 +181,15 @@ public class LuaManifestLoader implements ManifestLoader {
     @Inject
     public void setAssetLoaderBuiltinProvider(Provider<AssetLoaderBuiltin> assetLoaderBuiltinProvider) {
         this.assetLoaderBuiltinProvider = assetLoaderBuiltinProvider;
+    }
+
+    public Provider<ClasspathBuiltin> getClasspathBuiltinProvider() {
+        return classpathBuiltinProvider;
+    }
+
+    @Inject
+    public void setClasspathBuiltinProvider(Provider<ClasspathBuiltin> classpathBuiltinProvider) {
+        this.classpathBuiltinProvider = classpathBuiltinProvider;
     }
 
 }
