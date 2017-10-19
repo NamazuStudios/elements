@@ -42,7 +42,7 @@ public interface Request {
      * @param <T> the requested type
      * @throws {@link InvalidConversionException} if the conversion isn't possible
      */
-    default <T> T getPayload(Class<T> cls) {
+    default <T> T getPayload(final Class<T> cls) {
 
         final Object payload = getPayload();
 
