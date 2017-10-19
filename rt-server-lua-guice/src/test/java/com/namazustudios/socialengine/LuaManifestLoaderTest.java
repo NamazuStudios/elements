@@ -25,7 +25,6 @@ import static java.nio.file.Files.createTempDirectory;
 /**
  * Created by patricktwohig on 8/17/17.
  */
-@Test
 @Guice(modules = LuaManifestLoaderTest.Module.class)
 public class LuaManifestLoaderTest {
 

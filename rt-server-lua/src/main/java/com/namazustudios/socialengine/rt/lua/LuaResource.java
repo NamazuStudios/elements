@@ -61,9 +61,14 @@ public class LuaResource implements Resource {
     private Logger scriptLog = logger;
 
     /**
+     * Redirects the assert function to one that plays nicely with the logger
+     */
+    private final JavaFunction scriptAssert = new ScriptAssert(s -> getScriptLog().error("{}", s));
+
+    /**
      * Redirects the print function to the logger returned by {@link #getScriptLog()}.
      */
-    private final JavaFunction printToScriptLog = new ScriptLogger(s -> scriptLog.info("{}", s));
+    private final JavaFunction printToScriptLog = new ScriptLogger(s -> getScriptLog().info("{}", s));
 
     /**
      * Creates an instance of {@link LuaResource} with the given {@link LuaState}
@@ -153,9 +158,15 @@ public class LuaResource implements Resource {
     }
 
     private void setupFunctionOverrides() {
-        // Lastly we hijack the standard lua print function to redirect to the Logger
+
+        // We hijack the standard lua functions to better log output
+
         luaState.pushJavaFunction(printToScriptLog);
         luaState.setGlobal(Constants.PRINT_FUNCTION);
+
+        luaState.pushJavaFunction(scriptAssert);
+        luaState.setGlobal(Constants.ASSERT_FUNCTION);
+
     }
 
     /**
