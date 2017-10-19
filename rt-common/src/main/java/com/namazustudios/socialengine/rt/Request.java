@@ -3,6 +3,10 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * A Request is a request sent to a particular resource.
  *
@@ -70,6 +74,56 @@ public interface Request {
             throw new BadRequestException("invalid method " + requestHeader.getMethod());
         }
 
+    }
+
+    /**
+     * Returns a list of all request parameters with the provided name.  Parameters may be metadata or specific
+     * related information, but not tied specifically to the payload as determined by {@link #getPayload()}.
+     *
+     * @return a {@link List<String>} of parameter names
+     */
+    List<String> getParameterNames();
+
+    /**
+     * Returns a list of all parameter values associated with the supplied parameter name.  If no parameter exists with
+     * the provided name, then this must return null.
+     *
+     * @param parameterName the parameter name
+     * @return the {@link List<Object>} of {@link Request} parameters.
+     */
+    List<Object> getParameters(final String parameterName);
+
+    /**
+     * Like {@link #getParameterOrDefault(String, Object)} but returns null instead of a default value.
+     *
+     * @param parameterName the parameter name
+     * @return the first value assocaited with the parameterName or null
+     */
+    default Object getParameterOrDefault(final String parameterName) {
+        return getParameterOrDefault(parameterName, null);
+    }
+
+    /**
+     * Returns the first parameter obtained, or a default value if no parameter exists.
+     *
+     * @param parameterName the parameter name
+     * @param defaultValue the default value
+     * @return the first value returned by {@link #getParameters(String)} or the default value
+     */
+    default Object getParameterOrDefault(final String parameterName, final Object defaultValue) {
+        final List<Object> parameters = getParameters(parameterName);
+        return parameters == null || parameters.isEmpty() ? defaultValue : parameters.get(0);
+    }
+
+    /**
+     * Returns all parameters in the form of a {@link Map<String, List<Object>>}.
+     *
+     * @return the {@link Map<String, List<Object>>} of parameters and their values.
+     */
+    default Map<String, List<Object>> getParameterMap() {
+        final Map<String, List<Object>> parameterMap = new HashMap<>();
+        getParameterNames().forEach(p -> parameterMap.put(p, getParameters(p)));
+        return parameterMap;
     }
 
 }

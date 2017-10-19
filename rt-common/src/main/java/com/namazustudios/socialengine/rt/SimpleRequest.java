@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
+import com.google.common.collect.ListMultimap;
+
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by patricktwohig on 7/26/15.
@@ -10,6 +13,8 @@ public class SimpleRequest implements Request {
     private SimpleRequestHeader header;
 
     private Object payload;
+
+    private Map<String, List<Object>> parameters;
 
     @Override
     public SimpleRequestHeader getHeader() {
@@ -32,6 +37,21 @@ public class SimpleRequest implements Request {
     @Override
     public <T> T getPayload(Class<T> cls) {
         return cls.cast(getPayload());
+    }
+
+    @Override
+    public List<String> getParameterNames() {
+        return parameters.keySet().stream().collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Object> getParameters(String parameterName) {
+        return parameters.get(parameterName);
+    }
+
+    @Override
+    public Map<String, List<Object>> getParameterMap() {
+        return new LinkedHashMap<>(parameters);
     }
 
     @Override

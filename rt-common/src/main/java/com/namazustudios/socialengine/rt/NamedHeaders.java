@@ -2,7 +2,9 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -18,11 +20,11 @@ public interface NamedHeaders {
     List<String> getHeaderNames();
 
     /**
-     * Gets a listing of simpleResponseHeaderMap mapped by header name.  A header may be repeated and therefore
-     * the header may be associated with many values.  If the name appears in the {@link List<String>} returned
-     * by {@link #getHeaderNames()}, then this must return a non-null value.
+     * Gets a listing of headers mapped by header name.  A header may be repeated and therefore t
      *
-     *
+     * @return a {@link Map<String, List<Object>>} containhe header may be
+     * associated with many values.  If the name appears in the {@link List<String>} returned by
+     * {@link #getHeaderNames()}, then this must return a non-null value.
      *
      * @return the mapping of names to values
      */
@@ -83,6 +85,16 @@ public interface NamedHeaders {
             throw new InvalidConversionException(ex);
         }
 
+    }
+
+    /**
+     * Convenience method to assemble a {@link Map<String, Object>} from the various header values already present in
+     * this {@link NamedHeaders} instance.ing the headers.
+     */
+    default Map<String, List<Object>> getHeaderMap() {
+        final Map<String, List<Object>> headerMap = new HashMap<>();
+        getHeaderNames().forEach(h -> headerMap.put(h, getHeaders(h)));
+        return headerMap;
     }
 
 }
