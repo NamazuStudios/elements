@@ -229,4 +229,12 @@ public final class ParameterizedPath {
         return getRaw().hashCode();
     }
 
+    @Override
+    public String toString() {
+        return "ParameterizedPath{" +
+                "raw=" + raw +
+                ", parameters=" + parameters +
+                '}';
+    }
+
 }

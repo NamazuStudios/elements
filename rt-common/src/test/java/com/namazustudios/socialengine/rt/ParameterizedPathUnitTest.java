@@ -35,4 +35,12 @@ public class ParameterizedPathUnitTest {
 
     }
 
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testExtractFails() {
+        final Path path = new Path("/foo/bar/baz");
+        final ParameterizedPath parameterizedPath = new ParameterizedPath("/foo/{id0}");
+        parameterizedPath.extract(path);
+
+    }
+
 }

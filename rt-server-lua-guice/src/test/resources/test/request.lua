@@ -8,6 +8,7 @@
 
 local test_request = {}
 local request = require "namazu.request"
+local SimpleRequest = java.require "com.namazustudios.socialengine.rt.SimpleRequest"
 
 local function do_formulate()
     return request.formulate_table{
@@ -83,6 +84,20 @@ function test_request.test_unpack_parameters()
     local b1, b2 = request.unpack_parameters(req, "bar")
     assert(b1 == "bar1", "Expected bar1 got " .. b1)
     assert(b2 == "bar2", "Expected bar2 got " .. b2)
+
+end
+
+function test_request.test_unpack_path_parameters()
+
+    local builder = SimpleRequest:builder()
+
+    local req = builder:path("/foo/bar/baz")
+                       :parameterizedPath("/foo/{bar_id}/{baz_id}")
+                       :build()
+
+    local bar_id, baz_id = request.unpack_path_parameters(req)
+--    assert(bar_id == "bar", "Expected bar got " .. bar_id)
+--    assert(baz_id == "baz", "Expected baz got " .. baz_id)
 
 end
 

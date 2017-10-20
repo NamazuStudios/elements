@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -121,7 +122,7 @@ public interface Request {
      * @return the {@link Map<String, List<Object>>} of parameters and their values.
      */
     default Map<String, List<Object>> getParameterMap() {
-        final Map<String, List<Object>> parameterMap = new HashMap<>();
+        final Map<String, List<Object>> parameterMap = new LinkedHashMap<>();
         getParameterNames().forEach(p -> parameterMap.put(p, getParameters(p)));
         return parameterMap;
     }

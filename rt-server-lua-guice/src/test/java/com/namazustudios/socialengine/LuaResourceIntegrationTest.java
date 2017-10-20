@@ -42,7 +42,8 @@ public class LuaResourceIntegrationTest {
             {"test.pagination", "test_of"},
             {"test.request", "test_formulate"},
             {"test.request", "test_unpack_headers"},
-            {"test.request", "test_unpack_parameters"}
+            {"test.request", "test_unpack_parameters"},
+            {"test.request", "test_unpack_path_parameters"}
         };
     }
 
