@@ -43,7 +43,8 @@ public class LuaResourceIntegrationTest {
             {"test.request", "test_formulate"},
             {"test.request", "test_unpack_headers"},
             {"test.request", "test_unpack_parameters"},
-            {"test.request", "test_unpack_path_parameters"}
+            {"test.request", "test_unpack_path_parameters"},
+            {"test.resource", "test_invoke"}
         };
     }
 

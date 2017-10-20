@@ -41,6 +41,8 @@ public class CoroutineBuiltin implements Builtin {
 
     public static final String RESUME = "resume";
 
+    public static final String CURRENT = "current";
+
     private final LuaResource luaResource;
 
     private final Scheduler scheduler;

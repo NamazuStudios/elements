@@ -99,7 +99,7 @@ public class SimpleRequest implements Request {
 
         private String method;
 
-        private int sequence;
+        private int sequence = RequestHeader.UNKNOWN_SEQUENCE;
 
         private Object payload;
 
