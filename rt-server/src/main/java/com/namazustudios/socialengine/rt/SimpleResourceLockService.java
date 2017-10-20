@@ -8,7 +8,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Created by patricktwohig on 4/12/17.
  */
-public class SimpleLockService implements LockService {
+public class SimpleResourceLockService implements ResourceLockService {
 
     private final ConcurrentMap<ResourceId, ReentrantLock> resourceIdLockMap = new ConcurrentHashMap<>();
 

@@ -5,7 +5,7 @@ package com.namazustudios.socialengine.rt;
  *
  * Created by patricktwohig on 8/22/15.
  */
-public interface PathLockFactory {
+public interface ResourceIdLockService {
 
     /**
      * Creates a lock {@link ResourceId} which is unique and otherwise unassociated with

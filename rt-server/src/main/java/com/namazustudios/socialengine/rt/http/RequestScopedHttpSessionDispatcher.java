@@ -26,13 +26,11 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
 
     private List<Filter> filterList;
 
-    private ResourceLoader resourceLoader;
-
-    private ResourceService resourceService;
-
-    private Scheduler scheduler;
-
     private ExceptionMapper.Resolver exceptionMapperResolver;
+
+    private ResourceContext resourceContext;
+
+    private SchedulerContext schedulerContext;
 
     @Override
     public void dispatch(final Session session,
@@ -52,9 +50,9 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
         final HttpOperation httpOperation = httpRequest.getManifestMetadata().getPreferredOperation();
 
         final Path path = Path.fromComponents("http", "request", randomUUID().toString());
-        final Resource resource = getResourceLoader().load(httpModule.getModule());
+        final ResourceId resourceId = getResourceContext().create(path, httpModule.getModule());
 
-        getResourceService().addResource(path, resource);
+        logger.info("Created resource with id {} to handle request.", resourceId);
         schedule(httpOperation, path, session, request, responseConsumer);
 
     }
@@ -64,11 +62,10 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
                           final Session session,
                           final Request request,
                           final Consumer<Response> responseConsumer) {
-        getScheduler().performV(path, resource -> safelyDispatch(resource, path, httpOperation, session, request, responseConsumer));
+        getSchedulerContext().performV(path, resource -> safelyDispatch(resource, httpOperation, session, request, responseConsumer));
     }
 
     private void safelyDispatch(final Resource resource,
-                                final Path path,
                                 final HttpOperation httpOperation,
                                 final Session session,
                                 final Request request,
@@ -78,7 +75,7 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
             try {
                 responseConsumer.accept(response);
             } finally {
-                getResourceService().removeAndCloseResource(path);
+                getResourceContext().destroy(resource.getId());
             }
         };
 
@@ -118,33 +115,6 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
         this.filterList = filterList;
     }
 
-    public ResourceLoader getResourceLoader() {
-        return resourceLoader;
-    }
-
-    @Inject
-    public void setResourceLoader(ResourceLoader resourceLoader) {
-        this.resourceLoader = resourceLoader;
-    }
-
-    public ResourceService getResourceService() {
-        return resourceService;
-    }
-
-    @Inject
-    public void setResourceService(ResourceService resourceService) {
-        this.resourceService = resourceService;
-    }
-
-    public Scheduler getScheduler() {
-        return scheduler;
-    }
-
-    @Inject
-    public void setScheduler(Scheduler scheduler) {
-        this.scheduler = scheduler;
-    }
-
     public ExceptionMapper.Resolver getExceptionMapperResolver() {
         return exceptionMapperResolver;
     }
@@ -152,6 +122,24 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
     @Inject
     public void setExceptionMapperResolver(ExceptionMapper.Resolver exceptionMapperResolver) {
         this.exceptionMapperResolver = exceptionMapperResolver;
+    }
+
+    public ResourceContext getResourceContext() {
+        return resourceContext;
+    }
+
+    @Inject
+    public void setResourceContext(ResourceContext resourceContext) {
+        this.resourceContext = resourceContext;
+    }
+
+    public SchedulerContext getSchedulerContext() {
+        return schedulerContext;
+    }
+
+    @Inject
+    public void setSchedulerContext(SchedulerContext schedulerContext) {
+        this.schedulerContext = schedulerContext;
     }
 
 }

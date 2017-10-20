@@ -63,67 +63,48 @@ public interface ResourceService {
      */
     void addResource(Path path, Resource resource);
 
-//    /**
-//     * Adds a {@link Resource} to this resource service.  Rather than throwing an exception
-//     * if the resource already exists, this will return the existing instance instead.
-//     *
-//     * This returns either the newly added instance, or the instance that had already existed.
-//     *
-//     * Note that the given {@link Supplier<Resource>} should defer creation.  If you wish to
-//     * insert an existing resource, then consider using {@link #addResource(Path, Resource)}
-//     *
-//     * @param path the path for the {@link Resource} instance
-//     * @param resourceInitializer the resource initializer to use if the path is absent
-//     *
-//     * @return the actual {@link Resource} instance that was added
-//     *
-//     * @throws {@link DuplicateException} if a resource at the given path already exists
-//     * @throws {@link IllegalArgumentException} if the path is a wildcard path
-//     */
-//    AtomicOperationTuple<Resource> addResourceIfAbsent(Path path, Supplier<Resource> resourceInitializer);
-
     /**
      * Removes a {@link Resource} instance from this resource service.
      *
-     * @param path the path to the resource
+     * @param resourceId the path to the resource
      *
      * @throws {@l  ink ResourceNotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    Resource removeResource(Path path);
+    Resource removeResource(ResourceId resourceId);
 
     /**
      * Removes a {@link Resource} instance from this resource service.
      *
-     * @param path the path as a string
+     * @param resoureIdString the path as a string
      * @return the removed {@link Resource}
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    default Resource removeResource(String path) {
-        return removeResource(new Path(path));
+    default Resource removeResource(final  String resoureIdString) {
+        return removeResource(new ResourceId(resoureIdString));
     }
 
     /**
      * Removes a {@link Resource} and then immediately closes it.
      *
-     * @param path
+     * @param resourceId
      * @throws {@link ResourceNotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    default void removeAndCloseResource(final Path path) {
-        final Resource resource = removeResource(path);
+    default void destroy(final ResourceId resourceId) {
+        final Resource resource = removeResource(resourceId);
         resource.close();
     }
 
     /**
      * Removes a {@link Resource} and then immediately closes it.
      *
-     * @param path
+     * @param resourceIdString
      * @throws {@link ResourceNotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    default void removeAndCloseResource(final String path) {
-        final Resource resource = removeResource(path);
+    default void destroy(final String resourceIdString) {
+        final Resource resource = removeResource(resourceIdString);
         resource.close();
     }
 
@@ -146,30 +127,6 @@ public interface ResourceService {
                 logger.error("Error closing resource {}.", resource, ex);
             }
         });
-    }
-
-    /**
-     * Returned from the call to {@link #addResourceIfAbsent(Path, Supplier<ResourceT>)} to indicate
-     * the status of the addition.
-     *
-     * @param <ResourceT> the resource type
-     */
-    interface AtomicOperationTuple<ResourceT> {
-
-        /**
-         * Returns true if th eresource was newly added.   False if the resource was existing.
-         *
-         * @return true, if newly added, false otherwise.
-         */
-        boolean isNewlyAdded();
-
-        /**
-         * Gets the resource that was either added, or the existing resource.
-         *
-         * @return the resource, never null
-         */
-        ResourceT getResource();
-
     }
 
 }

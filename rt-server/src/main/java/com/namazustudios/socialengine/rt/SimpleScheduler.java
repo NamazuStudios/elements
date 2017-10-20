@@ -30,7 +30,7 @@ public class SimpleScheduler implements Scheduler {
      */
     public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.SimpleScheduler.executorService";
 
-    private LockService lockService;
+    private ResourceLockService resourceLockService;
 
     private ResourceService resourceService;
 
@@ -72,7 +72,7 @@ public class SimpleScheduler implements Scheduler {
 
     private <T> T performProtected(final Resource resource, final Function<Resource, T> operation) {
 
-        final Lock lock = getLockService().getLock(resource.getId());
+        final Lock lock = getResourceLockService().getLock(resource.getId());
 
         try {
             logger.trace("Locking resource {}", resource.getId());
@@ -99,13 +99,13 @@ public class SimpleScheduler implements Scheduler {
         this.scheduledExecutorService = scheduledExecutorService;
     }
 
-    public LockService getLockService() {
-        return lockService;
+    public ResourceLockService getResourceLockService() {
+        return resourceLockService;
     }
 
     @Inject
-    public void setLockService(LockService lockService) {
-        this.lockService = lockService;
+    public void setResourceLockService(ResourceLockService resourceLockService) {
+        this.resourceLockService = resourceLockService;
     }
 
     public ResourceService getResourceService() {

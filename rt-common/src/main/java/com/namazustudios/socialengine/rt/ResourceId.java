@@ -22,6 +22,16 @@ public class ResourceId implements Serializable {
     }
 
     /**
+     * Parses a new {@link ResourceId} from the given {@lnk String}.  The should be the string representation returned
+     * byt {@link #asString()}.
+     *
+     * @param resourceIdString the {@link String} representation of the {@link ResourceId} from {@link #asString()}
+     */
+    public ResourceId(final String resourceIdString) {
+        this.uuid = UUID.fromString(resourceIdString);
+    }
+
+    /**
      * Returns the string representation of this {@link ResourceId}
      *
      * @return the string representation

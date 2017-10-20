@@ -27,10 +27,13 @@ public class SimpleServicesModule extends AbstractModule {
     protected void configure() {
 
         bind(Context.class).to(SimpleContext.class).asEagerSingleton();
+        bind(ResourceContext.class).to(SimpleResourceContext.class);
+        bind(SchedulerContext.class).to(SimpleSchedulerContext.class);
+
         bind(Scheduler.class).to(SimpleScheduler.class).asEagerSingleton();
-        bind(LockService.class).to(SimpleLockService.class).asEagerSingleton();
+        bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
         bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();
-        bind(PathLockFactory.class).to(SimplePathLockFactory.class).asEagerSingleton();
+        bind(ResourceIdLockService.class).to(SimpleResourceIdLockService.class).asEagerSingleton();
 
         final AtomicInteger threadCount = new AtomicInteger();
         final Logger logger = LoggerFactory.getLogger(EXECUTOR_SERVICE);

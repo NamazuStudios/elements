@@ -5,7 +5,7 @@ import java.util.Objects;
 /**
  * Created by patricktwohig on 4/11/17.
  */
-public class SimplePathLockFactory implements PathLockFactory {
+public class SimpleResourceIdLockService implements ResourceIdLockService {
 
     @Override
     public ResourceId createLock() {

@@ -10,7 +10,7 @@ import java.util.concurrent.locks.Lock;
  *
  * Created by patricktwohig on 4/11/17.
  */
-public interface LockService {
+public interface ResourceLockService {
 
     /**
      * Gets the {@link Lock} for the provided {@link ResourceId}
@@ -20,11 +20,11 @@ public interface LockService {
      * @return a {@link Lock} used to serialize access to the provided resource
      * @throws {@link DuplicateException} if no lock could be found for the given {@link ResourceId}
      */
-    Lock getLock(final ResourceId resourceId);
+    Lock getLock(ResourceId resourceId);
 
     /**
      * Deletes the lock with the given {@link ResourceId}
      */
-    void delete(final ResourceId resourceId);
+    void delete(ResourceId resourceId);
 
 }
