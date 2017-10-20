@@ -7,6 +7,8 @@
 --
 
 local table = require "table"
+local util = require "namazu.util"
+
 local request = {}
 
 local Request       = java.require "com.namazustudios.socialengine.rt.Request"
@@ -159,7 +161,7 @@ end
 function request.unpack_headers(request, header_name)
     local header = request:getHeader()
     local headers = header:getHeaders(header_name)
-    return table.unpack(headers)
+    return table.unpack(util.sequence(headers))
 end
 
 --- Unpacks the parameters of the request with the provided name
@@ -177,7 +179,7 @@ end
 -- @return a sequence of path elements
 function request.unpack_parameters(request, parameter_name)
     local parameters = request:getParameters(parameter_name)
-    return table.unpack(parameters)
+    return table.unpack(util.sequence(parameters))
 end
 
 --- Unpacks the path parameters for a request
@@ -197,7 +199,7 @@ end
 -- @return a sequence of path elements
 function request.unpack_path_parameters(request)
     local parameters = request:getHeader():getPathParameters()
-    return table.unpack(table.pack(parameters))
+    return table.unpack(util.sequence(parameters))
 end
 
 return request

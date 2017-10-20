@@ -13,16 +13,36 @@ local Path = java.require("com.namazustudios.socialengine.rt.Path")
 
 local util = {}
 
--- Returns a Path object.  This can accept a single string, which will be parsed out accordingly.  Alternatively,
+--- Returns a Path object.
+-- This can accept a single string, which will be parsed out accordingly.  Alternatively,
 -- this accepts variadic arguments which will specify the individual components of the Path.  See the constructor
 -- for Path for more information.
-
+-- @param ... the path components or a single string representing the path
 function util.path(...)
     if (#arg == 1) then
         return Path:new(table[1])
     else
         return Path:new(arg)
     end
+end
+
+--- Returns a sequence from a table
+-- Accepting a single table, this will iterate the table, discard the keys, and sequene the table.  Some table, or
+-- table like objects, will be sequenced properly based on their natural ordering.
+-- @param t the tablke to sequence
+function util.sequence(t)
+
+    local i = 1
+    local seq = {}
+
+    for k, v in pairs(t)
+    do
+        seq[i] = v
+        i = i + 1
+    end
+
+    return seq
+
 end
 
 return util
