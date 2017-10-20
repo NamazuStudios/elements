@@ -19,7 +19,7 @@ public class SimpleResourceContext implements ResourceContext {
 
     @Override
     public void destroy(final ResourceId resourceId) {
-        getResourceService().destroy(resourceId);
+        getScheduler().performV(resourceId, r -> getResourceService().destroy(resourceId));
     }
 
     public Scheduler getScheduler() {
