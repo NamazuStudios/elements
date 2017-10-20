@@ -9,7 +9,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.SimpleScheduler.EXECUTOR_SERVICE;
+import static com.namazustudios.socialengine.rt.SimpleScheduler.SCHEDULED_EXECUTOR_SERVICE;
 import static java.lang.String.format;
 import static java.util.concurrent.Executors.newScheduledThreadPool;
 
@@ -36,15 +36,15 @@ public class SimpleServicesModule extends AbstractModule {
         bind(ResourceIdLockService.class).to(SimpleResourceIdLockService.class).asEagerSingleton();
 
         final AtomicInteger threadCount = new AtomicInteger();
-        final Logger logger = LoggerFactory.getLogger(EXECUTOR_SERVICE);
+        final Logger logger = LoggerFactory.getLogger(SCHEDULED_EXECUTOR_SERVICE);
 
         bind(ScheduledExecutorService.class)
-            .annotatedWith(named(EXECUTOR_SERVICE))
+            .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE))
             .toProvider(() -> newScheduledThreadPool(CORE_POOL_SIZE, r -> {
                     final Thread thread = new Thread(r);
                     thread.setDaemon(true);
                     thread.setUncaughtExceptionHandler((t , e) -> logger.error("Scheduler Exception in {}", t, e));
-                    thread.setName(format("%s - Thread %d", EXECUTOR_SERVICE, threadCount.incrementAndGet()));
+                    thread.setName(format("%s - Thread %d", SCHEDULED_EXECUTOR_SERVICE, threadCount.incrementAndGet()));
                     return thread;
                 }));
 

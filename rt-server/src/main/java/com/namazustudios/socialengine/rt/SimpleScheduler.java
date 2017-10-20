@@ -28,7 +28,7 @@ public class SimpleScheduler implements Scheduler {
      * events to the various {@link Resource}s.  This names the specific {@link ExecutorService}
      * to use for injectiong using {@link Named}
      */
-    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.SimpleScheduler.executorService";
+    public static final String SCHEDULED_EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.SimpleScheduler.scheduledExecutorService";
 
     private ResourceLockService resourceLockService;
 
@@ -95,7 +95,7 @@ public class SimpleScheduler implements Scheduler {
     }
 
     @Inject
-    public void setScheduledExecutorService(@Named(EXECUTOR_SERVICE) ScheduledExecutorService scheduledExecutorService) {
+    public void setScheduledExecutorService(@Named(SCHEDULED_EXECUTOR_SERVICE) ScheduledExecutorService scheduledExecutorService) {
         this.scheduledExecutorService = scheduledExecutorService;
     }
 

@@ -75,7 +75,13 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
             try {
                 responseConsumer.accept(response);
             } finally {
-                getResourceContext().destroy(resource.getId());
+
+                final ResourceId resourceId = resource.getId();
+
+                getResourceContext().destroyAsync(resourceId,
+                    v  -> logger.info("Destroyed {}", resourceId),
+                    th -> logger.error("Failed to destroy {}", resourceId, th));
+
             }
         };
 
