@@ -2,25 +2,33 @@ package com.namazustudios.socialengine.rt.servlet;
 
 import com.namazustudios.socialengine.rt.RequestHeader;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
+import com.namazustudios.socialengine.rt.http.CompositeHttpManifestMetadata;
+import com.namazustudios.socialengine.rt.http.HttpManifestMetadata;
 import com.namazustudios.socialengine.rt.http.XHttpHeaders;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static java.util.Collections.list;
 
 public class ServletRequestHeader implements RequestHeader {
 
+    private final HttpManifestMetadata httpManifestMetadata;
+
     private final String path;
 
     private final Supplier<HttpServletRequest> httpServletRequestSupplier;
 
-    public ServletRequestHeader(final Supplier<HttpServletRequest> httpServletRequestSupplier) {
+    public ServletRequestHeader(final HttpManifestMetadata httpManifestMetadata,
+                                final Supplier<HttpServletRequest> httpServletRequestSupplier) {
         final HttpServletRequest httpServletRequest = httpServletRequestSupplier.get();
         final String requestUri = httpServletRequest.getRequestURI();
         final String contextPath = httpServletRequest.getContextPath();
+        this.httpManifestMetadata = httpManifestMetadata;
         this.path = requestUri.substring(contextPath.length());
         this.httpServletRequestSupplier = httpServletRequestSupplier;
     }
@@ -54,6 +62,12 @@ public class ServletRequestHeader implements RequestHeader {
     @Override
     public String getMethod() {
         return httpServletRequestSupplier.get().getMethod();
+    }
+
+    @Override
+    public Map<String, String> getPathParameters() {
+        // TODO Implement this
+        return Collections.emptyMap();
     }
 
 }

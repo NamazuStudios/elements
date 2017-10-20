@@ -43,7 +43,7 @@ public class ServletHttpRequest implements HttpRequest {
         this.httpServletRequestSupplier = httpServletRequestSupplier;
         this.payloadDeserializerFunction = payloadDeserializerFunction;
         this.compositeHttpManifestMetadata = new CompositeHttpManifestMetadata(this, httpManifest);
-        this.servletRequestHeader = new ServletRequestHeader(httpServletRequestSupplier);
+        this.servletRequestHeader = new ServletRequestHeader(compositeHttpManifestMetadata, httpServletRequestSupplier);
     }
 
     @Override
