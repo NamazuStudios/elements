@@ -39,7 +39,10 @@ public class LuaResourceIntegrationTest {
     @DataProvider
     public static Object[][] resourcesToTest() {
         return new Object[][] {
-            {"test.pagination", "test_of"}
+            {"test.pagination", "test_of"},
+            {"test.request", "test_formulate"},
+            {"test.request", "test_unpack_headers"},
+            {"test.request", "test_unpack_parameters"}
         };
     }
 

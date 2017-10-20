@@ -88,15 +88,14 @@ end
 --- Formulates a response from a table
 -- Accepts a table corresponding to the parameters of the formulate call.
 --
--- @param code the response code (required)
--- @param optional a table containing the optional parameters
+-- @param resp a table containing the response parameters
 -- @return a Response
-function response.formulate_optional(code, optional)
+function response.formulate_optional(resp)
     return response.formulate(
-        code,
-        optional["payload"],
-        optional["headers"],
-        optional["sequence"]
+        resp["code"],
+        resp["payload"],
+        resp["headers"],
+        resp["sequence"]
     )
 end
 

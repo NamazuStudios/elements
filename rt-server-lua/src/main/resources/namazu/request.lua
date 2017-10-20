@@ -6,7 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local table = requre "table"
+local table = require "table"
 local request = {}
 
 local Request       = java.require "com.namazustudios.socialengine.rt.Request"
@@ -125,31 +125,31 @@ end
 -- formulating.  Each key corresponds to the parameters defined in the formulate function
 --
 -- @see request.formulate
--- @param optional the optional parameters for the response
+-- @param req a table containing the request parameters
+--
 -- @return a container Request
-function request.formulate_table(path, method, optional)
-
-    -- path, method, payload, parameters, headers, sequence
+function request.formulate_table(req)
 
     return request.formulate(
-        path,
-        method,
-        optional["payload"],
-        optional["parameters"],
-        optional["headers"],
-        optional["sequence"]
+        req["path"],
+        req["method"],
+        req["payload"],
+        req["parameters"],
+        req["headers"],
+        req["sequence"]
     )
 
 end
 
-function request.unpack_header(request, header_name)
-    -- TODO Write this code.
-    return nil
+function request.unpack_headers(request, header_name)
+    local header = request:getHeader()
+    local headers = header:getHeaders(header_name)
+    return table.unpack(headers)
 end
 
-function request.unpack_parameter(reqest, parameter_name)
-    -- TODO Write this code.
-    return nil
+function request.unpack_parameters(request, parameter_name)
+    local parameters = request:getParameters(parameter_name)
+    return table.unpack(parameters)
 end
 
 return request

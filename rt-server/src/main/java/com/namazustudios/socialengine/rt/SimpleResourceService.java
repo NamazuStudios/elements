@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt;
+    package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.ContentionException;
 import com.namazustudios.socialengine.rt.exception.DuplicateException;

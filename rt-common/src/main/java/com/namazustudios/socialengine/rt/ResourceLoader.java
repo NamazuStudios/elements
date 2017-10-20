@@ -3,9 +3,8 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
 
 /**
- * Loads instances of {@link Resource} based on {@link Path} instances.  Typically instances of this
- * work in conjunction with a {@link AssetLoader} to load the raw bytes from storage and then into
- * memory.
+ * Loads instances of {@link Resource} based on {@link Path} instances.  Typically instances of this work in conjunction
+ * with an AssetLoader to load the raw bytes from storage and then into memory.
  */
 @Proxyable
 public interface ResourceLoader extends AutoCloseable {
@@ -33,9 +32,7 @@ public interface ResourceLoader extends AutoCloseable {
      * before closing this {@link ResourceLoader}.  Using {@link Resource}s after closing this instance, or
      * closing this instance while resources are open should be considered undefined behavior.
      *
-     * This also closes the underlying {@link AssetLoader} which may be associated with this {@link ManifestLoader}.  If
-     * pooling or sharing resources of {@link AssetLoader} instances is desired, then something such as
-     * {@link AssetLoader#getReferenceCountedView()} should be used.
+     * This also closes the resources which may be associated with this {@link ResourceLoader}.
      *
      * Invoking this method twice on the same object should also be considered undefined behavior.
      */
