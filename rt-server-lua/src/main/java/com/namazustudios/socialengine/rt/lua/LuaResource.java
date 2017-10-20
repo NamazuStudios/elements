@@ -7,7 +7,6 @@ import com.namazustudios.socialengine.rt.exception.AssetNotFoundException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
-import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import com.namazustudios.socialengine.rt.lua.builtin.BuiltinManager;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
@@ -234,7 +233,7 @@ public class LuaResource implements Resource {
 }
 
     @Override
-    public void resume(final TaskId taskId, final double elapsedTime) {
+    public void resumeFromScheduler(final TaskId taskId, final double elapsedTime) {
 
         final PendingTask pendingTask = taskIdPendingTaskMap.get(taskId);
 

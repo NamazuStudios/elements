@@ -8,7 +8,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -125,7 +124,7 @@ public interface Scheduler {
         return performV(resourceId, r -> {
             final double mills = stopwatch.elapsed(MILLISECONDS);
             final double secondsPerMills = MILLISECONDS.convert(1, SECONDS);
-            r.resume(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
+            r.resumeFromScheduler(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
         });
 
     }
@@ -151,7 +150,7 @@ public interface Scheduler {
         return performAfterDelayV(resourceId, time, timeUnit, r -> {
             final double mills = stopwatch.elapsed(MILLISECONDS);
             final double secondsPerMills = MILLISECONDS.convert(1, SECONDS);
-            r.resume(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
+            r.resumeFromScheduler(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
         });
 
     }

@@ -49,7 +49,7 @@ public interface Resource extends AutoCloseable {
      * @param  elapsedTime the amount of time elapsed since the task was last activated
      *
      */
-    void resume(final TaskId taskId, final double elapsedTime);
+    void resumeFromScheduler(final TaskId taskId, final double elapsedTime);
 
     /**
      * Closes and destroys this Resource.  A resource, once destroyed, cannot be used again.
