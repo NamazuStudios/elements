@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.exception.InternalException;
+
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -163,6 +166,47 @@ public final class ParameterizedPath {
         return raw.getComponents()
             .stream()
             .allMatch(c -> c.equals(pathComponents.next()) || isParameter(c));
+
+    }
+
+    /**
+     * Given the provided non-parameterized path, this will return a {@link Map<String, String>} of the value of the
+     * parameters.  The supplied {@link Path} must match this instance using {@link #matches(Path)} for this method to
+     * succeed.
+     *
+     * The ordering of the returned {@link Map<String, String>} will be returned in the order in which the mapping
+     * matched the original {@link Path}.
+     *
+     * @param path the {@link Path} which matches this
+     * @return the mapping of parameter names to the supplied {@link Path}
+     *
+     * @throws {@link IllegalArgumentException} if the {@link Path} does not match
+     */
+    public Map<String, String> extract(final Path path) {
+
+        if (!matches(path)) {
+            throw new IllegalArgumentException(path + " does not match " + this);
+        }
+
+        final Map<String, String> extraced = new LinkedHashMap<>();
+
+        final Iterator<String> parameters = getParameters().iterator();
+
+        final Iterator<String> rawComponents = getRaw().getComponents().iterator();
+        final Iterator<String> pathComponents = path.getComponents().iterator();
+
+        while (rawComponents.hasNext() && pathComponents.hasNext()) {
+
+            final String rawComponent = rawComponents.next();
+            final String pathComponent = pathComponents.next();
+
+            if (isParameter(rawComponent)) {
+                extraced.put(parameters.next(), pathComponent);
+            }
+
+        }
+
+        return extraced;
 
     }
 
