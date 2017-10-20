@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 /**
- * Represents the connection to the underlying cluster of {@link Resource}, {@link ResourceLoader}
+ * Represents the connection the backend cluster of services.
  */
 @Proxyable
 public interface Context {
@@ -16,5 +16,19 @@ public interface Context {
      * defers all work to the managed services.
      */
     void shutdown();
+
+    /**
+     * Gets the {@link ResourceContext} assocaited with this {@link Context}
+     *
+     * @return the {@link ResourceContext}
+     */
+    ResourceContext getResourceContext();
+
+    /**
+     * Gets the {@link SchedulerContext} assocaited with this {@link Context}
+     *
+     * @return the {@link SchedulerContext}
+     */
+    SchedulerContext getSchedulerContext();
 
 }

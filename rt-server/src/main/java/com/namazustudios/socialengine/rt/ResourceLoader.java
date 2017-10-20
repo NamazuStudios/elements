@@ -6,7 +6,6 @@ import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
  * Loads instances of {@link Resource} based on {@link Path} instances.  Typically instances of this work in conjunction
  * with an AssetLoader to load the raw bytes from storage and then into memory.
  */
-@Proxyable
 public interface ResourceLoader extends AutoCloseable {
 
     /**

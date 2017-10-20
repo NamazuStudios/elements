@@ -81,11 +81,11 @@ public class LuaResource implements Resource {
      * @param luaState the luaState
      */
     @Inject
-    public LuaResource(final LuaState luaState, final Scheduler scheduler) {
+    public LuaResource(final LuaState luaState, final SchedulerContext schedulerContext) {
         try {
 
             this.luaState = luaState;
-            this.coroutineBuiltin = new CoroutineBuiltin(this, scheduler);
+            this.coroutineBuiltin = new CoroutineBuiltin(this, schedulerContext);
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
             this.builtinManager = new BuiltinManager(this::getLuaState, this::getScriptLog);
 

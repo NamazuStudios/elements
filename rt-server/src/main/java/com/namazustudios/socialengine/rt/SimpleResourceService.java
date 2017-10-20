@@ -144,81 +144,81 @@ public class SimpleResourceService implements ResourceService {
 
     }
 
-    @Override
-    public AtomicOperationTuple<Resource> addResourceIfAbsent(
-            final Path path,
-            final Supplier<Resource> resourceInitializer) {
-
-        if (path.isWildcard()) {
-            throw new IllegalArgumentException("Cannot add resources with wildcard path.");
-        }
-
-        final ResourceId lock = getPathLockFactory().createLock();
-
-        return doOptimistic(() -> {
-
-            final Storage<Resource> storage = storageAtomicReference.get();
-
-            try {
-
-                final ResourceId existing = storage.getPathResourceIdMap().computeIfAbsent(path, p -> lock);
-
-                if (!existing.equals(lock) && getPathLockFactory().isLock(existing)) {
-                    // Failure.  The resource path is currently locked by another thread.  We back off
-                    // and we continue as normal.
-                    throw new LockedException();
-                }
-
-                if (existing.equals(lock)) {
-
-                    // Success! We inserted a new value into the map because we actually managed to lock
-                    // the path and fetch the path.  Now it's time to insmert the value that's supplied
-                    // into the
-                    final Resource resource = resourceInitializer.get();
-
-                    if (storage.getResources().putIfAbsent(resource.getId(), resource) != null) {
-                        // If that failed then we are attempting to insert this to separate paths.  This should
-                        // almost never happen unless somebody is trying something sketchy trying to duplicate
-                        // resources.
-                        throw new DuplicateException("Attempting to add already-existing resource to path." + path);
-                    }
-
-                    if (storage.getResourceIdPathMap().put(resource.getId(), path) != null) {
-                        logger.error("Consistency Error:  {} is already mapped to path {}", resource.getId(), path);
-                    }
-
-                    // Lastly link the path to the resource ID and vise-versa.  Thus completing the transaction.
-                    storage.getResourceIdPathMap().put(resource.getId(), path);
-                    storage.getPathResourceIdMap().put(path, resource.getId());
-                    return new SimpleAtomicOperationTuple<>(true, resource);
-
-                } else {
-
-                    // Failure.  We are looking at an existing value.  Fetch it and report
-                    // appropriately.  No need to dig further, and no need to invoke the
-                    // supplier (and risk creating heavy resources).
-
-                    final Resource resource = storage.getResources().get(existing);
-
-                    if (resource == null) {
-                        // Since this method implies addition, throwing a ResourceNotFoundException
-                        // here doesn't make sense.  This could be happening because it's
-                        // in the process of being removed or added.  In this case we aren't
-                        // certain so we must force the cycle to reattempt.
-                        throw new LockedException();
-                    }
-
-                    return new SimpleAtomicOperationTuple<>(false, resource);
-
-                }
-
-            } finally {
-                storage.getPathResourceIdMap().remove(path, lock);
-            }
-
-        });
-
-    }
+//    @Override
+//    public AtomicOperationTuple<Resource> addResourceIfAbsent(
+//            final Path path,
+//            final Supplier<Resource> resourceInitializer) {
+//
+//        if (path.isWildcard()) {
+//            throw new IllegalArgumentException("Cannot add resources with wildcard path.");
+//        }
+//
+//        final ResourceId lock = getPathLockFactory().createLock();
+//
+//        return doOptimistic(() -> {
+//
+//            final Storage<Resource> storage = storageAtomicReference.get();
+//
+//            try {
+//
+//                final ResourceId existing = storage.getPathResourceIdMap().computeIfAbsent(path, p -> lock);
+//
+//                if (!existing.equals(lock) && getPathLockFactory().isLock(existing)) {
+//                    // Failure.  The resource path is currently locked by another thread.  We back off
+//                    // and we continue as normal.
+//                    throw new LockedException();
+//                }
+//
+//                if (existing.equals(lock)) {
+//
+//                    // Success! We inserted a new value into the map because we actually managed to lock
+//                    // the path and fetch the path.  Now it's time to insmert the value that's supplied
+//                    // into the
+//                    final Resource resource = resourceInitializer.get();
+//
+//                    if (storage.getResources().putIfAbsent(resource.getId(), resource) != null) {
+//                        // If that failed then we are attempting to insert this to separate paths.  This should
+//                        // almost never happen unless somebody is trying something sketchy trying to duplicate
+//                        // resources.
+//                        throw new DuplicateException("Attempting to add already-existing resource to path." + path);
+//                    }
+//
+//                    if (storage.getResourceIdPathMap().put(resource.getId(), path) != null) {
+//                        logger.error("Consistency Error:  {} is already mapped to path {}", resource.getId(), path);
+//                    }
+//
+//                    // Lastly link the path to the resource ID and vise-versa.  Thus completing the transaction.
+//                    storage.getResourceIdPathMap().put(resource.getId(), path);
+//                    storage.getPathResourceIdMap().put(path, resource.getId());
+//                    return new SimpleAtomicOperationTuple<>(true, resource);
+//
+//                } else {
+//
+//                    // Failure.  We are looking at an existing value.  Fetch it and report
+//                    // appropriately.  No need to dig further, and no need to invoke the
+//                    // supplier (and risk creating heavy resources).
+//
+//                    final Resource resource = storage.getResources().get(existing);
+//
+//                    if (resource == null) {
+//                        // Since this method implies addition, throwing a ResourceNotFoundException
+//                        // here doesn't make sense.  This could be happening because it's
+//                        // in the process of being removed or added.  In this case we aren't
+//                        // certain so we must force the cycle to reattempt.
+//                        throw new LockedException();
+//                    }
+//
+//                    return new SimpleAtomicOperationTuple<>(false, resource);
+//
+//                }
+//
+//            } finally {
+//                storage.getPathResourceIdMap().remove(path, lock);
+//            }
+//
+//        });
+//
+//    }
 
     @Override
     public Resource removeResource(final Path path) {

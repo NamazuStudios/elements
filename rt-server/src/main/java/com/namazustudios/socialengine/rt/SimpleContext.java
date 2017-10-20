@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 @Singleton
@@ -9,11 +8,15 @@ public class SimpleContext implements Context {
 
     private Scheduler scheduler;
 
+    private SchedulerContext schedulerContext;
+
     private ResourceLoader resourceLoader;
 
     private ResourceService resourceService;
 
-    private AssetLoader rootAssetLoader;
+    private ResourceContext resourceContext;
+
+    private AssetLoader assetLoader;
 
     @Override
     public void start() {}
@@ -23,7 +26,27 @@ public class SimpleContext implements Context {
         getScheduler().shutdown();
         getResourceService().removeAndCloseAllResources();
         getResourceLoader().close();
-        getRootAssetLoader().close();
+        getAssetLoader().close();
+    }
+
+    @Override
+    public ResourceContext getResourceContext() {
+        return resourceContext;
+    }
+
+    @Inject
+    public void setResourceContext(ResourceContext resourceContext) {
+        this.resourceContext = resourceContext;
+    }
+
+    @Override
+    public SchedulerContext getSchedulerContext() {
+        return schedulerContext;
+    }
+
+    @Inject
+    public void setSchedulerContext(SchedulerContext schedulerContext) {
+        this.schedulerContext = schedulerContext;
     }
 
     public Scheduler getScheduler() {
@@ -53,13 +76,13 @@ public class SimpleContext implements Context {
         this.resourceService = resourceService;
     }
 
-    public AssetLoader getRootAssetLoader() {
-        return rootAssetLoader;
+    public AssetLoader getAssetLoader() {
+        return assetLoader;
     }
 
     @Inject
-    public void setRootAssetLoader(AssetLoader rootAssetLoader) {
-        this.rootAssetLoader = rootAssetLoader;
+    public void setAssetLoader(AssetLoader assetLoader) {
+        this.assetLoader = assetLoader;
     }
 
 }

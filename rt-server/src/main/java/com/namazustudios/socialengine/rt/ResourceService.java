@@ -22,7 +22,6 @@ import java.util.stream.Stream;
  *
  * Created by patricktwohig on 7/24/15.
  */
-@Proxyable
 public interface ResourceService {
 
     /**
@@ -64,24 +63,24 @@ public interface ResourceService {
      */
     void addResource(Path path, Resource resource);
 
-    /**
-     * Adds a {@link Resource} to this resource service.  Rather than throwing an exception
-     * if the resource already exists, this will return the existing instance instead.
-     *
-     * This returns either the newly added instance, or the instance that had already existed.
-     *
-     * Note that the given {@link Supplier<Resource>} should defer creation.  If you wish to
-     * insert an existing resource, then consider using {@link #addResource(Path, Resource)}
-     *
-     * @param path the path for the {@link Resource} instance
-     * @param resourceInitializer the resource initializer to use if the path is absent
-     *
-     * @return the actual {@link Resource} instance that was added
-     *
-     * @throws {@link DuplicateException} if a resource at the given path already exists
-     * @throws {@link IllegalArgumentException} if the path is a wildcard path
-     */
-    AtomicOperationTuple<Resource> addResourceIfAbsent(Path path, Supplier<Resource> resourceInitializer);
+//    /**
+//     * Adds a {@link Resource} to this resource service.  Rather than throwing an exception
+//     * if the resource already exists, this will return the existing instance instead.
+//     *
+//     * This returns either the newly added instance, or the instance that had already existed.
+//     *
+//     * Note that the given {@link Supplier<Resource>} should defer creation.  If you wish to
+//     * insert an existing resource, then consider using {@link #addResource(Path, Resource)}
+//     *
+//     * @param path the path for the {@link Resource} instance
+//     * @param resourceInitializer the resource initializer to use if the path is absent
+//     *
+//     * @return the actual {@link Resource} instance that was added
+//     *
+//     * @throws {@link DuplicateException} if a resource at the given path already exists
+//     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+//     */
+//    AtomicOperationTuple<Resource> addResourceIfAbsent(Path path, Supplier<Resource> resourceInitializer);
 
     /**
      * Removes a {@link Resource} instance from this resource service.

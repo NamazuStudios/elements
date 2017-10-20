@@ -18,7 +18,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  *
  * Created by patricktwohig on 8/22/15.
  */
-@Proxyable
 public interface Scheduler {
     
     /**
