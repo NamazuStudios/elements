@@ -14,11 +14,14 @@ import static com.namazustudios.socialengine.rt.lua.Constants.REQUIRE;
 import static com.namazustudios.socialengine.rt.lua.Constants.YIELD;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstruction.*;
 
-public class ResourceBuiltin implements Builtin {
+/**
+ * Provides the details for the resoure manipulation operations.
+ */
+public class ResourceDetailBuiltin implements Builtin {
 
-    private static final Logger logger = LoggerFactory.getLogger(ResourceBuiltin.class);
+    private static final Logger logger = LoggerFactory.getLogger(ResourceDetailBuiltin.class);
 
-    public static final String MODULE_NAME = "namazu.resource";
+    public static final String MODULE_NAME = "namazu.resource.detail";
 
     public static final String CREATE = "create";
 
@@ -34,12 +37,12 @@ public class ResourceBuiltin implements Builtin {
 
     private final ResourceContext resourceContext;
 
-    public ResourceBuiltin(final LuaResource luaResource,
-                           final Scheduler scheduler,
-                           final ResourceContext resourceContext) {
+    public ResourceDetailBuiltin(final LuaResource luaResource,
+                                 final ResourceContext resourceContext,
+                                 final Scheduler scheduler) {
         this.luaResource = luaResource;
-        this.scheduler = scheduler;
         this.resourceContext = resourceContext;
+        this.scheduler = scheduler;
     }
 
     private JavaFunction create = luaState -> {
@@ -85,9 +88,9 @@ public class ResourceBuiltin implements Builtin {
             final ResourceId thisResourceId = getLuaResource().getId();
 
             getResourceContext().invokeAsync(
-                    object -> scheduleSuccess(thisResourceId, taskId, object),
-                    throwable -> scheduleFailure(thisResourceId, taskId, throwable),
-                    resourceId, methodName, params);
+                object -> scheduleSuccess(thisResourceId, taskId, object),
+                throwable -> scheduleFailure(thisResourceId, taskId, throwable),
+                resourceId, methodName, params);
 
             yieldIndefinitely(luaState);
 
@@ -141,7 +144,9 @@ public class ResourceBuiltin implements Builtin {
             final ResourceId thisResourceId = getLuaResource().getId();
 
             getResourceContext().destroyAsync(
-                    object -> scheduleSuccess(thisResourceId, taskId, null), throwable -> scheduleFailure(thisResourceId, taskId, throwable), resourceId
+                object -> scheduleSuccess(thisResourceId, taskId, null),
+                throwable -> scheduleFailure(thisResourceId, taskId, throwable),
+                resourceId
             );
 
             yieldIndefinitely(luaState);
@@ -205,9 +210,7 @@ public class ResourceBuiltin implements Builtin {
     @Override
     public JavaFunction getLoader() {
         return luaState -> {
-            luaState.newTable();
 
-            // The actual function table
             luaState.newTable();
 
             luaState.pushJavaFunction(create);
@@ -219,7 +222,7 @@ public class ResourceBuiltin implements Builtin {
             luaState.pushJavaFunction(invokePath);
             luaState.setField(-2, INVOKE_PATH);
 
-            luaState.pushJavaFunction(invokePath);
+            luaState.pushJavaFunction(destroy);
             luaState.setField(-2, DESTROY);
 
             return 1;

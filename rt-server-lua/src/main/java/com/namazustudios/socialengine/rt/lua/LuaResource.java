@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.*;
 import com.namazustudios.socialengine.rt.lua.builtin.BuiltinManager;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
+import com.namazustudios.socialengine.rt.lua.builtin.ResourceDetailBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReasonBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstructionBuiltin;
@@ -51,8 +52,6 @@ public class LuaResource implements Resource {
 
     private final LuaState luaState;
 
-    private final CoroutineBuiltin coroutineBuiltin;
-
     private final LogAssist logAssist;
 
     private final BuiltinManager builtinManager;
@@ -80,18 +79,18 @@ public class LuaResource implements Resource {
      * @param luaState the luaState
      */
     @Inject
-    public LuaResource(final LuaState luaState, final SchedulerContext schedulerContext) {
+    public LuaResource(final LuaState luaState, final Context context, final Scheduler scheduler) {
         try {
 
             this.luaState = luaState;
-            this.coroutineBuiltin = new CoroutineBuiltin(this, schedulerContext);
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
             this.builtinManager = new BuiltinManager(this::getLuaState, this::getScriptLog);
 
             luaState.openLibs();
             setupFunctionOverrides();
             getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
-            getBuiltinManager().installBuiltin(coroutineBuiltin);
+            getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, context.getSchedulerContext()));
+            getBuiltinManager().installBuiltin(new ResourceDetailBuiltin(this, context.getResourceContext(), scheduler));
             getBuiltinManager().installBuiltin(new YieldInstructionBuiltin());
             getBuiltinManager().installBuiltin(new ResumeReasonBuiltin());
 
