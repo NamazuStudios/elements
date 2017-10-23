@@ -233,6 +233,8 @@ public class CoroutineBuiltin implements Builtin {
             case UNTIL_NEXT:
                 scheduleUntilNextCron(taskId, luaState, logAssist);
                 break;
+            case INDEFINITELY:
+                break;
             default:
                 throw new InternalException("unknown enum value " + instruction);
         }

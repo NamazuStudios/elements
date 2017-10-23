@@ -25,7 +25,7 @@ public class SimpleResourceContext implements ResourceContext {
     private ExecutorService executorService;
 
     @Override
-    public ResourceId create(final Path path, final String module, final Object ... args) {
+    public ResourceId create(final String module, final Path path, final Object... args) {
         logger.info("Loading module {} -> {}", module, path);
         final Resource resource = getResourceLoader().load(module, args);
         getResourceService().addResource(path, resource);
@@ -34,10 +34,10 @@ public class SimpleResourceContext implements ResourceContext {
 
     @Override
     public Future<ResourceId> createAsync(final Consumer<ResourceId> success, final Consumer<Throwable> failure,
-                                          final Path path, final String module, final Object... args) {
+                                          final String module, final Path path, final Object... args) {
         return getExecutorService().submit(() -> {
             try {
-                final ResourceId resourceId = create(path, module, args);
+                final ResourceId resourceId = create(module, path, args);
                 success.accept(resourceId);
                 return resourceId;
             } catch (Throwable th) {
@@ -48,8 +48,33 @@ public class SimpleResourceContext implements ResourceContext {
         });
     }
 
-    public Future<Void> destroyAsync(final ResourceId resourceId, Consumer<Void> success, Consumer<Throwable> failure) {
+    public Future<Void> destroyAsync(Consumer<Void> success, Consumer<Throwable> failure, final ResourceId resourceId) {
+        // The Resource must be locked in order to properly destroy it because it invovles mutating the Resource itself.
+        // if we try to destroy it without using the scheduler, we could end up with two threads accessing it at the
+        // same time, which is no good.
         return getScheduler().performV(resourceId, r -> getResourceService().destroy(resourceId));
+    }
+
+    @Override
+    public Future<Object> invokeAsync(final Consumer<Object> success, final Consumer<Throwable> failure,
+                                      final ResourceId resourceId, final String method, final Object... args) {
+        return getScheduler().perform(resourceId, resource -> doInvoke(success, failure, resource, method, args));
+    }
+
+    @Override
+    public Future<Object> invokeAsync(final Consumer<Object> success, final Consumer<Throwable> failure,
+                                      final Path path, final String method, final Object... args) {
+        return getScheduler().perform(path, resource -> doInvoke(success, failure, resource, method, args));
+    }
+
+    private Object doInvoke(final Consumer<Object> success, final Consumer<Throwable> failure,
+                                    final Resource resource, final String method, final Object... args) {
+        try {
+            return resource.getMethodDispatcher(method).params(args).dispatch(success, failure);
+        } catch (Throwable th) {
+            failure.accept(th);
+            throw th;
+        }
     }
 
     public Scheduler getScheduler() {

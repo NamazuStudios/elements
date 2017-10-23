@@ -3,10 +3,7 @@ package com.namazustudios.socialengine.rt.lua;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.exception.AssetNotFoundException;
-import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
-import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
+import com.namazustudios.socialengine.rt.exception.*;
 import com.namazustudios.socialengine.rt.lua.builtin.BuiltinManager;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
@@ -26,6 +23,9 @@ import java.util.function.Consumer;
 import static com.naef.jnlua.LuaState.REGISTRYINDEX;
 import static com.naef.jnlua.LuaState.YIELD;
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
+import static com.namazustudios.socialengine.rt.lua.Constants.REQUIRE;
+import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReason.ERROR;
+import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReason.NETWORK;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReason.SCHEDULER;
 
 /**
@@ -184,53 +184,151 @@ public class LuaResource implements Resource {
     public MethodDispatcher getMethodDispatcher(final String name) {
         return params -> (consumer, throwableConsumer) -> {
 
-            final LuaState luaState = getLuaState();
-            FinalOperation finalOperation = () -> luaState.setTop(0);
+                final LuaState luaState = getLuaState();
+                FinalOperation finalOperation = () -> luaState.setTop(0);
 
-            try {
+                try {
 
-                luaState.getGlobal("require");
-                luaState.pushString(CoroutineBuiltin.MODULE_NAME);
-                luaState.call(1, 1);
-                luaState.getField(-1, CoroutineBuiltin.START);
-                luaState.remove(-2);
+                    luaState.getGlobal(REQUIRE);
+                    luaState.pushString(CoroutineBuiltin.MODULE_NAME);
+                    luaState.call(1, 1);
+                    luaState.getField(-1, CoroutineBuiltin.START);
+                    luaState.remove(-2);
 
-                luaState.getField(REGISTRYINDEX, MODULE);
-                luaState.getField(-1, name);
-                luaState.remove(-2);
+                    luaState.getField(REGISTRYINDEX, MODULE);
+                    luaState.getField(-1, name);
+                    luaState.remove(-2);
 
-                if (!luaState.isFunction(-1)){
-                    getScriptLog().error("No such method {}", name);
-                    throw new MethodNotFoundException("No such method: " + name);
-                }
+                    if (!luaState.isFunction(-1)){
+                        getScriptLog().error("No such method {}", name);
+                        throw new MethodNotFoundException("No such method: " + name);
+                    }
 
-                luaState.newThread();
-                for (Object param : params) luaState.pushJavaObject(param);
+                    luaState.newThread();
+                    for (Object param : params) luaState.pushJavaObject(param);
 
-                luaState.call(params.length + 1, 3);
+                    luaState.call(params.length + 1, 3);
 
-                final String taskId = luaState.checkString(1);                        // task id
-                final int status = luaState.checkInteger(2);                          // thread status
-                final Object result = luaState.checkJavaObject(3, Object.class);      // the return value
+                    final String taskId = luaState.checkString(1);                        // task id
+                    final int status = luaState.checkInteger(2);                          // thread status
+                    final Object result = luaState.checkJavaObject(3, Object.class);      // the return value
 
-                if (status == YIELD) {
-                    final PendingTask pendingTask = new PendingTask(consumer, throwableConsumer);
-                    taskIdPendingTaskMap.put(new TaskId(taskId), pendingTask);
-                } else {
-                    finalOperation = finalOperation.andThen(() -> consumer.accept(result));
-                }
+                    if (status == YIELD) {
+                        final PendingTask pendingTask = new PendingTask(consumer, throwableConsumer);
+                        taskIdPendingTaskMap.put(new TaskId(taskId), pendingTask);
+                    } else {
+                        finalOperation = finalOperation.andThen(() -> consumer.accept(result));
+                    }
 
-            return new TaskId(taskId);
+                return new TaskId(taskId);
+
+            } catch (Throwable th) {
+                logAssist.error("Error dispatching method: " + name, th);
+                throw th;
+            } finally {
+                finalOperation.perform();
+            }
+
+        };
+    }
+
+    @Override
+    public void resumeFromNetwork(TaskId taskId, Object networkResult) {
+
+        final PendingTask pendingTask = taskIdPendingTaskMap.get(taskId);
+
+        if (pendingTask == null) {
+            throw new InternalException("no pending task with id " + taskId);
+        }
+
+        final LuaState luaState = getLuaState();
+        FinalOperation finalOperation = () -> luaState.setTop(0);
+
+        try {
+
+            luaState.getGlobal(REQUIRE);
+            luaState.pushString(CoroutineBuiltin.MODULE_NAME);
+            luaState.call(1, 1);
+            luaState.getField(-1, CoroutineBuiltin.RESUME);
+            luaState.remove(1);
+
+            luaState.pushString(taskId.asString());
+            luaState.pushString(NETWORK.toString());
+            luaState.pushJavaObject(networkResult);
+            luaState.call(3, 3);
+
+            final String taskIdString = luaState.checkString(1);                        // task id
+            final int status = luaState.checkInteger(2);                                // thread status
+            final Object result = luaState.checkJavaObject(3, Object.class);            // the return value
+
+            if (!taskId.asString().equals(taskIdString)) {
+                getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
+                throw new IllegalStateException("task ID mismatch");
+            } else if (status == YIELD) {
+                getScriptLog().info("Task {} yielded.  Resuming later.", taskId);
+            } else {
+                finalOperation = finalOperation.andThen(() -> pendingTask.resultConsumer.accept(result));
+            }
 
         } catch (Throwable th) {
-            logAssist.error("Error dispatching method: " + name, th);
-            throw th;
+            getScriptLog().error("Caught exception resuming task {}.", taskId, th);
+            pendingTask.throwableConsumer.accept(th);
         } finally {
             finalOperation.perform();
         }
 
-    };
-}
+    }
+
+    @Override
+    public void resumeForError(TaskId taskId, Throwable throwable) {
+
+        final PendingTask pendingTask = taskIdPendingTaskMap.get(taskId);
+
+        if (pendingTask == null) {
+            throw new InternalException("no pending task with id " + taskId);
+        }
+
+        final LuaState luaState = getLuaState();
+        FinalOperation finalOperation = () -> luaState.setTop(0);
+
+        final ResponseCode responseCode = throwable instanceof BaseException ?
+                ((BaseException)throwable).getResponseCode() :
+                ResponseCode.INTERNAL_ERROR_FATAL;
+
+        try {
+
+            luaState.getGlobal(REQUIRE);
+            luaState.pushString(CoroutineBuiltin.MODULE_NAME);
+            luaState.call(1, 1);
+            luaState.getField(-1, CoroutineBuiltin.RESUME);
+            luaState.remove(1);
+
+            luaState.pushString(taskId.asString());
+            luaState.pushString(ERROR.toString());
+            luaState.pushInteger(responseCode.getCode());
+            luaState.call(3, 3);
+
+            final String taskIdString = luaState.checkString(1);                        // task id
+            final int status = luaState.checkInteger(2);                                // thread status
+            final Object result = luaState.checkJavaObject(3, Object.class);            // the return value
+
+            if (!taskId.asString().equals(taskIdString)) {
+                getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
+                throw new IllegalStateException("task ID mismatch");
+            } else if (status == YIELD) {
+                getScriptLog().info("Task {} yielded.  Resuming later.", taskId);
+            } else {
+                finalOperation = finalOperation.andThen(() -> pendingTask.resultConsumer.accept(result));
+            }
+
+        } catch (Throwable th) {
+            getScriptLog().error("Caught exception resuming task {}.", taskId, th);
+            pendingTask.throwableConsumer.accept(th);
+        } finally {
+            finalOperation.perform();
+        }
+
+    }
 
     @Override
     public void resumeFromScheduler(final TaskId taskId, final double elapsedTime) {
@@ -246,7 +344,7 @@ public class LuaResource implements Resource {
 
         try {
 
-            luaState.getGlobal("require");
+            luaState.getGlobal(REQUIRE);
             luaState.pushString(CoroutineBuiltin.MODULE_NAME);
             luaState.call(1, 1);
             luaState.getField(-1, CoroutineBuiltin.RESUME);

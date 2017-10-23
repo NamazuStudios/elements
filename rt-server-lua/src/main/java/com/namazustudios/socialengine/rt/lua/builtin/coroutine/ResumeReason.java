@@ -13,6 +13,16 @@ public enum ResumeReason {
     SCHEDULER,
 
     /**
+     * The coroutine was resumed as the part of a network or distributed callback.
+     */
+    NETWORK,
+
+    /**
+     * Indicates that an error condition caused the coroutine to resume.  The re
+     */
+    ERROR,
+
+    /**
      * The coroutine was manually resumed.
      */
     MANUAL

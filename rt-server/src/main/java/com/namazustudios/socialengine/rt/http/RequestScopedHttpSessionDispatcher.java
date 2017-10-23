@@ -16,9 +16,9 @@ import java.util.function.Consumer;
 import static java.util.UUID.randomUUID;
 
 /**
- * Loads an instance of {@link Resource} into the {@link ResourceService}, executes the {@link Request},
- * collects the {@link Response} and promptly removes and destroys the {@link Resource} once the
- * requested method provides its final result.
+ * Loads an instance of {@link Resource} into the {@link ResourceService}, executes the {@link Request}, collects the
+ * {@link Response} and promptly removes and destroys the {@link Resource} once the requested method provides its final
+ * result.
  */
 public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatcher<HttpRequest> {
 
@@ -50,7 +50,7 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
         final HttpOperation httpOperation = httpRequest.getManifestMetadata().getPreferredOperation();
 
         final Path path = Path.fromComponents("http", "request", randomUUID().toString());
-        final ResourceId resourceId = getResourceContext().create(path, httpModule.getModule());
+        final ResourceId resourceId = getResourceContext().create(httpModule.getModule(), path);
 
         logger.info("Created resource with id {} to handle request.", resourceId);
         schedule(httpOperation, path, session, request, responseConsumer);
@@ -78,9 +78,8 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
 
                 final ResourceId resourceId = resource.getId();
 
-                getResourceContext().destroyAsync(resourceId,
-                    v  -> logger.info("Destroyed {}", resourceId),
-                    th -> logger.error("Failed to destroy {}", resourceId, th));
+                getResourceContext().destroyAsync(v  -> logger.info("Destroyed {}", resourceId), th -> logger.error("Failed to destroy {}", resourceId, th), resourceId
+                );
 
             }
         };
