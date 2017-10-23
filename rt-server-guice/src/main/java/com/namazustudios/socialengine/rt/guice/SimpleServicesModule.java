@@ -5,12 +5,16 @@ import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.google.inject.name.Names.bindProperties;
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.SimpleResourceContext.EXECUTOR_SERVICE;
 import static com.namazustudios.socialengine.rt.SimpleScheduler.SCHEDULED_EXECUTOR_SERVICE;
 import static java.lang.String.format;
+import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.Executors.newScheduledThreadPool;
 
 /**
@@ -35,19 +39,36 @@ public class SimpleServicesModule extends AbstractModule {
         bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();
         bind(ResourceIdLockService.class).to(SimpleResourceIdLockService.class).asEagerSingleton();
 
-        final AtomicInteger threadCount = new AtomicInteger();
-        final Logger logger = LoggerFactory.getLogger(SCHEDULED_EXECUTOR_SERVICE);
+        bind(ExecutorService.class)
+                .annotatedWith(named(EXECUTOR_SERVICE))
+                .toProvider(() -> executorService(EXECUTOR_SERVICE));
 
         bind(ScheduledExecutorService.class)
             .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE))
-            .toProvider(() -> newScheduledThreadPool(CORE_POOL_SIZE, r -> {
-                    final Thread thread = new Thread(r);
-                    thread.setDaemon(true);
-                    thread.setUncaughtExceptionHandler((t , e) -> logger.error("Scheduler Exception in {}", t, e));
-                    thread.setName(format("%s - Thread %d", SCHEDULED_EXECUTOR_SERVICE, threadCount.incrementAndGet()));
-                    return thread;
-                }));
+            .toProvider(() -> scheduledExecutorService(SCHEDULED_EXECUTOR_SERVICE));
 
     }
+
+    private ExecutorService executorService(final String name) {
+        final AtomicInteger threadCount = new AtomicInteger();
+        final Logger logger = LoggerFactory.getLogger(SCHEDULED_EXECUTOR_SERVICE);
+        return newCachedThreadPool(r -> newThread(r, name, threadCount, logger));
+    }
+
+    private ScheduledExecutorService scheduledExecutorService(final String name) {
+        final AtomicInteger threadCount = new AtomicInteger();
+        final Logger logger = LoggerFactory.getLogger(SCHEDULED_EXECUTOR_SERVICE);
+        return newScheduledThreadPool(CORE_POOL_SIZE, r -> newThread(r, name, threadCount, logger));
+    }
+
+    private Thread newThread(final Runnable runnable, final String name,
+                             final AtomicInteger threadCount, final Logger logger) {
+        final Thread thread = new Thread(runnable);
+        thread.setDaemon(true);
+        thread.setUncaughtExceptionHandler((t , e) -> logger.error("Scheduler Exception in {}", t, e));
+        thread.setName(format("%s - Thread %d", name, threadCount.incrementAndGet()));
+        return thread;
+    }
+
 
 }

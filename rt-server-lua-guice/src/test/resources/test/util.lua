@@ -6,9 +6,11 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local util = require "util"
+local test_util = {}
 
-function test_uuid()
+local util = require "namazu.util"
+
+function test_util.test_uuid()
     local UUID = java.require "java.util.UUID"
 
     local uuid = util.uuid()
@@ -16,3 +18,5 @@ function test_uuid()
     assert(uuid == parsed:toString(), "Mismatching uuids " .. uuid .. " does not match " .. parsed:toString())
 
 end
+
+return test_util
