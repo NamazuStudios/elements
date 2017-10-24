@@ -52,7 +52,14 @@ public class SimpleResourceContext implements ResourceContext {
         // The Resource must be locked in order to properly destroy it because it invovles mutating the Resource itself.
         // if we try to destroy it without using the scheduler, we could end up with two threads accessing it at the
         // same time, which is no good.
-        return getScheduler().performV(resourceId, r -> getResourceService().destroy(resourceId));
+        return getScheduler().performV(resourceId, r -> {
+            try {
+                getResourceService().destroy(resourceId);
+                success.accept(null);
+            } catch (Throwable throwable) {
+                failure.accept(throwable);
+            }
+        });
     }
 
     @Override
