@@ -6,6 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
+local math = require "math"
 local table = require "table"
 local coroutine = require "coroutine"
 
@@ -16,75 +17,40 @@ local yieldinstruction = require "namazu.coroutine.yieldinstruction"
 
 local resource = {}
 
-function resource.create(module, path, ...)
-
-    detail.schedule_create(module, path, table.pack(...))
-
-    local reason, response = coroutine.yield(yieldinstruction.INDEFINITELY)
-
+local function process_result(reason, response)
     if reason == resumereason.NETWORK
     then
         return response, responsecode.OK
     elseif reason == resumereason.ERROR
     then
-        return nil, response
+        return nil, math.floor(response)
     else
         return nil, responsecode.UNKNOWN
     end
+end
 
+function resource.create(module, path, ...)
+    detail.schedule_create(module, path, table.pack(...))
+    local reason, response = coroutine.yield(yieldinstruction.INDEFINITELY)
+    return process_result(reason, response)
 end
 
 function resource.invoke(resource_id, method, ...)
-
     detail.schedule_invoke(resource_id, method, table.pack(...))
-
     local reason, response = coroutine.yield(yieldinstruction.INDEFINITELY)
-
-    if reason == resumereason.NETWORK
-    then
-        return response, responsecode.OK
-    elseif reason == resumereason.ERROR
-    then
-        return nil, response
-    else
-        return nil, responsecode.UNKNOWN
-    end
-
+    return process_result(reason, response)
 end
 
 function resource.invoke_path(path, method, ...)
-
     detail.schedule_invoke_path(path, method, table.pack(...))
-
     local reason, response = coroutine.yield(yieldinstruction.INDEFINITELY)
-
-    if reason == resumereason.NETWORK
-    then
-        return response, responsecode.OK
-    elseif reason == resumereason.ERROR
-    then
-        return nil, response
-    else
-        return nil, responsecode.UNKNOWN
-    end
-
+    return process_result(reason, response)
 end
 
 function resource.destroy(resource_id)
-
     detail.schedule_destroy(resource_id)
     local reason, response = coroutine.yield(yieldinstruction.INDEFINITELY)
-
-    if reason == resumereason.NETWORK
-    then
-        return response, responsecode.OK
-    elseif reason == resumereason.ERROR
-    then
-        return nil, response
-    else
-        return nil, responsecode.UNKNOWN
-    end
-
+    return process_result(reason, response)
 end
 
 return resource

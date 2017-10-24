@@ -48,7 +48,9 @@ public class SimpleResourceContext implements ResourceContext {
         });
     }
 
-    public Future<Void> destroyAsync(Consumer<Void> success, Consumer<Throwable> failure, final ResourceId resourceId) {
+    public Future<Void> destroyAsync(final Consumer<Void> success,
+                                     final Consumer<Throwable> failure,
+                                     final ResourceId resourceId) {
         // The Resource must be locked in order to properly destroy it because it invovles mutating the Resource itself.
         // if we try to destroy it without using the scheduler, we could end up with two threads accessing it at the
         // same time, which is no good.
@@ -59,7 +61,7 @@ public class SimpleResourceContext implements ResourceContext {
             } catch (Throwable throwable) {
                 failure.accept(throwable);
             }
-        });
+        }, failure.andThen(th -> logger.error("Failure", th)));
     }
 
     @Override
@@ -70,7 +72,7 @@ public class SimpleResourceContext implements ResourceContext {
 
         getScheduler().perform(resourceId, resource -> doInvoke(invocationFuture.success().andThen(success),
                                                                 invocationFuture.failure().andThen(failure),
-                                                                resource, method, args));
+                                                                resource, method, args), failure);
 
         return invocationFuture;
 
@@ -84,7 +86,7 @@ public class SimpleResourceContext implements ResourceContext {
 
         getScheduler().perform(path, resource -> doInvoke(invocationFuture.success().andThen(success),
                                                           invocationFuture.failure().andThen(failure),
-                                                          resource, method, args));
+                                                          resource, method, args), failure);
 
         return invocationFuture;
 

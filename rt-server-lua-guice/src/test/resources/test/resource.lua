@@ -102,12 +102,18 @@ end
 
 function test_resource.test_destroy()
 
-    local rid = make_resource()
+    local rid, path = make_resource()
     resource.destroy(rid)
 
-    local result, code = resource.invoke(rid, "knock_knock")
+    local result, code
+
+    result, code = resource.invoke(rid, "knock_knock")
     assert(result == nil, "Expected nil result.  Got" .. tostring(result))
-    assert(code == responsecode.RESOURCE_NOT_FOUND, "Expected Error Code RESOURCE_NOT_FOUND.  Got: " .. tostring(code));
+    assert(code == responsecode.RESOURCE_NOT_FOUND, "Expected Error Code " .. tostring(responsecode.RESOURCE_NOT_FOUND) .. " Got: " .. tostring(code));
+
+    result, code = resource.invoke_path(path, "knock_knock")
+    assert(result == nil, "Expected nil result.  Got" .. tostring(result))
+    assert(code == responsecode.RESOURCE_NOT_FOUND, "Expected Error Code " .. tostring(responsecode.RESOURCE_NOT_FOUND) .. " Got: " .. tostring(code));
 
 end
 

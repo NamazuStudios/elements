@@ -7,6 +7,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -40,37 +41,57 @@ public class SimpleScheduler implements Scheduler {
     public void shutdown() {}
 
     @Override
-    public <T> Future<T> perform(final ResourceId resourceId, final Function<Resource, T> operation) {
-        return getScheduledExecutorService().submit(protectedCallable(resourceId, operation));
+    public <T> Future<T> perform(final ResourceId resourceId,
+                                 final Function<Resource, T> operation,
+                                 final Consumer<Throwable> failure) {
+        return getScheduledExecutorService().submit(protectedCallable(resourceId, operation, failure));
     }
 
     @Override
-    public <T> Future<T> perform(final Path path, final Function<Resource, T> operation) {
-        return getScheduledExecutorService().submit(protectedCallable(path, operation));
+    public <T> Future<T> perform(final Path path,
+                                 final Function<Resource, T> operation,
+                                 final Consumer<Throwable> failure) {
+        return getScheduledExecutorService().submit(protectedCallable(path, operation, failure));
     }
 
     @Override
     public <T> Future<T> performAfterDelay(final ResourceId resourceId,
                                            final long time, final TimeUnit timeUnit,
-                                           final Function<Resource, T> operation) {
-        return getScheduledExecutorService().schedule(protectedCallable(resourceId, operation), time, timeUnit);
+                                           final Function<Resource, T> operation,
+                                           final Consumer<Throwable> failure) {
+        return getScheduledExecutorService().schedule(protectedCallable(resourceId, operation, failure), time, timeUnit);
     }
 
-    private <T> Callable<T> protectedCallable(final ResourceId resourceId, final Function<Resource, T> operation) {
+    private <T> Callable<T> protectedCallable(final ResourceId resourceId,
+                                              final Function<Resource, T> operation,
+                                              final Consumer<Throwable> failure) {
         return () -> {
-            final Resource resource = getResourceService().getResourceWithId(resourceId);
-            return performProtected(resource, operation);
+            try {
+                final Resource resource = getResourceService().getResourceWithId(resourceId);
+                return performProtected(resource, operation);
+            } catch (Throwable th) {
+                failure.accept(th);
+                throw th;
+            }
         };
     }
 
-    private <T> Callable<T> protectedCallable(final Path path, final Function<Resource, T> operation) {
+    private <T> Callable<T> protectedCallable(final Path path,
+                                              final Function<Resource, T> operation,
+                                              final Consumer<Throwable> failure) {
         return () -> {
-            final Resource resource = getResourceService().getResourceAtPath(path);
-            return performProtected(resource, operation);
+            try {
+                final Resource resource = getResourceService().getResourceAtPath(path);
+                return performProtected(resource, operation);
+            } catch (Throwable th) {
+                failure.accept(th);
+                throw th;
+            }
         };
     }
 
-    private <T> T performProtected(final Resource resource, final Function<Resource, T> operation) {
+    private <T> T performProtected(final Resource resource,
+                                   final Function<Resource, T> operation) {
 
         final Lock lock = getResourceLockService().getLock(resource.getId());
 
