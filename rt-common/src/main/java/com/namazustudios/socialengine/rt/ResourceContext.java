@@ -51,7 +51,7 @@ public interface ResourceContext {
                                    String module, Path path, Object... args);
 
     /**
-     * Synchronous invoke of {@link #invokeAsync(Consumer, Consumer, Path, String, Object...)}.
+     * Synchronous invoke of {@link #invokePathAsync(Consumer, Consumer, Path, String, Object...)}.
      *
      * @param resourceId the resource's id
      * @param method the method name
@@ -85,18 +85,18 @@ public interface ResourceContext {
                                ResourceId resourceId, String method, Object... args);
 
     /**
-     * Synchronous invoke of {@link #invokeAsync(Consumer, Consumer, Path, String, Object...)}.
+     * Synchronous invoke of {@link #invokePathAsync(Consumer, Consumer, Path, String, Object...)}.
      *
      * @param path the path
      * @param method the method name
      * @param args the argument array
      * @return the result of the invocation
      */
-    default Object invoke(final Path path, final String method, final Object... args) {
+    default Object invokePath(final Path path, final String method, final Object... args) {
 
         final Logger logger = LoggerFactory.getLogger(getClass());
 
-        final Future<Object> future = invokeAsync(
+        final Future<Object> future = invokePathAsync(
             object  -> logger.info("Invoked {}:{}({})", path.toNormalizedPathString(), method, Arrays.toString(args)),
             throwable -> logger.info("Invvocation failed {}:{}({})", path.toNormalizedPathString(), method, Arrays.toString(args), throwable),
             path, method, args);
@@ -115,8 +115,8 @@ public interface ResourceContext {
      * @param args the args
      * @return
      */
-    Future<Object> invokeAsync(Consumer<Object> success, Consumer<Throwable> failure,
-                               Path path, String method, Object... args);
+    Future<Object> invokePathAsync(Consumer<Object> success, Consumer<Throwable> failure,
+                                   Path path, String method, Object... args);
 
     /**
      * Destroys the {@link Resource} with the provided {@link ResourceId}.

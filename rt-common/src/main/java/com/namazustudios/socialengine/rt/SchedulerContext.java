@@ -47,34 +47,4 @@ public interface SchedulerContext {
      */
     Future<Void> resumeWithError(final ResourceId resourceId, final TaskId taskId, final Throwable throwable);
 
-    /**
-     * Performs an action against the resource with the provided {@link Path}.  Note that the provided
-     * {@link Resource} may be a proxy for a remote {@link Resource}.  Once the provided {@link Function <Resource, T>}
-     * returns, the {@link Resource} may no-longer be valid.
-     *
-     * The {@link ResourceContext} may background the processing of the operation.
-     *
-     * @param path the path of the resource
-     * @param operation the operation to perform
-     *
-     * @param <T>
-     */
-    <T> Future<T> perform(Path path, Function<Resource, T> operation);
-
-    /**
-     * Performs an action against the resource with the provided {@link Path}.  The default implementation simply passes
-     * an {@link Function<Resource, Void>} to {@link #perform(Path, Function)}.
-     *
-     * @param path the path of the resource
-     * @param operation the operation to perform
-     *
-     * @return {@link Future<Void>} which can be used to monitor the status of the request
-     */
-    default Future<Void> performV(final Path path, final Consumer<Resource> operation) {
-        return perform(path, resource -> {
-            operation.accept(resource);
-            return null;
-        });
-    }
-
 }

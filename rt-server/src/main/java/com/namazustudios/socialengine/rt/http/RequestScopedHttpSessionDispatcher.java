@@ -53,49 +53,41 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
         final ResourceId resourceId = getResourceContext().create(httpModule.getModule(), path);
 
         logger.info("Created resource with id {} to handle request.", resourceId);
-        schedule(httpOperation, path, session, request, responseConsumer);
+        schedule(httpOperation, resourceId, session, request, responseConsumer);
 
     }
 
     private void schedule(final HttpOperation httpOperation,
-                          final Path path,
+                          final ResourceId resourceId,
                           final Session session,
                           final Request request,
                           final Consumer<Response> responseConsumer) {
-        getSchedulerContext().performV(path, resource -> safelyDispatch(resource, httpOperation, session, request, responseConsumer));
-    }
 
-    private void safelyDispatch(final Resource resource,
-                                final HttpOperation httpOperation,
-                                final Session session,
-                                final Request request,
-                                final Consumer<Response> responseConsumer) {
-
-        final Consumer<Response> closingResponseConsumer = response -> {
-            try {
-                responseConsumer.accept(response);
-            } finally {
-
-                final ResourceId resourceId = resource.getId();
-
-                getResourceContext().destroyAsync(v  -> logger.info("Destroyed {}", resourceId), th -> logger.error("Failed to destroy {}", resourceId, th), resourceId
-                );
-
-            }
-        };
-
-        final Consumer<Throwable> handler = ex -> getExceptionMapperResolver()
+        final Consumer<Throwable> failure = ex -> getExceptionMapperResolver()
                 .getExceptionMapper(ex)
                 .map(ex, request, responseConsumer);
 
+        final Consumer<Object> success = result -> {
+            try {
+                final Response response = (Response) result;
+                responseConsumer.accept(response);
+            } catch (ClassCastException ex) {
+                logger.error("Resource did not return Response type.");
+                failure.accept(ex);
+            } finally {
+                getResourceContext().destroyAsync(
+                    v  -> logger.info("Destroyed {}", resourceId),
+                    th -> logger.error("Failed to destroy {}", resourceId, th), resourceId);
+            }
+        };
+
         try {
-            resource.getMethodDispatcher(httpOperation.getMethod())
-                    .params(request.getPayload(), request, session)
-                    .forResultType(Response.class)
-                    .dispatch(closingResponseConsumer, handler);
+            getResourceContext().invokeAsync(success, failure,
+                                             resourceId, httpOperation.getMethod(),
+                                             request.getPayload(), request, session);
         } catch (Throwable th) {
             logRequestFailure(request, th);
-            handler.accept(th);
+            failure.accept(th);
             throw th;
         }
 

@@ -31,11 +31,6 @@ public class SimpleSchedulerContext implements SchedulerContext {
                                                    th -> logger.error("Caught exception resuming.", th));
     }
 
-    @Override
-    public <T> Future<T> perform(Path path, Function<Resource, T> operation) {
-        return getScheduler().perform(path, operation, th -> logger.error("Caught exception resuming.", th));
-    }
-
     public Scheduler getScheduler() {
         return scheduler;
     }

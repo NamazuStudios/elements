@@ -79,8 +79,8 @@ public class SimpleResourceContext implements ResourceContext {
     }
 
     @Override
-    public Future<Object> invokeAsync(final Consumer<Object> success, final Consumer<Throwable> failure,
-                                      final Path path, final String method, final Object... args) {
+    public Future<Object> invokePathAsync(final Consumer<Object> success, final Consumer<Throwable> failure,
+                                          final Path path, final String method, final Object... args) {
 
         final InvocationFuture invocationFuture = new InvocationFuture();
 

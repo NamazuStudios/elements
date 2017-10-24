@@ -9,12 +9,7 @@ import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-
-import static com.namazustudios.socialengine.rt.lua.Constants.COROUTINE;
 import static com.namazustudios.socialengine.rt.lua.Constants.REQUIRE;
-import static com.namazustudios.socialengine.rt.lua.Constants.YIELD;
-import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstruction.*;
 
 /**
  * Provides the details for the resoure manipulation operations.
@@ -109,7 +104,7 @@ public class ResourceDetailBuiltin implements Builtin {
             final TaskId taskId = currentTaskId(luaState);
             final ResourceId thisResourceId = getLuaResource().getId();
 
-            getContext().getResourceContext().invokeAsync(
+            getContext().getResourceContext().invokePathAsync(
                     object -> getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, object),
                     throwable -> getContext().getSchedulerContext().resumeWithError(thisResourceId, taskId, throwable),
                     path, methodName, params);
