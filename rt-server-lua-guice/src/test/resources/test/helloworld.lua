@@ -9,11 +9,23 @@
 local helloworld = {}
 
 function helloworld.knock_knock()
+    print("Got Knock Knock.  Returning \"Who's There?\"")
     return "Who's there?"
 end
 
 function helloworld.identify(who)
-    return who == "Interrupting Cow - Moo!"
+
+    print("Identifying \"who\"" .. who)
+
+    if who == "Interrupting Cow - Moo!"
+    then
+        print("Correct punchline!")
+        return true
+    else
+        print("Wrong punchline!")
+        return false
+    end
+
 end
 
 return helloworld

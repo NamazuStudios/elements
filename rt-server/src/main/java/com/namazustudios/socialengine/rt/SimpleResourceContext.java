@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 
@@ -58,13 +58,29 @@ public class SimpleResourceContext implements ResourceContext {
     @Override
     public Future<Object> invokeAsync(final Consumer<Object> success, final Consumer<Throwable> failure,
                                       final ResourceId resourceId, final String method, final Object... args) {
-        return getScheduler().perform(resourceId, resource -> doInvoke(success, failure, resource, method, args));
+
+        final InvocationFuture invocationFuture = new InvocationFuture();
+
+        getScheduler().perform(resourceId, resource -> doInvoke(invocationFuture.success().andThen(success),
+                                                                invocationFuture.failure().andThen(failure),
+                                                                resource, method, args));
+
+        return invocationFuture;
+
     }
 
     @Override
     public Future<Object> invokeAsync(final Consumer<Object> success, final Consumer<Throwable> failure,
                                       final Path path, final String method, final Object... args) {
-        return getScheduler().perform(path, resource -> doInvoke(success, failure, resource, method, args));
+
+        final InvocationFuture invocationFuture = new InvocationFuture();
+
+        getScheduler().perform(path, resource -> doInvoke(invocationFuture.success().andThen(success),
+                                                          invocationFuture.failure().andThen(failure),
+                                                          resource, method, args));
+
+        return invocationFuture;
+
     }
 
     private Object doInvoke(final Consumer<Object> success, final Consumer<Throwable> failure,
@@ -113,4 +129,83 @@ public class SimpleResourceContext implements ResourceContext {
         this.executorService = executorService;
     }
 
+    private static class InvocationFuture implements Future<Object> {
+
+        private final CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        private final AtomicReference<State> state = new AtomicReference<>(State.PENDING);
+
+        private final AtomicReference<Object> result = new AtomicReference<>();
+
+        private final AtomicReference<Throwable> throwable = new AtomicReference<>();
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            if (state.compareAndSet(State.PENDING, State.CANCELED)) {
+                countDownLatch.countDown();
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return state.get() == State.CANCELED;
+        }
+
+        @Override
+        public boolean isDone() {
+            switch (state.get()) {
+                case DONE:
+                case CANCELED:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        @Override
+        public Object get() throws InterruptedException, ExecutionException {
+            countDownLatch.await();
+            return getResultOrThrow();
+        }
+
+        @Override
+        public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            countDownLatch.await(timeout, unit);
+            return getResultOrThrow();
+        }
+
+        private Object getResultOrThrow() throws ExecutionException {
+
+            final Throwable throwable = this.throwable.get();
+
+            if (this.throwable.get() != null) {
+                throw new ExecutionException(throwable);
+            }
+
+            return result.get();
+
+        }
+
+        private enum State { PENDING, DONE, CANCELED }
+
+        public Consumer<Object> success() {
+            return object -> {
+                if (throwable.get() == null && result.compareAndSet(null, object)) {
+                    countDownLatch.countDown();
+                }
+            };
+        }
+
+        public Consumer<Throwable> failure() {
+            return th -> {
+                if (throwable.compareAndSet(null, th)) {
+                    countDownLatch.countDown();
+                }
+            };
+        }
+
+    }
 }

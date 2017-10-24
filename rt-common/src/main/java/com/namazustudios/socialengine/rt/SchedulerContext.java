@@ -26,8 +26,25 @@ public interface SchedulerContext {
      */
     Future<Void> resumeTaskAfterDelay(ResourceId resourceId, long time, TimeUnit timeUnit, TaskId taskId);
 
+    /**
+     * Resumes a task that was waiting on a network call.
+     *
+     * @param resourceId the {@link ResourceId} which owns the task
+     * @param taskId the unique {@link TaskId} associated with the network
+     * @param result the result of the network operation, passed to the task
+     * @return returns {@link Future<Void>} which can be used to determine when the dispatch has been completed.
+     */
     Future<Void> resumeFromNetwork(final ResourceId resourceId, final TaskId taskId, final Object result);
 
+    /**
+     * Resumes a task that was waiting for any reason.  This is used to hand an error to the running task in order to a
+     * task waiting on an operation.
+     *
+     * @param resourceId the {@link ResourceId} which owns the task
+     * @param taskId the unique {@link TaskId} associated with the network
+     * @param throwable the error in the blocked operation
+     * @return returns {@link Future<Void>} which can be used to determine when the dispatch has been completed.
+     */
     Future<Void> resumeWithError(final ResourceId resourceId, final TaskId taskId, final Throwable throwable);
 
     /**
