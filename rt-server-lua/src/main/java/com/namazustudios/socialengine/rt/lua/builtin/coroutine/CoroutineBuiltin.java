@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.lua.builtin.coroutine;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaState;
 import com.naef.jnlua.LuaType;
-import com.namazustudios.socialengine.rt.Scheduler;
 import com.namazustudios.socialengine.rt.SchedulerContext;
 import com.namazustudios.socialengine.rt.TaskId;
 import com.namazustudios.socialengine.rt.exception.InternalException;
@@ -242,7 +241,7 @@ public class CoroutineBuiltin implements Builtin {
     }
 
     private void scheduleImmediate(final TaskId taskId, final LogAssist logAssist) {
-        getSchedulerContext().resumeTask(getLuaResource().getId(), taskId);
+        getSchedulerContext().resumeTaskAfterDelay(getLuaResource().getId(), 0, MILLISECONDS, taskId);
     }
 
     private void scheduleUntil(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {

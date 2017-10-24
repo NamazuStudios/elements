@@ -59,7 +59,7 @@ public interface Resource extends AutoCloseable {
      * @param taskId
      * @param throwable
      */
-    void resumeForError(final TaskId taskId, final Throwable throwable);
+    void resumeWithError(final TaskId taskId, final Throwable throwable);
 
     /**
      * Resumes a suspended task, accepting the task id.  The task will be resumed as soon as possible.  This method

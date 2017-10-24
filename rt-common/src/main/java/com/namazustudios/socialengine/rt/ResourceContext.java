@@ -30,9 +30,9 @@ public interface ResourceContext {
         final Logger logger = LoggerFactory.getLogger(getClass());
 
         final Future<ResourceId> future = createAsync(
-                resourceId  -> logger.info("Created {} -> {}", resourceId, path),
-                th -> logger.error("Failed create at {}", path, th),
-                module, path, args);
+            resourceId  -> logger.info("Created {} -> {}", resourceId, path),
+            th -> logger.error("Failed create at {}", path, th),
+            module, path, args);
 
         return _waitAsync(future);
 

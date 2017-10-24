@@ -90,7 +90,7 @@ public class LuaResource implements Resource {
             setupFunctionOverrides();
             getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
             getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, context.getSchedulerContext()));
-            getBuiltinManager().installBuiltin(new ResourceDetailBuiltin(this, context.getResourceContext(), scheduler));
+            getBuiltinManager().installBuiltin(new ResourceDetailBuiltin(this, context));
             getBuiltinManager().installBuiltin(new YieldInstructionBuiltin());
             getBuiltinManager().installBuiltin(new ResumeReasonBuiltin());
 
@@ -279,7 +279,7 @@ public class LuaResource implements Resource {
     }
 
     @Override
-    public void resumeForError(TaskId taskId, Throwable throwable) {
+    public void resumeWithError(TaskId taskId, Throwable throwable) {
 
         final PendingTask pendingTask = taskIdPendingTaskMap.get(taskId);
 

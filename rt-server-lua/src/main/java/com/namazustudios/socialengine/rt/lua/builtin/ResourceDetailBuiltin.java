@@ -9,6 +9,8 @@ import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+
 import static com.namazustudios.socialengine.rt.lua.Constants.COROUTINE;
 import static com.namazustudios.socialengine.rt.lua.Constants.REQUIRE;
 import static com.namazustudios.socialengine.rt.lua.Constants.YIELD;
@@ -23,26 +25,21 @@ public class ResourceDetailBuiltin implements Builtin {
 
     public static final String MODULE_NAME = "namazu.resource.detail";
 
-    public static final String CREATE = "create";
+    public static final String CREATE = "schedule_create";
 
-    public static final String INVOKE = "invoke";
+    public static final String INVOKE = "schedule_invoke";
 
-    public static final String INVOKE_PATH = "invoke_path";
+    public static final String INVOKE_PATH = "schedule_invoke_path";
 
-    public static final String DESTROY = "destroy";
+    public static final String DESTROY = "schedule_destroy";
+
+    private final Context context;
 
     private final LuaResource luaResource;
 
-    private final Scheduler scheduler;
-
-    private final ResourceContext resourceContext;
-
-    public ResourceDetailBuiltin(final LuaResource luaResource,
-                                 final ResourceContext resourceContext,
-                                 final Scheduler scheduler) {
+    public ResourceDetailBuiltin(final LuaResource luaResource, final Context context) {
+        this.context = context;
         this.luaResource = luaResource;
-        this.resourceContext = resourceContext;
-        this.scheduler = scheduler;
     }
 
     private JavaFunction create = luaState -> {
@@ -58,12 +55,10 @@ public class ResourceDetailBuiltin implements Builtin {
             final TaskId taskId = currentTaskId(luaState);
             final ResourceId thisResourceId = getLuaResource().getId();
 
-            getResourceContext().createAsync(
-                rid -> scheduleSuccess(thisResourceId, taskId, rid.asString()),
-                throwable -> scheduleFailure(thisResourceId, taskId, throwable),
+            getContext().getResourceContext().createAsync(
+                rid -> getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, rid.asString()),
+                throwable -> getContext().getSchedulerContext().resumeWithError(thisResourceId, taskId, throwable),
                 module, path, params);
-
-           yieldIndefinitely(luaState);
 
             return 0;
 
@@ -87,12 +82,10 @@ public class ResourceDetailBuiltin implements Builtin {
             final TaskId taskId = currentTaskId(luaState);
             final ResourceId thisResourceId = getLuaResource().getId();
 
-            getResourceContext().invokeAsync(
-                object -> scheduleSuccess(thisResourceId, taskId, object),
-                throwable -> scheduleFailure(thisResourceId, taskId, throwable),
+            getContext().getResourceContext().invokeAsync(
+                    object -> getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, object),
+                    throwable -> getContext().getSchedulerContext().resumeWithError(thisResourceId, taskId, throwable),
                 resourceId, methodName, params);
-
-            yieldIndefinitely(luaState);
 
             return 0;
 
@@ -116,12 +109,10 @@ public class ResourceDetailBuiltin implements Builtin {
             final TaskId taskId = currentTaskId(luaState);
             final ResourceId thisResourceId = getLuaResource().getId();
 
-            getResourceContext().invokeAsync(
-                    object -> scheduleSuccess(thisResourceId, taskId, object),
-                    throwable -> scheduleFailure(thisResourceId, taskId, throwable),
+            getContext().getResourceContext().invokeAsync(
+                    object -> getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, object),
+                    throwable -> getContext().getSchedulerContext().resumeWithError(thisResourceId, taskId, throwable),
                     path, methodName, params);
-
-            yieldIndefinitely(luaState);
 
             return 0;
 
@@ -143,13 +134,11 @@ public class ResourceDetailBuiltin implements Builtin {
             final TaskId taskId = currentTaskId(luaState);
             final ResourceId thisResourceId = getLuaResource().getId();
 
-            getResourceContext().destroyAsync(
-                object -> scheduleSuccess(thisResourceId, taskId, null),
-                throwable -> scheduleFailure(thisResourceId, taskId, throwable),
+            getContext().getResourceContext().destroyAsync(
+                object -> getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, null),
+                throwable -> getContext().getSchedulerContext().resumeWithError(thisResourceId, taskId, throwable),
                 resourceId
             );
-
-            yieldIndefinitely(luaState);
 
             return 0;
 
@@ -166,30 +155,13 @@ public class ResourceDetailBuiltin implements Builtin {
         luaState.pushString(CoroutineBuiltin.MODULE_NAME);
         luaState.call(1, 1);
         luaState.getField(-1, CoroutineBuiltin.CURRENT_TASK_ID);
+        luaState.remove(-2);
+        luaState.call(0, 1);
 
         final String taskId = luaState.toString(-1);
         luaState.pop(1);
         return new TaskId(taskId);
 
-    }
-
-    private void yieldIndefinitely(final LuaState luaState) {
-
-        luaState.getGlobal(REQUIRE);
-        luaState.pushString(COROUTINE);
-        luaState.call(1, 1);
-        luaState.getField(-1, YIELD);
-        luaState.pushString(INDEFINITELY.toString());
-        luaState.call(1, 0);
-
-    }
-
-    private void scheduleSuccess(final ResourceId resourceId, final TaskId taskId, final Object result) {
-        getScheduler().performV(resourceId, resource -> resource.resumeFromNetwork(taskId, result));
-    }
-
-    private void scheduleFailure(final ResourceId resourceId, final TaskId taskId, final Throwable throwable) {
-        getScheduler().performV(resourceId, resource -> resource.resumeFromNetwork(taskId, throwable));
     }
 
     @Override
@@ -229,16 +201,12 @@ public class ResourceDetailBuiltin implements Builtin {
         };
     }
 
+    public Context getContext() {
+        return context;
+    }
+
     public LuaResource getLuaResource() {
         return luaResource;
-    }
-
-    public Scheduler getScheduler() {
-        return scheduler;
-    }
-
-    public ResourceContext getResourceContext() {
-        return resourceContext;
     }
 
 }

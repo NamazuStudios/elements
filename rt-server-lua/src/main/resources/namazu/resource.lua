@@ -7,72 +7,82 @@
 --
 
 local table = require "table"
+local coroutine = require "coroutine"
+
 local detail = require "namazu.resource.detail"
-local response_code = require "namazu.response.code"
-local resume_reason = require "namazu.coroutine.resumereason"
+local responsecode = require "namazu.response.code"
+local resumereason = require "namazu.coroutine.resumereason"
+local yieldinstruction = require "namazu.coroutine.yieldinstruction"
 
 local resource = {}
 
 function resource.create(module, path, ...)
 
-    local reason, response = detail.create(module, path, table.pack(...))
+    detail.schedule_create(module, path, table.pack(...))
 
-    if reason == resume_reason.NETWORK
+    local reason, response = coroutine.yield(yieldinstruction.INDEFINITELY)
+
+    if reason == resumereason.NETWORK
     then
-        return response, response_code.OK
-    elseif reason == resume_reason.ERROR
+        return response, responsecode.OK
+    elseif reason == resumereason.ERROR
     then
         return nil, response
     else
-        return nil, response_code.UNKNOWN
+        return nil, responsecode.UNKNOWN
     end
 
 end
 
 function resource.invoke(resource_id, method, ...)
 
-    local reason, response = detail.invoke(resource_id, method, table.pack(...))
+    detail.schedule_invoke(resource_id, method, table.pack(...))
 
-    if reason == resume_reason.NETWORK
+    local reason, response = coroutine.yield(yieldinstruction.INDEFINITELY)
+
+    if reason == resumereason.NETWORK
     then
-        return response, response_code.OK
-    elseif reason == resume_reason.ERROR
+        return response, responsecode.OK
+    elseif reason == resumereason.ERROR
     then
         return nil, response
     else
-        return nil, response_code.UNKNOWN
+        return nil, responsecode.UNKNOWN
     end
 
 end
 
 function resource.invoke_path(path, method, ...)
 
-    local reason, response = detail.invoke_path(path, method, table.pack(...))
+    detail.schedule_invoke_path(path, method, table.pack(...))
 
-    if reason == resume_reason.NETWORK
+    local reason, response = coroutine.yield(yieldinstruction.INDEFINITELY)
+
+    if reason == resumereason.NETWORK
     then
-        return response, response_code.OK
-    elseif reason == resume_reason.ERROR
+        return response, responsecode.OK
+    elseif reason == resumereason.ERROR
     then
         return nil, response
     else
-        return nil, response_code.UNKNOWN
+        return nil, responsecode.UNKNOWN
     end
 
 end
 
 function resource.destroy(resource_id)
 
-    local reason, response = detail.destroy(resource_id)
+    detail.schedule_destroy(resource_id)
+    local reason, response = coroutine.yield(yieldinstruction.INDEFINITELY)
 
-    if reason == resume_reason.NETWORK
+    if reason == resumereason.NETWORK
     then
-        return response, response_code.OK
-    elseif reason == resume_reason.ERROR
+        return response, responsecode.OK
+    elseif reason == resumereason.ERROR
     then
         return nil, response
     else
-        return nil, response_code.UNKNOWN
+        return nil, responsecode.UNKNOWN
     end
 
 end

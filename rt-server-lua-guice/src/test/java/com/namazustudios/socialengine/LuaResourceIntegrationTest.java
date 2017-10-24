@@ -13,6 +13,11 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.testng.Assert.fail;
 
 /**
  * Provides tests for various lua libraries by instantiating them and invoking specific methods.
@@ -22,18 +27,14 @@ public class LuaResourceIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceIntegrationTest.class);
 
-    private ResourceLoader resourceLoader;
+    private Context context;
 
     @Test(dataProvider = "resourcesToTest")
-    public void performTest(final String moduleName, final String methodName) {
-        try (final Resource resource = getResourceLoader().load(moduleName)) {
-
-            resource.getMethodDispatcher(methodName)
-                .params()
-                .dispatch(o -> logger.info("Got result from invocation {}"),
-                          th -> Assert.fail("Caught exception in Lua code.", th));
-        }
-
+    public void performTest(final String moduleName, final String methodName) throws InterruptedException {
+        final Path path = new Path("/test/" + UUID.randomUUID());
+        final ResourceId resourceId = getContext().getResourceContext().create(moduleName, path);
+        final Object result = getContext().getResourceContext().invoke(resourceId, methodName);
+        logger.info("Successfuly got test result {}", result);
     }
 
     @DataProvider
@@ -54,13 +55,13 @@ public class LuaResourceIntegrationTest {
         };
     }
 
-    public ResourceLoader getResourceLoader() {
-        return resourceLoader;
+    public Context getContext() {
+        return context;
     }
 
     @Inject
-    public void setResourceLoader(ResourceLoader resourceLoader) {
-        this.resourceLoader = resourceLoader;
+    public void setContext(Context context) {
+        this.context = context;
     }
 
     public static class Module extends AbstractModule {

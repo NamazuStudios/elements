@@ -15,6 +15,16 @@ public class SimpleSchedulerContext implements SchedulerContext {
     }
 
     @Override
+    public Future<Void> resumeFromNetwork(ResourceId resourceId, TaskId taskId, Object result) {
+        return getScheduler().performV(resourceId, resource -> resource.resumeFromNetwork(taskId, result));
+    }
+
+    @Override
+    public Future<Void> resumeWithError(ResourceId resourceId, TaskId taskId, Throwable throwable) {
+        return getScheduler().performV(resourceId, resource -> resource.resumeWithError(taskId, throwable));
+    }
+
+    @Override
     public <T> Future<T> perform(Path path, Function<Resource, T> operation) {
         return getScheduler().perform(path, operation);
     }

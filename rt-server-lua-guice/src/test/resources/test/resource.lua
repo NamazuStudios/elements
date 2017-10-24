@@ -14,7 +14,9 @@ local test_resource = {}
 
 local function make_resource()
     local path = "/test/helloworld/" .. util.uuid()
-    return resource.create("test.helloworld", path), path
+    local rid, code = resource.create("test.helloworld", path), path
+    print("Created resource " .. rid .. " (" .. code .. ") at path " .. path)
+    return rid, code
 end
 
 function test_resource.test_create()
