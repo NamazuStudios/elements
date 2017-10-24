@@ -1,10 +1,12 @@
 package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Deque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,7 +39,12 @@ public class SimpleServicesModule extends AbstractModule {
         bind(Scheduler.class).to(SimpleScheduler.class).asEagerSingleton();
         bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
         bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();
-        bind(ResourceIdLockService.class).to(SimpleResourceIdLockService.class).asEagerSingleton();
+
+        bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>(){})
+                .to(PathOptimisticLockService.class);
+
+        bind(new TypeLiteral<OptimisticLockService<ResourceId>>(){})
+                .to(SimpleResourceIdOptimisticLockService.class);
 
         bind(ExecutorService.class)
                 .annotatedWith(named(EXECUTOR_SERVICE))

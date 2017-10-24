@@ -5,7 +5,7 @@ import java.util.Objects;
 /**
  * Created by patricktwohig on 4/11/17.
  */
-public class SimpleResourceIdLockService implements ResourceIdLockService {
+public class SimpleResourceIdOptimisticLockService implements OptimisticLockService<ResourceId> {
 
     @Override
     public ResourceId createLock() {
