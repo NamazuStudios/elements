@@ -53,7 +53,7 @@ public class SimpleResourceServiceUnitTest {
 
     }
 
-    @DataProvider
+    @DataProvider(parallel = true)
     public Object[][] intermediateDataProvider() {
         return intermediates.toArray(new Object[][]{});
     }
@@ -145,7 +145,7 @@ public class SimpleResourceServiceUnitTest {
         linkedIntermediates.add(new Object[]{resourceId, alias, resource});
     }
 
-    @DataProvider
+    @DataProvider(parallel = true)
     public Object[][] linkedIntermediateProvider() {
         return linkedIntermediates.toArray(new Object[][]{});
     }
@@ -181,6 +181,11 @@ public class SimpleResourceServiceUnitTest {
             // Pass Test
         }
 
+    }
+
+    @Test(dependsOnMethods = {"testRemove"}, dataProvider = "intermediateDataProvider", expectedExceptions = ResourceNotFoundException.class)
+    public void testDoubleRemove(final ResourceId resourceId, final Path path, final Resource resource) {
+        getResourceService().removeResource(resourceId);
     }
 
     public ResourceService getResourceService() {

@@ -53,7 +53,7 @@ public class SimpleResourceServiceLinkingUnitTest {
 
     }
 
-    @DataProvider
+    @DataProvider(parallel = true)
     public Object[][] intermediateDataProvider() {
         return intermediates.toArray(new Object[][]{});
     }
