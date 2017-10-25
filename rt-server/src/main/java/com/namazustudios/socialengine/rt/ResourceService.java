@@ -8,9 +8,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Spliterator;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * This is the service responsible for maintaining a set of {@link Resource} instances.  This
@@ -76,7 +77,29 @@ public interface ResourceService {
      * @param path the {@link Path} to match
      * @return an {@link Iterable<ResourceId>} instances
      */
-    Collection<ResourceId> listResourceIdsMatching(Path path);
+    Spliterator<Listing> resourceIdsMatching(Path path);
+
+    /**
+     * Returns a {@link Stream<ResourceId>} matching the provided {@link Path}.  The default implementation of this
+     * simply relies on the {@link Spliterator<ResourceId>} returned by {@link #resourceIdsMatching(Path)}.
+     *
+     * @param path the {@link Path} to match
+     * @return a {@link Stream<ResourceId>}
+     */
+    default Stream<Listing> resourceIdsMatchingStream(Path path) {
+        return StreamSupport.stream(resourceIdsMatching(path), false);
+    }
+
+    /**
+     * Returns a parallel {@link Stream<ResourceId>} matching the provided {@link Path}.  The default implementation of
+     * this simply relies on the {@link Spliterator<ResourceId>} returned by {@link #resourceIdsMatching(Path)}.
+     *
+     * @param path the {@link Path} to match
+     * @return a parallel {@link Stream<ResourceId>}
+     */
+    default Stream<Listing> resourceIdsMatchingStreamParallel(Path path) {
+        return StreamSupport.stream(resourceIdsMatching(path), true);
+    }
 
     /**
      * Given the provided {@link ResourceId}, this will create an additional alias for the provided destination
@@ -110,20 +133,25 @@ public interface ResourceService {
      * @return true if the {@link Resource} associated with the {@link Path} was removed, false otherwise
      */
     default boolean unlinkPath(Path path) {
-        return unlinkPath(path, this::destroy);
+        return unlinkPath(path, resource -> resource.close());
     }
 
     /**
      * Unlinks the {@link Resource} for the provided {@link Path}.  If the unlinked {@link Path} is the final path, then
      * this will remove the {@link Path} from the {@link ResourceService}.  If this {@link Path} is the last alias for
      * the associated {@link Resource}, then the removed {@link ResourceId} will be passed to the supplied
-     * {@link Consumer<ResourceId>}.
+     * {@link Consumer<Resource>}.
+     *
+     * The supplied {@link Consumer<Resource>} will not be called if there still exist aliases for the associated
+     * {@link Resource}.  Only one {@link Resource} may be unlinked at a time.  Therefore, the supplied,
+     * {@link Path} most not be a wildcard path.
      *
      * @param path a {@link Path} to unlink
-     * @param removed a Consumer<ResouceId> which will receive the removed {@link ResourceId}
+     * @param removed a Consumer<Resource> which will receive the removed {@link Resource}
      * @return true if the {@link Resource} associated with the {@link Path} was removed, false otherwise
+     * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    boolean unlinkPath(Path path, Consumer<ResourceId> removed);
+    boolean unlinkPath(Path path, Consumer<Resource> removed);
 
     /**
      * Removes a {@link Resource} instance from this resource service.
@@ -189,6 +217,27 @@ public interface ResourceService {
                 logger.error("Error closing resource {}.", resource, ex);
             }
         });
+    }
+
+    /**
+     * Contains the association between the {@link Path} and {@link ResourceId}.
+     */
+    interface Listing {
+
+        /**
+         * Returns the {@link Path} of this {@link Listing}
+         *
+         * @return the {@link Path}
+         */
+        Path getPath();
+
+        /**
+         * Returns the {@link ResourceId} at the supplied {@link ResourceId}.
+         *
+         * @return the {@link ResourceId}
+         */
+        ResourceId getResourceId();
+
     }
 
 }

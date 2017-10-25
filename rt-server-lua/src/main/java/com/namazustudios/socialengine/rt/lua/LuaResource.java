@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.rt.lua.builtin.ResourceDetailBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReasonBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstructionBuiltin;
+import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -184,7 +185,7 @@ public class LuaResource implements Resource {
         return params -> (consumer, throwableConsumer) -> {
 
                 final LuaState luaState = getLuaState();
-                FinalOperation finalOperation = () -> luaState.setTop(0);
+                FinallyAction finalOperation = () -> luaState.setTop(0);
 
                 try {
 
@@ -241,7 +242,7 @@ public class LuaResource implements Resource {
         }
 
         final LuaState luaState = getLuaState();
-        FinalOperation finalOperation = () -> luaState.setTop(0);
+        FinallyAction finalOperation = () -> luaState.setTop(0);
 
         try {
 
@@ -288,7 +289,7 @@ public class LuaResource implements Resource {
         }
 
         final LuaState luaState = getLuaState();
-        FinalOperation finalOperation = () -> luaState.setTop(0);
+        FinallyAction finalOperation = () -> luaState.setTop(0);
 
         final ResponseCode responseCode = throwable instanceof BaseException ?
                 ((BaseException)throwable).getResponseCode() :
@@ -339,7 +340,7 @@ public class LuaResource implements Resource {
         }
 
         final LuaState luaState = getLuaState();
-        FinalOperation finalOperation = () -> luaState.setTop(0);
+        FinallyAction finalOperation = () -> luaState.setTop(0);
 
         try {
 
@@ -413,23 +414,6 @@ public class LuaResource implements Resource {
         public PendingTask(Consumer<Object> resultConsumer, Consumer<Throwable> throwableConsumer) {
             this.resultConsumer = resultConsumer;
             this.throwableConsumer = throwableConsumer;
-        }
-
-    }
-
-    @FunctionalInterface
-    private interface FinalOperation {
-
-        void perform();
-
-        default FinalOperation andThen(final FinalOperation next) {
-            return () -> {
-                try {
-                    perform();
-                } finally {
-                    next.perform();
-                }
-            };
         }
 
     }
