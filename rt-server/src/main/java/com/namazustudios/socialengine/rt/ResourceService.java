@@ -51,7 +51,7 @@ public interface ResourceService {
     /**
      * Adds a {@link Resource} to this resource service.  This is used for the initial insert into the
      * {@link ResourceService}.  If linking to an additiona {@link Path} is necessary, then the methods
-     * {@link #linkPath(Path, Path)} or {@link #linkResourceId(ResourceId, Path)} must be used to perform additional
+     * {@link #linkPath(Path, Path)} or {@link #link(ResourceId, Path)} must be used to perform additional
      * aliasing operations.
      *
      * It is strongly recommended that newly inserted {@link Resource} instances be given a globally unique path
@@ -77,28 +77,28 @@ public interface ResourceService {
      * @param path the {@link Path} to match
      * @return an {@link Iterable<ResourceId>} instances
      */
-    Spliterator<Listing> resourceIdsMatching(Path path);
+    Spliterator<Listing> list(Path path);
 
     /**
      * Returns a {@link Stream<ResourceId>} matching the provided {@link Path}.  The default implementation of this
-     * simply relies on the {@link Spliterator<ResourceId>} returned by {@link #resourceIdsMatching(Path)}.
+     * simply relies on the {@link Spliterator<ResourceId>} returned by {@link #list(Path)}.
      *
      * @param path the {@link Path} to match
      * @return a {@link Stream<ResourceId>}
      */
-    default Stream<Listing> resourceIdsMatchingStream(Path path) {
-        return StreamSupport.stream(resourceIdsMatching(path), false);
+    default Stream<Listing> listStream(Path path) {
+        return StreamSupport.stream(list(path), false);
     }
 
     /**
      * Returns a parallel {@link Stream<ResourceId>} matching the provided {@link Path}.  The default implementation of
-     * this simply relies on the {@link Spliterator<ResourceId>} returned by {@link #resourceIdsMatching(Path)}.
+     * this simply relies on the {@link Spliterator<ResourceId>} returned by {@link #list(Path)}.
      *
      * @param path the {@link Path} to match
      * @return a parallel {@link Stream<ResourceId>}
      */
-    default Stream<Listing> resourceIdsMatchingStreamParallel(Path path) {
-        return StreamSupport.stream(resourceIdsMatching(path), true);
+    default Stream<Listing> listParallelStream(Path path) {
+        return StreamSupport.stream(list(path), true);
     }
 
     /**
@@ -112,7 +112,7 @@ public interface ResourceService {
      * @throws {@link DuplicateException} if an alias already exists for the destination
      * @throws {@link ResourceNotFoundException} if the {@link Resource} can't be found
      */
-    void linkResourceId(ResourceId sourceResourceId, Path destination);
+    void link(ResourceId sourceResourceId, Path destination);
 
     /**
      * Given the provided {@link Path}, this will create an additional {@link Path} alias for the provided source.
@@ -122,7 +122,7 @@ public interface ResourceService {
      */
     default void linkPath(Path source, Path destination) {
         final Resource resource = getResourceAtPath(source);
-        linkResourceId(resource.getId(), destination);
+        link(resource.getId(), destination);
     }
 
     /**

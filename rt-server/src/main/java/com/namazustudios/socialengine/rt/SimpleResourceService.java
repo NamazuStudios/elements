@@ -152,7 +152,7 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
-    public Spliterator<Listing> resourceIdsMatching(final Path searchPath) {
+    public Spliterator<Listing> list(final Path searchPath) {
 
         final Storage storage = storageAtomicReference.get();
         final Map<Path, ResourceId> tailMap = storage.getPathResourceIdMap().tailMap(searchPath);
@@ -198,7 +198,7 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
-    public void linkResourceId(final ResourceId sourceResourceId, final Path destination) {
+    public void link(final ResourceId sourceResourceId, final Path destination) {
 
         if (destination.isWildcard()) {
             throw new IllegalArgumentException("Cannot add resources with wildcard path.");
@@ -211,15 +211,22 @@ public class SimpleResourceService implements ResourceService {
 
             final Storage storage = storageAtomicReference.get();
 
-            final Deque<Path> existingPaths = storage.getResourceIdPathMap().replace(sourceResourceId, pathLock);
-            final ResourceId existingResourceId = storage.getPathResourceIdMap().replace(destination, resourceIdLock);
+            FinallyAction finallyAction = () -> {};
 
             try {
+
+                final Deque<Path> existingPaths = storage.getResourceIdPathMap().replace(sourceResourceId, pathLock);
+                finallyAction = finallyAction.andThen(() -> storage.getResourceIdPathMap().replace(sourceResourceId, pathLock, existingPaths));
+
+                final ResourceId existingResourceId = storage.getPathResourceIdMap().putIfAbsent(destination, resourceIdLock);
+                finallyAction = finallyAction.andThen(() -> storage.getPathResourceIdMap().remove(destination, resourceIdLock));
 
                 if (getPathOptimisticLockService().isLock(existingPaths)) {
                     throw new LockedException("existing paths locked");
                 } else if (getResourceIdOptimisticLockService().isLock(existingResourceId)) {
                     throw new LockedException("existing resource id locked");
+                } else if (existingResourceId != null) {
+                    throw new DuplicateException("Resource with id " + existingResourceId + " already exists at path " + destination);
                 } else if (!storage.getResources().containsKey(sourceResourceId)) {
                     throw new ResourceNotFoundException("Resource with id " + sourceResourceId + "not found.");
                 }
@@ -236,8 +243,7 @@ public class SimpleResourceService implements ResourceService {
                 }
 
             } finally {
-                storage.getResourceIdPathMap().replace(sourceResourceId, pathLock, existingPaths);
-                storage.getPathResourceIdMap().replace(destination, resourceIdLock, existingResourceId);
+                finallyAction.perform();
             }
 
         });
@@ -262,7 +268,14 @@ public class SimpleResourceService implements ResourceService {
             try {
 
                 final ResourceId existingResourceId = storage.getPathResourceIdMap().replace(path, resourceIdLock);
-                finallyAction = finallyAction.andThen(() -> storage.getPathResourceIdMap().replace(path, resourceIdLock, existingResourceId));
+                finallyAction = finallyAction.andThen(() -> {
+                    if (existingResourceId == null) {
+                        storage.getPathResourceIdMap().remove(path, resourceIdLock);
+                    } else {
+                        storage.getPathResourceIdMap().replace(path, resourceIdLock, existingResourceId);
+                    }
+
+                });
 
                 if (existingResourceId == null) {
                     throw new ResourceNotFoundException("No resource at path " + path);
@@ -334,7 +347,7 @@ public class SimpleResourceService implements ResourceService {
             try {
 
                 final Deque<Path> existingPaths = storage.getResourceIdPathMap().replace(resourceId, pathLock);
-                finallyAction = finallyAction.andThen(() -> storage.getResourceIdPathMap().replace(resourceId, pathLock, existingPaths));
+                finallyAction = finallyAction.andThen(() -> storage.getResourceIdPathMap().remove(resourceId, pathLock));
 
                 if (existingPaths == null) {
                     throw new ResourceNotFoundException("no resource for id " + resourceId);
@@ -351,7 +364,13 @@ public class SimpleResourceService implements ResourceService {
                         logger.error("Consistency error, bidirectional mapping broken for {} -> {}", path, resourceId);
                     }
 
-                    finallyAction.andThen(() -> storage.getPathResourceIdMap().replace(path, resourceIdLock, existingResourceId));
+                    finallyAction.andThen(() -> {
+                        if (existingResourceId == null) {
+                            storage.getPathResourceIdMap().remove(path, resourceIdLock);
+                        } else {
+                            storage.getPathResourceIdMap().replace(path, resourceIdLock, existingResourceId);
+                        }
+                    });
 
                     if (getResourceIdOptimisticLockService().isLock(existingResourceId)) {
                         throw new LockedException("locked at path");

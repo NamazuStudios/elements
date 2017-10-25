@@ -41,7 +41,7 @@ public class SimpleServicesModule extends AbstractModule {
         bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();
 
         bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>(){})
-                .to(PathOptimisticLockService.class);
+                .toProvider(() -> new ProxyLockService<>(Deque.class));
 
         bind(new TypeLiteral<OptimisticLockService<ResourceId>>(){})
                 .to(SimpleResourceIdOptimisticLockService.class);
