@@ -11,9 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.google.inject.name.Names.bindProperties;
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.SimpleResourceContext.EXECUTOR_SERVICE;
 import static com.namazustudios.socialengine.rt.SimpleScheduler.SCHEDULED_EXECUTOR_SERVICE;
 import static java.lang.String.format;
 import static java.util.concurrent.Executors.newCachedThreadPool;
@@ -47,8 +45,12 @@ public class SimpleServicesModule extends AbstractModule {
                 .to(SimpleResourceIdOptimisticLockService.class);
 
         bind(ExecutorService.class)
-                .annotatedWith(named(EXECUTOR_SERVICE))
-                .toProvider(() -> executorService(EXECUTOR_SERVICE));
+                .annotatedWith(named(SimpleResourceContext.EXECUTOR_SERVICE))
+                .toProvider(() -> executorService(SimpleResourceContext.EXECUTOR_SERVICE));
+
+        bind(ExecutorService.class)
+                .annotatedWith(named(SimpleIndexContext.EXECUTOR_SERVICE))
+                .toProvider(() -> executorService(SimpleIndexContext.EXECUTOR_SERVICE));
 
         bind(ScheduledExecutorService.class)
             .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE))
