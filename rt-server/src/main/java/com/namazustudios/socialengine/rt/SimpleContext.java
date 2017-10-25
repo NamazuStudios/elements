@@ -16,6 +16,8 @@ public class SimpleContext implements Context {
 
     private ResourceContext resourceContext;
 
+    private IndexContext indexContext;
+
     private AssetLoader assetLoader;
 
     @Override
@@ -42,6 +44,11 @@ public class SimpleContext implements Context {
     @Override
     public SchedulerContext getSchedulerContext() {
         return schedulerContext;
+    }
+
+    @Override
+    public IndexContext getIndexContext() {
+        return indexContext;
     }
 
     @Inject
@@ -83,6 +90,11 @@ public class SimpleContext implements Context {
     @Inject
     public void setAssetLoader(AssetLoader assetLoader) {
         this.assetLoader = assetLoader;
+    }
+
+    @Inject
+    public void setIndexContext(IndexContext indexContext) {
+        this.indexContext = indexContext;
     }
 
 }

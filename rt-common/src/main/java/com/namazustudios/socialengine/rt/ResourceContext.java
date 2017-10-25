@@ -10,6 +10,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.Context._waitAsync;
+
 /**
  * The interface for manipulating {@link Resource}s in the cluster.
  */
@@ -34,7 +36,7 @@ public interface ResourceContext {
             th -> logger.error("Failed create at {}", path, th),
             module, path, args);
 
-        return _waitAsync(future);
+        return _waitAsync(logger, future);
 
     }
 
@@ -67,7 +69,7 @@ public interface ResourceContext {
                 throwable -> logger.info("Invvocation failed {}:{}({})", resourceId.toString(), method, Arrays.toString(args), throwable),
                 resourceId, method, args);
 
-        return _waitAsync(future);
+        return _waitAsync(logger, future);
 
     }
 
@@ -101,7 +103,7 @@ public interface ResourceContext {
             throwable -> logger.info("Invvocation failed {}:{}({})", path.toNormalizedPathString(), method, Arrays.toString(args), throwable),
             path, method, args);
 
-        return _waitAsync(future);
+        return _waitAsync(logger, future);
 
     }
 
@@ -131,7 +133,7 @@ public interface ResourceContext {
             v  -> logger.info("Destroyed {}", resourceId),
             th -> logger.error("Failed to destroy {}", resourceId, th), resourceId);
 
-        _waitAsync(future);
+        _waitAsync(logger, future);
 
     }
 
@@ -150,35 +152,6 @@ public interface ResourceContext {
      */
     default Future<Void> destroyAsync(Consumer<Void> success, Consumer<Throwable> failure, String resourceIdString) {
         return destroyAsync(success, failure, new ResourceId(resourceIdString));
-    }
-
-    /**
-     * Used to assist implementations with handling {@link Future} types.  Because this is provided at the interface
-     * level, it must be public.  However, this should only be used within the implementation of {@link ResourceContext}
-     * implementations.
-     *
-     * @param tFuture the {@link Future}
-     * @param <T> the type of the {@link Future}
-     * @return the result of {@link Future#get()}
-     */
-    default <T> T _waitAsync(Future<T> tFuture) {
-
-        final Logger logger = LoggerFactory.getLogger(getClass());
-
-        try {
-            return tFuture.get();
-        } catch (InterruptedException e) {
-            logger.error("Interrupted.", e);
-            throw new InternalException(e);
-        } catch (ExecutionException e) {
-            final Throwable cause = e.getCause();
-            if (cause instanceof BaseException) {
-                throw (BaseException) e.getCause();
-            } else {
-                throw new InternalException(e.getCause());
-            }
-        }
-
     }
 
 }
