@@ -53,8 +53,8 @@ public class SimpleServicesModule extends AbstractModule {
                 .toProvider(() -> executorService(SimpleIndexContext.EXECUTOR_SERVICE));
 
         bind(ScheduledExecutorService.class)
-            .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE))
-            .toProvider(() -> scheduledExecutorService(SCHEDULED_EXECUTOR_SERVICE));
+                .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE))
+                .toProvider(() -> scheduledExecutorService(SCHEDULED_EXECUTOR_SERVICE));
 
     }
 
@@ -78,6 +78,5 @@ public class SimpleServicesModule extends AbstractModule {
         thread.setName(format("%s - Thread %d", name, threadCount.incrementAndGet()));
         return thread;
     }
-
 
 }

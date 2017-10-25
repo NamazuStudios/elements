@@ -5,6 +5,7 @@ import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.*;
 import com.namazustudios.socialengine.rt.lua.builtin.BuiltinManager;
+import com.namazustudios.socialengine.rt.lua.builtin.IndexDetailBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.ResourceDetailBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
@@ -92,6 +93,7 @@ public class LuaResource implements Resource {
             getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
             getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, context.getSchedulerContext()));
             getBuiltinManager().installBuiltin(new ResourceDetailBuiltin(this, context));
+            getBuiltinManager().installBuiltin(new IndexDetailBuiltin(this, context));
             getBuiltinManager().installBuiltin(new YieldInstructionBuiltin());
             getBuiltinManager().installBuiltin(new ResumeReasonBuiltin());
 

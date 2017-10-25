@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.namazustudios.socialengine.rt.lua.Constants.REQUIRE;
+import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinUtils.currentTaskId;
 
 /**
  * Provides the details for the resoure manipulation operations.
@@ -143,21 +144,6 @@ public class ResourceDetailBuiltin implements Builtin {
         }
 
     };
-
-    private TaskId currentTaskId(final LuaState luaState) {
-
-        luaState.getGlobal(REQUIRE);
-        luaState.pushString(CoroutineBuiltin.MODULE_NAME);
-        luaState.call(1, 1);
-        luaState.getField(-1, CoroutineBuiltin.CURRENT_TASK_ID);
-        luaState.remove(-2);
-        luaState.call(0, 1);
-
-        final String taskId = luaState.toString(-1);
-        luaState.pop(1);
-        return new TaskId(taskId);
-
-    }
 
     @Override
     public Module getModuleNamed(final String moduleName) {

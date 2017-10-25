@@ -9,7 +9,13 @@ public class ProxyLockService<LockT> implements OptimisticLockService<LockT> {
     private final Class<LockT> tClass;
 
     public ProxyLockService(final Class<?> tClass) {
+
         this.tClass = (Class<LockT>)tClass;
+
+        if (!tClass.isInterface()) {
+            throw new IllegalArgumentException(tClass.getName() + " is not an interface.");
+        }
+
     }
 
     @Override
