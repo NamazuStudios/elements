@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.lua.builtin.coroutine;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaState;
 import com.naef.jnlua.LuaType;
-import com.namazustudios.socialengine.rt.Scheduler;
+import com.namazustudios.socialengine.rt.SchedulerContext;
 import com.namazustudios.socialengine.rt.TaskId;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
@@ -41,14 +41,44 @@ public class CoroutineBuiltin implements Builtin {
 
     public static final String RESUME = "resume";
 
+    public static final String CURRENT_TASK_ID = "current_task_id";
+
     private final LuaResource luaResource;
 
-    private final Scheduler scheduler;
+    private final SchedulerContext schedulerContext;
 
-    public CoroutineBuiltin(final LuaResource luaResource, final Scheduler scheduler) {
+    private TaskId runningTaskId;
+
+    public CoroutineBuiltin(final LuaResource luaResource, final SchedulerContext schedulerContext) {
         this.luaResource = luaResource;
-        this.scheduler = scheduler;
+        this.schedulerContext = schedulerContext;
     }
+
+    /**
+     * Accepts no arguments and simply returns a string indicating the currently running task.  This can be used to
+     * within the body of a coroutine to get the currently-running
+     */
+    private final JavaFunction currentTaskId = luaState -> {
+
+        final LogAssist logAssist = new LogAssist(getLuaResource()::getScriptLog, () -> luaState);
+
+        try {
+
+            if (runningTaskId == null) {
+                logger.error("No running task.  Can only be called within the context of a managed coroutine.");
+            }
+
+            luaState.setTop(0);
+            luaState.pushString(runningTaskId.asString());
+
+            return 1;
+
+        } catch (Throwable th) {
+            logAssist.error("Could not start coroutine.", th);
+            throw th;
+        }
+
+    };
 
     /**
      * Accepts a coroutine along with arguments to pass to it.  This will run the coroutine, accepting yield
@@ -118,7 +148,15 @@ public class CoroutineBuiltin implements Builtin {
             // Execute the coroutine/thread.  Remember, if the thread is not in the right state, this may cause
             // the thread to fail.  This shouldn't happen because it should be deregistered.
 
-            final int returned = luaState.resume(1, luaState.getTop() - 1);
+            final int returned;
+            final TaskId existingRunningTaskId = this.runningTaskId;
+
+            try {
+                runningTaskId = taskId;
+                returned = luaState.resume(1, luaState.getTop() - 1);
+            } finally {
+                runningTaskId = existingRunningTaskId;
+            }
 
             // Check the status of the coroutine.  If it is a yield, then we process the yield instructions which will
             // reschedule the task if necessary.  If there's a successful completion, then we collect the results
@@ -194,6 +232,8 @@ public class CoroutineBuiltin implements Builtin {
             case UNTIL_NEXT:
                 scheduleUntilNextCron(taskId, luaState, logAssist);
                 break;
+            case INDEFINITELY:
+                break;
             default:
                 throw new InternalException("unknown enum value " + instruction);
         }
@@ -201,12 +241,12 @@ public class CoroutineBuiltin implements Builtin {
     }
 
     private void scheduleImmediate(final TaskId taskId, final LogAssist logAssist) {
-        getScheduler().resumeTask(getLuaResource().getId(), taskId);
+        getSchedulerContext().resumeTaskAfterDelay(getLuaResource().getId(), 0, MILLISECONDS, taskId);
     }
 
     private void scheduleUntil(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = delayUntilMilliseconds(luaState);
-        getScheduler().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
+        getSchedulerContext().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
     }
 
     private long delayUntilMilliseconds(final LuaState luaState) {
@@ -217,7 +257,7 @@ public class CoroutineBuiltin implements Builtin {
 
     private void scheduleFor(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = timeValueInMilliseconds(luaState);
-        getScheduler().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
+        getSchedulerContext().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
     }
 
     private long timeValueInMilliseconds(final LuaState luaState) {
@@ -239,7 +279,7 @@ public class CoroutineBuiltin implements Builtin {
 
     private void scheduleUntilNextCron(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = delayUntilNextCronMilliseconds(luaState);
-        getScheduler().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
+        getSchedulerContext().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
     }
 
     private long delayUntilNextCronMilliseconds(final LuaState luaState) {
@@ -299,13 +339,16 @@ public class CoroutineBuiltin implements Builtin {
             luaState.pushJavaFunction(resume);
             luaState.setField(-2, RESUME);
 
+            luaState.pushJavaFunction(currentTaskId);
+            luaState.setField(-2, CURRENT_TASK_ID);
+
             return 1;
 
         };
     }
 
-    public Scheduler getScheduler() {
-        return scheduler;
+    public SchedulerContext getSchedulerContext() {
+        return schedulerContext;
     }
 
     public LuaResource getLuaResource() {

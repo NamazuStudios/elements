@@ -1,30 +1,34 @@
-package com.namazustudios.socialengine.rt;
+    package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.ContentionException;
 import com.namazustudios.socialengine.rt.exception.DuplicateException;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.ConcurrentModificationException;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static java.lang.Thread.yield;
+import static java.util.Spliterator.CONCURRENT;
+import static java.util.Spliterator.IMMUTABLE;
+import static java.util.Spliterator.NONNULL;
 
-/**
- * A generic {@link ResourceService} which can take any type of {@link Resource}.
+    /**
+ * A {@link ResourceService} which stores instances of {@link Resource} instances in memory and indexes them by path.
+ * This {@link ResourceService} uses an optimistic locking strategy and will perform best when avoiding path collisions.
  *
- * This maps instances of {@link Resource} to their paths.
- *
- * This uses a simple locking strategy to lock paths in order to manipulate resources.  Note that the
- * entire resource isn't locked, but rather paths are locked separately.  Everything is stored
- * in memory.
- *
- * Note that a {@link Resource} must exist at one and only one {@link Path}.
+ * Like other similar approaches, this relies on eventual consistency.  In the event of very rapid reads and writes it
+ * may be possible to miss links between paths and {@link Resource} instances.
  *
  * Created by patricktwohig on 8/4/15.
  */
@@ -34,9 +38,13 @@ public class SimpleResourceService implements ResourceService {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleResourceService.class);
 
-    private final AtomicReference<Storage<Resource>> storageAtomicReference = new AtomicReference<>(new Storage());
+    private final AtomicReference<Storage> storageAtomicReference = new AtomicReference<>(new Storage());
 
-    private PathLockFactory pathLockFactory;
+    private ResourceLockService resourceLockService;
+
+    private OptimisticLockService<Deque<Path>> pathOptimisticLockService;
+
+    private OptimisticLockService<ResourceId> resourceIdOptimisticLockService;
 
     @Override
     public Resource getResourceWithId(final ResourceId resourceId) {
@@ -60,12 +68,12 @@ public class SimpleResourceService implements ResourceService {
 
         return doOptimistic(() -> {
 
-            final Storage<Resource> storage = storageAtomicReference.get();
+            final Storage storage = storageAtomicReference.get();
             final ResourceId resourceId = storage.getPathResourceIdMap().get(path);
 
             if (resourceId == null) {
                 throw new ResourceNotFoundException("Resource at path not found: " + path);
-            } else if (pathLockFactory.isLock(resourceId)) {
+            } else if (getResourceIdOptimisticLockService().isLock(resourceId)) {
                 throw new LockedException();
             }
 
@@ -82,62 +90,61 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
-    public Path getPathForResourceId(ResourceId resourceId) {
-
-        final Path path = storageAtomicReference.get().getResourceIdPathMap().get(resourceId);
-
-        if (path == null) {
-            throw new ResourceNotFoundException("No path for resource with ID: " + resourceId);
-        }
-
-        return path;
-    }
-
-    @Override
     public void addResource(final Path path, final Resource resource) {
 
         if (path.isWildcard()) {
             throw new IllegalArgumentException("Cannot add resources with wildcard path.");
         }
 
-        final ResourceId lock = getPathLockFactory().createLock();
+        final ResourceId resourceId = resource.getId();
+
+        final Deque<Path> pathLock = getPathOptimisticLockService().createLock();
+        final ResourceId resourceIdLock = getResourceIdOptimisticLockService().createLock();
 
         doOptimisticV(() -> {
 
-            final Storage<Resource> storage = storageAtomicReference.get();
+            final Storage storage = storageAtomicReference.get();
 
             try {
 
-                final ResourceId existing = storage.getPathResourceIdMap().putIfAbsent(path, lock);
+                final Deque<Path> existingPaths = storage.getResourceIdPathMap().putIfAbsent(resourceId, pathLock);
+                final ResourceId existingResourceId = storage.getPathResourceIdMap().putIfAbsent(path, resourceIdLock);
 
-                if (getPathLockFactory().isLock(existing)) {
-                    // If another thread is attempting to operate on the same path, then
-                    // this is locked.  We need to fall back and try again after some fall
-                    // off.
-                    throw new LockedException();
-                } else if (existing != null) {
+                if (getPathOptimisticLockService().isLock(existingPaths)) {
+                    throw new LockedException("existing paths locked");
+                } else if (getResourceIdOptimisticLockService().isLock(existingResourceId)) {
+                    throw new LockedException("existing resource id locked");
+                } else if (existingResourceId != null || existingPaths != null) {
                     // An actual resource is occupying this path.
-                    throw new DuplicateException("Resource at path already exists " + path);
-                } else if (storage.getResources().putIfAbsent(resource.getId(), resource) != null) {
-                    // If that failed then we are attempting to insert this to separate paths.
+                    throw new DuplicateException("Resource at path already exists: " + path);
+                } else if (storage.getResources().putIfAbsent(resourceId, resource) != null) {
+                    // While is is possible to insert the resource at multiple paths, this met
                     throw new DuplicateException("Attempting to add already-existing resource to path." + path);
                 }
 
-                if (storage.getResourceIdPathMap().put(resource.getId(), path) != null) {
-                    logger.error("Consistency Error:  {} is already mapped to path {}", resource.getId(), path);
+                // We now know that the resource has been inserted completely into the master resource mapping it's
+                // Time to complete the job by actually mapping the path properly.
+
+                final Deque<Path> newPaths = new ConcurrentLinkedDeque<>();
+                newPaths.add(path);
+
+                final Deque<Path> oldPaths = storage.getResourceIdPathMap().put(resourceId, newPaths);
+                final ResourceId removed = storage.getPathResourceIdMap().put(path, resourceId);
+
+                if (!pathLock.equals(oldPaths)) {
+                    logger.error("Consistency Error:  Expected lock for {}. Got: {}", resourceId, oldPaths);
                 }
 
-                // We now know that the resource has been inserted completely into the master resource
-                // catalogue.  Time to complete the job by actually mapping the path properly.
-
-                final ResourceId removed = storage.getPathResourceIdMap().put(path, resource.getId());
-
-                if (!lock.equals(removed)) {
-                    logger.error("Consistency Error:  Expected lock {} but got {}", lock, removed);
+                if (!resourceIdLock.equals(removed)) {
+                    logger.error("Consistency Error:  Expected lock for {} but got {}", resourceIdLock, removed);
                 }
 
             } finally {
-                storage.getPathResourceIdMap().remove(path, lock);
+                // These should be no-op unless there's a locking failure.  In which case, these will only roll back
+                // locking because they would have been inserted with putIfAbsent, and they're only removed if they
+                // currently equal the specific lock used in the locking strategy.
+                storage.getPathResourceIdMap().remove(path, resourceIdLock);
+                storage.getResourceIdPathMap().remove(resourceId, pathLock);
             }
 
         });
@@ -145,75 +152,193 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
-    public AtomicOperationTuple<Resource> addResourceIfAbsent(
-            final Path path,
-            final Supplier<Resource> resourceInitializer) {
+    public Spliterator<Listing> list(final Path searchPath) {
 
-        if (path.isWildcard()) {
+        final Storage storage = storageAtomicReference.get();
+        final Map<Path, ResourceId> tailMap = storage.getPathResourceIdMap().tailMap(searchPath);
+
+        return new Spliterators.AbstractSpliterator<Listing> (tailMap.size(), CONCURRENT | IMMUTABLE | NONNULL) {
+
+            private final Iterator<Map.Entry<Path, ResourceId>> iterator = tailMap.entrySet().iterator();
+
+            @Override
+            public boolean tryAdvance(final Consumer<? super Listing> action) {
+
+                if (!iterator.hasNext()) {
+                    return false;
+                }
+
+                final Map.Entry<Path, ResourceId> pathResourceIdEntry = iterator.next();
+
+                final Path path = pathResourceIdEntry.getKey();
+                final ResourceId resourceId = pathResourceIdEntry.getValue();
+
+                if (searchPath.matches(path)) {
+                    action.accept(new Listing() {
+
+                        @Override
+                        public Path getPath() {
+                            return path;
+                        }
+
+                        @Override
+                        public ResourceId getResourceId() {
+                            return resourceId;
+                        }
+                    });
+                    return true;
+                } else {
+                    return false;
+                }
+
+            }
+
+        };
+
+    }
+
+    @Override
+    public void link(final ResourceId sourceResourceId, final Path destination) {
+
+        if (destination.isWildcard()) {
             throw new IllegalArgumentException("Cannot add resources with wildcard path.");
         }
 
-        final ResourceId lock = getPathLockFactory().createLock();
+        final Deque<Path> pathLock = getPathOptimisticLockService().createLock();
+        final ResourceId resourceIdLock = getResourceIdOptimisticLockService().createLock();
 
-        return doOptimistic(() -> {
+        doOptimisticV(() -> {
 
-            final Storage<Resource> storage = storageAtomicReference.get();
+            final Storage storage = storageAtomicReference.get();
+
+            FinallyAction finallyAction = () -> {};
 
             try {
 
-                final ResourceId existing = storage.getPathResourceIdMap().computeIfAbsent(path, p -> lock);
+                final Deque<Path> existingPaths = storage.getResourceIdPathMap().replace(sourceResourceId, pathLock);
+                finallyAction = finallyAction.andThen(() -> storage.getResourceIdPathMap().replace(sourceResourceId, pathLock, existingPaths));
 
-                if (!existing.equals(lock) && getPathLockFactory().isLock(existing)) {
-                    // Failure.  The resource path is currently locked by another thread.  We back off
-                    // and we continue as normal.
-                    throw new LockedException();
+                final ResourceId existingResourceId = storage.getPathResourceIdMap().putIfAbsent(destination, resourceIdLock);
+                finallyAction = finallyAction.andThen(() -> storage.getPathResourceIdMap().remove(destination, resourceIdLock));
+
+                if (getPathOptimisticLockService().isLock(existingPaths)) {
+                    throw new LockedException("existing paths locked");
+                } else if (getResourceIdOptimisticLockService().isLock(existingResourceId)) {
+                    throw new LockedException("existing resource id locked");
+                } else if (existingResourceId != null) {
+                    throw new DuplicateException("Resource with id " + existingResourceId + " already exists at path " + destination);
+                } else if (!storage.getResources().containsKey(sourceResourceId)) {
+                    throw new ResourceNotFoundException("Resource with id " + sourceResourceId + "not found.");
                 }
 
-                if (existing.equals(lock)) {
+                // All locks are acquired, the following operations should never fail because all pre-conditions
+                // are checked and all appropriate collections are locked.
 
-                    // Success! We inserted a new value into the map because we actually managed to lock
-                    // the path and fetch the path.  Now it's time to insmert the value that's supplied
-                    // into the
-                    final Resource resource = resourceInitializer.get();
+                // Should not fail because simply adding a value to a collection should not cause an exception, unless
+                // something is seriously wrong.
+                existingPaths.add(destination);
 
-                    if (storage.getResources().putIfAbsent(resource.getId(), resource) != null) {
-                        // If that failed then we are attempting to insert this to separate paths.  This should
-                        // almost never happen unless somebody is trying something sketchy trying to duplicate
-                        // resources.
-                        throw new DuplicateException("Attempting to add already-existing resource to path." + path);
-                    }
-
-                    if (storage.getResourceIdPathMap().put(resource.getId(), path) != null) {
-                        logger.error("Consistency Error:  {} is already mapped to path {}", resource.getId(), path);
-                    }
-
-                    // Lastly link the path to the resource ID and vise-versa.  Thus completing the transaction.
-                    storage.getResourceIdPathMap().put(resource.getId(), path);
-                    storage.getPathResourceIdMap().put(path, resource.getId());
-                    return new SimpleAtomicOperationTuple<>(true, resource);
-
-                } else {
-
-                    // Failure.  We are looking at an existing value.  Fetch it and report
-                    // appropriately.  No need to dig further, and no need to invoke the
-                    // supplier (and risk creating heavy resources).
-
-                    final Resource resource = storage.getResources().get(existing);
-
-                    if (resource == null) {
-                        // Since this method implies addition, throwing a ResourceNotFoundException
-                        // here doesn't make sense.  This could be happening because it's
-                        // in the process of being removed or added.  In this case we aren't
-                        // certain so we must force the cycle to reattempt.
-                        throw new LockedException();
-                    }
-
-                    return new SimpleAtomicOperationTuple<>(false, resource);
-
+                if (!storage.getPathResourceIdMap().replace(destination, resourceIdLock, sourceResourceId)) {
+                    logger.error("Consistency error.  Could not link {} -> {}", sourceResourceId, destination);
                 }
 
             } finally {
-                storage.getPathResourceIdMap().remove(path, lock);
+                finallyAction.perform();
+            }
+
+        });
+    }
+
+    @Override
+    public Unlink unlinkPath(final Path path, final Consumer<Resource> removed) {
+
+        if (path.isWildcard()) {
+            throw new IllegalArgumentException("Cannot add resources with wildcard path.");
+        }
+
+        final Deque<Path> pathLock = getPathOptimisticLockService().createLock();
+        final ResourceId resourceIdLock = getResourceIdOptimisticLockService().createLock();
+
+        return doOptimistic(() -> {
+
+            FinallyAction finallyAction = () -> {};
+
+            final Storage storage = storageAtomicReference.get();
+
+            try {
+
+                final ResourceId existingResourceId = storage.getPathResourceIdMap().replace(path, resourceIdLock);
+                finallyAction = finallyAction.andThen(() -> {
+                    if (existingResourceId == null) {
+                        storage.getPathResourceIdMap().remove(path, resourceIdLock);
+                    } else {
+                        storage.getPathResourceIdMap().replace(path, resourceIdLock, existingResourceId);
+                    }
+
+                });
+
+                if (existingResourceId == null) {
+                    throw new ResourceNotFoundException("No resource at path " + path);
+                } else if (getResourceIdOptimisticLockService().isLock(existingResourceId)) {
+                    throw new LockedException("path locked");
+                } else if (!storage.getResources().containsKey(existingResourceId)) {
+                    logger.info("Conistency error.  No resource for id {}", existingResourceId);
+                    throw new ResourceNotFoundException("No resource at path " + path);
+                }
+
+                final Deque<Path> existingPaths = storage.getResourceIdPathMap().replace(existingResourceId, pathLock);
+                finallyAction = finallyAction.andThen(() -> storage.getResourceIdPathMap().replace(existingResourceId, pathLock, existingPaths));
+
+                if (existingPaths == null) {
+                    // This should never happen.  We throw an internal exception to indicate the failure because with
+                    // a null value we cannot proceed.
+                    logger.error("Consistency error, got null path for {} -> {} ", path, existingResourceId);
+                    throw new InternalException("Got null paths for resource id " +  existingResourceId);
+                } else if (getPathOptimisticLockService().isLock(existingPaths)) {
+                    throw new LockedException("resource id locked");
+                }
+
+                if (!storage.getPathResourceIdMap().remove(path, resourceIdLock)) {
+                    // This should never happen
+                    logger.error("Consistency error, expected lock when removing path {}", path);
+                }
+
+                if (!existingPaths.remove(path)) {
+                    // This should never happen
+                    logger.error("Consistency error, bidirectional mapping broken for  {} -> {} ", path, existingResourceId);
+                }
+
+                final boolean isRemoved = existingPaths.isEmpty();
+
+                if (isRemoved) {
+
+                    final Resource resource = storage.getResources().remove(existingResourceId);
+
+                    if (resource == null) {
+                        logger.error("Consistency error, no resource for resource id {}", existingResourceId);
+                    }
+
+                    storage.getPathResourceIdMap().remove(path);
+                    storage.getResourceIdPathMap().remove(existingResourceId);
+
+                    removed.accept(resource);
+
+                }
+
+                return new Unlink() {
+                    @Override
+                    public ResourceId getResourceId() {
+                        return existingResourceId;
+                    }
+
+                    @Override
+                    public boolean isRemoved() {
+                        return isRemoved;
+                    }
+                };
+
+            } finally {
+                finallyAction.perform();
             }
 
         });
@@ -221,57 +346,65 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
-    public Resource removeResource(final Path path) {
+    public Resource removeResource(final ResourceId resourceId) {
 
-        if (path.isWildcard()) {
-            throw new IllegalArgumentException("Cannot add resources with wildcard path.");
-        }
-
-        final ResourceId lock = getPathLockFactory().createLock();
+        final Deque<Path> pathLock = getPathOptimisticLockService().createLock();
 
         return doOptimistic(() -> {
 
-            final Storage<Resource> storage = storageAtomicReference.get();
+            final Storage storage = storageAtomicReference.get();
 
-            final ResourceId existing = storage.getPathResourceIdMap().get(path);
+            FinallyAction finallyAction = () -> {};
 
-            if (existing == null ) {
-                // If we can't find something, then we know that there's simply
-                // nothing here.  It may be in the process of being destroyed
-                // or removed, but it may not.
-                throw new ResourceNotFoundException("No resource at path: " + path);
-            } else if (getPathLockFactory().isLock(existing)) {
-                // Path is locked elsewhere.  We don't touch this resource because
-                // we don't want to interfere with another ongoing operation.
-                throw new LockedException();
+            try {
+
+                final Deque<Path> existingPaths = storage.getResourceIdPathMap().replace(resourceId, pathLock);
+                finallyAction = finallyAction.andThen(() -> storage.getResourceIdPathMap().remove(resourceId, pathLock));
+
+                if (existingPaths == null) {
+                    throw new ResourceNotFoundException("no resource for id " + resourceId);
+                } else if (getPathOptimisticLockService().isLock(existingPaths)) {
+                    throw new LockedException("resource id locked");
+                }
+
+                for (final Path path : existingPaths) {
+
+                    final ResourceId resourceIdLock = getResourceIdOptimisticLockService().createLock();
+                    final ResourceId existingResourceId = storage.getPathResourceIdMap().replace(path, resourceIdLock);
+
+                    if (!Objects.equals(resourceId, existingResourceId)) {
+                        logger.error("Consistency error, bidirectional mapping broken for {} -> {}", path, resourceId);
+                    }
+
+                    finallyAction.andThen(() -> {
+                        if (existingResourceId == null) {
+                            storage.getPathResourceIdMap().remove(path, resourceIdLock);
+                        } else {
+                            storage.getPathResourceIdMap().replace(path, resourceIdLock, existingResourceId);
+                        }
+                    });
+
+                    if (getResourceIdOptimisticLockService().isLock(existingResourceId)) {
+                        throw new LockedException("locked at path");
+                    }
+
+                }
+
+                final Resource removed = storage.getResources().remove(resourceId);
+
+                if (removed == null) {
+                    throw new ResourceNotFoundException("No resource with id " + resourceId);
+                }
+
+                storage.getResourceIdPathMap().remove(resourceId);
+                existingPaths.forEach(path -> storage.getPathResourceIdMap().remove(path));
+                getResourceLockService().delete(resourceId);
+
+                return removed;
+
+            } finally {
+                finallyAction.perform();
             }
-
-            // Attempt to actually lock the resource at the path so we have a chance
-            // to actually carry out our operation.  LazyValue this happens we must
-            // proceed to completely remove the rest of the mapping.
-
-            if (!storage.getPathResourceIdMap().replace(path, existing, lock)) {
-                // If this fails we probably are going to assume the resource is
-                // locked between the two operations to get and set.
-                throw new LockedException();
-            }
-
-            // So at this point we know the existing value is valid and we also know
-            // that this should map to an existing value.
-            final Resource resource = storage.getResources().get(existing);
-
-            if (resource == null) {
-                throw new DuplicateException("No resource at path: " + path);
-            }
-
-            // Removes the mapping from both places as wlel as the temporary lock
-            // we assigned to the path mapping.
-
-            storage.getResources().remove(existing);
-            storage.getResourceIdPathMap().remove(resource.getId(), path);
-            storage.getPathResourceIdMap().remove(path, lock);
-
-            return resource;
 
         });
 
@@ -287,13 +420,31 @@ public class SimpleResourceService implements ResourceService {
         return storage.getResources().values().parallelStream();
     }
 
-    public PathLockFactory getPathLockFactory() {
-        return pathLockFactory;
+    public ResourceLockService getResourceLockService() {
+        return resourceLockService;
     }
 
     @Inject
-    public void setPathLockFactory(PathLockFactory pathLockFactory) {
-        this.pathLockFactory = pathLockFactory;
+    public void setResourceLockService(ResourceLockService resourceLockService) {
+        this.resourceLockService = resourceLockService;
+    }
+
+    public OptimisticLockService<Deque<Path>> getPathOptimisticLockService() {
+        return pathOptimisticLockService;
+    }
+
+    @Inject
+    public void setPathOptimisticLockService(OptimisticLockService<Deque<Path>> pathOptimisticLockService) {
+        this.pathOptimisticLockService = pathOptimisticLockService;
+    }
+
+    public OptimisticLockService<ResourceId> getResourceIdOptimisticLockService() {
+        return resourceIdOptimisticLockService;
+    }
+
+    @Inject
+    public void setResourceIdOptimisticLockService(OptimisticLockService<ResourceId> resourceIdOptimisticLockService) {
+        this.resourceIdOptimisticLockService = resourceIdOptimisticLockService;
     }
 
     private <T> T doOptimistic(final Supplier<T> supplier) {
@@ -327,16 +478,16 @@ public class SimpleResourceService implements ResourceService {
 
     }
 
-    private static final class Storage<T> {
+    private static final class Storage {
 
 
-        private final ConcurrentMap<ResourceId, T> resources = new ConcurrentHashMap<>();
+        private final ConcurrentMap<ResourceId, Resource> resources = new ConcurrentHashMap<>();
 
         private final ConcurrentNavigableMap<Path, ResourceId> pathResourceIdMap = new ConcurrentSkipListMap<>();
 
-        private final ConcurrentMap<ResourceId, Path> resourceIdPathMap = new ConcurrentHashMap<>();
+        private final ConcurrentMap<ResourceId, Deque<Path>> resourceIdPathMap = new ConcurrentHashMap<>();
 
-        public ConcurrentMap<ResourceId, T> getResources() {
+        public ConcurrentMap<ResourceId, Resource> getResources() {
             return resources;
         }
 
@@ -344,33 +495,12 @@ public class SimpleResourceService implements ResourceService {
             return pathResourceIdMap;
         }
 
-        public ConcurrentMap<ResourceId, Path> getResourceIdPathMap() {
+        public ConcurrentMap<ResourceId, Deque<Path>> getResourceIdPathMap() {
             return resourceIdPathMap;
         }
 
     }
 
-    private static class SimpleAtomicOperationTuple<T extends Resource> implements AtomicOperationTuple<T> {
-
-        private final boolean newlyAdded;
-        private final T resource;
-
-        public SimpleAtomicOperationTuple(boolean newlyAdded, T resource) {
-            this.newlyAdded = newlyAdded;
-            this.resource = resource;
-        }
-
-        @Override
-        public boolean isNewlyAdded() {
-            return newlyAdded;
-        }
-
-        @Override
-        public T getResource() {
-            return resource;
-        }
-
-    }
     private static class LockedException extends ConcurrentModificationException {
 
         public LockedException() {}

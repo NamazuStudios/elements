@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.builtin.coroutine;
 
+import com.namazustudios.socialengine.rt.Resource;
+
 public enum YieldInstruction {
 
     /**
@@ -24,6 +26,14 @@ public enum YieldInstruction {
      * Indicates that the coroutine should yield for the specified amount of time.  The units may be specified but
      * the default is is in seconds.
      */
-    FOR
+    FOR,
+
+    /**
+     * Indicates that the coroutine should yield indefinitely.  Typically this means the the calling code will manually
+     * resume the coroutine at some point later.  Note that under some circumstances, the container may opt to forcibly
+     * kill the running {@link Resource}
+     * }
+     */
+    INDEFINITELY
 
 }

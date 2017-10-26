@@ -7,12 +7,15 @@ import com.namazustudios.socialengine.rt.guice.SimpleServicesModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
+import java.util.UUID;
+
+import static java.util.UUID.randomUUID;
 
 /**
  * Provides tests for various lua libraries by instantiating them and invoking specific methods.
@@ -22,34 +25,63 @@ public class LuaResourceIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceIntegrationTest.class);
 
-    private ResourceLoader resourceLoader;
+    private Context context;
+
+    private ResourceService resourceService;
 
     @Test(dataProvider = "resourcesToTest")
-    public void performTest(final String moduleName, final String methodName) {
-        try (final Resource resource = getResourceLoader().load(moduleName)) {
-
-            resource.getMethodDispatcher(methodName)
-                .params()
-                .dispatch(o -> logger.info("Got result from invocation {}"),
-                          th -> Assert.fail("Caught exception in Lua code.", th));
-        }
-
+    public void performTest(final String moduleName, final String methodName) throws InterruptedException {
+        final Path path = new Path(randomUUID().toString());
+        final ResourceId resourceId = getContext().getResourceContext().create(moduleName, path);
+        final Object result = getContext().getResourceContext().invoke(resourceId, methodName);
+        logger.info("Successfuly got test result {}", result);
+        getContext().getResourceContext().destroy(resourceId);
     }
 
     @DataProvider
     public static Object[][] resourcesToTest() {
         return new Object[][] {
-            {"test.pagination", "test_of"}
+            {"test.pagination", "test_of"},
+            {"test.request", "test_formulate"},
+            {"test.request", "test_unpack_headers"},
+            {"test.request", "test_unpack_parameters"},
+            {"test.request", "test_unpack_path_parameters"},
+            {"test.util", "test_uuid"},
+            {"test.resource", "test_create"},
+            {"test.resource", "test_invoke"},
+            {"test.resource", "test_invoke_fail"},
+            {"test.resource", "test_invoke_path"},
+            {"test.resource", "test_invoke_path_fail"},
+            {"test.resource", "test_destroy"},
+            {"test.index", "test_list"},
+            {"test.index", "test_link"},
+            {"test.index", "test_link_path"},
+            {"test.index", "test_unlink"},
+            {"test.index", "test_unlink_and_destroy"}
         };
     }
 
-    public ResourceLoader getResourceLoader() {
-        return resourceLoader;
+    @AfterMethod
+    public void clearResourceService() {
+        getResourceService().removeAndCloseAllResources();
+    }
+
+    public Context getContext() {
+        return context;
     }
 
     @Inject
-    public void setResourceLoader(ResourceLoader resourceLoader) {
-        this.resourceLoader = resourceLoader;
+    public void setContext(Context context) {
+        this.context = context;
+    }
+
+    public ResourceService getResourceService() {
+        return resourceService;
+    }
+
+    @Inject
+    public void setResourceService(ResourceService resourceService) {
+        this.resourceService = resourceService;
     }
 
     public static class Module extends AbstractModule {

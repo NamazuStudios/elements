@@ -8,7 +8,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -18,7 +17,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  *
  * Created by patricktwohig on 8/22/15.
  */
-@Proxyable
 public interface Scheduler {
     
     /**
@@ -29,7 +27,7 @@ public interface Scheduler {
      *
      * @return {@link Future<T>} which can be used to monitor the status of the request
      */
-    <T> Future<T> perform(ResourceId resourceId, Function<Resource, T> operation);
+    <T> Future<T> perform(ResourceId resourceId, Function<Resource, T> operation, Consumer<Throwable> failure);
 
     /**
      * Performs an action against the resource with the provided ID.
@@ -40,11 +38,13 @@ public interface Scheduler {
      * @return {@link Future<Void>} which can be used to monitor the status of the request
      *
      * */
-    default Future<Void> performV(final ResourceId resourceId, final Consumer<Resource> operation) {
+    default Future<Void> performV(final ResourceId resourceId,
+                                  final Consumer<Resource> operation,
+                                  final Consumer<Throwable> failure) {
         return perform(resourceId, resource -> {
             operation.accept(resource);
             return null;
-        });
+        }, failure);
     }
 
     /**
@@ -57,7 +57,7 @@ public interface Scheduler {
      *
      * @param <T>
      */
-    <T> Future<T> perform(Path path, Function<Resource, T> operation);
+    <T> Future<T> perform(Path path, Function<Resource, T> operation, Consumer<Throwable> failure);
 
     /**
      * Performs an action against the resource with the provided {@link Path}.
@@ -67,11 +67,13 @@ public interface Scheduler {
      *
      * @return {@link Future<Void>} which can be used to monitor the status of the request
      */
-    default Future<Void> performV(final Path path, final Consumer<Resource> operation) {
+    default Future<Void> performV(final Path path,
+                                  final Consumer<Resource> operation,
+                                  final Consumer<Throwable> failure) {
         return perform(path, resource -> {
             operation.accept(resource);
             return null;
-        });
+        }, failure);
     }
 
     /**
@@ -87,10 +89,12 @@ public interface Scheduler {
      *
      * @return {@link Future<T>} which can be used to monitor the status of the request
      */
-    <T> Future<T> performAfterDelay(ResourceId resourceId, long time, TimeUnit timeUnit, Function<Resource, T> operation);
+    <T> Future<T> performAfterDelay(ResourceId resourceId,
+                                    long time, TimeUnit timeUnit,
+                                    Function<Resource, T> operation, Consumer<Throwable> failure);
 
     /**
-     * Invoke {@link #performAfterDelay(ResourceId, long, TimeUnit, Function)} with a {@link Consumer<Resource>}
+     * Invoke {@link #performAfterDelay(ResourceId, long, TimeUnit, Function, Consumer)} with a {@link Consumer<Resource>}
      * instead of a {@link Function<Resource, ?>}.
      *
      * @param resourceId the id of the resource
@@ -101,13 +105,12 @@ public interface Scheduler {
      * @return {@link Future<Void>} which can be used to monitor the status of the request
      */
     default Future<Void> performAfterDelayV(final ResourceId resourceId,
-                                            final long time,
-                                            final TimeUnit timeUnit,
-                                            final Consumer<Resource> operation) {
+                                            final long time, final TimeUnit timeUnit,
+                                            final Consumer<Resource> operation, final Consumer<Throwable> failure) {
         return performAfterDelay(resourceId, time, timeUnit, resource -> {
             operation.accept(resource);
             return null;
-        });
+        }, failure);
     }
 
     /**
@@ -119,15 +122,17 @@ public interface Scheduler {
      *
      * @return {@link Future<Void>} which can be used to monitor the status of the request
      */
-    default Future<Void> resumeTask(final ResourceId resourceId, final TaskId taskId) {
+    default Future<Void> resumeTask(final ResourceId resourceId,
+                                    final TaskId taskId,
+                                    final Consumer<Throwable> failure) {
 
         final Stopwatch stopwatch = Stopwatch.createStarted();
 
         return performV(resourceId, r -> {
             final double mills = stopwatch.elapsed(MILLISECONDS);
             final double secondsPerMills = MILLISECONDS.convert(1, SECONDS);
-            r.resume(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
-        });
+            r.resumeFromScheduler(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
+        }, failure);
 
     }
 
@@ -143,17 +148,16 @@ public interface Scheduler {
      * @return {@link Future<Void>} which can be used to monitor the status of the request
      */
     default Future<Void> resumeTaskAfterDelay(final ResourceId resourceId,
-                                              final long time,
-                                              final TimeUnit timeUnit,
-                                              final TaskId taskId) {
+                                              final long time, final TimeUnit timeUnit,
+                                              final TaskId taskId, final Consumer<Throwable> failure) {
 
         final Stopwatch stopwatch = Stopwatch.createStarted();
 
         return performAfterDelayV(resourceId, time, timeUnit, r -> {
             final double mills = stopwatch.elapsed(MILLISECONDS);
             final double secondsPerMills = MILLISECONDS.convert(1, SECONDS);
-            r.resume(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
-        });
+            r.resumeFromScheduler(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
+        }, failure);
 
     }
 

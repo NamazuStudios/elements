@@ -16,9 +16,9 @@ import java.util.function.Consumer;
 import static java.util.UUID.randomUUID;
 
 /**
- * Loads an instance of {@link Resource} into the {@link ResourceService}, executes the {@link Request},
- * collects the {@link Response} and promptly removes and destroys the {@link Resource} once the
- * requested method provides its final result.
+ * Loads an instance of {@link Resource} into the {@link ResourceService}, executes the {@link Request}, collects the
+ * {@link Response} and promptly removes and destroys the {@link Resource} once the requested method provides its final
+ * result.
  */
 public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatcher<HttpRequest> {
 
@@ -26,13 +26,11 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
 
     private List<Filter> filterList;
 
-    private ResourceLoader resourceLoader;
-
-    private ResourceService resourceService;
-
-    private Scheduler scheduler;
-
     private ExceptionMapper.Resolver exceptionMapperResolver;
+
+    private ResourceContext resourceContext;
+
+    private SchedulerContext schedulerContext;
 
     @Override
     public void dispatch(final Session session,
@@ -52,48 +50,44 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
         final HttpOperation httpOperation = httpRequest.getManifestMetadata().getPreferredOperation();
 
         final Path path = Path.fromComponents("http", "request", randomUUID().toString());
-        final Resource resource = getResourceLoader().load(httpModule.getModule());
+        final ResourceId resourceId = getResourceContext().create(httpModule.getModule(), path);
 
-        getResourceService().addResource(path, resource);
-        schedule(httpOperation, path, session, request, responseConsumer);
+        logger.info("Created resource with id {} to handle request.", resourceId);
+        schedule(httpOperation, resourceId, session, request, responseConsumer);
 
     }
 
     private void schedule(final HttpOperation httpOperation,
-                          final Path path,
+                          final ResourceId resourceId,
                           final Session session,
                           final Request request,
                           final Consumer<Response> responseConsumer) {
-        getScheduler().performV(path, resource -> safelyDispatch(resource, path, httpOperation, session, request, responseConsumer));
-    }
 
-    private void safelyDispatch(final Resource resource,
-                                final Path path,
-                                final HttpOperation httpOperation,
-                                final Session session,
-                                final Request request,
-                                final Consumer<Response> responseConsumer) {
-
-        final Consumer<Response> closingResponseConsumer = response -> {
-            try {
-                responseConsumer.accept(response);
-            } finally {
-                getResourceService().removeAndCloseResource(path);
-            }
-        };
-
-        final Consumer<Throwable> handler = ex -> getExceptionMapperResolver()
+        final Consumer<Throwable> failure = ex -> getExceptionMapperResolver()
                 .getExceptionMapper(ex)
                 .map(ex, request, responseConsumer);
 
+        final Consumer<Object> success = result -> {
+            try {
+                final Response response = (Response) result;
+                responseConsumer.accept(response);
+            } catch (ClassCastException ex) {
+                logger.error("Resource did not return Response type.");
+                failure.accept(ex);
+            } finally {
+                getResourceContext().destroyAsync(
+                    v  -> logger.info("Destroyed {}", resourceId),
+                    th -> logger.error("Failed to destroy {}", resourceId, th), resourceId);
+            }
+        };
+
         try {
-            resource.getMethodDispatcher(httpOperation.getMethod())
-                    .params(request.getPayload(), request, session)
-                    .forResultType(Response.class)
-                    .dispatch(closingResponseConsumer, handler);
+            getResourceContext().invokeAsync(success, failure,
+                                             resourceId, httpOperation.getMethod(),
+                                             request.getPayload(), request, session);
         } catch (Throwable th) {
             logRequestFailure(request, th);
-            handler.accept(th);
+            failure.accept(th);
             throw th;
         }
 
@@ -118,33 +112,6 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
         this.filterList = filterList;
     }
 
-    public ResourceLoader getResourceLoader() {
-        return resourceLoader;
-    }
-
-    @Inject
-    public void setResourceLoader(ResourceLoader resourceLoader) {
-        this.resourceLoader = resourceLoader;
-    }
-
-    public ResourceService getResourceService() {
-        return resourceService;
-    }
-
-    @Inject
-    public void setResourceService(ResourceService resourceService) {
-        this.resourceService = resourceService;
-    }
-
-    public Scheduler getScheduler() {
-        return scheduler;
-    }
-
-    @Inject
-    public void setScheduler(Scheduler scheduler) {
-        this.scheduler = scheduler;
-    }
-
     public ExceptionMapper.Resolver getExceptionMapperResolver() {
         return exceptionMapperResolver;
     }
@@ -152,6 +119,24 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
     @Inject
     public void setExceptionMapperResolver(ExceptionMapper.Resolver exceptionMapperResolver) {
         this.exceptionMapperResolver = exceptionMapperResolver;
+    }
+
+    public ResourceContext getResourceContext() {
+        return resourceContext;
+    }
+
+    @Inject
+    public void setResourceContext(ResourceContext resourceContext) {
+        this.resourceContext = resourceContext;
+    }
+
+    public SchedulerContext getSchedulerContext() {
+        return schedulerContext;
+    }
+
+    @Inject
+    public void setSchedulerContext(SchedulerContext schedulerContext) {
+        this.schedulerContext = schedulerContext;
     }
 
 }

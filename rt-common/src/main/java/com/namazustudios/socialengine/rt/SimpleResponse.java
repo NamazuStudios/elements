@@ -28,11 +28,6 @@ public class SimpleResponse implements Response {
         return payload;
     }
 
-    @Override
-    public <T> T getPayload(Class<T> cls) {
-        return cls.cast(getPayload());
-    }
-
     public void setPayload(Object payload) {
         this.payload = payload;
     }
@@ -59,19 +54,18 @@ public class SimpleResponse implements Response {
      */
     public static class Builder {
 
-        final SimpleResponse simpleResponse = new SimpleResponse();
+        private Object payload;
 
-        final SimpleResponseHeader simpleResponseHeader = new SimpleResponseHeader();
+        private int code;
+
+        private int sequence = ResponseHeader.UNKNOWN_SEQUENCE;
 
         final Map<String, List<Object>> simpleResponseHeaderMap = new LinkedHashMap<>();
 
         /**
          * Creates a new builder for {@link SimpleResponse}
          */
-        public Builder() {
-            simpleResponse.setResponseHeader(simpleResponseHeader);
-            simpleResponseHeader.setHeaders(simpleResponseHeaderMap);
-        }
+        public Builder() {}
 
         /**
          * Builds an instance of {@link SimpleResponse} in response to the given {@link Request}.
@@ -81,13 +75,8 @@ public class SimpleResponse implements Response {
          * @return this object
          */
         public Builder from(final Request request) {
-
-            if (request.getHeader() != null) {
-                simpleResponseHeader.setSequence(request.getHeader().getSequence());
-            }
-
+            sequence = request.getHeader().getSequence();
             return this;
-
         }
 
         /**
@@ -97,14 +86,23 @@ public class SimpleResponse implements Response {
          * @return this object
          */
         public Builder from(final Response response) {
-            simpleResponse.setPayload(response.getPayload());
 
-            if (response.getResponseHeader() != null) {
-                simpleResponseHeader.setCode(response.getResponseHeader().getCode());
-                simpleResponseHeader.setSequence(response.getResponseHeader().getSequence());
+            payload = response.getPayload();
+
+            final ResponseHeader header = response.getResponseHeader();
+
+            code = header.getCode();
+            sequence = header.getSequence();
+
+            simpleResponseHeaderMap.clear();
+
+            for (final String headerName : header.getHeaderNames()) {
+                final List<Object> value = header.getHeaders(headerName);
+                simpleResponseHeaderMap.put(headerName, new ArrayList<>(value));
             }
 
             return this;
+
         }
 
         /**
@@ -113,7 +111,7 @@ public class SimpleResponse implements Response {
          * @return this object
          */
         public Builder ok() {
-            simpleResponseHeader.setCode(ResponseCode.OK.getCode());
+            code = ResponseCode.OK.getCode();
             return this;
         }
 
@@ -123,7 +121,7 @@ public class SimpleResponse implements Response {
          * @return this object
          */
         public Builder code(final ResponseCode code) {
-            simpleResponseHeader.setCode(code.getCode());
+            this.code = code.getCode();
             return this;
         }
 
@@ -133,7 +131,7 @@ public class SimpleResponse implements Response {
          * @return this object
          */
         public Builder code(final int code) {
-            simpleResponseHeader.setCode(code);
+            this.code = code;
             return this;
         }
 
@@ -144,7 +142,7 @@ public class SimpleResponse implements Response {
          * @return this object.
          */
         public Builder sequence(final int sequence) {
-            simpleResponseHeader.setSequence(sequence);
+            this.sequence = sequence;
             return this;
         }
 
@@ -155,12 +153,12 @@ public class SimpleResponse implements Response {
          * @return this object
          */
         public Builder payload(final Object payload) {
-            simpleResponse.setPayload(payload);
+            this.payload = payload;
             return this;
         }
 
         /**
-         * Appends the header with name and value to the map provided by {@link ResponseHeader#getHeaders()}.
+         * Appends the header with name and value.
          *
          * @param header the header name
          * @param value the header value
@@ -176,6 +174,13 @@ public class SimpleResponse implements Response {
          * @return the {@link SimpleResponse}
          */
         public SimpleResponse build() {
+
+            final SimpleResponse simpleResponse = new SimpleResponse();
+            final SimpleResponseHeader simpleResponseHeader = new SimpleResponseHeader();
+
+            simpleResponse.setResponseHeader(simpleResponseHeader);
+            simpleResponseHeader.setHeaders(new LinkedHashMap<>(simpleResponseHeaderMap));
+
             return simpleResponse;
         }
 

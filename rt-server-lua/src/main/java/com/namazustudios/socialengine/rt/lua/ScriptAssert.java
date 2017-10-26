@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.lua;
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import sun.jvm.hotspot.utilities.AssertionFailure;
 
 import java.util.function.Consumer;
 

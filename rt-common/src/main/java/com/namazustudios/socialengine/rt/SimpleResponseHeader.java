@@ -74,5 +74,4 @@ public class SimpleResponseHeader implements ResponseHeader {
         result = 31 * result + (headers != null ? headers.hashCode() : 0);
         return result;
     }
-
 }

@@ -36,4 +36,19 @@ public interface Constants {
      */
     String LUA_FILE_EXT = "lua";
 
+    /**
+     * The lua loader method "require"
+     */
+    String REQUIRE = "require";
+
+    /**
+     * The lua coroutine library.
+     */
+    String COROUTINE = "coroutine";
+
+    /**
+     * The lua coroutine method "resume"
+     */
+    String YIELD = "yield";
+
 }

@@ -22,7 +22,7 @@ import static java.util.Collections.unmodifiableList;
  *
  * Created by patricktwohig on 9/4/15.
  */
-public final class Path implements Comparable<Path> {
+public class Path implements Comparable<Path> {
 
     /**
      * The path separator.  Literal value "/"
@@ -235,7 +235,7 @@ public final class Path implements Comparable<Path> {
 
     /**
      * This implementation of {@link #compareTo(Path)} compares the path to the other path
-     * considering wild card matching and can beused to find paths in a sorted collection.
+     * considering wild card matching and can be used to find paths in a sorted collection.
      *
      * @param other the other path
      * @return @see {@link Comparable#compareTo(Object)}

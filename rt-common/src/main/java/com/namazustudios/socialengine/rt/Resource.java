@@ -41,15 +41,36 @@ public interface Resource extends AutoCloseable {
     MethodDispatcher getMethodDispatcher(String name);
 
     /**
+     * Resumes a suspended task, accepting the task id.  The task will be resumed as soon as possible.  This is used
+     * when the network resumes the call.  This is assumed that the resume was successful.  The response to the,
+     * invocation whatever it may be, was successful.
+     *
+     * @param taskId the {@link TaskId} if the running task
+     * @param result the resulting object from the call
+     *
+     */
+    void resumeFromNetwork(final TaskId taskId, final Object result);
+
+    /**
+     * Resumes a suspended task, accepting the task id.  The task will be resumed as soon as possible.  This is used
+     * when suspended coroutine encountered an error.  The coroutine will be resume with the error that caused the
+     * underlying failure.
+     *
+     * @param taskId
+     * @param throwable
+     */
+    void resumeWithError(final TaskId taskId, final Throwable throwable);
+
+    /**
      * Resumes a suspended task, accepting the task id.  The task will be resumed as soon as possible.  This method
      * must succeed at the scheduling process, or else throw an exception.  Note that this does not guarantee successful
      * execution of the task, but rather successful scheduling.
      *
      * @param taskId the {@link TaskId} if the running task
-     * @param  elapsedTime the amount of time elapsed since the task was last activated
+     * @param elapsedTime the amount of time elapsed since the task was last activated
      *
      */
-    void resume(final TaskId taskId, final double elapsedTime);
+    void resumeFromScheduler(final TaskId taskId, final double elapsedTime);
 
     /**
      * Closes and destroys this Resource.  A resource, once destroyed, cannot be used again.
