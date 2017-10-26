@@ -17,14 +17,16 @@ local index = {}
 
 local function process_listing(listings)
 
-    local tabular_listing = {}
+    local tabular = {}
 
     for i, listing in ipairs(listings)
     do
-        tabular_listing[listing:getPath():toNormalizedPathString()] = listing:getResourceId():asString()
+        local path = listing:getPath():toNormalizedPathString()
+        local resourceId = listing:getResourceId():asString()
+        tabular[path] = resourceId
     end
 
-    return tabular_listing
+    return tabular
 
 end
 
@@ -119,7 +121,7 @@ function index.unlink(path)
 
     if reason == resumereason.NETWORK
     then
-        return response:getResourceId():asString(), response:isDestroyed(), resumereason.OK
+        return response:getResourceId():asString(), response:isDestroyed(), responsecode.OK
     elseif reason == resumereason.ERROR
     then
         return nil, false, response

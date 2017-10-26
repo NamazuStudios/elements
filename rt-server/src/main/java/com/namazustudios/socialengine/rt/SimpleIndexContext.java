@@ -89,9 +89,26 @@ public class SimpleIndexContext implements IndexContext {
                                       final Consumer<Throwable> failure) {
         return getExecutorService().submit(() -> {
             try {
-                getResourceService().unlinkPath(path);
-                success.accept(null);
-                return null;
+
+                final Unlink result = new Unlink() {
+
+                    final ResourceService.Unlink delegate = getResourceService().unlinkPath(path);
+
+                    @Override
+                    public ResourceId getResourceId() {
+                        return delegate.getResourceId();
+                    }
+
+                    @Override
+                    public boolean isDestroyed() {
+                        return delegate.isRemoved();
+                    }
+
+                };
+
+                success.accept(result);
+                return result;
+
             } catch (Throwable th) {
                 logger.error("Caught error unlinking path {}", path, th);
                 failure.accept(th);

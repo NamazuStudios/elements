@@ -24,7 +24,7 @@ public class IndexDetailBuiltin implements Builtin {
 
     public static final String LINK = "schedule_link";
 
-    public static final String LINK_PATH = "schedule_link";
+    public static final String LINK_PATH = "schedule_link_path";
 
     public static final String UNLINK = "schedule_unlink";
 
@@ -49,8 +49,8 @@ public class IndexDetailBuiltin implements Builtin {
             final ResourceId thisResourceId = getLuaResource().getId();
 
             final Consumer<Stream<IndexContext.Listing>> success = stream -> {
-                final List<IndexContext.Listing> listingList = stream.collect(toList());
-                getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, listingList);
+                final List<IndexContext.Listing> listings = stream.collect(toList());
+                getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, listings);
             };
 
             final Consumer<Throwable> failure = throwable ->

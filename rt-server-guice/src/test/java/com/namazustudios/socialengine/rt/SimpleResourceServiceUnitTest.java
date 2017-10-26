@@ -16,6 +16,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.AssertJUnit.fail;
 
 @Guice(modules = SimpleResourceServiceUnitTest.Module.class)
@@ -157,7 +158,13 @@ public class SimpleResourceServiceUnitTest {
 
     @Test(dependsOnMethods = {"testGetByAlias"}, dataProvider = "linkedIntermediateProvider", expectedExceptions = ResourceNotFoundException.class)
     public void testUnlink(final ResourceId resourceId, final Path path, final Resource resource) {
-        getResourceService().unlinkPath(path, removed -> fail("Did not expect resource removal."));
+
+        final ResourceService.Unlink unlink;
+        unlink = getResourceService().unlinkPath(path, removed -> fail("Did not expect resource removal."));
+
+        assertEquals(resourceId, unlink.getResourceId(), "Unlink mismatch");
+        assertFalse(unlink.isRemoved(), "Resource should not have been removed.");
+
         assertEquals(getResourceService().getResourceWithId(resourceId), resource);
         getResourceService().getResourceAtPath(path);
     }

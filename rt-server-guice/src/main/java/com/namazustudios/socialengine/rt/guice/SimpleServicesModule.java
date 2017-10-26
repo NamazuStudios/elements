@@ -30,10 +30,15 @@ public class SimpleServicesModule extends AbstractModule {
     @Override
     protected void configure() {
 
+        // The main context for the application
         bind(Context.class).to(SimpleContext.class).asEagerSingleton();
+
+        // The sub-contexts associated with the main context
+        bind(IndexContext.class).to(SimpleIndexContext.class);
         bind(ResourceContext.class).to(SimpleResourceContext.class);
         bind(SchedulerContext.class).to(SimpleSchedulerContext.class);
 
+        // The actual underlying services
         bind(Scheduler.class).to(SimpleScheduler.class).asEagerSingleton();
         bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
         bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();

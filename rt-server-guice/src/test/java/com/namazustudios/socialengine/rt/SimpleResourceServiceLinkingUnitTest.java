@@ -13,6 +13,7 @@ import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.FileAssert.fail;
@@ -62,14 +63,19 @@ public class SimpleResourceServiceLinkingUnitTest {
     public void testRemoveAllAliases(final ResourceId resourceId, final Path path, final Path alias, final Resource resource) {
         final AtomicBoolean removed = new AtomicBoolean();
 
-        getResourceService().unlinkPath(path, r -> fail("Unexpected removal."));
-        getResourceService().unlinkPath(alias, r -> {
+        final ResourceService.Unlink first = getResourceService().unlinkPath(path, r -> fail("Unexpected removal."));
+        final ResourceService.Unlink second = getResourceService().unlinkPath(alias, r -> {
             assertEquals(r, resource);
             assertEquals(r.getId(), resourceId);
             removed.set(true);
         });
 
         assertTrue(removed.get(), "Resource was not removed.");
+
+        assertFalse(first.isRemoved(), "Resource should not have been removed on first call.");
+        assertTrue(second.isRemoved(), "Resource shoudl have been removed on second call.");
+        assertEquals(first.getResourceId(), resourceId);
+        assertEquals(second.getResourceId(), resourceId);
 
     }
 

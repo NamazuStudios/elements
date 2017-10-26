@@ -250,7 +250,7 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
-    public boolean unlinkPath(final Path path, final Consumer<Resource> removed) {
+    public Unlink unlinkPath(final Path path, final Consumer<Resource> removed) {
 
         if (path.isWildcard()) {
             throw new IllegalArgumentException("Cannot add resources with wildcard path.");
@@ -259,7 +259,7 @@ public class SimpleResourceService implements ResourceService {
         final Deque<Path> pathLock = getPathOptimisticLockService().createLock();
         final ResourceId resourceIdLock = getResourceIdOptimisticLockService().createLock();
 
-        doOptimisticV(() -> {
+        return doOptimistic(() -> {
 
             FinallyAction finallyAction = () -> {};
 
@@ -308,7 +308,9 @@ public class SimpleResourceService implements ResourceService {
                     logger.error("Consistency error, bidirectional mapping broken for  {} -> {} ", path, existingResourceId);
                 }
 
-                if (existingPaths.isEmpty()) {
+                final boolean isRemoved = existingPaths.isEmpty();
+
+                if (isRemoved) {
 
                     final Resource resource = storage.getResources().remove(existingResourceId);
 
@@ -323,13 +325,23 @@ public class SimpleResourceService implements ResourceService {
 
                 }
 
+                return new Unlink() {
+                    @Override
+                    public ResourceId getResourceId() {
+                        return existingResourceId;
+                    }
+
+                    @Override
+                    public boolean isRemoved() {
+                        return isRemoved;
+                    }
+                };
+
             } finally {
                 finallyAction.perform();
             }
 
         });
-
-        return false;
 
     }
 

@@ -132,7 +132,7 @@ public interface ResourceService {
      * @param path a {@link Path} to unlink
      * @return true if the {@link Resource} associated with the {@link Path} was removed, false otherwise
      */
-    default boolean unlinkPath(Path path) {
+    default Unlink unlinkPath(Path path) {
         return unlinkPath(path, resource -> resource.close());
     }
 
@@ -151,7 +151,7 @@ public interface ResourceService {
      * @return true if the {@link Resource} associated with the {@link Path} was removed, false otherwise
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    boolean unlinkPath(Path path, Consumer<Resource> removed);
+    Unlink unlinkPath(Path path, Consumer<Resource> removed);
 
     /**
      * Removes a {@link Resource} instance from this resource service.
@@ -237,6 +237,27 @@ public interface ResourceService {
          * @return the {@link ResourceId}
          */
         ResourceId getResourceId();
+
+    }
+
+    /**
+     * The return-value for methods such as {@link #unlinkPath(Path)} and {@link #unlinkPath(Path, Consumer)}
+     */
+    interface Unlink {
+
+        /**
+         * Returns the {@link ResourceId} at the supplied {@link ResourceId}.
+         *
+         * @return the {@link ResourceId}
+         */
+        ResourceId getResourceId();
+
+        /**
+         * Returns true if the {@link ResourceId} was destroyed as part of this unlink operation.
+         *
+         * @return true if destroyed, false otherwise
+         */
+        boolean isRemoved();
 
     }
 
