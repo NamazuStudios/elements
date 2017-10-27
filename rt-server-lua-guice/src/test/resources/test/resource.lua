@@ -109,6 +109,18 @@ function test_resource.test_invoke_table()
     assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
     assert(type(result) == "table", "Expected \"table\" for type Got: " .. type(result))
 
+    local count = 0
+    for k,v in pairs(result)
+    do
+        count = count + 1
+        print("Result key \"" .. tostring(k) .. "\" value " .. tostring(v))
+    end
+
+    assert(count == 3, "Expected specifically three results.  Got " .. tostring(count))
+    assert(result.setup == "Knock Knock", "Expected setup to be \"Knock Knock\"  Got: " .. tostring(result.setup))
+    assert(result.question == "Who's There?", "Expected setup to be \"Who's There?\"  Got: " .. tostring(result.question))
+    assert(result.punchline == "Interrupting Cow - Moo!", "Expected setup to be \"Interrupting Cow - Moo!\"  Got: " .. tostring(result.punchline))
+
 end
 
 function test_resource.test_destroy()

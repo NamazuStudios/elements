@@ -30,9 +30,9 @@ end
 
 function helloworld.full_joke()
     return {
-        "Knock Knock",
-        "Who's There?",
-        "Interrupting Cow - Moo!"
+        setup = "Knock Knock",
+        question = "Who's There?",
+        punchline = "Interrupting Cow - Moo!"
     }
 end
 

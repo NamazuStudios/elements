@@ -35,8 +35,7 @@ public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
             asMap.forEach((k, v) -> {
                 luaState.pushJavaObject(k);
                 luaState.pushJavaObject(v);
-                luaState.rawSet(-3, -2);
-                luaState.pop(1);
+                luaState.setTable(-3);
             });
 
         }
