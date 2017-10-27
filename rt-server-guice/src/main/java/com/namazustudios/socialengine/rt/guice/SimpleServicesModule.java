@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;
@@ -23,7 +24,7 @@ import static java.util.concurrent.Executors.newScheduledThreadPool;
  *
  * Created by patricktwohig on 9/22/15.
  */
-public class SimpleServicesModule extends AbstractModule {
+public class SimpleServicesModule extends PrivateModule {
 
     private static final int CORE_POOL_SIZE = 5;
 
@@ -60,6 +61,11 @@ public class SimpleServicesModule extends AbstractModule {
         bind(ScheduledExecutorService.class)
                 .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE))
                 .toProvider(() -> scheduledExecutorService(SCHEDULED_EXECUTOR_SERVICE));
+
+        expose(Context.class);
+        expose(IndexContext.class);
+        expose(ResourceContext.class);
+        expose(SchedulerContext.class);
 
     }
 

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +24,9 @@ public class SimpleResourceContext implements ResourceContext {
     private ResourceService resourceService;
 
     private ExecutorService executorService;
+
+    @Inject
+    private ObjectMapper objectMapper;
 
     @Override
     public ResourceId create(final String module, final Path path, final Object... args) {
@@ -217,4 +221,26 @@ public class SimpleResourceContext implements ResourceContext {
         }
 
     }
+
+    @Override
+    public void destroyAllResources() {
+        getResourceService().removeAndCloseAllResources();
+    }
+
+    @Override
+    public Future<Void> destroyAllResourcesAsync(Consumer<Void> success, Consumer<Throwable> failure) {
+        return getExecutorService().submit(() -> {
+
+            try {
+                getResourceService().removeAndCloseAllResources();
+                success.accept(null);
+            } catch (Throwable th) {
+                failure.accept(th);
+                throw th;
+            }
+
+            return null;
+        });
+    }
+
 }

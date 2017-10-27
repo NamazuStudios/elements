@@ -26,8 +26,6 @@ public class SimpleTestRunner implements TestRunner {
 
     private Set<Test> testList;
 
-    private ResourceService resourceService;
-
     @Override
     public void perform() {
 
@@ -58,13 +56,13 @@ public class SimpleTestRunner implements TestRunner {
                 final long elapsed = testStopwatch.elapsed(MILLISECONDS);
                 testLogger.info("Finished running test {} msec", elapsed);
 
-                getResourceService().list(new Path("*")).forEachRemaining(listing -> {
+                getContext().getIndexContext().list(new Path("*")).forEach(listing -> {
                     final Path resourcePath = listing.getPath();
                     final ResourceId resourceId = listing.getResourceId();
                     testLogger.warn("{} -> {} remains after test {}.", resourcePath, resourceId, test.getName());
                 });
 
-                resourceService.removeAndCloseAllResources();
+                getContext().getResourceContext().destroyAllResources();
 
             }
 
@@ -95,15 +93,6 @@ public class SimpleTestRunner implements TestRunner {
     @Inject
     public void setTestList(@Named(TESTS) Set<Test> testList) {
         this.testList = testList;
-    }
-
-    public ResourceService getResourceService() {
-        return resourceService;
-    }
-
-    @Inject
-    public void setResourceService(ResourceService resourceService) {
-        this.resourceService = resourceService;
     }
 
 }

@@ -64,7 +64,7 @@ public class LuaResourceIntegrationTest {
 
     @AfterMethod
     public void clearResourceService() {
-        getResourceService().removeAndCloseAllResources();
+        getContext().getResourceContext().destroyAllResources();
     }
 
     public Context getContext() {
@@ -74,15 +74,6 @@ public class LuaResourceIntegrationTest {
     @Inject
     public void setContext(Context context) {
         this.context = context;
-    }
-
-    public ResourceService getResourceService() {
-        return resourceService;
-    }
-
-    @Inject
-    public void setResourceService(ResourceService resourceService) {
-        this.resourceService = resourceService;
     }
 
     public static class Module extends AbstractModule {

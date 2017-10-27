@@ -1,12 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.exception.BaseException;
-import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
@@ -153,5 +150,27 @@ public interface ResourceContext {
     default Future<Void> destroyAsync(Consumer<Void> success, Consumer<Throwable> failure, String resourceIdString) {
         return destroyAsync(success, failure, new ResourceId(resourceIdString));
     }
+
+    /**
+     * Performs the operations of {@link #destroyAllResourcesAsync(Consumer, Consumer)} in a synchronous fashion.
+     */
+    default void destroyAllResources() {
+
+        final Logger logger = LoggerFactory.getLogger(getClass());
+
+        final Future<Void> future = destroyAllResourcesAsync(
+                v  -> logger.info("Destroyed all resources."),
+                th -> logger.error("Failed to destroy all resources", th));
+
+        _waitAsync(logger, future);
+
+    }
+
+    /**
+     * Clears all {@link Resource} instances from the system.  This is a call that shoudl be used with extreme care
+     * as it can possibly destroy the whole system.  This is primarily used for testing, and some implementations may
+     * opt to throw an exception.
+     */
+    Future<Void> destroyAllResourcesAsync(Consumer<Void> success, Consumer<Throwable> failure);
 
 }
