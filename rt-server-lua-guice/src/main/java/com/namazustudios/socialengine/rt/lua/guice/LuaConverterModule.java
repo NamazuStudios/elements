@@ -4,10 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.naef.jnlua.Converter;
 import com.naef.jnlua.LuaState;
-import com.namazustudios.socialengine.rt.lua.converter.DelegatingConverter;
-import com.namazustudios.socialengine.rt.lua.converter.HttpManifestConverter;
-import com.namazustudios.socialengine.rt.lua.converter.ModelManifestConverter;
-import com.namazustudios.socialengine.rt.lua.converter.TypedConverter;
+import com.namazustudios.socialengine.rt.lua.converter.*;
 import com.namazustudios.socialengine.rt.lua.provider.LuaStateProvider;
 
 /**
@@ -19,6 +16,7 @@ public class LuaConverterModule extends AbstractModule {
     protected void configure() {
 
         final Multibinder<TypedConverter> multiBinder = Multibinder.newSetBinder(binder(), TypedConverter.class);
+        multiBinder.addBinding().to(ProxyConverter.class);
         multiBinder.addBinding().to(HttpManifestConverter.class);
         multiBinder.addBinding().to(ModelManifestConverter.class);
 

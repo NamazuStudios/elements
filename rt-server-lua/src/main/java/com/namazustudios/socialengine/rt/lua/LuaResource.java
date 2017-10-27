@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.lua;
 
 import com.naef.jnlua.JavaFunction;
 import com.naef.jnlua.LuaState;
+import com.naef.jnlua.LuaValueProxy;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.*;
 import com.namazustudios.socialengine.rt.lua.builtin.BuiltinManager;
@@ -81,7 +82,7 @@ public class LuaResource implements Resource {
      * @param luaState the luaState
      */
     @Inject
-    public LuaResource(final LuaState luaState, final Context context, final Scheduler scheduler) {
+    public LuaResource(final LuaState luaState, final Context context) {
         try {
 
             this.luaState = luaState;

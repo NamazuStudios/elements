@@ -217,4 +217,26 @@ public class SimpleResourceContext implements ResourceContext {
         }
 
     }
+
+    @Override
+    public void destroyAllResources() {
+        getResourceService().removeAndCloseAllResources();
+    }
+
+    @Override
+    public Future<Void> destroyAllResourcesAsync(Consumer<Void> success, Consumer<Throwable> failure) {
+        return getExecutorService().submit(() -> {
+
+            try {
+                getResourceService().removeAndCloseAllResources();
+                success.accept(null);
+            } catch (Throwable th) {
+                failure.accept(th);
+                throw th;
+            }
+
+            return null;
+        });
+    }
+
 }

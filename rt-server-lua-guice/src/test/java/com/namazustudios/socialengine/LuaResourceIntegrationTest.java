@@ -3,6 +3,7 @@ package com.namazustudios.socialengine;
 
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
 import com.namazustudios.socialengine.rt.guice.SimpleServicesModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import org.slf4j.Logger;
@@ -52,6 +53,7 @@ public class LuaResourceIntegrationTest {
             {"test.resource", "test_invoke_fail"},
             {"test.resource", "test_invoke_path"},
             {"test.resource", "test_invoke_path_fail"},
+            {"test.resource", "test_invoke_table"},
             {"test.resource", "test_destroy"},
             {"test.index", "test_list"},
             {"test.index", "test_link"},
@@ -63,7 +65,7 @@ public class LuaResourceIntegrationTest {
 
     @AfterMethod
     public void clearResourceService() {
-        getResourceService().removeAndCloseAllResources();
+        getContext().getResourceContext().destroyAllResources();
     }
 
     public Context getContext() {
@@ -75,21 +77,12 @@ public class LuaResourceIntegrationTest {
         this.context = context;
     }
 
-    public ResourceService getResourceService() {
-        return resourceService;
-    }
-
-    @Inject
-    public void setResourceService(ResourceService resourceService) {
-        this.resourceService = resourceService;
-    }
-
     public static class Module extends AbstractModule {
 
         @Override
         protected void configure() {
             install(new LuaModule());
-            install(new SimpleServicesModule());
+            install(new SimpleContextModule());
             bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(getClass().getClassLoader()));
         }
 
