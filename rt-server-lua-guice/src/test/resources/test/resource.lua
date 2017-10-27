@@ -63,7 +63,6 @@ function test_resource.test_invoke_fail()
 
 end
 
-
 function test_resource.test_invoke_path()
 
     local result, code
@@ -97,6 +96,18 @@ function test_resource.test_invoke_path_fail()
     result, code = resource.invoke_path(path, "identify", "Convex")
     assert(code == responsecode.OK, "Expected OK response code.  Got: " .. tostring(code))
     assert(type(result) == "boolean" and not result, "Expected false.  Got : " .. tostring(result))
+
+end
+
+function test_resource.test_invoke_table()
+
+    local result, code
+    local rid = make_resource()
+
+    result, code = resource.invoke(rid, "full_joke")
+    print("Got result " .. tostring(result) .. " with code " .. tostring(code))
+    assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
+    assert(type("result") == "table", "Expected \"table\" for type Got: " .. type(result))
 
 end
 

@@ -28,4 +28,12 @@ function helloworld.identify(who)
 
 end
 
+function helloworld.full_joke()
+    return {
+        "Knock Knock",
+        "Who's There?",
+        "Interrupting Cow - Moo!"
+    }
+end
+
 return helloworld
