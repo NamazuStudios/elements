@@ -7,6 +7,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.ClasspathAssetLoader;
 import com.namazustudios.socialengine.rt.FileAssetLoader;
+import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
 import com.namazustudios.socialengine.rt.guice.SimpleServicesModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 
@@ -31,7 +32,7 @@ public class TestRunnerModule extends AbstractModule {
         }
 
         install(new LuaModule());
-        install(new SimpleServicesModule());
+        install(new SimpleContextModule());
 
         final Multibinder<Test> testMultibinder = Multibinder.newSetBinder(binder(), Test .class, named(SimpleTestRunner.TESTS));
         tests.forEach(testMultibinder.addBinding()::toInstance);

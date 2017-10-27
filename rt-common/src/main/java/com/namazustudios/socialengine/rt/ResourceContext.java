@@ -167,9 +167,12 @@ public interface ResourceContext {
     }
 
     /**
-     * Clears all {@link Resource} instances from the system.  This is a call that shoudl be used with extreme care
-     * as it can possibly destroy the whole system.  This is primarily used for testing, and some implementations may
-     * opt to throw an exception.
+     * Clears all {@link Resource} instances from the system.  This is a call that should be used with extreme care
+     * as it can possibly destroy the whole system.  This is primarily used for testing, or restarting or shutting down
+     * handler instances which are intended to be short-lived.
+     *
+     * This may not exist for all implementations of {@link ResourceContext}, and may simply provide an exception
+     * indicating so.
      */
     Future<Void> destroyAllResourcesAsync(Consumer<Void> success, Consumer<Throwable> failure);
 

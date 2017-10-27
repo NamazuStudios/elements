@@ -3,6 +3,7 @@ package com.namazustudios.socialengine;
 
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
 import com.namazustudios.socialengine.rt.guice.SimpleServicesModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import org.slf4j.Logger;
@@ -81,7 +82,7 @@ public class LuaResourceIntegrationTest {
         @Override
         protected void configure() {
             install(new LuaModule());
-            install(new SimpleServicesModule());
+            install(new SimpleContextModule());
             bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(getClass().getClassLoader()));
         }
 

@@ -31,13 +31,6 @@ public class SimpleServicesModule extends PrivateModule {
     @Override
     protected void configure() {
 
-        // The main context for the application
-        bind(Context.class).to(SimpleContext.class).asEagerSingleton();
-
-        // The sub-contexts associated with the main context
-        bind(IndexContext.class).to(SimpleIndexContext.class);
-        bind(ResourceContext.class).to(SimpleResourceContext.class);
-        bind(SchedulerContext.class).to(SimpleSchedulerContext.class);
 
         // The actual underlying services
         bind(Scheduler.class).to(SimpleScheduler.class).asEagerSingleton();
@@ -50,29 +43,13 @@ public class SimpleServicesModule extends PrivateModule {
         bind(new TypeLiteral<OptimisticLockService<ResourceId>>(){})
                 .to(SimpleResourceIdOptimisticLockService.class);
 
-        bind(ExecutorService.class)
-                .annotatedWith(named(SimpleResourceContext.EXECUTOR_SERVICE))
-                .toProvider(() -> executorService(SimpleResourceContext.EXECUTOR_SERVICE));
-
-        bind(ExecutorService.class)
-                .annotatedWith(named(SimpleIndexContext.EXECUTOR_SERVICE))
-                .toProvider(() -> executorService(SimpleIndexContext.EXECUTOR_SERVICE));
-
         bind(ScheduledExecutorService.class)
                 .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE))
                 .toProvider(() -> scheduledExecutorService(SCHEDULED_EXECUTOR_SERVICE));
 
-        expose(Context.class);
-        expose(IndexContext.class);
-        expose(ResourceContext.class);
-        expose(SchedulerContext.class);
+        expose(Scheduler.class);
+        expose(ResourceService.class);
 
-    }
-
-    private ExecutorService executorService(final String name) {
-        final AtomicInteger threadCount = new AtomicInteger();
-        final Logger logger = LoggerFactory.getLogger(SCHEDULED_EXECUTOR_SERVICE);
-        return newCachedThreadPool(r -> newThread(r, name, threadCount, logger));
     }
 
     private ScheduledExecutorService scheduledExecutorService(final String name) {

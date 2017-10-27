@@ -107,7 +107,7 @@ function test_resource.test_invoke_table()
     result, code = resource.invoke(rid, "full_joke")
     print("Got result " .. tostring(result) .. " with code " .. tostring(code))
     assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
-    assert(type("result") == "table", "Expected \"table\" for type Got: " .. type(result))
+    assert(type(result) == "table", "Expected \"table\" for type Got: " .. type(result))
 
 end
 

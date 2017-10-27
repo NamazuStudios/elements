@@ -12,6 +12,8 @@ public abstract class AbstractMapConverter<JavaT> implements TypedConverter<Java
 
     private final DefaultConverter defaultConverter = DefaultConverter.getInstance();
 
+    protected abstract Class<JavaT> getConvertedType();
+
     @Override
     public int getTypeDistance(LuaState luaState, int index, Class<?> formalType) {
         return defaultConverter.getTypeDistance(luaState, index, formalType);
@@ -29,6 +31,11 @@ public abstract class AbstractMapConverter<JavaT> implements TypedConverter<Java
         final JavaT javaTObject = getConvertedType().cast(object);
         final Map<?, ?> map = convertJava2Lua(javaTObject);
         defaultConverter.convertJavaObject(luaState, map);
+    }
+
+    @Override
+    public boolean isConvertibleFromLua(Class<?> aClass) {
+        return getConvertedType().equals(aClass);
     }
 
     public Map<?,?> convertJava2Lua(JavaT object) {
