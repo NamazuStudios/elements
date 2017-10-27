@@ -20,6 +20,10 @@ public class FileAssetLoader extends AbstractAssetLoader {
 
     private final File rootDirectory;
 
+    public FileAssetLoader(final String rootDirectory) {
+        this(new File(rootDirectory));
+    }
+
     public FileAssetLoader(final File rootDirectory) {
 
         if (!rootDirectory.exists()) {
