@@ -59,7 +59,8 @@ public class LuaResourceIntegrationTest {
             {"test.index", "test_link"},
             {"test.index", "test_link_path"},
             {"test.index", "test_unlink"},
-            {"test.index", "test_unlink_and_destroy"}
+            {"test.index", "test_unlink_and_destroy"},
+            {"test.box2d", "test_hello_world"}
         };
     }
 
