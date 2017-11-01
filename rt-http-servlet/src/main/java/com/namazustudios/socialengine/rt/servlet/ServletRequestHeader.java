@@ -66,8 +66,10 @@ public class ServletRequestHeader implements RequestHeader {
 
     @Override
     public Map<String, String> getPathParameters() {
-        // TODO Implement this
-        return Collections.emptyMap();
+        return httpManifestMetadata
+            .getPreferredOperation()
+            .getPath()
+            .extract(getParsedPath());
     }
 
 }
