@@ -28,6 +28,8 @@ public class LuaResourceLoader implements ResourceLoader {
 
     private Provider<HttpStatusBuiltin> httpStatusBuiltinProvider;
 
+    private Provider<JNABuiltin> jnaBuiltinProvider;
+
     @Override
     public Resource load(final String moduleName, final Object ... args) throws ModuleNotFoundException {
 
@@ -40,6 +42,7 @@ public class LuaResourceLoader implements ResourceLoader {
             luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getHttpStatusBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
+            luaResource.getBuiltinManager().installBuiltin(getJnaBuiltinProvider().get());
             luaResource.loadModule(getAssetLoader(), moduleName, args);
             return luaResource;
         } catch (Throwable th) {
@@ -115,6 +118,15 @@ public class LuaResourceLoader implements ResourceLoader {
     @Inject
     public void setHttpStatusBuiltinProvider(Provider<HttpStatusBuiltin> httpStatusBuiltinProvider) {
         this.httpStatusBuiltinProvider = httpStatusBuiltinProvider;
+    }
+
+    public Provider<JNABuiltin> getJnaBuiltinProvider() {
+        return jnaBuiltinProvider;
+    }
+
+    @Inject
+    public void setJnaBuiltinProvider(Provider<JNABuiltin> jnaBuiltinProvider) {
+        this.jnaBuiltinProvider = jnaBuiltinProvider;
     }
 
 }
