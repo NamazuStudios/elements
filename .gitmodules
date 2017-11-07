@@ -1,0 +1,3 @@
+[submodule "socialengine-jnlua"]
+	path = socialengine-jnlua
+	url = ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-jnlua.git

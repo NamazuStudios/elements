@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.lua;
 
-import com.naef.jnlua.JavaFunction;
-import com.naef.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.LuaState;
 
 import java.util.function.Consumer;
 

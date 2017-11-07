@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.rt.lua;
 
-import com.naef.jnlua.JavaFunction;
-import com.naef.jnlua.LuaState;
-import com.naef.jnlua.LuaValueProxy;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.LuaValueProxy;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.*;
 import com.namazustudios.socialengine.rt.lua.builtin.BuiltinManager;
@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static com.naef.jnlua.LuaState.REGISTRYINDEX;
-import static com.naef.jnlua.LuaState.YIELD;
+import static com.namazustudios.socialengine.jnlua.LuaState.REGISTRYINDEX;
+import static com.namazustudios.socialengine.jnlua.LuaState.YIELD;
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
 import static com.namazustudios.socialengine.rt.lua.Constants.REQUIRE;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReason.ERROR;

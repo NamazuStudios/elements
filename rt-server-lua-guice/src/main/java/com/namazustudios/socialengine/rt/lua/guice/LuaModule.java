@@ -1,16 +1,13 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.inject.PrivateModule;
-import com.naef.jnlua.Converter;
-import com.naef.jnlua.LuaState;
-import com.naef.jnlua.NativeSupport;
+import com.namazustudios.socialengine.jnlua.Converter;
+import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.ManifestLoader;
-import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.lua.IocResolver;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
 import com.namazustudios.socialengine.rt.lua.LuaResourceLoader;
-import com.namazustudios.socialengine.rt.lua.NativeLibLoader;
 
 /**
  * Created by patricktwohig on 8/17/17.
@@ -19,7 +16,6 @@ public class LuaModule extends PrivateModule {
 
     @Override
     protected final void configure() {
-        NativeSupport.getInstance().setLoader(new NativeLibLoader());
         bind(IocResolver.class).to(GuiceIoCResolver.class);
         configureFeatures();
     }

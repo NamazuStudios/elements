@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.rt.lua;
 
 import com.google.common.net.MediaType;
-import com.naef.jnlua.JavaFunction;
-import com.naef.jnlua.LuaException;
-import com.naef.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.LuaException;
+import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.exception.BadManifestException;

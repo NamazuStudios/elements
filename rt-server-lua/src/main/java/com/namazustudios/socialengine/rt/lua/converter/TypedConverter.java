@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.converter;
 
-import com.naef.jnlua.Converter;
-import com.naef.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.Converter;
+import com.namazustudios.socialengine.jnlua.LuaState;
 
 /**
  * Created by patricktwohig on 8/18/17.

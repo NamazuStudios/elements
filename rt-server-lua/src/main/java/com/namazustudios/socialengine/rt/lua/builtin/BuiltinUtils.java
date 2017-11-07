@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
-import com.naef.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.TaskId;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 
