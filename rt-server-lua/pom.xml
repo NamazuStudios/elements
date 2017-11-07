@@ -17,9 +17,7 @@
     <name>rt-server-lua</name>
 
     <properties>
-        <jnlua.version>1.0.4</jnlua.version>
         <quartz.version>2.3.0</quartz.version>
-        <native.lib.loader.version>2.2.0</native.lib.loader.version>
     </properties>
 
     <dependencies>
@@ -29,9 +27,9 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.nebula2d</groupId>
+            <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>jnlua</artifactId>
-            <version>${jnlua.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>
@@ -53,11 +51,6 @@
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
             <version>${quartz.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.scijava</groupId>
-            <artifactId>native-lib-loader</artifactId>
-            <version>${native.lib.loader.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

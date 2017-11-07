@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
-import com.naef.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.rt.ResponseCode;
 import com.namazustudios.socialengine.rt.exception.BaseException;
 import com.namazustudios.socialengine.rt.lua.LogAssist;

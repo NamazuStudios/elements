@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.rt.lua.builtin.coroutine;
 
-import com.naef.jnlua.JavaFunction;
-import com.naef.jnlua.LuaState;
-import com.naef.jnlua.LuaType;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.LuaType;
 import com.namazustudios.socialengine.rt.SchedulerContext;
 import com.namazustudios.socialengine.rt.TaskId;
 import com.namazustudios.socialengine.rt.exception.InternalException;
@@ -17,8 +17,8 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import static com.naef.jnlua.LuaState.REGISTRYINDEX;
-import static com.naef.jnlua.LuaState.YIELD;
+import static com.namazustudios.socialengine.jnlua.LuaState.REGISTRYINDEX;
+import static com.namazustudios.socialengine.jnlua.LuaState.YIELD;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstruction.IMMEDIATE;
 import static java.lang.Math.max;
 import static java.lang.StrictMath.round;

@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.rt.lua;
 
-import com.naef.jnlua.JavaFunction;
-import com.naef.jnlua.LuaState;
-import com.naef.jnlua.LuaValueProxy;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
+import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.*;
 import com.namazustudios.socialengine.rt.lua.builtin.BuiltinManager;
@@ -13,27 +13,22 @@ import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReasonBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstructionBuiltin;
 import com.namazustudios.socialengine.rt.util.FinallyAction;
-import com.sun.jna.Function;
-import com.sun.jna.NativeLibrary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static com.naef.jnlua.LuaState.REGISTRYINDEX;
-import static com.naef.jnlua.LuaState.YIELD;
+import static com.namazustudios.socialengine.jnlua.LuaState.REGISTRYINDEX;
+import static com.namazustudios.socialengine.jnlua.LuaState.YIELD;
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
 import static com.namazustudios.socialengine.rt.lua.Constants.REQUIRE;
-import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReason.ERROR;
-import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReason.NETWORK;
-import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReason.SCHEDULER;
+import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReason.*;
 
 /**
  * The abstract {@link Resource} type backed by a Lua script.  This uses the JNLua implentation

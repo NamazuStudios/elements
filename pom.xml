@@ -51,6 +51,7 @@
         <module>app-serve</module>
         <module>rt-dao-guice</module>
         <module>rt-server-lua-testkit</module>
+        <module>socialengine-jnlua/jnlua</module>
     </modules>
 
     <properties>

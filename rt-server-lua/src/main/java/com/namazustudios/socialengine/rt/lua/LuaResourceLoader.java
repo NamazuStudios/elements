@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.lua;
 
-import com.naef.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceLoader;

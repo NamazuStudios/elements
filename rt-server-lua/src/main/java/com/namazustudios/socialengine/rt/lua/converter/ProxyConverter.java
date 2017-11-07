@@ -1,12 +1,12 @@
 package com.namazustudios.socialengine.rt.lua.converter;
 
-import com.naef.jnlua.DefaultConverter;
-import com.naef.jnlua.LuaState;
-import com.naef.jnlua.LuaValueProxy;
+import com.namazustudios.socialengine.jnlua.DefaultConverter;
+import com.namazustudios.socialengine.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.LuaValueProxy;
 
 import java.util.Map;
 
-import static com.naef.jnlua.DefaultConverter.*;
+import static com.namazustudios.socialengine.jnlua.DefaultConverter.*;
 
 public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
 

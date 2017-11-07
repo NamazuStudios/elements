@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.builtin.coroutine;
 
-import com.naef.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

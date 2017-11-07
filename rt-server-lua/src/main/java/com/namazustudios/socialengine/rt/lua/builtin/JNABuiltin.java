@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
-import com.naef.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
 import com.sun.jna.Function;
@@ -72,22 +72,7 @@ public class JNABuiltin implements Builtin {
 
             logger.info("Found loader symbol {} invoking using {}", function.getName(), function.getCallingConvention());
 
-            final long luaStatePointer;
-
-            try {
-
-                // TODO Fix this not to use Reflection, but this requires a change to jnLua since nobody seems to
-                // maintain that package we should appropriate it for our own use.
-
-                final Field field = luaState.getClass().getDeclaredField("luaThread");
-                field.setAccessible(true);
-                luaStatePointer = field.getLong(luaState);
-
-            } catch (IllegalAccessException | NoSuchFieldException e) {
-                logAssist.error("Reflection error", e);
-                throw new InternalException(e);
-            }
-
+            final long luaStatePointer = luaState.getLuaThread();
             return function.invokeInt(new Object[]{luaStatePointer});
 
         };

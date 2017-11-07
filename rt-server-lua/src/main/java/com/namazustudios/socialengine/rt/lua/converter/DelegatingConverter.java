@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.rt.lua.converter;
 
-import com.naef.jnlua.Converter;
-import com.naef.jnlua.DefaultConverter;
-import com.naef.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.Converter;
+import com.namazustudios.socialengine.jnlua.DefaultConverter;
+import com.namazustudios.socialengine.jnlua.LuaState;
 
 import javax.inject.Inject;
 import java.util.Set;

@@ -2,8 +2,8 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-import com.naef.jnlua.Converter;
-import com.naef.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.Converter;
+import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.lua.converter.*;
 import com.namazustudios.socialengine.rt.lua.provider.LuaStateProvider;
 

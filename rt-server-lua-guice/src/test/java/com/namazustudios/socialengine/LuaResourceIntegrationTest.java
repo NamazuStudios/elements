@@ -2,12 +2,17 @@ package com.namazustudios.socialengine;
 
 
 import com.google.inject.AbstractModule;
+import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
 import com.namazustudios.socialengine.rt.guice.SimpleServicesModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
+import net.bytebuddy.implementation.bytecode.Throw;
+import org.omg.CORBA.INTERNAL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -17,6 +22,8 @@ import javax.inject.Inject;
 import java.util.UUID;
 
 import static java.util.UUID.randomUUID;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 /**
  * Provides tests for various lua libraries by instantiating them and invoking specific methods.
@@ -62,6 +69,23 @@ public class LuaResourceIntegrationTest {
             {"test.index", "test_unlink_and_destroy"},
             {"test.box2d", "test_hello_world"}
         };
+    }
+
+    @Test
+    public void testRuntimeException() {
+
+        final Path path = new Path(randomUUID().toString());
+        final ResourceId resourceId = getContext().getResourceContext().create("test.failures", path);
+
+        try {
+            getContext().getResourceContext().invoke(resourceId, "lua_runtime_exception");
+            fail("Expected exception by this pointl");
+        } catch (InternalException ex) {
+            assertTrue((ex.getCause() instanceof LuaRuntimeException), "Expected cause to be LuaRuntimeException.");
+        } finally {
+            getContext().getResourceContext().destroy(resourceId);
+        }
+
     }
 
     @AfterMethod
