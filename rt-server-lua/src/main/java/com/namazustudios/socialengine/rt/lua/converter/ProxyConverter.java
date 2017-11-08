@@ -3,7 +3,10 @@ package com.namazustudios.socialengine.rt.lua.converter;
 import com.namazustudios.socialengine.jnlua.DefaultConverter;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.jnlua.LuaValueProxy;
+import com.namazustudios.socialengine.rt.lua.LogAssist;
+import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Proxy;
 import java.util.Map;
 
 import static com.namazustudios.socialengine.jnlua.DefaultConverter.*;
@@ -30,9 +33,12 @@ public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
             getInstance().convertJavaObject(luaState, object);
         } else {
 
+            final LogAssist logAssist = new LogAssist(() -> LoggerFactory.getLogger(ProxyConverter.class), () -> luaState);
+
             luaState.newTable();
 
             asMap.forEach((k, v) -> {
+                logAssist.toString();
                 luaState.pushJavaObject(k);
                 luaState.pushJavaObject(v);
                 luaState.setTable(-3);

@@ -61,6 +61,7 @@ public class LuaResourceIntegrationTest {
             {"test.resource", "test_invoke_path"},
             {"test.resource", "test_invoke_path_fail"},
             {"test.resource", "test_invoke_table"},
+            {"test.resource", "test_invoke_array"},
             {"test.resource", "test_destroy"},
             {"test.index", "test_list"},
             {"test.index", "test_link"},

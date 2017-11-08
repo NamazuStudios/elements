@@ -36,4 +36,12 @@ function helloworld.full_joke()
     }
 end
 
+function helloworld.full_joke_array()
+    local array = {}
+    array[#array + 1] = "Knock Knock"
+    array[#array + 1] = "Who's There?"
+    array[#array + 1] = "Interrupting Cow - Moo!"
+    return array
+end
+
 return helloworld
