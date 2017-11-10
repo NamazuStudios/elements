@@ -16,6 +16,7 @@ public class LuaConverterModule extends AbstractModule {
     protected void configure() {
 
         final Multibinder<TypedConverter> multiBinder = Multibinder.newSetBinder(binder(), TypedConverter.class);
+
         multiBinder.addBinding().to(ProxyConverter.class);
         multiBinder.addBinding().to(HttpManifestConverter.class);
         multiBinder.addBinding().to(ModelManifestConverter.class);

@@ -34,8 +34,8 @@ public abstract class AbstractMapConverter<JavaT> implements TypedConverter<Java
     }
 
     @Override
-    public boolean isConvertibleFromLua(Class<?> aClass) {
-        return getConvertedType().equals(aClass);
+    public boolean isConvertibleFromLua(LuaState luaState, int index, Class<?> formalType) {
+        return getConvertedType().equals(formalType);
     }
 
     public Map<?,?> convertJava2Lua(JavaT object) {
