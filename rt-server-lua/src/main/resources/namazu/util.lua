@@ -25,26 +25,6 @@ function util.path(...)
     return Path:new(table.unpack(...))
 end
 
---- Returns a sequence from a table
--- Accepting a single table, this will iterate the table, discard the keys, and sequene the table.  Some table, or
--- table like objects, will be sequenced properly based on their natural ordering.  Note standard lua tables do not work
--- with this method because they are
--- @param t the tablke to sequence
-function util.sequence(t)
-
-    local i = 1
-    local seq = {}
-
-    for k, v in pairs(t)
-    do
-        seq[i] = v
-        i = i + 1
-    end
-
-    return seq
-
-end
-
 function util.uuid()
     return UUID:randomUUID():toString()
 end

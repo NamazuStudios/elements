@@ -14,18 +14,19 @@ public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
 
     @Override
     public <T> T convertLuaValue(final LuaState luaState, final int index, final Class<T> formalType) {
-        if (isList(luaState, index) && formalType.isAssignableFrom(List.class)) {
+        if (Iterable.class.isAssignableFrom(formalType) && isLuaSequence(luaState, index)) {
             final List<?> proxyList = getInstance().convertLuaValue(luaState, index, List.class);
             return (T) new ArrayList<Object>(proxyList);
         } else if (formalType.isAssignableFrom(Map.class)) {
             final Map<?, ?> proxyMap = getInstance().convertLuaValue(luaState, index, Map.class);
             return (T) new LinkedHashMap<Object, Object>(proxyMap);
         } else {
-            return getInstance().convertLuaValue(luaState, index, formalType);
+            final LuaType luaType = luaState.type(index);
+            throw new IllegalArgumentException("Unexpected " + luaType + " on the Lua stack requested conversion.");
         }
     }
 
-    private boolean isList(final LuaState luaState, final int index) {
+    private boolean isLuaSequence(final LuaState luaState, final int index) {
 
         final int top = luaState.getTop();
 
@@ -38,7 +39,7 @@ public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
 
                 luaState.pushValue(-2);
 
-                if (luaState.type(-2) != LuaType.NUMBER) {
+                if (luaState.type(-1) != LuaType.NUMBER) {
                     return false;
                 }
 
@@ -76,11 +77,11 @@ public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
                 luaState.setTable(-3);
             });
 
-        } else if (object instanceof List) {
+        } else if (object instanceof Iterable) {
 
             int index = 0;
-            final List<?> list = (List<?>)object;
-            final ListIterator<?> listIterator = list.listIterator();
+            final Iterable<?> list = (Iterable<?>)object;
+            final Iterator<?> listIterator = list.iterator();
 
             luaState.newTable();
 
@@ -97,7 +98,7 @@ public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
 
     @Override
     public boolean isConvertibleToLua(Object object) {
-        return (object instanceof List) || (object instanceof Map);
+        return (object instanceof Iterable) || (object instanceof Map);
     }
 
     @Override

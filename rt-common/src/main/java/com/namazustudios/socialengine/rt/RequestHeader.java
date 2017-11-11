@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -68,10 +69,23 @@ public interface RequestHeader extends NamedHeaders {
      * was formulated without a {@link ParameterizedPath} and returns the value of {@link Collections#emptyMap()}.
      * Implementations should provide more detail if such detail is available.
      *
+     * The iteration order of the returned {@link Map<String, String>} must follow the order in which the parameters
+     * appear within the path.  This behaviour matches that of {@link ParameterizedPath#extract(Path)}.
+     *
      * @return the path parameters where the key is the parameter name and the value is the matching path component
      */
     default Map<String, String> getPathParameters() {
         return Collections.emptyMap();
+    }
+
+    /**
+     * If the associated {@link Request} was build with a {@link ParameterizedPath}, then this will return the parameter
+     * values.  The default implementation uses the value of {@link Map#values()}.
+     *
+     * @return a {@link Collection<String>} containing the values of the path parameters in sequence
+     */
+    default Collection<String> getPathParameterValues() {
+        return getPathParameters().values();
     }
 
 }

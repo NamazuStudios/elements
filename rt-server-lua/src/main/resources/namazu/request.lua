@@ -7,7 +7,6 @@
 --
 
 local table = require "table"
-local util = require "namazu.util"
 
 local request = {}
 
@@ -161,7 +160,7 @@ end
 function request.unpack_headers(request, header_name)
     local header = request:getHeader()
     local headers = header:getHeaders(header_name)
-    return table.unpack(util.sequence(headers))
+    return table.unpack(headers)
 end
 
 --- Unpacks the parameters of the request with the provided name
@@ -179,7 +178,7 @@ end
 -- @return a sequence of path elements
 function request.unpack_parameters(request, parameter_name)
     local parameters = request:getParameters(parameter_name)
-    return table.unpack(util.sequence(parameters))
+    return table.unpack(parameters)
 end
 
 --- Unpacks the path parameters for a request
@@ -198,8 +197,8 @@ end
 -- @param request the request from which to extract path parameters
 -- @return a sequence of path elements
 function request.unpack_path_parameters(request)
-    local parameters = request:getHeader():getPathParameters()
-    return table.unpack(util.sequence(parameters))
+    local parameters = request:getHeader():getPathParameterValues()
+    return table.unpack(parameters)
 end
 
 return request
