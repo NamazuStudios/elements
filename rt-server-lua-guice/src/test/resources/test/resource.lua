@@ -123,6 +123,23 @@ function test_resource.test_invoke_table()
 
 end
 
+function test_resource.test_invoke_array()
+
+    local result, code
+    local rid = make_resource()
+
+    result, code = resource.invoke(rid, "full_joke_array")
+    print("Got result " .. tostring(result) .. " with code " .. tostring(code))
+    assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
+    assert(type(result) == "table", "Expected \"table\" for type Got: " .. type(result))
+
+    assert(#result == 3, "Expected specifically three results.  Got " .. tostring(#result))
+    assert(result[1] == "Knock Knock", "Expected setup to be \"Knock Knock\"  Got: " .. tostring(result[1]))
+    assert(result[2] == "Who's There?", "Expected setup to be \"Who's There?\"  Got: " .. tostring(result[2]))
+    assert(result[3] == "Interrupting Cow - Moo!", "Expected setup to be \"Interrupting Cow - Moo!\"  Got: " .. tostring(result[3]))
+
+end
+
 function test_resource.test_destroy()
 
     local rid, path = make_resource()

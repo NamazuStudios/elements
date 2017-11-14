@@ -17,6 +17,7 @@
     <name>rt-server-lua</name>
 
     <properties>
+        <jna.version>4.5.0</jna.version>
         <quartz.version>2.3.0</quartz.version>
     </properties>
 
@@ -60,7 +61,7 @@
         <dependency>
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna</artifactId>
-            <version>4.5.0</version>
+            <version>${jna.version}</version>
         </dependency>
     </dependencies>
 
