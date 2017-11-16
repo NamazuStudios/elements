@@ -46,7 +46,7 @@ public interface GooglePlayApplicationConfigurationDao {
             GooglePlayApplicationConfiguration googlePlayApplicationConfiguration);
 
     /**
-     * Delets an {@link GooglePlayApplicationConfiguration} using the ID as reference.
+     * Deletes an {@link GooglePlayApplicationConfiguration} using the ID as reference.
      *
      * @param applicationNameOrId the {@link Application} name or id
      * @param applicationConfigurationNameOrId the {@link GooglePlayApplicationConfiguration} id
