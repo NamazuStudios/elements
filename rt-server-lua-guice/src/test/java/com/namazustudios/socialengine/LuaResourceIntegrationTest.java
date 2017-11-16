@@ -6,20 +6,15 @@ import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
-import com.namazustudios.socialengine.rt.guice.SimpleServicesModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
-import net.bytebuddy.implementation.bytecode.Throw;
-import org.omg.CORBA.INTERNAL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-import java.util.UUID;
 
 import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertTrue;
@@ -68,7 +63,11 @@ public class LuaResourceIntegrationTest {
             {"test.index", "test_link_path"},
             {"test.index", "test_unlink"},
             {"test.index", "test_unlink_and_destroy"},
-            {"test.box2d", "test_hello_world"}
+            {"test.box2d", "test_hello_world"},
+            {"test.javamodule", "test_hello_world"},
+            {"test.javamodule", "test_return_hello_world"},
+            {"test.javamodule", "test_overload_1"},
+            {"test.javamodule", "test_overload_2"}
         };
     }
 
@@ -107,7 +106,15 @@ public class LuaResourceIntegrationTest {
 
         @Override
         protected void configure() {
-            install(new LuaModule());
+
+            install(new LuaModule() {
+                @Override
+                protected void configureFeatures() {
+                    super.configureFeatures();
+                    bindBuiltin(TestJavaModule.class).toModuleNamed("test.java.module");
+                }
+            });
+
             install(new SimpleContextModule());
             bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(getClass().getClassLoader()));
         }

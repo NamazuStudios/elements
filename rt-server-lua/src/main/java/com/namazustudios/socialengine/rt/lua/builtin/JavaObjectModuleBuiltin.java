@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
 import static java.util.Arrays.stream;
 import static java.util.Collections.unmodifiableList;
@@ -20,8 +21,6 @@ import static java.util.Collections.unmodifiableList;
  * Allows a Java object to behave as a module.
  */
 public class JavaObjectModuleBuiltin implements Builtin {
-
-
 
     private final String moduleName;
 
@@ -33,7 +32,7 @@ public class JavaObjectModuleBuiltin implements Builtin {
 
     public <T> JavaObjectModuleBuiltin(final String moduleName,
                                        final Provider<T> tProvider) {
-        this(moduleName, tProvider, in -> LOWER_UNDERSCORE.to(LOWER_UNDERSCORE, in));
+        this(moduleName, tProvider, in -> LOWER_UNDERSCORE.to(LOWER_CAMEL, in));
     }
 
     public <T> JavaObjectModuleBuiltin(final String moduleName,
@@ -82,11 +81,18 @@ public class JavaObjectModuleBuiltin implements Builtin {
 
     private JavaFunction index(final Object object) {
         return luaState -> {
+
             final String methodName = luaState.toString(2);
             final List<Method> methodList = getMethodsNamed(object, methodName);
-            final JavaFunction dispatcherForMethod = getDispatcherForMethods(luaState, methodName, methodList);
+
+            if (methodList.isEmpty()) {
+                return 0;
+            }
+
+            final JavaFunction dispatcherForMethod = getDispatcherForMethods(object, methodName, methodList);
             luaState.pushJavaFunction(dispatcherForMethod);
             return 1;
+
         };
     }
 
@@ -121,13 +127,17 @@ public class JavaObjectModuleBuiltin implements Builtin {
             final Object[] args = new Object[nargs];
             final Class<?>[] parameterTypes = toInvoke.getParameterTypes();
 
-            for (int i = 1; i < nargs; ++i) {
-                args[i] = luaState.toJavaObject(i, parameterTypes[i]);
+            for (int i = 0; i < nargs; ++i) {
+                args[i] = luaState.toJavaObject(i + 1, parameterTypes[i]);
             }
 
             try {
-                luaState.pushJavaObject(toInvoke.invoke(target, args));
-                return 1;
+                if (void.class.equals(toInvoke.getReturnType()) || Void.class.equals(toInvoke.getReturnType())) {
+                    return 0;
+                } else {
+                    luaState.pushJavaObject(toInvoke.invoke(target, args));
+                    return 1;
+                }
             } catch (InvocationTargetException | IllegalAccessException ex) {
                 throw new InternalException("Could not invoke Java method.", ex);
             }
