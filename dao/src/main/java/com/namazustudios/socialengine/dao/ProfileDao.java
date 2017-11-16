@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.annotation.Expose;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
@@ -10,6 +11,7 @@ import com.namazustudios.socialengine.model.profile.Profile;
 /**
  * Created by patricktwohig on 6/28/17.
  */
+@Expose(luaModuleName = "namazu.socialengine.dao.profile")
 public interface ProfileDao {
 
     /**
