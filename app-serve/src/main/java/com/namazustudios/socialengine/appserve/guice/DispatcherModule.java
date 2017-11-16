@@ -30,7 +30,7 @@ public class DispatcherModule extends PrivateModule {
     @Override
     protected void configure() {
 
-        install(new LuaModule());
+        install(new DispatcherLuaModule());
         install(new RTFileAssetLoaderModule(assetRootDirectory));
 
         install(new FilterModule());
