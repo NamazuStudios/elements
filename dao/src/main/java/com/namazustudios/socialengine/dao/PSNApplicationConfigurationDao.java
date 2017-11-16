@@ -8,7 +8,6 @@ import com.namazustudios.socialengine.model.application.PSNApplicationConfigurat
 /**
  * Created by patricktwohig on 5/25/17.
  */
-@Expose(luaModuleName = "namazu.socialengine.dao.psn")
 public interface PSNApplicationConfigurationDao {
 
     /**

@@ -25,6 +25,7 @@ public class DispatcherLuaModule extends LuaModule {
         final Set<Class<?>> classSet = reflections.getTypesAnnotatedWith(Expose.class);
 
         classSet.stream()
+                .filter(cls -> cls.getAnnotation(Expose.class) != null)
                 .collect(Collectors.toMap(cls -> cls.getAnnotation(Expose.class), identity()))
                 .forEach((expose, type) -> bindBuiltin(type).toModuleNamed(expose.luaModuleName()));
 
