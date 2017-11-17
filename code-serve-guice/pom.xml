@@ -18,6 +18,16 @@
     <dependencies>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>common-servlet</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>code-serve</artifactId>
             <version>${project.version}</version>
         </dependency>

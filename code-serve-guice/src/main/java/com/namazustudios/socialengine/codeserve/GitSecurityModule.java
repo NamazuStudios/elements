@@ -4,9 +4,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.servlet.ServletScopes;
 import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.service.UserAuthenticationMethod;
-import com.namazustudios.socialengine.service.UserProvider;
-import com.namazustudios.socialengine.service.auth.RequestAttributeAuthenticationMethod;
+import com.namazustudios.socialengine.security.UserAuthenticationMethod;
+import com.namazustudios.socialengine.security.UserProvider;
+import com.namazustudios.socialengine.security.HttpRequestAttributeAuthenticationMethod;
 
 /**
  * Created by patricktwohig on 8/3/17.
@@ -19,7 +19,7 @@ public class GitSecurityModule extends AbstractModule {
 
         final Multibinder<UserAuthenticationMethod> userAuthenticationMethodMultibinder;
         userAuthenticationMethodMultibinder = Multibinder.newSetBinder(binder(), UserAuthenticationMethod.class);
-        userAuthenticationMethodMultibinder.addBinding().to(RequestAttributeAuthenticationMethod.class);
+        userAuthenticationMethodMultibinder.addBinding().to(HttpRequestAttributeAuthenticationMethod.class);
 
     }
 }
