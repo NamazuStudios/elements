@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.lua;
 
-import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceLoader;
@@ -9,6 +8,8 @@ import com.namazustudios.socialengine.rt.lua.builtin.*;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+
+import java.util.Set;
 
 import static com.namazustudios.socialengine.rt.lua.IocResolver.IOC_RESOLVER_MODULE_NAME;
 
@@ -30,6 +31,8 @@ public class LuaResourceLoader implements ResourceLoader {
 
     private Provider<JNABuiltin> jnaBuiltinProvider;
 
+    private Provider<Set<Builtin>> additionalBuiltins;
+
     @Override
     public Resource load(final String moduleName, final Object ... args) throws ModuleNotFoundException {
 
@@ -37,13 +40,19 @@ public class LuaResourceLoader implements ResourceLoader {
 
         try {
             final IocResolver iocResolver = getIocResolverProvider().get();
+
             luaResource.getBuiltinManager().installBuiltin(getClasspathBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getAssetLoaderBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getHttpStatusBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
             luaResource.getBuiltinManager().installBuiltin(getJnaBuiltinProvider().get());
+
+            final Set<Builtin> builtinSet = getAdditionalBuiltins().get();
+            builtinSet.forEach(luaResource.getBuiltinManager()::installBuiltin);
+
             luaResource.loadModule(getAssetLoader(), moduleName, args);
+
             return luaResource;
         } catch (Throwable th) {
             luaResource.close();
@@ -127,6 +136,15 @@ public class LuaResourceLoader implements ResourceLoader {
     @Inject
     public void setJnaBuiltinProvider(Provider<JNABuiltin> jnaBuiltinProvider) {
         this.jnaBuiltinProvider = jnaBuiltinProvider;
+    }
+
+    public Provider<Set<Builtin>> getAdditionalBuiltins() {
+        return additionalBuiltins;
+    }
+
+    @Inject
+    public void setAdditionalBuiltins(Provider<Set<Builtin>> additionalBuiltins) {
+        this.additionalBuiltins = additionalBuiltins;
     }
 
 }

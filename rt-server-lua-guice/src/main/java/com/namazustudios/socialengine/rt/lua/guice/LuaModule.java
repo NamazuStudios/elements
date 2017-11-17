@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.inject.PrivateModule;
+import com.google.inject.multibindings.Multibinder;
 import com.namazustudios.socialengine.jnlua.Converter;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.ManifestLoader;
@@ -8,14 +9,21 @@ import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.lua.IocResolver;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
 import com.namazustudios.socialengine.rt.lua.LuaResourceLoader;
+import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
+import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectModuleBuiltin;
+
+import javax.inject.Provider;
 
 /**
  * Created by patricktwohig on 8/17/17.
  */
 public class LuaModule extends PrivateModule {
 
+    private Multibinder<Builtin> builtinMultibinder;
+
     @Override
     protected final void configure() {
+        builtinMultibinder = Multibinder.newSetBinder(binder(), Builtin.class);
         bind(IocResolver.class).to(GuiceIoCResolver.class);
         configureFeatures();
     }
@@ -67,6 +75,31 @@ public class LuaModule extends PrivateModule {
     protected final void enableLuaResourceLoaderFeature() {
         bind(ResourceLoader.class).to(LuaResourceLoader.class);
         expose(ResourceLoader.class);
+    }
+
+    /**
+     * Binds a {@link Builtin} to to the type specified by the supplied {@link Class}.
+     *
+     * @param cls the type
+     */
+    protected ModuleBinding bindBuiltin(final Class<?> cls) {
+        final Provider<?> provider = getProvider(cls);
+        return moduleName -> builtinMultibinder.addBinding().toProvider(() -> new JavaObjectModuleBuiltin(moduleName, provider));
+    }
+
+    /**
+     * Used to add a binding to a Lua module.
+     */
+    @FunctionalInterface
+    public interface ModuleBinding {
+
+        /**
+         * Specifies the module.
+         *
+         * @param moduleName the module name.
+         */
+        void toModuleNamed(final String moduleName);
+
     }
 
 }

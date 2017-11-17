@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.annotation.Expose;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
@@ -7,6 +8,7 @@ import com.namazustudios.socialengine.model.application.Application;
 /**
  * Created by patricktwohig on 7/10/15.
  */
+@Expose(luaModuleName = "namazu.socialengine.dao.application")
 public interface ApplicationDao {
 
     /**

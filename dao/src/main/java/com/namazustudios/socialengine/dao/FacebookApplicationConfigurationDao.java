@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.annotation.Expose;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;

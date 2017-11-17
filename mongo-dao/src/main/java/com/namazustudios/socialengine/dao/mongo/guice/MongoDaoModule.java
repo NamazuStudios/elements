@@ -65,8 +65,6 @@ public class MongoDaoModule extends PrivateModule {
         bind(new TypeLiteral<Function<MatchingAlgorithm, Matchmaker>>(){})
             .toProvider(MongoMatchmakerFunctionProvider.class);
 
-
-
         expose(UserDao.class);
         expose(ProfileDao.class);
         expose(FacebookUserDao.class);

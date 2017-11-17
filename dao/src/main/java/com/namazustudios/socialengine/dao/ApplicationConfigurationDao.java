@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.annotation.Expose;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
@@ -7,6 +8,7 @@ import com.namazustudios.socialengine.model.application.ApplicationConfiguration
 /**
  * Created by patricktwohig on 7/13/15.
  */
+@Expose(luaModuleName = "namazu.socialengine.dao.applicationconfiguration")
 public interface ApplicationConfigurationDao {
 
     /**

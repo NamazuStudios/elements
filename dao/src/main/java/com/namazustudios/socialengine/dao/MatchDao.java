@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.annotation.Expose;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.Pagination;
@@ -14,6 +15,7 @@ import java.util.List;
 /**
  * Created by patricktwohig on 7/20/17.
  */
+@Expose(luaModuleName = "namazu.socialengine.dao.match")
 public interface MatchDao {
 
     /**

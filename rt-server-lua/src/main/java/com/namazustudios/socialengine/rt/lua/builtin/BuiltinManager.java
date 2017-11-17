@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.rt.lua.LuaResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Provider;
 import java.util.function.Supplier;
 
 /**
@@ -56,5 +57,7 @@ public class BuiltinManager {
         }
 
     }
+
+
 
 }

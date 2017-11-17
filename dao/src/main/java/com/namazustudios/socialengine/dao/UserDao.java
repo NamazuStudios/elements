@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.annotation.Expose;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 
@@ -14,6 +15,7 @@ import com.namazustudios.socialengine.model.User;
  *
  * Created by patricktwohig on 3/26/15.
  */
+@Expose(luaModuleName = "namazu.socialengine.dao.user")
 public interface UserDao {
 
     /**
