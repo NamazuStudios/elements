@@ -16,6 +16,12 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -69,6 +75,32 @@ public class LuaResourceIntegrationTest {
             {"test.javamodule", "test_overload_1"},
             {"test.javamodule", "test_overload_2"}
         };
+    }
+
+    @Test(dataProvider = "resourcesToTestWithReturnValues")
+    public void performTestWithReturnValue(final String moduleName,
+                                           final String methodName,
+                                           final Consumer<Object> resultConsumer) throws InterruptedException {
+        final Path path = new Path(randomUUID().toString());
+        final ResourceId resourceId = getContext().getResourceContext().create(moduleName, path);
+        final Object result = getContext().getResourceContext().invoke(resourceId, methodName);
+        logger.info("Successfuly got test result {}", result);
+        resultConsumer.accept(result);
+        getContext().getResourceContext().destroy(resourceId);
+    }
+
+    @DataProvider
+    public static Object[][] resourcesToTestWithReturnValues() {
+
+        final Function<Consumer<Object>, Consumer<Object>> expected = c -> c;
+
+        return new Object[][] {
+            {"test.model", "test_array", expected.apply(result -> assertTrue(result instanceof List, "Expected instance of list."))},
+            {"test.model", "test_object", expected.apply(result -> assertTrue(result instanceof Map, "Expected instance of map."))},
+            {"test.model", "test_array_default", expected.apply(result -> assertTrue(result instanceof List, "Expected instance of list."))},
+            {"test.model", "test_object_default", expected.apply(result -> assertTrue(result instanceof List, "Expected instance of map."))},
+        };
+
     }
 
     @Test

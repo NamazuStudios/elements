@@ -42,6 +42,11 @@ public interface Constants {
     String REQUIRE = "require";
 
     /**
+     * A field in an object's metatable indicating the type, (eg "object" or "array").
+     */
+    String MANIFEST_TYPE_METAFIELD = "__namazu_manifest_type";
+
+    /**
      * The lua coroutine library.
      */
     String COROUTINE = "coroutine";
