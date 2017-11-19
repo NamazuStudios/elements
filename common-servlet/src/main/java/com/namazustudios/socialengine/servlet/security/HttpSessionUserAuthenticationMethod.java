@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.security;
+package com.namazustudios.socialengine.servlet.security;
 
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.User;

@@ -6,6 +6,9 @@ import com.google.inject.multibindings.Multibinder;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.security.*;
+import com.namazustudios.socialengine.servlet.security.HttpRequestAttributeAuthenticationMethod;
+import com.namazustudios.socialengine.servlet.security.HttpRequestAttributeProfileIdentificationMethod;
+import com.namazustudios.socialengine.servlet.security.HttpSessionUserAuthenticationMethod;
 
 import java.util.function.Supplier;
 
