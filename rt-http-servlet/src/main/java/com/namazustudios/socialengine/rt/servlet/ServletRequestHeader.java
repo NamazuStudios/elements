@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.list;
 
 public class ServletRequestHeader implements RequestHeader {
@@ -41,7 +42,7 @@ public class ServletRequestHeader implements RequestHeader {
     @Override
     public List<Object> getHeaders(final String name) {
         final Enumeration<String> headers = httpServletRequestSupplier.get().getHeaders(name);
-        return headers != null && headers.hasMoreElements() ? ServletHttpRequest.objectList(headers) : null;
+        return headers != null && headers.hasMoreElements() ? ServletHttpRequest.objectList(headers) : emptyList();
     }
 
     @Override

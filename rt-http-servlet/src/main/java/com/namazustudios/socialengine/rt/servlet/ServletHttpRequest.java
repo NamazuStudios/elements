@@ -30,6 +30,8 @@ public class ServletHttpRequest implements HttpRequest {
 
     private final ServletRequestHeader servletRequestHeader;
 
+    private final ServletRequestAttributes servletRequestAttributes;
+
     private final CompositeHttpManifestMetadata compositeHttpManifestMetadata;
 
     private final Supplier<HttpServletRequest> httpServletRequestSupplier;
@@ -45,6 +47,7 @@ public class ServletHttpRequest implements HttpRequest {
         this.payloadDeserializerFunction = payloadDeserializerFunction;
         this.compositeHttpManifestMetadata = new CompositeHttpManifestMetadata(this, httpManifest);
         this.servletRequestHeader = new ServletRequestHeader(compositeHttpManifestMetadata, httpServletRequestSupplier);
+        this.servletRequestAttributes = new ServletRequestAttributes(httpServletRequestSupplier::get);
     }
 
     @Override
@@ -68,8 +71,7 @@ public class ServletHttpRequest implements HttpRequest {
 
     @Override
     public Attributes getAttributes() {
-        // TODO Implement
-        return null;
+        return servletRequestAttributes;
     }
 
     @Override
