@@ -23,6 +23,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.UUID.randomUUID;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -98,7 +99,9 @@ public class LuaResourceIntegrationTest {
             {"test.model", "test_array", expected.apply(result -> assertTrue(result instanceof List, "Expected instance of list."))},
             {"test.model", "test_object", expected.apply(result -> assertTrue(result instanceof Map, "Expected instance of map."))},
             {"test.model", "test_array_default", expected.apply(result -> assertTrue(result instanceof List, "Expected instance of list."))},
-            {"test.model", "test_object_default", expected.apply(result -> assertTrue(result instanceof List, "Expected instance of map."))},
+            {"test.model", "test_object_default", expected.apply(result -> assertTrue(result instanceof Map, "Expected instance of map."))},
+            {"test.model", "test_nil", expected.apply(result -> assertNull(result, "Expected null"))},
+
         };
 
     }

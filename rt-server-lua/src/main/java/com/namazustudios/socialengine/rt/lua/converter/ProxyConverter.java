@@ -59,7 +59,9 @@ public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
             luaState.pushValue(index);
             luaState.pushNil();
 
-            for (int expected = 1; luaState.next(-2); ++expected) {
+            int count = 0;
+
+            for (int expected = 1; luaState.next(-2); ++expected, ++count) {
 
                 luaState.pushValue(-2);
 
@@ -77,7 +79,7 @@ public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
 
             }
 
-            return true;
+            return count > 0;
 
         } finally {
             luaState.setTop(top);

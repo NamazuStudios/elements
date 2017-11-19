@@ -26,4 +26,8 @@ function test_model.test_object_default()
     return {}
 end
 
+function test_model.test_nil()
+    return nil
+end
+
 return test_model
