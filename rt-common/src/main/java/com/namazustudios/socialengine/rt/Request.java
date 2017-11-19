@@ -19,6 +19,13 @@ import java.util.Map;
 public interface Request {
 
     /**
+     * Gets the {@link Attributes} of this {@link Request}.
+     *
+     * @return the {@link Attributes}
+     */
+    Attributes getAttributes();
+
+    /**
      * Gets ths {@link RequestHeader} object for this particular request.
      *
      * @return the header
