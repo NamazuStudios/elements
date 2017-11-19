@@ -36,15 +36,22 @@ public class FacebookAuthenticationFilter implements Filter {
         final HttpServletRequest request = (HttpServletRequest) _request;
         final HttpServletResponse response = (HttpServletResponse) _response;
 
+        if (trySetUserIfAvailable(request, response)) {
+            chain.doFilter(request, response);
+        }
+
+    }
+
+    private boolean trySetUserIfAvailable(final HttpServletRequest request, final HttpServletResponse response) {
         try {
             setUserIfAvailable(request);
-            chain.doFilter(request, response);
+            return true;
         } catch (BaseException ex) {
             logger.info("Caught exception servicing the request.", ex);
             final int status = map(ex);
             response.setStatus(status);
+            return false;
         }
-
     }
 
     private void setUserIfAvailable(final HttpServletRequest request) {
