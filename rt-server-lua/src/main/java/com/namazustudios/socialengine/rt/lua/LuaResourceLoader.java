@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.lua;
 
 import com.namazustudios.socialengine.rt.AssetLoader;
+import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
@@ -12,6 +13,7 @@ import javax.inject.Provider;
 import java.util.Set;
 
 import static com.namazustudios.socialengine.rt.lua.IocResolver.IOC_RESOLVER_MODULE_NAME;
+import static com.namazustudios.socialengine.rt.lua.LuaResource.ATTRIBUTES_MODULE;
 
 public class LuaResourceLoader implements ResourceLoader {
 
@@ -34,13 +36,17 @@ public class LuaResourceLoader implements ResourceLoader {
     private Provider<Set<Builtin>> additionalBuiltins;
 
     @Override
-    public Resource load(final String moduleName, final Object ... args) throws ModuleNotFoundException {
+    public Resource load(final String moduleName,
+                         final Attributes attributes,
+                         final Object ... args) throws ModuleNotFoundException {
 
         final LuaResource luaResource = getLuaResourceProvider().get();
 
         try {
+
             final IocResolver iocResolver = getIocResolverProvider().get();
 
+            luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(ATTRIBUTES_MODULE, attributes));
             luaResource.getBuiltinManager().installBuiltin(getClasspathBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getAssetLoaderBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());

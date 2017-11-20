@@ -3,15 +3,15 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
 import org.omg.CORBA.DynAnyPackage.Invalid;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
+
 /**
- * Contains attributes which may be attached to a {@link Request} or similar object.  These are transient properties
- * which live in memory and are associated temporarily with the associated object.  These do no persist between requests
- * and are used to set various context objects to the associated type.
- *
- * Attributes may be set by the underlying container to provide context or metadata to the associated object.
+ * Contains attributes which may be attached to a {@link Request}, {@link Request} or similar object.
  */
 public interface Attributes {
 
@@ -20,7 +20,7 @@ public interface Attributes {
      *
      * @return the {@link List<String>} of attribute names
      */
-    List<String> getAttributeNames();
+    Set<String> getAttributeNames();
 
     /**
      * Gets the attribute associated with this {@link Attributes} object.
@@ -63,6 +63,31 @@ public interface Attributes {
             throw new InvalidConversionException(ex);
         }
 
+    }
+
+    /**
+     * The empty {@link Attributes} implementation.  This returns an empty list of attribute names, and will return null
+     * for any requested attribute.
+     */
+    Attributes EMPTY = new Attributes() {
+        @Override
+        public Set<String> getAttributeNames() {
+            return emptySet();
+        }
+
+        @Override
+        public Object getAttribute(String name) {
+            return null;
+        }
+    };
+
+    /**
+     * Returns {@link #EMPTY}.
+     *
+     * @return {@link #EMPTY}
+     */
+    static Attributes emptyAttributes() {
+        return emptyAttributes();
     }
 
 }

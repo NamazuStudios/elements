@@ -50,7 +50,7 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
         final HttpOperation httpOperation = httpRequest.getManifestMetadata().getPreferredOperation();
 
         final Path path = Path.fromComponents("http", "request", randomUUID().toString());
-        final ResourceId resourceId = getResourceContext().create(httpModule.getModule(), path);
+        final ResourceId resourceId = getResourceContext().createAttributes(httpModule.getModule(), path, request.getAttributes());
 
         logger.info("Created resource with id {} to handle request.", resourceId);
         schedule(httpOperation, resourceId, session, request, responseConsumer);

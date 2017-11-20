@@ -25,7 +25,7 @@ public class SimpleResourceContext implements ResourceContext {
     private ExecutorService executorService;
 
     @Override
-    public ResourceId create(final String module, final Path path, final Object... args) {
+    public ResourceId createAttributes(final String module, final Path path, final Attributes attributes, final Object... args) {
         logger.info("Loading module {} -> {}", module, path);
         final Resource resource = getResourceLoader().load(module, args);
         getResourceService().addResource(path, resource);
@@ -33,11 +33,11 @@ public class SimpleResourceContext implements ResourceContext {
     }
 
     @Override
-    public Future<ResourceId> createAsync(final Consumer<ResourceId> success, final Consumer<Throwable> failure,
-                                          final String module, final Path path, final Object... args) {
+    public Future<ResourceId> createAttributesAsync(final Consumer<ResourceId> success, final Consumer<Throwable> failure,
+                                                    final String module, final Path path, final Attributes attributes, final Object... args) {
         return getExecutorService().submit(() -> {
             try {
-                final ResourceId resourceId = create(module, path, args);
+                final ResourceId resourceId = createAttributes(module, path, attributes, args);
                 success.accept(resourceId);
                 return resourceId;
             } catch (Throwable th) {

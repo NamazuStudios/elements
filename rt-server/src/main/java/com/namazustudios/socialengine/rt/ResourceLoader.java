@@ -9,6 +9,14 @@ import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
 public interface ResourceLoader extends AutoCloseable {
 
     /**
+     * Performs the same operation as {@link #load(String, Attributes, Object...)} using {@link Attributes#EMPTY}
+     * as the specified {@link Attributes}.
+     */
+    default Resource load(final String moduleName, final Object ... args) throws ModuleNotFoundException {
+        return load(moduleName, args);
+    }
+
+    /**
      * Loads the {@Link Resource} specified by the supplied module name.  The supplied module name is specific to
      * the particular implementation of the {@link ResourceLoader}, but should be a unique identifier specifying the
      * unit or module of code to load.
@@ -17,13 +25,14 @@ public interface ResourceLoader extends AutoCloseable {
      * to the underlying implementation's semantics.
      *
      * @param moduleName the module name
+     * @param attributes {@link Attributes} assocaited with the {@link Resource}
      * @param args various initialization arguments to be passed to the underlying {@link Resource}
      *
      * @return the {@link Resource} instance, never null
      *
      * @throws {@link ModuleNotFoundException} if the source for the {@link Resource} cannot be found.
      */
-    Resource load(final String moduleName, final Object ... args) throws ModuleNotFoundException;
+    Resource load(String moduleName, Attributes attributes, Object ... args) throws ModuleNotFoundException;
 
     /**
      * Closes the {@link ResourceLoader} and cleaning up any resources.  Any open {@link Resource}

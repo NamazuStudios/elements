@@ -45,6 +45,8 @@ public class LuaResource implements Resource {
 
     public static final String RESOURCE_BUILTIN = "namazu.resource.this";
 
+    public static final String ATTRIBUTES_MODULE = "namazu.resource.attributes";
+
     private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
 
     private final Map<TaskId, PendingTask> taskIdPendingTaskMap = new HashMap<>();
