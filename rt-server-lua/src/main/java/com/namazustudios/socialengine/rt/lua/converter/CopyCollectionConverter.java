@@ -15,7 +15,7 @@ import static com.namazustudios.socialengine.rt.lua.Constants.*;
 import static com.namazustudios.socialengine.rt.manifest.model.Type.ARRAY;
 import static com.namazustudios.socialengine.rt.manifest.model.Type.OBJECT;
 
-public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
+public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT> {
 
     @Override
     public <T> T convertLuaValue(final LuaState luaState, final int index, final Class<T> formalType) {
@@ -103,6 +103,11 @@ public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
                 luaState.setTable(-3);
             });
 
+            luaState.newTable();
+            luaState.pushString(OBJECT.value);
+            luaState.setField(-2, MANIFEST_TYPE_METAFIELD);
+            luaState.setMetatable(-2);
+
         } else if (object instanceof Iterable) {
 
             int index = 0;
@@ -116,6 +121,11 @@ public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
                 luaState.pushJavaObject(element);
                 luaState.rawSet(-2, ++index);
             }
+
+            luaState.newTable();
+            luaState.pushString(ARRAY.value);
+            luaState.setField(-2, MANIFEST_TYPE_METAFIELD);
+            luaState.setMetatable(-2);
 
         } else {
             throw new IllegalArgumentException("Unexpected object " + object + " attempted to convert.");

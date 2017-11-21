@@ -7,7 +7,6 @@
 --
 
 local model = {}
-local manifest_type_key = "__namazu_manifest_type"
 
 --- Tags the supplied table an "array" type
 -- This will set a metatable hint indicating that the supplied value should be treated as an array type for
