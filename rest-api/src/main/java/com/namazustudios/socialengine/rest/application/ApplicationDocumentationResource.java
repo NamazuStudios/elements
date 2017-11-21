@@ -15,13 +15,12 @@ import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.model.Property;
 import com.namazustudios.socialengine.service.ApplicationService;
 import com.namazustudios.socialengine.service.ManifestService;
+import com.sun.javafx.property.PropertyReference;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 import io.swagger.models.*;
-import io.swagger.models.parameters.HeaderParameter;
-import io.swagger.models.parameters.Parameter;
-import io.swagger.models.parameters.PathParameter;
+import io.swagger.models.parameters.*;
 import io.swagger.models.properties.*;
 import org.glassfish.jersey.internal.util.Producer;
 
@@ -53,6 +52,8 @@ import static java.util.Arrays.asList;
         authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
 @Path("application/{applicationNameOrId}/swagger.json")
 public class ApplicationDocumentationResource {
+
+    public static final String BODY_PARAMETER = "body";
 
     private ManifestService manifestService;
 
@@ -239,6 +240,7 @@ public class ApplicationDocumentationResource {
         operation.setParameters(parameters);
         operation.setOperationId(httpOperation.getName());
         operation.setDescription(httpOperation.getDescription());
+
         operation.setResponses(responses.stream().collect(Collectors.toMap(r -> "200", identity())));
 
         operationConsumer.accept(operation);
@@ -249,27 +251,46 @@ public class ApplicationDocumentationResource {
         final List<Parameter> parameters = new ArrayList<>();
 
         httpOperation.getProducesContentByType()
-                .values()
-                .stream()
-                .flatMap(c -> c.getHeaders().entrySet().stream())
-                .map(e -> {
-                    final HeaderParameter parameter = new HeaderParameter();
-                    parameter.setName(e.getKey());
-                    parameter.setProperty(toSwaggerProperty(e.getValue()));
-                    return parameter;
-                }).forEach(parameters::add);
+            .values()
+            .stream()
+            .flatMap(c -> c.getHeaders().entrySet().stream())
+            .map(e -> {
+                final HeaderParameter parameter = new HeaderParameter();
+                parameter.setName(e.getKey());
+                parameter.setProperty(toSwaggerProperty(e.getValue()));
+                return parameter;
+            }).forEach(parameters::add);
 
         httpOperation.getParameters()
-                .entrySet()
-                .stream()
-                .map(entry -> {
-                    final PathParameter parameter = new PathParameter();
-                    parameter.setName(entry.getKey());
-                    parameter.setType(entry.getValue().name());
-                    return parameter;
-                }).forEach(parameters::add);
+            .entrySet()
+            .stream()
+            .map(entry -> {
+                final PathParameter parameter = new PathParameter();
+                parameter.setName(entry.getKey());
+                parameter.setType(entry.getValue().name());
+                return parameter;
+            }).forEach(parameters::add);
+
+        final Map<String, HttpContent> consumesContentByType =  httpOperation.getConsumesContentByType();
+
+        if (consumesContentByType != null) {
+
+            final String model = consumesContentByType
+                .values().stream()
+                .filter(c -> c.getModel() != null)
+                .map(c -> c.getModel())
+                .findFirst().orElse(null);
+
+            if (model != null) {
+                final RefParameter bodyParameter = new RefParameter(model);
+                bodyParameter.setName(BODY_PARAMETER);
+                parameters.add(bodyParameter);
+            }
+
+        }
 
         return parameters;
+
     }
 
     private List<Response> resolveResponses(final Collection<HttpContent> httpContentCollection) {
