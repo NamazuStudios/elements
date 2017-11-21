@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
+import org.w3c.dom.Attr;
+
+import static com.namazustudios.socialengine.rt.Attributes.emptyAttributes;
 
 /**
  * Loads instances of {@link Resource} based on {@link Path} instances.  Typically instances of this work in conjunction
@@ -13,7 +16,7 @@ public interface ResourceLoader extends AutoCloseable {
      * as the specified {@link Attributes}.
      */
     default Resource load(final String moduleName, final Object ... args) throws ModuleNotFoundException {
-        return load(moduleName, args);
+        return load(moduleName, emptyAttributes(), args);
     }
 
     /**

@@ -87,7 +87,7 @@ public interface Attributes {
      * @return {@link #EMPTY}
      */
     static Attributes emptyAttributes() {
-        return emptyAttributes();
+        return EMPTY;
     }
 
 }
