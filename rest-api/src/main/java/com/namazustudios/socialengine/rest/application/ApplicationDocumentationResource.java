@@ -6,16 +6,12 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.rt.ParameterizedPath;
-import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
-import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
-import com.namazustudios.socialengine.rt.manifest.http.HttpModule;
-import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
+import com.namazustudios.socialengine.rt.manifest.http.*;
 import com.namazustudios.socialengine.rt.manifest.model.Model;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.model.Property;
 import com.namazustudios.socialengine.service.ApplicationService;
 import com.namazustudios.socialengine.service.ManifestService;
-import com.sun.javafx.property.PropertyReference;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -25,10 +21,8 @@ import io.swagger.models.properties.*;
 import org.glassfish.jersey.internal.util.Producer;
 
 import javax.inject.Inject;
-import javax.ws.rs.GET;
+import javax.ws.rs.*;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -127,6 +121,7 @@ public class ApplicationDocumentationResource {
 
         final HttpManifest httpManifest = getManifestService().getHttpManifestForApplication(application);
         appendHttpManifest(swagger, httpManifest);
+
     }
 
     private void appendModelManifest(final Swagger swagger, final ModelManifest modelManifest) {
@@ -167,7 +162,7 @@ public class ApplicationDocumentationResource {
 
             for (final HttpOperation httpOperation : httpOperationsByName.values()) {
                 final io.swagger.models.Path path = parameterizedPathPathMap.computeIfAbsent(httpOperation.getPath(), this::computePath);
-                resolveOperation(httpOperation, path);
+                resolveOperation(swagger, httpOperation, path);
             }
 
         }
@@ -193,32 +188,35 @@ public class ApplicationDocumentationResource {
 
     }
 
-    private void resolveOperation(final HttpOperation httpOperation, final io.swagger.models.Path path) {
+    private void resolveOperation(final Swagger swagger,
+                                  final HttpOperation httpOperation,
+                                  final io.swagger.models.Path path) {
         switch (httpOperation.getVerb()) {
             case GET:
-                resolveOperation(httpOperation, path::getGet, path::get);
+                resolveOperation(swagger, httpOperation, path::getGet, path::get);
                 break;
             case PUT:
-                resolveOperation(httpOperation, path::getPut, path::put);
+                resolveOperation(swagger, httpOperation, path::getPut, path::put);
                 break;
             case HEAD:
-                resolveOperation(httpOperation, path::getHead, path::head);
+                resolveOperation(swagger, httpOperation, path::getHead, path::head);
                 break;
             case POST:
-                resolveOperation(httpOperation, path::getPost, path::post);
+                resolveOperation(swagger, httpOperation, path::getPost, path::post);
                 break;
             case DELETE:
-                resolveOperation(httpOperation, path::getDelete, path::delete);
+                resolveOperation(swagger, httpOperation, path::getDelete, path::delete);
                 break;
             case OPTIONS:
-                resolveOperation(httpOperation, path::getOptions, path::options);
+                resolveOperation(swagger, httpOperation, path::getOptions, path::options);
                 break;
             default:
                 throw new InvalidDataException("Invalid HTTP verb" + httpOperation.getVerb());
         }
     }
 
-    private void resolveOperation(final HttpOperation httpOperation,
+    private void resolveOperation(final Swagger swagger,
+                                  final HttpOperation httpOperation,
                                   final Producer<Operation> operationProducer,
                                   final Consumer<Operation> operationConsumer) {
 
@@ -241,8 +239,13 @@ public class ApplicationDocumentationResource {
         operation.setOperationId(httpOperation.getName());
         operation.setDescription(httpOperation.getDescription());
 
-        operation.setResponses(responses.stream().collect(Collectors.toMap(r -> "200", identity())));
+        final Parameter bodyParameter = resolveBodyParameter(swagger, httpOperation);
 
+        if (bodyParameter != null) {
+            operation.addParameter(bodyParameter);
+        }
+
+        operation.setResponses(responses.stream().collect(Collectors.toMap(r -> "200", identity())));
         operationConsumer.accept(operation);
 
     }
@@ -271,25 +274,30 @@ public class ApplicationDocumentationResource {
                 return parameter;
             }).forEach(parameters::add);
 
+        return parameters;
+
+    }
+
+    private Parameter resolveBodyParameter(final Swagger swagger, final HttpOperation httpOperation) {
+
+        final Map<String, io.swagger.models.Model> swaggerDefinitions = swagger.getDefinitions();
+
+        if (swaggerDefinitions == null) {
+            return null;
+        }
+
         final Map<String, HttpContent> consumesContentByType =  httpOperation.getConsumesContentByType();
 
         if (consumesContentByType != null) {
-
-            final String model = consumesContentByType
+            return consumesContentByType
                 .values().stream()
-                .filter(c -> c.getModel() != null)
                 .map(c -> c.getModel())
+                .filter(m -> m != null).map(m -> swaggerDefinitions.get(m))
+                .filter(m -> m != null).map(m -> new BodyParameter().schema(m))
                 .findFirst().orElse(null);
-
-            if (model != null) {
-                final RefParameter bodyParameter = new RefParameter(model);
-                bodyParameter.setName(BODY_PARAMETER);
-                parameters.add(bodyParameter);
-            }
-
         }
 
-        return parameters;
+        return null;
 
     }
 
