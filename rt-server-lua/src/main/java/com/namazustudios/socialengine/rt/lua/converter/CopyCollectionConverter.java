@@ -4,17 +4,22 @@ import com.namazustudios.socialengine.jnlua.LuaState;
 
 import com.namazustudios.socialengine.jnlua.LuaType;
 import com.namazustudios.socialengine.jnlua.LuaValueProxy;
+import com.namazustudios.socialengine.rt.lua.Constants;
+import com.namazustudios.socialengine.rt.manifest.model.Type;
 
 import java.util.*;
 
 import static com.namazustudios.socialengine.jnlua.DefaultConverter.*;
 import static com.namazustudios.socialengine.jnlua.LuaType.TABLE;
+import static com.namazustudios.socialengine.rt.lua.Constants.*;
+import static com.namazustudios.socialengine.rt.manifest.model.Type.ARRAY;
+import static com.namazustudios.socialengine.rt.manifest.model.Type.OBJECT;
 
-public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
+public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT> {
 
     @Override
     public <T> T convertLuaValue(final LuaState luaState, final int index, final Class<T> formalType) {
-        if (Iterable.class.isAssignableFrom(formalType) && isLuaSequence(luaState, index)) {
+        if (isArray(luaState, index) && formalType.isAssignableFrom(Iterable.class)) {
             final List<?> proxyList = getInstance().convertLuaValue(luaState, index, List.class);
             return (T) new ArrayList<Object>(proxyList);
         } else if (formalType.isAssignableFrom(Map.class)) {
@@ -26,16 +31,37 @@ public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
         }
     }
 
-    private boolean isLuaSequence(final LuaState luaState, final int index) {
+    private boolean isArray(final LuaState luaState, final int index) {
 
         final int top = luaState.getTop();
 
         try {
 
+            luaState.getMetatable(index);
+            luaState.getField(-1, MANIFEST_TYPE_METAFIELD);
+
+            final String value = luaState.toString(-1);
+
+            if (ARRAY.value.equals(value)) {
+                return true;
+            } else if (OBJECT.value.equals(value)) {
+                return false;
+            }
+
+        } finally {
+            luaState.setTop(top);
+        }
+
+        try {
+
+            // Inspect the table to see
+
             luaState.pushValue(index);
             luaState.pushNil();
 
-            for (int expected = 1; luaState.next(-2); ++expected) {
+            int count = 0;
+
+            for (int expected = 1; luaState.next(-2); ++expected, ++count) {
 
                 luaState.pushValue(-2);
 
@@ -53,7 +79,7 @@ public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
 
             }
 
-            return true;
+            return count > 0;
 
         } finally {
             luaState.setTop(top);
@@ -77,6 +103,11 @@ public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
                 luaState.setTable(-3);
             });
 
+            luaState.newTable();
+            luaState.pushString(OBJECT.value);
+            luaState.setField(-2, MANIFEST_TYPE_METAFIELD);
+            luaState.setMetatable(-2);
+
         } else if (object instanceof Iterable) {
 
             int index = 0;
@@ -91,6 +122,11 @@ public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
                 luaState.rawSet(-2, ++index);
             }
 
+            luaState.newTable();
+            luaState.pushString(ARRAY.value);
+            luaState.setField(-2, MANIFEST_TYPE_METAFIELD);
+            luaState.setMetatable(-2);
+
         } else {
             throw new IllegalArgumentException("Unexpected object " + object + " attempted to convert.");
         }
@@ -103,7 +139,7 @@ public class ProxyConverter<ObjectT> implements TypedConverter<ObjectT> {
 
     @Override
     public boolean isConvertibleFromLua(final LuaState luaState, final int index, final Class<?> formalType) {
-        return luaState.type(index) == TABLE && (formalType.isAssignableFrom(Map.class) || formalType.isAssignableFrom(List.class));
+        return luaState.type(index) == TABLE && (formalType.isAssignableFrom(Map.class) || formalType.isAssignableFrom(Iterable.class));
     }
 
 }

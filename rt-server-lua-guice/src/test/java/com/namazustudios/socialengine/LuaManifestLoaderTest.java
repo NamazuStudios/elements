@@ -4,6 +4,7 @@ import com.google.common.io.ByteStreams;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.namazustudios.socialengine.rt.AssetLoader;
+import com.namazustudios.socialengine.rt.ClasspathAssetLoader;
 import com.namazustudios.socialengine.rt.FileAssetLoader;
 import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
@@ -53,27 +54,6 @@ public class LuaManifestLoaderTest {
 
     public static class Module extends AbstractModule {
 
-        private final File workingDirectory;
-
-        public Module() throws IOException {
-            workingDirectory = createTempDirectory(LuaManifestLoaderTest.class.getSimpleName()).toFile();
-            workingDirectory.mkdirs();
-            copyTestFile(LuaManifestLoader.MAIN_MANIFEST);
-            copyTestFile("example/model.lua");
-        }
-
-        private void copyTestFile(final String file) throws IOException {
-
-            final File destination = new File(workingDirectory, file);
-            destination.getParentFile().mkdirs();
-
-            try (final FileOutputStream fos = new FileOutputStream(destination);
-                 final InputStream is = getClass().getResourceAsStream("/" + file)) {
-                ByteStreams.copy(is, fos);
-            }
-
-        }
-
         @Override
         protected void configure() {
             install(new LuaModule() {
@@ -87,7 +67,7 @@ public class LuaManifestLoaderTest {
 
         @Provides
         public AssetLoader assetLoader() {
-            return new FileAssetLoader(workingDirectory).getReferenceCountedView();
+            return new ClasspathAssetLoader();
         }
 
     }
