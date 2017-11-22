@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt.manifest.security;
 
-import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
-
 import java.util.Map;
 
 public class SecurityManifest {

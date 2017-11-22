@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.jnlua.Converter;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.lua.converter.*;
 import com.namazustudios.socialengine.rt.lua.provider.LuaStateProvider;
+import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
 
 /**
  * Created by patricktwohig on 8/18/17.
@@ -20,6 +21,7 @@ public class LuaConverterModule extends AbstractModule {
         multiBinder.addBinding().to(CopyCollectionConverter.class);
         multiBinder.addBinding().to(HttpManifestConverter.class);
         multiBinder.addBinding().to(ModelManifestConverter.class);
+        multiBinder.addBinding().to(SecurityManifestConverter.class);
 
         bind(LuaState.class).toProvider(LuaStateProvider.class);
         bind(Converter.class).to(DelegatingConverter.class).asEagerSingleton();

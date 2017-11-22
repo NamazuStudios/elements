@@ -57,6 +57,31 @@ local example_parameters = {
     bar_string = "string"
 }
 
+manifest.security {
+
+    -- Specifies header-based auth schemes
+
+    header = {
+
+        -- Specifies an auth scheme named "api-key"
+
+        ["api-key"] = {
+
+            -- Describes the auth scheme.
+
+            description = "Example Auth Scheme",
+
+            -- Includes the specifier for the
+
+            spec = {
+                name = "X-ExampleHeader",
+                description = "The Example Header Specification",
+                type = "string"
+            }
+
+        }
+    }
+}
 
 -- The table containing the HTTP method manifest.
 
@@ -108,6 +133,8 @@ manifest.http = {
                 -- Parameters which the request will accept.  Parameters may ony specify simple types.
 
                 parameters = example_parameters,
+
+                auth = { "api-key" },
 
                 -- Specifies the content which will be produced and consumed by the operation.  The consumer
                 -- will consume a model of the supplied type when the content type is provided.

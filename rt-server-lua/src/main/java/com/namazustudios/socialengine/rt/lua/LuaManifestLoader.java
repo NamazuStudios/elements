@@ -13,6 +13,7 @@ import com.namazustudios.socialengine.rt.lua.builtin.BuiltinManager;
 import com.namazustudios.socialengine.rt.lua.builtin.ClasspathBuiltin;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
+import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +32,8 @@ public class LuaManifestLoader implements ManifestLoader {
     public static final String MANIFEST_TABLE = "manifest";
 
     public static final String MODEL_TABLE = "model";
+
+    public static final String SECURITY_TABLE = "security";
 
     public static final String HTTP_TABLE = "http";
 
@@ -64,6 +67,11 @@ public class LuaManifestLoader implements ManifestLoader {
     @Override
     public HttpManifest getHttpManifest() {
         return loadIfNecessaryAndFetchFromManifestTable(HTTP_TABLE, HttpManifest.class);
+    }
+
+    @Override
+    public SecurityManifest getSecurityManifest() {
+        return loadIfNecessaryAndFetchFromManifestTable(SECURITY_TABLE, SecurityManifest.class);
     }
 
     @Override
@@ -139,6 +147,10 @@ public class LuaManifestLoader implements ManifestLoader {
         // manifest.model
         luaState.newTable();
         luaState.setField(-2, MODEL_TABLE);
+
+        // manifest.security
+        luaState.newTable();
+        luaState.setField(-2, SECURITY_TABLE);
 
         // Sets manifest to global table.
         luaState.setGlobal(MANIFEST_TABLE);

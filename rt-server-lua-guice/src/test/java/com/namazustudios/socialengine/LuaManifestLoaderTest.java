@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
+import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
 import org.testng.Assert;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import static java.nio.file.Files.createTempDirectory;
+import static org.testng.Assert.assertNotNull;
 
 /**
  * Created by patricktwohig on 8/17/17.
@@ -34,13 +36,19 @@ public class LuaManifestLoaderTest {
     @Test
     public void testLoadModelManifest() {
         final ModelManifest modelManifest = getManifestLoader().getModelManifest();
-        Assert.assertNotNull(modelManifest);
+        assertNotNull(modelManifest);
     }
 
     @Test
     public void testLoadHttpManifest() {
         final HttpManifest httpManifest = getManifestLoader().getHttpManifest();
-        Assert.assertNotNull(httpManifest);
+        assertNotNull(httpManifest);
+    }
+
+    @Test
+    public void testLoadSecurityManifest() {
+        final SecurityManifest securityManifest = getManifestLoader().getSecurityManifest();
+        assertNotNull(securityManifest);
     }
 
     public ManifestLoader getManifestLoader() {

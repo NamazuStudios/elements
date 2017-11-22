@@ -1,12 +1,12 @@
 package com.namazustudios.socialengine.rt.manifest.security;
 
+import com.namazustudios.socialengine.rt.manifest.Header;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
-import com.sun.org.apache.xpath.internal.operations.String;
 
 /**
  * Base class for the various auth schemes.
  */
-public abstract class AuthScheme {
+public abstract class AuthScheme<SpecT> {
 
     private String name;
 
@@ -49,48 +49,35 @@ public abstract class AuthScheme {
     }
 
     /**
+     * Returns the specification for the auth scheme.
+     *
+     * @return the specification
+     */
+    public abstract SpecT getSpec();
+
+    /**
+     * Sets the specification for the auth scheme.
+     *
+     * @param spec the specification
+     */
+    public abstract void setSpec(SpecT spec);
+
+    /**
      * Represents an {@link AuthScheme} which uses a {@link com.namazustudios.socialengine.rt.manifest.Header} to provide credentials.
      */
-    public static class Header extends AuthScheme {
+    public static class Header extends AuthScheme<com.namazustudios.socialengine.rt.manifest.Header> {
 
-        private com.namazustudios.socialengine.rt.manifest.Header header;
+        private com.namazustudios.socialengine.rt.manifest.Header spec;
 
-        /**
-         * The {@link com.namazustudios.socialengine.rt.manifest.Header} used to specify the auth information
-         *
-         * @return the {@link com.namazustudios.socialengine.rt.manifest.Header} used to specify this auth scheme.
-         */
-        public com.namazustudios.socialengine.rt.manifest.Header getHeader() {
-            return header;
-        }
-
-        /**
-         * The {@link com.namazustudios.socialengine.rt.manifest.Header} used to specify the auth information
-         *
-         * @param header  the {@link com.namazustudios.socialengine.rt.manifest.Header} used to specify this auth scheme.
-         */
-        public void setHeader(com.namazustudios.socialengine.rt.manifest.Header header) {
-            this.header = header;
+        @Override
+        public com.namazustudios.socialengine.rt.manifest.Header getSpec() {
+            return spec;
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Header)) return false;
-            if (!super.equals(o)) return false;
-
-            Header header1 = (Header) o;
-
-            return getHeader() != null ? getHeader().equals(header1.getHeader()) : header1.getHeader() == null;
+        public void setSpec(com.namazustudios.socialengine.rt.manifest.Header spec) {
+            this.spec = spec;
         }
-
-        @Override
-        public int hashCode() {
-            int result = super.hashCode();
-            result = 31 * result + (getHeader() != null ? getHeader().hashCode() : 0);
-            return result;
-        }
-
     }
 
     @Override
