@@ -2,6 +2,9 @@ package com.namazustudios.socialengine.rt.manifest.http;
 
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 
+/**
+ * Stores metadat for a specific HTTP request,
+ */
 public class HttpHeader {
 
     private String name;

@@ -41,12 +41,12 @@ public class HttpManifestConverter extends AbstractMapConverter<HttpManifest> {
             .forEach(e -> e.getValue().setName(e.getKey()));
 
         httpManifest.getModulesByName()
-                .values()
-                .stream()
-                .flatMap(module -> module.getOperationsByName().values().stream())
-                .flatMap(operation -> concat(operation.getConsumesContentByType().entrySet().stream(),
-                                             operation.getProducesContentByType().entrySet().stream()))
-                .forEach(e -> {e.getValue().setType(e.getKey()); e.getValue().setPayloadType(Map.class);} );
+            .values()
+            .stream()
+            .flatMap(module -> module.getOperationsByName().values().stream())
+            .flatMap(operation -> concat(operation.getConsumesContentByType().entrySet().stream(),
+                                         operation.getProducesContentByType().entrySet().stream()))
+            .forEach(e -> {e.getValue().setType(e.getKey()); e.getValue().setPayloadType(Map.class);} );
 
         return httpManifest;
 

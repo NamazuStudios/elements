@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.ParameterizedPath;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,6 +27,8 @@ public class HttpOperation {
     private String method;
 
     private Map<String, Type> parameters;
+
+    private List<String> authSchemes;
 
     private Map<String, HttpContent> producesContentByType;
 
@@ -138,6 +141,24 @@ public class HttpOperation {
      */
     public void setParameters(Map<String, Type> parameters) {
         this.parameters = parameters;
+    }
+
+    /**
+     * Gets the auth schemes supported by this {@link HttpOperation}.  The value returned corresponds to the name of the
+     * {@link AuthScheme} as specified by {@link AuthScheme#getName()}.
+     *
+     * @return the auth schemes supported by this {@link HttpOperation}
+     */
+    public List<String> getAuthSchemes() {
+        return authSchemes;
+    }
+
+    /**
+     * Sets the {@link AuthScheme} supported by this {@link HttpOperation}.
+     * @param authSchemes
+     */
+    public void setAuthSchemes(List<String> authSchemes) {
+        this.authSchemes = authSchemes;
     }
 
     /**
