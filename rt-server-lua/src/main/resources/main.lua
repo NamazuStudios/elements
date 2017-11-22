@@ -57,7 +57,9 @@ local example_parameters = {
     bar_string = "string"
 }
 
-manifest.security {
+-- The security manifest
+
+manifest.security = {
 
     -- Specifies header-based auth schemes
 
@@ -130,11 +132,13 @@ manifest.http = {
 
                 method = "get_all",
 
+                -- Specifies which auth schemes are supported by this endpoint.
+
+                auth = { "api-key" },
+
                 -- Parameters which the request will accept.  Parameters may ony specify simple types.
 
                 parameters = example_parameters,
-
-                auth = { "api-key" },
 
                 -- Specifies the content which will be produced and consumed by the operation.  The consumer
                 -- will consume a model of the supplied type when the content type is provided.

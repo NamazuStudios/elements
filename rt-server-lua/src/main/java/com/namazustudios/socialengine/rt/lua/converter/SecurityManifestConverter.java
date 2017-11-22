@@ -16,7 +16,7 @@ public class SecurityManifestConverter extends AbstractMapConverter<SecurityMani
 
     @Override
     protected Class<SecurityManifest> getConvertedType() {
-        return null;
+        return SecurityManifest.class;
     }
 
     @Override
