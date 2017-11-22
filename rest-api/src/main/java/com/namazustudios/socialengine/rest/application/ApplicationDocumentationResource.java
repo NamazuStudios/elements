@@ -6,10 +6,7 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.rt.ParameterizedPath;
-import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
-import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
-import com.namazustudios.socialengine.rt.manifest.http.HttpModule;
-import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
+import com.namazustudios.socialengine.rt.manifest.http.*;
 import com.namazustudios.socialengine.rt.manifest.model.Model;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.model.Property;
@@ -152,6 +149,19 @@ public class ApplicationDocumentationResource {
                 return new RefProperty(property.getModel()).description(property.getDescription());
             default:
                 throw new IllegalArgumentException("Unsupported property type: " + property.getType());
+        }
+    }
+
+    private io.swagger.models.properties.Property toSwaggerProperty(final HttpHeader httpHeader) {
+        switch (httpHeader.getType()) {
+            case NUMBER:
+                return new DoubleProperty().description(httpHeader.getDescription());
+            case STRING:
+                return new StringProperty().description(httpHeader.getDescription());
+            case BOOLEAN:
+                return new BooleanProperty().description(httpHeader.getDescription());
+            default:
+                throw new IllegalArgumentException("Unsupported header type: " + httpHeader.getType());
         }
     }
 

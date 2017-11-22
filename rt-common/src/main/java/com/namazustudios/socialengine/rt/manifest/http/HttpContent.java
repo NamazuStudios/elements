@@ -16,7 +16,7 @@ public class HttpContent {
 
     private String model;
 
-    private Map<String, Property> headers;
+    private Map<String, HttpHeader> headers;
 
     private Map<String, String> staticHeaders;
 
@@ -65,7 +65,7 @@ public class HttpContent {
      *
      * @return a {@link List <String>} indicating the headers
      */
-    public Map<String, Property> getHeaders() {
+    public Map<String, HttpHeader> getHeaders() {
         return headers;
     }
 
@@ -74,7 +74,7 @@ public class HttpContent {
      *
      * @param headers  a {@link List<String>} indicating the headers
      */
-    public void setHeaders(Map<String, Property> headers) {
+    public void setHeaders(Map<String, HttpHeader> headers) {
         this.headers = headers;
     }
 
