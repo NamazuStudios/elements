@@ -128,8 +128,8 @@ public class ApplicationDocumentationResource {
         for (final Model model : modelManifest.getModelsByName().values()) {
             final ModelImpl swaggerModel = new ModelImpl();
             swaggerModel.setName(model.getName());
+            swaggerModel.setTitle(model.getName());
             swaggerModel.setDescription(model.getDescription());
-            swaggerModel.setTitle(application.getName());
             model.getProperties().forEach((name, property) -> swaggerModel.addProperty(name, toSwaggerProperty(property)));
             swagger.addDefinition(model.getName(), swaggerModel);
         }
