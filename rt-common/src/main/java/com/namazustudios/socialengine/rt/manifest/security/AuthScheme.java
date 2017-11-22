@@ -1,5 +1,6 @@
-package com.namazustudios.socialengine.rt.manifest.http;
+package com.namazustudios.socialengine.rt.manifest.security;
 
+import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 import com.sun.org.apache.xpath.internal.operations.String;
 
 /**
@@ -48,27 +49,27 @@ public abstract class AuthScheme {
     }
 
     /**
-     * Represents an {@link AuthScheme} which uses a {@link HttpHeader} to provide credentials.
+     * Represents an {@link AuthScheme} which uses a {@link com.namazustudios.socialengine.rt.manifest.Header} to provide credentials.
      */
     public static class Header extends AuthScheme {
 
-        private HttpHeader header;
+        private com.namazustudios.socialengine.rt.manifest.Header header;
 
         /**
-         * The {@link HttpHeader} used to specify the auth information
+         * The {@link com.namazustudios.socialengine.rt.manifest.Header} used to specify the auth information
          *
-         * @return the {@link HttpHeader} used to specify this auth scheme.
+         * @return the {@link com.namazustudios.socialengine.rt.manifest.Header} used to specify this auth scheme.
          */
-        public HttpHeader getHeader() {
+        public com.namazustudios.socialengine.rt.manifest.Header getHeader() {
             return header;
         }
 
         /**
-         * The {@link HttpHeader} used to specify the auth information
+         * The {@link com.namazustudios.socialengine.rt.manifest.Header} used to specify the auth information
          *
-         * @param header  the {@link HttpHeader} used to specify this auth scheme.
+         * @param header  the {@link com.namazustudios.socialengine.rt.manifest.Header} used to specify this auth scheme.
          */
-        public void setHeader(HttpHeader header) {
+        public void setHeader(com.namazustudios.socialengine.rt.manifest.Header header) {
             this.header = header;
         }
 

@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.manifest.http;
 
+import com.namazustudios.socialengine.rt.manifest.security.AuthScheme;
+
 import java.util.Map;
 
 /**
@@ -10,8 +12,6 @@ import java.util.Map;
 public class HttpManifest {
 
     private Map<String, HttpModule> modulesByName;
-
-    private Map<String, AuthScheme.Header> headerAuthSchemesByName;
 
     /**
      * Gets a mapping of {@link HttpModule} instances by their associated name.
@@ -31,24 +31,6 @@ public class HttpManifest {
         this.modulesByName = modulesByName;
     }
 
-    /**
-     * Returns a mapping of header authorization schemes by name.
-     *
-     * @return the mapping of header auth schemes by name.
-     */
-    public Map<String, AuthScheme.Header> getHeaderAuthSchemesByName() {
-        return headerAuthSchemesByName;
-    }
-
-    /**
-     * Sets a mapping of header authorization schemes by name.
-     *
-     * @param headerAuthSchemesByName the mapping of header auth schemes by name.
-     */
-    public void setHeaderAuthSchemesByName(Map<String, AuthScheme.Header> headerAuthSchemesByName) {
-        this.headerAuthSchemesByName = headerAuthSchemesByName;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -56,16 +38,12 @@ public class HttpManifest {
 
         HttpManifest that = (HttpManifest) o;
 
-        if (getModulesByName() != null ? !getModulesByName().equals(that.getModulesByName()) : that.getModulesByName() != null)
-            return false;
-        return getHeaderAuthSchemesByName() != null ? getHeaderAuthSchemesByName().equals(that.getHeaderAuthSchemesByName()) : that.getHeaderAuthSchemesByName() == null;
+        return getModulesByName() != null ? getModulesByName().equals(that.getModulesByName()) : that.getModulesByName() == null;
     }
 
     @Override
     public int hashCode() {
-        int result = getModulesByName() != null ? getModulesByName().hashCode() : 0;
-        result = 31 * result + (getHeaderAuthSchemesByName() != null ? getHeaderAuthSchemesByName().hashCode() : 0);
-        return result;
+        return getModulesByName() != null ? getModulesByName().hashCode() : 0;
     }
 
 }

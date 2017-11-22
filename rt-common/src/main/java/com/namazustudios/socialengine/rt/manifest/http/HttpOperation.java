@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.manifest.http;
 import com.namazustudios.socialengine.rt.ParameterizedPath;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.manifest.model.Type;
+import com.namazustudios.socialengine.rt.manifest.security.AuthScheme;
 
 import java.util.List;
 import java.util.Map;

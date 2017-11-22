@@ -1,11 +1,11 @@
-package com.namazustudios.socialengine.rt.manifest.http;
+package com.namazustudios.socialengine.rt.manifest;
 
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 
 /**
  * Stores metadat for a specific HTTP request,
  */
-public class HttpHeader {
+public class Header {
 
     private String name;
 
@@ -40,9 +40,9 @@ public class HttpHeader {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof HttpHeader)) return false;
+        if (!(o instanceof Header)) return false;
 
-        HttpHeader that = (HttpHeader) o;
+        Header that = (Header) o;
 
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
         if (getDescription() != null ? !getDescription().equals(that.getDescription()) : that.getDescription() != null)
