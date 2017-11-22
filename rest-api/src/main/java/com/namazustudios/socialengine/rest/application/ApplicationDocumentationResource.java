@@ -128,6 +128,7 @@ public class ApplicationDocumentationResource {
         for (final Model model : modelManifest.getModelsByName().values()) {
             final ModelImpl swaggerModel = new ModelImpl();
             swaggerModel.setName(model.getName());
+            swaggerModel.setTitle(model.getName());
             swaggerModel.setDescription(model.getDescription());
             model.getProperties().forEach((name, property) -> swaggerModel.addProperty(name, toSwaggerProperty(property)));
             swagger.addDefinition(model.getName(), swaggerModel);
@@ -143,7 +144,7 @@ public class ApplicationDocumentationResource {
             case BOOLEAN:
                 return new BooleanProperty().description(property.getDescription());
             case ARRAY:
-                return new ArrayProperty(new RefProperty(property.getModel())).description(property.getDescription());
+                return new ArrayProperty().items(new RefProperty(property.getModel())).description(property.getDescription());
             case OBJECT:
                 return new RefProperty(property.getModel()).description(property.getDescription());
             default:
