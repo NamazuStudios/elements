@@ -117,18 +117,19 @@ public class ApplicationDocumentationResource {
     private void appendHttpManifests(final Swagger swagger, final Application application) {
 
         final ModelManifest modelManifest = getManifestService().getModelManifestForApplication(application);
-        appendModelManifest(swagger, modelManifest);
+        appendModelManifest(swagger, modelManifest, application);
 
         final HttpManifest httpManifest = getManifestService().getHttpManifestForApplication(application);
         appendHttpManifest(swagger, httpManifest);
 
     }
 
-    private void appendModelManifest(final Swagger swagger, final ModelManifest modelManifest) {
+    private void appendModelManifest(final Swagger swagger, final ModelManifest modelManifest, Application application) {
         for (final Model model : modelManifest.getModelsByName().values()) {
             final ModelImpl swaggerModel = new ModelImpl();
             swaggerModel.setName(model.getName());
             swaggerModel.setDescription(model.getDescription());
+            swaggerModel.setTitle(application.getName());
             model.getProperties().forEach((name, property) -> swaggerModel.addProperty(name, toSwaggerProperty(property)));
             swagger.addDefinition(model.getName(), swaggerModel);
         }
