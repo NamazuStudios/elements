@@ -1,10 +1,7 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.rt;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.namazustudios.socialengine.rt.AssetLoader;
-import com.namazustudios.socialengine.rt.ClasspathAssetLoader;
-import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;

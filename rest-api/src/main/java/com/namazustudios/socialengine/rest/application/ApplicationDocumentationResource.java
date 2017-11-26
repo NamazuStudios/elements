@@ -360,7 +360,6 @@ public class ApplicationDocumentationResource {
         apiKeyAuthDefinition.setDescription(headerAuthScheme.getDescription());
         swagger.addSecurityDefinition(name, apiKeyAuthDefinition);
 
-
     }
 
     public ManifestService getManifestService() {
