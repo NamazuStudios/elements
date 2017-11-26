@@ -73,7 +73,7 @@ manifest.security = {
 
             description = "Example Auth Scheme",
 
-            -- Includes the specifier for the
+            -- Includes the specifier for the header itself
 
             spec = {
                 name = "X-ExampleHeader",

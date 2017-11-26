@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.dao;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
+import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
 
 /**
  * Created by patricktwohig on 8/14/17.
@@ -26,5 +27,14 @@ public interface ManifestDao {
      * @return the {@link HttpManifest}
      */
     ModelManifest getModelManifestForApplication(Application application);
+
+    /**
+     * Loads the {@link SecurityManifest} for the supplied {@link Application} instance.
+     *
+     * @param application the {@link Application} for which to load the {@link ModelManifest}.
+     *
+     * @return the {@link SecurityManifest}
+     */
+    SecurityManifest getSecurityManifestForApplication(Application application);
 
 }

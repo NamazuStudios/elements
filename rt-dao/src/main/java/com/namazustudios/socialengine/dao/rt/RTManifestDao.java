@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.rt;
 
+import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
 import com.namazustudios.socialengine.util.ShutdownHooks;
 import com.namazustudios.socialengine.dao.ManifestDao;
 import com.namazustudios.socialengine.model.application.Application;
@@ -41,6 +42,12 @@ public class RTManifestDao implements ManifestDao {
     public ModelManifest getModelManifestForApplication(final Application application) {
         final ManifestLoader manifestLoader = getLoaderForApplication(application);
         return manifestLoader.getModelManifest();
+    }
+
+    @Override
+    public SecurityManifest getSecurityManifestForApplication(Application application) {
+        final ManifestLoader manifestLoader = getLoaderForApplication(application);
+        return manifestLoader.getSecurityManifest();
     }
 
     private ManifestLoader getLoaderForApplication(final Application application) {
