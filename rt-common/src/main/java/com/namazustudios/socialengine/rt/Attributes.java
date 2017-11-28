@@ -11,7 +11,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 
 /**
- * Contains attributes which may be attached to a {@link Request}, {@link Request} or similar object.
+ * Contains attributes which may be attached to a {@link Request}, {@link Resource} or similar object.  Typically these
+ * are used to inject contextual information (such as currently authenticated user).
  */
 public interface Attributes {
 
