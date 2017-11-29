@@ -19,6 +19,7 @@
     <properties>
         <jna.version>4.5.0</jna.version>
         <quartz.version>2.3.0</quartz.version>
+        <jbox2d.version>2.2.1.1</jbox2d.version>
     </properties>
 
     <dependencies>
@@ -56,6 +57,11 @@
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna</artifactId>
             <version>${jna.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jbox2d</groupId>
+            <artifactId>jbox2d-library</artifactId>
+            <version>${jbox2d.version}</version>
         </dependency>
     </dependencies>
 
