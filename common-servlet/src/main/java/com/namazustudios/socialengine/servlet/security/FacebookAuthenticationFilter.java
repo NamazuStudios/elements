@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import static com.namazustudios.socialengine.exception.StatusMapping.map;
 import static com.namazustudios.socialengine.security.AuthorizationHeader.AUTH_TYPE_FACEBOOK;
 
+@Singleton
 public class FacebookAuthenticationFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(FacebookAuthenticationFilter.class);
