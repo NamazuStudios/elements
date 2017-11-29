@@ -18,6 +18,7 @@
 
     <properties>
         <jetty.version>9.4.7.v20170914</jetty.version>
+        <jbox2d.version>2.2.1.1</jbox2d.version>
     </properties>
 
     <dependencies>
@@ -130,6 +131,11 @@
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
             <version>${reflections.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jbox2d</groupId>
+            <artifactId>jbox2d-library</artifactId>
+            <version>${jbox2d.version}</version>
         </dependency>
     </dependencies>
 
