@@ -57,6 +57,33 @@ local example_parameters = {
     bar_string = "string"
 }
 
+-- The security manifest
+
+manifest.security = {
+
+    -- Specifies header-based auth schemes
+
+    header = {
+
+        -- Specifies an auth scheme named "api-key"
+
+        ["api-key"] = {
+
+            -- Describes the auth scheme.
+
+            description = "Example Auth Scheme",
+
+            -- Includes the specifier for the header itself
+
+            spec = {
+                name = "X-ExampleHeader",
+                description = "The Example Header Specification",
+                type = "string"
+            }
+
+        }
+    }
+}
 
 -- The table containing the HTTP method manifest.
 
@@ -104,6 +131,10 @@ manifest.http = {
                 -- the get module.
 
                 method = "get_all",
+
+                -- Specifies which auth schemes are supported by this endpoint.
+
+                auth = { "api-key" },
 
                 -- Parameters which the request will accept.  Parameters may ony specify simple types.
 

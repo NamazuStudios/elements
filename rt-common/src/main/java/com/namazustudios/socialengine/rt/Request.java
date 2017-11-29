@@ -9,14 +9,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A Request is a request sent to a particular resource.
- *
- * This ties the {@link RequestHeader} to a specific payload type for
- * the application.
+ * A Request is a request sent from a client.
  *
  * Created by patricktwohig on 7/26/15.
  */
 public interface Request {
+
+    /**
+     * Gets the {@link Attributes} of this {@link Request}.  The {@link Attributes} are set by the container as part of
+     * processing the {@link Request}.
+     *
+     * @return the {@link Attributes}
+     */
+    Attributes getAttributes();
 
     /**
      * Gets ths {@link RequestHeader} object for this particular request.

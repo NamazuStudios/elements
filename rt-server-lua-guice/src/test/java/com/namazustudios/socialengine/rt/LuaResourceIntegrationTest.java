@@ -1,10 +1,9 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.rt;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
-import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
@@ -21,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertNull;
@@ -162,6 +160,7 @@ public class LuaResourceIntegrationTest {
 
             install(new SimpleContextModule());
             bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(getClass().getClassLoader()));
+
         }
 
     }

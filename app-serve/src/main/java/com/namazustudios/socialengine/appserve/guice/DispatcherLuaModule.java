@@ -1,17 +1,12 @@
 package com.namazustudios.socialengine.appserve.guice;
 
 import com.namazustudios.socialengine.annotation.Expose;
-import com.namazustudios.socialengine.annotation.FacebookPermissions;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import org.reflections.Reflections;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static java.util.Arrays.stream;
 import static java.util.function.Function.identity;
 
 public class DispatcherLuaModule extends LuaModule {

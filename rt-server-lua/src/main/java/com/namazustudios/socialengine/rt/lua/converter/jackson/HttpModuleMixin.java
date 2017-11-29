@@ -12,4 +12,6 @@ public interface  HttpModuleMixin {
     @JsonProperty("operations")
     Map<String, HttpOperation> getOperationsByName();
 
+
+
 }

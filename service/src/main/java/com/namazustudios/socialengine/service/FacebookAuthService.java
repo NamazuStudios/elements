@@ -14,8 +14,8 @@ import com.namazustudios.socialengine.model.session.FacebookSession;
 public interface FacebookAuthService {
 
     /**
-     * Attempts to find the {@link User} provided the {@link FacebookApplicationConfiguration}
-     * as well as the supplied facebook OAuth access token.
+     * Attempts to find the {@link User} provided the {@link FacebookApplicationConfiguration} as well as the supplied
+     * Facebook OAuth access token.
      *
      * @param applicationConfigurationNameOrId the value of {@link FacebookApplicationConfiguration#getApplicationId()}
      * @param facebookOAuthAccessToken the OAuth access token supplied by facebook.
@@ -25,10 +25,10 @@ public interface FacebookAuthService {
     FacebookSession authenticate(String applicationConfigurationNameOrId, String facebookOAuthAccessToken);
 
     /**
-     * Creates a new session using the supplied application configuration as well as the Facebook token.  If
-     * the user does not exist, then this may create a user in the system.  If creating a user is not possible
-     * then this may throw the appropraite exception indicating so.  The thrown exception should be
-     * as descriptive as necessary and must render the appropriate status code.
+     * Creates a new session using the supplied application configuration as well as the Facebook token.  If the user
+     * does not exist, then this may create a user in the system.  If creating a user is not possible then this may
+     * throw the appropraite exception indicating so.  The thrown exception should be as descriptive as necessary and
+     * must render the appropriate status code.
      *
      * In addition to manipulating the user account, this should also convert the short-term facebook token
      * to a long-term token and supply the result.

@@ -12,6 +12,8 @@ public class SimpleRequest implements Request {
 
     private SimpleRequestHeader header;
 
+    private SimpleAttributes attributes;
+
     private Object payload;
 
     private Map<String, List<Object>> parameterMap;
@@ -23,6 +25,15 @@ public class SimpleRequest implements Request {
 
     public void setHeader(final SimpleRequestHeader header) {
         this.header = header;
+    }
+
+    @Override
+    public SimpleAttributes getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(SimpleAttributes attributes) {
+        this.attributes = attributes;
     }
 
     @Override
@@ -105,6 +116,8 @@ public class SimpleRequest implements Request {
 
         private ParameterizedPath parameterizedPath;
 
+        final Map<String, Object> simpleAttributesMap = new HashMap<>();
+
         final Map<String, List<Object> > simpleRequestHeaderMap = new LinkedHashMap<>();
 
         final Map<String, List<Object> > simpleRequestParameterMap = new LinkedHashMap<>();
@@ -140,6 +153,11 @@ public class SimpleRequest implements Request {
                 for (final String headerName : header.getHeaderNames()) {
                     final List<Object> value = request.getHeader().getHeaders(headerName);
                     simpleRequestHeaderMap.put(headerName, new ArrayList<>(value));
+                }
+
+                for (final String attributeName : request.getAttributes().getAttributeNames()) {
+                    final Object attribute = request.getAttributes().getAttribute(attributeName);
+                    simpleAttributesMap.put(attributeName, attribute);
                 }
 
             }
@@ -217,6 +235,18 @@ public class SimpleRequest implements Request {
         }
 
         /**
+         * Sets the attribute with the supplied name and value.
+         *
+         * @param attribute the attribute name
+         * @param value the attribute value
+         * @return this object
+         */
+        public Builder attribute(final String attribute, final Object value) {
+            simpleAttributesMap.put(attribute, value);
+            return this;
+        }
+
+        /**
          * Calls {@link #parameterizedPath(ParameterizedPath)} using the {@link String} representation of the
          * {@link ParameterizedPath}.
          *
@@ -249,9 +279,14 @@ public class SimpleRequest implements Request {
 
             final SimpleRequest simpleRequest = new SimpleRequest();
             final SimpleRequestHeader simpleRequestHeader = new SimpleRequestHeader();
+            final SimpleAttributes simpleAttributes = new SimpleAttributes();
+
 
             simpleRequest.setPayload(payload);
             simpleRequest.setParameterMap(new LinkedHashMap<>(simpleRequestParameterMap));
+
+            simpleAttributes.setAttributes(new HashMap<>(simpleAttributesMap));
+            simpleRequest.setAttributes(simpleAttributes);
 
             simpleRequestHeader.setPath(path);
             simpleRequestHeader.setMethod(method);

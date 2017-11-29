@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.Attributes.emptyAttributes;
 import static com.namazustudios.socialengine.rt.Context._waitAsync;
 
 /**
@@ -24,14 +25,53 @@ public interface ResourceContext {
      *
      * @return the system-assigned {@link ResourceId}
      */
-    default ResourceId create(String module, Path path, Object... args) {
+    default ResourceId create(final String module, final Path path, final Object... args) {
 
         final Logger logger = LoggerFactory.getLogger(getClass());
 
-        final Future<ResourceId> future = createAsync(
+        final Future<ResourceId> future = createAttributesAsync(
+                resourceId  -> logger.info("Created {} -> {}", resourceId, path),
+                th -> logger.error("Failed create at {}", path, th),
+                module, path, emptyAttributes(), args);
+
+        return _waitAsync(logger, future);
+
+    }
+
+    /**
+     * Creates a {@link Resource} passing the default {@link Attributes} obtained from
+     * {@link Attributes#emptyAttributes()}.
+     *
+     * @param success the {@Consumer<ResourceId>} which will be called if the call succeeds
+     * @param failure the {@Consumer<Throwable>} which will be called if the call fails, capturing any failure
+     * @param module module name to instantiate
+     * @param path the {@link Path} for the {@link Resource}
+     * @param args the arguments to pass to the {@link Resource} on initialization
+     * @return
+     */
+    default Future<ResourceId> createAsync(Consumer<ResourceId> success, Consumer<Throwable> failure,
+                                           String module, Path path, Object... args) {
+        return createAttributesAsync(success, failure, module, path, emptyAttributes(), args);
+    }
+
+    /**
+     * Creates a {@link Resource} at the provided {@link Path}.
+     *
+     * @param module the module to instantiate
+     * @param path the path
+     * @param args the arguments to pass to the module instantiation
+     *
+     * @return the system-assigned {@link ResourceId}
+     */
+    default ResourceId createAttributes(final String module, final Path path,
+                                        final Attributes attributes, final Object... args) {
+
+        final Logger logger = LoggerFactory.getLogger(getClass());
+
+        final Future<ResourceId> future = createAttributesAsync(
             resourceId  -> logger.info("Created {} -> {}", resourceId, path),
             th -> logger.error("Failed create at {}", path, th),
-            module, path, args);
+            module, path, attributes, args);
 
         return _waitAsync(logger, future);
 
@@ -39,15 +79,16 @@ public interface ResourceContext {
 
     /**
      * Creates a {@link Resource} asynchronously.  Once created, the {@link Resource} can be provided to the supplied
-     * {@link Consumer<Resource>} in case any operations
+     * {@link Consumer<Resource>}.
+     *
      * @param success the {@Consumer<ResourceId>} which will be called if the call succeeds
      * @param failure the {@Consumer<Throwable>} which will be called if the call fails, capturing any failure
      * @param module module name to instantiate
      * @param path the {@link Path} for the {@link Resource}
      * @param args the arguments to pass to the {@link Resource} on initialization
      */
-    Future<ResourceId> createAsync(Consumer<ResourceId> success, Consumer<Throwable> failure,
-                                   String module, Path path, Object... args);
+    Future<ResourceId> createAttributesAsync(Consumer<ResourceId> success, Consumer<Throwable> failure,
+                                             String module, Path path, Attributes attributes, Object... args);
 
     /**
      * Synchronous invoke of {@link #invokePathAsync(Consumer, Consumer, Path, String, Object...)}.

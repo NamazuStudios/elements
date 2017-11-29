@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.servlet;
 
+import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.RequestHeader;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.rt.http.CompositeHttpManifestMetadata;
@@ -29,6 +30,8 @@ public class ServletHttpRequest implements HttpRequest {
 
     private final ServletRequestHeader servletRequestHeader;
 
+    private final ServletRequestAttributes servletRequestAttributes;
+
     private final CompositeHttpManifestMetadata compositeHttpManifestMetadata;
 
     private final Supplier<HttpServletRequest> httpServletRequestSupplier;
@@ -44,6 +47,7 @@ public class ServletHttpRequest implements HttpRequest {
         this.payloadDeserializerFunction = payloadDeserializerFunction;
         this.compositeHttpManifestMetadata = new CompositeHttpManifestMetadata(this, httpManifest);
         this.servletRequestHeader = new ServletRequestHeader(compositeHttpManifestMetadata, httpServletRequestSupplier);
+        this.servletRequestAttributes = new ServletRequestAttributes(httpServletRequestSupplier::get);
     }
 
     @Override
@@ -63,6 +67,11 @@ public class ServletHttpRequest implements HttpRequest {
     @Override
     public RequestHeader getHeader() {
         return servletRequestHeader;
+    }
+
+    @Override
+    public Attributes getAttributes() {
+        return servletRequestAttributes;
     }
 
     @Override

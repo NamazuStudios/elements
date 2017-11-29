@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.manifest.http;
 
+import com.namazustudios.socialengine.rt.manifest.security.AuthScheme;
+
 import java.util.Map;
 
 /**

@@ -6,16 +6,20 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.rt.ParameterizedPath;
+import com.namazustudios.socialengine.rt.manifest.Header;
 import com.namazustudios.socialengine.rt.manifest.http.*;
 import com.namazustudios.socialengine.rt.manifest.model.Model;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.model.Property;
+import com.namazustudios.socialengine.rt.manifest.security.AuthScheme;
+import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
 import com.namazustudios.socialengine.service.ApplicationService;
 import com.namazustudios.socialengine.service.ManifestService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 import io.swagger.models.*;
+import io.swagger.models.auth.ApiKeyAuthDefinition;
 import io.swagger.models.parameters.*;
 import io.swagger.models.properties.*;
 import org.glassfish.jersey.internal.util.Producer;
@@ -32,7 +36,9 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Functions.identity;
 import static io.swagger.models.Scheme.forValue;
+import static io.swagger.models.auth.In.HEADER;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 
 /**
  * Created by patricktwohig on 8/23/17.
@@ -46,8 +52,6 @@ import static java.util.Arrays.asList;
         authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
 @Path("application/{applicationNameOrId}/swagger.json")
 public class ApplicationDocumentationResource {
-
-    public static final String BODY_PARAMETER = "body";
 
     private ManifestService manifestService;
 
@@ -122,6 +126,9 @@ public class ApplicationDocumentationResource {
         final HttpManifest httpManifest = getManifestService().getHttpManifestForApplication(application);
         appendHttpManifest(swagger, httpManifest);
 
+        final SecurityManifest securityManifest = getManifestService().getSecurityManifestForApplication(application);
+        appendSecurityManifest(swagger, securityManifest);
+
     }
 
     private void appendModelManifest(final Swagger swagger, final ModelManifest modelManifest, Application application) {
@@ -146,9 +153,22 @@ public class ApplicationDocumentationResource {
             case ARRAY:
                 return new ArrayProperty().items(new RefProperty(property.getModel())).description(property.getDescription());
             case OBJECT:
-                return new RefProperty(property.getModel()).description(property.getDescription());
+                return new RefProperty().asDefault(property.getModel()).description(property.getDescription());
             default:
                 throw new IllegalArgumentException("Unsupported property type: " + property.getType());
+        }
+    }
+
+    private io.swagger.models.properties.Property toSwaggerProperty(final Header header) {
+        switch (header.getType()) {
+            case NUMBER:
+                return new DoubleProperty().description(header.getDescription());
+            case STRING:
+                return new StringProperty().description(header.getDescription());
+            case BOOLEAN:
+                return new BooleanProperty().description(header.getDescription());
+            default:
+                throw new IllegalArgumentException("Unsupported header type: " + header.getType());
         }
     }
 
@@ -240,6 +260,10 @@ public class ApplicationDocumentationResource {
         operation.setOperationId(httpOperation.getName());
         operation.setDescription(httpOperation.getDescription());
 
+        if (httpOperation.getAuthSchemes() != null) {
+            httpOperation.getAuthSchemes().forEach(scheme -> operation.addSecurity(scheme, emptyList()));
+        }
+
         final Parameter bodyParameter = resolveBodyParameter(swagger, httpOperation);
 
         if (bodyParameter != null) {
@@ -316,6 +340,25 @@ public class ApplicationDocumentationResource {
         response.setSchema(type);
         response.setHeaders(headerPropertyMap);
         return response;
+
+    }
+
+    private void appendSecurityManifest(final Swagger swagger, final SecurityManifest securityManifest) {
+        securityManifest
+            .getHeaderAuthSchemesByName()
+            .forEach((name, header) -> addHeaderAuth(swagger, name, header));
+    }
+
+    private void addHeaderAuth(final Swagger swagger, final String name, final AuthScheme.Header headerAuthScheme) {
+
+        final Header headerSpec = headerAuthScheme.getSpec();
+
+        final ApiKeyAuthDefinition apiKeyAuthDefinition = new ApiKeyAuthDefinition()
+                .name(headerSpec.getName())
+                .in(HEADER);
+
+        apiKeyAuthDefinition.setDescription(headerAuthScheme.getDescription());
+        swagger.addSecurityDefinition(name, apiKeyAuthDefinition);
 
     }
 

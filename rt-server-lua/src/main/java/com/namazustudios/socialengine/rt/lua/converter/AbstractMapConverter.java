@@ -22,27 +22,35 @@ public abstract class AbstractMapConverter<JavaT> implements TypedConverter<Java
     @Override
     public <T> T convertLuaValue(LuaState luaState, int index, Class<T> formalType) {
         final Map<?, ?> map = defaultConverter.convertLuaValue(luaState, index, Map.class);
-        final JavaT object = convertLua2Java(map);
+        final JavaT object = convertNullOrLua2Java(map);
         return formalType.cast(object);
     }
 
     @Override
     public void convertJavaObject(LuaState luaState, Object object) {
         final JavaT javaTObject = getConvertedType().cast(object);
-        final Map<?, ?> map = convertJava2Lua(javaTObject);
+        final Map<?, ?> map = convertNullOrJava2Lua(javaTObject);
         defaultConverter.convertJavaObject(luaState, map);
     }
 
     @Override
-    public boolean isConvertibleFromLua(LuaState luaState, int index, Class<?> formalType) {
+    public boolean isConvertibleFromLua(final LuaState luaState, final int index, final Class<?> formalType) {
         return getConvertedType().equals(formalType);
     }
 
-    public Map<?,?> convertJava2Lua(JavaT object) {
-        throw new UnsupportedOperationException("Conversion Java -> Lua not supported for " + getConvertedType());
+    public Map<?,?> convertNullOrJava2Lua(final JavaT object) {
+        return object == null ? null : convertJava2Lua(object);
     }
 
-    public JavaT convertLua2Java(Map<?,?> map) {
+    public Map<?,?> convertJava2Lua(final JavaT object) {
+        throw new UnsupportedOperationException("Conversion Java -> Lua not supported for " + object + " through " + getConvertedType());
+    }
+
+    public JavaT convertNullOrLua2Java(final Map<?,?> map) {
+        return map == null ? null : convertLua2Java(map);
+    }
+
+    public JavaT convertLua2Java(final Map<?,?> map) {
         throw new UnsupportedOperationException("Conversion Lua -> Java not supported for " + getConvertedType());
     }
 

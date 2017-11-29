@@ -13,7 +13,7 @@ import static com.namazustudios.socialengine.rt.lua.Constants.REQUIRE;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinUtils.currentTaskId;
 
 /**
- * Provides the details for the resoure manipulation operations.
+ * Provides the details for the resource manipulation operations.
  */
 public class ResourceDetailBuiltin implements Builtin {
 

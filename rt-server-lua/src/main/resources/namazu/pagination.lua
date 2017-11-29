@@ -6,7 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local table = require "table"
+local model = require "namazu.model"
 
 local pagination = {}
 
@@ -14,7 +14,7 @@ function pagination.of(offset, total, objects)
     return {
         ["offset"] = offset,
         ["total"] = total,
-        ["objects"] = objects
+        ["objects"] = model.array(objects)
     }
 end
 

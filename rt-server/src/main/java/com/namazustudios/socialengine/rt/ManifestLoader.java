@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
+import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
 
 /**
  * Cooperates with the {@link AssetLoader} to load manifest instances such as {@link HttpManifest}.  This is used
@@ -32,6 +33,13 @@ public interface ManifestLoader extends AutoCloseable {
      * @return the
      */
     HttpManifest getHttpManifest();
+
+    /**
+     * Gets the {@link SecurityManifest}, if available.
+     *
+     * @return the {@link SecurityManifest}
+     */
+    SecurityManifest getSecurityManifest();
 
     /**
      * Closes the {@link ManifestLoader} as well as any open resources associated therein.  This also closes
