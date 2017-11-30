@@ -175,7 +175,7 @@ public class UserMatchService implements MatchService {
             .getSubtopicNamed(profile.getId());
 
         return matchTimeDeltaTopic.subscribeNext(matchTimeDelta -> {
-            if (matchTimeDelta.getTimeStamp() >= timeStamp) {
+            if (matchTimeDelta.getTimeStamp() > timeStamp) {
                 final List<MatchTimeDelta> matchTimeDeltaList;
                 matchTimeDeltaList = getMatchDao().getDeltasForPlayerAfter(profile.getId(), timeStamp);
                 timeDeltaListConsumer.accept(matchTimeDeltaList);
@@ -201,7 +201,7 @@ public class UserMatchService implements MatchService {
                 .getSubtopicNamed(match.getId());
 
         return matchTimeDeltaTopic.subscribeNext(matchTimeDelta ->  {
-            if (matchTimeDelta.getTimeStamp() >= timeStamp) {
+            if (matchTimeDelta.getTimeStamp() > timeStamp) {
                 final List<MatchTimeDelta> matchTimeDeltaList;
                 matchTimeDeltaList = getMatchDao().getDeltasForPlayerAfter(profile.getId(), timeStamp, matchId);
                 timeDeltaListConsumer.accept(matchTimeDeltaList);

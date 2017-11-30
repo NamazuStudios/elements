@@ -161,6 +161,9 @@ public class MongoMatchmakerIntegrationTest {
         final Profile player = match.getPlayer();
         List<MatchTimeDelta> matchTimeDeltas;
 
+        // Because we're trying to examine the list of deltas for a specific match, burning down the list should always
+        // reduce by one until we get zero match deltas.
+
         matchTimeDeltas = getMatchDao().getDeltasForPlayerAfter(player.getId(), 0, match.getId());
         assertFalse(matchTimeDeltas.isEmpty(), "Expected at least one match.");
 
@@ -193,6 +196,10 @@ public class MongoMatchmakerIntegrationTest {
     public void testDeltasForPlayer(final Profile player) {
         List<MatchTimeDelta> matchTimeDeltas;
 
+        // This is a tricky scenario to test because there can be any number of matches pending for a specific user,
+        // however we can test that the list burns-down properly by seeing if we get progressively fewer match deltas
+        // until the count reaches zero.
+
         matchTimeDeltas = getMatchDao().getDeltasForPlayerAfter(player.getId(), 0);
         assertFalse(matchTimeDeltas.isEmpty(), "Expected at least one match.");
 
@@ -205,7 +212,7 @@ public class MongoMatchmakerIntegrationTest {
 
             final List<MatchTimeDelta> intermediateTimeDeltas;
             intermediateTimeDeltas = getMatchDao().getDeltasForPlayerAfter(player.getId(), timestamp);
-            assertEquals(intermediateTimeDeltas.size(), matchTimeDeltas.size() - 1);
+            assertTrue(intermediateTimeDeltas.size() < matchTimeDeltas.size());
             matchTimeDeltas = intermediateTimeDeltas;
 
         }
