@@ -29,11 +29,15 @@
         <module>rest-guice</module>
         <module>web-ui-war</module>
         <module>common-util</module>
+        <module>common-servlet</module>
         <module>lucene-pojo</module>
         <module>lucene-indexer</module>
         <module>mongo-lucene</module>
         <module>rt-common</module>
         <module>rt-server</module>
+        <module>rt-server-simple</module>
+        <module>rt-server-cluster-node</module>
+        <module>rt-server-cluster-client</module>
         <module>rt-mina</module>
         <module>rt-server-lua</module>
         <module>rt-server-lua-guice</module>
@@ -51,7 +55,6 @@
         <module>rt-dao-guice</module>
         <module>rt-server-lua-testkit</module>
         <module>socialengine-jnlua/jnlua</module>
-    <module>common-servlet</module>
   </modules>
 
     <properties>
