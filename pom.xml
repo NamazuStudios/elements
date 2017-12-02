@@ -92,6 +92,7 @@
         <jxpath.version>1.3</jxpath.version>
         <mockito.version>2.11.0</mockito.version>
         <jopt.version>4.9-beta-1</jopt.version>
+        <jeromq.version>0.4.3</jeromq.version>
     </properties>
 
     <dependencies>
