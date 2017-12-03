@@ -7,12 +7,16 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.empty;
 
-public class Methods {
+/**
+ * Houses some utility logic for interacting with the Reflection API.
+ */
+public class Reflection {
 
     /**
+     * Streams a {@link Method}s in a {@link Class}.
      *
-     * @param aClass
-     * @return
+     * @param aClass a class
+     * @return a {@link Stream<Method>}
      */
     public static Stream<Method> methods(final Class<?> aClass) {
 

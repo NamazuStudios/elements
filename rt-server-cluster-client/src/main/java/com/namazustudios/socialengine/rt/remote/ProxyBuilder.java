@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.remote;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,8 +18,6 @@ import static java.lang.String.format;
 import static java.lang.reflect.Proxy.newProxyInstance;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Stream.concat;
-import static java.util.stream.Stream.empty;
 
 public class ProxyBuilder<ProxyT> {
 
@@ -40,8 +39,14 @@ public class ProxyBuilder<ProxyT> {
      * @param interfaceClassT
      */
     public ProxyBuilder(final Class<ProxyT> interfaceClassT) {
+
+        if (interfaceClassT.getAnnotation(Proxyable.class) == null) {
+            throw new IllegalArgumentException(interfaceClassT.getName() + " is not @Proxyable");
+        }
+
         this.interfaceClassT = interfaceClassT;
         classLoader = interfaceClassT.getClassLoader();
+
     }
 
     /**
@@ -126,7 +131,7 @@ public class ProxyBuilder<ProxyT> {
     }
 
     private Stream<Method> methods() {
-        return Methods.methods(interfaceClassT);
+        return Reflection.methods(interfaceClassT);
     }
 
     private class InvocationHandlerMethodAssignment implements MethodAssignment<ProxyBuilder<ProxyT>> {
