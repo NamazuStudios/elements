@@ -20,7 +20,6 @@ import java.util.stream.IntStream;
 
 import static com.namazustudios.socialengine.rt.remote.Reflection.format;
 import static com.namazustudios.socialengine.rt.remote.Reflection.methods;
-import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
@@ -90,7 +89,10 @@ public class RemoteInvocationHandlerBuilder {
     }
 
     /**
-     * Builds the {@link InvocationHandler} which will dispach calls to hte remote method.
+     * Builds the {@link InvocationHandler} which will dispach calls to hte remote method.  This does so by building
+     * as much as possible ahead of time in order to provide type checking before methods are ever called.  Secondly,
+     * the returned {@link InvocationHandler} performs minimal work to actually shuffle the arguments around when
+     * implementing the request/response schema.
      *
      * @return the {@link InvocationHandler}
      */
@@ -244,10 +246,6 @@ public class RemoteInvocationHandlerBuilder {
 
         return handlerMethod;
 
-    }
-
-    private int checkErrorHandler(final int index, final Parameter parameter) {
-        return index;
     }
 
     /**

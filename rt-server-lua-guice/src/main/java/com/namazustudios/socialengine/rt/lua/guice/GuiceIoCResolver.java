@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.lua.guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-import com.namazustudios.socialengine.rt.lua.IocResolver;
+import com.namazustudios.socialengine.rt.IocResolver;
 
 import javax.inject.Inject;
 import javax.inject.Provider;

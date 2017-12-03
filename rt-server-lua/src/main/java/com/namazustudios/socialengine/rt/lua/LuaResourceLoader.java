@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.rt.lua;
 
-import com.namazustudios.socialengine.rt.AssetLoader;
-import com.namazustudios.socialengine.rt.Attributes;
-import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.ResourceLoader;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
 import com.namazustudios.socialengine.rt.lua.builtin.*;
 
@@ -12,7 +9,7 @@ import javax.inject.Provider;
 
 import java.util.Set;
 
-import static com.namazustudios.socialengine.rt.lua.IocResolver.IOC_RESOLVER_MODULE_NAME;
+import static com.namazustudios.socialengine.rt.IocResolver.IOC_RESOLVER_MODULE_NAME;
 import static com.namazustudios.socialengine.rt.lua.LuaResource.ATTRIBUTES_MODULE;
 
 public class LuaResourceLoader implements ResourceLoader {

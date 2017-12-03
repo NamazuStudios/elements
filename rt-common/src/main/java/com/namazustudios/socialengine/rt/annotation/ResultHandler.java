@@ -13,6 +13,9 @@ import java.util.function.Function;
  * value, if applicable, is not used.
  *
  * This can be used with type such as {@link Consumer<?>} or {@link Function<?, ?>}.
+ *
+ * If there exists either {@link ResultHandler} or {@link ErrorHandler}, the method is assumed to be asynchronous and
+ * the return value of the method will not be used
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)

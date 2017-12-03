@@ -6,8 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Designates a {@link FunctionalInterface} type parameter which will receive an instance of {@link Throwable} as a
- * response to a remotely-invoked method.
+ * Designates a method as being remotely invokable.  The method must be marked in a {@link Proxyable} type.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

@@ -1,6 +1,5 @@
-package com.namazustudios.socialengine.rt.lua;
+package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.exception.BaseException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 
