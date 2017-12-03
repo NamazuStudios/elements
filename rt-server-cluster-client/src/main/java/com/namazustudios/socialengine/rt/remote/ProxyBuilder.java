@@ -126,14 +126,7 @@ public class ProxyBuilder<ProxyT> {
     }
 
     private Stream<Method> methods() {
-
-        Stream<Method> methodStream = empty();
-
-        for (Class<?> cls = interfaceClassT; cls != Object.class; cls = cls.getSuperclass()) {
-            methodStream = concat(methodStream, stream(cls.getMethods()));
-        }
-
-        return methodStream;
+        return Methods.methods(interfaceClassT);
     }
 
     private class InvocationHandlerMethodAssignment implements MethodAssignment<ProxyBuilder<ProxyT>> {

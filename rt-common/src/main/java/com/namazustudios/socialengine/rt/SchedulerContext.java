@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.annotation.Proxyable;
+
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
