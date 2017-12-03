@@ -1,13 +1,16 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -22,6 +25,10 @@ public class ProxyBuilder<ProxyT> {
     private static final Logger logger = LoggerFactory.getLogger(ProxyBuilder.class);
 
     private ClassLoader classLoader;
+
+    private InvocationHandler defaultInvocationHandler = (p, method, args) -> {
+        throw new NoSuchMethodError("No invocation handler for method: " + method);
+    };
 
     private final Class<ProxyT> interfaceClassT;
 
@@ -38,6 +45,43 @@ public class ProxyBuilder<ProxyT> {
     }
 
     /**
+     * Given any interface methods that are declared as "default" this will ensure that they are not proxied.
+     *
+     * @return this instance
+     */
+    public ProxyBuilder<ProxyT> dontProxyDefaultMethods() {
+        final LoadingCache<Object, LoadingCache<Method, MethodHandle>> proxyCache = proxyCache();
+        final InvocationHandler handler = (p, method, args) -> proxyCache.get(p).get(method).invoke(args);
+        methods().filter(m -> m.isDefault()).forEach(m -> handler(handler).forMethod(m));
+        return this;
+    }
+
+    final LoadingCache<Object, LoadingCache<Method, MethodHandle>> proxyCache() {
+        return CacheBuilder.newBuilder().weakKeys().build(proxyLoader());
+    }
+
+    private CacheLoader<Object, LoadingCache<Method, MethodHandle>> proxyLoader() {
+        return new CacheLoader<Object, LoadingCache<Method, MethodHandle>>() {
+            @Override
+            public LoadingCache<Method, MethodHandle> load(final Object proxy) throws Exception {
+                return CacheBuilder
+                    .newBuilder()
+                    .weakValues()
+                    .build(new CacheLoader<Method, MethodHandle>() {
+                        @Override
+                        public MethodHandle load(final Method method) throws Exception {
+                            return MethodHandles
+                                .lookup()
+                                .in(interfaceClassT)
+                                .unreflectSpecial(method, interfaceClassT)
+                                .bindTo(proxy);
+                        }
+                    });
+            }
+        };
+    }
+
+    /**
      * Specifies an instance of {@link InvocationHandler}, which can be used to handle invocations against a
      * {@link Method} through a {@link MethodAssignment}.
      *
@@ -49,6 +93,18 @@ public class ProxyBuilder<ProxyT> {
     }
 
     /**
+     * Specifies the default {@link InvocationHandler}, which gets called when no other {@link InvocationHandler} is
+     * able to handle the invocation.
+     *
+     * @param defaultInvocationHandler the default {@link InvocationHandler}
+     * @return this instance
+     */
+    public ProxyBuilder<ProxyT> withDefaultHandler(final InvocationHandler defaultInvocationHandler) {
+        this.defaultInvocationHandler = defaultInvocationHandler;
+        return this;
+    }
+
+    /**
      * Returns new instance of {@link ProxyT} using the built-in {@link java.lang.reflect.Proxy} functionality.
      *
      * @return the {@link ProxyT} instance.
@@ -56,35 +112,14 @@ public class ProxyBuilder<ProxyT> {
     public ProxyT build() {
 
         final Map<Method, InvocationHandler> handlerMap = new HashMap<>(this.handlerMap);
+        final InvocationHandler defaultInvocationHandler = this.defaultInvocationHandler;
 
-        final Set<Method> definedMethodSet = new HashSet<>(handlerMap.keySet());
-        final Set<Method> availableMethodSet = methods().collect(Collectors.toSet());
-
-        if (!definedMethodSet.equals(availableMethodSet)) {
-
-            final Set<Method> undefinedMethods = new HashSet<>(availableMethodSet);
-            undefinedMethods.removeAll(definedMethodSet);
-
-            final String undefinedMethodList = undefinedMethods
-                .stream()
-                .map(method -> {
-                    final String parameterSpec = stream(method.getParameterTypes()).map(c -> c.getName()).collect(joining(","));
-                    return format("%s.%s(%s)", method.getDeclaringClass().getName(), method.getName(), parameterSpec);
-                })
-                .collect(joining("\n"));
-
-            logger.warn("Some methods undefined for {}:\n{}", undefinedMethodList);
-
-        }
-
-        final InvocationHandler throwingInvocationHandler = (p, method, args) -> {
-            throw new NoSuchMethodError("No invocation handler for method: " + method);
-        };
-
-        final Object proxy = newProxyInstance(classLoader, new Class<?>[]{interfaceClassT}, (p, method, args) -> {
-            final InvocationHandler invocationHandler =  handlerMap.getOrDefault(method, throwingInvocationHandler);
-            return invocationHandler.invoke(p, method, args);
-        });
+        final Object proxy = handlerMap.isEmpty() ?
+            newProxyInstance(classLoader, new Class<?>[]{interfaceClassT}, defaultInvocationHandler) :
+            newProxyInstance(classLoader, new Class<?>[]{interfaceClassT}, (p, method, args) -> {
+                final InvocationHandler invocationHandler =  handlerMap.getOrDefault(method, defaultInvocationHandler);
+                return invocationHandler.invoke(p, method, args);
+            });
 
         return interfaceClassT.cast(proxy);
 

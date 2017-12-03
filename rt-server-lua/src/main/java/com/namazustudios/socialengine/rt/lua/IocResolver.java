@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.lua;
 
+import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.exception.BaseException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 
@@ -8,9 +9,9 @@ import javax.inject.Provider;
 import static java.lang.Class.forName;
 
 /**
- * Used by Lua resources to access member that would otherwise be provided using the javax.inject annotations
- * {@link javax.inject.Inject} and {@link javax.inject.Named}.  This module does not have an explicit dependency upon
- * any specific IoC container, and relies only on those provided by the javax.inject packages.
+ * Used by {@link Resource} instances to access member that would otherwise be provided using the javax.inject
+ * annotations {@link javax.inject.Inject} and {@link javax.inject.Named}.  This module does not have an explicit
+ * dependency upon any specific IoC container, and relies only on those provided by the javax.inject packages.
  *
  * All methods should throw some type of {@link BaseException} wrapping the underlying framework's exception if an
  * injection fails.  In most cases this will map to {@link InternalException}.
