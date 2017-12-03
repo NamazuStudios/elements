@@ -78,25 +78,27 @@ public class LocalInvocationDispatcherBuilder {
 
         final Method method = getMethod();
 
-        return (target, invocation, invocationResultConsumer) -> {
+        return (target, invocation, invocationErrorConsumer, invocationReturnConsumer, invocationResultConsumerList) -> {
 
             final Object[] args = parametersTransformer.apply(invocation.getArguments());
 
             try {
-                method.invoke(target, args);
+                final Object returnValue = method.invoke(target, args);
+                final InvocationResult invocationResult = new InvocationResult();
+                invocationResult.setResult(returnValue);
+                invocationReturnConsumer.accept(invocationResult);
             } catch (InvocationTargetException ex) {
                 logger.info("Caught exception dispatching the respnse.", ex);
-                final InvocationResult invocationResult = new InvocationResult();
-//                invocationResult.setOk(false);
-//                invocationResult.setThrowable(ex.getTargetException());
-                invocationResultConsumer.accept(invocationResult);
+                final InvocationError invocationError = new InvocationError();
+                invocationError.setThrowable(ex.getTargetException());
+                invocationErrorConsumer.accept(invocationError);
             } catch (IllegalAccessException ex) {
                 // This should not happen because we only consider public methods in the binding
                 logger.error("IllegalAccessException dispatching method", ex);
                 final InvocationResult invocationResult = new InvocationResult();
-//                invocationResult.setOk(false);
-//                invocationResult.setThrowable(ex);
-                invocationResultConsumer.accept(invocationResult);
+                final InvocationError invocationError = new InvocationError();
+                invocationError.setThrowable(ex);
+                invocationErrorConsumer.accept(invocationError);
             }
 
         };

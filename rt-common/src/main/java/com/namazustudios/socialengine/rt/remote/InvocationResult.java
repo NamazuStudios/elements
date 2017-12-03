@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
  */
 public class InvocationResult {
 
+
     private int arg;
 
     private Object result;

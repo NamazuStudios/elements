@@ -31,31 +31,51 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
         });
 
     @Override
-    public void dispatch(final Invocation invocation, final Consumer<InvocationResult> invocationResultConsumer) {
+    public void dispatch(final Invocation invocation,
+                         final Consumer<InvocationError> invocationErrorConsumer,
+                         final Consumer<InvocationResult> returnInvocationResultConsumer,
+                         final List<Consumer<InvocationResult>> invocationResultConsumerList) {
+
         try {
+
             final String name = invocation.getName();
             final Class<?> type = Class.forName(invocation.getType());
             final Object object = name == null ? getIocResolver().inject(type) : getIocResolver().inject(type, name);
-            doDispatch(type, object, invocation, invocationResultConsumer);
+
+            doDispatch(
+                type, object, invocation,
+                invocationErrorConsumer, returnInvocationResultConsumer, invocationResultConsumerList);
+
         } catch (Throwable th) {
             logger.error("Caught exception resolving target for invocation.", th);
-            final InvocationResult invocationResult = new InvocationResult();
-//            invocationResult.setOk(false);
-//            invocationResult.setThrowable(th);
-            invocationResultConsumer.accept(invocationResult);
+            final InvocationError invocationError = new InvocationError();
+            invocationError.setThrowable(th);
+            invocationErrorConsumer.accept(invocationError);
         }
+
     }
 
     private void doDispatch(
-            final Class<?> type, final Object object,
-            final Invocation invocation, final Consumer<InvocationResult> invocationResultConsumer) throws Throwable {
+            final Class<?> type,
+            final Object object,
+            final Invocation invocation,
+            final Consumer<InvocationError> invocationErrorConsumer,
+            final Consumer<InvocationResult> returnInvocationResultConsumer,
+            final List<Consumer<InvocationResult>> invocationResultConsumerList) throws Throwable {
+
+        final LocalInvocationDispatcher localInvocationDispatcher;
+
         try {
             final MethodKey methodKey = new MethodKey(type, invocation);
-            final LocalInvocationDispatcher localInvocationDispatcher = localDispatcherCache.get(methodKey);
-            localInvocationDispatcher.dispatch(object, invocation, invocationResultConsumer);
+            localInvocationDispatcher = localDispatcherCache.get(methodKey);
         } catch (ExecutionException ex) {
             throw ex.getCause();
         }
+
+        localInvocationDispatcher.dispatch(
+                object, invocation,
+                invocationErrorConsumer, returnInvocationResultConsumer, invocationResultConsumerList);
+
     }
 
     public IocResolver getIocResolver() {

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -12,8 +13,13 @@ public interface InvocationDispatcher {
      * {@link Consumer<InvocationResult>}.  The supplied {@link Consumer<InvocationResult>}.
      *
      * @param invocation
-     * @param invocationResultConsumer
+     * @param invocationErrorConsumer
+     * @param returnInvocationResultConsumer
+     * @param invocationResultConsumerList
      */
-    void dispatch(Invocation invocation, Consumer<InvocationResult> invocationResultConsumer);
+    void dispatch(Invocation invocation,
+                  Consumer<InvocationError> invocationErrorConsumer,
+                  Consumer<InvocationResult> returnInvocationResultConsumer,
+                  List<Consumer<InvocationResult>> invocationResultConsumerList);
 
 }
