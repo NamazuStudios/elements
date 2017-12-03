@@ -14,8 +14,8 @@ public interface RemoteInvoker {
      * @param invocation the outoing {@link Invocation}
      * @param invocationResultConsumerConsumer receives the {@link InvocationResult} when the remote method returns
      *
-     * @return a {@link Future<InvocationResult>}
+     * @return a {@link Future<Object>} which returns the result of the remote invocation
      */
-    Future<InvocationResult> invoke(Invocation invocation, Consumer<InvocationResult> invocationResultConsumerConsumer);
+    Future<Object> invoke(Invocation invocation, Consumer<InvocationResult> invocationResultConsumerConsumer);
 
 }
