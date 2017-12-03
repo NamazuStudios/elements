@@ -107,12 +107,16 @@ public class RemoteInvocationHandlerBuilder {
         final Function<Object[], Consumer<InvocationResult>> invocationResultConsumerAssembler;
         invocationResultConsumerAssembler = getInvocationResultConsumerAssembler(getMethod());
 
+        final List<String> parameters;
+        parameters = stream(method.getParameterTypes()).map(c -> c.getName()).collect(toList());
+
         return (proxy, method1, args) -> {
             final Invocation invocation = new Invocation();
 
             invocation.setType(getType().getName());
             invocation.setName(getName());
             invocation.setMethod(getMethod().getName());
+            invocation.setParameters(parameters);
             invocation.setArguments(parameterAssembler.apply(args));
 
             final Consumer<InvocationResult> invocationResultConsumer;
@@ -213,7 +217,7 @@ public class RemoteInvocationHandlerBuilder {
     private Method getHandlerMethod(final int index,
                                     final Method method,
                                     final Parameter parameter,
-                                    final Class<?> paramterType) {
+                                    final Class<?> parameterType) {
 
         final Class<?> type = parameter.getType();
 
@@ -239,7 +243,7 @@ public class RemoteInvocationHandlerBuilder {
 
         final Parameter handlerParameter = handlerMethod.getParameters()[0];
 
-        if (!handlerParameter.getType().isAssignableFrom(Throwable.class)) {
+        if (!handlerParameter.getType().isAssignableFrom(parameterType)) {
             final String msg = format(handlerMethod) + " must accept a Throwable.";
             throw new IllegalArgumentException(msg);
         }

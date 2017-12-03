@@ -182,14 +182,11 @@ public class ProxyBuilder<ProxyT> {
         }
 
         private IllegalArgumentException noSuchMethod(final String name) {
-            final String msg = format("No such method: %s.%s()", interfaceClassT.getName(), name);
-            return new IllegalArgumentException(msg);
+            return Reflection.noSuchMethod(interfaceClassT, name);
         }
 
         private IllegalArgumentException noSuchMethod(final String name, final Class<?>[] args) {
-            final String parameterSpec = stream(args).map(c -> c.getName()).collect(joining(","));
-            final String msg = format("No such method: %s.%s(%s)", interfaceClassT.getName(), name, parameterSpec);
-            return new IllegalArgumentException(msg);
+            return Reflection.noSuchMethod(interfaceClassT, name, args);
         }
 
     }
