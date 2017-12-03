@@ -1,9 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.annotation.ErrorHandler;
-import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
-import com.namazustudios.socialengine.rt.annotation.ResultHandler;
-import com.namazustudios.socialengine.rt.annotation.Serialize;
+import com.namazustudios.socialengine.rt.Reflection;
+import com.namazustudios.socialengine.rt.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,12 +12,16 @@ import java.lang.reflect.Parameter;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static com.namazustudios.socialengine.rt.Reflection.format;
+import static com.namazustudios.socialengine.rt.Reflection.indices;
 import static com.namazustudios.socialengine.rt.Reflection.methods;
+import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
@@ -36,6 +38,8 @@ public class RemoteInvocationHandlerBuilder {
 
     private final Method method;
 
+    private final Dispatch.Type dispatchType;
+
     private final RemoteInvoker remoteInvoker;
 
     public RemoteInvocationHandlerBuilder(final RemoteInvoker remoteInvoker, final Class<?> type, final Method method) {
@@ -46,6 +50,7 @@ public class RemoteInvocationHandlerBuilder {
 
         this.type = type;
         this.method = method;
+        this.dispatchType = Dispatch.Type.determine(method);
         this.remoteInvoker = remoteInvoker;
 
     }
@@ -78,6 +83,15 @@ public class RemoteInvocationHandlerBuilder {
     }
 
     /**
+     * Returns the {@link Dispatch.Type} of this method.
+     *
+     * @return the type of dispatch
+     */
+    public Dispatch.Type getDispatchType() {
+        return dispatchType;
+    }
+
+    /**
      * Sets the name of the remote object to invoke.  {@link Invocation#getName()}.
      *
      * @param name may be null if no name is used.
@@ -98,14 +112,19 @@ public class RemoteInvocationHandlerBuilder {
      */
     public InvocationHandler build() {
 
+        logger.info("Building invocation handler for {} with dispatch type {}", format(method), getDispatchType());
+
         final ReturnValueTransformer returnValueTransformer;
-        returnValueTransformer = getReturnValueTransformer(getMethod());
+        returnValueTransformer = getReturnValueTransformer();
 
         final Function<Object[], List<Object>> parameterAssembler;
-        parameterAssembler = getParameterAssembler(getMethod());
+        parameterAssembler = getParameterAssembler();
 
-        final Function<Object[], Consumer<InvocationResult>> invocationResultConsumerAssembler;
-        invocationResultConsumerAssembler = getInvocationResultConsumerAssembler(getMethod());
+        final Function<Object[], Consumer<InvocationError>> invocationErrorConsumerAssembler;
+        invocationErrorConsumerAssembler = getInvocationErrorConsumerAssembler();
+
+        final BiFunction<Object[], Consumer<InvocationError>, List<Consumer<InvocationResult>>> invocationResultConsumerAssembler;
+        invocationResultConsumerAssembler = getInvocationResultConsumerListAssembler();
 
         final List<String> parameters;
         parameters = stream(method.getParameterTypes()).map(c -> c.getName()).collect(toList());
@@ -119,18 +138,41 @@ public class RemoteInvocationHandlerBuilder {
             invocation.setParameters(parameters);
             invocation.setArguments(parameterAssembler.apply(args));
 
-            final Consumer<InvocationResult> invocationResultConsumer;
-            invocationResultConsumer = invocationResultConsumerAssembler.apply(args);
+            final Consumer<InvocationError> invocationErrorConsumer;
+            invocationErrorConsumer = invocationErrorConsumerAssembler.apply(args);
 
-            final Future<Object> objectFuture = remoteInvoker.invoke(invocation, invocationResultConsumer);
+            final List<Consumer<InvocationResult>> invocationResultConsumerList;
+            invocationResultConsumerList = invocationResultConsumerAssembler.apply(args, invocationErrorConsumer);
+
+            final Future<Object> objectFuture;
+            objectFuture = remoteInvoker.invoke(invocation, invocationErrorConsumer, invocationResultConsumerList);
             return returnValueTransformer.transform(objectFuture);
 
         };
 
     }
 
-    private ReturnValueTransformer getReturnValueTransformer(final Method method) {
-        return Future.class.isAssignableFrom(method.getReturnType()) ? future -> future : future -> {
+    private ReturnValueTransformer getReturnValueTransformer() {
+
+        final Dispatch.Type type = getDispatchType();
+
+        switch (type) {
+            case SYNCHRONOUS:
+                return getSynchronousReturnValueTransformer();
+            case FUTURE:
+                return future -> future;
+            case CONSUMER:
+                return void.class.equals(getMethod().getReturnType()) ? future -> null :
+                       Future.class.isAssignableFrom(getMethod().getReturnType()) ? future -> future :
+                       future -> getSynchronousReturnValueTransformer();
+            default:
+                throw new IllegalArgumentException("Unknown dispatch type: " + type);
+        }
+
+    }
+
+    private ReturnValueTransformer getSynchronousReturnValueTransformer() {
+        return future -> {
             try {
                 return future.get();
             } catch (ExecutionException ex) {
@@ -139,78 +181,70 @@ public class RemoteInvocationHandlerBuilder {
         };
     }
 
-    private Function<Object[], List<Object>> getParameterAssembler(final Method method) {
-
-        final Parameter[] parameters = method.getParameters();
-
-        final int[] indices = IntStream
-            .range(0, parameters.length)
-            .filter(index -> parameters[index].getAnnotation(Serialize.class) != null)
-            .toArray();
-
+    private Function<Object[], List<Object>> getParameterAssembler() {
+        final Method method = getMethod();
+        final int[] indices = indices(method, Serialize.class);
         return objects -> stream(indices).mapToObj(index -> objects[index]).collect(toList());
+    }
+
+    private Function<Object[], Consumer<InvocationError>> getInvocationErrorConsumerAssembler() {
+
+        final Method method = getMethod();
+        final Parameter[] parameters = method.getParameters();
+        final int index = Reflection.errorHandlerIndex(method);
+        final Method errorHandlerMethod = getHandlerMethod(index, method, parameters[index], Throwable.class);
+
+        return objects -> invocationError -> {
+
+            final Consumer<Throwable> throwableConsumer = throwable -> {
+                try {
+                    errorHandlerMethod.invoke(objects[index], throwable);
+                } catch (IllegalAccessException | InvocationTargetException ex) {
+                    logger.error("Caught Exception passing Exception to Exception handler (It's confusing, I know, but trust me.)", ex);
+                }
+            };
+
+            throwableConsumer.accept(invocationError.getThrowable());
+
+        };
 
     }
 
-    private Function<Object[], Consumer<InvocationResult>> getInvocationResultConsumerAssembler(final Method method) {
+    private BiFunction<Object[], Consumer<InvocationError>, List<Consumer<InvocationResult>>> getInvocationResultConsumerListAssembler() {
 
+        final Method method = getMethod();
         final Parameter[] parameters = method.getParameters();
-
-        final int[] resultHandlerIndices = IntStream
-            .range(0, parameters.length)
-            .filter(index -> parameters[index].getAnnotation(ResultHandler.class) != null)
-            .toArray();
-
-        final int[] errorHandlerIndices = IntStream
-            .range(0, parameters.length)
-            .filter(index -> parameters[index].getAnnotation(ErrorHandler.class) != null)
-            .toArray();
+        final int[] resultHandlerIndices = indices(method, ResultHandler.class);
 
         final Method[] resultHandlerMethods = stream(resultHandlerIndices)
-            .mapToObj(index -> getHandlerMethod(index, method, parameters[index], Object.class))
-            .toArray(Method[]::new);
+            .mapToObj(index -> {
+                try {
+                    return getHandlerMethod(index, method, parameters[index], Object.class);
+                } catch (IllegalArgumentException ex) {
+                    return null;
+                }
+            }).toArray(Method[]::new);
 
-        final Method[] errorHandlerMethods = stream(errorHandlerIndices)
-            .mapToObj(index -> getHandlerMethod(index, method, parameters[index], Throwable.class))
-            .toArray(Method[]::new);
-
-        return objects -> invocationResult -> {
-
-            final Consumer<Throwable> throwableConsumer = throwable -> {
-                stream(errorHandlerIndices).forEach(i -> {
+        return (objects, errorConsumer) -> stream(resultHandlerIndices)
+            .mapToObj(index -> {
+                final Object object = objects[index];
+                final Method handlerMethod = resultHandlerMethods[index];
+                return (Consumer<InvocationResult>) invocationResult -> {
                     try {
-                        errorHandlerMethods[i].invoke(objects[i], throwable);
-                    } catch (IllegalAccessException | InvocationTargetException ex) {
-                        logger.error("Caught Exception passing Exception to Exception handler (It's confusing, I know, but trust me.)", ex);
+                        handlerMethod.invoke(object, invocationResult.getResult());
+                    } catch (IllegalAccessException e) {
+                        logger.error("Caught exception executing handler.", e);
+                        final InvocationError invocationError = new InvocationError();
+                        invocationError.setThrowable(e);
+                        errorConsumer.accept(invocationError);
+                    } catch (InvocationTargetException e) {
+                        logger.info("Caught exception calling handler.", e.getTargetException());
+                        final InvocationError invocationError = new InvocationError();
+                        invocationError.setThrowable(e.getTargetException());
+                        errorConsumer.accept(invocationError);
                     }
-                });
-            };
-
-            final Consumer<Object> objectConsumer = object -> {
-                stream(resultHandlerIndices).forEach(i -> {
-                    try {
-                        resultHandlerMethods[i].invoke(objects[i], object);
-                    } catch (InvocationTargetException ex) {
-                        // Any issue that happens attempting to relay the result, this will forward the
-                        // exception along.
-                        logger.error("Caught exception invoking result acceptor.  Forwarding invocation target exception.", ex);
-                        throwableConsumer.accept(ex.getTargetException());
-                    } catch (IllegalAccessException ex) {
-                        // Any issue that happens attempting to relay the result, this will forward the
-                        // exception along.
-                        logger.error("Caught exception invoking result acceptor.", ex);
-                        throwableConsumer.accept(ex);
-                    }
-                });
-            };
-
-            if (invocationResult.isOk()) {
-                objectConsumer.accept(invocationResult.getResult());
-            } else {
-                throwableConsumer.accept(invocationResult.getThrowable());
-            }
-
-        };
+                };
+            }).collect(toList());
 
     }
 
@@ -262,29 +296,11 @@ public class RemoteInvocationHandlerBuilder {
          * Performs the translation.  This will translate the return value and, if necessary, throw an instance of
          * {@link Throwable} if the remote {@link Method} failed.
          *
-         * @param objectFuture the {@link Future<Object>} supplied by {@link RemoteInvoker#invoke(Invocation, Consumer)}
+         * @param objectFuture the {@link Future<Object>} supplied by {@link RemoteInvoker#invoke(Invocation, Consumer, List<Consumer>)}
          * @return an {@link Object} to return from the {@link InvocationHandler}
          * @throws Throwable if an exception occurs, can also be re-throwing the remiote invocation error
          */
         Object transform(Future<Object> objectFuture) throws Throwable;
-
-    }
-
-    /**
-     * Transforms the object paramters to {@link Consumer<InvocationResult>} to be handed into the {@link RemoteInvoker}
-     * to relay network errors.
-     */
-    @FunctionalInterface
-    private interface InvocationConsumerTransformer {
-
-        /**
-         * Handles the invocation and returns the appropriate {@link Consumer<InvocationResult>} which will handle
-         * the results.
-         *
-         * @param args the args
-         * @return the {@link Consumer<InvocationResult>}
-         */
-        Consumer<InvocationResult> handle(Object[] args);
 
     }
 

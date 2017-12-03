@@ -7,28 +7,26 @@ import java.lang.reflect.Method;
  */
 public class InvocationResult {
 
-    private boolean ok;
+    private int arg;
 
     private Object result;
 
-    private Throwable throwable;
-
     /**
-     * Returns true if the remote method executed successfully.,
+     * Gets the argument position which accepts the result.
      *
-     * @return true if okay, false otherwise
+     * @return the argument.
      */
-    public boolean isOk() {
-        return ok;
+    public int getArg() {
+        return arg;
     }
 
     /**
-     * Sets the flag to represent successful remote invocation.
+     * Sets the argument position which accepts the result.
      *
-     * @param ok true if successful, false otherwise
+     * @param arg  the argument.
      */
-    public void setOk(boolean ok) {
-        this.ok = ok;
+    public void setArg(int arg) {
+        this.arg = arg;
     }
 
     /**
@@ -49,24 +47,6 @@ public class InvocationResult {
      */
     public void setResult(Object result) {
         this.result = result;
-    }
-
-    /**
-     * Gets the {@link Throwable} thrown by the remote {@link Method}, or null if the method executed successfully.
-     *
-     * @return the result
-     */
-    public Throwable getThrowable() {
-        return throwable;
-    }
-
-    /**
-     * Sets the {@link Throwable} thrown by the remote {@link Method}, or null if the method executed successfully.
-     *
-     * @param throwable  the result
-     */
-    public void setThrowable(Throwable throwable) {
-        this.throwable = throwable;
     }
 
 }

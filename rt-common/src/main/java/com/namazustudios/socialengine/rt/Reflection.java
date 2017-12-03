@@ -2,12 +2,18 @@ package com.namazustudios.socialengine.rt;
 
 
 import com.google.common.collect.Streams;
+import com.namazustudios.socialengine.rt.annotation.ErrorHandler;
+import com.namazustudios.socialengine.rt.annotation.ResultHandler;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.Collection;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Stream.concat;
@@ -85,6 +91,41 @@ public class Reflection {
         final String parameterSpec = stream(args).map(c -> c.getName()).collect(joining(","));
         final String msg = String.format("No such method: %s.%s(%s)", cls, name, parameterSpec);
         return new IllegalArgumentException(msg);
+    }
+
+    /**
+     * Finds the {@link Parameter} index annoated with {@link ErrorHandler} in the {@link Method}
+     *
+     * @param method the {@link Method}
+     * @return the integer
+     */
+    public static int errorHandlerIndex(final Method method) {
+
+        final Parameter[] parameters = method.getParameters();
+
+        return IntStream
+                .range(0, parameters.length)
+                .filter(index -> parameters[index].getAnnotation(ErrorHandler.class) != null)
+                .findFirst().orElse(-1);
+
+    }
+
+    /**
+     * Returns the parameter indices of the {@link Method} which are anootated with the supplied annotation class.
+     *
+     * @param method the method
+     * @param aClass the {@link Annotation} type
+     * @return an integer array of all indices
+     */
+    public static int[] indices(final Method method, final Class<? extends Annotation> aClass) {
+
+        final Parameter[] parameters = method.getParameters();
+
+        return IntStream
+            .range(0, parameters.length)
+            .filter(index -> parameters[index].getAnnotation(aClass) != null)
+            .toArray();
+
     }
 
 }

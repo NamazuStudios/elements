@@ -9,7 +9,7 @@ public interface LocalInvocationDispatcher {
 
     /**
      * Performs the dispatch to the supplied object.  Catching and collecting any errors appropriately, and forwarding
-     * the result to the supplied {@link Consumer<InvocationResult>}.
+     * the result to the supplied {@link Consumer<InvocationResult>}.  This should not throw an exception, ever.
      *
      * @param target the target {@link Object}
      * @param invocation the {@link Invocation} to send

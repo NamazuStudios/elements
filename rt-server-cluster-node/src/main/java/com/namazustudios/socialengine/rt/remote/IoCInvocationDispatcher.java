@@ -40,8 +40,8 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
         } catch (Throwable th) {
             logger.error("Caught exception resolving target for invocation.", th);
             final InvocationResult invocationResult = new InvocationResult();
-            invocationResult.setOk(false);
-            invocationResult.setThrowable(th);
+//            invocationResult.setOk(false);
+//            invocationResult.setThrowable(th);
             invocationResultConsumer.accept(invocationResult);
         }
     }

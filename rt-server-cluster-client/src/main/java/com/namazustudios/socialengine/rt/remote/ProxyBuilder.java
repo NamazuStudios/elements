@@ -15,10 +15,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static java.lang.reflect.Proxy.newProxyInstance;
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.joining;
 
 public class ProxyBuilder<ProxyT> {
 
