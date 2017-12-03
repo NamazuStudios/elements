@@ -14,7 +14,9 @@ public class Invocation {
 
     private String method;
 
-    private List<Object> parameters;
+    private List<String> parameters;
+
+    private List<Object> arguments;
 
     /**
      * Gets the string representing the type of the remote object to invoke.  {@see {@link Class#getName()}}
@@ -71,21 +73,41 @@ public class Invocation {
     }
 
     /**
+     * Gets a listing of the names of the method parameters.  Each parameter is named for the {@link Class<?>} it
+     * represents.
+     *
+     * @return the {@link List<String>} of parameters
+     */
+    public List<String> getParameters() {
+        return parameters;
+    }
+
+    /**
+     * Sets a listing of the names of the method parameters.  Each parameter is named for the {@link Class<?>} it
+     * represents.
+     *
+     * @param parameters the {@link List<String>} of parameters
+     */
+    public void setParameters(List<String> parameters) {
+        this.parameters = parameters;
+    }
+
+    /**
      * Gets the arguments to pass to the remote method when invoking.  {@see {@link Method#invoke(Object, Object...)}}.
      *
-     * @return a {@link List<Object>} containing the parameters to pass to the remote method
+     * @return a {@link List<Object>} containing the arguments to pass to the remote method
      */
-    public List<Object> getParameters() {
-        return parameters;
+    public List<Object> getArguments() {
+        return arguments;
     }
 
     /**
      * Sets the arguments to pass to the remote method when invoking.  {@see {@link Method#invoke(Object, Object...)}}.
      *
-     * @param parameters {@link List<Object>} containing the parameters to pass to the remote method
+     * @param arguments {@link List<Object>} containing the arguments to pass to the remote method
      */
-    public void setParameters(List<Object> parameters) {
-        this.parameters = parameters;
+    public void setArguments(List<Object> arguments) {
+        this.arguments = arguments;
     }
 
 }

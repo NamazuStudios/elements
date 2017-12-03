@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.remote;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.namazustudios.socialengine.rt.Reflection;
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

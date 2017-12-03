@@ -2,11 +2,7 @@ package com.namazustudios.socialengine.rt.remote;
 
 import java.util.function.Consumer;
 
-public class SyncInvocationDispatcher implements InvocationDispatcher {
+public class SyncInvocationDispatcher implements LocalInvocationDispatcher {
 
-    @Override
-    public void dispatch(Invocation invocation, Consumer<InvocationResult> invocationResultConsumer) {
-
-    }
 
 }

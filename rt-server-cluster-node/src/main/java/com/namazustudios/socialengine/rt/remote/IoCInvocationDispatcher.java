@@ -15,21 +15,23 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
 
     @Override
     public void dispatch(final Invocation invocation, final Consumer<InvocationResult> invocationResultConsumer) {
-
-        final Object object;
-
         try {
-            final String type = invocation.getType();
             final String name = invocation.getName();
-            object = name == null ? getIocResolver().inject(type) : getIocResolver().inject(type, name);
+            final Class<?> type = Class.forName(invocation.getType());
+            final Object object = name == null ? getIocResolver().inject(type) : getIocResolver().inject(type, name);
+            doDispatch(object, invocation, invocationResultConsumer);
         } catch (Throwable th) {
             logger.error("Caught exception resolving target for invocation.", th);
             final InvocationResult invocationResult = new InvocationResult();
             invocationResult.setOk(false);
             invocationResult.setThrowable(th);
             invocationResultConsumer.accept(invocationResult);
-            return;
         }
+    }
+
+    private void doDispatch(final Object object,
+                            final Invocation invocation,
+                            final Consumer<InvocationResult> invocationResultConsumer) {
 
     }
 

@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import static com.namazustudios.socialengine.rt.remote.Reflection.methods;
+import static com.namazustudios.socialengine.rt.Reflection.methods;
 
 public class RemoteProxyProvider<ProxyableT> implements Provider<ProxyableT> {
 

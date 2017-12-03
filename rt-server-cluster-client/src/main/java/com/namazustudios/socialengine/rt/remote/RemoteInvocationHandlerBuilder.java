@@ -18,8 +18,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import static com.namazustudios.socialengine.rt.remote.Reflection.format;
-import static com.namazustudios.socialengine.rt.remote.Reflection.methods;
+import static com.namazustudios.socialengine.rt.Reflection.format;
+import static com.namazustudios.socialengine.rt.Reflection.methods;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
@@ -113,7 +113,7 @@ public class RemoteInvocationHandlerBuilder {
             invocation.setType(getType().getName());
             invocation.setName(getName());
             invocation.setMethod(getMethod().getName());
-            invocation.setParameters(parameterAssembler.apply(args));
+            invocation.setArguments(parameterAssembler.apply(args));
 
             final Consumer<InvocationResult> invocationResultConsumer;
             invocationResultConsumer = invocationResultConsumerAssembler.apply(args);

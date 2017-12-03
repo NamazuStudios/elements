@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.remote;
+package com.namazustudios.socialengine.rt;
 
 import java.lang.reflect.Method;
 import java.util.stream.Stream;
