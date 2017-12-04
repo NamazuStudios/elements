@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.ErrorHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -18,6 +20,10 @@ import static java.util.stream.Stream.empty;
  * Houses some utility logic for interacting with the Reflection API.
  */
 public class Reflection {
+
+    private static final Logger logger = LoggerFactory.getLogger(Reflection.class);
+
+    private Reflection(){}
 
     /**
      * Formats a {@link Method} for use in logging.
@@ -123,16 +129,22 @@ public class Reflection {
 
     }
 
-    public static Method getHandlerMethod(final int index, final Method method, final Class<?> parameterType) {
+    /**
+     * Searches {@link Method}'s parameters for a handler type.
+     *
+     * @param parameter parameter
+     * @param handlerParameterType
+     * @return
+     */
+    public static Method getHandlerMethod(final Parameter parameter, final Class<?> handlerParameterType) {
 
-        final Parameter parameter = method.getParameters()[index];
         final Class<?> type = parameter.getType();
 
         if (type.getAnnotation(FunctionalInterface.class) == null) {
 
-            final String msg = "Parameter at index " + index + " " +
-                    " in method " + format(method) +
-                    " is not annotated with @FunctionalInterface";
+            final String msg =
+                "Parameter type " + parameter +
+                " is not annotated with " + FunctionalInterface.class.getName();
 
             throw new IllegalArgumentException(msg);
 
@@ -150,9 +162,13 @@ public class Reflection {
 
         final Parameter handlerParameter = handlerMethod.getParameters()[0];
 
-        if (!parameterType.isAssignableFrom(handlerParameter.getType())) {
+        if (!handlerParameterType.isAssignableFrom(handlerParameter.getType())) {
             final String msg = format(handlerMethod) + " must accept a Throwable.";
             throw new IllegalArgumentException(msg);
+        }
+
+        if (!void.class.equals(handlerMethod.getReturnType())) {
+            logger.warn("{} returns a value.", format(handlerMethod));
         }
 
         return handlerMethod;

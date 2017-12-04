@@ -1,10 +1,9 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.google.common.cache.Cache;
 import com.namazustudios.socialengine.rt.Reflection;
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,8 +12,13 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.remote.SharedMethodHandleCache.getSharedMethodHandleCache;
 import static java.lang.reflect.Proxy.newProxyInstance;
 
 public class ProxyBuilder<ProxyT> {
@@ -22,6 +26,9 @@ public class ProxyBuilder<ProxyT> {
     private static final Logger logger = LoggerFactory.getLogger(ProxyBuilder.class);
 
     private ClassLoader classLoader;
+
+    private BiFunction<MethodHandleKey, Supplier<MethodHandle>, MethodHandle> methodHandleCache =
+        (methodHandleKey, methodHandleSupplier) -> methodHandleSupplier.get();
 
     private InvocationHandler defaultInvocationHandler = (p, method, args) -> {
         throw new NoSuchMethodError("No invocation handler for method: " + method);
@@ -32,7 +39,7 @@ public class ProxyBuilder<ProxyT> {
     private final Map<Method, InvocationHandler> handlerMap = new HashMap<>();
 
     /**
-     * Creates a {@link ProxyBuilder<ProxyT>} for the supplied interface type
+     * Creates a {@link ProxyBuilder<ProxyT>} for the supplied interface type.
      *
      * @param interfaceClassT
      */
@@ -53,35 +60,68 @@ public class ProxyBuilder<ProxyT> {
      * @return this instance
      */
     public ProxyBuilder<ProxyT> dontProxyDefaultMethods() {
-        final LoadingCache<Object, LoadingCache<Method, MethodHandle>> proxyCache = proxyCache();
-        final InvocationHandler handler = (p, method, args) -> proxyCache.get(p).get(method).invoke(args);
+
+
+        final InvocationHandler handler = (p, method, args) -> {
+
+            final MethodHandleKey methodHandleKey = new MethodHandleKey(interfaceClassT, p, method);
+
+            final Supplier<MethodHandle> methodHandleSupplier = () -> {
+                try {
+                    return MethodHandles
+                        .lookup()
+                        .in(methodHandleKey.getInterfaceClassT())
+                        .unreflectSpecial(methodHandleKey.getMethod(), methodHandleKey.getInterfaceClassT())
+                        .bindTo(methodHandleKey.getProxy());
+                } catch (IllegalAccessException e) {
+                    throw new InternalException(e);
+                }
+            };
+
+            return methodHandleCache.apply(methodHandleKey, methodHandleSupplier).invoke(args);
+
+        };
+
         methods().filter(m -> m.isDefault()).forEach(m -> handler(handler).forMethod(m));
         return this;
+
     }
 
-    final LoadingCache<Object, LoadingCache<Method, MethodHandle>> proxyCache() {
-        return CacheBuilder.newBuilder().weakKeys().build(proxyLoader());
-    }
-
-    private CacheLoader<Object, LoadingCache<Method, MethodHandle>> proxyLoader() {
-        return new CacheLoader<Object, LoadingCache<Method, MethodHandle>>() {
-            @Override
-            public LoadingCache<Method, MethodHandle> load(final Object proxy) throws Exception {
-                return CacheBuilder
-                    .newBuilder()
-                    .weakValues()
-                    .build(new CacheLoader<Method, MethodHandle>() {
-                        @Override
-                        public MethodHandle load(final Method method) throws Exception {
-                            return MethodHandles
-                                .lookup()
-                                .in(interfaceClassT)
-                                .unreflectSpecial(method, interfaceClassT)
-                                .bindTo(proxy);
-                        }
-                    });
+    /**
+     * Uses the {@link SharedMethodHandleCache#getSharedMethodHandleCache()} to cache method handles.
+     *
+     * @return this instance
+     */
+    public ProxyBuilder<ProxyT> withSharedMethodHandleCache() {
+        return withMethodHandleCache(((methodHandleKey, methodHandleSupplier) -> {
+            final Cache<MethodHandleKey, MethodHandle> cache = getSharedMethodHandleCache();
+            try {
+                return cache.get(methodHandleKey, () -> methodHandleSupplier.get());
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof RuntimeException) {
+                    throw (RuntimeException) e.getCause();
+                } else {
+                    throw new InternalException(e);
+                }
             }
-        };
+        }));
+    }
+
+    /**
+     * Allows for hte specification of a cache-getter function.  If the underlying cache
+     *
+     * @param methodHandleCache a {@link Function<MethodHandleKey, MethodHandle>} used to retrieve cached instances
+     * @return
+     */
+    public ProxyBuilder<ProxyT> withMethodHandleCache(final BiFunction<MethodHandleKey, Supplier<MethodHandle>, MethodHandle> methodHandleCache) {
+
+        if (methodHandleCache == null) {
+            throw new IllegalArgumentException("Must specify method handle cache.");
+        }
+
+        this.methodHandleCache = methodHandleCache;
+        return this;
+
     }
 
     /**

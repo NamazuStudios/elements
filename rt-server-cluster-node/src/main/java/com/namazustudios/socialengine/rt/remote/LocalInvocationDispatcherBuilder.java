@@ -15,9 +15,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import static com.namazustudios.socialengine.rt.Reflection.errorHandlerIndex;
-import static com.namazustudios.socialengine.rt.Reflection.indices;
-import static com.namazustudios.socialengine.rt.Reflection.methods;
+import static com.namazustudios.socialengine.rt.Reflection.*;
 import static java.util.Arrays.stream;
 
 /**
@@ -106,9 +104,9 @@ public class LocalInvocationDispatcherBuilder {
                 invocationError.setThrowable(ex.getTargetException());
                 invocationErrorConsumer.accept(invocationError);
             } catch (IllegalAccessException ex) {
-                // This should not happen because we only consider public methods in the binding
+                // This should not happen because we only consider public methods in the binding but we need to catch
+                // it anyhow and try to relay it to the client.
                 logger.error("IllegalAccessException dispatching method", ex);
-                final InvocationResult invocationResult = new InvocationResult();
                 final InvocationError invocationError = new InvocationError();
                 invocationError.setThrowable(ex);
                 invocationErrorConsumer.accept(invocationError);
@@ -136,15 +134,26 @@ public class LocalInvocationDispatcherBuilder {
         final int errorHandlerIndex = errorHandlerIndex(method);
 
         return (invocationErrorConsumer, args) -> {
-            final Object errorHandler = proxyErrorHandler(method, errorHandlerIndex);
+            final Object errorHandler = proxyErrorHandler(errorHandlerIndex, invocationErrorConsumer);
             args[errorHandlerIndex] = errorHandler;
         };
 
     }
 
-    private Object proxyErrorHandler(Method method, int errorHandlerIndex) {
-        // TODO Return Proxy Error Handler
-        return null;
+    private Object proxyErrorHandler(final int errorHandlerIndex,
+                                     final Consumer<InvocationError> invocationErrorConsumer) {
+
+        final Method method = getHandlerMethod(getMethod().getParameters()[errorHandlerIndex], Throwable.class);
+
+        return new ProxyBuilder<>(method.getDeclaringClass())
+            .withSharedMethodHandleCache()
+            .handler((proxy, m, args) -> {
+                final InvocationError invocationError = new InvocationError();
+                invocationError.setThrowable((Throwable) args[0]);
+                invocationErrorConsumer.accept(invocationError);
+                return null;
+            });
+
     }
 
     private BiConsumer<List<Consumer<InvocationResult>>, Object[]> getResultHandlerTransformer() {
@@ -152,14 +161,33 @@ public class LocalInvocationDispatcherBuilder {
         final Method method = getMethod();
         final int resultHandlerIndices[] = indices(method, ResultHandler.class);
 
-        return (invocationResultConsumerList, args) -> stream(resultHandlerIndices).forEach(index -> {
-            final Object resultHandler = proxyResultHandler(method, index);
-        });
+        return (invocationResultConsumerList, args) -> {
+
+            final Iterator<Consumer<InvocationResult>> invocationResultIterator;
+            invocationResultIterator = invocationResultConsumerList.iterator();
+
+            stream(resultHandlerIndices).forEach(index -> {
+                final Object resultHandler = proxyResultHandler(index, invocationResultIterator.next());
+                args[index] = resultHandler;
+            });
+
+        };
 
     }
 
-    private Object proxyResultHandler(Method method, int index) {
-        return null;
+    private Object proxyResultHandler(final int index, final Consumer<InvocationResult> invocationResultConsumer) {
+
+        final Method method = getHandlerMethod(getMethod().getParameters()[index], Object.class);
+
+        return new ProxyBuilder<>(method.getDeclaringClass())
+            .withSharedMethodHandleCache()
+            .handler((proxy, m, args) -> {
+                final InvocationResult invocationResult = new InvocationResult();
+                invocationResult.setResult(args[0]);
+                invocationResultConsumer.accept(invocationResult);
+                return null;
+            });
+
     }
 
 }

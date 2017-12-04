@@ -24,7 +24,10 @@ public class RemoteProxyProvider<ProxyableT> implements Provider<ProxyableT> {
     public ProxyableT get() {
 
         final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
-        final ProxyBuilder<ProxyableT> builder = new ProxyBuilder<>(proxyableTClass).dontProxyDefaultMethods();
+
+        final ProxyBuilder<ProxyableT> builder = new ProxyBuilder<>(proxyableTClass)
+            .withSharedMethodHandleCache()
+            .dontProxyDefaultMethods();
 
         methods(proxyableTClass)
             .filter(m -> m.getAnnotation(RemotelyInvokable.class) != null)

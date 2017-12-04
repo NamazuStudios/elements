@@ -21,12 +21,13 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
 
     private IocResolver iocResolver;
 
-    private final LoadingCache<MethodKey, LocalInvocationDispatcher> localDispatcherCache = CacheBuilder.newBuilder()
+    private final LoadingCache<MethodKey, LocalInvocationDispatcher> localDispatcherCache = CacheBuilder
+        .newBuilder()
+        .weakKeys()
         .build(new CacheLoader<MethodKey, LocalInvocationDispatcher>() {
             @Override
             public LocalInvocationDispatcher load(final MethodKey key) throws Exception {
-
-                return null;
+                return new LocalInvocationDispatcherBuilder(key.getType(), key.getMethod(), key.getParameters()).build();
             }
         });
 
@@ -73,8 +74,8 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
         }
 
         localInvocationDispatcher.dispatch(
-                object, invocation,
-                invocationErrorConsumer, returnInvocationResultConsumer, invocationResultConsumerList);
+            object, invocation,
+            invocationErrorConsumer, returnInvocationResultConsumer, invocationResultConsumerList);
 
     }
 
@@ -91,19 +92,19 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
 
         private final Class<?> type;
 
-        private final String name;
+        private final String method;
 
         private final List<String> parameters;
 
         public MethodKey(final Class<?> type, final Invocation invocation) throws ClassNotFoundException {
-            this(type, invocation.getName(), invocation.getParameters());
+            this(type, invocation.getMethod(), invocation.getParameters());
         }
 
         public MethodKey(final Class<?> type,
                          final String name,
                          final List<String> parameters) throws ClassNotFoundException {
             this.type = type;
-            this.name = name;
+            this.method = name;
             this.parameters = unmodifiableList(new CopyOnWriteArrayList<>(parameters));
         }
 
@@ -111,8 +112,8 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
             return type;
         }
 
-        public String getName() {
-            return name;
+        public String getMethod() {
+            return method;
         }
 
         public List<String> getParameters() {
@@ -127,14 +128,14 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
             MethodKey methodKey = (MethodKey) o;
 
             if (!type.equals(methodKey.type)) return false;
-            if (!name.equals(methodKey.name)) return false;
+            if (!methodKey.equals(methodKey.method)) return false;
             return parameters.equals(methodKey.parameters);
         }
 
         @Override
         public int hashCode() {
             int result = type.hashCode();
-            result = 31 * result + name.hashCode();
+            result = 31 * result + method.hashCode();
             result = 31 * result + parameters.hashCode();
             return result;
         }

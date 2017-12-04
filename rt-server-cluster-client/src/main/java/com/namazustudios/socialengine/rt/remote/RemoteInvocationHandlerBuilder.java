@@ -188,9 +188,9 @@ public class RemoteInvocationHandlerBuilder {
     private Function<Object[], Consumer<InvocationError>> getInvocationErrorConsumerAssembler() {
 
         final Method method = getMethod();
-        final Parameter[] parameters = method.getParameters();
         final int index = Reflection.errorHandlerIndex(method);
-        final Method errorHandlerMethod = getHandlerMethod(index, method, Throwable.class);
+        final Parameter parameter = method.getParameters()[index];
+        final Method errorHandlerMethod = getHandlerMethod(parameter, Throwable.class);
 
         return objects -> invocationError -> {
 
@@ -211,13 +211,13 @@ public class RemoteInvocationHandlerBuilder {
     private BiFunction<Object[], Consumer<InvocationError>, List<Consumer<InvocationResult>>> getInvocationResultConsumerListAssembler() {
 
         final Method method = getMethod();
-        final Parameter[] parameters = method.getParameters();
         final int[] resultHandlerIndices = indices(method, ResultHandler.class);
+        final Parameter[] parameters = method.getParameters();
 
         final Method[] resultHandlerMethods = stream(resultHandlerIndices)
             .mapToObj(index -> {
                 try {
-                    return getHandlerMethod(index, method, Object.class);
+                    return getHandlerMethod(parameters[index], Object.class);
                 } catch (IllegalArgumentException ex) {
                     return null;
                 }
