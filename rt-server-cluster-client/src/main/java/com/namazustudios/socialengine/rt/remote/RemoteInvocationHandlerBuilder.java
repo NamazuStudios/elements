@@ -18,9 +18,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import static com.namazustudios.socialengine.rt.Reflection.format;
-import static com.namazustudios.socialengine.rt.Reflection.indices;
-import static com.namazustudios.socialengine.rt.Reflection.methods;
+import static com.namazustudios.socialengine.rt.Reflection.*;
 import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
@@ -192,7 +190,7 @@ public class RemoteInvocationHandlerBuilder {
         final Method method = getMethod();
         final Parameter[] parameters = method.getParameters();
         final int index = Reflection.errorHandlerIndex(method);
-        final Method errorHandlerMethod = getHandlerMethod(index, method, parameters[index], Throwable.class);
+        final Method errorHandlerMethod = getHandlerMethod(index, method, Throwable.class);
 
         return objects -> invocationError -> {
 
@@ -219,7 +217,7 @@ public class RemoteInvocationHandlerBuilder {
         final Method[] resultHandlerMethods = stream(resultHandlerIndices)
             .mapToObj(index -> {
                 try {
-                    return getHandlerMethod(index, method, parameters[index], Object.class);
+                    return getHandlerMethod(index, method, Object.class);
                 } catch (IllegalArgumentException ex) {
                     return null;
                 }
@@ -245,44 +243,6 @@ public class RemoteInvocationHandlerBuilder {
                     }
                 };
             }).collect(toList());
-
-    }
-
-    private Method getHandlerMethod(final int index,
-                                    final Method method,
-                                    final Parameter parameter,
-                                    final Class<?> parameterType) {
-
-        final Class<?> type = parameter.getType();
-
-        if (type.getAnnotation(FunctionalInterface.class) == null) {
-
-            final String msg = "Parameter at index " + index + " " +
-                               " in method " + format(method) +
-                               " is not annotated with @FunctionalInterface";
-
-            throw new IllegalArgumentException(msg);
-
-        }
-
-        final Method handlerMethod = methods(type)
-            .filter(m -> !m.isDefault())
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("No non-default method found in type: " + type));
-
-        if (handlerMethod.getParameterCount() != 1) {
-            final String msg = format(handlerMethod) + " must accept a single parameter.";
-            throw new IllegalArgumentException(msg);
-        }
-
-        final Parameter handlerParameter = handlerMethod.getParameters()[0];
-
-        if (!handlerParameter.getType().isAssignableFrom(parameterType)) {
-            final String msg = format(handlerMethod) + " must accept a Throwable.";
-            throw new IllegalArgumentException(msg);
-        }
-
-        return handlerMethod;
 
     }
 

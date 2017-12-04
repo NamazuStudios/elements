@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-
-import com.google.common.collect.Streams;
 import com.namazustudios.socialengine.rt.annotation.ErrorHandler;
-import com.namazustudios.socialengine.rt.annotation.ResultHandler;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -12,8 +9,6 @@ import java.util.Collection;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
-import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Stream.concat;
@@ -125,6 +120,42 @@ public class Reflection {
             .range(0, parameters.length)
             .filter(index -> parameters[index].getAnnotation(aClass) != null)
             .toArray();
+
+    }
+
+    public static Method getHandlerMethod(final int index, final Method method, final Class<?> parameterType) {
+
+        final Parameter parameter = method.getParameters()[index];
+        final Class<?> type = parameter.getType();
+
+        if (type.getAnnotation(FunctionalInterface.class) == null) {
+
+            final String msg = "Parameter at index " + index + " " +
+                    " in method " + format(method) +
+                    " is not annotated with @FunctionalInterface";
+
+            throw new IllegalArgumentException(msg);
+
+        }
+
+        final Method handlerMethod = methods(type)
+                .filter(m -> !m.isDefault())
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No non-default method found in type: " + type));
+
+        if (handlerMethod.getParameterCount() != 1) {
+            final String msg = format(handlerMethod) + " must accept a single parameter.";
+            throw new IllegalArgumentException(msg);
+        }
+
+        final Parameter handlerParameter = handlerMethod.getParameters()[0];
+
+        if (!parameterType.isAssignableFrom(handlerParameter.getType())) {
+            final String msg = format(handlerMethod) + " must accept a Throwable.";
+            throw new IllegalArgumentException(msg);
+        }
+
+        return handlerMethod;
 
     }
 

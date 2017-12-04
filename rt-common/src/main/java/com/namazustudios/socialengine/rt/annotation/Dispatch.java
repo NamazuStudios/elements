@@ -103,18 +103,13 @@ public @interface Dispatch {
 
             if (Future.class.isAssignableFrom(method.getReturnType())) {
                 return FUTURE;
-            } else if (errorCount == 1 && resultCount == 1) {
-                return CONSUMER;
-            } else if (errorCount == 0 && resultCount == 0) {
+            } if (errorCount == 0 && resultCount == 0) {
                 return SYNCHRONOUS;
-            } else{
-
-                final String msg = String.format(
-                    "Exactly one of %s and %s may be specified in %s",
-                    ErrorHandler.class.getSimpleName(), ResultHandler.class.getSimpleName(), format(method));
-
+            } else if (errorCount != 1) {
+                final String msg = String.format("Only one of %s can be specified for %s", ErrorHandler.class.getSimpleName(), format(method));
                 throw new IllegalArgumentException(msg);
-
+            } else {
+                return CONSUMER;
             }
 
         }
