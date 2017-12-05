@@ -36,6 +36,7 @@
         <module>rt-common</module>
         <module>rt-server</module>
         <module>rt-server-simple</module>
+        <module>rt-server-simple-guice</module>
         <module>rt-server-cluster-node</module>
         <module>rt-server-cluster-client</module>
         <module>rt-mina</module>

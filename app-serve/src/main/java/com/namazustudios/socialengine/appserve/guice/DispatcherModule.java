@@ -14,7 +14,6 @@ import com.namazustudios.socialengine.rt.http.HttpRequest;
 import com.namazustudios.socialengine.rt.http.RequestScopedHttpSessionDispatcher;
 import com.namazustudios.socialengine.rt.jackson.guice.JacksonPaylaodWriterModule;
 import com.namazustudios.socialengine.rt.jackson.guice.JacksonPayloadReaderModule;
-import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.servlet.*;
 
 import java.io.File;

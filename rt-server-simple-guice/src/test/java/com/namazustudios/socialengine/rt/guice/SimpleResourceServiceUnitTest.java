@@ -1,9 +1,10 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
-import com.namazustudios.socialengine.rt.guice.SimpleServicesModule;
+import org.mockito.Mockito;
 import org.testng.annotations.*;
 
 import java.util.ArrayList;
@@ -13,8 +14,6 @@ import java.util.Set;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toSet;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.AssertJUnit.fail;
@@ -46,8 +45,8 @@ public class SimpleResourceServiceUnitTest {
     @Test(dataProvider = "initialDataProvider")
     public void testAdd(final ResourceId resourceId, final Path path) {
 
-        final Resource resource = mock(Resource.class);
-        when(resource.getId()).thenReturn(resourceId);
+        final Resource resource = Mockito.mock(Resource.class);
+        Mockito.when(resource.getId()).thenReturn(resourceId);
 
         getResourceService().addResource(path, resource);
         intermediates.add(new Object[]{resourceId, path, resource});
@@ -211,10 +210,10 @@ public class SimpleResourceServiceUnitTest {
 
             install(new SimpleServicesModule());
 
-            final AssetLoader mockAssetLoader = mock(AssetLoader.class);
+            final AssetLoader mockAssetLoader = Mockito.mock(AssetLoader.class);
             bind(AssetLoader.class).toInstance(mockAssetLoader);
 
-            final ResourceLoader resourceLoader = mock(ResourceLoader.class);
+            final ResourceLoader resourceLoader = Mockito.mock(ResourceLoader.class);
             bind(ResourceLoader.class).toInstance(resourceLoader);
 
         }

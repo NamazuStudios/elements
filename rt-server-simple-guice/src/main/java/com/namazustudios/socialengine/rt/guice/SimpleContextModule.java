@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.guice;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.PrivateModule;
+import com.google.inject.name.Names;
 import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +10,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.inject.matcher.Matchers.annotatedWith;
-import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.SimpleScheduler.SCHEDULED_EXECUTOR_SERVICE;
 import static java.lang.String.format;
 import static java.util.concurrent.Executors.newCachedThreadPool;
@@ -34,11 +33,11 @@ public class SimpleContextModule extends PrivateModule {
         bind(SchedulerContext.class).to(SimpleSchedulerContext.class);
 
         bind(ExecutorService.class)
-            .annotatedWith(named(SimpleResourceContext.EXECUTOR_SERVICE))
+            .annotatedWith(Names.named(SimpleResourceContext.EXECUTOR_SERVICE))
             .toProvider(() -> executorService(SimpleResourceContext.EXECUTOR_SERVICE));
 
         bind(ExecutorService.class)
-            .annotatedWith(named(SimpleIndexContext.EXECUTOR_SERVICE))
+            .annotatedWith(Names.named(SimpleIndexContext.EXECUTOR_SERVICE))
             .toProvider(() -> executorService(SimpleIndexContext.EXECUTOR_SERVICE));
 
         install(new SimpleServicesModule());

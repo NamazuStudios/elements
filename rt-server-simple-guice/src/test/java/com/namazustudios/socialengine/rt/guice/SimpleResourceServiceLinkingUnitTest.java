@@ -1,5 +1,10 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.guice;
 
+import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.ResourceService;
+import org.mockito.Mockito;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -12,7 +17,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import static org.testng.AssertJUnit.assertEquals;
@@ -44,8 +48,8 @@ public class SimpleResourceServiceLinkingUnitTest {
     @Test(dataProvider = "initialDataProvider")
     public void testAdd(final ResourceId resourceId, final Path path, final Path alias) {
 
-        final Resource resource = mock(Resource.class);
-        when(resource.getId()).thenReturn(resourceId);
+        final Resource resource = Mockito.mock(Resource.class);
+        Mockito.when(resource.getId()).thenReturn(resourceId);
 
         getResourceService().addResource(path, resource);
         getResourceService().link(resourceId, alias);

@@ -1,17 +1,13 @@
 package com.namazustudios.socialengine.rt.testkit;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
 import com.namazustudios.socialengine.rt.AssetLoader;
-import com.namazustudios.socialengine.rt.ClasspathAssetLoader;
 import com.namazustudios.socialengine.rt.FileAssetLoader;
 import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
 import com.namazustudios.socialengine.rt.guice.SimpleServicesModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 
-import java.io.File;
 import java.util.*;
 import java.util.stream.Stream;
 

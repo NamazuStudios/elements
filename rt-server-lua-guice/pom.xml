@@ -56,6 +56,12 @@
             <artifactId>jnlua</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-server-simple-guice</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

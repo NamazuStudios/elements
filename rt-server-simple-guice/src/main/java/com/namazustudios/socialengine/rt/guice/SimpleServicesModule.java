@@ -1,27 +1,24 @@
 package com.namazustudios.socialengine.rt.guice;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Deque;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.SimpleScheduler.SCHEDULED_EXECUTOR_SERVICE;
 import static java.lang.String.format;
-import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.Executors.newScheduledThreadPool;
 
 /**
  * Creates the simple internal
- *
- *
+ * <p>
+ * <p>
  * Created by patricktwohig on 9/22/15.
  */
 public class SimpleServicesModule extends PrivateModule {
@@ -37,14 +34,16 @@ public class SimpleServicesModule extends PrivateModule {
         bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
         bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();
 
-        bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>(){})
+        bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>() {
+        })
                 .toProvider(() -> new ProxyLockService<>(Deque.class));
 
-        bind(new TypeLiteral<OptimisticLockService<ResourceId>>(){})
+        bind(new TypeLiteral<OptimisticLockService<ResourceId>>() {
+        })
                 .to(SimpleResourceIdOptimisticLockService.class);
 
         bind(ScheduledExecutorService.class)
-                .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE))
+                .annotatedWith(Names.named(SCHEDULED_EXECUTOR_SERVICE))
                 .toProvider(() -> scheduledExecutorService(SCHEDULED_EXECUTOR_SERVICE));
 
         expose(Scheduler.class);
@@ -62,7 +61,7 @@ public class SimpleServicesModule extends PrivateModule {
                              final AtomicInteger threadCount, final Logger logger) {
         final Thread thread = new Thread(runnable);
         thread.setDaemon(true);
-        thread.setUncaughtExceptionHandler((t , e) -> logger.error("Scheduler Exception in {}", t, e));
+        thread.setUncaughtExceptionHandler((t, e) -> logger.error("Scheduler Exception in {}", t, e));
         thread.setName(format("%s - Thread %d", name, threadCount.incrementAndGet()));
         return thread;
     }
