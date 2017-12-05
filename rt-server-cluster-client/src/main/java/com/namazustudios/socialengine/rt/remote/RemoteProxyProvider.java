@@ -15,6 +15,10 @@ public class RemoteProxyProvider<ProxyableT> implements Provider<ProxyableT> {
 
     private final Class<ProxyableT> proxyableTClass;
 
+    public RemoteProxyProvider(final Class<ProxyableT> proxyableTClass) {
+        this(proxyableTClass, null);
+    }
+
     public RemoteProxyProvider(final Class<ProxyableT> proxyableTClass, final String name) {
         this.name = name;
         this.proxyableTClass = proxyableTClass;
