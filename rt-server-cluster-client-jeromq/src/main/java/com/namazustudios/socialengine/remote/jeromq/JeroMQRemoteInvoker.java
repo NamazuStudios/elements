@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.remote.jeromq;
+package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.remote.Invocation;
 import com.namazustudios.socialengine.rt.remote.InvocationError;

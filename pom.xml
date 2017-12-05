@@ -38,7 +38,9 @@
         <module>rt-server-simple</module>
         <module>rt-server-simple-guice</module>
         <module>rt-server-cluster-node</module>
+        <module>rt-server-cluster-node-jeromq</module>
         <module>rt-server-cluster-client</module>
+        <module>rt-server-cluster-client-jeromq</module>
         <module>rt-mina</module>
         <module>rt-server-lua</module>
         <module>rt-server-lua-guice</module>

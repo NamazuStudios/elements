@@ -34,12 +34,10 @@ public class SimpleServicesModule extends PrivateModule {
         bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
         bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();
 
-        bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>() {
-        })
+        bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>() {})
                 .toProvider(() -> new ProxyLockService<>(Deque.class));
 
-        bind(new TypeLiteral<OptimisticLockService<ResourceId>>() {
-        })
+        bind(new TypeLiteral<OptimisticLockService<ResourceId>>() {})
                 .to(SimpleResourceIdOptimisticLockService.class);
 
         bind(ScheduledExecutorService.class)
