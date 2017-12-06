@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.testkit;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -167,8 +168,9 @@ public class TestKitMain {
      * @param args program arguments.
      */
     public static void main(final String[] args) throws Exception {
-        final TestKitMain runnerMain = new TestKitMain(args);
-        runnerMain.run();
+        final TestKitMain testKitMain = new TestKitMain(args);
+        testKitMain.addModule(new LuaModule());
+        testKitMain.run();
     }
 
 }

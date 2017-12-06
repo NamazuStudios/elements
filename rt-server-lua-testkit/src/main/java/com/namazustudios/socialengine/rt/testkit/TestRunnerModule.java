@@ -25,7 +25,6 @@ public class TestRunnerModule extends AbstractModule {
             addError("No tests defined.  Please define tests.");
         }
 
-        install(new LuaModule());
         install(new SimpleContextModule());
 
         final Multibinder<Test> testMultibinder = Multibinder.newSetBinder(binder(), Test .class, named(SimpleTestRunner.TESTS));

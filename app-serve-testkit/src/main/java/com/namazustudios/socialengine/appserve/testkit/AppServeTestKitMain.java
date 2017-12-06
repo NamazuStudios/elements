@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.appserve.testkit;
 
+import com.namazustudios.socialengine.appserve.guice.ExtendedLuaModule;
 import com.namazustudios.socialengine.appserve.guice.ServicesModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
@@ -45,6 +46,8 @@ public class AppServeTestKitMain {
      */
     public void run() throws Exception {
         testKitMain.run(optionSet -> {
+
+            testKitMain.addModule(new ExtendedLuaModule());
 
             if (optionSet.valueOf(integration)) {
 

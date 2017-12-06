@@ -6,8 +6,6 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local auth = require "namazu.socialengine.auth"
-
 local example_unit_test = {}
 
 function example_unit_test.do_test()
