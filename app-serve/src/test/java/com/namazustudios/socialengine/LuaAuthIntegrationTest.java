@@ -33,6 +33,19 @@ public class LuaAuthIntegrationTest  {
     }
 
     @Test
+    public void testProfileRemote() throws Exception {
+
+        final Profile profile = mockProfile();
+        final Attributes attributes = new SimpleAttributes.Builder()
+                .setAttribute(Profile.PROFILE_ATTRIBUTE, profile)
+                .build();
+
+        performLuaTest("namazu.socialengine.test.auth", "test_profile_remote", attributes);
+
+    }
+
+
+    @Test
     public void testProfileUnknown() throws Exception {
         final Attributes attributes = Attributes.emptyAttributes();
         performLuaTest("namazu.socialengine.test.auth", "test_profile_unknown", attributes);
@@ -47,6 +60,18 @@ public class LuaAuthIntegrationTest  {
                 .build();
 
         performLuaTest("namazu.socialengine.test.auth", "test_authenticated_user", attributes);
+
+    }
+
+    @Test
+    public void testAuthenticatedUserRemote() throws Exception {
+
+        final User user = mockUser();
+        final Attributes attributes = new SimpleAttributes.Builder()
+                .setAttribute(User.USER_ATTRIBUTE, user)
+                .build();
+
+        performLuaTest("namazu.socialengine.test.auth", "test_authenticated_user_remote", attributes);
 
     }
 

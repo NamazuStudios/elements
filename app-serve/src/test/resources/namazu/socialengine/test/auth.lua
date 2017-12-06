@@ -6,7 +6,15 @@
 -- To change this template use File | Settings | File Templates.
 --
 
+local util = require "namazu.util"
+local resource = require "namazu.resource"
+
 local auth = require "namazu.socialengine.auth"
+
+local User = java.require "com.namazustudios.socialengine.model.User"
+local Profile = java.require "com.namazustudios.socialengine.model.profile.Profile"
+
+local responsecode = require "namazu.response.code"
 
 local test_auth = {}
 
@@ -84,6 +92,43 @@ function test_auth.test_unauthenticated_user()
     assert(user.email == "", "Expected ''.  Got " .. tostring(user.id))
     assert(not user.active, "Expected inactive user.")
     assert(tostring(user.level) == "UNPRIVILEGED", "Expected 'UNPRIVILEGED'.  Got " .. tostring(user.level))
+
+end
+
+
+local function make_resource()
+
+    local attributes = {
+        [User.USER_ATTRIBUTE] = auth.user(),
+        [Profile.PROFILE_ATTRIBUTE] = auth.profile()
+    }
+
+    local path = "/test/auth/" .. util.uuid()
+    local rid, code = resource.create("namazu.socialengine.test.auth", path, attributes)
+    print("Created resource " .. rid .. " (" .. code .. ") at path " .. path)
+    return rid, code
+
+end
+
+function test_auth.test_authenticated_user_remote()
+
+    local result, code
+    local rid = make_resource()
+
+    result, code = resource.invoke(rid, "test_authenticated_user")
+    print("Got result " .. tostring(result) .. " with code " .. tostring(code))
+    assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
+
+end
+
+function test_auth.test_profile_remote()
+
+    local result, code
+    local rid = make_resource()
+
+    result, code = resource.invoke(rid, "test_profile")
+    print("Got result " .. tostring(result) .. " with code " .. tostring(code))
+    assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
 
 end
 
