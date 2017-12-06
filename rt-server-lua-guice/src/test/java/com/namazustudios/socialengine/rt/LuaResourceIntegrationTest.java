@@ -36,8 +36,6 @@ public class LuaResourceIntegrationTest {
 
     private Context context;
 
-    private ResourceService resourceService;
-
     @Test(dataProvider = "resourcesToTest")
     public void performTest(final String moduleName, final String methodName) throws InterruptedException {
         final Path path = new Path(randomUUID().toString());

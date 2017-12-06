@@ -40,6 +40,17 @@ public class SimpleAttributes implements Attributes {
         private final Map<String, Object> attributes = new LinkedHashMap<>();
 
         /**
+         * Bulk-sets attributes using the supplied {@link Map<String , Object>}.
+         *
+         * @param attributes the map of attributes
+         * @return this instance
+         */
+        public Builder setAttributes(final Map<String, Object> attributes) {
+            this.attributes.putAll(attributes);
+            return this;
+        }
+
+        /**
          * Sets the provided attribute using the name and value.
          *
          * @param name the attribute name
