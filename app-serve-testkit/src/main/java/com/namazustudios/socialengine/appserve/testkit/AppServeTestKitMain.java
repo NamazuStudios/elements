@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
+import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.testkit.TestKitMain;
 import joptsimple.OptionSpec;
 import org.apache.bval.guice.ValidationModule;
@@ -47,8 +48,6 @@ public class AppServeTestKitMain {
     public void run() throws Exception {
         testKitMain.run(optionSet -> {
 
-            testKitMain.addModule(new ExtendedLuaModule());
-
             if (optionSet.valueOf(integration)) {
 
                 final DefaultConfigurationSupplier defaultConfigurationSupplier;
@@ -59,8 +58,11 @@ public class AppServeTestKitMain {
                            .addModule(new MongoDaoModule())
                            .addModule(new ValidationModule())
                            .addModule(new MongoSearchModule())
-                           .addModule(new ConfigurationModule(defaultConfigurationSupplier));
+                           .addModule(new ConfigurationModule(defaultConfigurationSupplier))
+                           .addModule(new ExtendedLuaModule());
 
+            } else {
+                testKitMain.addModule(new LuaModule());
             }
 
         });
