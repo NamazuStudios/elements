@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.testkit;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -12,12 +13,11 @@ import org.slf4j.event.Level;
 
 import java.io.*;
 import java.util.*;
-import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.testkit.TestSuites.parseTestFiles;
 import static com.namazustudios.socialengine.rt.testkit.TestRunner.LOGGER;
 import static java.lang.System.getProperties;
 import static org.slf4j.event.Level.ERROR;
-import static org.slf4j.event.Level.INFO;
 import static org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY;
 import static org.slf4j.impl.SimpleLogger.LOG_FILE_KEY;
 import static org.slf4j.impl.SimpleLogger.SYSTEM_PREFIX;
@@ -32,38 +32,46 @@ public class TestRunnerMain {
 
     private static final Logger logger = LoggerFactory.getLogger(TestRunnerMain.class);
 
-    /**
-     * Main entry point for the application.
-     *
-     * @param args program arguments.
-     */
-    public static void main( String[] args ) throws IOException {
+    private final String[] args;
 
-        final OptionParser optionParser = new OptionParser();
+    final OptionParser optionParser = new OptionParser();
 
-        final OptionSpec<String> projectPath = optionParser
+    private final OptionSpec<String> projectPath = optionParser
             .accepts("project-root", "The root directory of all Lua scripts.")
             .withRequiredArg()
             .ofType(String.class)
             .defaultsTo(new File(".").getAbsolutePath());
 
-        final OptionSpec<String> test = optionParser
+    private final OptionSpec<String> test = optionParser
             .accepts("test", "The test (or tests).  Specified in the format of <module name>:<method name>")
             .withOptionalArg()
             .ofType(String.class)
             .withValuesSeparatedBy(",");
 
-        final OptionSpec<String> testFile = optionParser
+    private final OptionSpec<String> testFile = optionParser
             .accepts("test-suite", "A file (or files) which specifies a suite of tests.  Line by line.")
             .withOptionalArg()
             .ofType(String.class)
             .withValuesSeparatedBy(",");
 
-        final OptionSpec<String> logLevel = optionParser
+    private final OptionSpec<String> logLevel = optionParser
             .accepts("log-level", "The default log level.")
             .withOptionalArg()
             .ofType(String.class)
             .defaultsTo(Level.ERROR.toString());
+
+    private final List<Module> moduleList = new ArrayList<>();
+
+    public TestRunnerMain(String[] args) {
+        this.args = args;
+    }
+
+    public TestRunnerMain addModule(final Module module) {
+        moduleList.add(module);
+        return this;
+    }
+
+    public void run() throws Exception {
 
         final Properties systemProperties = getProperties();
 
@@ -88,7 +96,7 @@ public class TestRunnerMain {
 
             final TestRunnerModule testRunnerModule = new TestRunnerModule()
                     .addTests(test.values(optionSet))
-                    .addTests(parseTestFiles(optionSet, testFile))
+                    .addTests(parseTestFiles(testFile.values(optionSet)))
                     .withProjectRoot(projectPath.value(optionSet));
 
             if (testRunnerModule.testCount() == 0) {
@@ -97,7 +105,10 @@ public class TestRunnerMain {
                 return;
             }
 
-            injector = Guice.createInjector(testRunnerModule);
+            final List<Module> moduleList = new ArrayList<>();
+            moduleList.add(testRunnerModule);
+            moduleList.addAll(this.moduleList);
+            injector = Guice.createInjector(moduleList.toArray(new Module[]{}));
 
         } catch (OptionException ex) {
             optionParser.printHelpOn(System.out);
@@ -112,44 +123,14 @@ public class TestRunnerMain {
 
     }
 
-    private static Stream<String> parseTestFiles(final OptionSet optionSet, final OptionSpec<String> testFile) {
-
-        return testFile.values(optionSet)
-            .stream()
-            .flatMap(fileName -> {
-
-
-                final BufferedReader bufferedReader;
-
-                try {
-                    bufferedReader = open(fileName);
-                } catch (FileNotFoundException e) {
-                    return Stream.empty();
-                }
-
-                return bufferedReader.lines().onClose(() -> {
-                    try {
-                        bufferedReader.close();
-                    } catch (IOException e) {
-                        logger.error("Caught error reading file '{}'.  Skipping.", e);
-                    }
-                });
-
-            })
-            .filter(line -> !line.trim().startsWith("--"));
-    }
-
-    private static BufferedReader open(final String fileName) throws FileNotFoundException {
-
-        final File file = new File(fileName);
-
-        try {
-            return new BufferedReader(new FileReader(file));
-        } catch (FileNotFoundException ex) {
-            logger.error("File not found or could not read file {}.  Skipping.", fileName);
-            throw ex;
-        }
-
+    /**
+     * Main entry point for the application.
+     *
+     * @param args program arguments.
+     */
+    public static void main(final String[] args) throws Exception {
+        final TestRunnerMain runnerMain = new TestRunnerMain(args);
+        runnerMain.run();
     }
 
 }

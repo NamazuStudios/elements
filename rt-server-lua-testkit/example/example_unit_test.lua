@@ -12,4 +12,8 @@ function example_unit_test.do_test()
     print "Hello World!"
 end
 
+function example_unit_test.do_test_again()
+    print "Hello World!"
+end
+
 return example_unit_test

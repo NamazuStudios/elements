@@ -4,13 +4,11 @@ import com.google.common.base.Stopwatch;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.ResourceId;
-import com.namazustudios.socialengine.rt.ResourceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.List;
 import java.util.Set;
 
 import static java.util.UUID.randomUUID;
