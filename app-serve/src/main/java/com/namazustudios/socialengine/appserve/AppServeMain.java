@@ -14,7 +14,7 @@ import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import org.apache.bval.guice.ValidationModule;
 import org.eclipse.jetty.server.Server;
 
-public class Main {
+public class AppServeMain {
 
     public static void main(final String[] args) throws Exception {
 

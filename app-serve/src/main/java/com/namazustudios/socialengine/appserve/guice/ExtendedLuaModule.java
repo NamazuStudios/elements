@@ -9,7 +9,11 @@ import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
 
-public class DispatcherLuaModule extends LuaModule {
+/**
+ * Enables the extended lua options by scanning for {@link Expose} annotations and providing that to to the lua
+ * engine.
+ */
+public class ExtendedLuaModule extends LuaModule {
 
     @Override
     protected void configureFeatures() {

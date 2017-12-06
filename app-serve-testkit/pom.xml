@@ -2,7 +2,6 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
          xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -12,35 +11,20 @@
     </parent>
 
     <groupId>com.namazustudios.socialengine</groupId>
-    <artifactId>rt-server-lua-testkit</artifactId>
+    <artifactId>app-serve-testkit</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>rt-server-lua-testkit</name>
+    <name>app-serve-testkit</name>
 
     <dependencies>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rt-server-lua-guice</artifactId>
+            <artifactId>rt-server-lua-testkit</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>net.sf.jopt-simple</groupId>
-            <artifactId>jopt-simple</artifactId>
-            <version>${jopt.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
-            <version>${guice.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.inject.extensions</groupId>
-            <artifactId>guice-multibindings</artifactId>
-            <version>${guice.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.99soft.guice</groupId>
-            <artifactId>rocoto</artifactId>
-            <version>${rocoto.version}</version>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>app-serve</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -56,7 +40,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.namazustudios.socialengine.rt.testkit.TestKitMain</mainClass>
+                            <mainClass>com.namazustudios.socialengine.appserve.testkit.AppServeTestKitMain</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
