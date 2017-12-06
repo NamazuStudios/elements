@@ -15,14 +15,32 @@ public interface MockServiceInterface {
     double testSyncReturn(@Serialize String msg);
 
     @RemotelyInvokable
+    void testAsyncReturnVoid(@Serialize String msg,
+                             @ResultHandler Consumer<String> stringConsumer,
+                             @ErrorHandler Consumer<Throwable> throwableConsumer);
+
+    @RemotelyInvokable
     Future<Integer> testAsyncReturnFuture(@Serialize String msg);
 
     @RemotelyInvokable
-    Future<Integer> testAsync(@Serialize String msg);
+    Future<Integer> testAsyncReturnFuture(@Serialize String msg,
+                                          @ResultHandler Consumer<String> stringConsumer,
+                                          @ErrorHandler Consumer<Throwable> throwableConsumer);
 
     @RemotelyInvokable
-    Future<Integer> testAsync(@Serialize String msg,
-                              @ResultHandler Consumer<String> stringConsumer,
-                              @ErrorHandler Consumer<Throwable> throwableConsumer);
+    Future<Integer> testAsyncReturnFuture(@Serialize String msg,
+                                          @ResultHandler MyStringHandler stringConsumer,
+                                          @ErrorHandler MyErrorHandler errorHandler);
+
+
+    default void testDefaultMethod() {
+        testSyncVoid("Hello World!");
+    }
+
+    @FunctionalInterface
+    interface MyErrorHandler { void handle(Throwable throwable); }
+
+    @FunctionalInterface
+    interface MyStringHandler { void handle(Object result); }
 
 }

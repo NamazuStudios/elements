@@ -110,4 +110,40 @@ public class Invocation {
         this.arguments = arguments;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Invocation)) return false;
+
+        Invocation that = (Invocation) o;
+
+        if (getType() != null ? !getType().equals(that.getType()) : that.getType() != null) return false;
+        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
+        if (getMethod() != null ? !getMethod().equals(that.getMethod()) : that.getMethod() != null) return false;
+        if (getParameters() != null ? !getParameters().equals(that.getParameters()) : that.getParameters() != null)
+            return false;
+        return getArguments() != null ? getArguments().equals(that.getArguments()) : that.getArguments() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getType() != null ? getType().hashCode() : 0;
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
+        result = 31 * result + (getMethod() != null ? getMethod().hashCode() : 0);
+        result = 31 * result + (getParameters() != null ? getParameters().hashCode() : 0);
+        result = 31 * result + (getArguments() != null ? getArguments().hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Invocation{" +
+                "type='" + type + '\'' +
+                ", name='" + name + '\'' +
+                ", method='" + method + '\'' +
+                ", parameters=" + parameters +
+                ", arguments=" + arguments +
+                '}';
+    }
+
 }

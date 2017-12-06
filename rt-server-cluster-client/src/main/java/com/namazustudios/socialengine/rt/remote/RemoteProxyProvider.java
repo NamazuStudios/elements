@@ -30,6 +30,8 @@ public class RemoteProxyProvider<ProxyableT> implements Provider<ProxyableT> {
         final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
 
         final ProxyBuilder<ProxyableT> builder = new ProxyBuilder<>(proxyableTClass)
+            .withToString()
+            .withDefaultHashCodeAndEquals()
             .withSharedMethodHandleCache()
             .dontProxyDefaultMethods();
 

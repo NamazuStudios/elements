@@ -143,16 +143,18 @@ public class LocalInvocationDispatcherBuilder {
     private Object proxyErrorHandler(final int errorHandlerIndex,
                                      final Consumer<InvocationError> invocationErrorConsumer) {
 
-        final Method method = getHandlerMethod(getMethod().getParameters()[errorHandlerIndex], Throwable.class);
+        final Method method = getHandlerMethod(getMethod().getParameters()[errorHandlerIndex]);
 
         return new ProxyBuilder<>(method.getDeclaringClass())
+            .withToString()
+            .withDefaultHashCodeAndEquals()
             .withSharedMethodHandleCache()
             .handler((proxy, m, args) -> {
                 final InvocationError invocationError = new InvocationError();
                 invocationError.setThrowable((Throwable) args[0]);
                 invocationErrorConsumer.accept(invocationError);
                 return null;
-            });
+            }).forMethod(method);
 
     }
 
@@ -177,16 +179,18 @@ public class LocalInvocationDispatcherBuilder {
 
     private Object proxyResultHandler(final int index, final Consumer<InvocationResult> invocationResultConsumer) {
 
-        final Method method = getHandlerMethod(getMethod().getParameters()[index], Object.class);
+        final Method method = getHandlerMethod(getMethod().getParameters()[index]);
 
         return new ProxyBuilder<>(method.getDeclaringClass())
+            .withToString()
+            .withDefaultHashCodeAndEquals()
             .withSharedMethodHandleCache()
             .handler((proxy, m, args) -> {
                 final InvocationResult invocationResult = new InvocationResult();
                 invocationResult.setResult(args[0]);
                 invocationResultConsumer.accept(invocationResult);
                 return null;
-            });
+            }).forMethod(method);
 
     }
 

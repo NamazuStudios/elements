@@ -9,14 +9,13 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.IntStream;
 
 import static com.namazustudios.socialengine.rt.Reflection.*;
 import static java.util.Arrays.fill;
@@ -189,8 +188,13 @@ public class RemoteInvocationHandlerBuilder {
 
         final Method method = getMethod();
         final int index = Reflection.errorHandlerIndex(method);
+
+        if (index < 0) {
+            return objects -> invocationError -> logger.error("Got invocation error.", invocationError.getThrowable());
+        }
+
         final Parameter parameter = method.getParameters()[index];
-        final Method errorHandlerMethod = getHandlerMethod(parameter, Throwable.class);
+        final Method errorHandlerMethod = getHandlerMethod(parameter);
 
         return objects -> invocationError -> {
 
@@ -217,16 +221,21 @@ public class RemoteInvocationHandlerBuilder {
         final Method[] resultHandlerMethods = stream(resultHandlerIndices)
             .mapToObj(index -> {
                 try {
-                    return getHandlerMethod(parameters[index], Object.class);
+                    return getHandlerMethod(parameters[index]);
                 } catch (IllegalArgumentException ex) {
                     return null;
                 }
             }).toArray(Method[]::new);
 
-        return (objects, errorConsumer) -> stream(resultHandlerIndices)
-            .mapToObj(index -> {
+        return (objects, errorConsumer) -> {
+
+            final Iterator<Method> resultHandlerMethodIterator = stream(resultHandlerMethods).iterator();
+
+            return stream(resultHandlerIndices).mapToObj(index -> {
+
                 final Object object = objects[index];
-                final Method handlerMethod = resultHandlerMethods[index];
+                final Method handlerMethod = resultHandlerMethodIterator.next();
+
                 return (Consumer<InvocationResult>) invocationResult -> {
                     try {
                         handlerMethod.invoke(object, invocationResult.getResult());
@@ -242,7 +251,10 @@ public class RemoteInvocationHandlerBuilder {
                         errorConsumer.accept(invocationError);
                     }
                 };
+
             }).collect(toList());
+
+        };
 
     }
 

@@ -19,6 +19,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.remote.SharedMethodHandleCache.getSharedMethodHandleCache;
+import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Proxy.newProxyInstance;
 
 public class ProxyBuilder<ProxyT> {
@@ -60,7 +61,6 @@ public class ProxyBuilder<ProxyT> {
      * @return this instance
      */
     public ProxyBuilder<ProxyT> dontProxyDefaultMethods() {
-
 
         final InvocationHandler handler = (p, method, args) -> {
 
@@ -144,6 +144,38 @@ public class ProxyBuilder<ProxyT> {
      */
     public ProxyBuilder<ProxyT> withDefaultHandler(final InvocationHandler defaultInvocationHandler) {
         this.defaultInvocationHandler = defaultInvocationHandler;
+        return this;
+    }
+
+    /**
+     * Specifies the a default {@link #toString()} method, which simply returns the value "Proxy for the.class.Name"
+     *
+     * @return this instance
+     */
+    public ProxyBuilder<ProxyT> withToString() {
+        return withToString("Proxy for " + interfaceClassT.getName());
+    }
+
+    /**
+     * Specifies the a default {@link #toString()} method, which simply returns the hardcoded value.
+     *
+     * @param toString the value to return when {@link #toString()} is invoked on the proxy.
+     * @return this instance
+     */
+    public ProxyBuilder<ProxyT> withToString(final String toString) {
+        handler((proxy, method, args) -> toString).forMethod("toString");
+        return this;
+    }
+
+    /**
+     * Specifies the {@link #hashCode()} and {@link #equals(Object)} method.  {@link #hashCode()} will be implemented
+     * {@link System#identityHashCode(Object)} and equals will be implemented as "=="
+     *
+     * @return this instance
+     */
+    public ProxyBuilder<ProxyT> withDefaultHashCodeAndEquals() {
+        handler((proxy, method, args) -> identityHashCode(proxy)).forMethod("hashCode");
+        handler((proxy, method, args) -> proxy == args[0]).forMethod("equals", Object.class);
         return this;
     }
 

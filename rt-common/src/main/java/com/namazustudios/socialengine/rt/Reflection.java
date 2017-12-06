@@ -5,8 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
 import java.util.Collection;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -48,11 +47,11 @@ public class Reflection {
 
         Stream<Method> methodStream = empty();
 
-        for (Class<?> cls = aClass; cls != Object.class; cls = cls.getSuperclass()) {
+        for (Class<?> cls = aClass; cls != null; cls = cls.getSuperclass()) {
             methodStream = concat(methodStream, stream(cls.getMethods()));
         }
 
-        return methodStream;
+        return aClass.isInterface() ? concat(methodStream, stream(Object.class.getMethods())) : methodStream;
 
     }
 
@@ -133,10 +132,9 @@ public class Reflection {
      * Searches {@link Method}'s parameters for a handler type.
      *
      * @param parameter parameter
-     * @param handlerParameterType
      * @return
      */
-    public static Method getHandlerMethod(final Parameter parameter, final Class<?> handlerParameterType) {
+    public static Method getHandlerMethod(final Parameter parameter) {
 
         final Class<?> type = parameter.getType();
 
@@ -151,19 +149,12 @@ public class Reflection {
         }
 
         final Method handlerMethod = methods(type)
-                .filter(m -> !m.isDefault())
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No non-default method found in type: " + type));
+            .filter(m -> !m.isDefault())
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("No non-default method found in type: " + type));
 
         if (handlerMethod.getParameterCount() != 1) {
             final String msg = format(handlerMethod) + " must accept a single parameter.";
-            throw new IllegalArgumentException(msg);
-        }
-
-        final Parameter handlerParameter = handlerMethod.getParameters()[0];
-
-        if (!handlerParameterType.isAssignableFrom(handlerParameter.getType())) {
-            final String msg = format(handlerMethod) + " must accept a Throwable.";
             throw new IllegalArgumentException(msg);
         }
 
