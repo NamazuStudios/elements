@@ -9,7 +9,9 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -68,17 +70,24 @@ public class ProxyBuilder<ProxyT> {
 
             final Supplier<MethodHandle> methodHandleSupplier = () -> {
                 try {
-                    return MethodHandles
-                        .lookup()
-                        .in(methodHandleKey.getInterfaceClassT())
-                        .unreflectSpecial(methodHandleKey.getMethod(), methodHandleKey.getInterfaceClassT())
+
+                    final Constructor<MethodHandles.Lookup> constructor;
+                    constructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class, int.class);
+                    constructor.setAccessible(true);
+
+                    final Class<?> declaringClass = methodHandleKey.getMethod().getDeclaringClass();
+
+                    return constructor.newInstance(declaringClass, MethodHandles.Lookup.PRIVATE)
+                        .in(declaringClass)
+                        .unreflectSpecial(methodHandleKey.getMethod(), declaringClass)
                         .bindTo(methodHandleKey.getProxy());
-                } catch (IllegalAccessException e) {
+
+                } catch (InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
                     throw new InternalException(e);
                 }
             };
 
-            return methodHandleCache.apply(methodHandleKey, methodHandleSupplier).invoke(args);
+            return methodHandleCache.apply(methodHandleKey, methodHandleSupplier).invokeWithArguments(args);
 
         };
 

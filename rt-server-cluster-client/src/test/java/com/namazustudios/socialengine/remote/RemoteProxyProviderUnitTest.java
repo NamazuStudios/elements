@@ -52,6 +52,31 @@ public class RemoteProxyProviderUnitTest {
     }
 
     @Test
+    public void testDefaultMethod() {
+
+        setupMockToReturnFuture();
+        getMockServiceInterface().testDefaultMethod();
+
+        final Invocation expected = new Invocation();
+
+        expected.setType(MockServiceInterface.class.getName());
+        expected.setMethod("testSyncVoid");
+        expected.setParameters(asList(String.class.getName()));
+        expected.setArguments(asList("Hello World!"));
+
+        verify(getMockRemoteInvoker()).invoke(
+                argThat(i -> i.equals(expected)),
+                argThat((Consumer<InvocationError> ec) -> {
+                    ec.accept(new InvocationError());
+                    return true;
+                }),
+                eq(emptyList())
+        );
+
+    }
+
+
+    @Test
     public void testSyncReturn() throws Exception {
 
         final Future<Object> future = setupMockToReturnFuture();
@@ -69,12 +94,12 @@ public class RemoteProxyProviderUnitTest {
         expected.setArguments(asList("Hello World!"));
 
         verify(getMockRemoteInvoker()).invoke(
-                eq(expected),
-                argThat((Consumer<InvocationError> ec) -> {
-                    ec.accept(new InvocationError());
-                    return true;
-                }),
-                eq(emptyList())
+            eq(expected),
+            argThat((Consumer<InvocationError> ec) -> {
+                ec.accept(new InvocationError());
+                return true;
+            }),
+            eq(emptyList())
         );
 
     }
@@ -83,7 +108,6 @@ public class RemoteProxyProviderUnitTest {
     public void testAsyncVoid() throws Exception {
 
         final Future<Object> objectFuture = setupMockToReturnFuture();
-        when(objectFuture.get()).thenReturn(42);
 
         final RuntimeException expectedRuntimeException = new RuntimeException();
         final Consumer<String> resultHandler = r -> assertEquals("Why, hello to you as well!", r);
@@ -138,15 +162,100 @@ public class RemoteProxyProviderUnitTest {
         expected.setArguments(asList("Hello World!"));
 
         verify(getMockRemoteInvoker()).invoke(
-                eq(expected),
-                argThat((Consumer<InvocationError> ec) -> {
-                    ec.accept(new InvocationError());
-                    return true;
-                }),
-                eq(emptyList())
+            eq(expected),
+            argThat((Consumer<InvocationError> ec) -> {
+                ec.accept(new InvocationError());
+                return true;
+            }),
+            eq(emptyList())
         );
 
     }
+
+    @Test
+    public void testAsyncReturnFutureWithConsumers() throws Exception {
+
+        final Future<Object> objectFuture = setupMockToReturnFuture();
+        when(objectFuture.get()).thenReturn(42);
+
+        final RuntimeException expectedRuntimeException = new RuntimeException();
+        final Consumer<String> resultHandler = r -> assertEquals("Why, hello to you as well!", r);
+        final Consumer<Throwable> throwableConsumer = ex -> ex.equals(expectedRuntimeException);
+
+        final Future<Integer> integerFuture = getMockServiceInterface().testAsyncReturnFuture("Hello World!", resultHandler, throwableConsumer);
+        verify(objectFuture, never()).get();
+        assertEquals(integerFuture.get(), Integer.valueOf(42));
+        verify(objectFuture, times(1)).get();
+
+
+        final Invocation expected = new Invocation();
+        expected.setType(MockServiceInterface.class.getName());
+        expected.setMethod("testAsyncReturnFuture");
+        expected.setParameters(asList(String.class.getName(), Consumer.class.getName(), Consumer.class.getName()));
+        expected.setArguments(asList("Hello World!"));
+
+        final InvocationError expectedInvocationError = new InvocationError();
+        expectedInvocationError.setThrowable(expectedRuntimeException);
+
+        final InvocationResult expectedInvocationResult = new InvocationResult();
+        expectedInvocationResult.setResult("Why, hello to you as well!");
+
+        verify(getMockRemoteInvoker()).invoke(
+                argThat(i -> i.equals(expected)),
+                argThat((Consumer<InvocationError> ec) -> {
+                    ec.accept(expectedInvocationError);
+                    return true;
+                }),
+                argThat(cl -> {
+                    cl.forEach(c -> c.accept(expectedInvocationResult));
+                    return true;
+                })
+        );
+
+    }
+
+    @Test
+    public void testAsyncReturnFutureWithCustomConsumers() throws Exception {
+
+        final Future<Object> objectFuture = setupMockToReturnFuture();
+        when(objectFuture.get()).thenReturn(42);
+
+        final RuntimeException expectedRuntimeException = new RuntimeException();
+        final MockServiceInterface.MyStringHandler resultHandler = r -> assertEquals("Why, hello to you as well!", r);
+        final MockServiceInterface.MyErrorHandler errorHandler = ex -> ex.equals(expectedRuntimeException);
+
+        final Future<Integer> integerFuture = getMockServiceInterface().testAsyncReturnFuture("Hello World!", resultHandler, errorHandler);
+        verify(objectFuture, never()).get();
+        assertEquals(integerFuture.get(), Integer.valueOf(42));
+        verify(objectFuture, times(1)).get();
+
+
+        final Invocation expected = new Invocation();
+        expected.setType(MockServiceInterface.class.getName());
+        expected.setMethod("testAsyncReturnFuture");
+        expected.setParameters(asList(String.class.getName(), Consumer.class.getName(), Consumer.class.getName()));
+        expected.setArguments(asList("Hello World!"));
+
+        final InvocationError expectedInvocationError = new InvocationError();
+        expectedInvocationError.setThrowable(expectedRuntimeException);
+
+        final InvocationResult expectedInvocationResult = new InvocationResult();
+        expectedInvocationResult.setResult("Why, hello to you as well!");
+
+        verify(getMockRemoteInvoker()).invoke(
+                argThat(i -> i.equals(expected)),
+                argThat((Consumer<InvocationError> ec) -> {
+                    ec.accept(expectedInvocationError);
+                    return true;
+                }),
+                argThat(cl -> {
+                    cl.forEach(c -> c.accept(expectedInvocationResult));
+                    return true;
+                })
+        );
+
+    }
+
 
     public Future<Object> setupMockToReturnFuture() {
         final Future<Object> future = mock(Future.class);
