@@ -13,6 +13,7 @@ import org.slf4j.event.Level;
 
 import java.io.*;
 import java.util.*;
+import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.testkit.TestSuites.parseTestFiles;
 import static com.namazustudios.socialengine.rt.testkit.TestRunner.LOGGER;
@@ -26,11 +27,11 @@ import static org.slf4j.impl.SimpleLogger.SYSTEM_PREFIX;
  * Main entry point.
  *
  */
-public class TestRunnerMain {
+public class TestKitMain {
 
     private static final String TEST_LOGGER_KEY = SYSTEM_PREFIX + LOGGER;
 
-    private static final Logger logger = LoggerFactory.getLogger(TestRunnerMain.class);
+    private static final Logger logger = LoggerFactory.getLogger(TestKitMain.class);
 
     private final String[] args;
 
@@ -62,16 +63,51 @@ public class TestRunnerMain {
 
     private final List<Module> moduleList = new ArrayList<>();
 
-    public TestRunnerMain(String[] args) {
-        this.args = args;
+    /**
+     * Creates a new {@link TestKitMain} with the supplied arguments (presumably from the command line).
+     *
+     * @param args the arguments
+     */
+    public TestKitMain(final String[] args) {
+        this.args = args.clone();
     }
 
-    public TestRunnerMain addModule(final Module module) {
+    /**
+     * Adds an addition {@link Module} to this {@link TestKitMain} instance.
+     *
+     * @param module the {@link Module} to add
+     * @return this instance
+     */
+    public TestKitMain addModule(final Module module) {
         moduleList.add(module);
         return this;
     }
 
+    /**
+     * Returns the {@link OptionParser} used to parse the options of this runner.
+     *
+     * @return this instance's {@link OptionParser}
+     */
+    public OptionParser getOptionParser() {
+        return optionParser;
+    }
+
+    /**
+     * Invokes {@link #run(Consumer)} without any additional options.
+     *
+     * @throws Exception
+     */
     public void run() throws Exception {
+        run(optionSet -> {});
+    }
+
+    /**
+     * Runs all of the tests, allowing for additional processing of extra options parsed from the command line.
+     *
+     * @param optionSetConsumer allows for the processing of any additional options
+     * @throws Exception if there is any error running the tests.
+     */
+    public void run(final Consumer<OptionSet> optionSetConsumer) throws Exception {
 
         final Properties systemProperties = getProperties();
 
@@ -95,15 +131,17 @@ public class TestRunnerMain {
             }
 
             final TestRunnerModule testRunnerModule = new TestRunnerModule()
-                    .addTests(test.values(optionSet))
-                    .addTests(parseTestFiles(testFile.values(optionSet)))
-                    .withProjectRoot(projectPath.value(optionSet));
+                .addTests(test.values(optionSet))
+                .addTests(parseTestFiles(testFile.values(optionSet)))
+                .withProjectRoot(projectPath.value(optionSet));
 
             if (testRunnerModule.testCount() == 0) {
                 logger.error("No tests defined.");
                 optionParser.printHelpOn(System.out);
                 return;
             }
+
+            optionSetConsumer.accept(optionSet);
 
             final List<Module> moduleList = new ArrayList<>();
             moduleList.add(testRunnerModule);
@@ -129,7 +167,7 @@ public class TestRunnerMain {
      * @param args program arguments.
      */
     public static void main(final String[] args) throws Exception {
-        final TestRunnerMain runnerMain = new TestRunnerMain(args);
+        final TestKitMain runnerMain = new TestKitMain(args);
         runnerMain.run();
     }
 
