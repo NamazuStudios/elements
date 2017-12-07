@@ -8,7 +8,6 @@ import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.guice.ExceptionMapperModule;
 import com.namazustudios.socialengine.rt.guice.FilterModule;
 import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
-import com.namazustudios.socialengine.rt.guice.SimpleServicesModule;
 import com.namazustudios.socialengine.rt.handler.SessionRequestDispatcher;
 import com.namazustudios.socialengine.rt.http.HttpRequest;
 import com.namazustudios.socialengine.rt.http.RequestScopedHttpSessionDispatcher;
@@ -29,7 +28,7 @@ public class DispatcherModule extends PrivateModule {
     @Override
     protected void configure() {
 
-        install(new DispatcherLuaModule());
+        install(new ExtendedLuaModule());
         install(new RTFileAssetLoaderModule(assetRootDirectory));
 
         install(new FilterModule());

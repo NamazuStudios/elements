@@ -17,6 +17,8 @@
 
     <modules>
         <module>common</module>
+        <module>common-util</module>
+        <module>common-servlet</module>
         <module>rest-api</module>
         <module>web-ui</module>
         <module>service</module>
@@ -28,8 +30,6 @@
         <module>guice</module>
         <module>rest-guice</module>
         <module>web-ui-war</module>
-        <module>common-util</module>
-        <module>common-servlet</module>
         <module>lucene-pojo</module>
         <module>lucene-indexer</module>
         <module>mongo-lucene</module>
@@ -55,6 +55,7 @@
         <module>code-serve-guice</module>
         <module>code-serve-war</module>
         <module>app-serve</module>
+        <module>app-serve-testkit</module>
         <module>rt-dao-guice</module>
         <module>rt-server-lua-testkit</module>
         <module>socialengine-jnlua/jnlua</module>

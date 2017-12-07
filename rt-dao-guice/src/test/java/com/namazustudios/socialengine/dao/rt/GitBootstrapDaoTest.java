@@ -31,7 +31,6 @@ import static org.testng.Assert.assertTrue;
 /**
  * Created by patricktwohig on 8/23/17.
  */
-@Test
 @Guice(modules = GitBootstrapDaoTest.Module.class)
 public class GitBootstrapDaoTest {
 
