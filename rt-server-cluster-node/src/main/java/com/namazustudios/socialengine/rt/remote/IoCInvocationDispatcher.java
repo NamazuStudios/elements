@@ -35,7 +35,7 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
     public void dispatch(final Invocation invocation,
                          final Consumer<InvocationError> invocationErrorConsumer,
                          final Consumer<InvocationResult> returnInvocationResultConsumer,
-                         final List<Consumer<InvocationResult>> invocationResultConsumerList) {
+                         final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList) {
 
         try {
 
@@ -45,7 +45,7 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
 
             doDispatch(
                 type, object, invocation,
-                invocationErrorConsumer, returnInvocationResultConsumer, invocationResultConsumerList);
+                invocationErrorConsumer, returnInvocationResultConsumer, additionalInvocationResultConsumerList);
 
         } catch (Throwable th) {
             logger.error("Caught exception resolving target for invocation.", th);

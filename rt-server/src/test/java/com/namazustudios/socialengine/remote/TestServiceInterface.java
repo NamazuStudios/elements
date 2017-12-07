@@ -6,7 +6,7 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 @Proxyable
-public interface MockServiceInterface {
+public interface TestServiceInterface {
 
     @RemotelyInvokable
     void testSyncVoid(@Serialize String msg);

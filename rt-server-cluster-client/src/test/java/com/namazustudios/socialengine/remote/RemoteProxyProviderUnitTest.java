@@ -23,7 +23,7 @@ public class RemoteProxyProviderUnitTest {
 
     private RemoteInvoker mockRemoteInvoker;
 
-    private MockServiceInterface mockServiceInterface;
+    private TestServiceInterface testServiceInterface;
 
         @AfterMethod
         public void resetMocks() {
@@ -34,12 +34,12 @@ public class RemoteProxyProviderUnitTest {
         public void testSync() throws Exception {
 
             final Future<Object> objectFuture =  setupMockToReturnFuture();
-            getMockServiceInterface().testSyncVoid("Hello World!");
+            getTestServiceInterface().testSyncVoid("Hello World!");
             verify(objectFuture, times(1)).get();
 
             final Invocation expected = new Invocation();
 
-            expected.setType(MockServiceInterface.class.getName());
+            expected.setType(TestServiceInterface.class.getName());
             expected.setMethod("testSyncVoid");
             expected.setParameters(asList(String.class.getName()));
             expected.setArguments(asList("Hello World!"));
@@ -59,12 +59,12 @@ public class RemoteProxyProviderUnitTest {
     public void testDefaultMethod() throws Exception {
 
         final Future<Object> objectFuture =  setupMockToReturnFuture();
-        getMockServiceInterface().testDefaultMethod();
+        getTestServiceInterface().testDefaultMethod();
         verify(objectFuture, times(1)).get();
 
         final Invocation expected = new Invocation();
 
-        expected.setType(MockServiceInterface.class.getName());
+        expected.setType(TestServiceInterface.class.getName());
         expected.setMethod("testSyncVoid");
         expected.setParameters(asList(String.class.getName()));
         expected.setArguments(asList("Hello World!"));
@@ -87,13 +87,13 @@ public class RemoteProxyProviderUnitTest {
         final Future<Object> future = setupMockToReturnFuture();
         when(future.get()).thenReturn(4.2);
 
-        final double result = getMockServiceInterface().testSyncReturn("Hello World!");
+        final double result = getTestServiceInterface().testSyncReturn("Hello World!");
         assertEquals(result, 4.2);
         verify(future, times(1)).get();
 
         final Invocation expected = new Invocation();
 
-        expected.setType(MockServiceInterface.class.getName());
+        expected.setType(TestServiceInterface.class.getName());
         expected.setMethod("testSyncReturn");
         expected.setParameters(asList(String.class.getName()));
         expected.setArguments(asList("Hello World!"));
@@ -118,11 +118,11 @@ public class RemoteProxyProviderUnitTest {
         final Consumer<String> resultHandler = r -> assertEquals("Why, hello to you as well!", r);
         final Consumer<Throwable> throwableConsumer = ex -> ex.equals(expectedRuntimeException);
 
-        getMockServiceInterface().testAsyncReturnVoid("Hello World!", resultHandler, throwableConsumer);
+        getTestServiceInterface().testAsyncReturnVoid("Hello World!", resultHandler, throwableConsumer);
         verify(objectFuture, never()).get();
 
         final Invocation expected = new Invocation();
-        expected.setType(MockServiceInterface.class.getName());
+        expected.setType(TestServiceInterface.class.getName());
         expected.setMethod("testAsyncReturnVoid");
         expected.setParameters(asList(String.class.getName(), Consumer.class.getName(), Consumer.class.getName()));
         expected.setArguments(asList("Hello World!"));
@@ -153,7 +153,7 @@ public class RemoteProxyProviderUnitTest {
         final Future<Object> objectFuture = setupMockToReturnFuture();
         when(objectFuture.get()).thenReturn(42);
 
-        final Future<Integer> integerFuture = getMockServiceInterface().testAsyncReturnFuture("Hello World!");
+        final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture("Hello World!");
 
         final int result = integerFuture.get();
         assertEquals(result, 42);
@@ -161,7 +161,7 @@ public class RemoteProxyProviderUnitTest {
 
         final Invocation expected = new Invocation();
 
-        expected.setType(MockServiceInterface.class.getName());
+        expected.setType(TestServiceInterface.class.getName());
         expected.setMethod("testAsyncReturnFuture");
         expected.setParameters(asList(String.class.getName()));
         expected.setArguments(asList("Hello World!"));
@@ -187,14 +187,14 @@ public class RemoteProxyProviderUnitTest {
         final Consumer<String> resultHandler = r -> assertEquals("Why, hello to you as well!", r);
         final Consumer<Throwable> throwableConsumer = ex -> ex.equals(expectedRuntimeException);
 
-        final Future<Integer> integerFuture = getMockServiceInterface().testAsyncReturnFuture("Hello World!", resultHandler, throwableConsumer);
+        final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture("Hello World!", resultHandler, throwableConsumer);
         verify(objectFuture, never()).get();
         assertEquals(integerFuture.get(), Integer.valueOf(42));
         verify(objectFuture, times(1)).get();
 
 
         final Invocation expected = new Invocation();
-        expected.setType(MockServiceInterface.class.getName());
+        expected.setType(TestServiceInterface.class.getName());
         expected.setMethod("testAsyncReturnFuture");
         expected.setParameters(asList(String.class.getName(), Consumer.class.getName(), Consumer.class.getName()));
         expected.setArguments(asList("Hello World!"));
@@ -226,19 +226,19 @@ public class RemoteProxyProviderUnitTest {
         when(objectFuture.get()).thenReturn(42);
 
         final RuntimeException expectedRuntimeException = new RuntimeException();
-        final MockServiceInterface.MyStringHandler resultHandler = r -> assertEquals("Why, hello to you as well!", r);
-        final MockServiceInterface.MyErrorHandler errorHandler = ex -> ex.equals(expectedRuntimeException);
+        final TestServiceInterface.MyStringHandler resultHandler = r -> assertEquals("Why, hello to you as well!", r);
+        final TestServiceInterface.MyErrorHandler errorHandler = ex -> ex.equals(expectedRuntimeException);
 
-        final Future<Integer> integerFuture = getMockServiceInterface().testAsyncReturnFuture("Hello World!", resultHandler, errorHandler);
+        final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture("Hello World!", resultHandler, errorHandler);
         verify(objectFuture, never()).get();
         assertEquals(integerFuture.get(), Integer.valueOf(42));
         verify(objectFuture, times(1)).get();
 
 
         final Invocation expected = new Invocation();
-        expected.setType(MockServiceInterface.class.getName());
+        expected.setType(TestServiceInterface.class.getName());
         expected.setMethod("testAsyncReturnFuture");
-        expected.setParameters(asList(String.class.getName(), MockServiceInterface.MyStringHandler.class.getName(), MockServiceInterface.MyErrorHandler.class.getName()));
+        expected.setParameters(asList(String.class.getName(), TestServiceInterface.MyStringHandler.class.getName(), TestServiceInterface.MyErrorHandler.class.getName()));
         expected.setArguments(asList("Hello World!"));
 
         final InvocationError expectedInvocationError = new InvocationError();
@@ -277,13 +277,13 @@ public class RemoteProxyProviderUnitTest {
         this.mockRemoteInvoker = mockRemoteInvoker;
     }
 
-    public MockServiceInterface getMockServiceInterface() {
-        return mockServiceInterface;
+    public TestServiceInterface getTestServiceInterface() {
+        return testServiceInterface;
     }
 
     @Inject
-    public void setMockServiceInterface(MockServiceInterface mockServiceInterface) {
-        this.mockServiceInterface = mockServiceInterface;
+    public void setTestServiceInterface(TestServiceInterface testServiceInterface) {
+        this.testServiceInterface = testServiceInterface;
     }
 
     public static class Module extends AbstractModule {
@@ -292,7 +292,7 @@ public class RemoteProxyProviderUnitTest {
         protected void configure() {
             final RemoteInvoker remoteInvoker = mock(RemoteInvoker.class);
             bind(RemoteInvoker.class).toInstance(remoteInvoker);
-            bind(MockServiceInterface.class).toProvider(new RemoteProxyProvider<>(MockServiceInterface.class));
+            bind(TestServiceInterface.class).toProvider(new RemoteProxyProvider<>(TestServiceInterface.class));
         }
 
     }
