@@ -3,9 +3,7 @@ package com.namazustudios.socialengine.remote;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.remote.*;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -27,18 +25,24 @@ public class RemoteProxyProviderUnitTest {
 
     private MockServiceInterface mockServiceInterface;
 
-    @Test
-    public void testSync() {
+        @AfterMethod
+        public void resetMocks() {
+            reset(getMockRemoteInvoker());
+        }
 
-        setupMockToReturnFuture();
-        getMockServiceInterface().testSyncVoid("Hello World!");
+        @Test
+        public void testSync() throws Exception {
 
-        final Invocation expected = new Invocation();
+            final Future<Object> objectFuture =  setupMockToReturnFuture();
+            getMockServiceInterface().testSyncVoid("Hello World!");
+            verify(objectFuture, times(1)).get();
 
-        expected.setType(MockServiceInterface.class.getName());
-        expected.setMethod("testSyncVoid");
-        expected.setParameters(asList(String.class.getName()));
-        expected.setArguments(asList("Hello World!"));
+            final Invocation expected = new Invocation();
+
+            expected.setType(MockServiceInterface.class.getName());
+            expected.setMethod("testSyncVoid");
+            expected.setParameters(asList(String.class.getName()));
+            expected.setArguments(asList("Hello World!"));
 
         verify(getMockRemoteInvoker()).invoke(
             eq(expected),
@@ -52,10 +56,11 @@ public class RemoteProxyProviderUnitTest {
     }
 
     @Test
-    public void testDefaultMethod() {
+    public void testDefaultMethod() throws Exception {
 
-        setupMockToReturnFuture();
+        final Future<Object> objectFuture =  setupMockToReturnFuture();
         getMockServiceInterface().testDefaultMethod();
+        verify(objectFuture, times(1)).get();
 
         final Invocation expected = new Invocation();
 
@@ -233,7 +238,7 @@ public class RemoteProxyProviderUnitTest {
         final Invocation expected = new Invocation();
         expected.setType(MockServiceInterface.class.getName());
         expected.setMethod("testAsyncReturnFuture");
-        expected.setParameters(asList(String.class.getName(), Consumer.class.getName(), Consumer.class.getName()));
+        expected.setParameters(asList(String.class.getName(), MockServiceInterface.MyStringHandler.class.getName(), MockServiceInterface.MyErrorHandler.class.getName()));
         expected.setArguments(asList("Hello World!"));
 
         final InvocationError expectedInvocationError = new InvocationError();
@@ -261,11 +266,6 @@ public class RemoteProxyProviderUnitTest {
         final Future<Object> future = mock(Future.class);
         when(getMockRemoteInvoker().invoke(any(), any(), any())).thenReturn(future);
         return future;
-    }
-
-    @AfterTest
-    public void resetMocks() {
-        reset(getMockRemoteInvoker());
     }
 
     public RemoteInvoker getMockRemoteInvoker() {
