@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -32,7 +33,19 @@ public class LocalInvocationDispatcherBuilder {
 
     public LocalInvocationDispatcherBuilder(
             final Class<?> type, final String name,
-            final List<String> parameters) throws ClassNotFoundException {
+            final List<String> parameters) throws ClassNotFoundException { ;
+
+        final Class<?>[] parameterTypes = lookupParameterTypes(parameters);
+
+        this.method = methods(type).filter(m -> m.getName().equals(name))
+                                   .filter(m -> Arrays.equals(m.getParameterTypes(), parameterTypes))
+                                   .findFirst().orElseThrow(() -> Reflection.noSuchMethod(type, name, parameterTypes));
+
+        this.dispatchType = Dispatch.Type.determine(method);
+
+    }
+
+    private Class<?>[] lookupParameterTypes(final List<String> parameters) throws ClassNotFoundException {
 
         final List<Class<?>> parameterTypes = new ArrayList<>();
 
@@ -40,11 +53,7 @@ public class LocalInvocationDispatcherBuilder {
             parameterTypes.add(Class.forName(parameter));
         }
 
-        this.method = methods(type).filter(m -> m.getName().equals(name))
-                                   .filter(m -> m.getParameterTypes().equals(parameterTypes))
-                                   .findFirst().orElseThrow(() -> Reflection.noSuchMethod(type, name, parameterTypes));
-
-        this.dispatchType = Dispatch.Type.determine(method);
+        return parameterTypes.stream().toArray(Class[]::new);
 
     }
 
@@ -133,7 +142,7 @@ public class LocalInvocationDispatcherBuilder {
         final Method method = getMethod();
         final int errorHandlerIndex = errorHandlerIndex(method);
 
-        return (invocationErrorConsumer, args) -> {
+        return errorHandlerIndex < 0 ? (c, o) -> {} : (invocationErrorConsumer, args) -> {
             final Object errorHandler = proxyErrorHandler(errorHandlerIndex, invocationErrorConsumer);
             args[errorHandlerIndex] = errorHandler;
         };

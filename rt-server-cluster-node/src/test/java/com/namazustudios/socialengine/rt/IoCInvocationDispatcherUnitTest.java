@@ -9,13 +9,11 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertEquals;
 
@@ -177,15 +175,14 @@ public class IoCInvocationDispatcherUnitTest {
         @Override
         protected void configure() {
 
-            bind(IocResolver.class).to(GuiceIoCResolver.class).asEagerSingleton();
-            bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class).asEagerSingleton();
-
             final TestServiceInterface testServiceInterface = mock(TestServiceInterface.class);
             bind(TestServiceInterface.class).toInstance(testServiceInterface);
+
+            bind(IocResolver.class).toInstance(new GuiceIoCResolver());
+            bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class);
 
         }
 
     }
-
 
 }
