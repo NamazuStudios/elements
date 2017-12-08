@@ -27,4 +27,26 @@ public class InvocationError {
         this.throwable = throwable;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof InvocationError)) return false;
+
+        InvocationError that = (InvocationError) o;
+
+        return getThrowable() != null ? getThrowable().equals(that.getThrowable()) : that.getThrowable() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return getThrowable() != null ? getThrowable().hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "InvocationError{" +
+                "throwable=" + throwable +
+                '}';
+    }
+
 }

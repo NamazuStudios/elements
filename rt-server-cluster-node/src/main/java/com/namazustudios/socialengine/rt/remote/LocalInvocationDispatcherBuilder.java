@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -17,6 +18,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.Reflection.*;
+import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 
 /**
@@ -152,10 +154,11 @@ public class LocalInvocationDispatcherBuilder {
     private Object proxyErrorHandler(final int errorHandlerIndex,
                                      final Consumer<InvocationError> invocationErrorConsumer) {
 
-        final Method method = getHandlerMethod(getMethod().getParameters()[errorHandlerIndex]);
+        final Parameter parameter = getMethod().getParameters()[errorHandlerIndex];
+        final Method method = getHandlerMethod(parameter);
 
         return new ProxyBuilder<>(method.getDeclaringClass())
-            .withToString()
+            .withToString("Proxy Error Handler for " + parameter.getType() + " " + parameter.getName())
             .withDefaultHashCodeAndEquals()
             .withSharedMethodHandleCache()
             .handler((proxy, m, args) -> {
@@ -163,7 +166,7 @@ public class LocalInvocationDispatcherBuilder {
                 invocationError.setThrowable((Throwable) args[0]);
                 invocationErrorConsumer.accept(invocationError);
                 return null;
-            }).forMethod(method);
+            }).forMethod(method).build();
 
     }
 
@@ -188,10 +191,11 @@ public class LocalInvocationDispatcherBuilder {
 
     private Object proxyResultHandler(final int index, final Consumer<InvocationResult> invocationResultConsumer) {
 
-        final Method method = getHandlerMethod(getMethod().getParameters()[index]);
+        final Parameter parameter = getMethod().getParameters()[index];
+        final Method method = getHandlerMethod(parameter);
 
         return new ProxyBuilder<>(method.getDeclaringClass())
-            .withToString()
+            .withToString("Proxy Result Error Handler for " + parameter.getType() + " " + parameter.getName())
             .withDefaultHashCodeAndEquals()
             .withSharedMethodHandleCache()
             .handler((proxy, m, args) -> {
@@ -199,7 +203,7 @@ public class LocalInvocationDispatcherBuilder {
                 invocationResult.setResult(args[0]);
                 invocationResultConsumer.accept(invocationResult);
                 return null;
-            }).forMethod(method);
+            }).forMethod(method).build();
 
     }
 

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 
 import javax.inject.Inject;
@@ -13,15 +14,21 @@ public class RemoteProxyProvider<ProxyableT> implements Provider<ProxyableT> {
 
     private final String name;
 
-    private final Class<ProxyableT> proxyableTClass;
+    private final Class<ProxyableT> interfaceClassT;
 
-    public RemoteProxyProvider(final Class<ProxyableT> proxyableTClass) {
-        this(proxyableTClass, null);
+    public RemoteProxyProvider(final Class<ProxyableT> proxyableInterface) {
+        this(proxyableInterface, null);
     }
 
-    public RemoteProxyProvider(final Class<ProxyableT> proxyableTClass, final String name) {
+    public RemoteProxyProvider(final Class<ProxyableT> interfaceClassT, final String name) {
+
+        if (interfaceClassT.getAnnotation(Proxyable.class) == null) {
+            throw new IllegalArgumentException(interfaceClassT.getName() + " is not @Proxyable");
+        }
+
         this.name = name;
-        this.proxyableTClass = proxyableTClass;
+        this.interfaceClassT = interfaceClassT;
+
     }
 
     @Override
@@ -29,15 +36,15 @@ public class RemoteProxyProvider<ProxyableT> implements Provider<ProxyableT> {
 
         final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
 
-        final ProxyBuilder<ProxyableT> builder = new ProxyBuilder<>(proxyableTClass)
+        final ProxyBuilder<ProxyableT> builder = new ProxyBuilder<>(interfaceClassT)
             .withToString()
             .withDefaultHashCodeAndEquals()
             .withSharedMethodHandleCache()
             .dontProxyDefaultMethods();
 
-        methods(proxyableTClass)
+        methods(interfaceClassT)
             .filter(m -> m.getAnnotation(RemotelyInvokable.class) != null)
-            .map(m -> new RemoteInvocationHandlerBuilder(remoteInvoker, proxyableTClass, m).withName(name))
+            .map(m -> new RemoteInvocationHandlerBuilder(remoteInvoker, interfaceClassT, m).withName(name))
             .forEach(b -> builder.handler(b.build()).forMethod(b.getMethod()));
 
         return builder.build();

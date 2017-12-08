@@ -47,14 +47,8 @@ public class ProxyBuilder<ProxyT> {
      * @param interfaceClassT
      */
     public ProxyBuilder(final Class<ProxyT> interfaceClassT) {
-
-        if (interfaceClassT.getAnnotation(Proxyable.class) == null) {
-            throw new IllegalArgumentException(interfaceClassT.getName() + " is not @Proxyable");
-        }
-
         this.interfaceClassT = interfaceClassT;
         classLoader = interfaceClassT.getClassLoader();
-
     }
 
     /**
