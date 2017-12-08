@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -33,6 +35,8 @@ public class LocalInvocationDispatcherBuilder {
 
     private final Dispatch.Type dispatchType;
 
+    private LocalInvocationDispatcher.ReturnValueStrategy returnValueStrategy;
+
     public LocalInvocationDispatcherBuilder(
             final Class<?> type, final String name,
             final List<String> parameters) throws ClassNotFoundException { ;
@@ -44,6 +48,35 @@ public class LocalInvocationDispatcherBuilder {
                                    .findFirst().orElseThrow(() -> Reflection.noSuchMethod(type, name, parameterTypes));
 
         this.dispatchType = Dispatch.Type.determine(method);
+
+        switch (getDispatchType()) {
+            case CONSUMER:
+                returnValueStrategy =
+                    void.class.isAssignableFrom(getMethod().getReturnType())   ? LocalInvocationDispatcher.ignoreReturnValueStrategy() :
+                    Future.class.isAssignableFrom(getMethod().getReturnType()) ? LocalInvocationDispatcher.blockingFutureStrategy()    :
+                                                                                 LocalInvocationDispatcher.simpleReturnValueStrategy();
+                break;
+            case FUTURE:
+
+                if (Future.class.isAssignableFrom(getMethod().getReturnType())) {
+                    returnValueStrategy = LocalInvocationDispatcher.blockingFutureStrategy();
+                } else {
+                    final String msg = format(getMethod()) + " does not return " + Future.class.getName();
+                    throw new IllegalArgumentException(msg);
+                }
+
+                break;
+
+            case SYNCHRONOUS:
+                returnValueStrategy =
+                    Future.class.isAssignableFrom(getMethod().getReturnType()) ? LocalInvocationDispatcher.blockingFutureStrategy() :
+                                                                                 LocalInvocationDispatcher.simpleReturnValueStrategy();
+                break;
+
+            default:
+                throw new IllegalArgumentException("Dispatch type " + getDispatchType() + " is not supported.");
+
+        }
 
     }
 
@@ -96,6 +129,8 @@ public class LocalInvocationDispatcherBuilder {
         final Method method = getMethod();
         final int argCount = method.getParameterCount();
 
+        final LocalInvocationDispatcher.ReturnValueStrategy returnValueStrategy = this.returnValueStrategy;
+
         return (target, invocation, invocationErrorConsumer, invocationReturnConsumer, invocationResultConsumerList) -> {
 
             final Object[] args = new Object[argCount];
@@ -106,9 +141,7 @@ public class LocalInvocationDispatcherBuilder {
 
             try {
                 final Object returnValue = method.invoke(target, args);
-                final InvocationResult invocationResult = new InvocationResult();
-                invocationResult.setResult(returnValue);
-                invocationReturnConsumer.accept(invocationResult);
+                returnValueStrategy.process(returnValue, invocationErrorConsumer, invocationReturnConsumer);
             } catch (InvocationTargetException ex) {
                 logger.info("Caught exception dispatching the respnse.", ex);
                 final InvocationError invocationError = new InvocationError();

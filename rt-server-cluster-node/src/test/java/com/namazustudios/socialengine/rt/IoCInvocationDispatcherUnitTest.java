@@ -162,7 +162,7 @@ public class IoCInvocationDispatcherUnitTest {
         expected.setResult(null);
 
         verify(invocationErrorConsumer, times(1)).accept(expectedInvocationError);
-        verify(returnInvocationResultConsumer, times(1)).accept(eq(expected));
+        verify(returnInvocationResultConsumer, never()).accept(any());
         verify(getMockTestServiceInterface(), times(1))
             .testAsyncReturnVoid(eq("Hello World!"), any(Consumer.class), any(Consumer.class));
 
@@ -183,6 +183,7 @@ public class IoCInvocationDispatcherUnitTest {
         final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList = emptyList();
 
         final Future<Integer> integerFuture = mock(Future.class);
+        when(integerFuture.get()).thenReturn(42);
         when(getMockTestServiceInterface().testAsyncReturnFuture(any())).thenReturn(integerFuture);
 
         getInvocationDispatcher().dispatch(invocation,
@@ -191,7 +192,7 @@ public class IoCInvocationDispatcherUnitTest {
                 additionalInvocationResultConsumerList);
 
         final InvocationResult expected = new InvocationResult();
-        expected.setResult(4.2);
+        expected.setResult(42);
 
         verify(invocationErrorConsumer, never()).accept(any());
         verify(returnInvocationResultConsumer, times(1)).accept(eq(expected));
@@ -202,10 +203,9 @@ public class IoCInvocationDispatcherUnitTest {
     @Test
     public void testAsyncReturnFutureWithConsumers() throws Exception {
 
-
         final Invocation invocation = new Invocation();
         invocation.setType(TestServiceInterface.class.getName());
-        invocation.setMethod("testAsyncReturnVoid");
+        invocation.setMethod("testAsyncReturnFuture");
         invocation.setParameters(asList(String.class.getName(), Consumer.class.getName(), Consumer.class.getName()));
         invocation.setArguments(asList("Hello World!"));
 
@@ -222,6 +222,9 @@ public class IoCInvocationDispatcherUnitTest {
         final Consumer<InvocationResult> argInvocationResultConsumer = mock(Consumer.class);
         final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList = asList(argInvocationResultConsumer);
 
+        final Future<Integer> integerFuture = mock(Future.class);
+        when(integerFuture.get()).thenReturn(42);
+
         when(getMockTestServiceInterface().testAsyncReturnFuture(any(), any(Consumer.class), any(Consumer.class))).thenAnswer(i -> {
 
             final Consumer<String> stringConsumer = i.getArgument(1);
@@ -230,7 +233,7 @@ public class IoCInvocationDispatcherUnitTest {
             stringConsumer.accept("Why, hello to you as well!");
             throwableConsumer.accept(expectedRuntimeException);
 
-            return null;
+            return integerFuture;
 
         });
 
@@ -240,32 +243,68 @@ public class IoCInvocationDispatcherUnitTest {
                 additionalInvocationResultConsumerList);
 
         final InvocationResult expected = new InvocationResult();
-        expected.setResult(4.2);
+        expected.setResult(42);
 
-        verify(invocationErrorConsumer, never()).accept(any());
+        verify(invocationErrorConsumer, times(1)).accept(eq(expectedInvocationError));
         verify(returnInvocationResultConsumer, times(1)).accept(eq(expected));
-        verify(getMockTestServiceInterface(), times(1)).testSyncReturn(eq("Hello World!"));
+        verify(getMockTestServiceInterface(), times(1))
+            .testAsyncReturnFuture(eq("Hello World!"), any(Consumer.class), any(Consumer.class));
 
     }
 
     @Test
     public void testAsyncReturnFutureWithCustomConsumers() throws Exception {
 
-        final RuntimeException expectedRuntimeException = new RuntimeException();
-        final TestServiceInterface.MyStringHandler resultHandler = r -> assertEquals("Why, hello to you as well!", r);
-        final TestServiceInterface.MyErrorHandler errorHandler = ex -> ex.equals(expectedRuntimeException);
-
-        final Invocation expected = new Invocation();
-        expected.setType(TestServiceInterface.class.getName());
-        expected.setMethod("testAsyncReturnFuture");
-        expected.setParameters(asList(String.class.getName(), TestServiceInterface.MyStringHandler.class.getName(), TestServiceInterface.MyErrorHandler.class.getName()));
-        expected.setArguments(asList("Hello World!"));
+        final Invocation invocation = new Invocation();
+        invocation.setType(TestServiceInterface.class.getName());
+        invocation.setMethod("testAsyncReturnFuture");
+        invocation.setParameters(asList(String.class.getName(),
+                                        TestServiceInterface.MyStringHandler.class.getName(),
+                                        TestServiceInterface.MyErrorHandler.class.getName()));
+        invocation.setArguments(asList("Hello World!"));
 
         final InvocationError expectedInvocationError = new InvocationError();
+        final RuntimeException expectedRuntimeException = new RuntimeException();
         expectedInvocationError.setThrowable(expectedRuntimeException);
 
         final InvocationResult expectedInvocationResult = new InvocationResult();
         expectedInvocationResult.setResult("Why, hello to you as well!");
+
+        final Consumer<InvocationError> invocationErrorConsumer = mock(Consumer.class);
+        final Consumer<InvocationResult> returnInvocationResultConsumer = mock(Consumer.class);
+
+        final Consumer<InvocationResult> argInvocationResultConsumer = mock(Consumer.class);
+        final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList = asList(argInvocationResultConsumer);
+
+        final Future<Integer> integerFuture = mock(Future.class);
+        when(integerFuture.get()).thenReturn(42);
+
+        when(getMockTestServiceInterface().testAsyncReturnFuture(any(), any(Consumer.class), any(Consumer.class))).thenAnswer(i -> {
+
+            final TestServiceInterface.MyStringHandler stringHandler = i.getArgument(1);
+            final TestServiceInterface.MyErrorHandler throwableConsumer = i.getArgument(2);
+
+            stringHandler.handle("Why, hello to you as well!");
+            throwableConsumer.handle(expectedRuntimeException);
+
+            return integerFuture;
+
+        });
+
+        getInvocationDispatcher().dispatch(invocation,
+                invocationErrorConsumer,
+                returnInvocationResultConsumer,
+                additionalInvocationResultConsumerList);
+
+        final InvocationResult expected = new InvocationResult();
+        expected.setResult(42);
+
+        verify(invocationErrorConsumer, times(1)).accept(eq(expectedInvocationError));
+        verify(returnInvocationResultConsumer, times(1)).accept(eq(expected));
+        verify(getMockTestServiceInterface(), times(1))
+            .testAsyncReturnFuture(eq("Hello World!"),
+                                   any(TestServiceInterface.MyStringHandler.class),
+                                   any(TestServiceInterface.MyErrorHandler.class));
 
     }
 
