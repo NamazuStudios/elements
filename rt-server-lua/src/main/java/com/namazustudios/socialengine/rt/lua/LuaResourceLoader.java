@@ -13,7 +13,7 @@ import javax.inject.Provider;
 import java.util.Set;
 
 import static com.namazustudios.socialengine.rt.lua.IocResolver.IOC_RESOLVER_MODULE_NAME;
-import static com.namazustudios.socialengine.rt.lua.LuaResource.ATTRIBUTES_MODULE;
+import static com.namazustudios.socialengine.rt.lua.Constants.ATTRIBUTES_MODULE;
 
 public class LuaResourceLoader implements ResourceLoader {
 

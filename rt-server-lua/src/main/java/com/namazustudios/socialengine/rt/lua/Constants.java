@@ -56,4 +56,8 @@ public interface Constants {
      */
     String YIELD = "yield";
 
+    /**
+     * The lua name of the attributes module
+     */
+    String ATTRIBUTES_MODULE = "namazu.resource.attributes";
 }
