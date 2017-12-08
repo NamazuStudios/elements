@@ -71,7 +71,8 @@ public class LuaResourceIntegrationTest {
             {"test.javamodule", "test_hello_world"},
             {"test.javamodule", "test_return_hello_world"},
             {"test.javamodule", "test_overload_1"},
-            {"test.javamodule", "test_overload_2"}
+            {"test.javamodule", "test_overload_2"},
+            {"test.response", "test_simple_response"}
         };
     }
 
