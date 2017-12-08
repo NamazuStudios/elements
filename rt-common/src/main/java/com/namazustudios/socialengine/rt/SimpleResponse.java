@@ -179,6 +179,8 @@ public class SimpleResponse implements Response {
             final SimpleResponseHeader simpleResponseHeader = new SimpleResponseHeader();
 
             simpleResponse.setResponseHeader(simpleResponseHeader);
+            simpleResponse.setPayload(payload);
+
             simpleResponseHeader.setHeaders(new LinkedHashMap<>(simpleResponseHeaderMap));
 
             return simpleResponse;
