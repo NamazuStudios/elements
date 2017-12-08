@@ -48,20 +48,40 @@ public class IoCInvocationDispatcherUnitTest {
                                            returnInvocationResultConsumer,
                                            additionalInvocationResultConsumerList);
 
+        final InvocationResult expected = new InvocationResult();
+        expected.setResult(null);
+
         verify(invocationErrorConsumer, never()).accept(any());
+        verify(returnInvocationResultConsumer, times(1)).accept(eq(expected));
+        verify(getMockTestServiceInterface(), times(1)).testSyncVoid(eq("Hello World!"));
 
     }
 
     @Test
     public void testDefaultMethod() throws Exception {
 
-        final Invocation expected = new Invocation();
+        final Invocation invocation = new Invocation();
 
-        expected.setType(TestServiceInterface.class.getName());
-        expected.setMethod("testSyncVoid");
-        expected.setParameters(asList(String.class.getName()));
-        expected.setArguments(asList("Hello World!"));
+        invocation.setType(TestServiceInterface.class.getName());
+        invocation.setMethod("testDefaultMethod");
+        invocation.setParameters(emptyList());
+        invocation.setArguments(emptyList());
 
+        final Consumer<InvocationError> invocationErrorConsumer = mock(Consumer.class);
+        final Consumer<InvocationResult> returnInvocationResultConsumer = mock(Consumer.class);
+        final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList = emptyList();
+
+        getInvocationDispatcher().dispatch(invocation,
+                invocationErrorConsumer,
+                returnInvocationResultConsumer,
+                additionalInvocationResultConsumerList);
+
+        final InvocationResult expected = new InvocationResult();
+        expected.setResult(null);
+
+        verify(invocationErrorConsumer, never()).accept(any());
+        verify(returnInvocationResultConsumer, times(1)).accept(eq(expected));
+        verify(getMockTestServiceInterface(), times(1)).testDefaultMethod();
 
     }
 
@@ -69,12 +89,30 @@ public class IoCInvocationDispatcherUnitTest {
     @Test
     public void testSyncReturn() throws Exception {
 
-        final Invocation expected = new Invocation();
+        final Invocation invocation = new Invocation();
 
-        expected.setType(TestServiceInterface.class.getName());
-        expected.setMethod("testSyncReturn");
-        expected.setParameters(asList(String.class.getName()));
-        expected.setArguments(asList("Hello World!"));
+        invocation.setType(TestServiceInterface.class.getName());
+        invocation.setMethod("testSyncReturn");
+        invocation.setParameters(asList(String.class.getName()));
+        invocation.setArguments(asList("Hello World!"));
+
+        final Consumer<InvocationError> invocationErrorConsumer = mock(Consumer.class);
+        final Consumer<InvocationResult> returnInvocationResultConsumer = mock(Consumer.class);
+        final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList = emptyList();
+
+        when(getMockTestServiceInterface().testSyncReturn(any())).thenReturn(4.2);
+
+        getInvocationDispatcher().dispatch(invocation,
+                invocationErrorConsumer,
+                returnInvocationResultConsumer,
+                additionalInvocationResultConsumerList);
+
+        final InvocationResult expected = new InvocationResult();
+        expected.setResult(4.2);
+
+        verify(invocationErrorConsumer, never()).accept(any());
+        verify(returnInvocationResultConsumer, times(1)).accept(eq(expected));
+        verify(getMockTestServiceInterface(), times(1)).testSyncReturn(eq("Hello World!"));
 
     }
 

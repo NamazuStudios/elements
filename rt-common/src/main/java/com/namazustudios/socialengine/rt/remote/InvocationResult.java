@@ -50,4 +50,30 @@ public class InvocationResult {
         this.result = result;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof InvocationResult)) return false;
+
+        InvocationResult that = (InvocationResult) o;
+
+        if (getArg() != that.getArg()) return false;
+        return getResult() != null ? getResult().equals(that.getResult()) : that.getResult() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result1 = getArg();
+        result1 = 31 * result1 + (getResult() != null ? getResult().hashCode() : 0);
+        return result1;
+    }
+
+    @Override
+    public String toString() {
+        return "InvocationResult{" +
+                "arg=" + arg +
+                ", result=" + result +
+                '}';
+    }
+
 }
