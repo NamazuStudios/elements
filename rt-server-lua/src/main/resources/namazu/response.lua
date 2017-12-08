@@ -3,6 +3,7 @@ require "table"
 
 local Response       = java.require "com.namazustudios.socialengine.rt.Response"
 local ResponseHeader = java.require "com.namazustudios.socialengine.rt.ResponseHeader"
+local SimpleResponse = java.require "com.namazustudios.socialengine.rt.SimpleResponse"
 
 local response = {}
 
@@ -81,7 +82,11 @@ function response.formulate(code, payload, headers, sequence)
         return payload
     end
 
-    return Response:new(methods)
+    local r = Response:new(methods)
+
+    return SimpleResponse:builder()
+                         :from(r)
+                         :build()
 
 end
 
