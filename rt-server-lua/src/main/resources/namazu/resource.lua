@@ -44,10 +44,11 @@ end
 --
 -- @param module the module name
 -- @param path the initial path of the module
+-- @param attributes the resource attributes
 -- @return the resource id
 -- @return the response code
-function resource.create(module, path, ...)
-    detail.schedule_create(module, path, table.pack(...))
+function resource.create(module, path, attributes, ...)
+    detail.schedule_create(module, path, attributes, table.pack(...))
     local reason, response = coroutine.yield(yieldinstruction.INDEFINITELY)
     return process_result(reason, response)
 end

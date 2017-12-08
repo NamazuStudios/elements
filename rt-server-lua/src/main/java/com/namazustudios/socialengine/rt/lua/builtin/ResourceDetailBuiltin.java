@@ -9,6 +9,11 @@ import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static com.namazustudios.socialengine.rt.Attributes.emptyAttributes;
 import static com.namazustudios.socialengine.rt.lua.Constants.REQUIRE;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinUtils.currentTaskId;
 
@@ -46,15 +51,20 @@ public class ResourceDetailBuiltin implements Builtin {
 
             final String module = luaState.checkString(1);
             final Path path = new Path(luaState.checkString(2));
-            final Object[] params = luaState.checkJavaObject(3, Object[].class);
+            final Map<?, ?> attributesMap = luaState.checkJavaObject(3, Map.class);
+            final Object[] params = luaState.checkJavaObject(4, Object[].class);
 
             final TaskId taskId = currentTaskId(luaState);
             final ResourceId thisResourceId = getLuaResource().getId();
 
-            getContext().getResourceContext().createAsync(
+            final Attributes attributes = attributesMap == null ? emptyAttributes() : new SimpleAttributes.Builder()
+                .setAttributes(attributesMap.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue())))
+                .build();
+
+            getContext().getResourceContext().createAttributesAsync(
                 rid -> getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, rid.asString()),
                 throwable -> getContext().getSchedulerContext().resumeWithError(thisResourceId, taskId, throwable),
-                module, path, params);
+                module, path, attributes, params);
 
             return 0;
 
