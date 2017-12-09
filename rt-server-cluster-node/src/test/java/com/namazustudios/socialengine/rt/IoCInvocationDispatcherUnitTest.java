@@ -4,7 +4,6 @@ import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.remote.TestServiceInterface;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.rt.remote.*;
-import net.bytebuddy.implementation.bytecode.Throw;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -15,10 +14,8 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 import static java.util.Arrays.asList;
-import static java.util.Arrays.fill;
 import static java.util.Collections.emptyList;
 import static org.mockito.Mockito.*;
-import static org.testng.Assert.assertEquals;
 
 @Guice(modules = IoCInvocationDispatcherUnitTest.Module.class)
 public class IoCInvocationDispatcherUnitTest {
@@ -196,7 +193,7 @@ public class IoCInvocationDispatcherUnitTest {
 
         verify(invocationErrorConsumer, never()).accept(any());
         verify(returnInvocationResultConsumer, times(1)).accept(eq(expected));
-        verify(getMockTestServiceInterface(), times(1)).testSyncReturn(eq("Hello World!"));
+        verify(getMockTestServiceInterface(), times(1)).testAsyncReturnFuture(eq("Hello World!"));
 
     }
 
@@ -279,7 +276,7 @@ public class IoCInvocationDispatcherUnitTest {
         final Future<Integer> integerFuture = mock(Future.class);
         when(integerFuture.get()).thenReturn(42);
 
-        when(getMockTestServiceInterface().testAsyncReturnFuture(any(), any(Consumer.class), any(Consumer.class))).thenAnswer(i -> {
+        when(getMockTestServiceInterface().testAsyncReturnFuture(any(), isA(TestServiceInterface.MyStringHandler.class), isA(TestServiceInterface.MyErrorHandler.class))).thenAnswer(i -> {
 
             final TestServiceInterface.MyStringHandler stringHandler = i.getArgument(1);
             final TestServiceInterface.MyErrorHandler throwableConsumer = i.getArgument(2);
