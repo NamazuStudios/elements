@@ -129,6 +129,7 @@ public class RemoteInvocationHandlerBuilder {
         return (proxy, method1, args) -> {
             final Invocation invocation = new Invocation();
 
+            invocation.setDispatchType(getDispatchType());
             invocation.setType(getType().getName());
             invocation.setName(getName());
             invocation.setMethod(getMethod().getName());

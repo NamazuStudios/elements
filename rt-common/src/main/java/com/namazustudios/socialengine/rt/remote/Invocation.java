@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.annotation.Dispatch;
+
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -17,6 +19,8 @@ public class Invocation {
     private List<String> parameters;
 
     private List<Object> arguments;
+
+    private Dispatch.Type dispatchType;
 
     /**
      * Gets the string representing the type of the remote object to invoke.  {@see {@link Class#getName()}}
@@ -110,6 +114,26 @@ public class Invocation {
         this.arguments = arguments;
     }
 
+    /**
+     * Indicates the {@link Dispatch.Type} used to send this invocation.  This can be used to hint how the invocation
+     * can be routed.
+     *
+     * @return the {@link Dispatch.Type}
+     */
+    public Dispatch.Type getDispatchType() {
+        return dispatchType;
+    }
+
+    /**
+     * Sets the {@link Dispatch.Type} used to send this invocation.  This can be used to hint how the invocation can be
+     * routed.
+     *
+     * @return the {@link Dispatch.Type}
+     */
+    public void setDispatchType(Dispatch.Type dispatchType) {
+        this.dispatchType = dispatchType;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -122,7 +146,9 @@ public class Invocation {
         if (getMethod() != null ? !getMethod().equals(that.getMethod()) : that.getMethod() != null) return false;
         if (getParameters() != null ? !getParameters().equals(that.getParameters()) : that.getParameters() != null)
             return false;
-        return getArguments() != null ? getArguments().equals(that.getArguments()) : that.getArguments() == null;
+        if (getArguments() != null ? !getArguments().equals(that.getArguments()) : that.getArguments() != null)
+            return false;
+        return getDispatchType() == that.getDispatchType();
     }
 
     @Override
@@ -132,6 +158,7 @@ public class Invocation {
         result = 31 * result + (getMethod() != null ? getMethod().hashCode() : 0);
         result = 31 * result + (getParameters() != null ? getParameters().hashCode() : 0);
         result = 31 * result + (getArguments() != null ? getArguments().hashCode() : 0);
+        result = 31 * result + (getDispatchType() != null ? getDispatchType().hashCode() : 0);
         return result;
     }
 
@@ -143,7 +170,7 @@ public class Invocation {
                 ", method='" + method + '\'' +
                 ", parameters=" + parameters +
                 ", arguments=" + arguments +
+                ", dispatchType=" + dispatchType +
                 '}';
     }
-
 }

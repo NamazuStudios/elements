@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.remote;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.namazustudios.socialengine.rt.annotation.Dispatch;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.testng.annotations.*;
 
@@ -30,19 +31,20 @@ public class RemoteProxyProviderUnitTest {
             reset(getMockRemoteInvoker());
         }
 
-        @Test
-        public void testSync() throws Exception {
+    @Test
+    public void testSync() throws Exception {
 
-            final Future<Object> objectFuture =  setupMockToReturnFuture();
-            getTestServiceInterface().testSyncVoid("Hello World!");
-            verify(objectFuture, times(1)).get();
+        final Future<Object> objectFuture =  setupMockToReturnFuture();
+        getTestServiceInterface().testSyncVoid("Hello World!");
+        verify(objectFuture, times(1)).get();
 
-            final Invocation expected = new Invocation();
+        final Invocation expected = new Invocation();
 
-            expected.setType(TestServiceInterface.class.getName());
-            expected.setMethod("testSyncVoid");
-            expected.setParameters(asList(String.class.getName()));
-            expected.setArguments(asList("Hello World!"));
+        expected.setType(TestServiceInterface.class.getName());
+        expected.setMethod("testSyncVoid");
+        expected.setParameters(asList(String.class.getName()));
+        expected.setArguments(asList("Hello World!"));
+        expected.setDispatchType(Dispatch.Type.SYNCHRONOUS);
 
         verify(getMockRemoteInvoker()).invoke(
             eq(expected),
@@ -68,6 +70,7 @@ public class RemoteProxyProviderUnitTest {
         expected.setMethod("testSyncVoid");
         expected.setParameters(asList(String.class.getName()));
         expected.setArguments(asList("Hello World!"));
+        expected.setDispatchType(Dispatch.Type.SYNCHRONOUS);
 
         verify(getMockRemoteInvoker()).invoke(
                 argThat(i -> i.equals(expected)),
@@ -97,6 +100,7 @@ public class RemoteProxyProviderUnitTest {
         expected.setMethod("testSyncReturn");
         expected.setParameters(asList(String.class.getName()));
         expected.setArguments(asList("Hello World!"));
+        expected.setDispatchType(Dispatch.Type.SYNCHRONOUS);
 
         verify(getMockRemoteInvoker()).invoke(
             eq(expected),
@@ -126,6 +130,7 @@ public class RemoteProxyProviderUnitTest {
         expected.setMethod("testAsyncReturnVoid");
         expected.setParameters(asList(String.class.getName(), Consumer.class.getName(), Consumer.class.getName()));
         expected.setArguments(asList("Hello World!"));
+        expected.setDispatchType(Dispatch.Type.CONSUMER);
 
         final InvocationError expectedInvocationError = new InvocationError();
         expectedInvocationError.setThrowable(expectedRuntimeException);
@@ -165,6 +170,7 @@ public class RemoteProxyProviderUnitTest {
         expected.setMethod("testAsyncReturnFuture");
         expected.setParameters(asList(String.class.getName()));
         expected.setArguments(asList("Hello World!"));
+        expected.setDispatchType(Dispatch.Type.FUTURE);
 
         verify(getMockRemoteInvoker()).invoke(
             eq(expected),
@@ -198,6 +204,7 @@ public class RemoteProxyProviderUnitTest {
         expected.setMethod("testAsyncReturnFuture");
         expected.setParameters(asList(String.class.getName(), Consumer.class.getName(), Consumer.class.getName()));
         expected.setArguments(asList("Hello World!"));
+        expected.setDispatchType(Dispatch.Type.FUTURE);
 
         final InvocationError expectedInvocationError = new InvocationError();
         expectedInvocationError.setThrowable(expectedRuntimeException);
@@ -240,6 +247,7 @@ public class RemoteProxyProviderUnitTest {
         expected.setMethod("testAsyncReturnFuture");
         expected.setParameters(asList(String.class.getName(), TestServiceInterface.MyStringHandler.class.getName(), TestServiceInterface.MyErrorHandler.class.getName()));
         expected.setArguments(asList("Hello World!"));
+        expected.setDispatchType(Dispatch.Type.FUTURE);
 
         final InvocationError expectedInvocationError = new InvocationError();
         expectedInvocationError.setThrowable(expectedRuntimeException);
