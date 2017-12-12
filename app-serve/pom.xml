@@ -17,7 +17,6 @@
     <name>app-serve</name>
 
     <properties>
-        <jbox2d.version>2.2.1.1</jbox2d.version>
         <jetty.version>9.4.7.v20170914</jetty.version>
     </properties>
 
@@ -138,9 +137,9 @@
             <version>${reflections.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jbox2d</groupId>
-            <artifactId>jbox2d-library</artifactId>
-            <version>${jbox2d.version}</version>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>common-lua</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
