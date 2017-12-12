@@ -59,6 +59,7 @@
         <module>rt-dao-guice</module>
         <module>rt-server-lua-testkit</module>
         <module>socialengine-jnlua/jnlua</module>
+    <module>common-lua</module>
   </modules>
 
     <properties>

@@ -146,6 +146,8 @@ public class ApplicationDocumentationResource {
         switch (property.getType()) {
             case NUMBER:
                 return new DoubleProperty().description(property.getDescription());
+            case INTEGER:
+                return new IntegerProperty().description(property.getDescription());
             case STRING:
                 return new StringProperty().description(property.getDescription());
             case BOOLEAN:
@@ -163,6 +165,8 @@ public class ApplicationDocumentationResource {
         switch (header.getType()) {
             case NUMBER:
                 return new DoubleProperty().description(header.getDescription());
+            case INTEGER:
+                return new IntegerProperty().description(header.getDescription());
             case STRING:
                 return new StringProperty().description(header.getDescription());
             case BOOLEAN:
