@@ -20,6 +20,11 @@ public enum Type {
     NUMBER("number"),
 
     /**
+     * The number type.  Generally expressed as a {@link Integer} or primitive Java double.
+     */
+    INTEGER("integer"),
+
+    /**
      * The boolean type.  Generally expressed as a {@link Boolean} or primitive Java boolean.
      */
     BOOLEAN("boolean"),
