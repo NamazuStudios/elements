@@ -10,9 +10,12 @@ import java.util.function.Consumer;
 public interface RemoteInvoker {
 
     /**
-     * Sends the {@link Invocation} to the remote service and waits for the {@link InvocationResult}.
+     * Sends the {@link Invocation} to the remote service and waits for the {@link InvocationResult}.  The supplied
+     * {@link Consumer<InvocationError>} will relay all encountered errors.
      *
-     * @param invocation the outoing {@link Invocation}
+     * @param invocation the outgoing {@link Invocation}
+     * @param errorInvocationResultConsumer a {@link Consumer<InvocationError>} to receive all errors
+     * @param invocationResultConsumerList a {@link List<Consumer<InvocationResult>>} to capture all results
      *
      * @return a {@link Future<Object>} which returns the result of the remote invocation
      */

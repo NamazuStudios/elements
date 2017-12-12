@@ -37,6 +37,7 @@
         <module>rt-server</module>
         <module>rt-server-simple</module>
         <module>rt-server-simple-guice</module>
+        <module>rt-server-cluster</module>
         <module>rt-server-cluster-node</module>
         <module>rt-server-cluster-node-jeromq</module>
         <module>rt-server-cluster-client</module>
@@ -59,7 +60,7 @@
         <module>rt-dao-guice</module>
         <module>rt-server-lua-testkit</module>
         <module>socialengine-jnlua/jnlua</module>
-    <module>common-lua</module>
+        <module>common-lua</module>
   </modules>
 
     <properties>

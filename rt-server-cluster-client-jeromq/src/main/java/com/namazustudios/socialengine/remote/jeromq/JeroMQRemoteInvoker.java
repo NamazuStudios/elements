@@ -6,53 +6,59 @@ import com.namazustudios.socialengine.rt.remote.Invocation;
 import com.namazustudios.socialengine.rt.remote.InvocationError;
 import com.namazustudios.socialengine.rt.remote.InvocationResult;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
-import org.zeromq.ZContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zeromq.ZMQ;
 
 import javax.inject.Inject;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class JeroMQRemoteInvoker implements RemoteInvoker {
 
-    private ZContext zContext;
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQRemoteInvoker.class);
 
-    private PayloadReader payloadReader;
-
-    private PayloadWriter payloadWriter;
+    private ClientConnectionFactory clientConnectionFactory;
 
     @Override
     public Future<Object> invoke(final Invocation invocation,
                                  final Consumer<InvocationError> errorInvocationResultConsumer,
                                  final List<Consumer<InvocationResult>> invocationResultConsumerList) {
+
+        try {
+
+            final ClientConnectionFactory.Connection connection = getSocketFactory().connect();
+            final ZMQ.Socket socket = connection.socket();
+
+            sendInvocation(socket, errorInvocationResultConsumer, invocation);
+
+
+        } catch (Throwable th) {
+            logger.error("Error dispatching remote method invocation.");
+            final InvocationError invocationError = new InvocationError();
+            invocationError.setThrowable(th);
+            errorInvocationResultConsumer.accept(invocationError);
+        }
+
         return null;
+
     }
 
-    public ZContext getzContext() {
-        return zContext;
+    private void sendInvocation(final ZMQ.Socket socket,
+                                final Consumer<InvocationError> errorInvocationResultConsumer,
+                                final Invocation invocation) {
     }
 
-    @Inject
-    public void setzContext(ZContext zContext) {
-        this.zContext = zContext;
-    }
-
-    public PayloadReader getPayloadReader() {
-        return payloadReader;
+    public ClientConnectionFactory getSocketFactory() {
+        return clientConnectionFactory;
     }
 
     @Inject
-    public void setPayloadReader(PayloadReader payloadReader) {
-        this.payloadReader = payloadReader;
-    }
-
-    public PayloadWriter getPayloadWriter() {
-        return payloadWriter;
-    }
-
-    @Inject
-    public void setPayloadWriter(PayloadWriter payloadWriter) {
-        this.payloadWriter = payloadWriter;
+    public void setSocketFactory(ClientConnectionFactory socketFactory) {
+        this.clientConnectionFactory = socketFactory;
     }
 
 }
