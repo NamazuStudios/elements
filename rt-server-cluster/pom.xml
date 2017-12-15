@@ -21,6 +21,11 @@
             <artifactId>rt-server</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.javolution</groupId>
+            <artifactId>javolution-core-java</artifactId>
+            <version>${javolution.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

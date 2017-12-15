@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt.annotation;
 
-import com.namazustudios.socialengine.rt.remote.InvocationError;
-import com.namazustudios.socialengine.rt.remote.InvocationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +10,6 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 
 import static com.namazustudios.socialengine.rt.Reflection.format;
-import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 
 /**
@@ -37,9 +34,7 @@ public @interface Dispatch {
     enum Type {
 
         /**
-         * The method is dispatched, blocking until the method returns, and the return value is passed to the
-         * {@link InvocationResult#setResult(Object)}.  If the invocation throws an exception, then the exception is
-         * passed to {@link InvocationError#setThrowable(Throwable)}.
+         * The method is dispatched, blocking until the method returns or an exception is thrown.
          *
          * This mode is automatically selected if a {@link Method} returns an object and neither
          * {@link ResultHandler} or {@link ErrorHandler} are specified in the parameters.  This implies that the return
@@ -52,20 +47,20 @@ public @interface Dispatch {
          * {@link Future<?>}.  The result is obtained through {@link Future#get()}, or {@link ExecutionException}
          * in the event of a failure.
          *
-         * The method may use {@link ResultHandler} or {@link ErrorHandler} to receive results.  However, on the remote
-         * server side, the value is obtained using the returned {@link Future<?>} and the functional consumers simply
-         * log results.
+         *
+         * The method may use {@link ResultHandler} or {@link ErrorHandler} to receive results in addition to the
+         * returned {@link Future}.
          *
          * On the client side, either {@link ResultHandler} or {@link ErrorHandler} may be used to receive the result.
          * The client method invocation will not block and instead return an instance of {@link Future} which will be
-         * used to return the result.
+         * used to dispatch the remote invocation.
          */
         FUTURE,
 
         /**
-         * The method is dispatched and the return value is discarded.  The value received by the {@link ResultHandler}
-         * annotated object will be handed  to {@link InvocationResult#setResult(Object)}.  The value passed to the
-         * {@link ErrorHandler} will be handed to {@link InvocationError#setThrowable(Throwable)}.
+         * The method is dispatched and the return value is discarded on the remote end.  The annotated {@link Method}
+         * should be a void method.  However, null will be substituted on the local side for any return value.
+         * Primitives are not supported.
          *
          * The method must use {@link ResultHandler} and {@link ErrorHandler} to receive results.  On both client and
          * server side.
@@ -76,8 +71,6 @@ public @interface Dispatch {
          *
          */
         CONSUMER;
-
-        private static final Logger logger = LoggerFactory.getLogger(Dispatch.Type.class);
 
         /**
          * Inspects the supplied {@link Method} and determines the type of dispatch used.  If not specified, then this

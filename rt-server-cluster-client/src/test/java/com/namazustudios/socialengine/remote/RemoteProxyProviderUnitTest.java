@@ -2,6 +2,9 @@ package com.namazustudios.socialengine.remote;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.namazustudios.socialengine.rt.remote.Invocation;
+import com.namazustudios.socialengine.rt.remote.InvocationError;
+import com.namazustudios.socialengine.rt.remote.InvocationResult;
 import com.namazustudios.socialengine.rt.annotation.Dispatch;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.testng.annotations.*;

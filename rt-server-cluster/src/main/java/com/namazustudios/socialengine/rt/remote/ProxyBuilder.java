@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.remote;
 
 import com.google.common.cache.Cache;
 import com.namazustudios.socialengine.rt.Reflection;
-import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +19,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.rt.remote.SharedMethodHandleCache.getSharedMethodHandleCache;
 import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Proxy.newProxyInstance;
 
@@ -97,7 +95,7 @@ public class ProxyBuilder<ProxyT> {
      */
     public ProxyBuilder<ProxyT> withSharedMethodHandleCache() {
         return withMethodHandleCache(((methodHandleKey, methodHandleSupplier) -> {
-            final Cache<MethodHandleKey, MethodHandle> cache = getSharedMethodHandleCache();
+            final Cache<MethodHandleKey, MethodHandle> cache = SharedMethodHandleCache.getSharedMethodHandleCache();
             try {
                 return cache.get(methodHandleKey, () -> methodHandleSupplier.get());
             } catch (ExecutionException e) {

@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -197,17 +198,27 @@ public class RemoteInvocationHandlerBuilder {
         final Parameter parameter = method.getParameters()[index];
         final Method errorHandlerMethod = getHandlerMethod(parameter);
 
-        return objects -> invocationError -> {
+        return objects -> {
 
-            final Consumer<Throwable> throwableConsumer = throwable -> {
+            final AtomicBoolean called = new AtomicBoolean();
+
+            return invocationError -> {
                 try {
-                    errorHandlerMethod.invoke(objects[index], throwable);
+
+                    final Throwable throwable = invocationError.getThrowable();
+
+                    if (called.getAndSet(true)) {
+                        // Remote calls may end up sending multiple errors for any number of reasons, so we ensure
+                        // that the error handler we do use actually only gets called just once.
+                        logger.info("Additional errors invoking method {}", format(method));
+                    } else {
+                        errorHandlerMethod.invoke(objects[index], throwable);
+                    }
+
                 } catch (IllegalAccessException | InvocationTargetException ex) {
                     logger.error("Caught Exception passing Exception to Exception handler (It's confusing, I know, but trust me.)", ex);
                 }
             };
-
-            throwableConsumer.accept(invocationError.getThrowable());
 
         };
 

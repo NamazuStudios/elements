@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.rt.remote;
 
 @FunctionalInterface
 public interface MessageWriter {

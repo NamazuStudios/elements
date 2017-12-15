@@ -16,10 +16,6 @@
     <packaging>jar</packaging>
     <name>rt-common</name>
 
-    <properties>
-        <javolution.version>5.3.1</javolution.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -28,7 +24,7 @@
         </dependency>
         <dependency>
             <groupId>org.javolution</groupId>
-            <artifactId>javolution</artifactId>
+            <artifactId>javolution-core-java</artifactId>
             <version>${javolution.version}</version>
         </dependency>
         <dependency>
