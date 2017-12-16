@@ -82,7 +82,7 @@ public class MongoMatchDelta {
         public Key() {}
 
         public Key(MongoMatch match) {
-            this(match.getObjectId(), 0, currentTimeMillis());
+            this(match.getObjectId(), 0, match.getLastUpdatedTimestamp().getTime());
         }
 
         public Key(ObjectId match) {
