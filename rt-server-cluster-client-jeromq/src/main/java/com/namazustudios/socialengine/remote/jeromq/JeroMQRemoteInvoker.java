@@ -9,6 +9,7 @@ import org.zeromq.ZPoller;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -19,6 +20,8 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQRemoteInvoker.class);
 
+    private final Set<LatchedFuture<Object>> futureSet = new ConcurrentHashMap<LatchedFuture<Object>, Object>().keySet();
+
     private MessageWriter messageWriter;
 
     private MessageReader messageReader;
@@ -27,12 +30,14 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     @Override
     public void start() {
-        getConnectionPool().stop();
+        getConnectionPool().start();
     }
 
     @Override
     public void stop() {
         getConnectionPool().stop();
+        futureSet.forEach(futureSet -> futureSet.cancel(true));
+        futureSet.clear();
     }
 
     @Override
@@ -40,14 +45,9 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                                  final Consumer<InvocationError> invocationErrorConsumer,
                                  final List<Consumer<InvocationResult>> invocationResultConsumerList) {
 
-        final CountDownLatch latch = new CountDownLatch(1);
-
-        final AtomicReference<Callable<Object>> resultObjectCallable = new AtomicReference<>(() -> {
-            throw new InternalException("Interrupted or request timed out.");
-        });
+        final LatchedFuture<Object> latchedFuture = new LatchedFuture<>();
 
         getConnectionPool().process(connection -> {
-
 
             try (final ZPoller poller = new ZPoller(connection.context())) {
 
@@ -58,7 +58,6 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
                 for (int received = 0; received < expectedResponseCount && !interrupted(); ++received) {
 
-
                     poller.poll(-1);
 
                     final ResponseHeader responseHeader = receiveHeader(connection.socket());
@@ -66,14 +65,16 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                     handleResponse(connection.socket(),
                                    responseHeader,
                                    invocationErrorConsumer,
-                                   result -> resultObjectCallable.set(() -> result.getResult()),
+                                   result -> latchedFuture.setResultCallable(() -> result),
                                    invocationResultConsumerList);
 
                 }
 
             } catch (Throwable th) {
 
-                resultObjectCallable.set(() -> {
+                logger.error("Suppressing error because return value was already processed.", th);
+
+                final boolean set = latchedFuture.setResultCallable(() -> {
                     logger.error("Could not dispatch invocation.", th);
                     final InvocationError invocationError = new InvocationError();
                     invocationError.setThrowable(th);
@@ -81,16 +82,12 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                     throw th;
                 });
 
-                latch.countDown();
-
             }
 
         });
 
-        return new FutureTask<>(() -> {
-            latch.await();
-            return resultObjectCallable.get().call();
-        });
+        futureSet.add(latchedFuture);
+        return latchedFuture;
 
     }
 
@@ -169,6 +166,78 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     @Inject
     public void setMessageReader(MessageReader messageReader) {
         this.messageReader = messageReader;
+    }
+
+    /**
+     * A {@link Future<T>} type which will wait for a call from another thread before returning the value.  This is
+     * backed by a {@link CountDownLatch} (hence the name) as well as a {@link FutureTask} to handle the result.  This
+     * allows for the setting of a {@link Callable<T>} to supply the result which will not get called until the latch
+     * has counted down.
+     *
+     * By default this supplies {@link Callable<T>} which just throws an exception.  Only one result can be set to this
+     * instance.
+     *
+     * @param <T>
+     */
+    private class LatchedFuture<T> implements Future<T> {
+
+        private final Callable<T> unspecifiedResult = () -> {
+            throw new InternalException("Interrupted or request timed out.");
+        };
+
+        private final AtomicReference<Callable<T>> resultCallable = new AtomicReference<>(unspecifiedResult);
+
+        private final CountDownLatch latch = new CountDownLatch(1);
+
+        private final FutureTask<T> futureTask = new FutureTask<T>(() -> {
+            latch.await();
+            return resultCallable.get().call();
+        });
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            return futureTask.cancel(mayInterruptIfRunning);
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return futureTask.isCancelled();
+        }
+
+        @Override
+        public boolean isDone() {
+            return futureTask.isDone();
+        }
+
+        @Override
+        public T get() throws InterruptedException, ExecutionException {
+            return futureTask.get();
+        }
+
+        @Override
+        public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            return futureTask.get(timeout, unit);
+        }
+
+        /**
+         * Sets the result {@link Callable<T>} and releases the latch allowing the supplied result to be available
+         * immediately after this call returns.  If a result has previously been set, then this simply rejects the
+         * changed value and does nothing.
+         *
+         *
+         * @param resultCallable the result {@link Callable<T>}
+         * @return true if the result was set, or false if a previous result was alredy set.
+         */
+        public boolean setResultCallable(final Callable<T> resultCallable) {
+            if (this.resultCallable.compareAndSet(unspecifiedResult, resultCallable)) {
+                futureSet.remove(this);
+                latch.countDown();
+                return true;
+            } else {
+                return false;
+            }
+        }
+
     }
 
 }

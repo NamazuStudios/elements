@@ -2,8 +2,6 @@ package com.namazustudios.socialengine.remote.jeromq;
 
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ.Socket;
-import org.zeromq.ZSocket;
-import zmq.poll.Poller;
 
 import java.util.function.Consumer;
 
