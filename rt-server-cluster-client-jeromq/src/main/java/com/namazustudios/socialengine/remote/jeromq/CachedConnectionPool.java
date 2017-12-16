@@ -4,20 +4,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
+import sun.tools.jconsole.Worker;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import static java.util.concurrent.Executors.newCachedThreadPool;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class CachedConnectionPool implements ConnectionPool {
 
@@ -25,11 +30,7 @@ public class CachedConnectionPool implements ConnectionPool {
 
     public static final String TIMEOUT = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.timeout";
 
-    public static final String HIGH_WATER_MARK = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.highWaterMark";
-
     public static final String MIN_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.minConnections";
-
-    public static final String PEER_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.peerAddress";
 
     private final AtomicReference<Context> context = new AtomicReference<>();
 
@@ -37,16 +38,12 @@ public class CachedConnectionPool implements ConnectionPool {
 
     private int timeout;
 
-    private int highWaterMark;
-
     private int minConnections;
 
-    private String peerAddress;
-
     @Override
-    public void start() {
+    public void start(final Function<ZContext, ZMQ.Socket> socketSupplier) {
 
-        final Context c = new Context();
+        final Context c = new Context(socketSupplier);
 
         if (context.compareAndSet(null, c)) {
             c.start();
@@ -91,15 +88,6 @@ public class CachedConnectionPool implements ConnectionPool {
         this.timeout = timeout;
     }
 
-    public int getHighWaterMark() {
-        return highWaterMark;
-    }
-
-    @Inject
-    public void setHighWaterMark(@Named(HIGH_WATER_MARK) int highWaterMark) {
-        this.highWaterMark = highWaterMark;
-    }
-
     public int getMinConnections() {
         return minConnections;
     }
@@ -118,146 +106,125 @@ public class CachedConnectionPool implements ConnectionPool {
         this.zContext = zContext;
     }
 
-    public String getPeerAddress() {
-        return peerAddress;
-    }
-
-    @Inject
-    public void setPeerAddress(@Named(PEER_ADDRESS) String peerAddress) {
-        this.peerAddress = peerAddress;
-    }
-
     private class Context {
 
         private final AtomicInteger count = new AtomicInteger();
 
-        private final AtomicBoolean running = new AtomicBoolean();
+        private final Queue<Connection> connections = new ConcurrentLinkedQueue<>();
 
-        private final BlockingQueue<Consumer<Connection>> workQueue = new LinkedBlockingDeque<>();
+        private final AtomicReference<Supplier<Connection>> connectionSupplier = new AtomicReference<>(this::acquire);
 
-        private final Set<Thread> threadSet = new ConcurrentHashMap<Thread, Object>().keySet(new Object());
+        private final ExecutorService executorService = new ThreadPoolExecutor(
+            0, Integer.MAX_VALUE,
+            getTimeout(), MINUTES, new SynchronousQueue<>(), r -> {
+                final Thread thread = new Thread();
+                thread.setDaemon(true);
+                thread.setName(CachedConnectionPool.class.getSimpleName() + " worker.");
+                return thread;
+            }, (r, e) -> r.run());
 
-        public void start() {
-            if (running.compareAndSet(false, true)) {
-                doStart();
-            } else {
-                throw new IllegalStateException("Already started.");
-            }
+        private final Function<ZContext, ZMQ.Socket> socketSupplier;
+
+        public Context(final Function<ZContext, ZMQ.Socket> socketSupplier) {
+            this.socketSupplier= socketSupplier;
         }
 
-        private void doStart() {
-            for (int i = 0; i < getMinConnections(); ++i) {
-                startNewWorker();
+        public void start() {
+
+            final int numConnections = getMinConnections();
+
+            for (int i = 0; i < numConnections; ++i) {
+                final WorkerConnection workerConnection = new WorkerConnection();
+                connections.add(workerConnection);
             }
+
         }
 
         public void stop() {
-            if (running.compareAndSet(true, false)) {
-                doStop();
-            } else {
-                throw new IllegalStateException("Already stopped.");
+
+            executorService.shutdownNow();
+            connectionSupplier.set(TerminalConnection::new);
+            connections.forEach(connection -> connection.close());
+
+            try {
+                executorService.awaitTermination(5, MINUTES);
+            } catch (InterruptedException ex) {
+                throw new InternalError("Interrupted while shutting down connection pool.", ex);
             }
+
         }
 
-        private void doStop() {
+        public void process(final Consumer<Connection> connectionConsumer) {
+            executorService.submit(() -> {
 
-            final List<Consumer<Connection>> leftoverConsumerList = new ArrayList<>();
-            workQueue.drainTo(leftoverConsumerList);
+                final Connection connection = connectionSupplier.get().get();
 
-            final TerminalConnection terminalConnection = new TerminalConnection();
-
-            leftoverConsumerList.forEach(consumer -> {
                 try {
-                    consumer.accept(terminalConnection);
-                } catch (TerminatedException ex) {
-                    // Expected exception.
-                    logger.trace("Termianted connection.", ex);
-                } catch (Throwable th) {
-                    logger.error("Caught exception terminating connection.", th);
+
+                    connectionConsumer.accept(new Connection() {
+
+                        @Override
+                        public ZContext context() {
+                            return connection.context();
+                        }
+
+                        @Override
+                        public ZMQ.Socket socket() {
+                            return connection.socket();
+                        }
+
+                        @Override
+                        public void close() {
+                            logger.warn("Attempting to close managed connection.", new Exception());
+                        }
+
+                    });
+
+                    connections.add(connection);
+
+                }  catch (Throwable th) {
+                    connection.close();
+                    logger.error("Caught error on connection pool.", th);
+                    throw th;
                 }
+
             });
-
-            threadSet.forEach(thread -> thread.interrupt());
-
-            for (final Thread thread : threadSet) {
-                try {
-                    thread.join();
-                } catch (InterruptedException e) {
-                    logger.info("Interrupted while joining threads.", e);
-                    break;
-                }
-            }
-
         }
 
-        public void process(final Consumer<Connection> consumer) {
-            if (running.get()) {
-                doProcess(consumer);
-            } else {
-                throw new IllegalStateException("Not Running.");
-            }
+        private Connection acquire() {
+            final Connection connection = connections.poll();
+            return connection == null ? new WorkerConnection() : connection;
         }
 
-        private void doProcess(Consumer<Connection> consumer) {
+        private class WorkerConnection implements Connection, AutoCloseable {
 
-            workQueue.add(consumer);
-
-            if (workQueue.size() > getHighWaterMark()) {
-                startNewWorker();
-            }
-
-        }
-
-        private void startNewWorker() {
-
-            final Worker worker = new Worker();
-            final Thread thread = new Thread(worker);
-
-            thread.setDaemon(true);
-            thread.setName(CachedConnectionPool.class.getSimpleName() + " worker.");
-
-            threadSet.add(thread);
-            thread.start();
-
-        }
-
-        private class Worker implements Runnable {
+            private final ZMQ.Socket socket = socketSupplier.apply(getzContext());
 
             @Override
-            public void run() {
-
-                count.incrementAndGet();
-
-                try (final WorkerConnection connection = new WorkerConnection()) {
-
-                    while (running.get() && count.get() < getMinConnections()) {
-                        consumeWorkUntilTimeout(connection);
-                    }
-
-                    logger.info("Shutting down connection.");
-
-                } finally {
-                    count.decrementAndGet();
-                }
-
+            public ZContext context() {
+                return getzContext();
             }
 
-            private void consumeWorkUntilTimeout(final Connection connection) {
-                for (Consumer<Connection> c = waitForWork(); running.get() && c != null; c = waitForWork()) {
-                    c.accept(connection);
-                }
+            @Override
+            public ZMQ.Socket socket() {
+                return socket;
             }
 
-            private Consumer<Connection> waitForWork() {
+            @Override
+            public void close() {
+
                 try {
-                    return workQueue.poll(getTimeout(), TimeUnit.SECONDS);
-                } catch (InterruptedException ex) {
-                    logger.info("Interrupted processing work.  Shutting down connection.", ex);
-                    return null;
-                } catch (Throwable th) {
-                    logger.error("Caught exception in connection pool.", th);
-                    return null;
+                    socket().close();
+                } catch (final Exception ex) {
+                    logger.error("Caught exception closing Socket.", ex);
                 }
+
+                try {
+                    getzContext().destroySocket(socket());
+                } catch (final Exception ex) {
+                    logger.error("Caught exception destroying Socket.", ex);
+                }
+
             }
 
         }
@@ -276,30 +243,8 @@ public class CachedConnectionPool implements ConnectionPool {
             throw new TerminatedException();
         }
 
-    }
-
-    private class WorkerConnection implements Connection, AutoCloseable {
-
-        private final ZMQ.Socket socket;
-        {
-            socket = getzContext().createSocket(ZMQ.DEALER);
-            socket.connect(getPeerAddress());
-        }
-
         @Override
-        public ZContext context() {
-            return getzContext();
-        }
-
-        @Override
-        public ZMQ.Socket socket() {
-            return socket;
-        }
-
-        @Override
-        public void close() {
-            socket().close();
-        }
+        public void close() {}
 
     }
 

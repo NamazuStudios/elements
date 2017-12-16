@@ -4,17 +4,25 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ.Socket;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Responsible for creating, configuring, and connecting instances of {@link Socket} and dispatching work against the
- * {@link Socket}.
+ * {@link Socket}.  Each {@link Socket} is wrapped in a {@link Connection} which can be used to perform network IO.
+ *
+ * The {@link Connection} manages the lifecycle of the {@link Socket} and provides startup and shutdown of its managed
+ * connections.
+ *
  */
 public interface ConnectionPool {
 
     /**
-     * Starts the {@link ConnectionPool}, blocking as necessary to startup and dispatch threads.
+     * Starts the {@link ConnectionPool}, blocking as necessary to startup and connect.  This accepts a {@link Function}
+     * which will supply the {@link Socket} instances.  Note that each {@link Socket} supplied should be interchangeable
+     * with any other as this pool will recycle {@link Socket} instances as needed.
      */
-    void start();
+    void start(Function<ZContext, Socket> socketSupplier);
 
     /**
      * Stops the {@link ConnectionPool}, blocking as necessary to stop all threads.
@@ -33,7 +41,7 @@ public interface ConnectionPool {
     /**
      * Represents a connection to the remote node.
      */
-    interface Connection {
+    interface Connection extends AutoCloseable {
 
         /**
          * Returns the {@link ZContext} used by this {@link Connection}.
@@ -49,6 +57,12 @@ public interface ConnectionPool {
          * @return the {@link Socket} instance
          */
         Socket socket();
+
+        /**
+         * Closes the {@link Connection} an destroys the associated underlying {@link Socket}.
+         */
+        @Override
+        void close();
 
     }
 

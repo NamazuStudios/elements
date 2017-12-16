@@ -13,6 +13,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,7 +31,7 @@ public class JeroMQNode implements Node {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQNode.class);
 
-    private static final String INPROC_BIND_ADDR = "inproc://JeroMQNode/dispatch";
+    private static final String INPROC_BIND_ADDR = "inproc://JeroMQNode-dispatch";
 
     public static final String BIND_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.bindAddress";
 
@@ -140,6 +142,8 @@ public class JeroMQNode implements Node {
             return thread;
         });
 
+        private final Queue<ZMQ.Socket> sockets = new ConcurrentLinkedQueue<>();
+
         public void start() {
 
             executorService.submit(() -> bindFrontendSocketAndPerformWork());
@@ -208,15 +212,15 @@ public class JeroMQNode implements Node {
             }
         }
 
-        private void dispatchMethodInvocation(final ZMQ.Socket socket) {
+        private void dispatchMethodInvocation(final ZMQ.Socket inbound) {
 
-            final byte[] identity = socket.recv();
-            final byte[] delimiter = socket.recv();
+            final byte[] identity = inbound.recv();
+            final byte[] delimiter = inbound.recv();
 
             final RequestHeader requestHeader = new RequestHeader();
-            socket.recvByteBuffer(requestHeader.getByteBuffer(), 0);
+            inbound.recvByteBuffer(requestHeader.getByteBuffer(), 0);
 
-            final Invocation invocation = getMessageReader().read(socket.recv(), Invocation.class);
+            final Invocation invocation = getMessageReader().read(inbound.recv(), Invocation.class);
 
             if (delimiter.length > 0) {
                 throw new InternalException("Invalid delimiter " + Arrays.toString(delimiter));
@@ -225,62 +229,72 @@ public class JeroMQNode implements Node {
             final AtomicInteger remaining = new AtomicInteger(1 + requestHeader.additionalParts.get());
 
             final Consumer<InvocationError> invocationErrorConsumer = invocationError -> {
+                try (final ZMQ.Socket outbound = getzContext().createSocket(ZMQ.DEALER)) {
 
-                if (remaining.getAndSet(0) > 0) {
+                    outbound.connect(INPROC_BIND_ADDR);
 
-                    final ResponseHeader responseHeader = new ResponseHeader();
-                    responseHeader.type.set(MessageType.INVOCATION_ERROR);
-                    responseHeader.part.set(0);
+                    if (remaining.getAndSet(0) > 0) {
 
-                    socket.send(identity, ZMQ.SNDMORE);
-                    socket.send(delimiter, ZMQ.SNDMORE);
-                    socket.sendByteBuffer(responseHeader.getByteBuffer(), ZMQ.SNDMORE);
-                    socket.send(getMessageWriter().write(invocationError));
+                        final ResponseHeader responseHeader = new ResponseHeader();
+                        responseHeader.type.set(MessageType.INVOCATION_ERROR);
+                        responseHeader.part.set(0);
 
-                } else {
-                    logger.info("Ignoring other invocation errors.  Terminating context.");
+                        outbound.send(identity, ZMQ.SNDMORE);
+                        outbound.send(delimiter, ZMQ.SNDMORE);
+                        outbound.sendByteBuffer(responseHeader.getByteBuffer(), ZMQ.SNDMORE);
+                        outbound.send(getMessageWriter().write(invocationError));
+
+                    } else {
+                        logger.info("Ignoring other invocation errors.  Terminating context.");
+                    }
+
                 }
-
             };
 
             final Consumer<InvocationResult> returnInvocationResultConsumer = invocationResult -> {
-                if (remaining.decrementAndGet() <= 0) {
-                    logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
-                } else {
+                try (ZMQ.Socket outbound = getzContext().createSocket(ZMQ.DEALER)) {
 
-                    final ResponseHeader responseHeader = new ResponseHeader();
-                    responseHeader.type.set(MessageType.INVOCATION_RESULT);
-                    responseHeader.part.set(0);
+                    outbound.connect(INPROC_BIND_ADDR);
 
-                    socket.send(identity, ZMQ.SNDMORE);
-                    socket.send(delimiter, ZMQ.SNDMORE);
-                    socket.sendByteBuffer(responseHeader.getByteBuffer(), ZMQ.SNDMORE);
-                    socket.send(getMessageWriter().write(invocationResult));
+                    if (remaining.decrementAndGet() <= 0) {
+                        logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
+                    } else {
+
+                        final ResponseHeader responseHeader = new ResponseHeader();
+                        responseHeader.type.set(MessageType.INVOCATION_RESULT);
+                        responseHeader.part.set(0);
+
+                        outbound.send(identity, ZMQ.SNDMORE);
+                        outbound.send(delimiter, ZMQ.SNDMORE);
+                        outbound.sendByteBuffer(responseHeader.getByteBuffer(), ZMQ.SNDMORE);
+                        outbound.send(getMessageWriter().write(invocationResult));
+
+                    }
 
                 }
             };
 
             final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList =
                     range(0, requestHeader.additionalParts.get())
-                            .map(index -> index + 1)
-                            .mapToObj(part -> (Consumer<InvocationResult>) invocationResult -> {
+                    .map(index -> index + 1)
+                    .mapToObj(part -> (Consumer<InvocationResult>) invocationResult -> {
 
-                                if (remaining.decrementAndGet() <= 0) {
-                                    logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
-                                } else {
+                        if (remaining.decrementAndGet() <= 0) {
+                            logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
+                        } else {
 
-                                    final ResponseHeader responseHeader = new ResponseHeader();
-                                    responseHeader.type.set(MessageType.INVOCATION_RESULT);
-                                    responseHeader.part.set(part);
+                            final ResponseHeader responseHeader = new ResponseHeader();
+                            responseHeader.type.set(MessageType.INVOCATION_RESULT);
+                            responseHeader.part.set(part);
 
-                                    socket.send(identity, ZMQ.SNDMORE);
-                                    socket.send(delimiter, ZMQ.SNDMORE);
-                                    socket.sendByteBuffer(responseHeader.getByteBuffer(), ZMQ.SNDMORE);
-                                    socket.send(getMessageWriter().write(invocation));
+                            inbound.send(identity, ZMQ.SNDMORE);
+                            inbound.send(delimiter, ZMQ.SNDMORE);
+                            inbound.sendByteBuffer(responseHeader.getByteBuffer(), ZMQ.SNDMORE);
+                            inbound.send(getMessageWriter().write(invocation));
 
-                                }
+                        }
 
-                            }).collect(toList());
+                    }).collect(toList());
 
             getInvocationDispatcher().dispatch(invocation,
                     invocationErrorConsumer,

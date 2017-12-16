@@ -8,6 +8,7 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZPoller;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -18,9 +19,13 @@ import static java.lang.Thread.interrupted;
 
 public class JeroMQRemoteInvoker implements RemoteInvoker {
 
+    public static final String NODE_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.nodeAddress";
+
     private static final Logger logger = LoggerFactory.getLogger(JeroMQRemoteInvoker.class);
 
     private final Set<LatchedFuture<Object>> futureSet = new ConcurrentHashMap<LatchedFuture<Object>, Object>().keySet();
+
+    private String nodeAddress;
 
     private MessageWriter messageWriter;
 
@@ -30,7 +35,11 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     @Override
     public void start() {
-        getConnectionPool().start();
+        getConnectionPool().start(zContext -> {
+            final ZMQ.Socket socket = zContext.createSocket(ZMQ.DEALER);
+            socket.connect(getNodeAddress());
+            return socket;
+        });
     }
 
     @Override
@@ -181,6 +190,15 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     @Inject
     public void setMessageReader(MessageReader messageReader) {
         this.messageReader = messageReader;
+    }
+
+    public String getNodeAddress() {
+        return nodeAddress;
+    }
+
+    @Inject
+    public void setNodeAddress(@Named(NODE_ADDRESS) String nodeAddress) {
+        this.nodeAddress = nodeAddress;
     }
 
     /**
