@@ -22,6 +22,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  * Created by patricktwohig on 7/20/17.
  */
@@ -143,7 +145,7 @@ public class UserMatchService implements MatchService {
             .getDeltasForPlayerAfter(profile.getId(), timeStamp)
             .stream()
             .map(this::redactOpponentUser)
-            .collect(Collectors.toList());
+            .collect(toList());
 
     }
 
@@ -156,7 +158,7 @@ public class UserMatchService implements MatchService {
             .getDeltasForPlayerAfter(profile.getId(), timeStamp, matchId)
             .stream()
             .map(this::redactOpponentUser)
-            .collect(Collectors.toList());
+            .collect(toList());
 
     }
 
@@ -173,7 +175,7 @@ public class UserMatchService implements MatchService {
             .getSubtopicNamed(profile.getId());
 
         return matchTimeDeltaTopic.subscribeNext(matchTimeDelta -> {
-            if (matchTimeDelta.getTimeStamp() >= timeStamp) {
+            if (matchTimeDelta.getTimeStamp() > timeStamp) {
                 final List<MatchTimeDelta> matchTimeDeltaList;
                 matchTimeDeltaList = getMatchDao().getDeltasForPlayerAfter(profile.getId(), timeStamp);
                 timeDeltaListConsumer.accept(matchTimeDeltaList);
@@ -199,7 +201,7 @@ public class UserMatchService implements MatchService {
                 .getSubtopicNamed(match.getId());
 
         return matchTimeDeltaTopic.subscribeNext(matchTimeDelta ->  {
-            if (matchTimeDelta.getTimeStamp() >= timeStamp) {
+            if (matchTimeDelta.getTimeStamp() > timeStamp) {
                 final List<MatchTimeDelta> matchTimeDeltaList;
                 matchTimeDeltaList = getMatchDao().getDeltasForPlayerAfter(profile.getId(), timeStamp, matchId);
                 timeDeltaListConsumer.accept(matchTimeDeltaList);
