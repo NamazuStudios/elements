@@ -51,7 +51,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
             try (final ZPoller poller = new ZPoller(connection.context())) {
 
-                send(connection.socket(), invocation);
+                send(connection.socket(), invocation, invocationResultConsumerList.size());
                 poller.register(connection.socket(), ZPoller.READABLE);
 
                 final int expectedResponseCount = 1 + invocationResultConsumerList.size();
@@ -62,11 +62,15 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
                     final ResponseHeader responseHeader = receiveHeader(connection.socket());
 
-                    handleResponse(connection.socket(),
-                                   responseHeader,
-                                   invocationErrorConsumer,
-                                   result -> latchedFuture.setResultCallable(() -> result),
-                                   invocationResultConsumerList);
+                    final boolean success = handleResponse(connection.socket(),
+                                                           responseHeader,
+                                                           invocationErrorConsumer,
+                                                           result -> latchedFuture.setResultCallable(() -> result),
+                                                           invocationResultConsumerList);
+
+                    if (!success) {
+                        break;
+                    }
 
                 }
 
@@ -82,6 +86,10 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                     throw th;
                 });
 
+                if (!set) {
+                    logger.error("Already set result.  Silencing error.");
+                }
+
             }
 
         });
@@ -91,26 +99,33 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     }
 
-    private void send(final ZMQ.Socket socket, final Invocation invocation) {
+    private void send(final ZMQ.Socket socket, final Invocation invocation, final int additionalCount) {
+
+        final RequestHeader requestHeader = new RequestHeader();
+        requestHeader.additionalParts.set(additionalCount);
+
         final byte[] payload = getMessageWriter().write(invocation);
+
+        socket.sendByteBuffer(requestHeader.getByteBuffer(), ZMQ.SNDMORE);
         socket.send(payload);
+
     }
 
-    private void handleResponse(final ZMQ.Socket socket,
-                                final ResponseHeader responseHeader,
-                                final Consumer<InvocationError> invocationErrorConsumer,
-                                final Consumer<InvocationResult> resultObjectCallable,
-                                final List<Consumer<InvocationResult>> invocationResultConsumerList) {
+    private boolean handleResponse(final ZMQ.Socket socket,
+                                   final ResponseHeader responseHeader,
+                                   final Consumer<InvocationError> invocationErrorConsumer,
+                                   final Consumer<InvocationResult> resultObjectCallable,
+                                   final List<Consumer<InvocationResult>> invocationResultConsumerList) {
 
         final int part = responseHeader.part.get();
 
         switch (responseHeader.type.get()) {
             case INVOCATION_ERROR:
                 handleError(socket, invocationErrorConsumer);
-                break;
+                return false;
             case INVOCATION_RESULT:
                 handleResult(socket, part == 0 ? resultObjectCallable : invocationResultConsumerList.get(part - 1));
-                break;
+                return true;
             default:
                 logger.error("Invalid response type {}", responseHeader.type.get());
                 throw new InternalError("Invalid response type " + responseHeader.type.get());

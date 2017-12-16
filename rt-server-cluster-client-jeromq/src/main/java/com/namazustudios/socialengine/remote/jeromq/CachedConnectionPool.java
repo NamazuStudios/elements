@@ -23,11 +23,13 @@ public class CachedConnectionPool implements ConnectionPool {
 
     private static final Logger logger = LoggerFactory.getLogger(CachedConnectionPool.class);
 
-    private static final String TIMEOUT = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.timeout";
+    public static final String TIMEOUT = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.timeout";
 
-    private static final String HIGH_WATER_MARK = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.highWaterMark";
+    public static final String HIGH_WATER_MARK = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.highWaterMark";
 
-    private static final String MIN_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.minConnections";
+    public static final String MIN_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.minConnections";
+
+    public static final String PEER_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.peerAddress";
 
     private final AtomicReference<Context> context = new AtomicReference<>();
 
@@ -38,6 +40,8 @@ public class CachedConnectionPool implements ConnectionPool {
     private int highWaterMark;
 
     private int minConnections;
+
+    private String peerAddress;
 
     @Override
     public void start() {
@@ -55,12 +59,12 @@ public class CachedConnectionPool implements ConnectionPool {
     @Override
     public void stop() {
 
-        final Context c = context.getAndSet(null);
+        final Context c = context.get();
 
-        if (c == null) {
-            throw new IllegalStateException("Not started");
-        } else {
+        if (context.compareAndSet(c, null)) {
             c.stop();
+        } else {
+            throw new IllegalStateException("Not started");
         }
 
     }
@@ -114,13 +118,16 @@ public class CachedConnectionPool implements ConnectionPool {
         this.zContext = zContext;
     }
 
+    public String getPeerAddress() {
+        return peerAddress;
+    }
+
+    @Inject
+    public void setPeerAddress(@Named(PEER_ADDRESS) String peerAddress) {
+        this.peerAddress = peerAddress;
+    }
+
     private class Context {
-
-        private final int timeout = getTimeout();
-
-        private final int highWaterMark = getHighWaterMark();
-
-        private final int minConnections = getMinConnections();
 
         private final AtomicInteger count = new AtomicInteger();
 
@@ -139,7 +146,7 @@ public class CachedConnectionPool implements ConnectionPool {
         }
 
         private void doStart() {
-            for (int i = 0; i < minConnections; ++i) {
+            for (int i = 0; i < getMinConnections(); ++i) {
                 startNewWorker();
             }
         }
@@ -195,7 +202,7 @@ public class CachedConnectionPool implements ConnectionPool {
 
             workQueue.add(consumer);
 
-            if (workQueue.size() > highWaterMark) {
+            if (workQueue.size() > getHighWaterMark()) {
                 startNewWorker();
             }
 
@@ -223,7 +230,7 @@ public class CachedConnectionPool implements ConnectionPool {
 
                 try (final WorkerConnection connection = new WorkerConnection()) {
 
-                    while (running.get() && count.get() < minConnections) {
+                    while (running.get() && count.get() < getMinConnections()) {
                         consumeWorkUntilTimeout(connection);
                     }
 
@@ -243,7 +250,7 @@ public class CachedConnectionPool implements ConnectionPool {
 
             private Consumer<Connection> waitForWork() {
                 try {
-                    return workQueue.poll(timeout, TimeUnit.SECONDS);
+                    return workQueue.poll(getTimeout(), TimeUnit.SECONDS);
                 } catch (InterruptedException ex) {
                     logger.info("Interrupted processing work.  Shutting down connection.", ex);
                     return null;
@@ -273,13 +280,15 @@ public class CachedConnectionPool implements ConnectionPool {
 
     private class WorkerConnection implements Connection, AutoCloseable {
 
-        private final ZContext zContext = getzContext();
-
-        private final ZMQ.Socket socket = zContext.createSocket(ZMQ.DEALER);
+        private final ZMQ.Socket socket;
+        {
+            socket = getzContext().createSocket(ZMQ.DEALER);
+            socket.connect(getPeerAddress());
+        }
 
         @Override
         public ZContext context() {
-            return zContext;
+            return getzContext();
         }
 
         @Override

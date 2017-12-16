@@ -9,12 +9,6 @@ import javolution.io.Struct;
  */
 public class ResponseHeader extends Struct {
 
-//    /**
-//     * The uniquely assigned invocation identifier.  Multiple requests fire as the result of an invocation, so therefore
-//     * this defines the overall scope of the invocation.
-//     */
-//    public final PackedUUID invocation = inner(new PackedUUID());
-
     /**
      * The uniquely assigned request identifier.  This further subdivides the invocation into multiple requests for each
      * of the unique ID of the particular invocation.  The request with the value of zero must be the initial request
@@ -28,15 +22,5 @@ public class ResponseHeader extends Struct {
      * Indicates the message type as specified by {@link MessageType}.
      */
     public final Enum32<MessageType> type = new Enum32<>(MessageType.values());
-
-    @Override
-    public int hashCode() {
-        return getByteBuffer().hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return getByteBuffer().equals(obj);
-    }
 
 }
