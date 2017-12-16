@@ -7,27 +7,25 @@ import org.zeromq.ZMQ;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Queue;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
-
-import static java.lang.Thread.interrupted;
 
 public class CachedConnectionPool implements ConnectionPool {
 
     private static final Logger logger = LoggerFactory.getLogger(CachedConnectionPool.class);
 
     private static final String TIMEOUT = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.timeout";
+
+    private static final String HIGH_WATER_MARK = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.highWaterMark";
 
     private static final String MIN_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.minConnections";
 
@@ -36,6 +34,8 @@ public class CachedConnectionPool implements ConnectionPool {
     private ZContext zContext;
 
     private int timeout;
+
+    private int highWaterMark;
 
     private int minConnections;
 
@@ -87,6 +87,15 @@ public class CachedConnectionPool implements ConnectionPool {
         this.timeout = timeout;
     }
 
+    public int getHighWaterMark() {
+        return highWaterMark;
+    }
+
+    @Inject
+    public void setHighWaterMark(@Named(HIGH_WATER_MARK) int highWaterMark) {
+        this.highWaterMark = highWaterMark;
+    }
+
     public int getMinConnections() {
         return minConnections;
     }
@@ -108,6 +117,8 @@ public class CachedConnectionPool implements ConnectionPool {
     private class Context {
 
         private final int timeout = getTimeout();
+
+        private final int highWaterMark = getHighWaterMark();
 
         private final int minConnections = getMinConnections();
 
@@ -142,7 +153,34 @@ public class CachedConnectionPool implements ConnectionPool {
         }
 
         private void doStop() {
-            // TODO Implement this
+
+            final List<Consumer<Connection>> leftoverConsumerList = new ArrayList<>();
+            workQueue.drainTo(leftoverConsumerList);
+
+            final TerminalConnection terminalConnection = new TerminalConnection();
+
+            leftoverConsumerList.forEach(consumer -> {
+                try {
+                    consumer.accept(terminalConnection);
+                } catch (TerminatedException ex) {
+                    // Expected exception.
+                    logger.trace("Termianted connection.", ex);
+                } catch (Throwable th) {
+                    logger.error("Caught exception terminating connection.", th);
+                }
+            });
+
+            threadSet.forEach(thread -> thread.interrupt());
+
+            for (final Thread thread : threadSet) {
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    logger.info("Interrupted while joining threads.", e);
+                    break;
+                }
+            }
+
         }
 
         public void process(final Consumer<Connection> consumer) {
@@ -154,7 +192,13 @@ public class CachedConnectionPool implements ConnectionPool {
         }
 
         private void doProcess(Consumer<Connection> consumer) {
-            // TODO Implement this
+
+            workQueue.add(consumer);
+
+            if (workQueue.size() > highWaterMark) {
+                startNewWorker();
+            }
+
         }
 
         private void startNewWorker() {
@@ -175,24 +219,9 @@ public class CachedConnectionPool implements ConnectionPool {
             @Override
             public void run() {
 
-                final ZContext zContext = getzContext();
                 count.incrementAndGet();
 
-                try (final ZMQ.Socket socket = zContext.createSocket(ZMQ.DEALER)) {
-
-                    final Connection connection = new Connection() {
-
-                        @Override
-                        public ZContext context() {
-                            return zContext;
-                        }
-
-                        @Override
-                        public ZMQ.Socket socket() {
-                            return socket;
-                        }
-
-                    };
+                try (final WorkerConnection connection = new WorkerConnection()) {
 
                     while (running.get() && count.get() < minConnections) {
                         consumeWorkUntilTimeout(connection);
@@ -232,14 +261,44 @@ public class CachedConnectionPool implements ConnectionPool {
 
         @Override
         public ZContext context() {
-            throw new IllegalStateException("Connection pool shutdown.");
+            throw new TerminatedException();
         }
 
         @Override
         public ZMQ.Socket socket() {
-            throw new IllegalStateException("Connection pool shutdown.");
+            throw new TerminatedException();
         }
 
     }
+
+    private class WorkerConnection implements Connection, AutoCloseable {
+
+        private final ZContext zContext = getzContext();
+
+        private final ZMQ.Socket socket = zContext.createSocket(ZMQ.DEALER);
+
+        @Override
+        public ZContext context() {
+            return zContext;
+        }
+
+        @Override
+        public ZMQ.Socket socket() {
+            return socket;
+        }
+
+        @Override
+        public void close() {
+            socket().close();
+        }
+
+    }
+
+    private static class TerminatedException extends RuntimeException {
+        public TerminatedException() {
+            super("Connection pool terminated.");
+        }
+    }
+
 
 }
