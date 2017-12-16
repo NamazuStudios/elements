@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.match.Match;
+import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
 import de.flapdoodle.embed.mongo.MongodExecutable;
@@ -14,14 +15,21 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.*;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
 import static com.namazustudios.socialengine.model.match.MatchingAlgorithm.FIFO;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Arrays.fill;
+import static java.util.stream.Collectors.toList;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 import static org.testng.AssertJUnit.fail;
 
 @Guice(modules = IntegrationTestModule.class)
@@ -43,12 +51,16 @@ public class MongoMatchmakerIntegrationTest {
 
     private MongodExecutable mongodExecutable;
 
+    private List<Match> intermediateMatches = new ArrayList<>();
+
+    private List<Profile> intermediateProfiles = new ArrayList<>();
+
     @DataProvider
     public static Iterator<Object[]> matchingAlgorithms() {
         return asList(MatchingAlgorithm.values())
             .stream()
             .map(algo -> new Object[]{algo})
-            .collect(Collectors.toList())
+            .collect(toList())
             .iterator();
     }
 
@@ -81,6 +93,12 @@ public class MongoMatchmakerIntegrationTest {
 
         // Cross validates that the matches were made properly
         crossValidateMatch(successfulMatchTuple, profileb, profilea);
+
+        intermediateMatches.add(matcha);
+        intermediateMatches.add(matchb);
+
+        intermediateProfiles.add(profilea);
+        intermediateProfiles.add(profileb);
 
     }
 
@@ -126,6 +144,78 @@ public class MongoMatchmakerIntegrationTest {
 
         assertEquals(opponentMatch.getPlayer(), opponent);
         assertEquals(opponentMatch.getOpponent(), player);
+
+    }
+
+    @DataProvider
+    public Object[][] intermediateMatchDataProvider() {
+        return intermediateMatches
+            .stream()
+            .map(m -> new Object[]{m})
+            .collect(toList())
+            .toArray(new Object[][]{});
+    }
+
+    @Test(dataProvider = "intermediateMatchDataProvider", dependsOnMethods = "testMatch")
+    public void testDeltasForMatch(final Match match) {
+        final Profile player = match.getPlayer();
+        List<MatchTimeDelta> matchTimeDeltas;
+
+        // Because we're trying to examine the list of deltas for a specific match, burning down the list should always
+        // reduce by one until we get zero match deltas.
+
+        matchTimeDeltas = getMatchDao().getDeltasForPlayerAfter(player.getId(), 0, match.getId());
+        assertFalse(matchTimeDeltas.isEmpty(), "Expected at least one match.");
+
+        while (!matchTimeDeltas.isEmpty()) {
+
+            final long timestamp = matchTimeDeltas.stream()
+                .mapToLong(matchTimeDelta -> matchTimeDelta.getTimeStamp())
+                .reduce(Math::min)
+                .getAsLong();
+
+            final List<MatchTimeDelta> intermediateTimeDeltas;
+            intermediateTimeDeltas = getMatchDao().getDeltasForPlayerAfter(player.getId(), timestamp, match.getId());
+            assertEquals(intermediateTimeDeltas.size(), matchTimeDeltas.size() - 1);
+            matchTimeDeltas = intermediateTimeDeltas;
+
+        }
+
+    }
+
+    @DataProvider
+    public Object[][] intermediateProfileDataProvider() {
+        return intermediateProfiles
+                .stream()
+                .map(m -> new Object[]{m})
+                .collect(toList())
+                .toArray(new Object[][]{});
+    }
+
+    @Test(dataProvider = "intermediateProfileDataProvider", dependsOnMethods = "testMatch")
+    public void testDeltasForPlayer(final Profile player) {
+        List<MatchTimeDelta> matchTimeDeltas;
+
+        // This is a tricky scenario to test because there can be any number of matches pending for a specific user,
+        // however we can test that the list burns-down properly by seeing if we get progressively fewer match deltas
+        // until the count reaches zero.
+
+        matchTimeDeltas = getMatchDao().getDeltasForPlayerAfter(player.getId(), 0);
+        assertFalse(matchTimeDeltas.isEmpty(), "Expected at least one match.");
+
+        while (!matchTimeDeltas.isEmpty()) {
+
+            final long timestamp = matchTimeDeltas.stream()
+                    .mapToLong(matchTimeDelta -> matchTimeDelta.getTimeStamp())
+                    .reduce(Math::min)
+                    .getAsLong();
+
+            final List<MatchTimeDelta> intermediateTimeDeltas;
+            intermediateTimeDeltas = getMatchDao().getDeltasForPlayerAfter(player.getId(), timestamp);
+            assertTrue(intermediateTimeDeltas.size() < matchTimeDeltas.size());
+            matchTimeDeltas = intermediateTimeDeltas;
+
+        }
 
     }
 

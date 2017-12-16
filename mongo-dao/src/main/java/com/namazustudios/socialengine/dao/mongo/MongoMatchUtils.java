@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.dao.Matchmaker;
 import com.namazustudios.socialengine.dao.mongo.model.MongoMatch;
 import com.namazustudios.socialengine.dao.mongo.model.MongoMatchDelta;
 import com.namazustudios.socialengine.dao.mongo.model.MongoMatchLock;
+import com.namazustudios.socialengine.dao.mongo.model.MongoMatchSnapshot;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.exception.TooBusyException;
@@ -224,8 +225,8 @@ public class MongoMatchUtils {
             throw new InternalException("player or opponent match was deleted while processing match");
         }
 
-        final MongoMatchDelta playerDelta = deltaForUpdate(playerMatch);
-        final MongoMatchDelta opponnentDelta = deltaForUpdate(opponentMatch);
+        final MongoMatchDelta playerDelta = deltaForUpdate(updatedPlayerMatch);
+        final MongoMatchDelta opponnentDelta = deltaForUpdate(updatedOpponentMatch);
 
         return new Matchmaker.SuccessfulMatchTuple() {
 
@@ -253,6 +254,9 @@ public class MongoMatchUtils {
 
     private MongoMatchDelta deltaForUpdate(final MongoMatch mongoMatch) {
         try {
+
+            final MongoMatchSnapshot mongoMatchSnapshot = getDozerMapper().map(mongoMatch, MongoMatchSnapshot.class);
+
             return getMongoConcurrentUtils().performOptimisticInsert(ds -> {
 
                 final MongoMatchDelta latestDelta = getLatestDelta(mongoMatch.getObjectId());
@@ -266,6 +270,7 @@ public class MongoMatchUtils {
                 final MongoMatchDelta toInsert = new MongoMatchDelta();
                 toInsert.setKey(latestDelta.getKey().nextInSequence(mongoMatch.getLastUpdatedTimestamp().getTime()));
                 toInsert.setOperation(TimeDelta.Operation.UPDATED);
+                toInsert.setSnapshot(mongoMatchSnapshot);
                 ds.insert(toInsert);
 
                 return toInsert;
