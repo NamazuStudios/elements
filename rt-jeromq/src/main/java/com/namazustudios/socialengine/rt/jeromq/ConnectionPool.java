@@ -1,11 +1,10 @@
-package com.namazustudios.socialengine.remote.jeromq;
+package com.namazustudios.socialengine.rt.jeromq;
 
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ.Socket;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * Responsible for creating, configuring, and connecting instances of {@link Socket} and dispatching work against the
@@ -25,7 +24,8 @@ public interface ConnectionPool {
     void start(Function<ZContext, Socket> socketSupplier);
 
     /**
-     * Stops the {@link ConnectionPool}, blocking as necessary to stop all threads.
+     * Stops the {@link ConnectionPool}, blocking as necessary to stop all threads as well as close and destroy all
+     * sockets in the pool.
      */
     void stop();
 
@@ -37,6 +37,14 @@ public interface ConnectionPool {
      * @param consumer
      */
     void process(final Consumer<Connection> consumer);
+
+    /**
+     * Gets the high water mark, that is the most connections that the {@link ConnectionPool} has held at a single time.
+     * This persists beyond the scope of {@link #start(Function)} and {@link #stop()}.
+     *
+     * @return the high water mark for the lifetime of the {@link ConnectionPool}
+     */
+    int getHighWaterMark();
 
     /**
      * Represents a connection to the remote node.

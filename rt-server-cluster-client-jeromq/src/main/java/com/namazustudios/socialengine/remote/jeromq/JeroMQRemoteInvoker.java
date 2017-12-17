@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

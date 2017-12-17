@@ -1,36 +1,35 @@
-package com.namazustudios.socialengine.remote.jeromq;
+package com.namazustudios.socialengine.rt.jeromq;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
-import sun.tools.jconsole.Worker;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
-import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class CachedConnectionPool implements ConnectionPool {
 
     private static final Logger logger = LoggerFactory.getLogger(CachedConnectionPool.class);
 
-    public static final String TIMEOUT = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.timeout";
+    public static final String TIMEOUT = "com.namazustudios.socialengine.rt.jeromq.CachedConnectionPool.timeout";
 
-    public static final String MIN_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.CachedConnectionPool.minConnections";
+    public static final String MIN_CONNECTIONS = "com.namazustudios.socialengine.rt.jeromq.CachedConnectionPool.minConnections";
+
+    private final AtomicInteger highWaterMark = new AtomicInteger();
 
     private final AtomicReference<Context> context = new AtomicReference<>();
 
@@ -79,6 +78,11 @@ public class CachedConnectionPool implements ConnectionPool {
 
     }
 
+    @Override
+    public int getHighWaterMark() {
+        return highWaterMark.get();
+    }
+
     public int getTimeout() {
         return timeout;
     }
@@ -108,20 +112,18 @@ public class CachedConnectionPool implements ConnectionPool {
 
     private class Context {
 
-        private final AtomicInteger count = new AtomicInteger();
-
         private final Queue<Connection> connections = new ConcurrentLinkedQueue<>();
 
         private final AtomicReference<Supplier<Connection>> connectionSupplier = new AtomicReference<>(this::acquire);
 
         private final ExecutorService executorService = new ThreadPoolExecutor(
-            0, Integer.MAX_VALUE,
-            getTimeout(), MINUTES, new SynchronousQueue<>(), r -> {
-                final Thread thread = new Thread();
-                thread.setDaemon(true);
-                thread.setName(CachedConnectionPool.class.getSimpleName() + " worker.");
-                return thread;
-            }, (r, e) -> r.run());
+                0, Integer.MAX_VALUE,
+                getTimeout(), SECONDS, new SynchronousQueue<>(), r -> {
+            final Thread thread = new Thread(r);
+            thread.setDaemon(false);
+            thread.setName(CachedConnectionPool.class.getSimpleName() + " worker.");
+            return thread;
+        }, (r, e) -> r.run());
 
         private final Function<ZContext, ZMQ.Socket> socketSupplier;
 
@@ -200,6 +202,10 @@ public class CachedConnectionPool implements ConnectionPool {
 
             private final ZMQ.Socket socket = socketSupplier.apply(getzContext());
 
+            public WorkerConnection() {
+                highWaterMark.incrementAndGet();
+            }
+
             @Override
             public ZContext context() {
                 return getzContext();
@@ -253,6 +259,5 @@ public class CachedConnectionPool implements ConnectionPool {
             super("Connection pool terminated.");
         }
     }
-
 
 }

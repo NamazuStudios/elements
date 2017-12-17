@@ -19,13 +19,13 @@
     <dependencies>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rt-server-cluster-client</artifactId>
+            <artifactId>rt-jeromq</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.zeromq</groupId>
-            <artifactId>jeromq</artifactId>
-            <version>${jeromq.version}</version>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-server-cluster-client</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
