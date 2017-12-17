@@ -34,6 +34,7 @@
         <module>lucene-indexer</module>
         <module>mongo-lucene</module>
         <module>rt-common</module>
+        <module>rt-jeromq</module>
         <module>rt-server</module>
         <module>rt-server-simple</module>
         <module>rt-server-simple-guice</module>
@@ -61,7 +62,6 @@
         <module>rt-server-lua-testkit</module>
         <module>socialengine-jnlua/jnlua</module>
         <module>common-lua</module>
-    <module>rt-jeromq</module>
   </modules>
 
     <properties>

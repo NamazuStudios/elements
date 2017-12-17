@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
+import com.namazustudios.socialengine.rt.PayloadReader;
+import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.remote.*;
@@ -10,6 +12,7 @@ import org.zeromq.ZPoller;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -24,13 +27,15 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQRemoteInvoker.class);
 
-    private final Set<LatchedFuture<Object>> futureSet = new ConcurrentHashMap<LatchedFuture<Object>, Object>().keySet();
+    private final Set<LatchedFuture<Object>> futureSet =
+        new ConcurrentHashMap<LatchedFuture<Object>, Object>()
+        .keySet(new Object());
 
     private String nodeAddress;
 
-    private MessageWriter messageWriter;
+    private PayloadReader payloadReader;
 
-    private MessageReader messageReader;
+    private PayloadWriter payloadWriter;
 
     private ConnectionPool connectionPool;
 
@@ -114,7 +119,13 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         final RequestHeader requestHeader = new RequestHeader();
         requestHeader.additionalParts.set(additionalCount);
 
-        final byte[] payload = getMessageWriter().write(invocation);
+        final byte[] payload;
+
+        try {
+            payload = getPayloadWriter().write(invocation);
+        } catch (IOException e) {
+            throw new InternalException(e);
+        }
 
         socket.sendByteBuffer(requestHeader.getByteBuffer(), ZMQ.SNDMORE);
         socket.send(payload);
@@ -144,15 +155,33 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     }
 
     private void handleError(final ZMQ.Socket socket, final Consumer<InvocationError> invocationErrorConsumer) {
+
         final byte[] bytes = socket.recv();
-        final InvocationError invocationError = getMessageReader().read(bytes, InvocationError.class);
+        final InvocationError invocationError;
+
+        try {
+            invocationError = getPayloadReader().read(InvocationError.class, bytes);
+        } catch (IOException e) {
+            throw new InternalException(e);
+        }
+
         invocationErrorConsumer.accept(invocationError);
+
     }
 
     private void handleResult(final ZMQ.Socket socket, final Consumer<InvocationResult> invocationResultConsumer) {
+
         final byte[] bytes = socket.recv();
-        final InvocationResult invocationResult = getMessageReader().read(bytes, InvocationResult.class);
+        final InvocationResult invocationResult;
+
+        try {
+            invocationResult = getPayloadReader().read(InvocationResult.class, bytes);
+        } catch (IOException e) {
+            throw new InternalException(e);
+        }
+
         invocationResultConsumer.accept(invocationResult);
+
     }
 
     private ResponseHeader receiveHeader(final ZMQ.Socket socket) {
@@ -166,31 +195,22 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         return responseHeader;
     }
 
-    public MessageWriter getMessageWriter() {
-        return messageWriter;
+    public PayloadReader getPayloadReader() {
+        return payloadReader;
     }
 
     @Inject
-    public void setMessageWriter(MessageWriter messageWriter) {
-        this.messageWriter = messageWriter;
+    public void setPayloadReader(PayloadReader payloadReader) {
+        this.payloadReader = payloadReader;
     }
 
-    public ConnectionPool getConnectionPool() {
-        return connectionPool;
-    }
-
-    @Inject
-    public void setConnectionPool(ConnectionPool connectionPool) {
-        this.connectionPool = connectionPool;
-    }
-
-    public MessageReader getMessageReader() {
-        return messageReader;
+    public PayloadWriter getPayloadWriter() {
+        return payloadWriter;
     }
 
     @Inject
-    public void setMessageReader(MessageReader messageReader) {
-        this.messageReader = messageReader;
+    public void setPayloadWriter(PayloadWriter payloadWriter) {
+        this.payloadWriter = payloadWriter;
     }
 
     public String getNodeAddress() {
@@ -200,6 +220,15 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     @Inject
     public void setNodeAddress(@Named(NODE_ADDRESS) String nodeAddress) {
         this.nodeAddress = nodeAddress;
+    }
+
+    public ConnectionPool getConnectionPool() {
+        return connectionPool;
+    }
+
+    @Inject
+    public void setConnectionPool(ConnectionPool connectionPool) {
+        this.connectionPool = connectionPool;
     }
 
     /**

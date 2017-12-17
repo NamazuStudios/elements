@@ -17,7 +17,7 @@ public class ObjectMapperPayloadReader implements PayloadReader {
     private ObjectMapper objectMapper;
 
     @Override
-    public Object read(final Class<?> payloadType, final InputStream stream) throws IOException {
+    public <T> T read(final Class<T> payloadType, final InputStream stream) throws IOException {
         final byte[] bytes = toByteArray(stream);
         return bytes.length == 0 ? null : getObjectMapper().readValue(bytes, payloadType);
     }

@@ -123,7 +123,13 @@ public class CachedConnectionPool implements ConnectionPool {
             thread.setDaemon(false);
             thread.setName(CachedConnectionPool.class.getSimpleName() + " worker.");
             return thread;
-        }, (r, e) -> r.run());
+        }, (r, e) ->  {
+            try {
+                r.run();
+            } catch (TerminatedException tex) {
+                logger.debug("Connection terminated.");
+            }
+        });
 
         private final Function<ZContext, ZMQ.Socket> socketSupplier;
 
@@ -240,17 +246,13 @@ public class CachedConnectionPool implements ConnectionPool {
     private static class TerminalConnection  implements Connection {
 
         @Override
-        public ZContext context() {
-            throw new TerminatedException();
-        }
+        public ZContext context() { throw new TerminatedException(); }
 
         @Override
-        public ZMQ.Socket socket() {
-            throw new TerminatedException();
-        }
+        public ZMQ.Socket socket() { throw new TerminatedException(); }
 
         @Override
-        public void close() {}
+        public void close() { throw new TerminatedException(); }
 
     }
 

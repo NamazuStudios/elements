@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.Node;
+import com.namazustudios.socialengine.rt.PayloadReader;
+import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
@@ -11,6 +13,7 @@ import org.zeromq.ZMsg;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
@@ -22,10 +25,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.remote.MessageType.INVOCATION_ERROR;
 import static java.lang.Thread.interrupted;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
+import static org.zeromq.ZMQ.SNDMORE;
 
 public class JeroMQNode implements Node {
 
@@ -47,9 +52,9 @@ public class JeroMQNode implements Node {
 
     private InvocationDispatcher invocationDispatcher;
 
-    private MessageReader messageReader;
+    private PayloadReader payloadReader;
 
-    private MessageWriter messageWriter;
+    private PayloadWriter payloadWriter;
 
     @Override
     public void start() {
@@ -113,22 +118,22 @@ public class JeroMQNode implements Node {
         this.invocationDispatcher = invocationDispatcher;
     }
 
-    public MessageReader getMessageReader() {
-        return messageReader;
+    public PayloadReader getPayloadReader() {
+        return payloadReader;
     }
 
     @Inject
-    public void setMessageReader(MessageReader messageReader) {
-        this.messageReader = messageReader;
+    public void setPayloadReader(PayloadReader payloadReader) {
+        this.payloadReader = payloadReader;
     }
 
-    public MessageWriter getMessageWriter() {
-        return messageWriter;
+    public PayloadWriter getPayloadWriter() {
+        return payloadWriter;
     }
 
     @Inject
-    public void setMessageWriter(MessageWriter messageWriter) {
-        this.messageWriter = messageWriter;
+    public void setPayloadWriter(PayloadWriter payloadWriter) {
+        this.payloadWriter = payloadWriter;
     }
 
     private class Context {
@@ -220,8 +225,6 @@ public class JeroMQNode implements Node {
             final RequestHeader requestHeader = new RequestHeader();
             inbound.recvByteBuffer(requestHeader.getByteBuffer(), 0);
 
-            final Invocation invocation = getMessageReader().read(inbound.recv(), Invocation.class);
-
             if (delimiter.length > 0) {
                 throw new InternalException("Invalid delimiter " + Arrays.toString(delimiter));
             }
@@ -236,13 +239,22 @@ public class JeroMQNode implements Node {
                     if (remaining.getAndSet(0) > 0) {
 
                         final ResponseHeader responseHeader = new ResponseHeader();
-                        responseHeader.type.set(MessageType.INVOCATION_ERROR);
+                        responseHeader.type.set(INVOCATION_ERROR);
                         responseHeader.part.set(0);
 
-                        outbound.send(identity, ZMQ.SNDMORE);
-                        outbound.send(delimiter, ZMQ.SNDMORE);
-                        outbound.sendByteBuffer(responseHeader.getByteBuffer(), ZMQ.SNDMORE);
-                        outbound.send(getMessageWriter().write(invocationError));
+                        byte[] payload;
+
+                        try {
+                             payload = getPayloadWriter().write(invocationError);
+                        } catch (IOException e) {
+                            logger.error("Could not write payload to byte stream.  Sending empty payload.", e);
+                            payload = new byte[0];
+                        }
+
+                        outbound.send(identity, SNDMORE);
+                        outbound.send(delimiter, SNDMORE);
+                        outbound.sendByteBuffer(responseHeader.getByteBuffer(), SNDMORE);
+                        outbound.send(payload);
 
                     } else {
                         logger.info("Ignoring other invocation errors.  Terminating context.");
@@ -259,16 +271,7 @@ public class JeroMQNode implements Node {
                     if (remaining.decrementAndGet() <= 0) {
                         logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
                     } else {
-
-                        final ResponseHeader responseHeader = new ResponseHeader();
-                        responseHeader.type.set(MessageType.INVOCATION_RESULT);
-                        responseHeader.part.set(0);
-
-                        outbound.send(identity, ZMQ.SNDMORE);
-                        outbound.send(delimiter, ZMQ.SNDMORE);
-                        outbound.sendByteBuffer(responseHeader.getByteBuffer(), ZMQ.SNDMORE);
-                        outbound.send(getMessageWriter().write(invocationResult));
-
+                        sendResult(inbound, invocationResult, 0, identity, delimiter, invocationErrorConsumer);
                     }
 
                 }
@@ -282,24 +285,51 @@ public class JeroMQNode implements Node {
                         if (remaining.decrementAndGet() <= 0) {
                             logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
                         } else {
-
-                            final ResponseHeader responseHeader = new ResponseHeader();
-                            responseHeader.type.set(MessageType.INVOCATION_RESULT);
-                            responseHeader.part.set(part);
-
-                            inbound.send(identity, ZMQ.SNDMORE);
-                            inbound.send(delimiter, ZMQ.SNDMORE);
-                            inbound.sendByteBuffer(responseHeader.getByteBuffer(), ZMQ.SNDMORE);
-                            inbound.send(getMessageWriter().write(invocation));
-
+                            sendResult(inbound, invocationResult, part, identity, delimiter, invocationErrorConsumer);
                         }
 
                     }).collect(toList());
 
-            getInvocationDispatcher().dispatch(invocation,
-                    invocationErrorConsumer,
-                    returnInvocationResultConsumer,
-                    additionalInvocationResultConsumerList);
+            try {
+
+                final Invocation invocation = getPayloadReader().read(Invocation.class, inbound.recv());
+
+                getInvocationDispatcher().dispatch(invocation,
+                        invocationErrorConsumer,
+                        returnInvocationResultConsumer,
+                        additionalInvocationResultConsumerList);
+
+            } catch (IOException e) {
+                final InvocationError invocationError = new InvocationError();
+                invocationError.setThrowable(e);
+                invocationErrorConsumer.accept(invocationError);
+            }
+
+        }
+
+        private void sendResult(final ZMQ.Socket socket,
+                                final InvocationResult invocationResult,
+                                final int part,
+                                final byte[] identity,
+                                final byte[] delimiter,
+                                final Consumer<InvocationError> invocationErrorConsumer) {
+
+            final ResponseHeader responseHeader = new ResponseHeader();
+            responseHeader.type.set(MessageType.INVOCATION_RESULT);
+            responseHeader.part.set(part);
+
+            try {
+                final byte[] payload = getPayloadWriter().write(invocationResult);
+                socket.send(identity, SNDMORE);
+                socket.send(delimiter, SNDMORE);
+                socket.sendByteBuffer(responseHeader.getByteBuffer(), SNDMORE);
+                socket.send(payload);
+            } catch (IOException e) {
+                logger.error("Could not write payload to byte stream.  Sending empty.", e);
+                final InvocationError invocationError = new InvocationError();
+                invocationError.setThrowable(e);
+                invocationErrorConsumer.accept(invocationError);
+            }
 
         }
 
