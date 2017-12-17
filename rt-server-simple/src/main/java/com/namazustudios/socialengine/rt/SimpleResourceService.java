@@ -12,11 +12,9 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static java.lang.Thread.yield;
 import static java.util.Spliterator.CONCURRENT;
@@ -216,10 +214,10 @@ public class SimpleResourceService implements ResourceService {
             try {
 
                 final Deque<Path> existingPaths = storage.getResourceIdPathMap().replace(sourceResourceId, pathLock);
-                finallyAction = finallyAction.andThen(() -> storage.getResourceIdPathMap().replace(sourceResourceId, pathLock, existingPaths));
+                finallyAction = finallyAction.then(() -> storage.getResourceIdPathMap().replace(sourceResourceId, pathLock, existingPaths));
 
                 final ResourceId existingResourceId = storage.getPathResourceIdMap().putIfAbsent(destination, resourceIdLock);
-                finallyAction = finallyAction.andThen(() -> storage.getPathResourceIdMap().remove(destination, resourceIdLock));
+                finallyAction = finallyAction.then(() -> storage.getPathResourceIdMap().remove(destination, resourceIdLock));
 
                 if (getPathOptimisticLockService().isLock(existingPaths)) {
                     throw new LockedException("existing paths locked");
@@ -268,7 +266,7 @@ public class SimpleResourceService implements ResourceService {
             try {
 
                 final ResourceId existingResourceId = storage.getPathResourceIdMap().replace(path, resourceIdLock);
-                finallyAction = finallyAction.andThen(() -> {
+                finallyAction = finallyAction.then(() -> {
                     if (existingResourceId == null) {
                         storage.getPathResourceIdMap().remove(path, resourceIdLock);
                     } else {
@@ -287,7 +285,7 @@ public class SimpleResourceService implements ResourceService {
                 }
 
                 final Deque<Path> existingPaths = storage.getResourceIdPathMap().replace(existingResourceId, pathLock);
-                finallyAction = finallyAction.andThen(() -> storage.getResourceIdPathMap().replace(existingResourceId, pathLock, existingPaths));
+                finallyAction = finallyAction.then(() -> storage.getResourceIdPathMap().replace(existingResourceId, pathLock, existingPaths));
 
                 if (existingPaths == null) {
                     // This should never happen.  We throw an internal exception to indicate the failure because with
@@ -359,7 +357,7 @@ public class SimpleResourceService implements ResourceService {
             try {
 
                 final Deque<Path> existingPaths = storage.getResourceIdPathMap().replace(resourceId, pathLock);
-                finallyAction = finallyAction.andThen(() -> storage.getResourceIdPathMap().remove(resourceId, pathLock));
+                finallyAction = finallyAction.then(() -> storage.getResourceIdPathMap().remove(resourceId, pathLock));
 
                 if (existingPaths == null) {
                     throw new ResourceNotFoundException("no resource for id " + resourceId);
@@ -376,7 +374,7 @@ public class SimpleResourceService implements ResourceService {
                         logger.error("Consistency error, bidirectional mapping broken for {} -> {}", path, resourceId);
                     }
 
-                    finallyAction.andThen(() -> {
+                    finallyAction.then(() -> {
                         if (existingResourceId == null) {
                             storage.getPathResourceIdMap().remove(path, resourceIdLock);
                         } else {
