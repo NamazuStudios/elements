@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -30,13 +28,11 @@ import java.util.function.Consumer;
 import static com.namazustudios.socialengine.rt.remote.MessageType.INVOCATION_ERROR;
 import static com.namazustudios.socialengine.rt.util.FinallyAction.with;
 import static java.lang.Thread.interrupted;
-import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 import static org.zeromq.ZMQ.DEALER;
 import static org.zeromq.ZMQ.Poller.POLLIN;
 import static org.zeromq.ZMQ.SNDMORE;
-import static org.zeromq.ZMQ.poll;
 
 public class JeroMQNode implements Node {
 

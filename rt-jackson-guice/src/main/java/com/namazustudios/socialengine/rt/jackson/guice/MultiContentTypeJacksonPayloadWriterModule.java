@@ -5,8 +5,8 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
-import com.namazustudios.socialengine.rt.PayloadReader;
-import com.namazustudios.socialengine.rt.jackson.ObjectMapperPayloadReader;
+import com.namazustudios.socialengine.rt.PayloadWriter;
+import com.namazustudios.socialengine.rt.jackson.ObjectMapperPayloadWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,22 +14,22 @@ import javax.inject.Provider;
 
 import static com.google.inject.multibindings.MapBinder.newMapBinder;
 
-public class JacksonPayloadReaderModule extends AbstractModule {
+public class MultiContentTypeJacksonPayloadWriterModule extends AbstractModule {
 
-    private static final Logger logger = LoggerFactory.getLogger(JacksonPayloadReaderModule.class);
+    private static final Logger logger = LoggerFactory.getLogger(MultiContentTypeJacksonPayloadWriterModule.class);
 
     @Override
-    public void configure() {
+    protected void configure() {
 
-    final MapBinder<String, PayloadReader> writers = newMapBinder(binder(), String.class, PayloadReader.class);
+        final MapBinder<String, PayloadWriter> writers = newMapBinder(binder(), String.class, PayloadWriter.class);
 
         writers.addBinding("application/json")
-                .toProvider(readerProvider(getProvider(ObjectMapper.class)));
+               .toProvider(writerProvider(getProvider(ObjectMapper.class)));
 
         try {
             Class.forName("com.fasterxml.jackson.dataformat.yaml.YAMLMapper");
             final Provider<YAMLMapper> yamlMapperProvider = getProvider(YAMLMapper.class);
-            writers.addBinding("application/yaml").toProvider(readerProvider(yamlMapperProvider));
+            writers.addBinding("application/yaml").toProvider(writerProvider(yamlMapperProvider));
             logger.info("YAML Support Enabled.");
         } catch (ClassNotFoundException ex) {
             logger.info("YAML Support Disabled.");
@@ -38,7 +38,7 @@ public class JacksonPayloadReaderModule extends AbstractModule {
         try {
             Class.forName("com.fasterxml.jackson.dataformat.xml.XmlMapper");
             final Provider<XmlMapper> xmlMapperProvider = getProvider(XmlMapper.class);
-            writers.addBinding("application/xml").toProvider(readerProvider(xmlMapperProvider));
+            writers.addBinding("application/xml").toProvider(writerProvider(xmlMapperProvider));
             logger.info("XML Support Enabled.");
         } catch (ClassNotFoundException ex) {
             logger.info("XML Support Disabled.");
@@ -46,11 +46,11 @@ public class JacksonPayloadReaderModule extends AbstractModule {
 
     }
 
-    private Provider<ObjectMapperPayloadReader> readerProvider(final Provider<? extends ObjectMapper> objectMapperProvider) {
+    private Provider<ObjectMapperPayloadWriter> writerProvider(final Provider<? extends ObjectMapper> objectMapperProvider) {
         return () -> {
-            final ObjectMapperPayloadReader objectMapperPayloadReader = new ObjectMapperPayloadReader();
-            objectMapperPayloadReader.setObjectMapper(objectMapperProvider.get());
-            return objectMapperPayloadReader;
+            final ObjectMapperPayloadWriter objectMapperPayloadWriter = new ObjectMapperPayloadWriter();
+            objectMapperPayloadWriter.setObjectMapper(objectMapperProvider.get());
+            return objectMapperPayloadWriter;
         };
     }
 
