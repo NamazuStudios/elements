@@ -15,7 +15,6 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
 
         install(new CBORJacksonModule());
 
-        bind(ZContext.class).asEagerSingleton();
         bind(RemoteInvoker.class).to(JeroMQRemoteInvoker.class).asEagerSingleton();
         bind(ConnectionPool.class).to(CachedConnectionPool.class).asEagerSingleton();
 

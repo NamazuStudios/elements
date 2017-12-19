@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.rt.jackson.ObjectMapperPayloadReader;
 import com.namazustudios.socialengine.rt.jackson.ObjectMapperPayloadWriter;
 
 public class CBORJacksonModule extends AbstractModule {
+
     @Override
     protected void configure() {
         bind(PayloadWriter.class).to(ObjectMapperPayloadWriter.class);

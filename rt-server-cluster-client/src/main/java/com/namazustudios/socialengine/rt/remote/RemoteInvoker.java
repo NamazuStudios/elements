@@ -10,8 +10,7 @@ import java.util.function.Consumer;
 public interface RemoteInvoker {
 
     /**
-     * Starts up this {@link RemoteInvoker}.  This may connect to the remote endpoint if necessary and may block until
-     * the connection is complete.
+     * Starts up thin is complete.
      *
      * The default implementation of this method does nothing in case no setup is necessary.
      */
