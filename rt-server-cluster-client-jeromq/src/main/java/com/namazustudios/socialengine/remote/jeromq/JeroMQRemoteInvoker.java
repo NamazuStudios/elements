@@ -84,7 +84,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                                                            latchedFuture,
                                                            responseHeader,
                                                            invocationErrorConsumer,
-                                                           result -> latchedFuture.setResultCallable(() -> result),
+                                                           result -> latchedFuture.setResultCallable(() -> result.getResult()),
                                                            invocationResultConsumerList);
 
                     if (!success) {

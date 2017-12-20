@@ -22,6 +22,8 @@ import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.NUMBER_OF_
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.*;
 import static com.namazustudios.socialengine.rt.jeromq.CachedConnectionPool.MIN_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.jeromq.CachedConnectionPool.TIMEOUT;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
 public class JeroMQEndToEndIntegrationTest {
 
@@ -67,6 +69,18 @@ public class JeroMQEndToEndIntegrationTest {
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testRemoteInvokeSyncException() {
         getTestServiceInterface().testSyncVoid("World");
+    }
+
+    @Test
+    public void testRemoteInvokeSyncReturn() {
+        final double result = getTestServiceInterface().testSyncReturn("Hello");
+        assertEquals(result, 40.42);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testRemoteInvokeSyncReturnException() {
+        getTestServiceInterface().testSyncVoid("World");
+        fail("Did not expect return.");
     }
 
     public void setNode(Node node) {
