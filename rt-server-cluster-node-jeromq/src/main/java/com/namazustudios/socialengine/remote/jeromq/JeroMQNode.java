@@ -40,6 +40,8 @@ public class JeroMQNode implements Node {
 
     private static final String INPROC_BIND_ADDR = "inproc://JeroMQNode-dispatch";
 
+    private static final byte[] DELIMITER = new byte[0];
+
     public static final String BIND_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.bindAddress";
 
     public static final String NUMBER_OF_DISPATCHERS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.numberOfDispatchers";
@@ -66,7 +68,7 @@ public class JeroMQNode implements Node {
         final Context c = new Context();
 
         if (context.compareAndSet(null, c)) {
-            c.stop();
+            c.start();
         } else {
             throw new IllegalStateException("Already started.");
         }
@@ -79,7 +81,7 @@ public class JeroMQNode implements Node {
         final Context c = context.get();
 
         if (context.compareAndSet(c, null)) {
-            c.start();
+            c.stop();
         } else {
             throw new IllegalStateException("Already stopped.");
         }
@@ -159,15 +161,9 @@ public class JeroMQNode implements Node {
 
         private final Thread proxyThread;
         {
-
-            proxyThread = new Thread(() -> {
-                bindFrontendSocketAndPerformWork();
-                proxyStartupLatch.countDown();
-            });
-
+            proxyThread = new Thread(() -> bindFrontendSocketAndPerformWork());
             proxyThread.setDaemon(true);
             proxyThread.setName(JeroMQNode.this.getClass().getSimpleName() + " dispatcher thread.");
-
         }
 
         public void start() {
@@ -226,6 +222,8 @@ public class JeroMQNode implements Node {
                 final int fIndex = poller.register(frontend, POLLIN);
                 final int bIndex = poller.register(backend, POLLIN);
 
+                proxyStartupLatch.countDown();
+
                 while (running.get() && !interrupted()) {
 
                     if (poller.poll(1000) == 0) {
@@ -266,14 +264,9 @@ public class JeroMQNode implements Node {
         private void dispatchMethodInvocation(final ZMQ.Socket inbound) {
 
             final byte[] identity = inbound.recv();
-            final byte[] delimiter = inbound.recv();
 
             final RequestHeader requestHeader = new RequestHeader();
             inbound.recvByteBuffer(requestHeader.getByteBuffer(), 0);
-
-            if (delimiter.length > 0) {
-                throw new InternalException("Invalid delimiter " + Arrays.toString(delimiter));
-            }
 
             final AtomicInteger remaining = new AtomicInteger(1 + requestHeader.additionalParts.get());
 
@@ -296,7 +289,7 @@ public class JeroMQNode implements Node {
                         }
 
                         outbound.socket().send(identity, SNDMORE);
-                        outbound.socket().send(delimiter, SNDMORE);
+                        outbound.socket().send(DELIMITER, SNDMORE);
                         outbound.socket().sendByteBuffer(responseHeader.getByteBuffer(), SNDMORE);
                         outbound.socket().send(payload);
 
@@ -313,7 +306,7 @@ public class JeroMQNode implements Node {
                     if (remaining.decrementAndGet() <= 0) {
                         logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
                     } else {
-                        sendResult(inbound, invocationResult, 0, identity, delimiter, invocationErrorConsumer);
+                        sendResult(inbound, invocationResult, 0, identity, DELIMITER, invocationErrorConsumer);
                     }
                 });
             };
@@ -325,7 +318,7 @@ public class JeroMQNode implements Node {
                     if (remaining.decrementAndGet() <= 0) {
                         logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
                     } else {
-                        sendResult(outbound.socket(), invocationResult, part, identity, delimiter, invocationErrorConsumer);
+                        sendResult(outbound.socket(), invocationResult, part, identity, DELIMITER, invocationErrorConsumer);
                     }
                 })).collect(toList());
 

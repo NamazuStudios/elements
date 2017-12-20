@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 import com.namazustudios.socialengine.rt.remote.RemoteProxyProvider;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.zeromq.ZContext;
@@ -31,7 +32,7 @@ public class JeroMQEndToEndIntegrationTest {
     private TestServiceInterface testServiceInterface;
 
     @BeforeClass
-    public void setupGuice() {
+    public void setup() {
 
         final Injector injector = Guice.createInjector(new SharedModule());
         injector.injectMembers(this);
@@ -47,6 +48,12 @@ public class JeroMQEndToEndIntegrationTest {
         getNode().start();
         getRemoteInvoker().start();
 
+    }
+
+    @AfterClass
+    public void shutdown() {
+        getRemoteInvoker().stop();
+        getNode().stop();
     }
 
     public Node getNode() {

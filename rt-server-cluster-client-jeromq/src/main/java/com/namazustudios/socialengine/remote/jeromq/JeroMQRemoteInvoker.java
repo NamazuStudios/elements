@@ -64,16 +64,18 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         getConnectionPool().process(connection -> {
 
-            try (final ZPoller poller = new ZPoller(connection.context())) {
+            try (final ZMQ.Poller poller = connection.context().createPoller(1)) {
 
                 send(connection.socket(), invocation, invocationResultConsumerList.size());
-                poller.register(connection.socket(), ZPoller.READABLE);
+                final int sIndex = poller.register(connection.socket(), ZPoller.READABLE);
 
                 final int expectedResponseCount = 1 + invocationResultConsumerList.size();
 
                 for (int received = 0; received < expectedResponseCount && !interrupted(); ++received) {
 
-                    poller.poll(-1);
+                    if (!pollForResponse(poller, sIndex)) {
+                        break;
+                    }
 
                     final ResponseHeader responseHeader = receiveHeader(connection.socket());
 
@@ -112,6 +114,11 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         futureSet.add(latchedFuture);
         return latchedFuture;
 
+    }
+
+    private boolean pollForResponse(final ZMQ.Poller poller, final int sIndex) {
+        while (poller.poll(1000) == 0 && !interrupted());
+        return poller.pollin(sIndex);
     }
 
     private void send(final ZMQ.Socket socket, final Invocation invocation, final int additionalCount) {
@@ -185,13 +192,8 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     }
 
     private ResponseHeader receiveHeader(final ZMQ.Socket socket) {
-
-        final byte[] bytes = socket.recv();
         final ResponseHeader responseHeader = new ResponseHeader();
-
-        responseHeader.getByteBuffer().flip();
-        responseHeader.getByteBuffer().put(bytes);
-
+        socket.recvByteBuffer(responseHeader.getByteBuffer(), 0);
         return responseHeader;
     }
 
@@ -286,7 +288,6 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
          * Sets the result {@link Callable<T>} and releases the latch allowing the supplied result to be available
          * immediately after this call returns.  If a result has previously been set, then this simply rejects the
          * changed value and does nothing.
-         *
          *
          * @param resultCallable the result {@link Callable<T>}
          * @return true if the result was set, or false if a previous result was alredy set.

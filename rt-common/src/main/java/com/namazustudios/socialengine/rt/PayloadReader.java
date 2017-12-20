@@ -33,7 +33,7 @@ public interface PayloadReader {
      */
     default <T> T read(Class<T> payloadType, byte[] toRead) throws IOException {
         try (final ByteArrayInputStream bis = new ByteArrayInputStream(toRead)) {
-            return read(payloadType, toRead);
+            return read(payloadType, bis);
         }
     }
 
