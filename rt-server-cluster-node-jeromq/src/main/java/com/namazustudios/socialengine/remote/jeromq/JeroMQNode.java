@@ -40,8 +40,6 @@ public class JeroMQNode implements Node {
 
     private static final String INPROC_BIND_ADDR = "inproc://JeroMQNode-dispatch";
 
-    private static final byte[] DELIMITER = new byte[0];
-
     public static final String BIND_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.bindAddress";
 
     public static final String NUMBER_OF_DISPATCHERS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.numberOfDispatchers";
@@ -289,7 +287,6 @@ public class JeroMQNode implements Node {
                         }
 
                         outbound.socket().send(identity, SNDMORE);
-                        outbound.socket().send(DELIMITER, SNDMORE);
                         outbound.socket().sendByteBuffer(responseHeader.getByteBuffer(), SNDMORE);
                         outbound.socket().send(payload);
 
@@ -303,10 +300,10 @@ public class JeroMQNode implements Node {
 
             final Consumer<InvocationResult> returnInvocationResultConsumer = invocationResult -> {
                 connectionPool.process(outbound -> {
-                    if (remaining.decrementAndGet() <= 0) {
+                    if (remaining.getAndDecrement() <= 0) {
                         logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
                     } else {
-                        sendResult(inbound, invocationResult, 0, identity, DELIMITER, invocationErrorConsumer);
+                        sendResult(inbound, invocationResult, 0, identity, invocationErrorConsumer);
                     }
                 });
             };
@@ -315,10 +312,10 @@ public class JeroMQNode implements Node {
                 range(0, requestHeader.additionalParts.get())
                 .map(index -> index + 1)
                 .mapToObj(part -> (Consumer<InvocationResult>) invocationResult -> connectionPool.process(outbound -> {
-                    if (remaining.decrementAndGet() <= 0) {
+                    if (remaining.getAndDecrement() <= 0) {
                         logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
                     } else {
-                        sendResult(outbound.socket(), invocationResult, part, identity, DELIMITER, invocationErrorConsumer);
+                        sendResult(outbound.socket(), invocationResult, part, identity, invocationErrorConsumer);
                     }
                 })).collect(toList());
 
@@ -343,7 +340,6 @@ public class JeroMQNode implements Node {
                                 final InvocationResult invocationResult,
                                 final int part,
                                 final byte[] identity,
-                                final byte[] delimiter,
                                 final Consumer<InvocationError> invocationErrorConsumer) {
 
             final ResponseHeader responseHeader = new ResponseHeader();
@@ -353,7 +349,6 @@ public class JeroMQNode implements Node {
             try {
                 final byte[] payload = getPayloadWriter().write(invocationResult);
                 socket.send(identity, SNDMORE);
-                socket.send(delimiter, SNDMORE);
                 socket.sendByteBuffer(responseHeader.getByteBuffer(), SNDMORE);
                 socket.send(payload);
             } catch (IOException e) {

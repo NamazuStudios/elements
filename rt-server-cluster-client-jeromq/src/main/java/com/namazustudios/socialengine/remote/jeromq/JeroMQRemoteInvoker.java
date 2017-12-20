@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -246,43 +247,63 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
      */
     private class LatchedFuture<T> implements Future<T> {
 
+        private final Callable<T> canceled = () -> {
+            throw new IllegalStateException("Operation was canceled.");
+        };
+
         private final Callable<T> unspecifiedResult = () -> {
             throw new InternalException("Interrupted or request timed out.");
         };
+
+        private final AtomicInteger state = new AtomicInteger();
 
         private final AtomicReference<Callable<T>> resultCallable = new AtomicReference<>(unspecifiedResult);
 
         private final CountDownLatch latch = new CountDownLatch(1);
 
-        private final FutureTask<T> futureTask = new FutureTask<T>(() -> {
-            latch.await();
-            return resultCallable.get().call();
-        });
-
         @Override
         public boolean cancel(boolean mayInterruptIfRunning) {
-            return futureTask.cancel(mayInterruptIfRunning);
+            try {
+                return resultCallable.compareAndSet(unspecifiedResult, canceled);
+            } finally {
+                latch.countDown();
+            }
         }
 
         @Override
         public boolean isCancelled() {
-            return futureTask.isCancelled();
+            return resultCallable.get() == canceled;
         }
 
         @Override
         public boolean isDone() {
-            return futureTask.isDone();
+            return resultCallable.get() != unspecifiedResult;
         }
 
         @Override
         public T get() throws InterruptedException, ExecutionException {
-            futureTask.run();
-            return futureTask.get();
+
+            latch.await();
+
+            try {
+                return resultCallable.get().call();
+            } catch (Exception e) {
+                throw new ExecutionException(e);
+            }
+
         }
 
         @Override
         public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-            return futureTask.get(timeout, unit);
+
+            latch.await(timeout, unit);
+
+            try {
+                return resultCallable.get().call();
+            } catch (Exception e) {
+                throw new ExecutionException(e);
+            }
+
         }
 
         /**
