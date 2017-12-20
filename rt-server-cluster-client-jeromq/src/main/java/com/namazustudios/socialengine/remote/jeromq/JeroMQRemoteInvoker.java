@@ -156,7 +156,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                 return true;
             default:
                 logger.error("Invalid response type {}", responseHeader.type.get());
-                throw new InternalError("Invalid response type " + responseHeader.type.get());
+                throw new InternalException("Invalid response type " + responseHeader.type.get());
         }
 
     }
@@ -276,6 +276,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         @Override
         public T get() throws InterruptedException, ExecutionException {
+            futureTask.run();
             return futureTask.get();
         }
 

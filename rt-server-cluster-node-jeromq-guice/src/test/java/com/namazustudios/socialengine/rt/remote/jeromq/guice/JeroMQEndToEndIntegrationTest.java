@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.remote.TestServiceInterface;
 import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.rt.Node;
@@ -34,11 +35,10 @@ public class JeroMQEndToEndIntegrationTest {
     @BeforeClass
     public void setup() {
 
-        final Injector injector = Guice.createInjector(new SharedModule());
-        injector.injectMembers(this);
+        final ZContext zContext = new ZContext();
 
-        final Injector nodeInjector = injector.createChildInjector(new NodeModule());
-        final Injector clientInvoker = injector.createChildInjector(new ClientModule());
+        final Injector nodeInjector = Guice.createInjector(new NodeModule(zContext));
+        final Injector clientInvoker = Guice.createInjector(new ClientModule(zContext));
 
         setNode(nodeInjector.getInstance(Node.class));
 
@@ -85,26 +85,23 @@ public class JeroMQEndToEndIntegrationTest {
         this.testServiceInterface = testServiceInterface;
     }
 
-    public static class SharedModule extends AbstractModule {
-
-        @Override
-        protected void configure() {
-
-            bind(ZContext.class).asEagerSingleton();
-
-            bind(String.class).annotatedWith(named(TIMEOUT)).toInstance("60");
-            bind(String.class).annotatedWith(named(MIN_CONNECTIONS)).toInstance("5");
-
-        }
-
-    }
-
     public static class NodeModule extends AbstractModule {
+
+        private final ZContext zContext;
+
+        public NodeModule(ZContext zContext) {
+            this.zContext = zContext;
+        }
 
         @Override
         protected void configure() {
 
             install(new JeroMQNodeModule());
+
+            bind(ZContext.class).toInstance(zContext);
+
+            bind(String.class).annotatedWith(named(TIMEOUT)).toInstance("60");
+            bind(String.class).annotatedWith(named(MIN_CONNECTIONS)).toInstance("5");
 
             bind(IocResolver.class).to(GuiceIoCResolver.class);
             bind(TestServiceInterface.class).to(IntegrationTestService.class);
@@ -119,10 +116,21 @@ public class JeroMQEndToEndIntegrationTest {
 
     public static class ClientModule extends AbstractModule {
 
+        private final ZContext zContext;
+
+        public ClientModule(ZContext zContext) {
+            this.zContext = zContext;
+        }
+
         @Override
         protected void configure() {
 
             install(new JeroMQRemoteInvokerModule());
+
+            bind(ZContext.class).toInstance(zContext);
+
+            bind(String.class).annotatedWith(named(TIMEOUT)).toInstance("60");
+            bind(String.class).annotatedWith(named(MIN_CONNECTIONS)).toInstance("5");
 
             bind(String.class)
                 .annotatedWith(named(NODE_ADDRESS))
