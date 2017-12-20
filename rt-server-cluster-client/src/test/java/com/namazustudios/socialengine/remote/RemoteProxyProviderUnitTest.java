@@ -51,10 +51,7 @@ public class RemoteProxyProviderUnitTest {
 
         verify(getMockRemoteInvoker()).invoke(
             eq(expected),
-            argThat((Consumer<InvocationError> ec) -> {
-                ec.accept(new InvocationError());
-                return true;
-            }),
+            any(RemoteInvoker.InvocationErrorConsumer.class),
             eq(emptyList())
         );
 
@@ -77,10 +74,7 @@ public class RemoteProxyProviderUnitTest {
 
         verify(getMockRemoteInvoker()).invoke(
                 argThat(i -> i.equals(expected)),
-                argThat((Consumer<InvocationError> ec) -> {
-                    ec.accept(new InvocationError());
-                    return true;
-                }),
+                any(RemoteInvoker.InvocationErrorConsumer.class),
                 eq(emptyList())
         );
 
@@ -105,13 +99,7 @@ public class RemoteProxyProviderUnitTest {
         expected.setArguments(asList("Hello World!"));
         expected.setDispatchType(Dispatch.Type.SYNCHRONOUS);
 
-        verify(getMockRemoteInvoker()).invoke(
-            eq(expected),
-            argThat((Consumer<InvocationError> ec) -> {
-                ec.accept(new InvocationError());
-                return true;
-            }),
-            eq(emptyList())
+        verify(getMockRemoteInvoker()).invoke(eq(expected), any(), eq(emptyList())
         );
 
     }
@@ -143,10 +131,14 @@ public class RemoteProxyProviderUnitTest {
 
         verify(getMockRemoteInvoker()).invoke(
             argThat(i -> i.equals(expected)),
-            argThat((Consumer<InvocationError> ec) -> {
-                ec.accept(expectedInvocationError);
-                return true;
-            }),
+                argThat((RemoteInvoker.InvocationErrorConsumer ec) -> {
+                    try {
+                        ec.accept(new InvocationError());
+                        return true;
+                    } catch (Throwable throwable) {
+                        return false;
+                    }
+                }),
             argThat(cl -> {
                 cl.forEach(c -> c.accept(expectedInvocationResult));
                 return true;
@@ -177,12 +169,8 @@ public class RemoteProxyProviderUnitTest {
 
         verify(getMockRemoteInvoker()).invoke(
             eq(expected),
-            argThat((Consumer<InvocationError> ec) -> {
-                ec.accept(new InvocationError());
-                return true;
-            }),
-            eq(emptyList())
-        );
+            any(RemoteInvoker.InvocationErrorConsumer.class),
+            eq(emptyList()));
 
     }
 
@@ -217,10 +205,7 @@ public class RemoteProxyProviderUnitTest {
 
         verify(getMockRemoteInvoker()).invoke(
                 argThat(i -> i.equals(expected)),
-                argThat((Consumer<InvocationError> ec) -> {
-                    ec.accept(expectedInvocationError);
-                    return true;
-                }),
+                any(RemoteInvoker.InvocationErrorConsumer.class),
                 argThat(cl -> {
                     cl.forEach(c -> c.accept(expectedInvocationResult));
                     return true;
@@ -260,9 +245,13 @@ public class RemoteProxyProviderUnitTest {
 
         verify(getMockRemoteInvoker()).invoke(
                 argThat(i -> i.equals(expected)),
-                argThat((Consumer<InvocationError> ec) -> {
-                    ec.accept(expectedInvocationError);
-                    return true;
+                argThat((RemoteInvoker.InvocationErrorConsumer ec) -> {
+                    try {
+                        ec.accept(new InvocationError());
+                        return true;
+                    } catch (Throwable throwable) {
+                        return false;
+                    }
                 }),
                 argThat(cl -> {
                     cl.forEach(c -> c.accept(expectedInvocationResult));

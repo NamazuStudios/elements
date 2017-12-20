@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import org.slf4j.Logger;
+
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -36,7 +38,38 @@ public interface RemoteInvoker {
      * @return a {@link Future<Object>} which returns the result of the remote invocation
      */
     Future<Object> invoke(Invocation invocation,
-                          Consumer<InvocationError> invocationErrorConsumer,
+                          InvocationErrorConsumer invocationErrorConsumer,
                           List<Consumer<InvocationResult>> invocationResultConsumerList);
+
+    /**
+     * Behaves similar to {@link Consumer<Throwable>} except that it may allow for re-throwing of the underlying
+     * {@link Throwable}.
+     */
+    @FunctionalInterface
+    interface InvocationErrorConsumer {
+
+        /**
+         * Accepts the {@link Throwable} and processes it.  If necessary it can re-throw it, or wrap it in another type
+         * and throw that.
+         * @param invocationError the {@link Throwable} instance
+         * @throws Throwable if the supplied
+         */
+        void accept(InvocationError invocationError) throws Throwable;
+
+        /**
+         * Invokes {@link #accept(InvocationError)}, catching any {@link Throwable} instances and logging them to the
+         * supplied instance of {@link Logger}.
+         *
+         * @param logger the logger to accep the {@link Throwable}
+         */
+        default void acceptAndLogError(final Logger logger, final InvocationError invocationError) {
+            try {
+                accept(invocationError);
+            } catch (Throwable throwable) {
+                logger.error("Caught throwable handling error.", throwable);
+            }
+        }
+
+    }
 
 }

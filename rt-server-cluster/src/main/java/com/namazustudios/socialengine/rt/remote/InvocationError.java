@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.annotation.ErrorHandler;
+
 import java.lang.reflect.Method;
 
 /**

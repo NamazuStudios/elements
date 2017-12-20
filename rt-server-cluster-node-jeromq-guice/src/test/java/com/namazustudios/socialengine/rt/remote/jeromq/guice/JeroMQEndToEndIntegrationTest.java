@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.remote.TestServiceInterface;
 import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.rt.Node;
@@ -62,7 +61,12 @@ public class JeroMQEndToEndIntegrationTest {
 
     @Test
     public void testRemoteInvokeSync() {
-        getTestServiceInterface().testSyncVoid("Hello!");
+        getTestServiceInterface().testSyncVoid("Hello");
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testRemoteInvokeSyncException() {
+        getTestServiceInterface().testSyncVoid("World");
     }
 
     public void setNode(Node node) {

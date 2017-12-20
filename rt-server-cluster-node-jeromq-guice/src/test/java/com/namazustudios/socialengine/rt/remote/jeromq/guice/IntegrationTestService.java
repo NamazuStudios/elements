@@ -19,6 +19,11 @@ public class IntegrationTestService implements TestServiceInterface {
 
     @Override
     public void testSyncVoid(final String msg) {
+
+        if (!"Hello".equals(msg)) {
+            throw new IllegalArgumentException("Expected \"Hello\" but got: " + msg);
+        }
+
         try {
             logger.info("{}: Got msg {}", new Exception().getStackTrace()[0], msg);
             scheduledExecutorService.schedule(() -> logger.info("Got msg {}", msg), 1, SECONDS).get();
@@ -27,6 +32,7 @@ public class IntegrationTestService implements TestServiceInterface {
         } catch (ExecutionException e) {
             throw new InternalException(e);
         }
+
     }
 
     @Override

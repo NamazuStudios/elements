@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.Reflection;
 import com.namazustudios.socialengine.rt.annotation.*;
+import com.namazustudios.socialengine.rt.remote.RemoteInvoker.InvocationErrorConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,10 +119,10 @@ public class RemoteInvocationHandlerBuilder {
         final Function<Object[], List<Object>> parameterAssembler;
         parameterAssembler = getParameterAssembler();
 
-        final Function<Object[], Consumer<InvocationError>> invocationErrorConsumerAssembler;
+        final Function<Object[], InvocationErrorConsumer> invocationErrorConsumerAssembler;
         invocationErrorConsumerAssembler = getInvocationErrorConsumerAssembler();
 
-        final BiFunction<Object[], Consumer<InvocationError>, List<Consumer<InvocationResult>>> invocationResultConsumerAssembler;
+        final BiFunction<Object[], InvocationErrorConsumer, List<Consumer<InvocationResult>>> invocationResultConsumerAssembler;
         invocationResultConsumerAssembler = getInvocationResultConsumerListAssembler();
 
         final List<String> parameters;
@@ -137,7 +138,7 @@ public class RemoteInvocationHandlerBuilder {
             invocation.setParameters(parameters);
             invocation.setArguments(parameterAssembler.apply(args));
 
-            final Consumer<InvocationError> invocationErrorConsumer;
+            final InvocationErrorConsumer invocationErrorConsumer;
             invocationErrorConsumer = invocationErrorConsumerAssembler.apply(args);
 
             final List<Consumer<InvocationResult>> invocationResultConsumerList;
@@ -186,13 +187,16 @@ public class RemoteInvocationHandlerBuilder {
         return objects -> stream(indices).mapToObj(index -> objects[index]).collect(toList());
     }
 
-    private Function<Object[], Consumer<InvocationError>> getInvocationErrorConsumerAssembler() {
+    private Function<Object[], InvocationErrorConsumer> getInvocationErrorConsumerAssembler() {
 
         final Method method = getMethod();
         final int index = Reflection.errorHandlerIndex(method);
 
         if (index < 0) {
-            return objects -> invocationError -> logger.error("Got invocation error.", invocationError.getThrowable());
+            return objects -> invocationError -> {
+                logger.error("Got invocation error.", invocationError.getThrowable());
+                throw invocationError.getThrowable();
+            };
         }
 
         final Parameter parameter = method.getParameters()[index];
@@ -224,7 +228,7 @@ public class RemoteInvocationHandlerBuilder {
 
     }
 
-    private BiFunction<Object[], Consumer<InvocationError>, List<Consumer<InvocationResult>>> getInvocationResultConsumerListAssembler() {
+    private BiFunction<Object[], InvocationErrorConsumer, List<Consumer<InvocationResult>>> getInvocationResultConsumerListAssembler() {
 
         final Method method = getMethod();
         final int[] resultHandlerIndices = indices(method, ResultHandler.class);
@@ -255,12 +259,12 @@ public class RemoteInvocationHandlerBuilder {
                         logger.error("Caught exception executing handler.", e);
                         final InvocationError invocationError = new InvocationError();
                         invocationError.setThrowable(e);
-                        errorConsumer.accept(invocationError);
+                        errorConsumer.acceptAndLogError(logger, invocationError);
                     } catch (InvocationTargetException e) {
                         logger.info("Caught exception calling handler.", e.getTargetException());
                         final InvocationError invocationError = new InvocationError();
                         invocationError.setThrowable(e.getTargetException());
-                        errorConsumer.accept(invocationError);
+                        errorConsumer.acceptAndLogError(logger, invocationError);
                     }
                 };
 
@@ -280,7 +284,7 @@ public class RemoteInvocationHandlerBuilder {
          * Performs the translation.  This will translate the return value and, if necessary, throw an instance of
          * {@link Throwable} if the remote {@link Method} failed.
          *
-         * @param objectFuture the {@link Future<Object>} supplied by {@link RemoteInvoker#invoke(Invocation, Consumer, List<Consumer>)}
+         * @param objectFuture the {@link Future<Object>} supplied by {@link RemoteInvoker#invoke(Invocation, InvocationErrorConsumer, List<Consumer>)}
          * @return an {@link Object} to return from the {@link InvocationHandler}
          * @throws Throwable if an exception occurs, can also be re-throwing the remiote invocation error
          */
