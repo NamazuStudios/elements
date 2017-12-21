@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import com.google.inject.PrivateModule;
@@ -11,6 +12,7 @@ import com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping.NON_FINAL;
 
 public class JeroMQRemoteInvokerModule extends PrivateModule {
@@ -33,6 +35,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
         final ObjectMapper objectMapper = new ObjectMapper(cborFactory);
         objectMapper.enableDefaultTyping();
         objectMapper.enableDefaultTyping(NON_FINAL);
+        objectMapper.disable(FAIL_ON_UNKNOWN_PROPERTIES);
         return objectMapper;
     }
 

@@ -134,8 +134,14 @@ public class IntegrationTestService implements TestServiceInterface {
                 return msg;
 
             }, msec, MILLISECONDS).get();
-        } catch (ExecutionException | InterruptedException e) {
+        } catch (InterruptedException e) {
             throw new InternalException(e);
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof RuntimeException) {
+                throw (RuntimeException)e.getCause();
+            } else {
+                throw new InternalException(e);
+            }
         }
 
     }

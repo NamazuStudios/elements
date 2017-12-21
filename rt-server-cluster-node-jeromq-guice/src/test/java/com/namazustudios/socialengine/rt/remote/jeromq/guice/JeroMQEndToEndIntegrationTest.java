@@ -120,27 +120,27 @@ public class JeroMQEndToEndIntegrationTest {
         bq.take().call();
     }
 
-    @Test(invocationCount = 10, threadPoolSize = 5)
+    @Test(invocationCount = 40, threadPoolSize = 40)
     public void testEcho() {
         final UUID uuid = randomUUID();
         final String result = getTestServiceInterface().testEcho(uuid.toString(), 0.0);
         assertEquals(result, uuid.toString());
     }
 
-//    @Test(invocationCount = 10, threadPoolSize = 5)
-//    public void testEchoWithSomeErrors() {
-//
-//        final UUID uuid = randomUUID();
-//        final String result;
-//
-//        try {
-//            result = getTestServiceInterface().testEcho(uuid.toString(), 30.0);
-//            assertEquals(result, uuid.toString());
-//        } catch (IllegalArgumentException iae) {
-//            assertEquals(iae.getMessage(), uuid.toString());
-//        }
-//
-//    }
+    @Test(invocationCount = 40, threadPoolSize = 40)
+    public void testEchoWithSomeErrors() {
+
+        final UUID uuid = randomUUID();
+        final String result;
+
+        try {
+            result = getTestServiceInterface().testEcho(uuid.toString(), 30.0);
+            assertEquals(result, uuid.toString());
+        } catch (IllegalArgumentException iae) {
+            assertEquals(iae.getMessage(), uuid.toString());
+        }
+
+    }
 
     public void setNode(Node node) {
         this.node = node;
@@ -184,7 +184,7 @@ public class JeroMQEndToEndIntegrationTest {
             bind(TestServiceInterface.class).to(IntegrationTestService.class);
             bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class);
 
-            bind(String.class).annotatedWith(named(NUMBER_OF_DISPATCHERS)).toInstance("1");
+            bind(String.class).annotatedWith(named(NUMBER_OF_DISPATCHERS)).toInstance("5");
             bind(String.class).annotatedWith(named(BIND_ADDRESS)).toInstance("inproc://integration-test");
 
         }
@@ -206,8 +206,8 @@ public class JeroMQEndToEndIntegrationTest {
 
             bind(ZContext.class).toInstance(zContext);
 
-            bind(String.class).annotatedWith(named(TIMEOUT)).toInstance("60");
-            bind(String.class).annotatedWith(named(MIN_CONNECTIONS)).toInstance("5");
+            bind(String.class).annotatedWith(named(TIMEOUT)).toInstance("10");
+            bind(String.class).annotatedWith(named(MIN_CONNECTIONS)).toInstance("100");
 
             bind(String.class)
                 .annotatedWith(named(NODE_ADDRESS))
