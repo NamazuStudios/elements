@@ -83,7 +83,23 @@ public class LocalInvocationDispatcherBuilder {
         final List<Class<?>> parameterTypes = new ArrayList<>();
 
         for(final String parameter : parameters) {
-            parameterTypes.add(Class.forName(parameter));
+            if (byte.class.getName().equals(parameter)) {
+                parameterTypes.add(byte.class);
+            } else if (short.class.getName().equals(parameter)) {
+                parameterTypes.add(short.class);
+            } else if (char.class.getName().equals(parameter)) {
+                parameterTypes.add(char.class);
+            } else if (int.class.getName().equals(parameter)) {
+                parameterTypes.add(int.class);
+            } else if (long.class.getName().equals(parameter)) {
+                parameterTypes.add(long.class);
+            } else if (float.class.getName().equals(parameter)) {
+                parameterTypes.add(float.class);
+            } else if (double.class.getName().equals(parameter)) {
+                parameterTypes.add(double.class);
+            } else {
+                parameterTypes.add(Class.forName(parameter));
+            }
         }
 
         return parameterTypes.stream().toArray(Class[]::new);
@@ -141,7 +157,7 @@ public class LocalInvocationDispatcherBuilder {
                 final Object returnValue = method.invoke(target, args);
                 returnValueStrategy.process(returnValue, invocationErrorConsumer, invocationReturnConsumer);
             } catch (InvocationTargetException ex) {
-                logger.info("Caught exception dispatching the respnse.", ex);
+                logger.info("Caught exception dispatching the invocation.", ex);
                 final InvocationError invocationError = new InvocationError();
                 invocationError.setThrowable(ex.getTargetException());
                 invocationErrorConsumer.accept(invocationError);

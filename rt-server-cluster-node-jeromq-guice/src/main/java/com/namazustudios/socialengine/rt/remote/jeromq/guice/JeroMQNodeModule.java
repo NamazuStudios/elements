@@ -21,7 +21,7 @@ public class JeroMQNodeModule extends PrivateModule {
         install(new ObjectMapperPayloadReaderWriterModule());
 
         bind(Node.class).to(JeroMQNode.class).asEagerSingleton();
-        bind(ConnectionPool.class).to(CachedConnectionPool.class).asEagerSingleton();
+        bind(ConnectionPool.class).to(CachedConnectionPool.class);
 
         expose(Node.class);
 

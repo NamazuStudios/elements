@@ -46,7 +46,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
             final ZMQ.Socket socket = zContext.createSocket(ZMQ.DEALER);
             socket.connect(getNodeAddress());
             return socket;
-        });
+        }, JeroMQRemoteInvoker.class.getName());
     }
 
     @Override
@@ -92,6 +92,8 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                     }
 
                 }
+
+                logger.info("Finished invocation");
 
             } catch (Throwable th) {
 

@@ -11,13 +11,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
+import org.zeromq.ZMonitor;
 import org.zeromq.ZMsg;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -30,15 +30,22 @@ import static com.namazustudios.socialengine.rt.util.FinallyAction.with;
 import static java.lang.Thread.interrupted;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
-import static org.zeromq.ZMQ.DEALER;
+import static org.zeromq.ZMQ.*;
+import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
-import static org.zeromq.ZMQ.SNDMORE;
+import static org.zeromq.ZMQ.Poller.POLLOUT;
 
 public class JeroMQNode implements Node {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQNode.class);
 
-    private static final String INPROC_BIND_ADDR = "inproc://JeroMQNode-dispatch";
+    private static final String INBOUND_ADDR = "inproc://node.in";
+
+    private static final String OUTBOUND_ADDR = "inproc://node.out";
+
+    private static final String MONITORING_IN = "inproc://node.in.mon";
+
+    private static final String MONITORING_OUT = "inproc://node.out.mon";
 
     public static final String BIND_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.bindAddress";
 
@@ -153,7 +160,9 @@ public class JeroMQNode implements Node {
 
         private final AtomicBoolean running = new AtomicBoolean();
 
-        private final ConnectionPool connectionPool = getConnectionPoolProvider().get();
+        private final ConnectionPool inboundConnectionPool = getConnectionPoolProvider().get();
+
+        private final ConnectionPool outboundConnectionPool = getConnectionPoolProvider().get();
 
         private final CountDownLatch proxyStartupLatch = new CountDownLatch(1);
 
@@ -175,21 +184,48 @@ public class JeroMQNode implements Node {
                 throw new InternalException(e);
             }
 
-            connectionPool.start(zc -> {
-                final ZMQ.Socket socket = zc.createSocket(DEALER);
-                socket.connect(INPROC_BIND_ADDR);
+            outboundConnectionPool.start(zc -> {
+                final Socket socket = zc.createSocket(PUSH);
+                socket.connect(OUTBOUND_ADDR);
                 return socket;
-            });
+            }, JeroMQNode.class.getSimpleName() + ".out");
+
+            inboundConnectionPool.start(zc -> {
+                final Socket socket = zc.createSocket(PULL);
+                socket.connect(INBOUND_ADDR);
+                return socket;
+            }, JeroMQNode.class.getSimpleName() + ".out");
 
             final int toDispatch = getNumberOfDispachers();
 
             for (int i = 0; i < toDispatch; ++i) {
-                connectionPool.process(connection -> connectBackendAndDispatchInvocations(connection.socket()));
+                inboundConnectionPool.process(connection -> {
+                    try (final Poller poller = getzContext().createPoller(1)) {
+
+                        final int index = poller.register(connection.socket(), POLLIN | POLLERR);
+
+                        while (running.get() && !interrupted()) {
+
+                            if (poller.poll(1000) == 0) {
+                                continue;
+                            }
+
+                            if (poller.pollin(index)) {
+                                dispatchMethodInvocation(connection.socket());
+                            }
+
+                        }
+
+                    }
+                });
             }
 
         }
 
         public void stop() {
+
+            inboundConnectionPool.stop();
+            outboundConnectionPool.stop();
 
             running.set(false);
             proxyThread.interrupt();
@@ -207,18 +243,37 @@ public class JeroMQNode implements Node {
 
             FinallyAction actions = () -> {};
 
-            try (final ZMQ.Socket frontend = getzContext().createSocket(ZMQ.ROUTER);
-                 final ZMQ.Socket backend = getzContext().createSocket(ZMQ.DEALER);
-                 final ZMQ.Poller poller = getzContext().createPoller(2)) {
+            try (final Socket frontend = getzContext().createSocket(ROUTER);
+
+                 final Socket inbound = getzContext().createSocket(PUSH);
+                 final Socket inMonitor = getzContext().createSocket(PAIR);
+
+                 final Socket outbound = getzContext().createSocket(PULL);
+                 final Socket outMonitor = getzContext().createSocket(PAIR);
+
+                 final Poller poller = getzContext().createPoller(4)) {
 
                 actions = with(() -> getzContext().destroySocket(frontend))
-                          .then(() -> getzContext().destroySocket(backend));
+                          .then(() -> getzContext().destroySocket(inbound))
+                          .then(() -> getzContext().destroySocket(inMonitor))
+                          .then(() -> getzContext().destroySocket(outbound))
+                          .then(() -> getzContext().destroySocket(outMonitor));
 
                 frontend.bind(getBindAddress());
-                backend.bind(INPROC_BIND_ADDR);
 
-                final int fIndex = poller.register(frontend, POLLIN);
-                final int bIndex = poller.register(backend, POLLIN);
+                inbound.monitor(MONITORING_IN, ZMQ.EVENT_ALL);
+                inMonitor.connect(MONITORING_IN);
+
+                outbound.monitor(MONITORING_OUT, ZMQ.EVENT_ALL);
+                outMonitor.connect(MONITORING_OUT);
+
+                inbound.bind(INBOUND_ADDR);
+                outbound.bind(OUTBOUND_ADDR);
+
+                final int frontendIndex = poller.register(frontend, POLLIN | POLLERR);
+                final int outboundIndex = poller.register(outbound, POLLIN | POLLERR);
+                final int inMonitorIndex = poller.register(inMonitor, POLLIN | POLLERR);
+                final int outMonitorIndex = poller.register(outMonitor, POLLIN | POLLERR);
 
                 proxyStartupLatch.countDown();
 
@@ -228,14 +283,32 @@ public class JeroMQNode implements Node {
                         continue;
                     }
 
-                    if (poller.pollin(fIndex)) {
+                    if (poller.pollin(frontendIndex)) {
                         final ZMsg msg = ZMsg.recvMsg(frontend);
-                        msg.send(backend);
+                        msg.send(inbound);
+                    } else if (poller.pollerr(frontendIndex)) {
+                        logger.error("Error in frontend socket.");
                     }
 
-                    if (poller.pollin(bIndex)) {
-                        final ZMsg msg = ZMsg.recvMsg(backend);
+                    if (poller.pollin(outboundIndex)) {
+                        final ZMsg msg = ZMsg.recvMsg(outbound);
                         msg.send(frontend);
+                    } else if (poller.pollerr(outboundIndex)) {
+                        logger.error("Error in outbound socket.");
+                    }
+
+                    if (poller.pollin(inMonitorIndex)) {
+                        final ZMsg msg = ZMsg.recvMsg(inMonitor);
+                        logger.info("Inbound {} {} {}", msg.popString(), msg.popString(), msg.popString());
+                    } else if (poller.pollerr(inMonitorIndex)) {
+                        logger.error("Error in inbound monitor socket.");
+                    }
+
+                    if (poller.pollin(outMonitorIndex)) {
+                        final ZMsg msg = ZMsg.recvMsg(outMonitor);
+                        logger.info("Outbound {} {} {}", msg.popString(), msg.popString(), msg.popString());
+                    } else if (poller.pollerr(outMonitorIndex)) {
+                        logger.error("Error in outbound monitor socket.");
                     }
 
                 }
@@ -245,37 +318,26 @@ public class JeroMQNode implements Node {
             }
         }
 
-        private void connectBackendAndDispatchInvocations(final ZMQ.Socket socket) {
-            try (final ZMQ.Poller poller = getzContext().createPoller(1)) {
+        private void dispatchMethodInvocation(final Socket inbound) {
 
-                final int index = poller.register(socket, POLLIN);
+            final ZMsg msg = ZMsg.recvMsg(inbound);
+            final byte[] identity = msg.remove().getData();
 
-                while (running.get() && !interrupted()) {
-                    if (poller.poll(1000) > 0 && poller.pollin(index)) {
-                        dispatchMethodInvocation(socket);
-                    }
-                }
-
-            }
-        }
-
-        private void dispatchMethodInvocation(final ZMQ.Socket inbound) {
-
-            final byte[] identity = inbound.recv();
+            final AtomicReference<Invocation> invocationAtomicReference = new AtomicReference<>();
 
             final RequestHeader requestHeader = new RequestHeader();
-            inbound.recvByteBuffer(requestHeader.getByteBuffer(), 0);
+            requestHeader.getByteBuffer().put(msg.remove().getData());
 
             final AtomicInteger remaining = new AtomicInteger(1 + requestHeader.additionalParts.get());
 
             final Consumer<InvocationError> invocationErrorConsumer = invocationError -> {
-                connectionPool.process(outbound -> {
+                if (remaining.getAndSet(0) > 0) {
 
-                    if (remaining.getAndSet(0) > 0) {
+                    final ResponseHeader responseHeader = new ResponseHeader();
+                    responseHeader.type.set(INVOCATION_ERROR);
+                    responseHeader.part.set(0);
 
-                        final ResponseHeader responseHeader = new ResponseHeader();
-                        responseHeader.type.set(INVOCATION_ERROR);
-                        responseHeader.part.set(0);
+                    outboundConnectionPool.process(outbound -> {
 
                         byte[] payload;
 
@@ -290,40 +352,44 @@ public class JeroMQNode implements Node {
                         outbound.socket().sendByteBuffer(responseHeader.getByteBuffer(), SNDMORE);
                         outbound.socket().send(payload);
 
-                    } else {
-                        logger.info("Ignoring other invocation errors.  Terminating context.");
-                    }
+                    });
 
-                });
+                } else {
+                    logger.info("Ignoring other invocation errors.  Terminating context.");
+                }
 
             };
 
             final Consumer<InvocationResult> returnInvocationResultConsumer = invocationResult -> {
-                connectionPool.process(outbound -> {
-                    if (remaining.getAndDecrement() <= 0) {
-                        logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
-                    } else {
-                        sendResult(inbound, invocationResult, 0, identity, invocationErrorConsumer);
-                    }
-                });
+                if (remaining.getAndDecrement() <= 0) {
+                    logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
+                } else {
+                    outboundConnectionPool.process(outbound ->
+                        sendResult(outbound.socket(), invocationResult, 0, identity, invocationErrorConsumer));
+                }
             };
+
 
             final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList =
                 range(0, requestHeader.additionalParts.get())
                 .map(index -> index + 1)
-                .mapToObj(part -> (Consumer<InvocationResult>) invocationResult -> connectionPool.process(outbound -> {
+                .mapToObj(part -> (Consumer<InvocationResult>) invocationResult -> {
                     if (remaining.getAndDecrement() <= 0) {
                         logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
                     } else {
-                        sendResult(outbound.socket(), invocationResult, part, identity, invocationErrorConsumer);
+                        outboundConnectionPool.process(outbound ->
+                            sendResult(outbound.socket(), invocationResult, part, identity, invocationErrorConsumer));
                     }
-                })).collect(toList());
+                }).collect(toList());
 
             try {
 
-                final Invocation invocation = getPayloadReader().read(Invocation.class, inbound.recv());
+                final byte[] payload = msg.remove().getData();
+                final Invocation invocation = getPayloadReader().read(Invocation.class, payload);
+                invocationAtomicReference.set(invocation);
 
-                getInvocationDispatcher().dispatch(invocation,
+                getInvocationDispatcher().dispatch(
+                        invocation,
                         invocationErrorConsumer,
                         returnInvocationResultConsumer,
                         additionalInvocationResultConsumerList);
@@ -336,7 +402,7 @@ public class JeroMQNode implements Node {
 
         }
 
-        private void sendResult(final ZMQ.Socket socket,
+        private void sendResult(final Socket socket,
                                 final InvocationResult invocationResult,
                                 final int part,
                                 final byte[] identity,

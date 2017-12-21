@@ -40,9 +40,9 @@ public class CachedConnectionPool implements ConnectionPool {
     private int minConnections;
 
     @Override
-    public void start(final Function<ZContext, ZMQ.Socket> socketSupplier) {
+    public void start(final Function<ZContext, ZMQ.Socket> socketSupplier, final String name) {
 
-        final Context c = new Context(socketSupplier);
+        final Context c = new Context(socketSupplier, name);
 
         if (context.compareAndSet(null, c)) {
             c.start();
@@ -112,28 +112,32 @@ public class CachedConnectionPool implements ConnectionPool {
 
     private class Context {
 
+        private final String name;
+
         private final Queue<Connection> connections = new ConcurrentLinkedQueue<>();
 
         private final AtomicReference<Supplier<Connection>> connectionSupplier = new AtomicReference<>(this::acquire);
 
         private final ExecutorService executorService = new ThreadPoolExecutor(
                 0, Integer.MAX_VALUE,
-                getTimeout(), SECONDS, new SynchronousQueue<>(), r -> {
+                getTimeout(), SECONDS, new SynchronousQueue<>(),
+        r -> {
             final Thread thread = new Thread(r);
             thread.setDaemon(false);
-            thread.setName(CachedConnectionPool.class.getSimpleName() + " worker.");
+            thread.setName(toString() + " worker.");
             return thread;
         }, (r, e) ->  {
             try {
                 r.run();
             } catch (TerminatedException tex) {
-                logger.debug("Connection terminated.");
+                logger.debug("{} Connection terminated.", toString());
             }
         });
 
         private final Function<ZContext, ZMQ.Socket> socketSupplier;
 
-        public Context(final Function<ZContext, ZMQ.Socket> socketSupplier) {
+        public Context(final Function<ZContext, ZMQ.Socket> socketSupplier, final String name) {
+            this.name = name;
             this.socketSupplier= socketSupplier;
         }
 
@@ -152,7 +156,7 @@ public class CachedConnectionPool implements ConnectionPool {
 
             executorService.shutdownNow();
             connectionSupplier.set(TerminalConnection::new);
-            connections.forEach(connection -> connection.close());
+            xions.forEach(connection -> connection.close());
 
             try {
                 executorService.awaitTermination(5, MINUTES);
@@ -183,16 +187,17 @@ public class CachedConnectionPool implements ConnectionPool {
 
                         @Override
                         public void close() {
-                            logger.warn("Attempting to close managed connection.", new Exception());
+                            logger.warn("{} Attempting to close managed connection.", toString(), new Exception());
                         }
 
                     });
 
+                    logger.info("{} recycling connection.", toString());
                     connections.add(connection);
 
                 }  catch (Throwable th) {
                     connection.close();
-                    logger.error("Caught error on connection pool.", th);
+                    logger.error("{} Caught error on connection pool.", toString(), th);
                     throw th;
                 }
 
@@ -202,6 +207,13 @@ public class CachedConnectionPool implements ConnectionPool {
         private Connection acquire() {
             final Connection connection = connections.poll();
             return connection == null ? new WorkerConnection() : connection;
+        }
+
+        @Override
+        public String toString() {
+            return "Context{" +
+                    "name='" + name + '\'' +
+                    '}';
         }
 
         private class WorkerConnection implements Connection, AutoCloseable {
@@ -228,18 +240,20 @@ public class CachedConnectionPool implements ConnectionPool {
                 try {
                     socket().close();
                 } catch (final Exception ex) {
-                    logger.error("Caught exception closing Socket.", ex);
+                    logger.error("{} Caught exception closing Socket.", toString(), ex);
                 }
 
                 try {
                     getzContext().destroySocket(socket());
                 } catch (final Exception ex) {
-                    logger.error("Caught exception destroying Socket.", ex);
+                    logger.error("{} Caught exception destroying Socket.", toString(), ex);
                 }
 
             }
 
         }
+
+
 
     }
 

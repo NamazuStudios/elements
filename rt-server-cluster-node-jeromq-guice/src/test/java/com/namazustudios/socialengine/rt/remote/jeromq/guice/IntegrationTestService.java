@@ -5,17 +5,20 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Random;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
+import static java.util.concurrent.Executors.newScheduledThreadPool;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class IntegrationTestService implements TestServiceInterface {
 
     private static final Logger logger = LoggerFactory.getLogger(IntegrationTestService.class);
 
-    private final ScheduledExecutorService scheduledExecutorService = newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService scheduledExecutorService = newScheduledThreadPool(50);
 
     @Override
     public void testSyncVoid(final String msg) {
@@ -112,6 +115,29 @@ public class IntegrationTestService implements TestServiceInterface {
             msg,
             (Consumer<String>) stringConsumer::handle,
             (Consumer<Throwable>) errorHandler::handle);
+    }
+
+    @Override
+    public String testEcho(final String msg, final double errorChance) {
+
+        final Random random = new Random();
+        final int msec = random.nextInt(500);
+        final boolean errorneous = random.nextDouble() < errorChance;
+
+        try {
+            return scheduledExecutorService.schedule(() -> {
+
+                if (errorneous) {
+                    throw new IllegalArgumentException(msg);
+                }
+
+                return msg;
+
+            }, msec, MILLISECONDS).get();
+        } catch (ExecutionException | InterruptedException e) {
+            throw new InternalException(e);
+        }
+
     }
 
 }

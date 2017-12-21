@@ -16,14 +16,17 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.zeromq.ZContext;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.LinkedBlockingDeque;
+
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.BIND_ADDRESS;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.NUMBER_OF_DISPATCHERS;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.*;
+import static com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.NODE_ADDRESS;
 import static com.namazustudios.socialengine.rt.jeromq.CachedConnectionPool.MIN_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.jeromq.CachedConnectionPool.TIMEOUT;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
+import static org.testng.Assert.*;
 
 public class JeroMQEndToEndIntegrationTest {
 
@@ -68,7 +71,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testRemoteInvokeSyncException() {
-        getTestServiceInterface().testSyncVoid("World");
+        getTestServiceInterface().testSyncVoid("testSyncVoid");
     }
 
     @Test
@@ -79,9 +82,63 @@ public class JeroMQEndToEndIntegrationTest {
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testRemoteInvokeSyncReturnException() {
-        getTestServiceInterface().testSyncVoid("World");
+        getTestServiceInterface().testSyncReturn("testSyncReturn");
         fail("Did not expect return.");
     }
+
+    @Test
+    public void testAsyncReturnVoid() throws Exception {
+        final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
+        getTestServiceInterface().testAsyncReturnVoid(
+            "Hello",
+            result -> bq.add(() -> {
+                assertEquals(result, "World!");
+                return null;
+            }),
+            throwable -> bq.add(() -> {
+                fail("Did not expect exception.", throwable);
+                return null;
+            }));
+        bq.take().call();
+    }
+
+    @Test
+    public void testAsyncReturnVoidException() throws Exception {
+        final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
+        getTestServiceInterface().testAsyncReturnVoid(
+            "testAsyncReturnVoidException",
+            result -> bq.add(() -> {
+                fail("Did not expect result.  Got: " + result);
+                return null;
+            }),
+            throwable -> bq.add(() -> {
+                assertTrue(throwable instanceof IllegalArgumentException, "Expected IllegalArgumentException");
+                return null;
+            }));
+        bq.take().call();
+    }
+
+//    @Test(invocationCount = 10, threadPoolSize = 5)
+//    public void testEcho() {
+//        final UUID uuid = randomUUID();
+//        final String result = getTestServiceInterface().testEcho(uuid.toString(), 0.0);
+//        assertEquals(result, uuid.toString());
+//    }
+//
+//    @Test(invocationCount = 10, threadPoolSize = 5)
+//    public void testEchoWithSomeErrors() {
+//
+//        final UUID uuid = randomUUID();
+//        final String result;
+//
+//        try {
+//            result = getTestServiceInterface().testEcho(uuid.toString(), 30.0);
+//            assertEquals(result, uuid.toString());
+//        } catch (IllegalArgumentException iae) {
+//            assertEquals(iae.getMessage(), uuid.toString());
+//        }
+//
+//    }
 
     public void setNode(Node node) {
         this.node = node;
@@ -125,7 +182,7 @@ public class JeroMQEndToEndIntegrationTest {
             bind(TestServiceInterface.class).to(IntegrationTestService.class);
             bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class);
 
-            bind(String.class).annotatedWith(named(NUMBER_OF_DISPATCHERS)).toInstance("5");
+            bind(String.class).annotatedWith(named(NUMBER_OF_DISPATCHERS)).toInstance("1");
             bind(String.class).annotatedWith(named(BIND_ADDRESS)).toInstance("inproc://integration-test");
 
         }

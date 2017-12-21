@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
 import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Socket;
 
 import java.util.function.Consumer;
@@ -21,7 +22,16 @@ public interface ConnectionPool {
      * which will supply the {@link Socket} instances.  Note that each {@link Socket} supplied should be interchangeable
      * with any other as this pool will recycle {@link Socket} instances as needed.
      */
-    void start(Function<ZContext, Socket> socketSupplier);
+    default void start(Function<ZContext, Socket> socketSupplier) {
+        start(socketSupplier, "");
+    }
+
+    /**
+     * Starts the {@link ConnectionPool}, blocking as necessary to startup and connect.  This accepts a {@link Function}
+     * which will supply the {@link Socket} instances.  Note that each {@link Socket} supplied should be interchangeable
+     * with any other as this pool will recycle {@link Socket} instances as needed.
+     */
+    void start(final Function<ZContext, ZMQ.Socket> socketSupplier, final String name);
 
     /**
      * Stops the {@link ConnectionPool}, blocking as necessary to stop all threads as well as close and destroy all

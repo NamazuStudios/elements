@@ -55,6 +55,10 @@ public interface LocalInvocationDispatcher {
 
         return ((object, invocationErrorConsumer, returnInvocationResultConsumer) -> {
             logger.info("Return value ignored.");
+
+            final InvocationResult invocationResult = new InvocationResult();
+            returnInvocationResultConsumer.accept(invocationResult);
+
         });
 
     }

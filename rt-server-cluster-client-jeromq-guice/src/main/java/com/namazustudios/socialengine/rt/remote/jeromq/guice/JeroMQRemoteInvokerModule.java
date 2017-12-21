@@ -20,7 +20,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
 
         install(new ObjectMapperPayloadReaderWriterModule());
 
-        bind(RemoteInvoker.class).to(JeroMQRemoteInvoker.class).asEagerSingleton();
+        bind(RemoteInvoker.class).to(JeroMQRemoteInvoker.class);
         bind(ConnectionPool.class).to(CachedConnectionPool.class).asEagerSingleton();
 
         expose(RemoteInvoker.class);

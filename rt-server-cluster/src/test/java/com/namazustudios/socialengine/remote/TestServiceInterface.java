@@ -32,15 +32,18 @@ public interface TestServiceInterface {
                                           @ResultHandler MyStringHandler stringConsumer,
                                           @ErrorHandler MyErrorHandler errorHandler);
 
-
-    default void testDefaultMethod() {
-        testSyncVoid("Hello World!");
-    }
-
     @FunctionalInterface
     interface MyErrorHandler { void handle(Throwable throwable); }
 
     @FunctionalInterface
     interface MyStringHandler { void handle(Object result); }
+
+    @RemotelyInvokable
+    default void testDefaultMethod() {
+        testSyncVoid("Hello World!");
+    }
+
+    @RemotelyInvokable
+    String testEcho(@Serialize String msg, @Serialize double errorChance);
 
 }
