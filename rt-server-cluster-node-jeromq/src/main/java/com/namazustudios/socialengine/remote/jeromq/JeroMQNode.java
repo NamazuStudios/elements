@@ -10,8 +10,6 @@ import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
-import org.zeromq.ZMQ;
-import org.zeromq.ZMonitor;
 import org.zeromq.ZMsg;
 
 import javax.inject.Inject;
@@ -33,7 +31,6 @@ import static java.util.stream.IntStream.range;
 import static org.zeromq.ZMQ.*;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
-import static org.zeromq.ZMQ.Poller.POLLOUT;
 
 public class JeroMQNode implements Node {
 
@@ -42,10 +39,6 @@ public class JeroMQNode implements Node {
     private static final String INBOUND_ADDR = "inproc://node.in";
 
     private static final String OUTBOUND_ADDR = "inproc://node.out";
-
-    private static final String MONITORING_IN = "inproc://node.in.mon";
-
-    private static final String MONITORING_OUT = "inproc://node.out.mon";
 
     public static final String BIND_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.bindAddress";
 
@@ -244,36 +237,21 @@ public class JeroMQNode implements Node {
             FinallyAction actions = () -> {};
 
             try (final Socket frontend = getzContext().createSocket(ROUTER);
-
                  final Socket inbound = getzContext().createSocket(PUSH);
-                 final Socket inMonitor = getzContext().createSocket(PAIR);
-
                  final Socket outbound = getzContext().createSocket(PULL);
-                 final Socket outMonitor = getzContext().createSocket(PAIR);
-
                  final Poller poller = getzContext().createPoller(4)) {
 
                 actions = with(() -> getzContext().destroySocket(frontend))
                           .then(() -> getzContext().destroySocket(inbound))
-                          .then(() -> getzContext().destroySocket(inMonitor))
-                          .then(() -> getzContext().destroySocket(outbound))
-                          .then(() -> getzContext().destroySocket(outMonitor));
+                          .then(() -> getzContext().destroySocket(outbound));
 
                 frontend.bind(getBindAddress());
-
-                inbound.monitor(MONITORING_IN, ZMQ.EVENT_ALL);
-                inMonitor.connect(MONITORING_IN);
-
-                outbound.monitor(MONITORING_OUT, ZMQ.EVENT_ALL);
-                outMonitor.connect(MONITORING_OUT);
 
                 inbound.bind(INBOUND_ADDR);
                 outbound.bind(OUTBOUND_ADDR);
 
                 final int frontendIndex = poller.register(frontend, POLLIN | POLLERR);
                 final int outboundIndex = poller.register(outbound, POLLIN | POLLERR);
-                final int inMonitorIndex = poller.register(inMonitor, POLLIN | POLLERR);
-                final int outMonitorIndex = poller.register(outMonitor, POLLIN | POLLERR);
 
                 proxyStartupLatch.countDown();
 
@@ -295,20 +273,6 @@ public class JeroMQNode implements Node {
                         msg.send(frontend);
                     } else if (poller.pollerr(outboundIndex)) {
                         logger.error("Error in outbound socket.");
-                    }
-
-                    if (poller.pollin(inMonitorIndex)) {
-                        final ZMsg msg = ZMsg.recvMsg(inMonitor);
-                        logger.info("Inbound {} {} {}", msg.popString(), msg.popString(), msg.popString());
-                    } else if (poller.pollerr(inMonitorIndex)) {
-                        logger.error("Error in inbound monitor socket.");
-                    }
-
-                    if (poller.pollin(outMonitorIndex)) {
-                        final ZMsg msg = ZMsg.recvMsg(outMonitor);
-                        logger.info("Outbound {} {} {}", msg.popString(), msg.popString(), msg.popString());
-                    } else if (poller.pollerr(outMonitorIndex)) {
-                        logger.error("Error in outbound monitor socket.");
                     }
 
                 }

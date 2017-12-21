@@ -7,7 +7,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker;
 import com.namazustudios.socialengine.rt.jackson.guice.ObjectMapperPayloadReaderWriterModule;
-import com.namazustudios.socialengine.rt.jeromq.CachedConnectionPool;
+import com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 
@@ -21,7 +21,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
         install(new ObjectMapperPayloadReaderWriterModule());
 
         bind(RemoteInvoker.class).to(JeroMQRemoteInvoker.class);
-        bind(ConnectionPool.class).to(CachedConnectionPool.class).asEagerSingleton();
+        bind(ConnectionPool.class).to(DynamicConnectionPool.class).asEagerSingleton();
 
         expose(RemoteInvoker.class);
 

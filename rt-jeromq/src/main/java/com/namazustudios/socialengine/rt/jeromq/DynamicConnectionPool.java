@@ -7,11 +7,7 @@ import org.zeromq.ZMQ;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -21,13 +17,13 @@ import java.util.function.Supplier;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class CachedConnectionPool implements ConnectionPool {
+public class DynamicConnectionPool implements ConnectionPool {
 
-    private static final Logger logger = LoggerFactory.getLogger(CachedConnectionPool.class);
+    private static final Logger logger = LoggerFactory.getLogger(DynamicConnectionPool.class);
 
-    public static final String TIMEOUT = "com.namazustudios.socialengine.rt.jeromq.CachedConnectionPool.timeout";
+    public static final String TIMEOUT = "com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.timeout";
 
-    public static final String MIN_CONNECTIONS = "com.namazustudios.socialengine.rt.jeromq.CachedConnectionPool.minConnections";
+    public static final String MIN_CONNECTIONS = "com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.minConnections";
 
     private final AtomicInteger highWaterMark = new AtomicInteger();
 
@@ -114,52 +110,66 @@ public class CachedConnectionPool implements ConnectionPool {
 
         private final String name;
 
-        private final Queue<Connection> connections = new ConcurrentLinkedQueue<>();
+        private final AtomicReference<Supplier<Connection>> connectionSupplier = new AtomicReference<>(WorkerConnection::new);
 
-        private final AtomicReference<Supplier<Connection>> connectionSupplier = new AtomicReference<>(this::acquire);
+        private final ThreadLocal<Connection> connectionThreadLocal = new ThreadLocal<>();
 
-        private final ExecutorService executorService = new ThreadPoolExecutor(
-                0, Integer.MAX_VALUE,
-                getTimeout(), SECONDS, new SynchronousQueue<>(),
-        r -> {
-            final Thread thread = new Thread(r);
-            thread.setDaemon(false);
-            thread.setName(toString() + " worker.");
-            return thread;
-        }, (r, e) ->  {
-            try {
-                r.run();
-            } catch (TerminatedException tex) {
-                logger.debug("{} Connection terminated.", toString());
-            }
-        });
+        private final ThreadPoolExecutor executorService;
+        {
+
+            final AtomicInteger count = new AtomicInteger();
+
+            executorService = new ThreadPoolExecutor(
+                    0, Integer.MAX_VALUE,
+                    getTimeout(), SECONDS, new SynchronousQueue<>(),
+                    r -> {
+
+                        final Thread thread = new Thread(() -> {
+
+                            final Connection connection = connectionSupplier.get().get();
+                            connectionThreadLocal.set(connection);
+
+                            try {
+                                r.run();
+                            } catch (Throwable th) {
+                                connectionThreadLocal.set(null);
+                                logger.error("{} Caught error on connection pool.", toString(), th);
+                                connection.close();
+                                throw th;
+                            }
+
+                        });
+
+                        thread.setDaemon(true);
+                        thread.setName(toString() + " worker #" + count.getAndIncrement());
+                        return thread;
+                    }, (r, e) -> {
+                try {
+                    r.run();
+                } catch (TerminatedException tex) {
+                    logger.debug("{} Connection terminated.", toString());
+                }
+            });
+        }
 
         private final Function<ZContext, ZMQ.Socket> socketSupplier;
 
         public Context(final Function<ZContext, ZMQ.Socket> socketSupplier, final String name) {
             this.name = name;
-            this.socketSupplier= socketSupplier;
+            this.socketSupplier = socketSupplier;
         }
 
         public void start() {
-
-            final int numConnections = getMinConnections();
-
-            for (int i = 0; i < numConnections; ++i) {
-                final WorkerConnection workerConnection = new WorkerConnection();
-                connections.add(workerConnection);
-            }
-
+            executorService.setCorePoolSize(getMinConnections());
         }
 
         public void stop() {
 
             executorService.shutdownNow();
             connectionSupplier.set(TerminalConnection::new);
-            xions.forEach(connection -> connection.close());
 
             try {
-                executorService.awaitTermination(5, MINUTES);
+                executorService.awaitTermination(2, MINUTES);
             } catch (InterruptedException ex) {
                 throw new InternalError("Interrupted while shutting down connection pool.", ex);
             }
@@ -169,7 +179,7 @@ public class CachedConnectionPool implements ConnectionPool {
         public void process(final Consumer<Connection> connectionConsumer) {
             executorService.submit(() -> {
 
-                final Connection connection = connectionSupplier.get().get();
+                final Connection connection = connectionThreadLocal.get();
 
                 try {
 
@@ -192,9 +202,6 @@ public class CachedConnectionPool implements ConnectionPool {
 
                     });
 
-                    logger.info("{} recycling connection.", toString());
-                    connections.add(connection);
-
                 }  catch (Throwable th) {
                     connection.close();
                     logger.error("{} Caught error on connection pool.", toString(), th);
@@ -202,11 +209,6 @@ public class CachedConnectionPool implements ConnectionPool {
                 }
 
             });
-        }
-
-        private Connection acquire() {
-            final Connection connection = connections.poll();
-            return connection == null ? new WorkerConnection() : connection;
         }
 
         @Override
@@ -252,8 +254,6 @@ public class CachedConnectionPool implements ConnectionPool {
             }
 
         }
-
-
 
     }
 

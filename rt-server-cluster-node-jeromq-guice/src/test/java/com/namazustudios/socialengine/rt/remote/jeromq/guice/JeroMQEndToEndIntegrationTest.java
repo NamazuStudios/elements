@@ -16,6 +16,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.zeromq.ZContext;
 
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -24,8 +25,9 @@ import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.BIND_ADDRESS;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.NUMBER_OF_DISPATCHERS;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.NODE_ADDRESS;
-import static com.namazustudios.socialengine.rt.jeromq.CachedConnectionPool.MIN_CONNECTIONS;
-import static com.namazustudios.socialengine.rt.jeromq.CachedConnectionPool.TIMEOUT;
+import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.MIN_CONNECTIONS;
+import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.TIMEOUT;
+import static java.util.UUID.randomUUID;
 import static org.testng.Assert.*;
 
 public class JeroMQEndToEndIntegrationTest {
@@ -118,13 +120,13 @@ public class JeroMQEndToEndIntegrationTest {
         bq.take().call();
     }
 
-//    @Test(invocationCount = 10, threadPoolSize = 5)
-//    public void testEcho() {
-//        final UUID uuid = randomUUID();
-//        final String result = getTestServiceInterface().testEcho(uuid.toString(), 0.0);
-//        assertEquals(result, uuid.toString());
-//    }
-//
+    @Test(invocationCount = 10, threadPoolSize = 5)
+    public void testEcho() {
+        final UUID uuid = randomUUID();
+        final String result = getTestServiceInterface().testEcho(uuid.toString(), 0.0);
+        assertEquals(result, uuid.toString());
+    }
+
 //    @Test(invocationCount = 10, threadPoolSize = 5)
 //    public void testEchoWithSomeErrors() {
 //

@@ -121,7 +121,7 @@ public class IntegrationTestService implements TestServiceInterface {
     public String testEcho(final String msg, final double errorChance) {
 
         final Random random = new Random();
-        final int msec = random.nextInt(500);
+        final int msec = random.nextInt(100);
         final boolean errorneous = random.nextDouble() < errorChance;
 
         try {

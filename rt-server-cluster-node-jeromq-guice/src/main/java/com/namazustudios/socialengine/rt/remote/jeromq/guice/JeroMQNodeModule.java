@@ -8,7 +8,7 @@ import com.google.inject.Singleton;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQNode;
 import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.jackson.guice.ObjectMapperPayloadReaderWriterModule;
-import com.namazustudios.socialengine.rt.jeromq.CachedConnectionPool;
+import com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 
 import static com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping.NON_FINAL;
@@ -21,7 +21,7 @@ public class JeroMQNodeModule extends PrivateModule {
         install(new ObjectMapperPayloadReaderWriterModule());
 
         bind(Node.class).to(JeroMQNode.class).asEagerSingleton();
-        bind(ConnectionPool.class).to(CachedConnectionPool.class);
+        bind(ConnectionPool.class).to(DynamicConnectionPool.class);
 
         expose(Node.class);
 

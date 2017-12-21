@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.jeromq;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.google.inject.name.Names;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -12,7 +11,6 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
-import org.zeromq.ZMsg;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
@@ -27,12 +25,12 @@ import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertEquals;
 import static org.zeromq.ZMsg.*;
 
-@Guice(modules = CachedConnectionPoolIntegrationTest.Module.class)
-public class CachedConnectionPoolIntegrationTest {
+@Guice(modules = DynamicConnectionPoolIntegrationTest.Module.class)
+public class DynamicConnectionPoolIntegrationTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(CachedConnectionPoolIntegrationTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(DynamicConnectionPoolIntegrationTest.class);
 
-    private static final String TEST_ADDRESS = "inproc://CachedConnectionPoolIntegrationTest";
+    private static final String TEST_ADDRESS = "inproc://DynamicConnectionPoolIntegrationTest";
 
     private ZContext zContext;
 
@@ -149,14 +147,14 @@ public class CachedConnectionPoolIntegrationTest {
         protected void configure() {
 
             binder().bind(ZContext.class).asEagerSingleton();
-            binder().bind(ConnectionPool.class).to(CachedConnectionPool.class).asEagerSingleton();
+            binder().bind(ConnectionPool.class).to(DynamicConnectionPool.class).asEagerSingleton();
 
             binder().bind(Integer.class)
-                    .annotatedWith(named(CachedConnectionPool.TIMEOUT))
+                    .annotatedWith(named(DynamicConnectionPool.TIMEOUT))
                     .toInstance(60);
 
             binder().bind(Integer.class)
-                    .annotatedWith(named(CachedConnectionPool.MIN_CONNECTIONS))
+                    .annotatedWith(named(DynamicConnectionPool.MIN_CONNECTIONS))
                     .toInstance(10);
 
         }
