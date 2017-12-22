@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
+import org.zeromq.ZMsg;
 import org.zeromq.ZPoller;
 
 import javax.inject.Inject;
@@ -52,7 +53,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     public Future<Object> invoke(final Invocation invocation,
                                  final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList, final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
-        final LatchedFuture<Object> latchedFuture = new LatchedFuture<>();
+        final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask = new RemoteInvocationFutureTask<>();
 
         getConnectionPool().processV((ConnectionPool.Connection connection) -> {
 
@@ -69,14 +70,20 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                         break;
                     }
 
-                    final ResponseHeader responseHeader = receiveHeader(connection.socket());
+                    final ZMsg msg = ZMsg.recvMsg(connection.socket());
 
-                    final boolean success = handleResponse(connection.socket(),
-                                                           latchedFuture,
-                                                           responseHeader,
-                            asyncInvocationErrorConsumer,
-                                                           result -> latchedFuture.setResultCallable(() -> result.getResult()),
-                            asyncInvocationResultConsumerList);
+                    final boolean success;
+                    try {
+                        success = handleResponse(
+                            msg,
+                            remoteInvocationFutureTask,
+                            asyncInvocationResultConsumerList,
+                            asyncInvocationErrorConsumer
+                        );
+                    } catch (final Exception ex) {
+                        remoteInvocationFutureTask.setException(ex);
+                        break;
+                    }
 
                     if (!success) {
                         break;
@@ -90,7 +97,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         });
 
-        return latchedFuture;
+        return remoteInvocationFutureTask;
 
     }
 
@@ -117,21 +124,20 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     }
 
-    private boolean handleResponse(final ZMQ.Socket socket,
-                                   final LatchedFuture<?> latchedFuture,
-                                   final ResponseHeader responseHeader,
-                                   final InvocationErrorConsumer invocationErrorConsumer,
-                                   final Consumer<InvocationResult> resultObjectCallable,
-                                   final List<Consumer<InvocationResult>> invocationResultConsumerList) {
+    private boolean handleResponse(final ZMsg msg,
+                                   final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask,
+                                   final List<Consumer<InvocationResult>> asyncResultConsumerList,
+                                   final InvocationErrorConsumer asyncErrorConsumer) throws  Exception {
 
+        final ResponseHeader responseHeader = receiveHeader(msg);
         final int part = responseHeader.part.get();
 
         switch (responseHeader.type.get()) {
             case INVOCATION_ERROR:
-                handleError(socket, latchedFuture, invocationErrorConsumer);
+                handleError(msg, responseHeader, remoteInvocationFutureTask, asyncErrorConsumer);
                 return false;
             case INVOCATION_RESULT:
-                handleResult(socket, part == 0 ? resultObjectCallable : invocationResultConsumerList.get(part - 1));
+                handleResult(msg, responseHeader, remoteInvocationFutureTask, asyncResultConsumerList);
                 return true;
             default:
                 logger.error("Invalid response type {}", responseHeader.type.get());
@@ -140,47 +146,70 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     }
 
-    private void handleError(final ZMQ.Socket socket,
-                             final LatchedFuture<?> latchedFuture,
-                             final InvocationErrorConsumer invocationErrorConsumer) {
+    private void handleError(final ZMsg msg,
+                             final ResponseHeader responseHeader,
+                             final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask,
+                             final InvocationErrorConsumer asyncErrorConsumer) throws Exception {
 
-        final byte[] bytes = socket.recv();
         final InvocationError invocationError;
 
         try {
+            final byte[] bytes = msg.pop().getData();
             invocationError = getPayloadReader().read(InvocationError.class, bytes);
         } catch (IOException e) {
             throw new InternalException(e);
         }
 
-        try {
-            invocationErrorConsumer.accept(invocationError);
-        } catch (Exception ex) {
-            if (!latchedFuture.setResultCallable(() -> { throw ex; })) {
-                logger.error("Already set result.  Silencing error.", ex);
+        final int part = responseHeader.part.get();
+
+        if (part == 0) {
+
+            final Throwable throwable = invocationError.getThrowable();
+
+            final Exception exception = throwable instanceof Exception ?
+                (Exception) throwable :
+                new RemoteInvocationException(throwable);
+
+            if (!remoteInvocationFutureTask.setException(exception)) {
+                logger.error("Already set result.  Silencing error.", exception);
             }
+
+        } else if (part == 1) {
+            asyncErrorConsumer.accept(invocationError);
+        } else {
+            throw new InternalException("Invalid error part " + responseHeader.part.get());
         }
 
     }
 
-    private void handleResult(final ZMQ.Socket socket, final Consumer<InvocationResult> invocationResultConsumer) {
 
-        final byte[] bytes = socket.recv();
+    private void handleResult(final ZMsg msg,
+                              final ResponseHeader responseHeader,
+                              final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask,
+                              final List<Consumer<InvocationResult>> asyncResultConsumerList) {
+
         final InvocationResult invocationResult;
 
         try {
+            final byte[] bytes = msg.pop().getData();
             invocationResult = getPayloadReader().read(InvocationResult.class, bytes);
         } catch (IOException e) {
             throw new InternalException(e);
         }
 
-        invocationResultConsumer.accept(invocationResult);
+        final int part = responseHeader.part.get();
+
+        if (part == 0) {
+            remoteInvocationFutureTask.setResult(invocationResult.getResult());
+        } else {
+
+        }
 
     }
 
-    private ResponseHeader receiveHeader(final ZMQ.Socket socket) {
+    private ResponseHeader receiveHeader(final ZMsg msg) {
         final ResponseHeader responseHeader = new ResponseHeader();
-        socket.recvByteBuffer(responseHeader.getByteBuffer(), 0);
+        responseHeader.getByteBuffer().put(msg.pop().getData());
         return responseHeader;
     }
 
@@ -231,7 +260,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
      *
      * @param <T>
      */
-    private class LatchedFuture<T> implements RunnableFuture<T> {
+    private class RemoteInvocationFutureTask<T> implements RunnableFuture<T> {
 
         private final ResultSupplier<T> unspecifiedResult = () -> {
             throw new InternalException("Interrupted or request timed out.");
@@ -272,7 +301,17 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         }
 
         /**
-         * Sets the exception to this {@link LatchedFuture}.
+         * Sets the result of this {@link RemoteInvocationFutureTask}.
+         *
+         * @param result the result obbject
+         * @return true if the set was successful
+         */
+        public boolean setResult(final T result) {
+            return setResultCallable(() -> result);
+        }
+
+        /**
+         * Sets the exception to this {@link RemoteInvocationFutureTask}.
          * '
          * @param exception the {@link Exception} to set
          */

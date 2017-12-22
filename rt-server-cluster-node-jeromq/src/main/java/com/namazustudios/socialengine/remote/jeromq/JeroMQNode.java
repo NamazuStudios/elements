@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -292,57 +293,41 @@ public class JeroMQNode implements Node {
             final RequestHeader requestHeader = new RequestHeader();
             requestHeader.getByteBuffer().put(msg.remove().getData());
 
-            final AtomicInteger remaining = new AtomicInteger(1 + requestHeader.additionalParts.get());
+            final AtomicBoolean sync = new AtomicBoolean();
+            final AtomicInteger remaining = new AtomicInteger(requestHeader.additionalParts.get());
 
-            final Consumer<InvocationError> invocationErrorConsumer = invocationError -> {
-                if (remaining.getAndSet(0) > 0) {
-
-                    final ResponseHeader responseHeader = new ResponseHeader();
-                    responseHeader.type.set(INVOCATION_ERROR);
-                    responseHeader.part.set(0);
-
-                    outboundConnectionPool.processV(outbound -> {
-
-                        byte[] payload;
-
-                        try {
-                            payload = getPayloadWriter().write(invocationError);
-                        } catch (IOException e) {
-                            logger.error("Could not write payload to byte stream.  Sending empty payload.", e);
-                            payload = new byte[0];
-                        }
-
-                        outbound.socket().send(identity, SNDMORE);
-                        outbound.socket().sendByteBuffer(responseHeader.getByteBuffer(), SNDMORE);
-                        outbound.socket().send(payload);
-
-                    });
-
+            final Consumer<InvocationError> syncInvocationErrorConsumer = invocationError -> {
+                if (sync.getAndSet(true)) {
+                    logger.error("Already set sync response.  Ignoring {}", invocationError);
                 } else {
-                    logger.info("Ignoring other invocation errors.  Terminating context.");
+                    outboundConnectionPool.processV(outbound -> sendError(outbound.socket(), invocationError, 0, identity));
                 }
 
             };
 
-            final Consumer<InvocationResult> returnInvocationResultConsumer = invocationResult -> {
-                if (remaining.getAndDecrement() <= 0) {
-                    logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
+            final Consumer<InvocationError> asyncInvocationErrorConsumer = invocationError -> {
+                if (remaining.getAndSet(0) <= 0) {
+                    logger.info("Suppressing invocation error.  Already sent.", invocationError.getThrowable());
                 } else {
-                    outboundConnectionPool.processV(outbound ->
-                        sendResult(outbound.socket(), invocationResult, 0, identity, invocationErrorConsumer));
+                    outboundConnectionPool.processV(outbound -> sendError(outbound.socket(), invocationError, 1, identity));
                 }
             };
 
+            final Consumer<InvocationResult> syncInvocationResultConsumer = invocationResult -> {
+                if (sync.getAndSet(true)) {
+                    logger.error("Already set sync response.  Ignoring {}", invocationResult);
+                } else {
+                    outboundConnectionPool.processV(outbound -> sendResult(outbound.socket(), invocationResult, 0, identity, syncInvocationErrorConsumer));
+                }
+            };
 
-            final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList =
-                range(0, requestHeader.additionalParts.get())
+            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList = range(0, requestHeader.additionalParts.get())
                 .map(index -> index + 1)
                 .mapToObj(part -> (Consumer<InvocationResult>) invocationResult -> {
                     if (remaining.getAndDecrement() <= 0) {
                         logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
                     } else {
-                        outboundConnectionPool.processV(outbound ->
-                            sendResult(outbound.socket(), invocationResult, part, identity, invocationErrorConsumer));
+                        outboundConnectionPool.processV(outbound -> sendResult(outbound.socket(), invocationResult, part, identity, asyncInvocationErrorConsumer));
                     }
                 }).collect(toList());
 
@@ -352,16 +337,19 @@ public class JeroMQNode implements Node {
                 final Invocation invocation = getPayloadReader().read(Invocation.class, payload);
                 invocationAtomicReference.set(invocation);
 
-                // TODO FIXME
                 getInvocationDispatcher().dispatch(
-                        invocation,
-                        returnInvocationResultConsumer, null,
-                        additionalInvocationResultConsumerList, invocationErrorConsumer);
+                    invocation,
+                    syncInvocationResultConsumer, syncInvocationErrorConsumer,
+                    asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
+
+                if (!sync.get()) {
+                    logger.error("Neither return nor error callback was invoked.");
+                }
 
             } catch (IOException e) {
                 final InvocationError invocationError = new InvocationError();
                 invocationError.setThrowable(e);
-                invocationErrorConsumer.accept(invocationError);
+                asyncInvocationErrorConsumer.accept(invocationError);
             }
 
         }
@@ -390,6 +378,31 @@ public class JeroMQNode implements Node {
 
         }
 
+        private void sendError(final Socket socket,
+                               final InvocationError invocationError,
+                               final int part,
+                               final byte[] identity) {
+
+            final ResponseHeader responseHeader = new ResponseHeader();
+            responseHeader.type.set(INVOCATION_ERROR);
+            responseHeader.part.set(part);
+
+            byte[] payload;
+
+            try {
+                payload = getPayloadWriter().write(invocationError);
+            } catch (IOException e) {
+                logger.error("Could not write payload to byte stream.  Sending empty payload.", e);
+                payload = new byte[0];
+            }
+
+            socket.send(identity, SNDMORE);
+            socket.sendByteBuffer(responseHeader.getByteBuffer(), SNDMORE);
+            socket.send(payload);
+
+        }
+
     }
 
 }
+
