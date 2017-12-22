@@ -144,67 +144,100 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-//    @Test
-//    public void testAsyncReturnFutureWithConsumers() throws Exception {
-//
-//        final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
-//
-//        final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture(
-//            "Hello",
-//            (Consumer<String>) result -> bq.add(() -> {
-//                assertEquals("World!", result);
-//                return null;
-//            }),
-//            (Consumer<Throwable>) throwable -> bq.add(() -> {
-//                fail("Did not expect exception.", throwable);
-//                return null;
-//            }));
-//
-//        bq.take().call();
-//        assertEquals(integerFuture.get(), Integer.valueOf(42));
-//
-//    }
-//
-//    @Test
-//    public void testAsyncReturnFutureWithConsumersException() throws Exception {
-//
-//        final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
-//
-//        final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture(
-//                "testAsyncReturnFuture",
-//                (Consumer<String>) result -> bq.add(() -> {
-//                    fail("Expected instance of IllegalArgumentException.  Got: " + result);
-//                    return null;
-//                }),
-//                (Consumer<Throwable>) throwable -> bq.add(() -> {
-//                    assertTrue(throwable instanceof IllegalArgumentException, "Expected IllegalArgumentException");
-//                    return null;
-//                }));
-//
-//        bq.take().call();
-//        assertEquals(integerFuture.get(), Integer.valueOf(42));
-//    }
-
     @Test
-    public void testAsyncReturnFutureWithCustomConsumers() {
+    public void testAsyncReturnFutureWithConsumers() throws Exception {
+
+        final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
+
+        final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture(
+            "Hello",
+            (Consumer<String>) result -> bq.add(() -> {
+                assertEquals("World!", result);
+                return null;
+            }),
+            (Consumer<Throwable>) throwable -> bq.add(() -> {
+                fail("Did not expect exception.", throwable);
+                return null;
+            }));
+
+        bq.take().call();
+        assertEquals(integerFuture.get(), Integer.valueOf(42));
 
     }
 
     @Test
-    public void testAsyncReturnFutureWithCustomConsumersException() {
+    public void testAsyncReturnFutureWithConsumersException() throws Exception {
+
+        final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
+
+        final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture(
+                "testAsyncReturnFuture",
+                (Consumer<String>) result -> bq.add(() -> {
+                    fail("Expected instance of IllegalArgumentException.  Got: " + result);
+                    return null;
+                }),
+                (Consumer<Throwable>) throwable -> bq.add(() -> {
+                    assertTrue(throwable instanceof IllegalArgumentException, "Expected IllegalArgumentException");
+                    return null;
+                }));
+
+        bq.take().call();
+
+        try {
+            integerFuture.get();
+        } catch (ExecutionException ex) {
+            assertTrue(ex.getCause() instanceof IllegalArgumentException, "Expected IllegalArgumentException but got " + ex.getCause());
+        }
 
     }
 
-//    @RemotelyInvokable
-//    Future<Integer> testAsyncReturnFuture(@Serialize String msg,
-//                                          @ResultHandler Consumer<String> stringConsumer,
-//                                          @ErrorHandler Consumer<Throwable> throwableConsumer);
-//
-//    @RemotelyInvokable
-//    Future<Integer> testAsyncReturnFuture(@Serialize String msg,
-//                                          @ResultHandler TestServiceInterface.MyStringHandler stringConsumer,
-//                                          @ErrorHandler TestServiceInterface.MyErrorHandler errorHandler);
-//
+    @Test
+    public void testAsyncReturnFutureWithCustomConsumers() throws Exception {
+
+        final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
+
+        final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture(
+                "Hello",
+                (TestServiceInterface.MyStringHandler) result -> bq.add(() -> {
+                    assertEquals("World!", result);
+                    return null;
+                }),
+                (TestServiceInterface.MyErrorHandler) throwable -> bq.add(() -> {
+                    fail("Did not expect exception.", throwable);
+                    return null;
+                }));
+
+        bq.take().call();
+        assertEquals(integerFuture.get(), Integer.valueOf(42));
+
+    }
+
+    @Test
+    public void testAsyncReturnFutureWithCustomConsumersException() throws Exception {
+
+        final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
+
+        final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture(
+                "testAsyncReturnFuture",
+                (TestServiceInterface.MyStringHandler) result -> bq.add(() -> {
+                    fail("Expected instance of IllegalArgumentException.  Got: " + result);
+                    return null;
+                }),
+                (TestServiceInterface.MyErrorHandler) throwable -> bq.add(() -> {
+                    assertTrue(throwable instanceof IllegalArgumentException, "Expected IllegalArgumentException");
+                    return null;
+                }));
+
+        bq.take().call();
+
+        try {
+            integerFuture.get();
+        } catch (ExecutionException ex) {
+            assertTrue(ex.getCause() instanceof IllegalArgumentException, "Expected IllegalArgumentException but got " + ex.getCause());
+        }
+
+    }
+    
     @Test(invocationCount = 40, threadPoolSize = 40)
     public void testEcho() {
         final UUID uuid = randomUUID();

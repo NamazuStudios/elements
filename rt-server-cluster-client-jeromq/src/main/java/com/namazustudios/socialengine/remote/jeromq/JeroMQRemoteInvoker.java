@@ -134,8 +134,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         switch (responseHeader.type.get()) {
             case INVOCATION_ERROR:
-                handleError(msg, responseHeader, remoteInvocationFutureTask, asyncErrorConsumer);
-                return false;
+                return handleError(msg, responseHeader, remoteInvocationFutureTask, asyncErrorConsumer);
             case INVOCATION_RESULT:
                 handleResult(msg, responseHeader, remoteInvocationFutureTask, asyncResultConsumerList);
                 return true;
@@ -146,10 +145,10 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     }
 
-    private void handleError(final ZMsg msg,
-                             final ResponseHeader responseHeader,
-                             final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask,
-                             final InvocationErrorConsumer asyncErrorConsumer) throws Exception {
+    private boolean handleError(final ZMsg msg,
+                                final ResponseHeader responseHeader,
+                                final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask,
+                                final InvocationErrorConsumer asyncErrorConsumer) throws Exception {
 
         final InvocationError invocationError;
 
@@ -174,8 +173,11 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                 logger.error("Already set result.  Silencing error.", exception);
             }
 
+            return true;
+
         } else if (part == 1) {
             asyncErrorConsumer.accept(invocationError);
+            return false;
         } else {
             throw new InternalException("Invalid error part " + responseHeader.part.get());
         }
