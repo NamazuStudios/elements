@@ -10,7 +10,6 @@ import javax.inject.Named;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -62,12 +61,12 @@ public class DynamicConnectionPool implements ConnectionPool {
     }
 
     @Override
-    public void process(final Consumer<Connection> consumer) {
+    public <T> Future<T> process(final Function<Connection, T> consumer) {
 
         final Context c = context.get();
 
         if (c != null) {
-            c.process(consumer);
+            return c.process(consumer);
         } else {
             throw new IllegalStateException("Not started.");
         }
@@ -176,14 +175,14 @@ public class DynamicConnectionPool implements ConnectionPool {
 
         }
 
-        public void process(final Consumer<Connection> connectionConsumer) {
-            executorService.submit(() -> {
+        public <T> Future<T> process(final Function<Connection, T> connectionTFunction) {
+
+            final FutureTask<T> futureTask = new FutureTask<T>(() -> {
 
                 final Connection connection = connectionThreadLocal.get();
 
                 try {
-
-                    connectionConsumer.accept(new Connection() {
+                    return connectionTFunction.apply(new Connection() {
 
                         @Override
                         public ZContext context() {
@@ -197,18 +196,28 @@ public class DynamicConnectionPool implements ConnectionPool {
 
                         @Override
                         public void close() {
-                            logger.warn("{} Attempting to close managed connection.", toString(), new Exception());
+                            logger.warn("{} Attempting to close managed connection.", toString(), new UnsupportedOperationException());
                         }
 
                     });
-
-                }  catch (Throwable th) {
+                } catch (ExpectedException ex) {
+                    final Throwable cause = ex.getCause();
+                    if (cause instanceof Exception) {
+                        throw (Exception) cause;
+                    } else {
+                        throw ex;
+                    }
+                } catch (Throwable th) {
                     connection.close();
                     logger.error("{} Caught error on connection pool.", toString(), th);
                     throw th;
                 }
 
             });
+
+            executorService.submit(futureTask);
+            return futureTask;
+
         }
 
         @Override

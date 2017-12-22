@@ -14,9 +14,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -27,10 +25,6 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     public static final String NODE_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.nodeAddress";
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQRemoteInvoker.class);
-
-    private final Set<LatchedFuture<Object>> futureSet =
-        new ConcurrentHashMap<LatchedFuture<Object>, Object>()
-        .keySet(new Object());
 
     private String nodeAddress;
 
@@ -52,25 +46,22 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     @Override
     public void stop() {
         getConnectionPool().stop();
-        futureSet.forEach(futureSet -> futureSet.cancel(true));
-        futureSet.clear();
     }
 
     @Override
     public Future<Object> invoke(final Invocation invocation,
-                                 final InvocationErrorConsumer invocationErrorConsumer,
-                                 final List<Consumer<InvocationResult>> invocationResultConsumerList) {
+                                 final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList, final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
         final LatchedFuture<Object> latchedFuture = new LatchedFuture<>();
 
-        getConnectionPool().process((ConnectionPool.Connection connection) -> {
+        getConnectionPool().processV((ConnectionPool.Connection connection) -> {
 
             try (final ZMQ.Poller poller = connection.context().createPoller(1)) {
 
-                send(connection.socket(), invocation, invocationResultConsumerList.size());
+                send(connection.socket(), invocation, asyncInvocationResultConsumerList.size());
                 final int sIndex = poller.register(connection.socket(), ZPoller.READABLE);
 
-                final int expectedResponseCount = 1 + invocationResultConsumerList.size();
+                final int expectedResponseCount = 1 + asyncInvocationResultConsumerList.size();
 
                 for (int received = 0; received < expectedResponseCount && !interrupted(); ++received) {
 
@@ -83,9 +74,9 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                     final boolean success = handleResponse(connection.socket(),
                                                            latchedFuture,
                                                            responseHeader,
-                                                           invocationErrorConsumer,
+                            asyncInvocationErrorConsumer,
                                                            result -> latchedFuture.setResultCallable(() -> result.getResult()),
-                                                           invocationResultConsumerList);
+                            asyncInvocationResultConsumerList);
 
                     if (!success) {
                         break;
@@ -95,29 +86,10 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
                 logger.info("Finished invocation");
 
-            } catch (Throwable th) {
-
-                logger.error("Suppressing error because return value was already processed.", th);
-
-                final boolean set = latchedFuture.setResultCallable(() -> {
-                    logger.error("Could not dispatch invocation.", th);
-                    final InvocationError invocationError = new InvocationError();
-                    invocationError.setThrowable(th);
-                    invocationErrorConsumer.accept(invocationError);
-                    throw th;
-                });
-
-                if (!set) {
-                    logger.error("Already set result.  Silencing error.");
-                }
-
-                throw th;
-
             }
 
         });
 
-        futureSet.add(latchedFuture);
         return latchedFuture;
 
     }
@@ -183,9 +155,9 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         try {
             invocationErrorConsumer.accept(invocationError);
-        } catch (Throwable th) {
-            if (!latchedFuture.setResultCallable(() -> { throw th; })) {
-                logger.error("Already set result.  Silencing error.", th);
+        } catch (Exception ex) {
+            if (!latchedFuture.setResultCallable(() -> { throw ex; })) {
+                logger.error("Already set result.  Silencing error.", ex);
             }
         }
 
@@ -259,65 +231,55 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
      *
      * @param <T>
      */
-    private class LatchedFuture<T> implements Future<T> {
-
-        private final ResultSupplier<T> canceled = () -> {
-            throw new IllegalStateException("Operation was canceled.");
-        };
+    private class LatchedFuture<T> implements RunnableFuture<T> {
 
         private final ResultSupplier<T> unspecifiedResult = () -> {
             throw new InternalException("Interrupted or request timed out.");
         };
 
-        private final AtomicInteger state = new AtomicInteger();
-
         private final AtomicReference<ResultSupplier<T>> resultCallable = new AtomicReference<>(unspecifiedResult);
 
-        private final CountDownLatch latch = new CountDownLatch(1);
-
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            try {
-                return resultCallable.compareAndSet(unspecifiedResult, canceled);
-            } finally {
-                latch.countDown();
-            }
-        }
+        private final FutureTask<T> futureTask = new FutureTask<T>(() -> resultCallable.get().supply());
 
         @Override
         public boolean isCancelled() {
-            return resultCallable.get() == canceled;
+            return futureTask.isCancelled();
         }
 
         @Override
         public boolean isDone() {
-            return resultCallable.get() != unspecifiedResult;
+            return futureTask.isDone();
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            return futureTask.cancel(mayInterruptIfRunning);
         }
 
         @Override
         public T get() throws InterruptedException, ExecutionException {
-
-            latch.await();
-
-            try {
-                return resultCallable.get().supply();
-            } catch (Throwable e) {
-                throw new ExecutionException(e);
-            }
-
+            return futureTask.get();
         }
 
         @Override
         public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            return futureTask.get(timeout, unit);
+        }
 
-            latch.await(timeout, unit);
+        @Override
+        public void run() {
+            futureTask.run();
+        }
 
-            try {
-                return resultCallable.get().supply();
-            } catch (Throwable e) {
-                throw new ExecutionException(e);
-            }
-
+        /**
+         * Sets the exception to this {@link LatchedFuture}.
+         * '
+         * @param exception the {@link Exception} to set
+         */
+        public boolean setException(final Exception exception) {
+            return setResultCallable(() -> {
+                throw exception;
+            });
         }
 
         /**
@@ -330,8 +292,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
          */
         public boolean setResultCallable(final ResultSupplier<T> resultCallable) {
             if (this.resultCallable.compareAndSet(unspecifiedResult, resultCallable)) {
-                futureSet.remove(this);
-                latch.countDown();
+                run();
                 return true;
             } else {
                 return false;
@@ -343,7 +304,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     @FunctionalInterface
     private interface ResultSupplier<T> {
 
-        T supply() throws Throwable;
+        T supply() throws Exception;
 
     }
 

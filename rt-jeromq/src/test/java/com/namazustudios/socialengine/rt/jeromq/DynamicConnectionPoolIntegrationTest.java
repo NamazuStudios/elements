@@ -107,7 +107,7 @@ public class DynamicConnectionPoolIntegrationTest {
 
         final BlockingQueue<ByteBuffer> responder = new LinkedBlockingDeque<>();
 
-        getConnectionPool().process(connection -> {
+        getConnectionPool().processV(connection -> {
 
             connection.socket().sendByteBuffer(message, 0);
 

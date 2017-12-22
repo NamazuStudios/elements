@@ -11,14 +11,15 @@ public interface InvocationDispatcher {
     /**
      * Performs the actual dispatch by unpacking the {@link Invocation} and collecting the results into the provided
      * {@link Consumer<InvocationResult>}.  The supplied {@link Consumer<InvocationResult>}.
-     *  @param invocation
-     * @param invocationErrorConsumer
-     * @param returnInvocationResultConsumer
+     * @param invocation
+     * @param syncInvocationErrorConsumer
      * @param additionalInvocationResultConsumerList
+     * @param asyncInvocationErrorConsumer
      */
     void dispatch(Invocation invocation,
-                  Consumer<InvocationError> invocationErrorConsumer,
-                  Consumer<InvocationResult> returnInvocationResultConsumer,
-                  List<Consumer<InvocationResult>> additionalInvocationResultConsumerList);
+                  Consumer<InvocationResult> syncInvocationResultConsumer,
+                  Consumer<InvocationError> syncInvocationErrorConsumer,
+                  List<Consumer<InvocationResult>> additionalInvocationResultConsumerList,
+                  Consumer<InvocationError> asyncInvocationErrorConsumer);
 
 }

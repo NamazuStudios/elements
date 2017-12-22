@@ -192,7 +192,7 @@ public class JeroMQNode implements Node {
             final int toDispatch = getNumberOfDispachers();
 
             for (int i = 0; i < toDispatch; ++i) {
-                inboundConnectionPool.process(connection -> {
+                inboundConnectionPool.processV(connection -> {
                     try (final Poller poller = getzContext().createPoller(1)) {
 
                         final int index = poller.register(connection.socket(), POLLIN | POLLERR);
@@ -301,7 +301,7 @@ public class JeroMQNode implements Node {
                     responseHeader.type.set(INVOCATION_ERROR);
                     responseHeader.part.set(0);
 
-                    outboundConnectionPool.process(outbound -> {
+                    outboundConnectionPool.processV(outbound -> {
 
                         byte[] payload;
 
@@ -328,7 +328,7 @@ public class JeroMQNode implements Node {
                 if (remaining.getAndDecrement() <= 0) {
                     logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
                 } else {
-                    outboundConnectionPool.process(outbound ->
+                    outboundConnectionPool.processV(outbound ->
                         sendResult(outbound.socket(), invocationResult, 0, identity, invocationErrorConsumer));
                 }
             };
@@ -341,7 +341,7 @@ public class JeroMQNode implements Node {
                     if (remaining.getAndDecrement() <= 0) {
                         logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
                     } else {
-                        outboundConnectionPool.process(outbound ->
+                        outboundConnectionPool.processV(outbound ->
                             sendResult(outbound.socket(), invocationResult, part, identity, invocationErrorConsumer));
                     }
                 }).collect(toList());
@@ -352,11 +352,11 @@ public class JeroMQNode implements Node {
                 final Invocation invocation = getPayloadReader().read(Invocation.class, payload);
                 invocationAtomicReference.set(invocation);
 
+                // TODO FIXME
                 getInvocationDispatcher().dispatch(
                         invocation,
-                        invocationErrorConsumer,
-                        returnInvocationResultConsumer,
-                        additionalInvocationResultConsumerList);
+                        returnInvocationResultConsumer, null,
+                        additionalInvocationResultConsumerList, invocationErrorConsumer);
 
             } catch (IOException e) {
                 final InvocationError invocationError = new InvocationError();

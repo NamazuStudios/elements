@@ -145,7 +145,7 @@ public class RemoteInvocationHandlerBuilder {
             invocationResultConsumerList = invocationResultConsumerAssembler.apply(args, invocationErrorConsumer);
 
             final Future<Object> objectFuture;
-            objectFuture = remoteInvoker.invoke(invocation, invocationErrorConsumer, invocationResultConsumerList);
+            objectFuture = remoteInvoker.invoke(invocation, invocationResultConsumerList, invocationErrorConsumer);
             return returnValueTransformer.transform(objectFuture);
 
         };
@@ -193,10 +193,7 @@ public class RemoteInvocationHandlerBuilder {
         final int index = Reflection.errorHandlerIndex(method);
 
         if (index < 0) {
-            return objects -> invocationError -> {
-                logger.error("Got invocation error.", invocationError.getThrowable());
-                throw invocationError.getThrowable();
-            };
+            return objects -> invocationError -> logger.error("Got invocation error.", invocationError.getThrowable());
         }
 
         final Parameter parameter = method.getParameters()[index];
@@ -284,7 +281,7 @@ public class RemoteInvocationHandlerBuilder {
          * Performs the translation.  This will translate the return value and, if necessary, throw an instance of
          * {@link Throwable} if the remote {@link Method} failed.
          *
-         * @param objectFuture the {@link Future<Object>} supplied by {@link RemoteInvoker#invoke(Invocation, InvocationErrorConsumer, List<Consumer>)}
+         * @param objectFuture the {@link Future<Object>} supplied by {@link RemoteInvoker#invoke(Invocation, List, InvocationErrorConsumer) <Consumer>)}
          * @return an {@link Object} to return from the {@link InvocationHandler}
          * @throws Throwable if an exception occurs, can also be re-throwing the remiote invocation error
          */

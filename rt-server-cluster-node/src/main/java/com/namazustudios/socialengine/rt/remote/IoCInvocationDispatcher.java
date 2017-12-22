@@ -33,9 +33,10 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
 
     @Override
     public void dispatch(final Invocation invocation,
-                         final Consumer<InvocationError> invocationErrorConsumer,
-                         final Consumer<InvocationResult> returnInvocationResultConsumer,
-                         final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList) {
+                         final Consumer<InvocationResult> syncInvocationResultConsumer,
+                         final Consumer<InvocationError> syncInvocationErrorConsumer,
+                         final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList,
+                         final Consumer<InvocationError> asyncInvocationErrorConsumer) {
 
         try {
 
@@ -45,13 +46,14 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
 
             doDispatch(
                 type, object, invocation,
-                invocationErrorConsumer, returnInvocationResultConsumer, additionalInvocationResultConsumerList);
+                    syncInvocationResultConsumer, syncInvocationErrorConsumer,
+                    additionalInvocationResultConsumerList, asyncInvocationErrorConsumer);
 
-        } catch (Throwable th) {
-            logger.error("Caught exception resolving target for invocation.", th);
+        } catch (Exception ex) {
+            logger.error("Caught exception resolving target for invocation.", ex);
             final InvocationError invocationError = new InvocationError();
-            invocationError.setThrowable(th);
-            invocationErrorConsumer.accept(invocationError);
+            invocationError.setThrowable(ex);
+            asyncInvocationErrorConsumer.accept(invocationError);
         }
 
     }
@@ -60,9 +62,10 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
             final Class<?> type,
             final Object object,
             final Invocation invocation,
-            final Consumer<InvocationError> invocationErrorConsumer,
-            final Consumer<InvocationResult> returnInvocationResultConsumer,
-            final List<Consumer<InvocationResult>> invocationResultConsumerList) throws Throwable {
+            final Consumer<InvocationResult> syncInvocationResultConsumer,
+            final Consumer<InvocationError> syncInvocationErrorConsumer,
+            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            final Consumer<InvocationError> asyncInvocationErrorConsumer) throws Exception {
 
         final LocalInvocationDispatcher localInvocationDispatcher;
 
@@ -70,12 +73,17 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
             final MethodKey methodKey = new MethodKey(type, invocation);
             localInvocationDispatcher = localDispatcherCache.get(methodKey);
         } catch (ExecutionException ex) {
-            throw ex.getCause();
+            logger.error("Caught exception resolving target for invocation.", ex);
+            final InvocationError invocationError = new InvocationError();
+            invocationError.setThrowable(ex);
+            asyncInvocationErrorConsumer.accept(invocationError);
+            return;
         }
 
         localInvocationDispatcher.dispatch(
                 object, invocation,
-                invocationErrorConsumer, returnInvocationResultConsumer, invocationResultConsumerList);
+                syncInvocationResultConsumer, asyncInvocationErrorConsumer,
+                asyncInvocationResultConsumerList, syncInvocationErrorConsumer);
 
     }
 

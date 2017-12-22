@@ -145,29 +145,31 @@ public class LocalInvocationDispatcherBuilder {
 
         final LocalInvocationDispatcher.ReturnValueStrategy returnValueStrategy = this.returnValueStrategy;
 
-        return (target, invocation, invocationErrorConsumer, invocationReturnConsumer, invocationResultConsumerList) -> {
+        return (target, invocation,
+                invocationReturnConsumer, syncInvocationErrorConsumer,
+                asyncInvocationResultConsumerList, asyncInvocationErrorConsumer) -> {
 
             final Object[] args = new Object[argCount];
 
             parametersTransformer.accept(invocation.getArguments(), args);
-            errorHandlerTransformer.accept(invocationErrorConsumer, args);
-            resultHandlerTransformer.accept(invocationResultConsumerList, args);
+            errorHandlerTransformer.accept(asyncInvocationErrorConsumer, args);
+            resultHandlerTransformer.accept(asyncInvocationResultConsumerList, args);
 
             try {
                 final Object returnValue = method.invoke(target, args);
-                returnValueStrategy.process(returnValue, invocationErrorConsumer, invocationReturnConsumer);
+                returnValueStrategy.process(returnValue, syncInvocationErrorConsumer, invocationReturnConsumer);
             } catch (InvocationTargetException ex) {
                 logger.info("Caught exception dispatching the invocation.", ex);
                 final InvocationError invocationError = new InvocationError();
                 invocationError.setThrowable(ex.getTargetException());
-                invocationErrorConsumer.accept(invocationError);
+                syncInvocationErrorConsumer.accept(invocationError);
             } catch (IllegalAccessException ex) {
                 // This should not happen because we only consider public methods in the binding but we need to catch
                 // it anyhow and try to relay it to the client.
                 logger.error("IllegalAccessException dispatching method", ex);
                 final InvocationError invocationError = new InvocationError();
                 invocationError.setThrowable(ex);
-                invocationErrorConsumer.accept(invocationError);
+                syncInvocationErrorConsumer.accept(invocationError);
             }
 
         };

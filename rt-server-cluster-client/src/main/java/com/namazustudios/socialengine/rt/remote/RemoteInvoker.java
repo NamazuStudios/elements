@@ -32,14 +32,13 @@ public interface RemoteInvoker {
      * {@link Consumer< InvocationError >} will relay all encountered errors.
      *
      * @param invocation the outgoing {@link Invocation}
-     * @param invocationErrorConsumer a {@link Consumer<InvocationError>} to receive all errors
-     * @param invocationResultConsumerList a {@link List<Consumer<InvocationResult>>} to capture all results
-     *
+     * @param asyncInvocationResultConsumerList a {@link List<Consumer<InvocationResult>>} to capture all async results
+     * @param asyncInvocationErrorConsumer a {@link Consumer<InvocationError>} to receive async errors
      * @return a {@link Future<Object>} which returns the result of the remote invocation
      */
     Future<Object> invoke(Invocation invocation,
-                          InvocationErrorConsumer invocationErrorConsumer,
-                          List<Consumer<InvocationResult>> invocationResultConsumerList);
+                          List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+                          InvocationErrorConsumer asyncInvocationErrorConsumer);
 
     /**
      * Behaves similar to {@link Consumer<Throwable>} except that it may allow for re-throwing of the underlying
@@ -54,7 +53,7 @@ public interface RemoteInvoker {
          * @param invocationError the {@link Throwable} instance
          * @throws Throwable if the supplied
          */
-        void accept(InvocationError invocationError) throws Throwable;
+        void accept(InvocationError invocationError) throws Exception;
 
         /**
          * Invokes {@link #accept(InvocationError)}, catching any {@link Throwable} instances and logging them to the
@@ -65,8 +64,8 @@ public interface RemoteInvoker {
         default void acceptAndLogError(final Logger logger, final InvocationError invocationError) {
             try {
                 accept(invocationError);
-            } catch (Throwable throwable) {
-                logger.error("Caught throwable handling error.", throwable);
+            } catch (Exception ex) {
+                logger.error("Caught throwable handling error.", ex);
             }
         }
 

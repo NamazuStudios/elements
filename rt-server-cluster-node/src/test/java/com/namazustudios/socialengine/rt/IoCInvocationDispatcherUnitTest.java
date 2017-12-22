@@ -39,20 +39,20 @@ public class IoCInvocationDispatcherUnitTest {
         invocation.setParameters(asList(String.class.getName()));
         invocation.setArguments(asList("Hello World!"));
 
-        final Consumer<InvocationError> invocationErrorConsumer = mock(Consumer.class);
-        final Consumer<InvocationResult> returnInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationError> asyncInvocationErrorConsumer = mock(Consumer.class);
+        final Consumer<InvocationResult> asyncInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationError> syncasyncInvocationErrorConsumer = mock(Consumer.class);
         final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList = emptyList();
 
         getInvocationDispatcher().dispatch(invocation,
-                                           invocationErrorConsumer,
-                                           returnInvocationResultConsumer,
-                                           additionalInvocationResultConsumerList);
+                asyncInvocationResultConsumer, syncasyncInvocationErrorConsumer,
+                additionalInvocationResultConsumerList, asyncInvocationErrorConsumer);
 
         final InvocationResult expected = new InvocationResult();
         expected.setResult(null);
 
-        verify(invocationErrorConsumer, never()).accept(any());
-        verify(returnInvocationResultConsumer, times(1)).accept(eq(expected));
+        verify(asyncInvocationErrorConsumer, never()).accept(any());
+        verify(asyncInvocationResultConsumer, times(1)).accept(eq(expected));
         verify(getMockTestServiceInterface(), times(1)).testSyncVoid(eq("Hello World!"));
 
     }
@@ -67,20 +67,20 @@ public class IoCInvocationDispatcherUnitTest {
         invocation.setParameters(emptyList());
         invocation.setArguments(emptyList());
 
-        final Consumer<InvocationError> invocationErrorConsumer = mock(Consumer.class);
-        final Consumer<InvocationResult> returnInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationError> asyncInvocationErrorConsumer = mock(Consumer.class);
+        final Consumer<InvocationResult> asyncInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationError> syncasyncInvocationErrorConsumer = mock(Consumer.class);
         final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList = emptyList();
 
         getInvocationDispatcher().dispatch(invocation,
-                invocationErrorConsumer,
-                returnInvocationResultConsumer,
-                additionalInvocationResultConsumerList);
+                asyncInvocationResultConsumer, syncasyncInvocationErrorConsumer,
+                additionalInvocationResultConsumerList, asyncInvocationErrorConsumer);
 
         final InvocationResult expected = new InvocationResult();
         expected.setResult(null);
 
-        verify(invocationErrorConsumer, never()).accept(any());
-        verify(returnInvocationResultConsumer, times(1)).accept(eq(expected));
+        verify(asyncInvocationErrorConsumer, never()).accept(any());
+        verify(asyncInvocationResultConsumer, times(1)).accept(eq(expected));
         verify(getMockTestServiceInterface(), times(1)).testDefaultMethod();
 
     }
@@ -96,22 +96,22 @@ public class IoCInvocationDispatcherUnitTest {
         invocation.setParameters(asList(String.class.getName()));
         invocation.setArguments(asList("Hello World!"));
 
-        final Consumer<InvocationError> invocationErrorConsumer = mock(Consumer.class);
-        final Consumer<InvocationResult> returnInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationError> asyncInvocationErrorConsumer = mock(Consumer.class);
+        final Consumer<InvocationResult> asyncInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationError> syncasyncInvocationErrorConsumer = mock(Consumer.class);
         final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList = emptyList();
 
         when(getMockTestServiceInterface().testSyncReturn(any())).thenReturn(4.2);
 
         getInvocationDispatcher().dispatch(invocation,
-                invocationErrorConsumer,
-                returnInvocationResultConsumer,
-                additionalInvocationResultConsumerList);
+                asyncInvocationResultConsumer, syncasyncInvocationErrorConsumer,
+                additionalInvocationResultConsumerList, asyncInvocationErrorConsumer);
 
         final InvocationResult expected = new InvocationResult();
         expected.setResult(4.2);
 
-        verify(invocationErrorConsumer, never()).accept(any());
-        verify(returnInvocationResultConsumer, times(1)).accept(eq(expected));
+        verify(asyncInvocationErrorConsumer, never()).accept(any());
+        verify(asyncInvocationResultConsumer, times(1)).accept(eq(expected));
         verify(getMockTestServiceInterface(), times(1)).testSyncReturn(eq("Hello World!"));
 
     }
@@ -132,8 +132,9 @@ public class IoCInvocationDispatcherUnitTest {
         final InvocationResult expectedInvocationResult = new InvocationResult();
         expectedInvocationResult.setResult("Why, hello to you as well!");
 
-        final Consumer<InvocationError> invocationErrorConsumer = mock(Consumer.class);
-        final Consumer<InvocationResult> returnInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationError> asyncInvocationErrorConsumer = mock(Consumer.class);
+        final Consumer<InvocationResult> asyncInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationError> syncasyncInvocationErrorConsumer = mock(Consumer.class);
 
         final Consumer<InvocationResult> argInvocationResultConsumer = mock(Consumer.class);
         final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList = asList(argInvocationResultConsumer);
@@ -151,15 +152,14 @@ public class IoCInvocationDispatcherUnitTest {
         }).when(getMockTestServiceInterface()).testAsyncReturnVoid(any(), any(), any());
 
         getInvocationDispatcher().dispatch(invocation,
-                invocationErrorConsumer,
-                returnInvocationResultConsumer,
-                additionalInvocationResultConsumerList);
+                asyncInvocationResultConsumer, syncasyncInvocationErrorConsumer,
+                additionalInvocationResultConsumerList, asyncInvocationErrorConsumer);
 
         final InvocationResult expected = new InvocationResult();
         expected.setResult(null);
 
-        verify(invocationErrorConsumer, times(1)).accept(expectedInvocationError);
-        verify(returnInvocationResultConsumer, never()).accept(any());
+        verify(asyncInvocationErrorConsumer, times(1)).accept(expectedInvocationError);
+        verify(asyncInvocationResultConsumer, never()).accept(any());
         verify(getMockTestServiceInterface(), times(1))
             .testAsyncReturnVoid(eq("Hello World!"), any(Consumer.class), any(Consumer.class));
 
@@ -175,8 +175,10 @@ public class IoCInvocationDispatcherUnitTest {
         invocation.setParameters(asList(String.class.getName()));
         invocation.setArguments(asList("Hello World!"));
 
-        final Consumer<InvocationError> invocationErrorConsumer = mock(Consumer.class);
-        final Consumer<InvocationResult> returnInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationResult> syncInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationError> syncInvocationErrorConsumer = mock(Consumer.class);
+
+        final Consumer<InvocationError> asyncInvocationErrorConsumer = mock(Consumer.class);
         final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList = emptyList();
 
         final Future<Integer> integerFuture = mock(Future.class);
@@ -184,15 +186,14 @@ public class IoCInvocationDispatcherUnitTest {
         when(getMockTestServiceInterface().testAsyncReturnFuture(any())).thenReturn(integerFuture);
 
         getInvocationDispatcher().dispatch(invocation,
-                invocationErrorConsumer,
-                returnInvocationResultConsumer,
-                additionalInvocationResultConsumerList);
+                syncInvocationResultConsumer, syncInvocationErrorConsumer,
+                additionalInvocationResultConsumerList, asyncInvocationErrorConsumer);
 
         final InvocationResult expected = new InvocationResult();
         expected.setResult(42);
 
-        verify(invocationErrorConsumer, never()).accept(any());
-        verify(returnInvocationResultConsumer, times(1)).accept(eq(expected));
+        verify(asyncInvocationErrorConsumer, never()).accept(any());
+        verify(syncInvocationResultConsumer, times(1)).accept(eq(expected));
         verify(getMockTestServiceInterface(), times(1)).testAsyncReturnFuture(eq("Hello World!"));
 
     }
@@ -213,10 +214,11 @@ public class IoCInvocationDispatcherUnitTest {
         final InvocationResult expectedInvocationResult = new InvocationResult();
         expectedInvocationResult.setResult("Why, hello to you as well!");
 
-        final Consumer<InvocationError> invocationErrorConsumer = mock(Consumer.class);
-        final Consumer<InvocationResult> returnInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationResult> syncInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationError> syncInvocationErrorConsumer = mock(Consumer.class);
 
         final Consumer<InvocationResult> argInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationError> asyncInvocationErrorConsumer = mock(Consumer.class);
         final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList = asList(argInvocationResultConsumer);
 
         final Future<Integer> integerFuture = mock(Future.class);
@@ -235,15 +237,14 @@ public class IoCInvocationDispatcherUnitTest {
         });
 
         getInvocationDispatcher().dispatch(invocation,
-                invocationErrorConsumer,
-                returnInvocationResultConsumer,
-                additionalInvocationResultConsumerList);
+                syncInvocationResultConsumer, syncInvocationErrorConsumer,
+                additionalInvocationResultConsumerList, asyncInvocationErrorConsumer);
 
         final InvocationResult expected = new InvocationResult();
         expected.setResult(42);
 
-        verify(invocationErrorConsumer, times(1)).accept(eq(expectedInvocationError));
-        verify(returnInvocationResultConsumer, times(1)).accept(eq(expected));
+        verify(asyncInvocationErrorConsumer, times(1)).accept(eq(expectedInvocationError));
+        verify(syncInvocationResultConsumer, times(1)).accept(eq(expected));
         verify(getMockTestServiceInterface(), times(1))
             .testAsyncReturnFuture(eq("Hello World!"), any(Consumer.class), any(Consumer.class));
 
@@ -267,10 +268,11 @@ public class IoCInvocationDispatcherUnitTest {
         final InvocationResult expectedInvocationResult = new InvocationResult();
         expectedInvocationResult.setResult("Why, hello to you as well!");
 
-        final Consumer<InvocationError> invocationErrorConsumer = mock(Consumer.class);
-        final Consumer<InvocationResult> returnInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationResult> syncInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationError> syncInvocationErrorConsumer = mock(Consumer.class);
 
         final Consumer<InvocationResult> argInvocationResultConsumer = mock(Consumer.class);
+        final Consumer<InvocationError> asyncInvocationErrorConsumer = mock(Consumer.class);
         final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList = asList(argInvocationResultConsumer);
 
         final Future<Integer> integerFuture = mock(Future.class);
@@ -289,15 +291,14 @@ public class IoCInvocationDispatcherUnitTest {
         });
 
         getInvocationDispatcher().dispatch(invocation,
-                invocationErrorConsumer,
-                returnInvocationResultConsumer,
-                additionalInvocationResultConsumerList);
+                syncInvocationResultConsumer, syncInvocationErrorConsumer,
+                additionalInvocationResultConsumerList, asyncInvocationErrorConsumer);
 
         final InvocationResult expected = new InvocationResult();
         expected.setResult(42);
 
-        verify(invocationErrorConsumer, times(1)).accept(eq(expectedInvocationError));
-        verify(returnInvocationResultConsumer, times(1)).accept(eq(expected));
+        verify(asyncInvocationErrorConsumer, times(1)).accept(eq(expectedInvocationError));
+        verify(syncInvocationResultConsumer, times(1)).accept(eq(expected));
         verify(getMockTestServiceInterface(), times(1))
             .testAsyncReturnFuture(eq("Hello World!"),
                                    any(TestServiceInterface.MyStringHandler.class),

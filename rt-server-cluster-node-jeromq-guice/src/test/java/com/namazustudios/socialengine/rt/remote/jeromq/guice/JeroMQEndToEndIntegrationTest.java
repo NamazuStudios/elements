@@ -6,6 +6,11 @@ import com.google.inject.Injector;
 import com.namazustudios.socialengine.remote.TestServiceInterface;
 import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.rt.Node;
+import com.namazustudios.socialengine.rt.annotation.ErrorHandler;
+import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
+import com.namazustudios.socialengine.rt.annotation.ResultHandler;
+import com.namazustudios.socialengine.rt.annotation.Serialize;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
@@ -17,9 +22,8 @@ import org.testng.annotations.Test;
 import org.zeromq.ZContext;
 
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.BIND_ADDRESS;
@@ -120,6 +124,87 @@ public class JeroMQEndToEndIntegrationTest {
         bq.take().call();
     }
 
+    @Test
+    public void testAsyncReturnFuture() throws ExecutionException, InterruptedException {
+        final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture("Hello");
+        final int result = integerFuture.get();
+        assertEquals(result, 42);
+    }
+
+    @Test
+    public void testAsyncReturnFutureException() throws InterruptedException {
+
+        final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture("testAsyncReturnFuture");
+
+        try {
+            integerFuture.get();
+        } catch (ExecutionException e) {
+            assertTrue(e.getCause() instanceof IllegalArgumentException, "Expected IllegalArgumentException but got " + e.getCause());
+        }
+
+    }
+
+//    @Test
+//    public void testAsyncReturnFutureWithConsumers() throws Exception {
+//
+//        final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
+//
+//        final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture(
+//            "Hello",
+//            (Consumer<String>) result -> bq.add(() -> {
+//                assertEquals("World!", result);
+//                return null;
+//            }),
+//            (Consumer<Throwable>) throwable -> bq.add(() -> {
+//                fail("Did not expect exception.", throwable);
+//                return null;
+//            }));
+//
+//        bq.take().call();
+//        assertEquals(integerFuture.get(), Integer.valueOf(42));
+//
+//    }
+//
+//    @Test
+//    public void testAsyncReturnFutureWithConsumersException() throws Exception {
+//
+//        final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
+//
+//        final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture(
+//                "testAsyncReturnFuture",
+//                (Consumer<String>) result -> bq.add(() -> {
+//                    fail("Expected instance of IllegalArgumentException.  Got: " + result);
+//                    return null;
+//                }),
+//                (Consumer<Throwable>) throwable -> bq.add(() -> {
+//                    assertTrue(throwable instanceof IllegalArgumentException, "Expected IllegalArgumentException");
+//                    return null;
+//                }));
+//
+//        bq.take().call();
+//        assertEquals(integerFuture.get(), Integer.valueOf(42));
+//    }
+
+    @Test
+    public void testAsyncReturnFutureWithCustomConsumers() {
+
+    }
+
+    @Test
+    public void testAsyncReturnFutureWithCustomConsumersException() {
+
+    }
+
+//    @RemotelyInvokable
+//    Future<Integer> testAsyncReturnFuture(@Serialize String msg,
+//                                          @ResultHandler Consumer<String> stringConsumer,
+//                                          @ErrorHandler Consumer<Throwable> throwableConsumer);
+//
+//    @RemotelyInvokable
+//    Future<Integer> testAsyncReturnFuture(@Serialize String msg,
+//                                          @ResultHandler TestServiceInterface.MyStringHandler stringConsumer,
+//                                          @ErrorHandler TestServiceInterface.MyErrorHandler errorHandler);
+//
     @Test(invocationCount = 40, threadPoolSize = 40)
     public void testEcho() {
         final UUID uuid = randomUUID();

@@ -17,18 +17,14 @@ public interface LocalInvocationDispatcher {
     /**
      * Performs the dispatch to the supplied object.  Catching and collecting any errors appropriately, and forwarding
      * the result to the supplied {@link Consumer<InvocationResult>}.  This should not throw an exception, ever.
-     *
-     * @param target
+     *  @param target
      * @param invocation
-     * @param invocationErrorConsumer
-     * @param returnInvocationResultConsumer
-     * @param invocationResultConsumerList
+     * @param asyncInvocationResultConsumerList
+     * @param asyncInvocationErrorConsumer
      */
-    void dispatch(Object target,
-                  Invocation invocation,
-                  Consumer<InvocationError> invocationErrorConsumer,
-                  Consumer<InvocationResult> returnInvocationResultConsumer,
-                  List<Consumer<InvocationResult>> invocationResultConsumerList);
+    void dispatch(Object target, Invocation invocation,
+                  Consumer<InvocationResult> syncInvocationResultConsumer, Consumer<InvocationError> syncInvocationErrorConsumer,
+                  List<Consumer<InvocationResult>> asyncInvocationResultConsumerList, Consumer<InvocationError> asyncInvocationErrorConsumer);
 
     /**
      * If the {@link Method} called from the {@link Invocation} returns a {@link Future} instance, this may defined
@@ -39,28 +35,22 @@ public interface LocalInvocationDispatcher {
     interface ReturnValueStrategy {
 
         void process(Object object,
-                     Consumer<InvocationError> invocationErrorConsumer,
-                     Consumer<InvocationResult> returnInvocationResultConsumer);
+                     Consumer<InvocationError> syncInvocationErrorConsumer,
+                     Consumer<InvocationResult> syncInvocationResultConsumer);
 
     }
 
     /**
-     * Constructs a {@link ReturnValueStrategy <Object>} which ignores the return value.
+     * Constructs a {@link ReturnValueStrategy <Object>} which ignores the return value and immediately returns an
+     * {@link InvocationResult} with a null result.
      *
      * @return the {@link ReturnValueStrategy} which passes the result through.
      */
     static ReturnValueStrategy ignoreReturnValueStrategy() {
-
-        final Logger logger = LoggerFactory.getLogger(InvocationDispatcher.class);
-
-        return ((object, invocationErrorConsumer, returnInvocationResultConsumer) -> {
-            logger.info("Return value ignored.");
-
+        return ((object, syncInvocationErrorConsumer, syncInvocationResultConsumer) -> {
             final InvocationResult invocationResult = new InvocationResult();
-            returnInvocationResultConsumer.accept(invocationResult);
-
+            syncInvocationResultConsumer.accept(invocationResult);
         });
-
     }
 
     /**
@@ -71,10 +61,10 @@ public interface LocalInvocationDispatcher {
      * @return the {@link ReturnValueStrategy} which passes the result through.
      */
     static ReturnValueStrategy simpleReturnValueStrategy() {
-        return ((result, invocationErrorConsumer, returnInvocationResultConsumer) -> {
+        return ((result, syncInvocationErrorConsumer, syncInvocationResultConsumer) -> {
             final InvocationResult invocationResult = new InvocationResult();
             invocationResult.setResult(result);
-            returnInvocationResultConsumer.accept(invocationResult);
+            syncInvocationResultConsumer.accept(invocationResult);
         });
     }
 
@@ -88,15 +78,16 @@ public interface LocalInvocationDispatcher {
 
         final Logger logger = LoggerFactory.getLogger(InvocationDispatcher.class);
 
-        return (future, invocationErrorConsumer, returnInvocationResultConsumer) -> {
+        return (future, syncInvocationErrorConsumer, syncInvocationResultConsumer) -> {
             try {
                 final Object result = ((Future<?>)future).get();
                 final InvocationResult invocationResult = new InvocationResult();
                 invocationResult.setResult(result);
-                returnInvocationResultConsumer.accept(invocationResult);
+                syncInvocationResultConsumer.accept(invocationResult);
             } catch (ExecutionException ex) {
                 final InvocationError invocationError = new InvocationError();
                 invocationError.setThrowable(ex.getCause());
+                syncInvocationErrorConsumer.accept(invocationError);
             } catch (InterruptedException e) {
                 logger.info("Interrupted while waiting for result.", e);
             }
