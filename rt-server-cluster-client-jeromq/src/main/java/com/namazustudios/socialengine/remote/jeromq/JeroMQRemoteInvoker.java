@@ -202,7 +202,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         if (part == 0) {
             remoteInvocationFutureTask.setResult(invocationResult.getResult());
         } else {
-
+            asyncResultConsumerList.get(part - 1).accept(invocationResult);
         }
 
     }

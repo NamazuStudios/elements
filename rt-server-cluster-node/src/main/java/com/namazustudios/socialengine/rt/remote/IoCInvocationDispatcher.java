@@ -82,8 +82,8 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
 
         localInvocationDispatcher.dispatch(
                 object, invocation,
-                syncInvocationResultConsumer, asyncInvocationErrorConsumer,
-                asyncInvocationResultConsumerList, syncInvocationErrorConsumer);
+                syncInvocationResultConsumer, syncInvocationErrorConsumer,
+                asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
 
     }
 
