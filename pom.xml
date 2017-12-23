@@ -64,6 +64,7 @@
         <module>rt-server-lua-testkit</module>
         <module>socialengine-jnlua/jnlua</module>
         <module>common-lua</module>
+    <module>cluster-node</module>
   </modules>
 
     <properties>
