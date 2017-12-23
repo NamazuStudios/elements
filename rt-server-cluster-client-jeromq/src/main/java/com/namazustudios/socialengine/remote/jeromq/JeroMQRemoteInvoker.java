@@ -62,9 +62,12 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                 send(connection.socket(), invocation, asyncInvocationResultConsumerList.size());
                 final int sIndex = poller.register(connection.socket(), ZPoller.READABLE);
 
-                final int expectedResponseCount = 1 + asyncInvocationResultConsumerList.size();
+                final int expectedResponseCount = asyncInvocationResultConsumerList.size();
 
-                for (int received = 0; received < expectedResponseCount && !interrupted(); ++received) {
+                boolean syncCompleted = false;
+                boolean asyncCompleted = false;
+
+                for (int remaining = asyncInvocationResultConsumerList.size(); !(syncCompleted && asyncCompleted);) {
 
                     if (!pollForResponse(poller, sIndex)) {
                         break;
@@ -72,26 +75,30 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
                     final ZMsg msg = ZMsg.recvMsg(connection.socket());
 
-                    final boolean success;
-                    try {
-                        success = handleResponse(
-                            msg,
-                            remoteInvocationFutureTask,
-                            asyncInvocationResultConsumerList,
-                            asyncInvocationErrorConsumer
-                        );
-                    } catch (final Exception ex) {
-                        remoteInvocationFutureTask.setException(ex);
-                        break;
-                    }
+                    final HandleResult result = handleResponse(
+                        msg,
+                        remoteInvocationFutureTask,
+                        asyncInvocationResultConsumerList,
+                        asyncInvocationErrorConsumer);
 
-                    if (!success) {
-                        break;
+                    switch (result) {
+                        case SYNC_ERROR:
+                        case SYNC_RESULT:
+                            syncCompleted = true;
+                            break;
+                        case ASYNC_RESULT:
+                            if (!asyncCompleted && (--remaining) == 0) {
+                                asyncCompleted = true;
+                            }
+                            break;
+                        case ASYNC_ERROR:
+                            asyncCompleted = true;
+                            break;
                     }
 
                 }
 
-                logger.info("Finished invocation");
+                logger.info("Finished Invocation.");
 
             }
 
@@ -124,21 +131,21 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     }
 
-    private boolean handleResponse(final ZMsg msg,
-                                   final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask,
-                                   final List<Consumer<InvocationResult>> asyncResultConsumerList,
-                                   final InvocationErrorConsumer asyncErrorConsumer) throws  Exception {
+    private HandleResult handleResponse(final ZMsg msg,
+                                        final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask,
+                                        final List<Consumer<InvocationResult>> asyncResultConsumerList,
+                                        final InvocationErrorConsumer asyncErrorConsumer) {
 
         final ResponseHeader responseHeader = receiveHeader(msg);
         final int part = responseHeader.part.get();
 
         switch (responseHeader.type.get()) {
-            case INVOCATION_ERROR:
-                handleError(msg, responseHeader, remoteInvocationFutureTask, asyncErrorConsumer);
-                return part == 0;
             case INVOCATION_RESULT:
                 handleResult(msg, responseHeader, remoteInvocationFutureTask, asyncResultConsumerList);
-                return true;
+                return part == 0 ? HandleResult.SYNC_RESULT : HandleResult.ASYNC_RESULT;
+            case INVOCATION_ERROR:
+                handleError(msg, responseHeader, remoteInvocationFutureTask, asyncErrorConsumer);
+                return part == 0 ? HandleResult.SYNC_ERROR : HandleResult.ASYNC_ERROR;
             default:
                 logger.error("Invalid response type {}", responseHeader.type.get());
                 throw new InternalException("Invalid response type " + responseHeader.type.get());
@@ -149,7 +156,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     private void handleError(final ZMsg msg,
                              final ResponseHeader responseHeader,
                              final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask,
-                             final InvocationErrorConsumer asyncErrorConsumer) throws Exception {
+                             final InvocationErrorConsumer asyncErrorConsumer) {
 
         final InvocationError invocationError;
 
@@ -350,6 +357,13 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         T supply() throws Exception;
 
+    }
+
+    private enum HandleResult {
+        SYNC_RESULT,
+        SYNC_ERROR,
+        ASYNC_RESULT,
+        ASYNC_ERROR
     }
 
 }

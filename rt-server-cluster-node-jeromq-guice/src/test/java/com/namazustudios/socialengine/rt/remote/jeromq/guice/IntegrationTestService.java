@@ -9,6 +9,7 @@ import java.util.Random;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
+import static java.lang.Thread.sleep;
 import static java.util.concurrent.Executors.newScheduledThreadPool;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -23,11 +24,15 @@ public class IntegrationTestService implements TestServiceInterface {
     @Override
     public void testSyncVoid(final String msg) {
 
+        final Random random = new Random();
+        final int msec = random.nextInt(100);
+
         if (!"Hello".equals(msg)) {
             throw new IllegalArgumentException("Expected \"Hello\" but got: " + msg);
         }
 
         try {
+            sleep(msec);
             logger.info("{}: Got msg {}", new Exception().getStackTrace()[0], msg);
             scheduledExecutorService.schedule(() -> logger.info("Got msg {}", msg), 1, SECONDS).get();
         } catch (InterruptedException e) {
@@ -40,6 +45,15 @@ public class IntegrationTestService implements TestServiceInterface {
 
     @Override
     public double testSyncReturn(String msg) {
+
+        final Random random = new Random();
+        final int msec = random.nextInt(100);
+
+        try {
+            sleep(msec);
+        } catch (InterruptedException e) {
+            throw new InternalException(e);
+        }
 
         logger.info("{}: Got msg {}", new Exception().getStackTrace()[0], msg);
 
@@ -55,6 +69,10 @@ public class IntegrationTestService implements TestServiceInterface {
     public void testAsyncReturnVoid(final String msg,
                                     final Consumer<String> stringConsumer,
                                     final Consumer<Throwable> throwableConsumer) {
+
+        final Random random = new Random();
+        final int msec = random.nextInt(100);
+
         scheduledExecutorService.schedule(() -> {
 
             logger.info("{}: Got msg {}", new Exception().getStackTrace()[0], msg);
@@ -66,11 +84,15 @@ public class IntegrationTestService implements TestServiceInterface {
                 throwableConsumer.accept(iae);
             }
 
-        }, 1, SECONDS);
+        }, msec, MILLISECONDS);
     }
 
     @Override
     public Future<Integer> testAsyncReturnFuture(final String msg) {
+
+        final Random random = new Random();
+        final int msec = random.nextInt(100);
+
         return scheduledExecutorService.schedule(() -> {
 
             logger.info("{}: Got msg {}", new Exception().getStackTrace()[0], msg);
@@ -81,13 +103,17 @@ public class IntegrationTestService implements TestServiceInterface {
                 throw new IllegalArgumentException("Expecting \"Hello\" but got " + msg);
             }
 
-        }, 1, SECONDS);
+        }, msec, MILLISECONDS);
     }
 
     @Override
     public Future<Integer> testAsyncReturnFuture(final String msg,
                                                  final Consumer<String> stringConsumer,
                                                  final Consumer<Throwable> throwableConsumer) {
+
+        final Random random = new Random();
+        final int msec = random.nextInt(100);
+
         return scheduledExecutorService.schedule(() -> {
 
             logger.info("{}: Got msg {}", new Exception().getStackTrace()[0], msg);
@@ -104,7 +130,7 @@ public class IntegrationTestService implements TestServiceInterface {
                 throw iae;
             }
 
-        }, 1, SECONDS);
+        }, msec, MILLISECONDS);
     }
 
     @Override

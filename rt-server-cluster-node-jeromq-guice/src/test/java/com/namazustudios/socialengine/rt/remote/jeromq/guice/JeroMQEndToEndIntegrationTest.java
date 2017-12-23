@@ -69,7 +69,7 @@ public class JeroMQEndToEndIntegrationTest {
         return node;
     }
 
-    @Test
+    @Test(invocationCount = 100, threadPoolSize = 100)
     public void testRemoteInvokeSync() {
         getTestServiceInterface().testSyncVoid("Hello");
     }
@@ -79,7 +79,7 @@ public class JeroMQEndToEndIntegrationTest {
         getTestServiceInterface().testSyncVoid("testSyncVoid");
     }
 
-    @Test
+    @Test(invocationCount = 100, threadPoolSize = 100)
     public void testRemoteInvokeSyncReturn() {
         final double result = getTestServiceInterface().testSyncReturn("Hello");
         assertEquals(result, 40.42);
@@ -91,7 +91,7 @@ public class JeroMQEndToEndIntegrationTest {
         fail("Did not expect return.");
     }
 
-    @Test
+    @Test(invocationCount = 100, threadPoolSize = 100)
     public void testAsyncReturnVoid() throws Exception {
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
         getTestServiceInterface().testAsyncReturnVoid(
@@ -107,7 +107,7 @@ public class JeroMQEndToEndIntegrationTest {
         bq.take().call();
     }
 
-    @Test
+    @Test(invocationCount = 100, threadPoolSize = 100)
     public void testAsyncReturnVoidException() throws Exception {
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
         getTestServiceInterface().testAsyncReturnVoid(
@@ -123,14 +123,14 @@ public class JeroMQEndToEndIntegrationTest {
         bq.take().call();
     }
 
-    @Test
+    @Test(invocationCount = 100, threadPoolSize = 100)
     public void testAsyncReturnFuture() throws ExecutionException, InterruptedException {
         final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture("Hello");
         final int result = integerFuture.get();
         assertEquals(result, 42);
     }
 
-    @Test
+    @Test(invocationCount = 100, threadPoolSize = 100)
     public void testAsyncReturnFutureException() throws InterruptedException {
 
         final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture("testAsyncReturnFuture");
@@ -143,7 +143,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test
+    @Test(invocationCount = 100, threadPoolSize = 100)
     public void testAsyncReturnFutureWithConsumers() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -164,7 +164,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test
+    @Test(invocationCount = 100, threadPoolSize = 100)
     public void testAsyncReturnFutureWithConsumersException() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -190,7 +190,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test
+    @Test(invocationCount = 100, threadPoolSize = 100)
     public void testAsyncReturnFutureWithCustomConsumers() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -211,7 +211,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test
+    @Test(invocationCount = 100, threadPoolSize = 100)
     public void testAsyncReturnFutureWithCustomConsumersException() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -238,15 +238,15 @@ public class JeroMQEndToEndIntegrationTest {
         }
 
     }
-    
-    @Test(invocationCount = 40, threadPoolSize = 40)
+
+    @Test(invocationCount = 100, threadPoolSize = 100)
     public void testEcho() {
         final UUID uuid = randomUUID();
         final String result = getTestServiceInterface().testEcho(uuid.toString(), 0.0);
         assertEquals(result, uuid.toString());
     }
 
-    @Test(invocationCount = 40, threadPoolSize = 40)
+    @Test(invocationCount = 100, threadPoolSize = 100)
     public void testEchoWithSomeErrors() {
 
         final UUID uuid = randomUUID();
@@ -303,7 +303,7 @@ public class JeroMQEndToEndIntegrationTest {
             bind(TestServiceInterface.class).to(IntegrationTestService.class);
             bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class);
 
-            bind(String.class).annotatedWith(named(NUMBER_OF_DISPATCHERS)).toInstance("5");
+            bind(String.class).annotatedWith(named(NUMBER_OF_DISPATCHERS)).toInstance("100");
             bind(String.class).annotatedWith(named(BIND_ADDRESS)).toInstance("inproc://integration-test");
 
         }

@@ -53,7 +53,7 @@ public interface RemoteInvoker {
          * @param invocationError the {@link Throwable} instance
          * @throws Throwable if the supplied
          */
-        void accept(InvocationError invocationError) throws Exception;
+        void accept(InvocationError invocationError);
 
         /**
          * Invokes {@link #accept(InvocationError)}, catching any {@link Throwable} instances and logging them to the

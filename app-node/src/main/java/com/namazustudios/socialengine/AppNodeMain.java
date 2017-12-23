@@ -19,9 +19,9 @@ import static java.lang.Thread.interrupted;
  * Hello world!
  *
  */
-public class ClusterNodeMain {
+public class AppNodeMain {
 
-    private static final Logger logger = LoggerFactory.getLogger(ClusterNodeMain.class);
+    private static final Logger logger = LoggerFactory.getLogger(AppNodeMain.class);
 
     public static void main(final String[] args) {
 
@@ -31,8 +31,6 @@ public class ClusterNodeMain {
         final Injector injector = Guice.createInjector(
                 new MongoCoreModule(),
                 new JeroMQNodeModule(),
-//                new ServerModule(),
-//                new ServicesModule(),
                 new MongoDaoModule(),
                 new ValidationModule(),
                 new MongoSearchModule(),
