@@ -6,16 +6,13 @@ import com.google.inject.Injector;
 import com.namazustudios.socialengine.remote.TestServiceInterface;
 import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.rt.Node;
-import com.namazustudios.socialengine.rt.annotation.ErrorHandler;
-import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
-import com.namazustudios.socialengine.rt.annotation.ResultHandler;
-import com.namazustudios.socialengine.rt.annotation.Serialize;
-import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 import com.namazustudios.socialengine.rt.remote.RemoteProxyProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -35,6 +32,8 @@ import static java.util.UUID.randomUUID;
 import static org.testng.Assert.*;
 
 public class JeroMQEndToEndIntegrationTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQEndToEndIntegrationTest.class);
 
     private Node node;
 
@@ -220,10 +219,12 @@ public class JeroMQEndToEndIntegrationTest {
         final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture(
                 "testAsyncReturnFuture",
                 (TestServiceInterface.MyStringHandler) result -> bq.add(() -> {
+                    logger.info("Got response {}", result);
                     fail("Expected instance of IllegalArgumentException.  Got: " + result);
                     return null;
                 }),
                 (TestServiceInterface.MyErrorHandler) throwable -> bq.add(() -> {
+                    logger.info("Got exception", throwable);
                     assertTrue(throwable instanceof IllegalArgumentException, "Expected IllegalArgumentException");
                     return null;
                 }));

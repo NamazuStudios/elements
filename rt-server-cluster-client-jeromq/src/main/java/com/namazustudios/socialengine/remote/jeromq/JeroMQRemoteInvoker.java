@@ -134,7 +134,8 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         switch (responseHeader.type.get()) {
             case INVOCATION_ERROR:
-                return handleError(msg, responseHeader, remoteInvocationFutureTask, asyncErrorConsumer);
+                handleError(msg, responseHeader, remoteInvocationFutureTask, asyncErrorConsumer);
+                return part == 0;
             case INVOCATION_RESULT:
                 handleResult(msg, responseHeader, remoteInvocationFutureTask, asyncResultConsumerList);
                 return true;
@@ -145,10 +146,10 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     }
 
-    private boolean handleError(final ZMsg msg,
-                                final ResponseHeader responseHeader,
-                                final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask,
-                                final InvocationErrorConsumer asyncErrorConsumer) throws Exception {
+    private void handleError(final ZMsg msg,
+                             final ResponseHeader responseHeader,
+                             final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask,
+                             final InvocationErrorConsumer asyncErrorConsumer) throws Exception {
 
         final InvocationError invocationError;
 
@@ -173,11 +174,8 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                 logger.error("Already set result.  Silencing error.", exception);
             }
 
-            return true;
-
         } else if (part == 1) {
             asyncErrorConsumer.accept(invocationError);
-            return false;
         } else {
             throw new InternalException("Invalid error part " + responseHeader.part.get());
         }
@@ -309,6 +307,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
          * @return true if the set was successful
          */
         public boolean setResult(final T result) {
+            logger.info("Setting remote result {}", result);
             return setResultCallable(() -> result);
         }
 
@@ -318,9 +317,13 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
          * @param exception the {@link Exception} to set
          */
         public boolean setException(final Exception exception) {
+
+            logger.info("Setting remote exception {}", exception);
+
             return setResultCallable(() -> {
                 throw exception;
             });
+
         }
 
         /**

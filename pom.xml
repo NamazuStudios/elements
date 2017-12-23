@@ -60,11 +60,11 @@
         <module>code-serve-war</module>
         <module>app-serve</module>
         <module>app-serve-testkit</module>
+        <module>app-node</module>
         <module>rt-dao-guice</module>
         <module>rt-server-lua-testkit</module>
         <module>socialengine-jnlua/jnlua</module>
         <module>common-lua</module>
-    <module>cluster-node</module>
   </modules>
 
     <properties>

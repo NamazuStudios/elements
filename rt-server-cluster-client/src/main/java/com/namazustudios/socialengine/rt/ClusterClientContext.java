@@ -1,11 +1,12 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
+
 import javax.inject.Inject;
 
 public class ClusterClientContext implements Context {
 
-    // TODO Implement this class (Skeleton Only At the Moment)
-
+    private RemoteInvoker remoteInvoker;
 
     private ResourceContext resourceContext;
 
@@ -15,12 +16,21 @@ public class ClusterClientContext implements Context {
 
     @Override
     public void start() {
-        // TODO: Connect to the service
+        getRemoteInvoker().start();
     }
 
     @Override
     public void shutdown() {
-        // TODO: Disconnect from the Service
+        getRemoteInvoker().stop();
+    }
+
+    public RemoteInvoker getRemoteInvoker() {
+        return remoteInvoker;
+    }
+
+    @Inject
+    public void setRemoteInvoker(RemoteInvoker remoteInvoker) {
+        this.remoteInvoker = remoteInvoker;
     }
 
     @Override
