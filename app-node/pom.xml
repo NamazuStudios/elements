@@ -122,6 +122,11 @@
             <artifactId>rt-server-cluster-node-jeromq-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.zeromq</groupId>
+            <artifactId>jeromq</artifactId>
+            <version>${jeromq.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

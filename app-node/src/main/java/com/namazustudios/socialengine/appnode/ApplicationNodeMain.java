@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.appnode;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -6,8 +6,7 @@ import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
-import com.namazustudios.socialengine.guice.ConfigurationModule;
-import com.namazustudios.socialengine.rt.Node;
+import com.namazustudios.socialengine.appnode.guice.ConfigurationModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import org.apache.bval.guice.ValidationModule;
 import org.slf4j.Logger;
@@ -19,9 +18,9 @@ import static java.lang.Thread.interrupted;
  * Hello world!
  *
  */
-public class AppNodeMain {
+public class ApplicationNodeMain {
 
-    private static final Logger logger = LoggerFactory.getLogger(AppNodeMain.class);
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationNodeMain.class);
 
     public static void main(final String[] args) {
 
@@ -34,15 +33,14 @@ public class AppNodeMain {
                 new MongoDaoModule(),
                 new ValidationModule(),
                 new MongoSearchModule(),
-//                new FileSystemGitLoaderModule(),
                 new ConfigurationModule(defaultConfigurationSupplier)
         );
 
         final Object lock = new Object();
 
-        try (final Node node = injector.getInstance(Node.class)) {
+        try (final ApplicationNodeContainer container = injector.getInstance(ApplicationNodeContainer.class)) {
 
-            node.start();
+            container.start();
 
             synchronized (lock) {
                 while (!interrupted()) {
