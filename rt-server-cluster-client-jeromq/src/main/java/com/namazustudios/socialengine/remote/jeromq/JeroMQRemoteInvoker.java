@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
+import com.namazustudios.socialengine.rt.jeromq.Identity;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,9 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
 import static java.lang.Thread.interrupted;
+import static org.zeromq.ZMQ.SNDMORE;
 
 public class JeroMQRemoteInvoker implements RemoteInvoker {
 
@@ -67,13 +70,14 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                 boolean syncCompleted = false;
                 boolean asyncCompleted = false;
 
-                for (int remaining = asyncInvocationResultConsumerList.size(); !(syncCompleted && asyncCompleted);) {
+                for (int remaining = expectedResponseCount; !(syncCompleted && asyncCompleted);) {
 
                     if (!pollForResponse(poller, sIndex)) {
                         break;
                     }
 
                     final ZMsg msg = ZMsg.recvMsg(connection.socket());
+                    msg.pop();
 
                     final HandleResult result = handleResponse(
                         msg,
@@ -126,7 +130,8 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
             throw new InternalException(e);
         }
 
-        socket.sendByteBuffer(requestHeader.getByteBuffer(), ZMQ.SNDMORE);
+        socket.send(EMPTY_DELIMITER, SNDMORE);
+        socket.sendByteBuffer(requestHeader.getByteBuffer(), SNDMORE);
         socket.send(payload);
 
     }

@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
+import com.namazustudios.socialengine.rt.jeromq.Identity;
 import com.namazustudios.socialengine.rt.remote.*;
 import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.MessageType.INVOCATION_ERROR;
 import static com.namazustudios.socialengine.rt.util.FinallyAction.with;
 import static java.lang.Thread.interrupted;
@@ -45,6 +47,8 @@ public class JeroMQNode implements Node {
     public static final String NUMBER_OF_DISPATCHERS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.numberOfDispatchers";
 
     private final AtomicReference<Context> context = new AtomicReference<>();
+
+    private Identity identity;
 
     private ZContext zContext;
 
@@ -84,6 +88,15 @@ public class JeroMQNode implements Node {
             throw new IllegalStateException("Already stopped.");
         }
 
+    }
+
+    public Identity getIdentity() {
+        return identity;
+    }
+
+    @Inject
+    public void setIdentity(Identity identity) {
+        this.identity = identity;
     }
 
     public ZContext getzContext() {
@@ -285,7 +298,7 @@ public class JeroMQNode implements Node {
         private void dispatchMethodInvocation(final Socket inbound) {
 
             final ZMsg msg = ZMsg.recvMsg(inbound);
-            final byte[] identity = msg.remove().getData();
+            final ZMsg identity = getIdentity().popIdentity(msg);
 
             final AtomicReference<Invocation> invocationAtomicReference = new AtomicReference<>();
 
@@ -356,18 +369,27 @@ public class JeroMQNode implements Node {
         private void sendResult(final Socket socket,
                                 final InvocationResult invocationResult,
                                 final int part,
-                                final byte[] identity,
+                                final ZMsg identity,
                                 final Consumer<InvocationError> invocationErrorConsumer) {
 
             final ResponseHeader responseHeader = new ResponseHeader();
             responseHeader.type.set(MessageType.INVOCATION_RESULT);
             responseHeader.part.set(part);
 
+            final byte[] responseHeaderBytes = new byte[responseHeader.size()];
+            responseHeader.getByteBuffer().get(responseHeaderBytes);
+
             try {
+
                 final byte[] payload = getPayloadWriter().write(invocationResult);
-                socket.send(identity, SNDMORE);
-                socket.sendByteBuffer(responseHeader.getByteBuffer(), SNDMORE);
-                socket.send(payload);
+                final ZMsg msg = identity.duplicate();
+
+                msg.addLast(EMPTY_DELIMITER);
+                msg.addLast(responseHeaderBytes);
+                msg.addLast(payload);
+
+                msg.send(socket);
+
             } catch (IOException e) {
                 logger.error("Could not write payload to byte stream.  Sending empty.", e);
                 final InvocationError invocationError = new InvocationError();
@@ -380,11 +402,14 @@ public class JeroMQNode implements Node {
         private void sendError(final Socket socket,
                                final InvocationError invocationError,
                                final int part,
-                               final byte[] identity) {
+                               final ZMsg identity) {
 
             final ResponseHeader responseHeader = new ResponseHeader();
             responseHeader.type.set(INVOCATION_ERROR);
             responseHeader.part.set(part);
+
+            final byte[] responseHeaderBytes = new byte[responseHeader.size()];
+            responseHeader.getByteBuffer().get(responseHeaderBytes);
 
             byte[] payload;
 
@@ -395,9 +420,13 @@ public class JeroMQNode implements Node {
                 payload = new byte[0];
             }
 
-            socket.send(identity, SNDMORE);
-            socket.sendByteBuffer(responseHeader.getByteBuffer(), SNDMORE);
-            socket.send(payload);
+            final ZMsg msg = identity.duplicate();
+
+            msg.addLast(EMPTY_DELIMITER);
+            msg.addLast(responseHeaderBytes);
+            msg.addLast(payload);
+
+            msg.send(socket);
 
         }
 
