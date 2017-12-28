@@ -1,4 +1,5 @@
-package com.namazustudios.socialengine.appnode.jeromq;
+package com.namazustudios.socialengine.rt.remote;
+
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
 
@@ -21,5 +22,5 @@ public class MalformedMessageException extends InternalException {
     public MalformedMessageException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
-    
+
 }

@@ -1,6 +1,4 @@
-package com.namazustudios.socialengine.appnode.jeromq;
-
-import com.namazustudios.socialengine.model.application.Application;
+package com.namazustudios.socialengine.rt.jeromq;
 
 import java.nio.charset.Charset;
 import java.util.UUID;
@@ -16,12 +14,11 @@ public class Routing {
     private static final Charset UTF_8 = Charset.forName("UTF-8");
 
     /**
-     * Gets a route {@link UUID} for the supplied {@link Application}.  The expected id corresponds to the value
-     * returned by {@link Application#getId()}.  A route ID is defined as a Type 3 UUID derived from the UTF-8 encoding
-     * of the supplied {@link String}.  This is used to abbreviate long database IDs over the network and guarantee
-     * a fixed-length identifier for the application.
+     * Gets a route {@link UUID} for the supplied id.  The expected id corresponds to the unique id of the node This is
+     * used to abbreviate potentially long unique IDs over the network and guarantee a fixed-length identifier for the
+     * route.
      *
-     * @param applicationId the application's ID
+     * @param applicationId the node's ID
      * @return a {@link UUID} based on the application id
      */
     public UUID getRouteId(final String applicationId) {
@@ -29,7 +26,7 @@ public class Routing {
     }
 
     /**
-     * Derives a URL based address for the internal routing of requests for a particular {@link Application} with the
+     * Derives a URL based address for the internal routing of requests for a particular node with the
      * associated route {@link UUID}. This is defined as the inproc://route-[routeId].
      *
      * Returns the {@link String} representing the internal route address.

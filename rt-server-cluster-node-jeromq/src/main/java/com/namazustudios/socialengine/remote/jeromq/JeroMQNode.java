@@ -27,6 +27,7 @@ import java.util.function.Consumer;
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.MessageType.INVOCATION_ERROR;
 import static com.namazustudios.socialengine.rt.util.FinallyAction.with;
+import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
@@ -38,15 +39,23 @@ public class JeroMQNode implements Node {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQNode.class);
 
-    private static final String INBOUND_ADDR = "inproc://node.in";
+    private static final String INBOUND_ADDR_FORMAT = "inproc://node.%s.in";
 
-    private static final String OUTBOUND_ADDR = "inproc://node.out";
+    private static final String OUTBOUND_ADDR_FORMAT = "inproc://node.%s.out";
+
+    public static final String ID = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.id";
+
+    public static final String NAME = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.name";
 
     public static final String BIND_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.bindAddress";
 
     public static final String NUMBER_OF_DISPATCHERS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.numberOfDispatchers";
 
     private final AtomicReference<Context> context = new AtomicReference<>();
+
+    private String id;
+
+    private String name;
 
     private Identity identity;
 
@@ -63,6 +72,24 @@ public class JeroMQNode implements Node {
     private PayloadWriter payloadWriter;
 
     private Provider<ConnectionPool> connectionPoolProvider;
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    public String getInboundAddr() {
+        return format(INBOUND_ADDR_FORMAT, getId());
+    }
+
+    public String getOutboundAddr() {
+        return format(OUTBOUND_ADDR_FORMAT, getId());
+    }
 
     @Override
     public void start() {
@@ -162,6 +189,16 @@ public class JeroMQNode implements Node {
         this.connectionPoolProvider = connectionPoolProvider;
     }
 
+    @Inject
+    public void setId(@Named(ID) String id) {
+        this.id = id;
+    }
+
+    @Inject
+    public void setName(@Named(NAME) String name) {
+        this.name = name;
+    }
+
     private class Context {
 
         private final AtomicBoolean running = new AtomicBoolean();
@@ -192,15 +229,15 @@ public class JeroMQNode implements Node {
 
             outboundConnectionPool.start(zc -> {
                 final Socket socket = zc.createSocket(PUSH);
-                socket.connect(OUTBOUND_ADDR);
+                socket.connect(getOutboundAddr());
                 return socket;
-            }, JeroMQNode.class.getSimpleName() + ".out");
+            }, getName() + ".out");
 
             inboundConnectionPool.start(zc -> {
                 final Socket socket = zc.createSocket(PULL);
-                socket.connect(INBOUND_ADDR);
+                socket.connect(getInboundAddr());
                 return socket;
-            }, JeroMQNode.class.getSimpleName() + ".out");
+            }, getName() + ".in");
 
             final int toDispatch = getNumberOfDispachers();
 
@@ -260,8 +297,8 @@ public class JeroMQNode implements Node {
 
                 frontend.bind(getBindAddress());
 
-                inbound.bind(INBOUND_ADDR);
-                outbound.bind(OUTBOUND_ADDR);
+                inbound.bind(getInboundAddr());
+                outbound.bind(getOutboundAddr());
 
                 final int frontendIndex = poller.register(frontend, POLLIN | POLLERR);
                 final int outboundIndex = poller.register(outbound, POLLIN | POLLERR);

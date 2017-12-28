@@ -1,8 +1,11 @@
-package com.namazustudios.socialengine.appnode.jeromq;
+package com.namazustudios.socialengine.remote.jeromq;
 
-import com.namazustudios.socialengine.appnode.ConnectionRouter;
-import com.namazustudios.socialengine.exception.MultiException;
+import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
+import com.namazustudios.socialengine.rt.exception.MultiException;
+import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.remote.MalformedMessageException;
+import com.namazustudios.socialengine.rt.jeromq.Routing;
 import com.namazustudios.socialengine.rt.remote.PackedUUID;
 import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
@@ -24,11 +27,11 @@ import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
 import static org.zeromq.ZMsg.recvMsg;
 
-public class JeroMQConnectionRouter implements ConnectionRouter {
+public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
-    private static final Logger logger = LoggerFactory.getLogger(JeroMQConnectionRouter.class);
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQConnectionDemultiplexer.class);
 
-    public static final String BIND_ADDR = "com.namazustudios.socialengine.appnode.jeromq.JeroMQConnectionRouter.bindAddress";
+    public static final String BIND_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.bindAddress";
 
     private Routing routing;
 
@@ -36,12 +39,17 @@ public class JeroMQConnectionRouter implements ConnectionRouter {
 
     private String bindAddress;
 
+    private Map<String, Node> applicationNode;
+
     private final AtomicReference<Thread> routerThread = new AtomicReference<>();
 
     @Override
     public void start() {
 
         final Thread thread = new Thread(new Router());
+
+        thread.setDaemon(true);
+        thread.setName(JeroMQConnectionDemultiplexer.class.getSimpleName() + " thread");
 
         if (routerThread.compareAndSet(null, thread)) {
             thread.start();
@@ -97,6 +105,15 @@ public class JeroMQConnectionRouter implements ConnectionRouter {
     @Inject
     public void setBindAddress(@Named(BIND_ADDR) String bindAddress) {
         this.bindAddress = bindAddress;
+    }
+
+    public Map<String, Node> getApplicationNode() {
+        return applicationNode;
+    }
+
+    @Inject
+    public void setApplicationNode(Map<String, Node> applicationNode) {
+        this.applicationNode = applicationNode;
     }
 
     private class Router implements Runnable {

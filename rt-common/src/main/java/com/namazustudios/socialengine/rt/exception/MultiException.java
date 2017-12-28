@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.exception;
+package com.namazustudios.socialengine.rt.exception;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.function.BiConsumer;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
 public class MultiException extends InternalException {

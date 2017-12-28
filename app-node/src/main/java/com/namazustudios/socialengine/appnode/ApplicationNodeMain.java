@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 
 import com.namazustudios.socialengine.guice.ConfigurationModule;
+import com.namazustudios.socialengine.rt.MultiNodeContainer;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import org.apache.bval.guice.ValidationModule;
 import org.slf4j.Logger;
@@ -39,7 +40,7 @@ public class ApplicationNodeMain {
 
         final Object lock = new Object();
 
-        try (final ApplicationNodeContainer container = injector.getInstance(ApplicationNodeContainer.class)) {
+        try (final MultiNodeContainer container = injector.getInstance(MultiNodeContainer.class)) {
 
             container.start();
 
