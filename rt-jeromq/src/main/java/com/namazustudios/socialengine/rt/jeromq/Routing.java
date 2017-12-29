@@ -18,11 +18,22 @@ public class Routing {
      * used to abbreviate potentially long unique IDs over the network and guarantee a fixed-length identifier for the
      * route.
      *
-     * @param applicationId the node's ID
+     * @param destinationNodeId the node's ID
      * @return a {@link UUID} based on the application id
      */
-    public UUID getRouteId(final String applicationId) {
-        return nameUUIDFromBytes(applicationId.getBytes(UTF_8));
+    public UUID getDestinationId(final String destinationNodeId) {
+        return nameUUIDFromBytes(destinationNodeId.getBytes(UTF_8));
+    }
+
+    /**
+     * Derives a URL based address for the internal routing of requests for a particular Node.  This is
+     * defined as the inproc://route-[routeId] (where routeId is the value of {@link #getDestinationId(String)}.
+     *
+     * Returns the {@link String} representing the internal route address.
+     **/
+    public String getAddressForNodeId(final String nodeId) {
+        final UUID routeId = getDestinationId(nodeId);
+        return getAddressForDestinationId(routeId);
     }
 
     /**
@@ -31,19 +42,8 @@ public class Routing {
      *
      * Returns the {@link String} representing the internal route address.
      **/
-    public String getAddressForRouteId(final UUID routeId) {
-        return format("inproc://route-%s", routeId);
-    }
-
-    /**
-     * Derives a URL based address for the internal routing of requests for a particular {@link Application}.  This is
-     * defined as the inproc://route-[routeId] (where routeId is the value of {@link #getRouteId(String)}.
-     *
-     * Returns the {@link String} representing the internal route address.
-     **/
-    public String getAddressForApplicationId(final String applicationId) {
-        final UUID routeId = getRouteId(applicationId);
-        return getAddressForRouteId(routeId);
+    public String getAddressForDestinationId(final UUID destinationNodeId) {
+        return format("inproc://route-%s", destinationNodeId);
     }
 
 }

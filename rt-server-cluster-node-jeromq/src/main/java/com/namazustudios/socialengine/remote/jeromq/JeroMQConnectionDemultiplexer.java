@@ -4,9 +4,11 @@ import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
+import com.namazustudios.socialengine.rt.jeromq.Identity;
 import com.namazustudios.socialengine.rt.remote.MalformedMessageException;
 import com.namazustudios.socialengine.rt.jeromq.Routing;
-import com.namazustudios.socialengine.rt.remote.PackedUUID;
+import com.namazustudios.socialengine.rt.remote.RoutingHeader;
 import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,18 +37,20 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
     private Routing routing;
 
+    private Identity identity;
+
     private ZContext zContext;
 
     private String bindAddress;
 
-    private Map<String, Node> applicationNode;
+    private Set<Node> nodeSet;
 
     private final AtomicReference<Thread> routerThread = new AtomicReference<>();
 
     @Override
     public void start() {
 
-        final Thread thread = new Thread(new Router());
+        final Thread thread = new Thread(new Demultiplexer());
 
         thread.setDaemon(true);
         thread.setName(JeroMQConnectionDemultiplexer.class.getSimpleName() + " thread");
@@ -54,7 +58,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         if (routerThread.compareAndSet(null, thread)) {
             thread.start();
         } else {
-            throw new IllegalStateException("Router already started.");
+            throw new IllegalStateException("Demultiplexer already started.");
         }
 
     }
@@ -75,9 +79,18 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
             }
 
         } else {
-            throw new IllegalStateException("Router already started.");
+            throw new IllegalStateException("Demultiplexer already started.");
         }
 
+    }
+
+    public Identity getIdentity() {
+        return identity;
+    }
+
+    @Inject
+    public void setIdentity(Identity identity) {
+        this.identity = identity;
     }
 
     public Routing getRouting() {
@@ -107,16 +120,16 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         this.bindAddress = bindAddress;
     }
 
-    public Map<String, Node> getApplicationNode() {
-        return applicationNode;
+    public Set<Node> getNodeSet() {
+        return nodeSet;
     }
 
     @Inject
-    public void setApplicationNode(Map<String, Node> applicationNode) {
-        this.applicationNode = applicationNode;
+    public void setNodeSet(Set<Node> nodeSet) {
+        this.nodeSet = nodeSet;
     }
 
-    private class Router implements Runnable {
+    private class Demultiplexer implements Runnable {
 
         @Override
         public void run() {
@@ -124,7 +137,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
             FinallyAction action = FinallyAction.with(() -> {});
 
             try (final ZMQ.Poller poller = getzContext().createPoller(1);
-                 final Routes routes = new Routes(poller);
+                 final Backends backends = new Backends(poller);
                  final ZMQ.Socket frontend = getzContext().createSocket(ZMQ.ROUTER)) {
 
                 action = FinallyAction.with(() -> getzContext().destroySocket(frontend));
@@ -141,9 +154,9 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                     }
 
                     try {
-                        routeMessages(routes, poller, index, frontend, frontendIndex);
+                        routeMessages(backends, poller, index, frontend, frontendIndex);
                     } catch (MalformedMessageException ex) {
-                        routes.close(index);
+                        backends.close(index);
                     }
 
                 }
@@ -159,29 +172,63 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         }
 
         private void routeMessages(
-                final Routes routes,
+                final Backends backends,
                 final ZMQ.Poller poller, final int index,
                 final ZMQ.Socket frontend, final int frontendIndex) {
 
-            if (poller.pollin(index)) if (index == frontendIndex) {
+            final boolean input = poller.pollin(index);
+            final boolean error = poller.pollerr(index);
+
+            if (input && index == frontendIndex) {
+
                 final ZMsg msg = recvMsg(frontend);
-                final UUID routeId = stripRouteId(msg);
-                final int route = routes.getRoute(routeId);
-                final ZMQ.Socket socket = poller.getSocket(route);
-                msg.send(socket);
-            } else {
+                final RoutingHeader incomingRoutingHeader = stripRoutingHeader(msg);
+
+                if (incomingRoutingHeader.status.get() == RoutingHeader.Status.CONTINUE) {
+                    try {
+
+                        final int route = backends.getBackend(incomingRoutingHeader.destination.get());
+                        final ZMQ.Socket socket = poller.getSocket(route);
+                        msg.send(socket);
+
+                    } catch (NodeNotFoundException ex) {
+
+                        // Without this check here, we could have an errant client constantly creating sockets in
+                        // this instance needlessly consuming resources/memory that will never get used.  Therefore, we
+                        // must limit or prevent this from happening.
+
+                        final RoutingHeader outgoingRoutingHeader = new RoutingHeader();
+                        outgoingRoutingHeader.status.set(RoutingHeader.Status.DEAD);
+                        outgoingRoutingHeader.destination.set(incomingRoutingHeader.destination.get());
+
+                        final byte[] outgoingRoutingHeaderBytes = new byte[outgoingRoutingHeader.size()];
+                        outgoingRoutingHeader.getByteBuffer().get(outgoingRoutingHeaderBytes);
+
+                        final ZMsg response = getIdentity().popIdentity(msg);
+                        response.add(EMPTY_DELIMITER);
+                        response.add(outgoingRoutingHeaderBytes);
+                        response.send(frontend);
+
+                    }
+                }
+
+            } else if (input) {
                 final ZMQ.Socket socket = poller.getSocket(index);
                 final ZMsg msg = recvMsg(socket);
                 msg.send(frontend);
-            } else if (poller.pollerr(index)) if (index == frontendIndex) {
+            } else if (error && index == frontendIndex) {
                 throw new InternalException("Frontend socket encountered error: " + frontend.errno());
+            } else if (error) {
+                backends.close(index);
             } else {
-                routes.close(index);
+                // This should never happen if the poller was setup properly, but if it is we should log the
+                // situation and keep on moving.
+                logger.warn("Condition neither error nor input.  Skipping IO Event.");
             }
 
         }
 
-        private UUID stripRouteId(final ZMsg msg) {
+        private RoutingHeader stripRoutingHeader(final ZMsg msg) {
 
             final Iterator<ZFrame> zFrameIterator = msg.iterator();
 
@@ -202,10 +249,10 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
                 zFrameIterator.remove();
 
-                final PackedUUID routeId = new PackedUUID();
-                routeId.getByteBuffer().put(routeIdFrame.getData());
+                final RoutingHeader routingHeader = new RoutingHeader();
+                routingHeader.getByteBuffer().put(routeIdFrame.getData());
 
-                return routeId.get();
+                return routingHeader;
 
             }
 
@@ -215,22 +262,28 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
     }
 
-    private class Routes implements AutoCloseable {
+    private class Backends implements AutoCloseable {
 
-        private final Map<UUID, Integer> routes = new HashMap<>();
+        private final Map<UUID, Integer> backends = new HashMap<>();
 
         private final ZMQ.Poller poller;
 
-        public Routes(final ZMQ.Poller poller) {
+        public Backends(final ZMQ.Poller poller) {
             this.poller = poller;
         }
 
         @Override
         public void close() throws Exception {
+            final List<Exception> exceptionList = backends.values().stream().map(backend -> {
 
-            final List<Exception> exceptionList = routes.values().stream().map(route -> {
+                final ZMQ.Socket socket = poller.getSocket(backend);
 
-                final ZMQ.Socket socket = poller.getSocket(route);
+                if (socket == null) {
+                    logger.warn("Missing socket at index {}", backend);
+                    return null;
+                }
+
+                poller.unregister(socket);
 
                 try {
                     socket.close();
@@ -250,7 +303,9 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         }
 
         public void close(final int index) {
-            final Collection<Integer> indices = routes.values();
+
+            final Collection<Integer> indices = backends.values();
+
             while (indices.remove(index)) {
 
                 final ZMQ.Socket socket = poller.getSocket(index);
@@ -259,11 +314,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                     continue;
                 }
 
-                try {
-                    poller.unregister(socket);
-                } catch (Exception ex) {
-                    logger.error("Unable to unregister socket {} ", socket);
-                }
+                poller.unregister(socket);
 
                 try {
                     socket.close();
@@ -274,14 +325,25 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                 }
 
             }
+
         }
 
-        public int getRoute(final UUID routeId) {
-            return routes.computeIfAbsent(routeId, rid -> {
+        public int getBackend(final UUID destinationId) {
+            return backends.computeIfAbsent(destinationId, did -> {
+
+                final Node node = getNodeSet()
+                    .stream()
+                    .filter(n -> destinationId.equals(getRouting().getDestinationId(n.getId())))
+                    .findFirst().orElseThrow(() -> new NodeNotFoundException());
+
+                logger.info("Found route for node {} ({})", node.getId(), node.getName());
+
                 final ZMQ.Socket socket = getzContext().createSocket(ZMQ.DEALER);
-                final String routeAddress = getRouting().getAddressForRouteId(routeId);
+                final String routeAddress = getRouting().getAddressForDestinationId(destinationId);
                 socket.connect(routeAddress);
+
                 return poller.register(socket, POLLIN | POLLERR);
+
             });
         }
 
