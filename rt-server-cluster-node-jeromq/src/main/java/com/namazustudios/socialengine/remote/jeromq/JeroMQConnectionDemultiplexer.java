@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
 import com.namazustudios.socialengine.rt.jeromq.Identity;
 import com.namazustudios.socialengine.rt.remote.MalformedMessageException;
 import com.namazustudios.socialengine.rt.jeromq.Routing;
+import com.namazustudios.socialengine.rt.remote.ResponseHeader;
 import com.namazustudios.socialengine.rt.remote.RoutingHeader;
 import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
+import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.CONTINUE;
 import static java.lang.Thread.interrupted;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
@@ -145,6 +147,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                  final ZMQ.Socket frontend = getzContext().createSocket(ZMQ.ROUTER)) {
 
                 action = FinallyAction.with(() -> getzContext().destroySocket(frontend));
+                frontend.setRouterMandatory(true);
                 frontend.bind(getBindAddress());
 
                 final int frontendIndex = poller.register(frontend, POLLIN | POLLERR);
@@ -187,9 +190,9 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
             if (input && index == frontendIndex) {
 
                 final ZMsg msg = recvMsg(frontend);
-                final RoutingHeader incomingRoutingHeader = stripRoutingHeader(msg);
+                final RoutingHeader incomingRoutingHeader = getRouting().stripRoutingHeader(msg);
 
-                if (incomingRoutingHeader.status.get() == RoutingHeader.Status.CONTINUE) {
+                if (incomingRoutingHeader.status.get() == CONTINUE) {
                     try {
                         final int route = backends.getBackend(incomingRoutingHeader.destination.get());
                         final ZMQ.Socket socket = poller.getSocket(route);
@@ -215,9 +218,18 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                     }
                 }
             } else if (input) {
+
                 final ZMQ.Socket socket = poller.getSocket(index);
                 final ZMsg msg = recvMsg(socket);
+                final UUID destination = backends.getDestination(index);
+
+                final RoutingHeader routingHeader = new RoutingHeader();
+                routingHeader.status.set(CONTINUE);
+                routingHeader.destination.set(destination);
+                getRouting().insertRoutingHeader(msg, routingHeader);
+
                 msg.send(frontend);
+
             } else if (error && index == frontendIndex) {
                 throw new InternalException("Frontend socket encountered error: " + frontend.errno());
             } else if (error) {
@@ -226,27 +238,13 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
         }
 
-        private RoutingHeader stripRoutingHeader(final ZMsg msg) {
-
-            final ZMsg identity = getIdentity().popIdentity(msg);
-
-            if (msg.isEmpty()) {
-                throw new MalformedMessageException("Message missing delimiter frame or no data follows delimiter.");
-            }
-
-            final RoutingHeader routingHeader = new RoutingHeader();
-            routingHeader.getByteBuffer().put(msg.pop().getData());
-            getIdentity().pushIdentity(msg, identity);
-
-            return routingHeader;
-
-        }
-
     }
 
     private class Backends implements AutoCloseable {
 
         private final Map<UUID, Integer> backends = new LinkedHashMap<>();
+
+        private final Map<Integer, UUID> backendsReverse = new LinkedHashMap<>();
 
         private final ZMQ.Poller poller;
 
@@ -286,28 +284,32 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
         public void close(final int index) {
 
-            final Collection<Integer> indices = backends.values();
+            final UUID uuid = backendsReverse.remove(index);
 
-            while (indices.remove(index)) {
+            if (uuid != null && backendsReverse.remove(uuid) != null) {
 
                 final ZMQ.Socket socket = poller.getSocket(index);
 
-                if (socket == null) {
-                    continue;
-                }
+                if (socket != null) {
 
-                poller.unregister(socket);
+                    poller.unregister(socket);
 
-                try {
-                    socket.close();
-                } catch (Exception ex) {
-                    logger.error("Unable to close socket.", ex);
-                } finally {
-                    getzContext().destroySocket(socket);
+                    try {
+                        socket.close();
+                    } catch (Exception ex) {
+                        logger.error("Unable to close socket.", ex);
+                    } finally {
+                        getzContext().destroySocket(socket);
+                    }
+
                 }
 
             }
 
+        }
+
+        public UUID getDestination(final int index) {
+            return backendsReverse.get(index);
         }
 
         public int getBackend(final UUID destinationId) {
@@ -318,13 +320,14 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                     .filter(nid -> destinationId.equals(getRouting().getDestinationId(nid)))
                     .findFirst().orElseThrow(() -> new NodeNotFoundException());
 
-                logger.info("Found route for node {} ({})", nodeId, destinationId);
-
                 final ZMQ.Socket socket = getzContext().createSocket(ZMQ.DEALER);
                 final String routeAddress = getRouting().getDemultiplexedForDestinationId(destinationId);
                 socket.connect(routeAddress);
 
-                return poller.register(socket, POLLIN | POLLERR);
+                final int index = poller.register(socket, POLLIN | POLLERR);
+                backendsReverse.put(index, destinationId);
+
+                return index;
 
             });
         }

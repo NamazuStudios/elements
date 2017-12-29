@@ -48,7 +48,7 @@ public class JeroMQMuxDemuxIntegrationTest {
 
     public static final String CONNECTION_ADDRESS = "inproc://test-connection";
 
-    public static List<String> DESTINATION_IDS = unmodifiableList(range(0, 100)
+    public static List<String> DESTINATION_IDS = unmodifiableList(range(0, 10)
         .mapToObj(value -> format("test-destination-%d", value))
         .collect(toList()));
 
@@ -79,6 +79,7 @@ public class JeroMQMuxDemuxIntegrationTest {
                 .map(routing::getDemultiplexedForDestinationId)
                 .map(addr -> {
                     final ZMQ.Socket socket = zContext.createSocket(ZMQ.ROUTER);
+                    socket.setRouterMandatory(true);
                     socket.bind(addr);
                     return socket;
                 }).collect(toList());
@@ -93,13 +94,14 @@ public class JeroMQMuxDemuxIntegrationTest {
                         continue;
                     }
 
-                    range(0, poller.getNext()).forEach(index -> {
+                    range(0, poller.getNext()).filter(index -> poller.getItem(index) != null).forEach(index -> {
 
                         final ZMQ.Socket socket = poller.getSocket(index);
 
                         if (poller.pollin(index)) {
                             final ZMsg msg = recvMsg(socket);
                             msg.send(socket);
+                            logger.info("Last {}", msg.getLast().getString(ZMQ.CHARSET));
                         } else if (poller.pollerr(index)) {
                             logger.error("Error on socket {}", socket.errno());
                         }
@@ -152,6 +154,8 @@ public class JeroMQMuxDemuxIntegrationTest {
     public void testMuxDemux(final String multiplexedAddress) {
 
         final UUID uuid = randomUUID();
+        logger.info("Sending {}", uuid.toString());
+
         FinallyAction action = () -> {};
 
         try (final ZMQ.Socket socket = zContext.createSocket(DEALER);
