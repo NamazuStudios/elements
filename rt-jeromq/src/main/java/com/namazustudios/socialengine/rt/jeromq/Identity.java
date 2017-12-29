@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
+import org.zeromq.ZFrame;
 import org.zeromq.ZMsg;
 
 import java.util.Arrays;
@@ -8,6 +9,23 @@ public class Identity {
 
     public static final byte[] EMPTY_DELIMITER = new byte[0];
 
+    public ZMsg copyIdentity(final ZMsg msg) {
+
+        final ZMsg identity = new ZMsg();
+
+        for (final ZFrame frame : msg) {
+
+            if (Arrays.equals(frame.getData(), EMPTY_DELIMITER)) {
+                break;
+            } else {
+                identity.addLast(frame.duplicate());
+            }
+
+        }
+
+        return identity;
+
+    }
     public ZMsg popIdentity(final ZMsg msg) {
 
         final ZMsg identity = new ZMsg();
@@ -26,7 +44,7 @@ public class Identity {
         msg.push(EMPTY_DELIMITER);
 
         while (!identity.isEmpty()) {
-            identity.addFirst(identity.removeLast());
+            msg.addFirst(identity.removeLast());
         }
 
     }

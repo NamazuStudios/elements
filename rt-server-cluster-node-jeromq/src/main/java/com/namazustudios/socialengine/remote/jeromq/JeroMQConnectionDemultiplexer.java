@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
 import com.namazustudios.socialengine.rt.exception.MultiException;
-import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
 import com.namazustudios.socialengine.rt.jeromq.Identity;
@@ -22,9 +21,12 @@ import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
 import static java.lang.Thread.interrupted;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.IntStream.range;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
 import static org.zeromq.ZMsg.recvMsg;
@@ -35,6 +37,8 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
     public static final String BIND_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.bindAddress";
 
+    public static final String DESTINATION_IDS = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.destinationIds";
+
     private Routing routing;
 
     private Identity identity;
@@ -43,7 +47,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
     private String bindAddress;
 
-    private Set<Node> nodeSet;
+    private Set<String> destinationIds;
 
     private final AtomicReference<Thread> routerThread = new AtomicReference<>();
 
@@ -120,13 +124,13 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         this.bindAddress = bindAddress;
     }
 
-    public Set<Node> getNodeSet() {
-        return nodeSet;
+    public Set<String> getDestinationIds() {
+        return destinationIds;
     }
 
     @Inject
-    public void setNodeSet(Set<Node> nodeSet) {
-        this.nodeSet = nodeSet;
+    public void setDestinationIds(@Named(DESTINATION_IDS) Set<String> destinationIds) {
+        this.destinationIds = destinationIds;
     }
 
     private class Demultiplexer implements Runnable {
@@ -147,17 +151,18 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
                 while (!interrupted()) {
 
-                    final int index = poller.poll(1000);
-
-                    if (index < 0) {
+                    if (poller.poll(1000) == 0) {
                         continue;
                     }
 
-                    try {
-                        routeMessages(backends, poller, index, frontend, frontendIndex);
-                    } catch (MalformedMessageException ex) {
-                        backends.close(index);
-                    }
+                    range(0, poller.getNext()).filter(index -> poller.getItem(index) != null).forEach(index -> {
+                        try {
+                            routeMessages(backends, poller, index, frontend, frontendIndex);
+                        } catch (MalformedMessageException ex) {
+                            logger.warn("Got malformed message.  Closing connection to peer.", ex);
+                            backends.close(index);
+                        }
+                    });
 
                 }
 
@@ -186,11 +191,9 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
                 if (incomingRoutingHeader.status.get() == RoutingHeader.Status.CONTINUE) {
                     try {
-
                         final int route = backends.getBackend(incomingRoutingHeader.destination.get());
                         final ZMQ.Socket socket = poller.getSocket(route);
                         msg.send(socket);
-
                     } catch (NodeNotFoundException ex) {
 
                         // Without this check here, we could have an errant client constantly creating sockets in
@@ -211,7 +214,6 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
                     }
                 }
-
             } else if (input) {
                 final ZMQ.Socket socket = poller.getSocket(index);
                 final ZMsg msg = recvMsg(socket);
@@ -220,43 +222,23 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                 throw new InternalException("Frontend socket encountered error: " + frontend.errno());
             } else if (error) {
                 backends.close(index);
-            } else {
-                // This should never happen if the poller was setup properly, but if it is we should log the
-                // situation and keep on moving.
-                logger.warn("Condition neither error nor input.  Skipping IO Event.");
             }
 
         }
 
         private RoutingHeader stripRoutingHeader(final ZMsg msg) {
 
-            final Iterator<ZFrame> zFrameIterator = msg.iterator();
+            final ZMsg identity = getIdentity().popIdentity(msg);
 
-            while (zFrameIterator.hasNext()) {
-                final ZFrame frame = zFrameIterator.next();
-
-                if (!Arrays.equals(frame.getData(), EMPTY_DELIMITER)) {
-                    continue;
-                }
-
-                final ZFrame routeIdFrame;
-
-                try {
-                    routeIdFrame = zFrameIterator.next();
-                } catch (NoSuchElementException ex) {
-                    throw new MalformedMessageException("No frames after delimtier.", ex);
-                }
-
-                zFrameIterator.remove();
-
-                final RoutingHeader routingHeader = new RoutingHeader();
-                routingHeader.getByteBuffer().put(routeIdFrame.getData());
-
-                return routingHeader;
-
+            if (msg.isEmpty()) {
+                throw new MalformedMessageException("Message missing delimiter frame or no data follows delimiter.");
             }
 
-            throw new MalformedMessageException("No delimiter frame found.");
+            final RoutingHeader routingHeader = new RoutingHeader();
+            routingHeader.getByteBuffer().put(msg.pop().getData());
+            getIdentity().pushIdentity(msg, identity);
+
+            return routingHeader;
 
         }
 
@@ -264,7 +246,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
     private class Backends implements AutoCloseable {
 
-        private final Map<UUID, Integer> backends = new HashMap<>();
+        private final Map<UUID, Integer> backends = new LinkedHashMap<>();
 
         private final ZMQ.Poller poller;
 
@@ -294,7 +276,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                     getzContext().destroySocket(socket);
                 }
 
-            }).filter(ex -> ex != null).collect(Collectors.toList());
+            }).filter(ex -> ex != null).collect(toList());
 
             if (!exceptionList.isEmpty()) {
                 throw new MultiException(exceptionList);
@@ -331,15 +313,15 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         public int getBackend(final UUID destinationId) {
             return backends.computeIfAbsent(destinationId, did -> {
 
-                final Node node = getNodeSet()
+                final String nodeId = getDestinationIds()
                     .stream()
-                    .filter(n -> destinationId.equals(getRouting().getDestinationId(n.getId())))
+                    .filter(nid -> destinationId.equals(getRouting().getDestinationId(nid)))
                     .findFirst().orElseThrow(() -> new NodeNotFoundException());
 
-                logger.info("Found route for node {} ({})", node.getId(), node.getName());
+                logger.info("Found route for node {} ({})", nodeId, destinationId);
 
                 final ZMQ.Socket socket = getzContext().createSocket(ZMQ.DEALER);
-                final String routeAddress = getRouting().getAddressForDestinationId(destinationId);
+                final String routeAddress = getRouting().getDemultiplexedForDestinationId(destinationId);
                 socket.connect(routeAddress);
 
                 return poller.register(socket, POLLIN | POLLERR);

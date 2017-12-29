@@ -36,7 +36,7 @@ public class PackedUUID extends Struct {
      * @return the {@link UUID}
      */
     public UUID get() {
-        return new UUID(lower.get(), upper.get());
+        return new UUID(upper.get(), lower.get());
     }
 
     @Override

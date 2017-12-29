@@ -26,24 +26,23 @@ public class Routing {
     }
 
     /**
-     * Derives a URL based address for the internal routing of requests for a particular Node.  This is
-     * defined as the inproc://route-[routeId] (where routeId is the value of {@link #getDestinationId(String)}.
+     * Derives a URL based address for the internal routing of requests for a particular node with the
+     * associated route {@link UUID}. This is defined as the inproc://multiplex-[destinationId].
      *
      * Returns the {@link String} representing the internal route address.
      **/
-    public String getAddressForNodeId(final String nodeId) {
-        final UUID routeId = getDestinationId(nodeId);
-        return getAddressForDestinationId(routeId);
+    public String getMultiplexedForDestinationId(final UUID destinationId) {
+        return format("inproc://multiplex-%s", destinationId);
     }
 
     /**
      * Derives a URL based address for the internal routing of requests for a particular node with the
-     * associated route {@link UUID}. This is defined as the inproc://route-[routeId].
+     * associated route {@link UUID}. This is defined as the inproc://multiplex-[destinationId].
      *
      * Returns the {@link String} representing the internal route address.
      **/
-    public String getAddressForDestinationId(final UUID destinationNodeId) {
-        return format("inproc://route-%s", destinationNodeId);
+    public String getDemultiplexedForDestinationId(final UUID destinationId) {
+        return format("inproc://demultiplex-%s", destinationId);
     }
 
 }
