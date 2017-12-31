@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.multibindings.Multibinder;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer;
@@ -22,7 +21,6 @@ import org.zeromq.ZMsg;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.IntStream;
 
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
@@ -34,6 +32,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.*;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.zeromq.ZMQ.DEALER;
@@ -48,7 +47,7 @@ public class JeroMQMuxDemuxIntegrationTest {
 
     public static final String CONNECTION_ADDRESS = "inproc://test-connection";
 
-    public static List<String> DESTINATION_IDS = unmodifiableList(range(0, 10)
+    public static List<String> DESTINATION_IDS = unmodifiableList(range(0, 15)
         .mapToObj(value -> format("test-destination-%d", value))
         .collect(toList()));
 
@@ -76,7 +75,7 @@ public class JeroMQMuxDemuxIntegrationTest {
 
             final List<ZMQ.Socket> socketList = DESTINATION_IDS.stream()
                 .map(routing::getDestinationId)
-                .map(routing::getDemultiplexedForDestinationId)
+                .map(routing::getDemultiplexedAddressForDestinationId)
                 .map(addr -> {
                     final ZMQ.Socket socket = zContext.createSocket(ZMQ.ROUTER);
                     socket.setRouterMandatory(true);
@@ -101,7 +100,6 @@ public class JeroMQMuxDemuxIntegrationTest {
                         if (poller.pollin(index)) {
                             final ZMsg msg = recvMsg(socket);
                             msg.send(socket);
-                            logger.info("Last {}", msg.getLast().getString(ZMQ.CHARSET));
                         } else if (poller.pollerr(index)) {
                             logger.error("Error on socket {}", socket.errno());
                         }
@@ -145,31 +143,29 @@ public class JeroMQMuxDemuxIntegrationTest {
         return DESTINATION_IDS
             .stream()
             .map(id -> routing.getDestinationId(id))
-            .map(uuid -> new Object[]{routing.getMultiplexedForDestinationId(uuid)})
+            .map(uuid -> new Object[]{routing.getMultiplexedAddressForDestinationId(uuid)})
             .toArray(Object[][]::new);
 
     }
 
-    @Test(dataProvider = "destinationIdDataSupplier", threadPoolSize = 10, invocationCount = 10)
+    @Test(dataProvider = "destinationIdDataSupplier", threadPoolSize = 10)
     public void testMuxDemux(final String multiplexedAddress) {
 
         final UUID uuid = randomUUID();
-        logger.info("Sending {}", uuid.toString());
 
         FinallyAction action = () -> {};
 
         try (final ZMQ.Socket socket = zContext.createSocket(DEALER);
              final ZMQ.Poller poller = zContext.createPoller(1)) {
 
-            action = action.then(() -> zContext.destroySocket(socket));
-            socket.connect(multiplexedAddress);
+            final int index = poller.register(socket, POLLIN | POLLERR);
+            final boolean connected = socket.connect(multiplexedAddress);
+            assertTrue(connected, "Failed to connect.");
 
             final ZMsg request = new ZMsg();
             request.push(uuid.toString());
             request.push(EMPTY_DELIMITER);
             request.send(socket);
-
-            final int index = poller.register(socket, POLLIN | POLLERR);
 
             while (!interrupted()) {
 

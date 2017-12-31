@@ -7,13 +7,11 @@ import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
 import com.namazustudios.socialengine.rt.jeromq.Identity;
 import com.namazustudios.socialengine.rt.remote.MalformedMessageException;
 import com.namazustudios.socialengine.rt.jeromq.Routing;
-import com.namazustudios.socialengine.rt.remote.ResponseHeader;
 import com.namazustudios.socialengine.rt.remote.RoutingHeader;
 import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
-import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
@@ -21,8 +19,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.CONTINUE;
@@ -321,7 +317,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                     .findFirst().orElseThrow(() -> new NodeNotFoundException());
 
                 final ZMQ.Socket socket = getzContext().createSocket(ZMQ.DEALER);
-                final String routeAddress = getRouting().getDemultiplexedForDestinationId(destinationId);
+                final String routeAddress = getRouting().getDemultiplexedAddressForDestinationId(destinationId);
                 socket.connect(routeAddress);
 
                 final int index = poller.register(socket, POLLIN | POLLERR);

@@ -38,7 +38,7 @@ public class Routing {
      *
      * Returns the {@link String} representing the internal route address.
      **/
-    public String getMultiplexedForDestinationId(final UUID destinationId) {
+    public String getMultiplexedAddressForDestinationId(final UUID destinationId) {
         return format("inproc://multiplex-%s", destinationId);
     }
 
@@ -48,7 +48,7 @@ public class Routing {
      *
      * Returns the {@link String} representing the internal route address.
      **/
-    public String getDemultiplexedForDestinationId(final UUID destinationId) {
+    public String getDemultiplexedAddressForDestinationId(final UUID destinationId) {
         return format("inproc://demultiplex-%s", destinationId);
     }
 

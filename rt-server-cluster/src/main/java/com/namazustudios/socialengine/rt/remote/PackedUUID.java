@@ -8,11 +8,11 @@ import static java.util.UUID.*;
 
 public class PackedUUID extends Struct {
 
-    public final Signed64 lower = new Signed64();
-
     public final Signed64 upper = new Signed64();
 
-    /**
+    public final Signed64 lower = new Signed64();
+
+     /**
      * Generates a random {@link UUID} and stores it to this instance.
      */
     public PackedUUID setRandom() {
@@ -26,8 +26,8 @@ public class PackedUUID extends Struct {
      * @param uuid the {@link UUID}
      */
     public void set(final UUID uuid) {
-        lower.set(uuid.getLeastSignificantBits());
         upper.set(uuid.getMostSignificantBits());
+        lower.set(uuid.getLeastSignificantBits());
     }
 
     /**
