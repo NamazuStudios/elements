@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
+import org.zeromq.ZMQException;
 import org.zeromq.ZMsg;
 
 import javax.inject.Inject;
@@ -28,6 +29,7 @@ import static java.util.stream.IntStream.range;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
 import static org.zeromq.ZMsg.recvMsg;
+import static zmq.ZError.EHOSTUNREACH;
 
 public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
@@ -189,10 +191,12 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                 final RoutingHeader incomingRoutingHeader = getRouting().stripRoutingHeader(msg);
 
                 if (incomingRoutingHeader.status.get() == CONTINUE) {
+
+                    final int route = backends.getBackend(incomingRoutingHeader.destination.get());
+                    final ZMQ.Socket socket = poller.getSocket(route);
+
                     try {
-                        final int route = backends.getBackend(incomingRoutingHeader.destination.get());
-                        final ZMQ.Socket socket = poller.getSocket(route);
-                        msg.send(socket);
+                        sendOrDrop(socket, msg);
                     } catch (NodeNotFoundException ex) {
 
                         // Without this check here, we could have an errant client constantly creating sockets in
@@ -209,7 +213,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                         final ZMsg response = getIdentity().popIdentity(msg);
                         response.add(EMPTY_DELIMITER);
                         response.add(outgoingRoutingHeaderBytes);
-                        response.send(frontend);
+                        sendOrDrop(socket, msg);
 
                     }
                 }
@@ -230,6 +234,19 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                 throw new InternalException("Frontend socket encountered error: " + frontend.errno());
             } else if (error) {
                 backends.close(index);
+            }
+
+        }
+
+        private void sendOrDrop(final ZMQ.Socket socket, final ZMsg msg) {
+            try {
+                msg.send(socket);
+            } catch (ZMQException ex) {
+                if (ex.getErrorCode() == EHOSTUNREACH) {
+                    logger.warn("Frontend host unreachable.  Dropping message.");
+                } else {
+                    throw ex;
+                }
             }
 
         }

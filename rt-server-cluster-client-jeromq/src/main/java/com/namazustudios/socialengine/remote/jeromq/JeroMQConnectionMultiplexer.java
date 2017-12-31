@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
+import org.zeromq.ZMQException;
 import org.zeromq.ZMsg;
 
 
@@ -27,6 +28,7 @@ import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
 import static org.zeromq.ZMQ.ROUTER;
 import static org.zeromq.ZMsg.recvMsg;
+import static zmq.ZError.EHOSTUNREACH;
 
 public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
@@ -181,7 +183,17 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
             if (routingHeader.status.get() == CONTINUE) {
                 final UUID destination = routingHeader.destination.get();
                 final ZMQ.Socket frontend = frontends.getFrontend(destination);
-                msg.send(frontend);
+
+                try {
+                    msg.send(frontend);
+                } catch (ZMQException ex) {
+                    if (ex.getErrorCode() == EHOSTUNREACH) {
+                        logger.warn("Host unreachable.  Dropping message.");
+                    } else {
+                        throw ex;
+                    }
+                }
+
             } else {
                 logger.error("Received {} route for destination {}", routingHeader.status.get(), routingHeader.destination.get());
             }
