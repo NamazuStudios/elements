@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.guice;
 import com.google.inject.PrivateModule;
 import com.google.inject.name.Names;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.provider.CachedThreadPoolProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,35 +29,10 @@ public class SimpleContextModule extends PrivateModule {
         bind(Context.class).to(SimpleContext.class).asEagerSingleton();
 
         // The sub-contexts associated with the main context
-        bind(IndexContext.class).to(SimpleIndexContext.class);
-        bind(ResourceContext.class).to(SimpleResourceContext.class);
-        bind(SchedulerContext.class).to(SimpleSchedulerContext.class);
-
-        bind(ExecutorService.class)
-            .annotatedWith(Names.named(SimpleResourceContext.EXECUTOR_SERVICE))
-            .toProvider(() -> executorService(SimpleResourceContext.EXECUTOR_SERVICE));
-
-        bind(ExecutorService.class)
-            .annotatedWith(Names.named(SimpleIndexContext.EXECUTOR_SERVICE))
-            .toProvider(() -> executorService(SimpleIndexContext.EXECUTOR_SERVICE));
-
         install(new SimpleServicesModule());
+        install(new SimpleIndexContextModule());
+        install(new SimpleResourceContextModule());
+        install(new SimpleSchedulerContextModule());
 
     }
-
-    private ExecutorService executorService(final String name) {
-        final AtomicInteger threadCount = new AtomicInteger();
-        final Logger logger = LoggerFactory.getLogger(SCHEDULED_EXECUTOR_SERVICE);
-        return newCachedThreadPool(r -> newThread(r, name, threadCount, logger));
-    }
-
-    private Thread newThread(final Runnable runnable, final String name,
-                             final AtomicInteger threadCount, final Logger logger) {
-        final Thread thread = new Thread(runnable);
-        thread.setDaemon(true);
-        thread.setUncaughtExceptionHandler((t , e) -> logger.error("Context exception in {}", t, e));
-        thread.setName(format("%s - Thread %d", name, threadCount.incrementAndGet()));
-        return thread;
-    }
-
 }

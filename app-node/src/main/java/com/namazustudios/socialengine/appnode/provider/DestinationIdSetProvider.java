@@ -9,13 +9,15 @@ import java.util.Set;
 
 import static java.util.stream.Collectors.toCollection;
 
-public class DestinationIDsProvider implements Provider<Set<String>> {
+public class DestinationIdSetProvider implements Provider<Set<String>> {
 
     private Provider<Set<Node>> nodeSetProvider;
 
     @Override
     public Set<String> get() {
-        return getNodeSetProvider().get().stream()
+        return getNodeSetProvider()
+            .get()
+            .stream()
             .map(node -> node.getId())
             .collect(toCollection(LinkedHashSet::new));
     }

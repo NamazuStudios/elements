@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.dao.rt.guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 
 import javax.inject.Inject;
@@ -35,6 +36,7 @@ public class RTGitApplicationInjectorProvider implements Provider<Function<Appli
                             enableManifestLoaderFeature();
                         }
                     },
+                    new GuiceIoCResolverModule(),
                     new RTFileAssetLoaderModule(codeDirectory)
             );
 

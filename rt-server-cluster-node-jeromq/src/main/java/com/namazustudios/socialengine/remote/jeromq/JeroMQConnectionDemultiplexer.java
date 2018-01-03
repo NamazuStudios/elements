@@ -60,6 +60,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         thread.setName(JeroMQConnectionDemultiplexer.class.getSimpleName() + " thread");
 
         if (routerThread.compareAndSet(null, thread)) {
+            logger.info("Starting up.");
             thread.start();
         } else {
             throw new IllegalStateException("Demultiplexer already started.");
@@ -74,6 +75,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
         if (routerThread.compareAndSet(thread, null)) {
 
+            logger.info("Shutting down.");
             thread.interrupt();
 
             try {
@@ -149,6 +151,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                 frontend.bind(getBindAddress());
 
                 final int frontendIndex = poller.register(frontend, POLLIN | POLLERR);
+                logger.info("Started.");
 
                 while (!interrupted()) {
 

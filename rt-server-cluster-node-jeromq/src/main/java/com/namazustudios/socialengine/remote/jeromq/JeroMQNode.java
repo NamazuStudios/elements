@@ -23,6 +23,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.MessageType.INVOCATION_ERROR;
@@ -37,7 +39,7 @@ import static org.zeromq.ZMQ.Poller.POLLIN;
 
 public class JeroMQNode implements Node {
 
-    private static final Logger logger = LoggerFactory.getLogger(JeroMQNode.class);
+    private static final Logger staticLogger = LoggerFactory.getLogger(JeroMQNode.class);
 
     private static final String INBOUND_ADDR_FORMAT = "inproc://node.%s.in";
 
@@ -73,6 +75,8 @@ public class JeroMQNode implements Node {
 
     private Provider<ConnectionPool> connectionPoolProvider;
 
+    private Logger logger = staticLogger;
+
     @Override
     public String getId() {
         return id;
@@ -97,6 +101,7 @@ public class JeroMQNode implements Node {
         final Context c = new Context();
 
         if (context.compareAndSet(null, c)) {
+            logger.info("Starting up.");
             c.start();
         } else {
             throw new IllegalStateException("Already started.");
@@ -110,6 +115,7 @@ public class JeroMQNode implements Node {
         final Context c = context.get();
 
         if (context.compareAndSet(c, null)) {
+            logger.info("Shutting down.");
             c.stop();
         } else {
             throw new IllegalStateException("Already stopped.");
@@ -192,11 +198,19 @@ public class JeroMQNode implements Node {
     @Inject
     public void setId(@Named(ID) String id) {
         this.id = id;
+        logger = LoggerFactory.getLogger(loggerName());
     }
 
     @Inject
     public void setName(@Named(NAME) String name) {
         this.name = name;
+        logger = LoggerFactory.getLogger(loggerName());
+    }
+
+    private String loggerName() {
+        return Stream.of(JeroMQNode.class.getName(), getName(), getId())
+                     .filter(s -> s != null)
+                     .collect(Collectors.joining("."));
     }
 
     private class Context {
@@ -304,6 +318,7 @@ public class JeroMQNode implements Node {
                 final int outboundIndex = poller.register(outbound, POLLIN | POLLERR);
 
                 proxyStartupLatch.countDown();
+                logger.info("Started up.");
 
                 while (running.get() && !interrupted()) {
 

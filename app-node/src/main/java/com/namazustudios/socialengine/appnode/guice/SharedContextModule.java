@@ -1,15 +1,15 @@
 package com.namazustudios.socialengine.appnode.guice;
 
 import com.google.inject.AbstractModule;
-import com.namazustudios.socialengine.rt.IndexContext;
-import com.namazustudios.socialengine.rt.SchedulerContext;
-import com.namazustudios.socialengine.rt.SimpleSchedulerContext;
+import com.namazustudios.socialengine.rt.guice.SimpleIndexContextModule;
+import com.namazustudios.socialengine.rt.guice.SimpleSchedulerContextModule;
 
 public class SharedContextModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(SchedulerContext.class).to(SimpleSchedulerContext.class).asEagerSingleton();
+        install(new SimpleIndexContextModule());
+        install(new SimpleSchedulerContextModule());
     }
 
 }

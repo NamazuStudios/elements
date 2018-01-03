@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.appnode.guice;
 
 import com.google.inject.*;
-import com.namazustudios.socialengine.appnode.provider.DestinationIDsProvider;
+import com.namazustudios.socialengine.appnode.provider.DestinationIdSetProvider;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.exception.NotFoundException;
@@ -47,7 +47,7 @@ public class MultiNodeContainerModule extends AbstractModule {
 
         bind(new TypeLiteral<Set<String>>(){})
             .annotatedWith(named(JeroMQConnectionDemultiplexer.DESTINATION_IDS))
-            .toProvider(DestinationIDsProvider.class);
+            .toProvider(DestinationIdSetProvider.class);
 
     }
 
