@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 
 import static com.namazustudios.socialengine.Constants.DEFAULT_PROPERTIES_FILE;
 import static com.namazustudios.socialengine.Constants.PROPERTIES_FILE;
+import static java.lang.String.format;
 import static java.lang.System.getProperties;
 
 /**
@@ -53,6 +54,11 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
         }
 
         logger.info("Using configuration properties {} with defaults {}", properties, defaultProperties);
+
+        final StringBuilder sb = new StringBuilder();
+        sb.append("Application Properties:\n");
+        defaultProperties.forEach((k, v) -> sb.append(format("\t\t%s=%s\n", k, v)));
+        logger.info("{}", sb.toString());
 
         this.properties = properties;
     }
