@@ -68,17 +68,17 @@ public class JeroMQEndToEndIntegrationTest {
         return node;
     }
 
-    @Test(invocationCount = 100, threadPoolSize = 100)
+    @Test(invocationCount = 10, threadPoolSize = 10)
     public void testRemoteInvokeSync() {
         getTestServiceInterface().testSyncVoid("Hello");
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class)
+    @Test(invocationCount = 10, threadPoolSize = 10, expectedExceptions = IllegalArgumentException.class)
     public void testRemoteInvokeSyncException() {
         getTestServiceInterface().testSyncVoid("testSyncVoid");
     }
 
-    @Test(invocationCount = 100, threadPoolSize = 100)
+    @Test(invocationCount = 10, threadPoolSize = 10)
     public void testRemoteInvokeSyncReturn() {
         final double result = getTestServiceInterface().testSyncReturn("Hello");
         assertEquals(result, 40.42);
@@ -90,7 +90,7 @@ public class JeroMQEndToEndIntegrationTest {
         fail("Did not expect return.");
     }
 
-    @Test(invocationCount = 100, threadPoolSize = 100)
+    @Test(invocationCount = 10, threadPoolSize = 10)
     public void testAsyncReturnVoid() throws Exception {
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
         getTestServiceInterface().testAsyncReturnVoid(
@@ -106,7 +106,7 @@ public class JeroMQEndToEndIntegrationTest {
         bq.take().call();
     }
 
-    @Test(invocationCount = 100, threadPoolSize = 100)
+    @Test(invocationCount = 10, threadPoolSize = 10)
     public void testAsyncReturnVoidException() throws Exception {
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
         getTestServiceInterface().testAsyncReturnVoid(
@@ -122,14 +122,14 @@ public class JeroMQEndToEndIntegrationTest {
         bq.take().call();
     }
 
-    @Test(invocationCount = 100, threadPoolSize = 100)
+    @Test(invocationCount = 10, threadPoolSize = 10)
     public void testAsyncReturnFuture() throws ExecutionException, InterruptedException {
         final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture("Hello");
         final int result = integerFuture.get();
         assertEquals(result, 42);
     }
 
-    @Test(invocationCount = 100, threadPoolSize = 100)
+    @Test(invocationCount = 10, threadPoolSize = 10)
     public void testAsyncReturnFutureException() throws InterruptedException {
 
         final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture("testAsyncReturnFuture");
@@ -142,7 +142,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test(invocationCount = 100, threadPoolSize = 100)
+    @Test(invocationCount = 10, threadPoolSize = 10)
     public void testAsyncReturnFutureWithConsumers() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -163,7 +163,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test(invocationCount = 100, threadPoolSize = 100)
+    @Test(invocationCount = 10, threadPoolSize = 10)
     public void testAsyncReturnFutureWithConsumersException() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -189,7 +189,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test(invocationCount = 100, threadPoolSize = 100)
+    @Test(invocationCount = 10, threadPoolSize = 10)
     public void testAsyncReturnFutureWithCustomConsumers() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -210,7 +210,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test(invocationCount = 100, threadPoolSize = 100)
+    @Test(invocationCount = 10, threadPoolSize = 10)
     public void testAsyncReturnFutureWithCustomConsumersException() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -238,14 +238,14 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test(invocationCount = 100, threadPoolSize = 100)
+    @Test(invocationCount = 10, threadPoolSize = 10)
     public void testEcho() {
         final UUID uuid = randomUUID();
         final String result = getTestServiceInterface().testEcho(uuid.toString(), 0.0);
         assertEquals(result, uuid.toString());
     }
 
-    @Test(invocationCount = 100, threadPoolSize = 100)
+    @Test(invocationCount = 10, threadPoolSize = 10)
     public void testEchoWithSomeErrors() {
 
         final UUID uuid = randomUUID();
