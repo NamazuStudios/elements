@@ -27,7 +27,7 @@ public class SimpleResourceServiceUnitTest {
 
     private final List<Object[]> linkedIntermediates = new ArrayList<>();
 
-    @DataProvider(parallel = true)
+    @DataProvider
     public static Object[][] initialDataProvider() {
 
         final List<Object[]> testData = new ArrayList<>();

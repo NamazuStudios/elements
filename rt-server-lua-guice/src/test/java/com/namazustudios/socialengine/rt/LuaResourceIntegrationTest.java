@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import org.slf4j.Logger;
@@ -158,6 +159,8 @@ public class LuaResourceIntegrationTest {
             });
 
             install(new SimpleContextModule());
+            install(new GuiceIoCResolverModule());
+
             bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(getClass().getClassLoader()));
 
         }

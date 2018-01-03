@@ -66,9 +66,9 @@ public class RemoteProxyProviderUnitTest {
         final Invocation expected = new Invocation();
 
         expected.setType(TestServiceInterface.class.getName());
-        expected.setMethod("testSyncVoid");
-        expected.setParameters(asList(String.class.getName()));
-        expected.setArguments(asList("Hello World!"));
+        expected.setMethod("testDefaultMethod");
+        expected.setParameters(emptyList());
+        expected.setArguments(emptyList());
         expected.setDispatchType(Dispatch.Type.SYNCHRONOUS);
 
         verify(getMockRemoteInvoker()).invoke(

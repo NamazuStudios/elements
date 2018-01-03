@@ -159,7 +159,7 @@ public class IoCInvocationDispatcherUnitTest {
         expected.setResult(null);
 
         verify(asyncInvocationErrorConsumer, times(1)).accept(expectedInvocationError);
-        verify(asyncInvocationResultConsumer, never()).accept(any());
+        verify(syncasyncInvocationErrorConsumer, never()).accept(any());
         verify(getMockTestServiceInterface(), times(1))
             .testAsyncReturnVoid(eq("Hello World!"), any(Consumer.class), any(Consumer.class));
 
