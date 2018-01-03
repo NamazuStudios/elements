@@ -73,13 +73,17 @@ public class MultiNodeContainerModule extends AbstractModule {
                     try {
                         codeDirectory = gitLoader.getCodeDirectory(application);
                     } catch (NotFoundException nfe) {
-                        logger.info("Application code not found.  Skipping application.");
+                        logger.info("Application code not found.  Skipping application {}", application.getName());
                         return null;
                     }
 
                     final UUID uuid = routing.getDestinationId(application.getId());
                     final String bindAddress = routing.getDemultiplexedAddressForDestinationId(uuid);
-                    final JeroMQNodeModule nodeModule = new JeroMQNodeModule().withBindAddress(bindAddress);
+
+                    final JeroMQNodeModule nodeModule = new JeroMQNodeModule()
+                        .withBindAddress(bindAddress)
+                        .withNodeId(application.getId())
+                        .withNodeName(application.getName());
 
                     final ApplicationModule applicationModule = new ApplicationModule(codeDirectory);
                     final Injector nodeInjector = injector.createChildInjector(applicationModule, nodeModule);

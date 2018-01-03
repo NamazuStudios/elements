@@ -25,7 +25,6 @@ public class LuaModule extends PrivateModule {
     @Override
     protected final void configure() {
         builtinMultibinder = Multibinder.newSetBinder(binder(), Builtin.class);
-        bind(IocResolver.class).to(GuiceIoCResolver.class);
         configureFeatures();
     }
 

@@ -1,7 +1,12 @@
 package com.namazustudios.socialengine.appnode.guice;
 
 import com.google.inject.AbstractModule;
+import com.namazustudios.socialengine.appnode.ApplicationNodeContext;
 import com.namazustudios.socialengine.dao.rt.guice.RTFileAssetLoaderModule;
+import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.rt.Context;
+import com.namazustudios.socialengine.rt.ResourceContext;
+import com.namazustudios.socialengine.rt.SimpleResourceContext;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
@@ -19,10 +24,14 @@ public class ApplicationModule extends AbstractModule {
 
     @Override
     protected void configure() {
+
         install(new LuaModule());
         install(new GuiceIoCResolverModule());
         install(new RTFileAssetLoaderModule(codeDirectory));
+
         bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class);
+        bind(Context.class).to(ApplicationNodeContext.class).asEagerSingleton();
+        bind(ResourceContext.class).to(SimpleResourceContext.class).asEagerSingleton();
 
     }
 
