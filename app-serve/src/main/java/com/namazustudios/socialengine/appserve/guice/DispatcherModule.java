@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.dao.rt.guice.RTFileAssetLoaderModule;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.guice.ExceptionMapperModule;
 import com.namazustudios.socialengine.rt.guice.FilterModule;
+import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
 import com.namazustudios.socialengine.rt.handler.SessionRequestDispatcher;
 import com.namazustudios.socialengine.rt.http.HttpRequest;
@@ -29,6 +30,7 @@ public class DispatcherModule extends PrivateModule {
     protected void configure() {
 
         install(new ExtendedLuaModule());
+        install(new GuiceIoCResolverModule());
         install(new RTFileAssetLoaderModule(assetRootDirectory));
 
         install(new FilterModule());
