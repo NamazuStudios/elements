@@ -2,11 +2,13 @@ package com.namazustudios.socialengine.appnode;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.namazustudios.socialengine.appnode.guice.MultiNodeContainerModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 
+import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.rt.MultiNodeContainer;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
@@ -30,19 +32,22 @@ public class ApplicationNodeMain {
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
         final Injector injector = Guice.createInjector(
+                new ConfigurationModule(defaultConfigurationSupplier),
                 new MongoCoreModule(),
-                new JeroMQNodeModule(),
                 new MongoDaoModule(),
                 new ValidationModule(),
                 new MongoSearchModule(),
-                new ConfigurationModule(defaultConfigurationSupplier)
+                new RTFilesystemGitLoaderModule(),
+                new MultiNodeContainerModule()
         );
 
         final Object lock = new Object();
 
         try (final MultiNodeContainer container = injector.getInstance(MultiNodeContainer.class)) {
 
+            logger.info("Starting container.");
             container.start();
+            logger.info("Container started.");
 
             synchronized (lock) {
                 while (!interrupted()) {

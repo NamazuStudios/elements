@@ -335,6 +335,8 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
                 final ZMQ.Socket socket = getzContext().createSocket(ZMQ.DEALER);
                 final String routeAddress = getRouting().getDemultiplexedAddressForDestinationId(destinationId);
+                logger.info("Connecting to {} through {}", nodeId, routeAddress);
+
                 socket.connect(routeAddress);
 
                 final int index = poller.register(socket, POLLIN | POLLERR);

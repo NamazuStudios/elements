@@ -173,14 +173,13 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
         if (input && backendIndex == index) {
 
-            logger.info("Servicing index {}", index);
-
             final ZMQ.Socket socket = poller.getSocket(index);
             final ZMsg msg = recvMsg(socket);
 
             final RoutingHeader routingHeader = getRouting().stripRoutingHeader(msg);
 
             if (routingHeader.status.get() == CONTINUE) {
+
                 final UUID destination = routingHeader.destination.get();
                 final ZMQ.Socket frontend = frontends.getFrontend(destination);
 
@@ -199,8 +198,6 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
             }
 
         } else if (input) {
-
-            logger.info("Servicing index {}", index);
 
             final ZMQ.Socket socket = poller.getSocket(index);
             final ZMsg msg = recvMsg(socket);
