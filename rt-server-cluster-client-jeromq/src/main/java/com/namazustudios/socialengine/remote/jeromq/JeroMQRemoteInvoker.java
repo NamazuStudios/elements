@@ -4,7 +4,6 @@ import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
-import com.namazustudios.socialengine.rt.jeromq.Identity;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,11 +25,11 @@ import static org.zeromq.ZMQ.SNDMORE;
 
 public class JeroMQRemoteInvoker implements RemoteInvoker {
 
-    public static final String NODE_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.nodeAddress";
+    public static final String CONNECT_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.connectAddress";
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQRemoteInvoker.class);
 
-    private String nodeAddress;
+    private String connectAddress;
 
     private PayloadReader payloadReader;
 
@@ -42,7 +41,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     public void start() {
         getConnectionPool().start(zContext -> {
             final ZMQ.Socket socket = zContext.createSocket(ZMQ.DEALER);
-            socket.connect(getNodeAddress());
+            socket.connect(getConnectAddress());
             return socket;
         }, JeroMQRemoteInvoker.class.getName());
     }
@@ -243,13 +242,13 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         this.payloadWriter = payloadWriter;
     }
 
-    public String getNodeAddress() {
-        return nodeAddress;
+    public String getConnectAddress() {
+        return connectAddress;
     }
 
     @Inject
-    public void setNodeAddress(@Named(NODE_ADDRESS) String nodeAddress) {
-        this.nodeAddress = nodeAddress;
+    public void setConnectAddress(@Named(CONNECT_ADDRESS) String connectAddress) {
+        this.connectAddress = connectAddress;
     }
 
     public ConnectionPool getConnectionPool() {
