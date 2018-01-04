@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,7 +19,7 @@ import static java.util.stream.Collectors.*;
  *
  * Created by patricktwohig on 8/16/17.
  */
-public final class ParameterizedPath {
+public final class ParameterizedPath implements Serializable {
 
     private static final String OPEN_PARAMETER = "{";
 

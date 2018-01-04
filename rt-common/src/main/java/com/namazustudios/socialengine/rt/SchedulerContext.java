@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
+import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
+import com.namazustudios.socialengine.rt.annotation.Serialize;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -22,7 +24,11 @@ public interface SchedulerContext {
      *
      * @return {@link Future<Void>} which can be used to monitor the status of the request
      */
-    void resumeTaskAfterDelay(ResourceId resourceId, long time, TimeUnit timeUnit, TaskId taskId);
+    @RemotelyInvokable
+    void resumeTaskAfterDelay(@Serialize ResourceId resourceId,
+                              @Serialize long time,
+                              @Serialize TimeUnit timeUnit,
+                              @Serialize TaskId taskId);
 
     /**
      * Resumes a task that was waiting on a network call.
@@ -32,7 +38,8 @@ public interface SchedulerContext {
      * @param result the result of the network operation, passed to the task
      * @return returns {@link Future<Void>} which can be used to determine when the dispatch has been completed.
      */
-    void resumeFromNetwork(final ResourceId resourceId, final TaskId taskId, final Object result);
+    @RemotelyInvokable
+    void resumeFromNetwork(@Serialize ResourceId resourceId, @Serialize TaskId taskId, @Serialize Object result);
 
     /**
      * Resumes a task that was waiting for any reason.  This is used to hand an error to the running task in order to a
@@ -43,6 +50,7 @@ public interface SchedulerContext {
      * @param throwable the error in the blocked operation
      * @return returns {@link Future<Void>} which can be used to determine when the dispatch has been completed.
      */
-    void resumeWithError(final ResourceId resourceId, final TaskId taskId, final Throwable throwable);
+    @RemotelyInvokable
+    void resumeWithError(@Serialize ResourceId resourceId, @Serialize TaskId taskId, @Serialize Throwable throwable);
 
 }

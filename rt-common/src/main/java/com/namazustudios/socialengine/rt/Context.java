@@ -11,7 +11,6 @@ import java.util.concurrent.Future;
 /**
  * Represents the connection the backend cluster of services.
  */
-@Proxyable
 public interface Context {
 
     /**

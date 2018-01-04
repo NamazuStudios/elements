@@ -7,6 +7,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -22,7 +23,7 @@ import static java.util.Collections.unmodifiableList;
  *
  * Created by patricktwohig on 9/4/15.
  */
-public class Path implements Comparable<Path> {
+public class Path implements Comparable<Path>, Serializable {
 
     /**
      * The path separator.  Literal value "/"
