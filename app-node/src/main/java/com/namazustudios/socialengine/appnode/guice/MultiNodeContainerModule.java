@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.appnode.guice;
 
 import com.google.inject.*;
-import com.namazustudios.socialengine.appnode.provider.DestinationIdSetProvider;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.exception.NotFoundException;
@@ -10,7 +9,6 @@ import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
 import com.namazustudios.socialengine.rt.MultiNodeContainer;
 import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.guice.SimpleServicesModule;
-import com.namazustudios.socialengine.rt.jeromq.Routing;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +19,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import static com.google.inject.name.Names.named;
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.toCollection;
 
@@ -45,25 +42,21 @@ public class MultiNodeContainerModule extends AbstractModule {
             .toProvider(nodeProvider())
             .asEagerSingleton();
 
-        bind(new TypeLiteral<Set<String>>(){})
-            .annotatedWith(named(JeroMQConnectionDemultiplexer.DESTINATION_IDS))
-            .toProvider(DestinationIdSetProvider.class);
-
     }
 
     private Provider<Set<Node>> nodeProvider() {
 
-        final Provider<Routing> routingProvider = getProvider(Routing.class);
         final Provider<ApplicationDao> applicationDaoProvider = getProvider(ApplicationDao.class);
         final Provider<Injector> injectorProvider = getProvider(Injector.class);
         final Provider<GitLoader> gitLoaderProvider = getProvider(GitLoader.class);
+        final Provider<ConnectionDemultiplexer> connectionDemultiplexerProvider = getProvider(ConnectionDemultiplexer.class);
 
         return () -> {
 
-            final Routing routing = routingProvider.get();
             final ApplicationDao applicationDao = applicationDaoProvider.get();
             final Injector injector = injectorProvider.get();
             final GitLoader gitLoader = gitLoaderProvider.get();
+            final ConnectionDemultiplexer connectionDemultiplexer = connectionDemultiplexerProvider.get();
 
             final Set<Node> nodeSet = applicationDao.getActiveApplications().getObjects().stream()
                 .map(application -> {
@@ -77,8 +70,8 @@ public class MultiNodeContainerModule extends AbstractModule {
                         return null;
                     }
 
-                    final UUID uuid = routing.getDestinationId(application.getId());
-                    final String bindAddress = routing.getDemultiplexedAddressForDestinationId(uuid);
+                    final UUID uuid = connectionDemultiplexer.getDestinationUUIDForNodeId(application.getId());
+                    final String bindAddress = connectionDemultiplexer.getBindAddress(uuid);
 
                     final JeroMQNodeModule nodeModule = new JeroMQNodeModule()
                         .withBindAddress(bindAddress)
