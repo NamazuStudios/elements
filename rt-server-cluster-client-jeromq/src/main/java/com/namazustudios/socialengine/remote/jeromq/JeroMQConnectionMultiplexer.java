@@ -47,8 +47,6 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
     private String connectAddress;
 
-    private Set<String> destinationIds;
-
     private final String controlAddress = format("inproc://%s.control", randomUUID());
 
     @Override

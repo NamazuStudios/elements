@@ -182,6 +182,17 @@ public class RoutingTable implements AutoCloseable {
     }
 
     /**
+     * Returns true if a destination {@link UUID} exists in this {@link RoutingTable}.
+     *
+     * @param uuid the {@link UUID}
+     *
+     * @return true if it exists, false otherwise
+     */
+    public boolean hasDestination(final UUID uuid) {
+        return reverse.containsKey(uuid);
+    }
+
+    /**
      * Opens a new connection to the supplied {@link UUID} destination.  If already opened, this returns the existing
      * index.
      *
