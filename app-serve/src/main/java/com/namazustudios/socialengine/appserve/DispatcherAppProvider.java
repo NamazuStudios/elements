@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.appserve.guice.DispatcherServletLoader;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
+import com.namazustudios.socialengine.rt.jeromq.Routing;
 import com.namazustudios.socialengine.service.ApplicationService;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.servlet.DispatcherType;
 import java.io.File;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -60,9 +62,16 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     private Injector injectFor(final Application application) {
         return applicationInjectorMap.computeIfAbsent(application.getId(), k -> {
+
+            final Injector injector = getInjector();
+            final Routing routing = injector.getInstance(Routing.class);
+            final UUID uuid = routing.getDestinationId(application.getId());
+            final String connectAddress = routing.getMultiplexedAddressForDestinationId(uuid);
+
             final File codeDiretory = getGitLoader().getCodeDirectory(application);
-            final DispatcherModule dispatcherModule = new DispatcherModule(codeDiretory);
+            final DispatcherModule dispatcherModule = new DispatcherModule(connectAddress, codeDiretory);
             return getInjector().createChildInjector(dispatcherModule);
+
         });
     }
 

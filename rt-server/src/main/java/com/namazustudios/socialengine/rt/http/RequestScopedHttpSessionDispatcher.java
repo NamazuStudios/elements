@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -21,6 +22,8 @@ import static java.util.UUID.randomUUID;
  * result.
  */
 public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatcher<HttpRequest> {
+
+    public static final String CONTEXT = "com.namazustudios.socialengine.rt.http.RequestScopedHttpSessionDispatcher.context";
 
     private static final Logger logger = LoggerFactory.getLogger(RequestScopedHttpSessionDispatcher.class);
 
@@ -128,7 +131,7 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
     }
 
     @Inject
-    public void setContext(Context context) {
+    public void setContext(@Named(CONTEXT) Context context) {
         this.context = context;
     }
 

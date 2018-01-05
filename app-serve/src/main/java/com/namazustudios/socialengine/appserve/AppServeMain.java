@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.appserve;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.namazustudios.socialengine.appserve.guice.JeroMQMultiplexerModule;
 import com.namazustudios.socialengine.appserve.guice.ServerModule;
 import com.namazustudios.socialengine.appserve.guice.ServicesModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
@@ -27,6 +28,7 @@ public class AppServeMain {
             new MongoDaoModule(),
             new ValidationModule(),
             new MongoSearchModule(),
+            new JeroMQMultiplexerModule(),
             new RTFilesystemGitLoaderModule(),
             new ConfigurationModule(defaultConfigurationSupplier)
         );
