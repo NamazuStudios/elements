@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexe
 import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
 import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
+import com.namazustudios.socialengine.rt.jeromq.Connection;
 import com.namazustudios.socialengine.rt.jeromq.Routing;
 import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ import java.util.UUID;
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
 import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
@@ -155,17 +157,17 @@ public class JeroMQMuxDemuxIntegrationTest {
 
         FinallyAction action = () -> {};
 
-        try (final ZMQ.Socket socket = zContext.createSocket(DEALER);
-             final ZMQ.Poller poller = zContext.createPoller(1)) {
+        try (final ZMQ.Poller poller = zContext.createPoller(1);
+             final Connection connection = from(zContext, c -> c.createSocket(DEALER))) {
 
-            final int index = poller.register(socket, POLLIN | POLLERR);
-            final boolean connected = socket.connect(multiplexedAddress);
+            final int index = poller.register(connection.socket(), POLLIN | POLLERR);
+            final boolean connected = connection.socket().connect(multiplexedAddress);
             assertTrue(connected, "Failed to connect.");
 
             final ZMsg request = new ZMsg();
             request.push(uuid.toString());
             request.push(EMPTY_DELIMITER);
-            request.send(socket);
+            request.send(connection.socket());
 
             while (!interrupted()) {
 
@@ -174,12 +176,12 @@ public class JeroMQMuxDemuxIntegrationTest {
                 } else if (poller.pollin(index)) {
                     break;
                 } else if (poller.pollerr(index)) {
-                    fail("Unxpected socket error." + socket.errno());
+                    fail("Unxpected socket error." + connection.socket().errno());
                 }
 
             }
 
-            final ZMsg response = recvMsg(socket);
+            final ZMsg response = recvMsg(connection.socket());
 
             assertEquals(response.pop().getData().length, 0);
             assertEquals(response.pop().getString(ZMQ.CHARSET), uuid.toString());

@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.remote.jeromq;
 import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.MultiException;
+import com.namazustudios.socialengine.rt.jeromq.Connection;
 import com.namazustudios.socialengine.rt.jeromq.Routing;
 import com.namazustudios.socialengine.rt.jeromq.RoutingTable;
 import com.namazustudios.socialengine.rt.remote.RoutingHeader;
@@ -19,6 +20,7 @@ import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.CONTINUE;
 import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
@@ -134,19 +136,14 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
         @Override
         public void run() {
 
-            FinallyAction action = FinallyAction.with(() -> {});
-
             try (final ZMQ.Poller poller = getzContext().createPoller(0);
-                 final ZMQ.Socket backend = getzContext().createSocket(DEALER);
-                 final ZMQ.Socket control = getzContext().createSocket(PULL);
+                 final Connection backend = from(getzContext(), c -> c.createSocket(DEALER));
+                 final Connection control = from(getzContext(), c -> c.createSocket(PULL));
                  final RoutingTable frontends = new RoutingTable(getzContext(), poller, this::bind)) {
 
-                action = action.then(() -> getzContext().destroySocket(backend))
-                               .then(() -> getzContext().destroySocket(control));
+                backend.socket().connect(getConnectAddress());
 
-                backend.connect(getConnectAddress());
-
-                final int backendIndex = poller.register(backend, POLLIN | POLLERR);
+                final int backendIndex = poller.register(backend.socket(), POLLIN | POLLERR);
                 getDestinationIds().stream().map(getRouting()::getDestinationId).forEach(frontends::open);
 
                 while (!interrupted()) {
@@ -156,15 +153,13 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
                     }
 
                     range(0, poller.getNext()).filter(index -> poller.getItem(index) != null).forEach(index -> {
-                        routeMessages(poller, backend, backendIndex, frontends, index);
+                        routeMessages(poller, backend.socket(), backendIndex, frontends, index);
                     });
 
                 }
 
             } catch (Exception ex) {
                 logger.error("Caught exception.  Exiting.", ex);
-            } finally {
-                action.perform();
             }
 
         }

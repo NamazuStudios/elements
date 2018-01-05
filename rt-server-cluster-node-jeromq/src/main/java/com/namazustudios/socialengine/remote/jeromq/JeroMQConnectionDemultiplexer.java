@@ -10,7 +10,6 @@ import com.namazustudios.socialengine.rt.jeromq.RoutingTable;
 import com.namazustudios.socialengine.rt.remote.MalformedMessageException;
 import com.namazustudios.socialengine.rt.jeromq.Routing;
 import com.namazustudios.socialengine.rt.remote.RoutingHeader;
-import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -23,10 +22,10 @@ import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.CONTINUE;
 import static java.lang.Thread.interrupted;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
@@ -144,7 +143,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         public void run() {
 
             try (final ZMQ.Poller poller = getzContext().createPoller(1);
-                 final Connection frontend = Connection.from(getzContext(), c -> c.createSocket(ROUTER));
+                 final Connection frontend = from(getzContext(), c -> c.createSocket(ROUTER));
                  final RoutingTable backends = new RoutingTable(getzContext(), poller, this::connect)) {
 
                 frontend.socket().setRouterMandatory(true);
