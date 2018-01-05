@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
 import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.jeromq.Connection;
 import com.namazustudios.socialengine.rt.jeromq.Routing;
-import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -22,6 +21,7 @@ import org.zeromq.ZMsg;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.*;
 
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
@@ -55,7 +55,7 @@ public class JeroMQMuxDemuxIntegrationTest {
 
     private Thread echoer;
 
-    private ZContext zContext;
+    private ZContext master;
 
     private ConnectionMultiplexer connectionMultiplexer;
 
@@ -64,11 +64,11 @@ public class JeroMQMuxDemuxIntegrationTest {
     @BeforeClass
     public void setup() {
 
-        zContext = new ZContext();
+        master = new ZContext();
 
         final Routing routing = new Routing();
-        final Injector muxInjector = createInjector(new MuxerModule(zContext));
-        final Injector demuxInjector = createInjector(new DemuxerModule(zContext));
+        final Injector muxInjector = createInjector(new MuxerModule());
+        final Injector demuxInjector = createInjector(new DemuxerModule());
 
         connectionMultiplexer = muxInjector.getInstance(ConnectionMultiplexer.class);
         connectionDemultiplexer = demuxInjector.getInstance(ConnectionDemultiplexer.class);
@@ -79,21 +79,19 @@ public class JeroMQMuxDemuxIntegrationTest {
                 .map(routing::getDestinationId)
                 .map(routing::getDemultiplexedAddressForDestinationId)
                 .map(addr -> {
-                    final ZMQ.Socket socket = zContext.createSocket(ZMQ.ROUTER);
+                    final ZMQ.Socket socket = master.createSocket(ZMQ.ROUTER);
                     socket.setRouterMandatory(true);
                     socket.bind(addr);
                     return socket;
                 }).collect(toList());
 
-            try (final ZMQ.Poller poller = zContext.createPoller(socketList.size())){
+            try (final ZMQ.Poller poller = master.createPoller(socketList.size())){
 
                 socketList.forEach(socket -> poller.register(socket, POLLIN | POLLERR));
 
                 while (!interrupted()) {
 
-                    if (poller.poll(1000) == 0) {
-                        continue;
-                    }
+                    poller.poll(2000);
 
                     range(0, poller.getNext()).filter(index -> poller.getItem(index) != null).forEach(index -> {
 
@@ -114,7 +112,7 @@ public class JeroMQMuxDemuxIntegrationTest {
                 socketList.forEach(socket -> {
                     try {
                         socket.close();
-                        zContext.destroySocket(socket);
+                        master.destroySocket(socket);
                     } catch (Exception ex) {
                         logger.error("Caught excpetiong shutting down.", ex);
                     }
@@ -135,6 +133,7 @@ public class JeroMQMuxDemuxIntegrationTest {
         connectionMultiplexer.stop();
         echoer.interrupt();
         echoer.join();
+//        master.destroy();
     }
 
     @DataProvider(parallel = true)
@@ -150,15 +149,13 @@ public class JeroMQMuxDemuxIntegrationTest {
 
     }
 
-    @Test(dataProvider = "destinationIdDataSupplier", threadPoolSize = 10)
-    public void testMuxDemux(final String multiplexedAddress) {
+    @Test(dataProvider = "destinationIdDataSupplier", invocationCount = 2)
+    public void testMuxDemux(final String multiplexedAddress) throws InterruptedException, ExecutionException {
 
         final UUID uuid = randomUUID();
 
-        FinallyAction action = () -> {};
-
-        try (final ZMQ.Poller poller = zContext.createPoller(1);
-             final Connection connection = from(zContext, c -> c.createSocket(DEALER))) {
+        try (final ZMQ.Poller poller = master.createPoller(1);
+             final Connection connection = from(master, c -> c.createSocket(DEALER))) {
 
             final int index = poller.register(connection.socket(), POLLIN | POLLERR);
             final boolean connected = connection.socket().connect(multiplexedAddress);
@@ -171,9 +168,9 @@ public class JeroMQMuxDemuxIntegrationTest {
 
             while (!interrupted()) {
 
-                if (poller.poll(1000) == 0) {
-                    continue;
-                } else if (poller.pollin(index)) {
+                poller.poll(1000);
+
+                if (poller.pollin(index)) {
                     break;
                 } else if (poller.pollerr(index)) {
                     fail("Unxpected socket error." + connection.socket().errno());
@@ -186,24 +183,16 @@ public class JeroMQMuxDemuxIntegrationTest {
             assertEquals(response.pop().getData().length, 0);
             assertEquals(response.pop().getString(ZMQ.CHARSET), uuid.toString());
 
-        } finally {
-            action.perform();
         }
 
     }
 
-    public static class MuxerModule extends AbstractModule {
-
-        private final ZContext zContext;
-
-        public MuxerModule(ZContext zContext) {
-            this.zContext = zContext;
-        }
+    public class MuxerModule extends AbstractModule {
 
         @Override
         protected void configure() {
 
-            bind(ZContext.class).toInstance(zContext);
+            bind(ZContext.class).toInstance(master);
 
             bind(String.class)
                 .annotatedWith(named(JeroMQConnectionMultiplexer.CONNECT_ADDR))
@@ -219,18 +208,12 @@ public class JeroMQMuxDemuxIntegrationTest {
 
     }
 
-    public static class DemuxerModule extends AbstractModule {
-
-        private final ZContext zContext;
-
-        public DemuxerModule(ZContext zContext) {
-            this.zContext = zContext;
-        }
+    public class DemuxerModule extends AbstractModule {
 
         @Override
         protected void configure() {
 
-            bind(ZContext.class).toInstance(zContext);
+            bind(ZContext.class).toInstance(master);
 
             bind(String.class)
                 .annotatedWith(named(JeroMQConnectionDemultiplexer.BIND_ADDR))

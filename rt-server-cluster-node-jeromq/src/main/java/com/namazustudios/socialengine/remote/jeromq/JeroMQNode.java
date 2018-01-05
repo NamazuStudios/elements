@@ -263,9 +263,7 @@ public class JeroMQNode implements Node {
 
                         while (running.get() && !interrupted()) {
 
-                            if (poller.poll(1000) == 0) {
-                                continue;
-                            }
+                            poller.poll(1000);
 
                             if (poller.pollin(index)) {
                                 dispatchMethodInvocation(connection.socket());

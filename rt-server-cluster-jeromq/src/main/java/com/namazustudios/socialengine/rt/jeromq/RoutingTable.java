@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.zeromq.ZMQ.Poller.POLLIN;
@@ -110,7 +109,8 @@ public class RoutingTable implements AutoCloseable {
     }
 
     /**
-     * Closes the {@link org.zeromq.ZMQ.Socket}
+     * Closes the {@link org.zeromq.ZMQ.Socket} associated with the supplied index and removes all route information
+     * from the internal table.
      *
      * @param index
      */
@@ -119,25 +119,43 @@ public class RoutingTable implements AutoCloseable {
         final UUID uuid = indices.remove(index);
 
         if (uuid != null && reverse.remove(uuid) != null) {
-
             final ZMQ.Socket socket = getPoller().getSocket(index);
+            close(socket);
+        }
 
-            if (socket != null) {
+    }
 
-                getPoller().unregister(socket);
+    /**
+     * Closes the {@link org.zeromq.ZMQ.Socket} associated with the supplied {@link UUID} and removes all information
+     * from the internal table.
+     *
+     * @param uuid the uuid to close
+     */
+    public void close(final UUID uuid) {
 
-                try {
-                    socket.close();
-                } catch (Exception ex) {
-                    logger.error("Unable to close socket.", ex);
-                } finally {
-                    getzContext().destroySocket(socket);
-                }
+        final Integer index = reverse.remove(uuid);
 
+        if (index != null && indices.remove(uuid) != null) {
+            final ZMQ.Socket socket = getPoller().getSocket(index);
+            close(socket);
+        }
+
+    }
+
+    private void close(final ZMQ.Socket socket) {
+        if (socket != null) {
+
+            getPoller().unregister(socket);
+
+            try {
+                socket.close();
+            } catch (Exception ex) {
+                logger.error("Unable to close socket.", ex);
+            } finally {
+                getzContext().destroySocket(socket);
             }
 
         }
-
     }
 
     /**
@@ -177,6 +195,22 @@ public class RoutingTable implements AutoCloseable {
             indices.put(index, destination);
             return index;
         });
+    }
+
+    /**
+     * Processes the supplied {@link RoutingCommand} and applies changes to the internals of this {@link RoutingTable}.
+     *
+     * @param command the command to process.
+     */
+    public void process(final RoutingCommand command) {
+        switch (command.action.get()) {
+            case OPEN:
+                open(command.destination.get());
+                return;
+            case CLOSE:
+                close(command.destination.get());
+                return;
+        }
     }
 
 }

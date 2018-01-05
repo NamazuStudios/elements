@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
 import static java.lang.Thread.interrupted;
 import static org.zeromq.ZMQ.SNDMORE;
+import static org.zeromq.ZMQ.poll;
 
 public class JeroMQRemoteInvoker implements RemoteInvoker {
 
@@ -113,8 +114,21 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     }
 
     private boolean pollForResponse(final ZMQ.Poller poller, final int sIndex) {
-        while (poller.poll(1000) == 0 && !interrupted());
-        return poller.pollin(sIndex);
+
+        while (!interrupted()) {
+
+            poller.poll(2000);
+
+            if (poller.pollin(sIndex)) {
+                return true;
+            } else if (poller.pollerr(sIndex)) {
+                return false;
+            }
+
+        }
+
+        return false;
+
     }
 
     private void send(final ZMQ.Socket socket, final Invocation invocation, final int additionalCount) {

@@ -2,12 +2,10 @@ package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.jeromq.Connection;
 import com.namazustudios.socialengine.rt.jeromq.Routing;
 import com.namazustudios.socialengine.rt.jeromq.RoutingTable;
 import com.namazustudios.socialengine.rt.remote.RoutingHeader;
-import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -26,11 +24,9 @@ import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.IntStream.range;
-import static org.zeromq.ZMQ.DEALER;
-import static org.zeromq.ZMQ.PULL;
+import static org.zeromq.ZMQ.*;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
-import static org.zeromq.ZMQ.ROUTER;
 import static org.zeromq.ZMsg.recvMsg;
 import static zmq.ZError.EHOSTUNREACH;
 
@@ -148,12 +144,23 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
                 while (!interrupted()) {
 
-                    if ((poller.poll(1000)) == 0) {
-                        continue;
-                    }
+                    poller.poll(2000);
 
                     range(0, poller.getNext()).filter(index -> poller.getItem(index) != null).forEach(index -> {
-                        routeMessages(poller, backend.socket(), backendIndex, frontends, index);
+
+                        final boolean input = poller.pollin(index);
+                        final boolean error = poller.pollerr(index);
+
+                        if (input && backendIndex == index) {
+                            sendToFrontend(poller, index, frontends);
+                        } else if (input) {
+                            sendToBackend(poller, index, frontends, backend.socket());
+                        } else if (error) {
+                            throw new InternalException("Caught exception reading socket.");
+                        } else {
+                            logger.trace("Skipping poll for {}", index);
+                        }
+
                     });
 
                 }
@@ -170,23 +177,6 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
             socket.setRouterMandatory(true);
             socket.bind(bindAddress);
             return socket;
-        }
-
-        private void routeMessages(final ZMQ.Poller poller,
-                                   final ZMQ.Socket backend, final int backendIndex,
-                                   final RoutingTable frontends, final int  index) {
-
-            final boolean input = poller.pollin(index);
-            final boolean error = poller.pollerr(index);
-
-            if (input && backendIndex == index) {
-                sendToFrontend(poller, index, frontends);
-            } else if (input) {
-                sendToBackend(poller, index, frontends, backend);
-            } else if (error) {
-                throw new InternalException("Caught exception reading socket.");
-            }
-
         }
 
         private void sendToFrontend(final ZMQ.Poller poller, final int index, final RoutingTable frontends) {

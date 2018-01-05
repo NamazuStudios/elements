@@ -154,9 +154,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
                 while (!interrupted()) {
 
-                    if (poller.poll(1000) == 0) {
-                        continue;
-                    }
+                    poller.poll(2000);
 
                     range(0, poller.getNext()).filter(index -> poller.getItem(index) != null).forEach(index -> {
                         try {
