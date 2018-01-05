@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.remote.jeromq;
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.jeromq.Connection;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
@@ -57,7 +58,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask = new RemoteInvocationFutureTask<>();
 
-        getConnectionPool().processV((ConnectionPool.Connection connection) -> {
+        getConnectionPool().processV((Connection connection) -> {
 
             try (final ZMQ.Poller poller = connection.context().createPoller(1)) {
 
