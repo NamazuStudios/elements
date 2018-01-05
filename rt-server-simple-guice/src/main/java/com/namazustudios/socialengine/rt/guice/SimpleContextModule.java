@@ -18,9 +18,10 @@ import static java.util.concurrent.Executors.newCachedThreadPool;
 
 public class SimpleContextModule extends PrivateModule {
 
-    private Runnable bindContextAction = () -> bind(Context.class)
-            .to(SimpleContext.class)
-            .asEagerSingleton();
+    private Runnable bindContextAction = () -> {
+        expose(Context.class);
+        bind(Context.class).to(SimpleContext.class).asEagerSingleton();
+    };
 
     /**
      * Specifies the {@link javax.inject.Named} value for the bound {@link Context}.  The context is left unnamed if
@@ -30,18 +31,18 @@ public class SimpleContextModule extends PrivateModule {
      * @return this instance
      */
     public SimpleContextModule withContextNamed(final String contextName) {
-        bindContextAction = () -> bind(Context.class)
-            .annotatedWith(named(contextName))
-            .to(SimpleContext.class)
-            .asEagerSingleton();
+
+        bindContextAction = () -> {
+            expose(Context.class).annotatedWith(named(contextName));
+            bind(Context.class).annotatedWith(named(contextName)).to(SimpleContext.class).asEagerSingleton();
+        };
 
         return this;
+
     }
 
     @Override
     protected void configure() {
-
-        expose(Context.class);
 
         // The main context for the application
         bindContextAction.run();

@@ -22,14 +22,16 @@ import org.eclipse.jetty.deploy.App;
 
 import java.io.File;
 
+import static com.google.inject.name.Names.named;
+
 public class DispatcherModule extends PrivateModule {
 
-    private final String clusterAddress;
+    private final String connectAddress;
 
     private final File assetRootDirectory;
 
     public DispatcherModule(final String connectAddress, final File assetRootDirectory) {
-        this.clusterAddress = connectAddress;
+        this.connectAddress = connectAddress;
         this.assetRootDirectory = assetRootDirectory;
     }
 
@@ -47,16 +49,12 @@ public class DispatcherModule extends PrivateModule {
         install(new MultiContentTypeJacksonPayloadReaderModule());
         install(new MultiContentTypeJacksonPayloadWriterModule());
 
-        install(new ClusterClientContextModule());
-        install(new JeroMQRemoteInvokerModule());
-
         bind(HttpSessionService.class).to(DefaultHttpSessionService.class).asEagerSingleton();
         bind(HttpRequestService.class).to(DefaultHttpRequestService.class);
         bind(HttpResponseService.class).to(DefaultHttpResponseService.class);
         bind(new TypeLiteral<SessionRequestDispatcher<HttpRequest>>(){}).to(RequestScopedHttpSessionDispatcher.class);
         bind(DispatcherServlet.class).in(Scopes.SINGLETON);
 
-        expose(Context.class);
         expose(DispatcherServlet.class);
 
     }

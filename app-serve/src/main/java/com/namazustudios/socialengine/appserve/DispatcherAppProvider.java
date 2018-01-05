@@ -6,8 +6,11 @@ import com.namazustudios.socialengine.appserve.guice.DispatcherModule;
 import com.namazustudios.socialengine.appserve.guice.DispatcherServletLoader;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.jeromq.Routing;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.ClusterClientContextModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
 import com.namazustudios.socialengine.service.ApplicationService;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
@@ -41,6 +44,8 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     private GitLoader gitLoader;
 
+    private ConnectionMultiplexer connectionMultiplexer;
+
     @Override
     public ContextHandler createContextHandler(App app) throws Exception {
 
@@ -63,14 +68,16 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     private Injector injectFor(final Application application) {
         return applicationInjectorMap.computeIfAbsent(application.getId(), k -> {
 
-            final Injector injector = getInjector();
-            final Routing routing = injector.getInstance(Routing.class);
-            final UUID uuid = routing.getDestinationId(application.getId());
-            final String connectAddress = routing.getMultiplexedAddressForDestinationId(uuid);
+            final UUID uuid = getConnectionMultiplexer().getDestinationUUIDForNodeId(application.getId());
+            getConnectionMultiplexer().open(application.getId());
 
-            final File codeDiretory = getGitLoader().getCodeDirectory(application);
-            final DispatcherModule dispatcherModule = new DispatcherModule(connectAddress, codeDiretory);
-            return getInjector().createChildInjector(dispatcherModule);
+            final String connectAddress = getConnectionMultiplexer().getConnectAddress(uuid);
+
+            final File codeDirectory = getGitLoader().getCodeDirectory(application);
+            final DispatcherModule dispatcherModule = new DispatcherModule(connectAddress, codeDirectory);
+            final ClusterClientContextModule clusterClientContextModule = new ClusterClientContextModule();
+            final JeroMQRemoteInvokerModule jeroMQRemoteInvokerModule = new JeroMQRemoteInvokerModule().withConnectAddress(connectAddress);
+            return getInjector().createChildInjector(dispatcherModule, clusterClientContextModule, jeroMQRemoteInvokerModule);
 
         });
     }
@@ -140,6 +147,15 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     @Inject
     public void setGitLoader(GitLoader gitLoader) {
         this.gitLoader = gitLoader;
+    }
+
+    public ConnectionMultiplexer getConnectionMultiplexer() {
+        return connectionMultiplexer;
+    }
+
+    @Inject
+    public void setConnectionMultiplexer(ConnectionMultiplexer connectionMultiplexer) {
+        this.connectionMultiplexer = connectionMultiplexer;
     }
 
 }
