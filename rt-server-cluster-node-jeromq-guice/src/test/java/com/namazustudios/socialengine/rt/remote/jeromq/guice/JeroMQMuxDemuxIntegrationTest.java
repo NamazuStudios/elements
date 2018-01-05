@@ -123,6 +123,8 @@ public class JeroMQMuxDemuxIntegrationTest {
 
         echoer.start();
         connectionMultiplexer.start();
+        DESTINATION_IDS.forEach(connectionMultiplexer::open);
+
         connectionDemultiplexer.start();
 
     }
@@ -197,10 +199,6 @@ public class JeroMQMuxDemuxIntegrationTest {
             bind(String.class)
                 .annotatedWith(named(JeroMQConnectionMultiplexer.CONNECT_ADDR))
                 .toInstance(CONNECTION_ADDRESS);
-
-            final Multibinder<String> destinationIdStringMultibinder;
-            destinationIdStringMultibinder = newSetBinder(binder(), String.class, named(JeroMQConnectionMultiplexer.DESTINATION_IDS));
-            DESTINATION_IDS.forEach(id -> destinationIdStringMultibinder.addBinding().toInstance(id));
 
             bind(ConnectionMultiplexer.class).to(JeroMQConnectionMultiplexer.class).asEagerSingleton();
 
