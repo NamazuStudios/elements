@@ -1,11 +1,12 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 
 /**
  * Contains the result of the remote invocation.
  */
-public class InvocationResult {
+public class InvocationResult implements Serializable {
 
     private Object result;
 
