@@ -46,14 +46,14 @@ public class IoCInvocationDispatcher implements InvocationDispatcher {
 
             doDispatch(
                 type, object, invocation,
-                    syncInvocationResultConsumer, syncInvocationErrorConsumer,
-                    additionalInvocationResultConsumerList, asyncInvocationErrorConsumer);
+                syncInvocationResultConsumer, syncInvocationErrorConsumer,
+                additionalInvocationResultConsumerList, asyncInvocationErrorConsumer);
 
         } catch (Exception ex) {
             logger.error("Caught exception resolving target for invocation.", ex);
             final InvocationError invocationError = new InvocationError();
             invocationError.setThrowable(ex);
-            asyncInvocationErrorConsumer.accept(invocationError);
+            syncInvocationErrorConsumer.accept(invocationError);
         }
 
     }

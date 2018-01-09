@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import com.google.inject.PrivateModule;
@@ -15,17 +14,23 @@ import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES;
 import static com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping.NON_FINAL;
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.BIND_ADDRESS;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.ID;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.NAME;
+import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.*;
+import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.MIN_CONNECTIONS;
+import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.TIMEOUT;
 
 public class JeroMQNodeModule extends PrivateModule {
 
-    private String bindAddress = null;
+    private Runnable bindAddressAction = () -> {};
 
-    private String nodeId = null;
+    private Runnable bindNodeIdAction = () -> {};
 
-    private String nodeName = null;
+    private Runnable bindNodeNameAction = () -> {};
+
+    private Runnable bindMinConnectionsAction = () -> {};
+
+    private Runnable bindTimeoutAction = () -> {};
+
+    private Runnable bindNumberOfDispatchersAction = () -> {};
 
     /**
      * Specifies the node unique id based {@link JeroMQNode#ID}.
@@ -34,7 +39,7 @@ public class JeroMQNodeModule extends PrivateModule {
      * @return this instance
      */
     public JeroMQNodeModule withNodeId(final String nodeId) {
-        this.nodeId = nodeId;
+        bindNodeIdAction = () -> bind(String.class).annotatedWith(named(ID)).toInstance(nodeId);
         return this;
     }
 
@@ -45,7 +50,7 @@ public class JeroMQNodeModule extends PrivateModule {
      * @return this instance
      */
     public JeroMQNodeModule withNodeName(final String nodeName) {
-        this.nodeName = nodeName;
+        bindNodeNameAction = () -> bind(String.class).annotatedWith(named(NAME)).toInstance(nodeName);
         return this;
     }
 
@@ -56,7 +61,49 @@ public class JeroMQNodeModule extends PrivateModule {
      * @return this instance
      */
     public JeroMQNodeModule withBindAddress(final String bindAddress) {
-        this.bindAddress = bindAddress;
+        bindAddressAction = () -> bind(String.class).annotatedWith(named(BIND_ADDRESS)).toInstance(bindAddress);
+        return this;
+    }
+
+    /**
+     * Specifies the connection timeout.  If a connection isn't used for the specified period of time, the underlying
+     * connection is terminated and removed.  Leaving this unspecified will not assign any properties and leave it to
+     * external means to configure the underlying module.
+     *
+     * @param timeoutInSeconds the timeout value, in seconds.
+     * @return this instance
+     */
+    public JeroMQNodeModule withTimeout(final int timeoutInSeconds) {
+        bindTimeoutAction = () -> bind(Integer.class)
+                .annotatedWith(named(TIMEOUT))
+                .toInstance(timeoutInSeconds);
+        return this;
+    }
+
+    /**
+     * Specifies the minimum number of connections to keep active, even if the timeout has expired.
+     *
+     * @param minimumConnections the minimum number of connections to keep open
+     * @return this instance
+     */
+    public JeroMQNodeModule withMinimumConnections(final int minimumConnections) {
+        bindMinConnectionsAction = () -> bind(Integer.class)
+                .annotatedWith(named(MIN_CONNECTIONS))
+                .toInstance(minimumConnections);
+        return this;
+    }
+
+    /**
+     * Specifies the number of dispatcher threads used to handle incoming connections.  The number of threads is fixed
+     * for the underlying {@link JeroMQNode} instance.
+     *
+     * @param numberOfDispatchers the number of dispatchers to run.
+     * @return this instance
+     */
+    public JeroMQNodeModule withNumberOfDispatchers(final int numberOfDispatchers) {
+        bindNumberOfDispatchersAction = () -> bind(Integer.class)
+                .annotatedWith(named(NUMBER_OF_DISPATCHERS))
+                .toInstance(numberOfDispatchers);
         return this;
     }
 
@@ -68,17 +115,12 @@ public class JeroMQNodeModule extends PrivateModule {
         bind(Node.class).to(JeroMQNode.class).asEagerSingleton();
         bind(ConnectionPool.class).to(DynamicConnectionPool.class);
 
-        if (nodeId != null) {
-            bind(String.class).annotatedWith(named(ID)).toInstance(nodeId);
-        }
-
-        if (nodeName != null) {
-            bind(String.class).annotatedWith(named(NAME)).toInstance(nodeName);
-        }
-
-        if (bindAddress != null) {
-            bind(String.class).annotatedWith(named(BIND_ADDRESS)).toInstance(bindAddress);
-        }
+        bindNodeIdAction.run();
+        bindNodeNameAction.run();
+        bindAddressAction.run();
+        bindTimeoutAction.run();
+        bindMinConnectionsAction.run();
+        bindNumberOfDispatchersAction.run();
 
         expose(Node.class);
 

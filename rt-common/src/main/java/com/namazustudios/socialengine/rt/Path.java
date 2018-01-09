@@ -13,9 +13,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static com.google.common.collect.Iterators.limit;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.namazustudios.socialengine.rt.Path.Util.*;
+import static java.lang.Math.min;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 
 /**
@@ -53,6 +56,14 @@ public class Path implements Comparable<Path>, Serializable {
 
     // A boolean value to indicate if the path is a wildcard path.
     private final boolean wildcard;
+
+    private Path() {
+        // This constructor must exist to ensure that the object can be serialized.  Serialization is able to break
+        // encapsulation, invoke it, and forcibly set the members of the class.
+        wildcard = false;
+        maxCompareIndex = 0;
+        components = emptyList();
+    }
 
     /**
      * Parses the path into components and checks for hte wildcard character.
@@ -252,9 +263,9 @@ public class Path implements Comparable<Path>, Serializable {
         final Iterator<String> o2StringIterator;
 
         if (isWildcard() || other.isWildcard()) {
-            final int min = Math.min(maxCompareIndex, other.maxCompareIndex);
-            o1StringIterator = Iterators.limit(getComponents().iterator(), min);
-            o2StringIterator = Iterators.limit(other.getComponents().iterator(), min);
+            final int min = min(maxCompareIndex, other.maxCompareIndex);
+            o1StringIterator = limit(getComponents().iterator(), min);
+            o2StringIterator = limit(other.getComponents().iterator(), min);
         } else {
             o1StringIterator = getComponents().iterator();
             o2StringIterator = other.getComponents().iterator();

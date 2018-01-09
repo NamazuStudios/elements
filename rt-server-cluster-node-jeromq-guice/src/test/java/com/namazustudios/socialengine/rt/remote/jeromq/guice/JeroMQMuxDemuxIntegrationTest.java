@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
-import com.google.inject.multibindings.Multibinder;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
@@ -21,10 +20,9 @@ import org.zeromq.ZMsg;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
 
 import static com.google.inject.Guice.createInjector;
-import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
@@ -33,14 +31,13 @@ import static java.lang.Thread.interrupted;
 import static java.util.Collections.unmodifiableList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.IntStream.*;
+import static java.util.stream.IntStream.range;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.zeromq.ZMQ.DEALER;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
-import static org.zeromq.ZMQ.poll;
 import static org.zeromq.ZMsg.recvMsg;
 
 public class JeroMQMuxDemuxIntegrationTest {
@@ -137,7 +134,6 @@ public class JeroMQMuxDemuxIntegrationTest {
         connectionMultiplexer.stop();
         echoer.interrupt();
         echoer.join();
-//        master.destroy();
     }
 
     @DataProvider(parallel = true)

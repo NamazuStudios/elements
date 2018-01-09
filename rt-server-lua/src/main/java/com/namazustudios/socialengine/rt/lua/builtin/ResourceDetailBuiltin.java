@@ -89,8 +89,8 @@ public class ResourceDetailBuiltin implements Builtin {
             final ResourceId thisResourceId = getLuaResource().getId();
 
             getContext().getResourceContext().invokeAsync(
-                    object -> getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, object),
-                    throwable -> getContext().getSchedulerContext().resumeWithError(thisResourceId, taskId, throwable),
+                object -> getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, object),
+                throwable -> getContext().getSchedulerContext().resumeWithError(thisResourceId, taskId, throwable),
                 resourceId, methodName, params);
 
             return 0;

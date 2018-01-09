@@ -444,7 +444,7 @@ public class JeroMQNode implements Node {
                 logger.error("Could not write payload to byte stream.  Sending empty.", e);
                 final InvocationError invocationError = new InvocationError();
                 invocationError.setThrowable(e);
-                invocationErrorConsumer.accept(invocationError);
+                sendError(socket, invocationError, part, identity);
             }
 
         }

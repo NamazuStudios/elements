@@ -177,16 +177,9 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                              final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask,
                              final InvocationErrorConsumer asyncErrorConsumer) {
 
-        final InvocationError invocationError;
-
-        try {
-            final byte[] bytes = msg.pop().getData();
-            invocationError = getPayloadReader().read(InvocationError.class, bytes);
-        } catch (IOException e) {
-            throw new InternalException(e);
-        }
 
         final int part = responseHeader.part.get();
+        final InvocationError invocationError = extractInvocationError(msg);
 
         if (part == 0) {
 
@@ -208,6 +201,16 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     }
 
+    private InvocationError extractInvocationError(final ZMsg msg) {
+        try {
+            final byte[] bytes = msg.pop().getData();
+            return getPayloadReader().read(InvocationError.class, bytes);
+        } catch (IOException e) {
+            final InvocationError invocationError = new InvocationError();
+            invocationError.setThrowable(e);
+            return invocationError;
+        }
+    }
 
     private void handleResult(final ZMsg msg,
                               final ResponseHeader responseHeader,
