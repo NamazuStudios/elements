@@ -205,7 +205,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         try {
             final byte[] bytes = msg.pop().getData();
             return getPayloadReader().read(InvocationError.class, bytes);
-        } catch (IOException e) {
+        } catch (Exception e) {
             final InvocationError invocationError = new InvocationError();
             invocationError.setThrowable(e);
             return invocationError;

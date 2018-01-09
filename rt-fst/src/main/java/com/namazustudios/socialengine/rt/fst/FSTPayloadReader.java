@@ -17,14 +17,18 @@ public class FSTPayloadReader implements PayloadReader {
         try {
             final FSTObjectInput fstObjectInput = getFstConfiguration().getObjectInput(stream);
             return payloadType.cast(fstObjectInput.readObject());
-        } catch (ClassNotFoundException e) {
+        } catch (Exception e) {
             throw new IOException(e);
         }
     }
 
     @Override
     public <T> T read(Class<T> payloadType, byte[] toRead) throws IOException {
-        return payloadType.cast(getFstConfiguration().asObject(toRead));
+        try {
+            return payloadType.cast(getFstConfiguration().asObject(toRead));
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
     }
 
     public FSTConfiguration getFstConfiguration() {
