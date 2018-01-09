@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import com.google.inject.PrivateModule;
@@ -73,7 +73,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
     @Override
     protected void configure() {
 
-        install(new ObjectMapperPayloadReaderWriterModule());
+        install(new ObjectMapperPayloadReaderWriterModule(new CBORFactory()));
 
         bindConnectAddressAction.run();
         bindMinConnectionsAction.run();
@@ -84,16 +84,6 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
 
         expose(RemoteInvoker.class);
 
-    }
-
-    @Provides
-    @Singleton
-    public ObjectMapper objectMapper(final CBORFactory cborFactory) {
-        final ObjectMapper objectMapper = new ObjectMapper(cborFactory);
-        objectMapper.enableDefaultTyping();
-        objectMapper.enableDefaultTyping(NON_FINAL);
-        objectMapper.disable(FAIL_ON_UNKNOWN_PROPERTIES);
-        return objectMapper;
     }
 
 }
