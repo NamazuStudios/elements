@@ -12,21 +12,6 @@ public class ClusterClientContextModule extends PrivateModule {
             .to(ClusterClientContext.class)
             .asEagerSingleton();
 
-    /**
-     * Specifies the {@link javax.inject.Named} value for the bound {@link Context}.  The context is left unnamed if
-     * this is not specified.
-     *
-     * @param contextName the {@link Context} name
-     * @return this instance
-     */
-    public ClusterClientContextModule withContextNamed(final String contextName) {
-        bindContextAction = () -> bind(Context.class)
-                .annotatedWith(named(contextName))
-                .to(ClusterClientContext.class)
-                .asEagerSingleton();
-        return this;
-    }
-
     @Override
     protected void configure() {
 
@@ -46,6 +31,21 @@ public class ClusterClientContextModule extends PrivateModule {
             .toProvider(new RemoteProxyProvider<>(SchedulerContext.class))
             .asEagerSingleton();
 
+    }
+
+    /**
+     * Specifies the {@link javax.inject.Named} value for the bound {@link Context}.  The context is left unnamed if
+     * this is not specified.
+     *
+     * @param contextName the {@link Context} name
+     * @return this instance
+     */
+    public ClusterClientContextModule withContextNamed(final String contextName) {
+        bindContextAction = () -> bind(Context.class)
+                .annotatedWith(named(contextName))
+                .to(ClusterClientContext.class)
+                .asEagerSingleton();
+        return this;
     }
 
 }

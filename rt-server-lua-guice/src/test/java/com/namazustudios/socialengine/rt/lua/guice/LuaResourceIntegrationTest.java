@@ -1,19 +1,13 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.lua.guice;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.guice.*;
-import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
-import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
-import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.ClusterClientContextModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -53,8 +47,21 @@ public class LuaResourceIntegrationTest {
     public void setup() {
 
         final ZContext zContext = new ZContext();
-        final Injector nodeInjector = Guice.createInjector(new NodeModule(shadow(zContext)));
-        final Injector clientInjector = Guice.createInjector(new ClientModule(shadow(zContext)));
+
+        final Injector nodeInjector = Guice.createInjector(new EmbeddedJeroMQLuaNodeModule()
+                .withZContext(shadow(zContext))
+                .withBindAddress(LuaResourceIntegrationTest.INTERNAL_NODE_ADDRESS)
+                .withNodeId("integration-test-node")
+                .withNodeName("integration-test-node")
+                .withMinimumConnections(5)
+                .withTimeout(60)
+                .withNumberOfDispatchers(10));
+
+        final Injector clientInjector = Guice.createInjector(new JeroMQClientModule()
+                .withZContext(shadow(zContext))
+                .withConnectAddress(LuaResourceIntegrationTest.INTERNAL_NODE_ADDRESS)
+                .withMinimumConnections(5)
+                .withTimeout(60));
 
         setNode(nodeInjector.getInstance(Node.class));
         setContext(clientInjector.getInstance(Context.class));
@@ -186,74 +193,6 @@ public class LuaResourceIntegrationTest {
     @Inject
     public void setNode(Node node) {
         this.node = node;
-    }
-
-    public static class ClientModule extends PrivateModule {
-
-        private final ZContext context;
-
-        public ClientModule(ZContext context) {
-            this.context = context;
-        }
-
-        @Override
-        protected void configure() {
-            expose(Context.class);
-            bind(ZContext.class).toInstance(context);
-            install(new ClusterClientContextModule());
-            install(new JeroMQRemoteInvokerModule()
-                .withConnectAddress(INTERNAL_NODE_ADDRESS)
-                .withMinimumConnections(5)
-                .withTimeout(60));
-        }
-
-    }
-
-    public static class NodeModule extends PrivateModule {
-
-        private final ZContext context;
-
-        public NodeModule(ZContext context) {
-            this.context = context;
-        }
-
-        @Override
-        protected void configure() {
-
-            expose(Node.class);
-            expose(ResourceContext.class);
-            expose(IndexContext.class);
-            expose(SchedulerContext.class);
-
-            bind(ZContext.class).toInstance(context);
-            bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class);
-            bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(getClass().getClassLoader()));
-            bind(Context.class).to(SimpleContext.class).asEagerSingleton();
-
-            install(new LuaModule() {
-                @Override
-                protected void configureFeatures() {
-                    super.configureFeatures();
-                    bindBuiltin(TestJavaModule.class).toModuleNamed("test.java.module");
-                }
-            });
-
-            install(new SimpleServicesModule());
-            install(new SimpleResourceContextModule());
-            install(new SimpleIndexContextModule());
-            install(new SimpleSchedulerContextModule());
-
-            install(new GuiceIoCResolverModule());
-            install(new JeroMQNodeModule()
-                .withBindAddress(INTERNAL_NODE_ADDRESS)
-                .withNodeId("integration-test-node")
-                .withNodeName("integration-test-node")
-                .withMinimumConnections(5)
-                .withTimeout(60)
-                .withNumberOfDispatchers(10));
-
-        }
-
     }
 
 }

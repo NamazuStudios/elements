@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.jeromq.Routing;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.ClusterClientContextModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
 import com.namazustudios.socialengine.service.ApplicationService;
 import org.eclipse.jetty.deploy.App;
@@ -75,9 +76,8 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
             final File codeDirectory = getGitLoader().getCodeDirectory(application);
             final DispatcherModule dispatcherModule = new DispatcherModule(connectAddress, codeDirectory);
-            final ClusterClientContextModule clusterClientContextModule = new ClusterClientContextModule();
-            final JeroMQRemoteInvokerModule jeroMQRemoteInvokerModule = new JeroMQRemoteInvokerModule().withConnectAddress(connectAddress);
-            return getInjector().createChildInjector(dispatcherModule, clusterClientContextModule, jeroMQRemoteInvokerModule);
+            final JeroMQClientModule jeroMQClientModule = new JeroMQClientModule().withConnectAddress(connectAddress);
+            return getInjector().createChildInjector(dispatcherModule, jeroMQClientModule);
 
         });
     }
