@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
+import com.namazustudios.socialengine.rt.annotation.Dispatch;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.jeromq.Connection;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
@@ -21,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
+import static java.lang.Thread.currentThread;
 import static java.lang.Thread.interrupted;
 import static org.zeromq.ZMQ.SNDMORE;
 import static org.zeromq.ZMQ.poll;
@@ -55,7 +57,8 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     @Override
     public Future<Object> invoke(final Invocation invocation,
-                                 final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList, final InvocationErrorConsumer asyncInvocationErrorConsumer) {
+                                 final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+                                 final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
         final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask = new RemoteInvocationFutureTask<>();
 
@@ -104,6 +107,20 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                 }
 
                 logger.info("Finished Invocation.");
+
+            } catch (Exception ex) {
+
+                // This is typical of an internal exception (such as a socket error, IO Exception etc.) and should be
+                // handed to the clients to ensure that they do not wait around for a response they're never going to
+                // get.  So, therefore, the exception is called on both the future task as well as the async handler.
+                // For good measure, the exception is re-thrown so the connection pool properly closes the connection
+                // as we can't assume that socket is still in a stable state.
+
+                final InvocationError invocationError = new InvocationError();
+                invocationError.setThrowable(ex);
+                remoteInvocationFutureTask.setException(ex);
+                asyncInvocationErrorConsumer.acceptAndLogError(logger, invocationError);
+                throw ex;
 
             }
 
