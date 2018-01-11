@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 
 /**
  * Represents a user's profile.  Generally speaking a profile associates the {@link Application}
@@ -15,7 +16,7 @@ import javax.validation.constraints.NotNull;
  * Created by patricktwohig on 6/27/17.
  */
 @ApiModel
-public class Profile {
+public class Profile implements Serializable {
 
     @ApiModelProperty("The unique ID of the profile itself.")
     private String id;

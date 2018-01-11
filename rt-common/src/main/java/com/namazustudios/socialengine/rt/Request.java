@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.Map;
  *
  * Created by patricktwohig on 7/26/15.
  */
-public interface Request {
+public interface Request extends Serializable {
 
     /**
      * Gets the {@link Attributes} of this {@link Request}.  The {@link Attributes} are set by the container as part of

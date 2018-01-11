@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.inject.PrivateModule;
-import com.google.inject.Provider;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.*;
 import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
@@ -9,7 +8,7 @@ import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import org.zeromq.ZContext;
 
-public class EmbeddedJeroMQLuaNodeModule extends PrivateModule {
+public class TestJeroMQLuaNodeModule extends PrivateModule {
 
     private final JeroMQNodeModule jeroMQNodeModule = new JeroMQNodeModule();
 
@@ -26,7 +25,6 @@ public class EmbeddedJeroMQLuaNodeModule extends PrivateModule {
         contextBindAction.run();
         bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class);
         bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(getClass().getClassLoader()));
-        bind(Context.class).to(SimpleContext.class).asEagerSingleton();
 
         install(new LuaModule() {
             @Override
@@ -36,11 +34,11 @@ public class EmbeddedJeroMQLuaNodeModule extends PrivateModule {
             }
         });
 
+        bind(Context.class).to(SimpleContext.class).asEagerSingleton();
         install(new SimpleServicesModule());
         install(new SimpleResourceContextModule());
         install(new SimpleIndexContextModule());
         install(new SimpleSchedulerContextModule());
-
         install(new GuiceIoCResolverModule());
         install(jeroMQNodeModule);
 
@@ -51,7 +49,7 @@ public class EmbeddedJeroMQLuaNodeModule extends PrivateModule {
      * @param zContext the {@link ZContext} instance.
      * @return this instance
      */
-    public EmbeddedJeroMQLuaNodeModule withZContext(final ZContext zContext) {
+    public TestJeroMQLuaNodeModule withZContext(final ZContext zContext) {
         contextBindAction = () -> bind(ZContext.class).toInstance(zContext);
         return this;
     }
@@ -62,7 +60,7 @@ public class EmbeddedJeroMQLuaNodeModule extends PrivateModule {
      * @param nodeId the node Id
      * @return this instance
      */
-    public EmbeddedJeroMQLuaNodeModule withNodeId(String nodeId) {
+    public TestJeroMQLuaNodeModule withNodeId(String nodeId) {
         jeroMQNodeModule.withNodeId(nodeId);
         return this;
     }
@@ -73,7 +71,7 @@ public class EmbeddedJeroMQLuaNodeModule extends PrivateModule {
      * @param nodeName the node Id
      * @return this instance
      */
-    public EmbeddedJeroMQLuaNodeModule withNodeName(String nodeName) {
+    public TestJeroMQLuaNodeModule withNodeName(String nodeName) {
         jeroMQNodeModule.withNodeName(nodeName);
         return this;
     }
@@ -84,7 +82,7 @@ public class EmbeddedJeroMQLuaNodeModule extends PrivateModule {
      * @param bindAddress the bind address
      * @return this instance
      */
-    public EmbeddedJeroMQLuaNodeModule withBindAddress(String bindAddress) {
+    public TestJeroMQLuaNodeModule withBindAddress(String bindAddress) {
         jeroMQNodeModule.withBindAddress(bindAddress);
         return this;
     }
@@ -95,7 +93,7 @@ public class EmbeddedJeroMQLuaNodeModule extends PrivateModule {
      * @param timeoutInSeconds the timeout, in seconds
      * @return this instance
      */
-    public EmbeddedJeroMQLuaNodeModule withTimeout(int timeoutInSeconds) {
+    public TestJeroMQLuaNodeModule withTimeout(int timeoutInSeconds) {
         jeroMQNodeModule.withTimeout(timeoutInSeconds);
         return this;
     }
@@ -106,7 +104,7 @@ public class EmbeddedJeroMQLuaNodeModule extends PrivateModule {
      * @param minimumConnections the minimum number of connections to keep in each connection pool
      * @return this instance
      */
-    public EmbeddedJeroMQLuaNodeModule withMinimumConnections(int minimumConnections) {
+    public TestJeroMQLuaNodeModule withMinimumConnections(int minimumConnections) {
         jeroMQNodeModule.withMinimumConnections(minimumConnections);
         return this;
     }
@@ -117,7 +115,7 @@ public class EmbeddedJeroMQLuaNodeModule extends PrivateModule {
      * @param numberOfDispatchers the number of dispatcher threads for incoming requests
      * @return this instance
      */
-    public EmbeddedJeroMQLuaNodeModule withNumberOfDispatchers(int numberOfDispatchers) {
+    public TestJeroMQLuaNodeModule withNumberOfDispatchers(int numberOfDispatchers) {
         jeroMQNodeModule.withNumberOfDispatchers(numberOfDispatchers);
         return this;
     }

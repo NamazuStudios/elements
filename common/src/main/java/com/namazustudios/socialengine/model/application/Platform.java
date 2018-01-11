@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.model.application;
 
 import io.swagger.annotations.ApiModel;
 
+import java.io.Serializable;
+
 /**
  * Represents the platform with which SocialEngine integrates.  Each platform
  * profile is a specific type which houses the necessary information to communicate
@@ -10,7 +12,7 @@ import io.swagger.annotations.ApiModel;
  * Created by patricktwohig on 7/10/15.
  */
 @ApiModel
-public enum Platform {
+public enum Platform implements Serializable {
 
     /**
      * Represents the PlayStation(tm) Network for PS4 enabled titles..

@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import java.io.Serializable;
 
 /**
  * Represents a user in the system.  Users are differing from entrants in that they are active users
@@ -13,7 +14,7 @@ import javax.validation.constraints.Pattern;
  * Created by patricktwohig on 3/19/15.
  */
 @ApiModel
-public class User {
+public class User implements Serializable {
 
     private String id;
 

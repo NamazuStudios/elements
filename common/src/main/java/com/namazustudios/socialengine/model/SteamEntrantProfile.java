@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import java.io.Serializable;
 
 /**
  * Extends the {@link BasicEntrantProfile} to include the
@@ -13,7 +14,7 @@ import javax.validation.constraints.Pattern;
  * Created by patricktwohig on 3/18/15.
  */
 @ApiModel
-public class SteamEntrantProfile extends BasicEntrantProfile {
+public class SteamEntrantProfile extends BasicEntrantProfile implements Serializable {
 
     @NotNull
     @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)

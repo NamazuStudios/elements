@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModel;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
@@ -20,7 +21,7 @@ import java.util.List;
  *
  */
 @ApiModel
-public class SocialCampaign {
+public class SocialCampaign implements Serializable {
 
     @NotNull
     @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)

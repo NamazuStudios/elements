@@ -2,11 +2,13 @@ package com.namazustudios.socialengine.model;
 
 import io.swagger.annotations.ApiModel;
 
+import java.io.Serializable;
+
 /**
  * Created by patricktwohig on 4/10/15.
  */
 @ApiModel
-public class ErrorResponse {
+public class ErrorResponse implements Serializable {
 
     private String code;
 

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -10,7 +11,7 @@ import static java.util.Collections.unmodifiableSet;
 /**
  * Simple implementation of {@link Attributes} backed by a {@link Map<String, Object>}.
  */
-public class SimpleAttributes implements Attributes {
+public class SimpleAttributes implements Attributes, Serializable {
 
     private Map<String, Object> attributes;
 

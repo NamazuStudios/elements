@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -14,7 +15,7 @@ import java.util.List;
     value = "The Facebook Application Configuration",
     description = "Houses the various parameters required which allow communication with " +
                   "the Faceook API.  The Facebook API will ")
-public class FacebookApplicationConfiguration extends ApplicationConfiguration {
+public class FacebookApplicationConfiguration extends ApplicationConfiguration implements Serializable {
 
     @NotNull
     @ApiModelProperty("The AppID as it appears in the Facebook Developer Console")

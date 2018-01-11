@@ -2,13 +2,15 @@ package com.namazustudios.socialengine.model;
 
 import io.swagger.annotations.ApiModel;
 
+import java.io.Serializable;
+
 /**
  * Provides simple version information about the running service.
  *
  * Created by patricktwohig on 7/14/17.
  */
 @ApiModel
-public class Version {
+public class Version implements Serializable {
 
     private String version;
 

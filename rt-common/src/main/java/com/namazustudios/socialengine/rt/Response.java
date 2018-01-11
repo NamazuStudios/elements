@@ -2,10 +2,12 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
 
+import java.io.Serializable;
+
 /**
  * Created by patricktwohig on 7/27/15.
  */
-public interface Response {
+public interface Response extends Serializable {
 
     /**
      * Gets the response header.

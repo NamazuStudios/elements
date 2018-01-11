@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
 import org.omg.CORBA.DynAnyPackage.Invalid;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -14,7 +15,7 @@ import static java.util.Collections.emptySet;
  * Contains attributes which may be attached to a {@link Request}, {@link Resource} or similar object.  Typically these
  * are used to inject contextual information (such as currently authenticated user).
  */
-public interface Attributes {
+public interface Attributes extends Serializable {
 
     /**
      * Gets a {@link List<String>} containing all attribute names contained in this instance.

@@ -4,13 +4,14 @@ import com.namazustudios.socialengine.Constants;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import java.io.Serializable;
 
 /**
  * Houses the necessary information for the Sony WebAPI to communicate with the SocialEngine system.
  *
  * Created by patricktwohig on 7/9/15.
  */
-public class PSNApplicationConfiguration extends ApplicationConfiguration {
+public class PSNApplicationConfiguration extends ApplicationConfiguration implements Serializable {
 
     @NotNull
     @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)

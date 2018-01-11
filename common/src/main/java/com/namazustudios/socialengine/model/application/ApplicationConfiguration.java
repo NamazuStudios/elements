@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 
 /**
  * Ties the {@link Application} model to one of its associated profiles as represented by the {@link Platform}
@@ -12,7 +13,7 @@ import javax.validation.constraints.NotNull;
  * Created by patricktwohig on 7/10/15.
  */
 @ApiModel
-public class ApplicationConfiguration {
+public class ApplicationConfiguration implements Serializable {
 
     @ApiModelProperty("The databased assigned ID for the application configuration.")
     private String id;

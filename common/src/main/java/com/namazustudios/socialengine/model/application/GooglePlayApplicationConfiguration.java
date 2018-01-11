@@ -1,12 +1,14 @@
 package com.namazustudios.socialengine.model.application;
 
+import java.io.Serializable;
+
 /**
  * Represents the application profile and any associated metadata, such as APNS certificate
  * or other information.
  *
  * Created by patricktwohig on 5/23/17.
  */
-public class GooglePlayApplicationConfiguration extends ApplicationConfiguration {
+public class GooglePlayApplicationConfiguration extends ApplicationConfiguration implements Serializable {
 
     private String applicationId;
 

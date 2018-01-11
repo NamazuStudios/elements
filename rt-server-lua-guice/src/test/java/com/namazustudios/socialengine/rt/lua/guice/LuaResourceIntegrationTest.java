@@ -35,45 +35,17 @@ import static org.zeromq.ZContext.shadow;
  */
 public class LuaResourceIntegrationTest {
 
-    private static final String INTERNAL_NODE_ADDRESS = "inproc://integration-test";
-
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceIntegrationTest.class);
 
-    private Node node;
+    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService().start();
 
-    private Context context;
+    private final Node node = getEmbeddedTestService().getNode();
 
-    @BeforeClass
-    public void setup() {
-
-        final ZContext zContext = new ZContext();
-
-        final Injector nodeInjector = Guice.createInjector(new EmbeddedJeroMQLuaNodeModule()
-                .withZContext(shadow(zContext))
-                .withBindAddress(LuaResourceIntegrationTest.INTERNAL_NODE_ADDRESS)
-                .withNodeId("integration-test-node")
-                .withNodeName("integration-test-node")
-                .withMinimumConnections(5)
-                .withTimeout(60)
-                .withNumberOfDispatchers(10));
-
-        final Injector clientInjector = Guice.createInjector(new JeroMQClientModule()
-                .withZContext(shadow(zContext))
-                .withConnectAddress(LuaResourceIntegrationTest.INTERNAL_NODE_ADDRESS)
-                .withMinimumConnections(5)
-                .withTimeout(60));
-
-        setNode(nodeInjector.getInstance(Node.class));
-        setContext(clientInjector.getInstance(Context.class));
-
-        getNode().start();
-        getContext().start();
-    }
+    private final Context context = getEmbeddedTestService().getContext();
 
     @AfterClass
     public void teardown() {
-        getNode().stop();
-        getContext().shutdown();
+        getEmbeddedTestService().close();
     }
 
     @Test(dataProvider = "resourcesToTest")
@@ -177,22 +149,16 @@ public class LuaResourceIntegrationTest {
         getContext().getResourceContext().destroyAllResources();
     }
 
-    public Context getContext() {
-        return context;
-    }
-
-    @Inject
-    public void setContext(Context context) {
-        this.context = context;
+    public JeroMQEmbeddedTestService getEmbeddedTestService() {
+        return embeddedTestService;
     }
 
     public Node getNode() {
         return node;
     }
 
-    @Inject
-    public void setNode(Node node) {
-        this.node = node;
+    public Context getContext() {
+        return context;
     }
 
 }

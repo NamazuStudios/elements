@@ -21,17 +21,11 @@ public class FSTPayloadWriter implements PayloadWriter {
 
     @Override
     public byte[] write(final Object payload) throws IOException {
-
-        final Serializable serializable;
-
         try {
-            serializable = (Serializable) payload;
-        } catch (ClassCastException ex) {
+            return getFstConfiguration().asByteArray((Serializable)payload);
+        } catch (Exception ex) {
             throw new IOException(ex);
         }
-
-        return getFstConfiguration().asByteArray(serializable);
-
     }
 
     public FSTConfiguration getFstConfiguration() {

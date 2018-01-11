@@ -2,11 +2,13 @@ package com.namazustudios.socialengine.model;
 
 import io.swagger.annotations.ApiModel;
 
+import java.io.Serializable;
+
 /**
  * Created by patricktwohig on 3/25/15.
  */
 @ApiModel
-public class SocialCampaignEntry {
+public class SocialCampaignEntry implements Serializable {
 
     private ShortLink shortLink;
 

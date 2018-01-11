@@ -207,10 +207,10 @@ public class DynamicConnectionPool implements ConnectionPool {
                     } else {
                         throw ex;
                     }
-                } catch (Throwable th) {
+                } catch (Exception ex) {
                     connection.close();
-                    logger.error("{} Caught error on connection pool.", toString(), th);
-                    throw th;
+                    logger.error("{} Caught error on connection pool.", toString(), ex);
+                    throw ex;
                 }
 
             });

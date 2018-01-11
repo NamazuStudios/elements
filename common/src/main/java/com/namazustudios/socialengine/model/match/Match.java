@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.Null;
+import java.io.Serializable;
 
 /**
  * Created by patricktwohig on 7/18/17.
@@ -13,7 +14,7 @@ import javax.validation.constraints.Null;
         "Represents a single one-on-one match between the current player and an opponent.  Once " +
         "matched, the player will will be able to create a game against the supplied opposing player.  The " +
         "server may modify or delete matches based on a variety of circumstances.")
-public class Match {
+public class Match implements Serializable {
 
     @ApiModelProperty("The unique ID of the match.")
     private String id;
