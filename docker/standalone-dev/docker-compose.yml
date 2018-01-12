@@ -107,7 +107,7 @@ services:
 
   app-node:
     build:
-      context: ./app-serve
+      context: ./app-node
     links:
       - redis
       - mongo

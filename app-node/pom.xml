@@ -136,7 +136,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.namazustudios.socialengine.appserve.AppServeMain</mainClass>
+                            <mainClass>com.namazustudios.socialengine.appnode.ApplicationNodeMain</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

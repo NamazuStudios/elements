@@ -53,14 +53,17 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
             logger.warn("Could not load properties from {}.  Using system properties.", propertiesFile.getAbsolutePath(), ex);
         }
 
-        logger.info("Using configuration properties {} with defaults {}", properties, defaultProperties);
+        this.properties = properties;
 
         final StringBuilder sb = new StringBuilder();
         sb.append("Application Properties:\n");
-        defaultProperties.forEach((k, v) -> sb.append(format("\t\t%s=%s\n", k, v)));
+        properties.forEach((k, v) -> sb.append(format("\t%s=%s\n", k, v)));
         logger.info("{}", sb.toString());
 
-        this.properties = properties;
+        sb.append("Default Properties:\n");
+        defaultProperties.forEach((k, v) -> sb.append(format("\t%s=%s\n", k, v)));
+        logger.info("{}", sb.toString());
+
     }
 
     public Properties get() {
