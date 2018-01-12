@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.lua;
 
 import com.namazustudios.socialengine.jnlua.JavaFunction;
-import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.*;
@@ -220,7 +219,7 @@ public class LuaResource implements Resource {
                         final PendingTask pendingTask = new PendingTask(consumer, throwableConsumer);
                         taskIdPendingTaskMap.put(new TaskId(taskId), pendingTask);
                     } else {
-                        finalOperation = finalOperation.andThen(() -> consumer.accept(result));
+                        finalOperation = finalOperation.then(() -> consumer.accept(result));
                     }
 
                 return new TaskId(taskId);
@@ -270,7 +269,7 @@ public class LuaResource implements Resource {
             } else if (status == YIELD) {
                 getScriptLog().info("Task {} yielded.  Resuming later.", taskId);
             } else {
-                finalOperation = finalOperation.andThen(() -> pendingTask.resultConsumer.accept(result));
+                finalOperation = finalOperation.then(() -> pendingTask.resultConsumer.accept(result));
             }
 
         } catch (Throwable th) {
@@ -321,7 +320,7 @@ public class LuaResource implements Resource {
             } else if (status == YIELD) {
                 getScriptLog().info("Task {} yielded.  Resuming later.", taskId);
             } else {
-                finalOperation = finalOperation.andThen(() -> pendingTask.resultConsumer.accept(result));
+                finalOperation = finalOperation.then(() -> pendingTask.resultConsumer.accept(result));
             }
 
         } catch (Throwable th) {
@@ -369,7 +368,7 @@ public class LuaResource implements Resource {
             } else if (status == YIELD) {
                 getScriptLog().info("Task {} yielded.  Resuming later.", taskId);
             } else {
-                finalOperation = finalOperation.andThen(() -> pendingTask.resultConsumer.accept(result));
+                finalOperation = finalOperation.then(() -> pendingTask.resultConsumer.accept(result));
             }
 
         } catch (Throwable th) {

@@ -6,7 +6,8 @@ import com.namazustudios.socialengine.jnlua.Converter;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.ResourceLoader;
-import com.namazustudios.socialengine.rt.lua.IocResolver;
+import com.namazustudios.socialengine.rt.IocResolver;
+import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
 import com.namazustudios.socialengine.rt.lua.LuaResourceLoader;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
@@ -24,7 +25,6 @@ public class LuaModule extends PrivateModule {
     @Override
     protected final void configure() {
         builtinMultibinder = Multibinder.newSetBinder(binder(), Builtin.class);
-        bind(IocResolver.class).to(GuiceIoCResolver.class);
         configureFeatures();
     }
 

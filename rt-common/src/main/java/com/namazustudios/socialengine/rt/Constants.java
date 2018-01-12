@@ -21,11 +21,6 @@ public interface Constants {
     double MILLISECONDS_PER_SECOND = 1000.0;
 
     /**
-     * It should be obvious what this is.
-     */
-    double SECONDS_PER_MILLISECOND = 1.0 / MILLISECONDS_PER_SECOND;
-
-    /**
      * The default port for communication.
      */
     int DEFAULT_PORT = 28883;

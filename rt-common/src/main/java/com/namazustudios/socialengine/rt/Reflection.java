@@ -1,0 +1,169 @@
+package com.namazustudios.socialengine.rt;
+
+import com.namazustudios.socialengine.rt.annotation.ErrorHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.*;
+import java.util.Collection;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Stream.concat;
+import static java.util.stream.Stream.empty;
+
+/**
+ * Houses some utility logic for interacting with the Reflection API.
+ */
+public class Reflection {
+
+    private static final Logger logger = LoggerFactory.getLogger(Reflection.class);
+
+    private Reflection(){}
+
+    /**
+     * Formats a {@link Method} for use in logging.
+     *
+     * @param method the {@link Method}
+     * @return the {@link String} representing the method
+     */
+    public static String format(final Method method) {
+        final Class<?>[] args = method.getParameterTypes();
+        final Class<?> declaringClass = method.getDeclaringClass();
+        final String parameterSpec = stream(args).map(c -> c.getName()).collect(joining(","));
+        return String.format("%s.%s(%s)", declaringClass.getName(), method.getName(), parameterSpec);
+    }
+
+    /**
+     * Streams a {@link Method}s in a {@link Class}.
+     *
+     * @param aClass a class
+     * @return a {@link Stream<Method>}
+     */
+    public static Stream<Method> methods(final Class<?> aClass) {
+
+        Stream<Method> methodStream = empty();
+
+        for (Class<?> cls = aClass; cls != null; cls = cls.getSuperclass()) {
+            methodStream = concat(methodStream, stream(cls.getMethods()));
+        }
+
+        return aClass.isInterface() ? concat(methodStream, stream(Object.class.getMethods())) : methodStream;
+
+    }
+
+    /**
+     * Returns an {@link IllegalArgumentException} with a descriptive name for the method and paramters.
+     *
+     * @param cls the type
+     * @param name the name of the method
+     * @return the {@link IllegalArgumentException}
+     */
+    public static IllegalArgumentException noSuchMethod(final Class<?> cls, final String name) {
+        final String msg = String.format("No such method: %s.%s()", cls.getName(), name);
+        return new IllegalArgumentException(msg);
+    }
+
+    /**
+     * Returns an {@link IllegalArgumentException} with a descriptive name for the method and paramters.
+     *
+     * @param cls the type
+     * @param name the name of the method
+     * @param args the argument types
+     * @return the {@link IllegalArgumentException}
+     */
+    public static IllegalArgumentException noSuchMethod(final Class<?> cls, final String name, final Collection<Class<?>> args) {
+        return noSuchMethod(cls, name, args.stream().toArray(Class[]::new));
+    }
+
+    /**
+     * Returns an {@link IllegalArgumentException} with a descriptive name for the method and paramters.
+     *
+     * @param cls the type
+     * @param name the name of the method
+     * @param args the argument types
+     * @return the {@link IllegalArgumentException}
+     */
+    public static IllegalArgumentException noSuchMethod(final Class<?> cls, final String name, final Class<?>[] args) {
+        final String parameterSpec = stream(args).map(c -> c.getName()).collect(joining(","));
+        final String msg = String.format("No such method: %s.%s(%s)", cls, name, parameterSpec);
+        return new IllegalArgumentException(msg);
+    }
+
+    /**
+     * Finds the {@link Parameter} index annoated with {@link ErrorHandler} in the {@link Method}
+     *
+     * @param method the {@link Method}
+     * @return the integer
+     */
+    public static int errorHandlerIndex(final Method method) {
+
+        final Parameter[] parameters = method.getParameters();
+
+        return IntStream
+                .range(0, parameters.length)
+                .filter(index -> parameters[index].getAnnotation(ErrorHandler.class) != null)
+                .findFirst().orElse(-1);
+
+    }
+
+    /**
+     * Returns the parameter indices of the {@link Method} which are anootated with the supplied annotation class.
+     *
+     * @param method the method
+     * @param aClass the {@link Annotation} type
+     * @return an integer array of all indices
+     */
+    public static int[] indices(final Method method, final Class<? extends Annotation> aClass) {
+
+        final Parameter[] parameters = method.getParameters();
+
+        return IntStream
+            .range(0, parameters.length)
+            .filter(index -> parameters[index].getAnnotation(aClass) != null)
+            .toArray();
+
+    }
+
+    /**
+     * Searches {@link Method}'s parameters for a handler type.
+     *
+     * @param parameter parameter
+     * @return
+     */
+    public static Method getHandlerMethod(final Parameter parameter) {
+
+        final Class<?> type = parameter.getType();
+
+        if (type.getAnnotation(FunctionalInterface.class) == null) {
+
+            final String msg =
+                "Parameter type " + parameter +
+                " is not annotated with " + FunctionalInterface.class.getName();
+
+            throw new IllegalArgumentException(msg);
+
+        }
+
+        final Method handlerMethod = methods(type)
+            .filter(m -> !m.isDefault())
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("No non-default method found in type: " + type));
+
+        if (handlerMethod.getParameterCount() != 1) {
+            final String msg = format(handlerMethod) + " must accept a single parameter.";
+            throw new IllegalArgumentException(msg);
+        }
+
+        if (!void.class.equals(handlerMethod.getReturnType())) {
+            logger.warn("{} returns a value.", format(handlerMethod));
+        }
+
+        return handlerMethod;
+
+    }
+
+}

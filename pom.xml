@@ -34,7 +34,18 @@
         <module>lucene-indexer</module>
         <module>mongo-lucene</module>
         <module>rt-common</module>
+        <module>rt-jeromq</module>
         <module>rt-server</module>
+        <module>rt-server-simple</module>
+        <module>rt-server-simple-guice</module>
+        <module>rt-server-cluster</module>
+        <module>rt-server-cluster-jeromq</module>
+        <module>rt-server-cluster-node</module>
+        <module>rt-server-cluster-node-jeromq</module>
+        <module>rt-server-cluster-node-jeromq-guice</module>
+        <module>rt-server-cluster-client</module>
+        <module>rt-server-cluster-client-jeromq</module>
+        <module>rt-server-cluster-client-jeromq-guice</module>
         <module>rt-mina</module>
         <module>rt-server-lua</module>
         <module>rt-server-lua-guice</module>
@@ -50,10 +61,11 @@
         <module>code-serve-war</module>
         <module>app-serve</module>
         <module>app-serve-testkit</module>
+        <module>app-node</module>
         <module>rt-dao-guice</module>
         <module>rt-server-lua-testkit</module>
         <module>socialengine-jnlua/jnlua</module>
-    <module>common-lua</module>
+        <module>common-lua</module>
   </modules>
 
     <properties>
@@ -73,10 +85,9 @@
         <javax.validation.version>1.0.0.GA</javax.validation.version>
         <lucene.version>5.1.0</lucene.version>
         <mongo.java.driver.version>3.4.0</mongo.java.driver.version>
-        <testng.version>6.9.4</testng.version>
+        <testng.version>6.13.1</testng.version>
         <test.groups>unit</test.groups>
         <surefire.version>2.18.1</surefire.version>
-        <testng.version>6.8.21</testng.version>
         <jackson.version>2.8.8</jackson.version>
         <bson4jackson.version>2.4.0</bson4jackson.version>
         <reflections.version>0.9.10</reflections.version>
@@ -91,6 +102,8 @@
         <jxpath.version>1.3</jxpath.version>
         <mockito.version>2.11.0</mockito.version>
         <jopt.version>4.9-beta-1</jopt.version>
+        <jeromq.version>0.4.3</jeromq.version>
+        <javolution.version>6.0.0</javolution.version>
     </properties>
 
     <dependencies>

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 
 import java.util.function.Consumer;
@@ -15,7 +16,6 @@ import java.util.function.Consumer;
  *
  * Created by patricktwohig on 8/8/15.
  */
-@Proxyable
 public interface Resource extends AutoCloseable {
 
     /**

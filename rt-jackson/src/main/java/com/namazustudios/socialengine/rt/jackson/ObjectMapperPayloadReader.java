@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
 import com.namazustudios.socialengine.rt.PayloadReader;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -17,7 +18,7 @@ public class ObjectMapperPayloadReader implements PayloadReader {
     private ObjectMapper objectMapper;
 
     @Override
-    public Object read(final Class<?> payloadType, final InputStream stream) throws IOException {
+    public <T> T read(final Class<T> payloadType, final InputStream stream) throws IOException {
         final byte[] bytes = toByteArray(stream);
         return bytes.length == 0 ? null : getObjectMapper().readValue(bytes, payloadType);
     }
@@ -26,6 +27,7 @@ public class ObjectMapperPayloadReader implements PayloadReader {
         return objectMapper;
     }
 
+    @Inject
     public void setObjectMapper(final ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
