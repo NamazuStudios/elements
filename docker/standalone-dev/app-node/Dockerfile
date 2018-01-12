@@ -1,4 +1,4 @@
-FROM namazu-socialengine-app-serve:latest
+FROM namazu-socialengine-app-node:latest
 
 ENV DOCKERIZE_VERSION v0.5.0
 
@@ -15,4 +15,4 @@ ENTRYPOINT ["dockerize",\
  			"-wait", "tcp://mongo:27017",\
 			"java", \
 			"-Dcom.namazustudios.socialengine.configuration.properties=/opt/socialengine/socialengine.properties", \
-			"-jar", "/opt/socialengine/app-serve.jar" ]
+			"-jar", "/opt/socialengine/app-node.jar" ]

@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.namazustudios.socialengine</groupId>
+        <artifactId>docker</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>com.namazustudios.socialengine</groupId>
+    <artifactId>namazu-socialengine-app-node</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>app-node</artifactId>
+            <version>${project.version}</version>
+            <classifier>jar-with-dependencies</classifier>
+        </dependency>
+    </dependencies>
+
+    <build>
+
+        <plugins>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeScope>runtime</includeScope>
+                            <overWriteReleases>false</overWriteReleases>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>${exec.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>my-exec</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <inherited>false</inherited>
+                    </execution>
+                </executions>
+                <configuration>
+                    <workingDirectory>${project.basedir}</workingDirectory>
+                    <executable>docker</executable>
+                    <arguments>
+                        <argument>build</argument>
+                        <argument>${project.basedir}</argument>
+                        <argument>--build-arg</argument>
+                        <argument>APP_NODE_JAR=target/lib/app-node-${project.version}-jar-with-dependencies.jar</argument>
+                        <argument>--tag</argument>
+                        <argument>${project.artifactId}:latest</argument>
+                        <argument>--tag</argument>
+                        <argument>${project.artifactId}:${project.version}</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+        </plugins>
+
+    </build>
+
+</project>
