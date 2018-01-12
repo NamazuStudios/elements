@@ -11,7 +11,7 @@ import com.namazustudios.socialengine.model.application.FacebookApplicationConfi
 public interface FacebookApplicationConfigurationDao {
 
     /**
-     * Creates, or updates an inactive ApplicationConfiguration object.
+     * Creates, or updates an inactive FacebookApplicationConfiguration object.
      *
      * @param applicationNameOrId
      * @param facebookApplicationConfiguration
