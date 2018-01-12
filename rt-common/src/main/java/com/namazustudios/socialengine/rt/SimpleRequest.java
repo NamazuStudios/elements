@@ -140,7 +140,7 @@ public class SimpleRequest implements Request, Serializable {
 
                 for (final String parameterName : request.getParameterNames()) {
                     final List<Object> value = request.getParameters(parameterName);
-                    simpleRequestParameterMap.put(parameterName, new ArrayList<>(value));
+                    simpleRequestParameterMap.put(parameterName, value == null ? Collections.emptyList() : new ArrayList<>(value));
                 }
 
                 final RequestHeader header = request.getHeader();

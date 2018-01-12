@@ -15,7 +15,7 @@ import static java.util.Collections.emptySet;
  * Contains attributes which may be attached to a {@link Request}, {@link Resource} or similar object.  Typically these
  * are used to inject contextual information (such as currently authenticated user).
  */
-public interface Attributes extends Serializable {
+public interface Attributes {
 
     /**
      * Gets a {@link List<String>} containing all attribute names contained in this instance.
@@ -71,17 +71,7 @@ public interface Attributes extends Serializable {
      * The empty {@link Attributes} implementation.  This returns an empty list of attribute names, and will return null
      * for any requested attribute.
      */
-    Attributes EMPTY = new Attributes() {
-        @Override
-        public Set<String> getAttributeNames() {
-            return emptySet();
-        }
-
-        @Override
-        public Object getAttribute(String name) {
-            return null;
-        }
-    };
+    Attributes EMPTY = new EmptyAttributes();
 
     /**
      * Returns {@link #EMPTY}.
@@ -93,3 +83,16 @@ public interface Attributes extends Serializable {
     }
 
 }
+
+class EmptyAttributes implements Attributes, Serializable {
+    @Override
+    public Set<String> getAttributeNames() {
+        return emptySet();
+    }
+
+    @Override
+    public Object getAttribute(String name) {
+        return null;
+    }
+}
+

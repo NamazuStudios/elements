@@ -23,8 +23,6 @@ import static java.util.UUID.randomUUID;
  */
 public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatcher<HttpRequest> {
 
-    public static final String CONTEXT = "com.namazustudios.socialengine.rt.http.RequestScopedHttpSessionDispatcher.context";
-
     private static final Logger logger = LoggerFactory.getLogger(RequestScopedHttpSessionDispatcher.class);
 
     private List<Filter> filterList;
@@ -37,9 +35,13 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
     public void dispatch(final Session session,
                          final HttpRequest httpRequest,
                          final Consumer<Response> responseConsumer) {
+
         final Filter.Chain chain;
         chain = Filter.Chain.build(getFilterList(), (s, r, rr) -> createAndSchedule(httpRequest, s, r, rr));
-        chain.next(session, httpRequest, responseConsumer);
+
+        final Request request = SimpleRequest.builder().from(httpRequest).build();
+        chain.next(session, request, responseConsumer);
+
     }
 
     private void createAndSchedule(final HttpRequest httpRequest,
@@ -131,7 +133,7 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
     }
 
     @Inject
-    public void setContext(@Named(CONTEXT) Context context) {
+    public void setContext(Context context) {
         this.context = context;
     }
 

@@ -18,12 +18,9 @@ public class TestJeroMQLuaNodeModule extends PrivateModule {
     protected void configure() {
 
         expose(Node.class);
-        expose(ResourceContext.class);
-        expose(IndexContext.class);
-        expose(SchedulerContext.class);
 
         contextBindAction.run();
-        bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class);
+        bind(InvocationDispatcher.class).to(ContextInvocationDispatcher.class).asEagerSingleton();
         bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(getClass().getClassLoader()));
 
         install(new LuaModule() {

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -7,7 +8,7 @@ import java.util.Map;
 /**
  * Created by patricktwohig on 7/24/15.
  */
-public class SimpleResponseHeader implements ResponseHeader {
+public class SimpleResponseHeader implements ResponseHeader, Serializable {
 
     private int code = UNKNOWN_SEQUENCE;
 

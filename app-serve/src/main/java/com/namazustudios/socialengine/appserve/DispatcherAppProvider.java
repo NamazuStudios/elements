@@ -84,6 +84,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     @Override
     protected void doStart() throws Exception {
+        getConnectionMultiplexer().start();
         getApplicationService().getApplications().getObjects().forEach(this::deploy);
     }
 
@@ -103,6 +104,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
             .stream()
             .map(i -> i.getInstance(Context.class))
             .forEach(this::shutdown);
+        getConnectionMultiplexer().stop();
     }
 
     private void shutdown(final Context context) {

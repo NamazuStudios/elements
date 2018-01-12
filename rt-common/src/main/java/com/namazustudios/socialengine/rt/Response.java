@@ -7,7 +7,7 @@ import java.io.Serializable;
 /**
  * Created by patricktwohig on 7/27/15.
  */
-public interface Response extends Serializable {
+public interface Response {
 
     /**
      * Gets the response header.

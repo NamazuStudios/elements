@@ -14,7 +14,7 @@ import java.util.Map;
  *
  * Created by patricktwohig on 7/26/15.
  */
-public interface Request extends Serializable {
+public interface Request {
 
     /**
      * Gets the {@link Attributes} of this {@link Request}.  The {@link Attributes} are set by the container as part of

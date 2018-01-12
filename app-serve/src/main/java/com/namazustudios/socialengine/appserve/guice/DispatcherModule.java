@@ -44,7 +44,6 @@ public class DispatcherModule extends PrivateModule {
 
         install(new FilterModule());
         install(new ExceptionMapperModule());
-        install(new SimpleContextModule().withContextNamed(RequestScopedHttpSessionDispatcher.CONTEXT));
 
         install(new MultiContentTypeJacksonPayloadReaderModule());
         install(new MultiContentTypeJacksonPayloadWriterModule());
