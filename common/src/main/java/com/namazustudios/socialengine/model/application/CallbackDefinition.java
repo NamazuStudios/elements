@@ -1,0 +1,38 @@
+package com.namazustudios.socialengine.model.application;
+
+import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+import javax.validation.constraints.NotNull;
+
+@ApiModel(
+    value = "Defines a Simple Script Callback.",
+    description = "Defines a method and a module to invoke.")
+public class CallbackDefinition {
+
+    @NotNull
+    @ApiModelProperty("Specifies the module to invoke.")
+    private String module;
+
+    @NotNull
+    @ApiModelProperty("Specifies the method to invoke.")
+    private String method;
+
+    public String getModule() {
+        return module;
+    }
+
+    public void setModule(String module) {
+        this.module = module;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String method) {
+        this.method = method;
+    }
+
+}
