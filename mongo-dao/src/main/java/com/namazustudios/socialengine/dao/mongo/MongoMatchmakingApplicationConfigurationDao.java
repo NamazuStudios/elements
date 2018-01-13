@@ -2,11 +2,11 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.MatchmakingApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
+import com.namazustudios.socialengine.dao.mongo.model.MongoCallbackDefinition;
 import com.namazustudios.socialengine.dao.mongo.model.MongoMatchmakingApplicationConfiguration;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
-import com.namazustudios.socialengine.model.application.ConfigurationCategory;
 import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.bson.types.ObjectId;
@@ -60,7 +60,7 @@ public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingA
         updateOperations.set("uniqueIdentifier", matchmakingApplicationConfiguration.getScheme().trim());
         updateOperations.set("category", MATCHMAKING);
         updateOperations.set("active", true);
-        updateOperations.set("success", matchmakingApplicationConfiguration.getSuccess());
+        updateOperations.set("success", getBeanMapper().map(matchmakingApplicationConfiguration.getSuccess(), MongoCallbackDefinition.class));
         updateOperations.set("parent", mongoApplication);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
@@ -139,7 +139,7 @@ public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingA
         updateOperations = getDatastore().createUpdateOperations(MongoMatchmakingApplicationConfiguration.class);
 
         updateOperations.set("uniqueIdentifier", matchmakingApplicationConfiguration.getScheme().trim());
-        updateOperations.set("success", matchmakingApplicationConfiguration.getSuccess());
+        updateOperations.set("success", getBeanMapper().map(matchmakingApplicationConfiguration.getSuccess(), MongoCallbackDefinition.class));
         updateOperations.set("parent", mongoApplication);
         updateOperations.set("category", MATCHMAKING);
 

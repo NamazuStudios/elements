@@ -51,7 +51,8 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("applicationId","uniqueIdentifier");
 
             mapping(MatchmakingApplicationConfiguration.class, MongoMatchmakingApplicationConfiguration.class)
-                .fields("scheme", "objectId");
+                .fields("id", "objectId", customConverter(ObjectIdConverter.class))
+                .fields("scheme", "uniqueIdentifier");
 
             mapping(Profile.class, MongoProfile.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))
