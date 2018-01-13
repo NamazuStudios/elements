@@ -58,11 +58,11 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
         final StringBuilder sb = new StringBuilder();
         sb.append("Application Properties:\n");
         properties.forEach((k, v) -> sb.append(format("\t%s=%s\n", k, v)));
-        logger.info("{}", sb.toString());
+        logger.info("{}\n", sb.toString());
 
         sb.append("Default Properties:\n");
         defaultProperties.forEach((k, v) -> sb.append(format("\t%s=%s\n", k, v)));
-        logger.info("{}", sb.toString());
+        logger.info("{}\n", sb.toString());
 
     }
 

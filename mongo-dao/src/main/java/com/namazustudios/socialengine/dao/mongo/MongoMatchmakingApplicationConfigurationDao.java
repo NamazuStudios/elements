@@ -1,277 +1,272 @@
-//package com.namazustudios.socialengine.dao.mongo;
-//
-//import com.namazustudios.socialengine.dao.MatchmakingApplicationConfigurationDao;
-//import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
-//import com.namazustudios.socialengine.dao.mongo.model.MongoIosApplicationConfiguration;
-//import com.namazustudios.socialengine.exception.InvalidDataException;
-//import com.namazustudios.socialengine.exception.NotFoundException;
-//import com.namazustudios.socialengine.fts.ObjectIndex;
-//import com.namazustudios.socialengine.model.application.IosApplicationConfiguration;
-//import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
-//import com.namazustudios.socialengine.util.ValidationHelper;
-//import org.bson.types.ObjectId;
-//import org.dozer.Mapper;
-//import org.mongodb.morphia.AdvancedDatastore;
-//import org.mongodb.morphia.FindAndModifyOptions;
-//import org.mongodb.morphia.query.Query;
-//import org.mongodb.morphia.query.UpdateOperations;
-//
-//import javax.inject.Inject;
-//
-//import static com.namazustudios.socialengine.model.application.Platform.IOS_APP_STORE;
-//
-//public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingApplicationConfigurationDao {
-//
-//    private ObjectIndex objectIndex;
-//
-//    private AdvancedDatastore datastore;
-//
-//    private MongoApplicationDao mongoApplicationDao;
-//
-//    private ValidationHelper validationHelper;
-//
-//    private Mapper beanMapper;
-//
-//    private MongoDBUtils mongoDBUtils;
-//
-//    @Override
-//    public MatchmakingApplicationConfiguration createOrUpdateInactiveApplicationConfiguration(
-//            final String applicationNameOrId,
-//            final MatchmakingApplicationConfiguration iosApplicationConfiguration) {
-//
-//        final MongoApplication mongoApplication;
-//        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
-//
-//        validate(iosApplicationConfiguration);
-//
-//        final Query<MongoIosApplicationConfiguration> query;
-//        query = getDatastore().createQuery(MongoIosApplicationConfiguration.class);
-//
-//        query.and(
-//                query.criteria("active").equal(false),
-//                query.criteria("parent").equal(mongoApplication),
-//                query.criteria("platform").equal(IOS_APP_STORE),
-//                query.criteria("uniqueIdentifier").equal(iosApplicationConfiguration.getApplicationId())
-//        );
-//
-//        final UpdateOperations<MongoIosApplicationConfiguration> updateOperations;
-//        updateOperations = getDatastore().createUpdateOperations(MongoIosApplicationConfiguration.class);
-//
-//        updateOperations.set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim());
-//        updateOperations.set("active", true);
-//        updateOperations.set("platform", iosApplicationConfiguration.getPlatform());
-//        updateOperations.set("parent", mongoApplication);
-//
-//        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-//                .returnNew(true)
-//                .upsert(true);
-//
-//        final MongoIosApplicationConfiguration mongoIosApplicationProfile;
-//
-//        mongoIosApplicationProfile = getMongoDBUtils()
-//                .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
-//
-//        getObjectIndex().index(mongoIosApplicationProfile);
-//        return getBeanMapper().map(mongoIosApplicationProfile, IosApplicationConfiguration.class);
-//
-//    }
-//
-//    @Override
-//    public IosApplicationConfiguration getIosApplicationConfiguration(
-//            final String applicationNameOrId,
-//            final String applicationConfigurationNameOrId) {
-//
-//        final MongoApplication mongoApplication;
-//        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
-//
-//        final Query<MongoIosApplicationConfiguration> query;
-//        query = getDatastore().createQuery(MongoIosApplicationConfiguration.class);
-//
-//        query.and(
-//                query.criteria("active").equal(true),
-//                query.criteria("parent").equal(mongoApplication),
-//                query.criteria("platform").equal(IOS_APP_STORE)
-//        );
-//
-//        try {
-//            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
-//        } catch (IllegalArgumentException ex) {
-//            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
-//        }
-//
-//        final MongoIosApplicationConfiguration mongoIosApplicationProfile = query.get();
-//
-//        if (mongoIosApplicationProfile == null) {
-//            throw new NotFoundException("application profile " + applicationConfigurationNameOrId + " not found.");
-//        }
-//
-//        return getBeanMapper().map(mongoIosApplicationProfile, IosApplicationConfiguration.class);
-//
-//    }
-//
-//    @Override
-//    public IosApplicationConfiguration updateApplicationConfiguration(
-//            final String applicationNameOrId,
-//            final String applicationProfileNameOrId,
-//            final IosApplicationConfiguration iosApplicationConfiguration) {
-//
-//        final MongoApplication mongoApplication;
-//        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
-//        validate(iosApplicationConfiguration);
-//
-//        final Query<MongoIosApplicationConfiguration> query;
-//        query = getDatastore().createQuery(MongoIosApplicationConfiguration.class);
-//
-//        query.and(
-//                query.criteria("active").equal(true),
-//                query.criteria("parent").equal(mongoApplication),
-//                query.criteria("platform").equal(IOS_APP_STORE)
-//        );
-//
-//        try {
-//            query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
-//        } catch (IllegalArgumentException ex) {
-//            query.filter("uniqueIdentifier = ", applicationProfileNameOrId);
-//        }
-//
-//        final UpdateOperations<MongoIosApplicationConfiguration> updateOperations;
-//        updateOperations = getDatastore().createUpdateOperations(MongoIosApplicationConfiguration.class);
-//
-//        updateOperations.set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim());
-//        updateOperations.set("platform", iosApplicationConfiguration.getPlatform());
-//        updateOperations.set("parent", mongoApplication);
-//
-//        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-//                .returnNew(true)
-//                .upsert(false);
-//
-//        final MongoIosApplicationConfiguration mongoIosApplicationProfile;
-//        mongoIosApplicationProfile = getMongoDBUtils()
-//                .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
-//
-//        if (mongoIosApplicationProfile == null) {
-//            throw new NotFoundException("profile with ID not found: " + applicationProfileNameOrId);
-//        }
-//
-//        getObjectIndex().index(iosApplicationConfiguration);
-//        return getBeanMapper().map(iosApplicationConfiguration, IosApplicationConfiguration.class);
-//
-//    }
-//
-//    @Override
-//    public void softDeleteApplicationConfiguration(
-//            final String applicationNameOrId,
-//            final String applicationConfigurationNameOrId) {
-//
-//        final MongoApplication mongoApplication;
-//        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
-//
-//        final Query<MongoIosApplicationConfiguration> query;
-//        query = getDatastore().createQuery(MongoIosApplicationConfiguration.class);
-//
-//        query.and(
-//                query.criteria("active").equal(true),
-//                query.criteria("parent").equal(mongoApplication),
-//                query.criteria("platform").equal(IOS_APP_STORE)
-//        );
-//
-//        try {
-//            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
-//        } catch (IllegalArgumentException ex) {
-//            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
-//        }
-//
-//        final UpdateOperations<MongoIosApplicationConfiguration> updateOperations;
-//        updateOperations = getDatastore().createUpdateOperations(MongoIosApplicationConfiguration.class);
-//
-//        updateOperations.set("active", false);
-//
-//        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-//                .returnNew(true)
-//                .upsert(false);
-//
-//        final MongoIosApplicationConfiguration mongoIosApplicationProfile;
-//
-//        mongoIosApplicationProfile = getMongoDBUtils()
-//                .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
-//
-//        if (mongoIosApplicationProfile == null) {
-//            throw new NotFoundException("profile with ID not found: " + mongoIosApplicationProfile.getObjectId());
-//        }
-//
-//        getObjectIndex().index(mongoIosApplicationProfile);
-//
-//    }
-//
-//    public void validate(final IosApplicationConfiguration psnApplicationProfile) {
-//
-//        if (psnApplicationProfile == null) {
-//            throw new InvalidDataException("psnApplicationProfile must not be null.");
-//        }
-//
-//        switch (psnApplicationProfile.getPlatform()) {
-//            case IOS_APP_STORE:
-//                break;
-//            default:
-//                throw new InvalidDataException("platform not supported: " + psnApplicationProfile.getPlatform());
-//        }
-//
-//        getValidationHelper().validateModel(psnApplicationProfile);
-//
-//    }
-//
-//    public ObjectIndex getObjectIndex() {
-//        return objectIndex;
-//    }
-//
-//    @Inject
-//    public void setObjectIndex(ObjectIndex objectIndex) {
-//        this.objectIndex = objectIndex;
-//    }
-//
-//    public AdvancedDatastore getDatastore() {
-//        return datastore;
-//    }
-//
-//    @Inject
-//    public void setDatastore(AdvancedDatastore datastore) {
-//        this.datastore = datastore;
-//    }
-//
-//    public MongoApplicationDao getMongoApplicationDao() {
-//        return mongoApplicationDao;
-//    }
-//
-//    @Inject
-//    public void setMongoApplicationDao(MongoApplicationDao mongoApplicationDao) {
-//        this.mongoApplicationDao = mongoApplicationDao;
-//    }
-//
-//    public ValidationHelper getValidationHelper() {
-//        return validationHelper;
-//    }
-//
-//    @Inject
-//    public void setValidationHelper(ValidationHelper validationHelper) {
-//        this.validationHelper = validationHelper;
-//    }
-//
-//    public Mapper getBeanMapper() {
-//        return beanMapper;
-//    }
-//
-//    @Inject
-//    public void setBeanMapper(Mapper beanMapper) {
-//        this.beanMapper = beanMapper;
-//    }
-//
-//    public MongoDBUtils getMongoDBUtils() {
-//        return mongoDBUtils;
-//    }
-//
-//    @Inject
-//    public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
-//        this.mongoDBUtils = mongoDBUtils;
-//    }
-//
-//}
+package com.namazustudios.socialengine.dao.mongo;
+
+import com.namazustudios.socialengine.dao.MatchmakingApplicationConfigurationDao;
+import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
+import com.namazustudios.socialengine.dao.mongo.model.MongoMatchmakingApplicationConfiguration;
+import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.fts.ObjectIndex;
+import com.namazustudios.socialengine.model.application.ConfigurationCategory;
+import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
+import com.namazustudios.socialengine.util.ValidationHelper;
+import org.bson.types.ObjectId;
+import org.dozer.Mapper;
+import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+
+import javax.inject.Inject;
+
+import static com.namazustudios.socialengine.model.application.ConfigurationCategory.*;
+
+public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingApplicationConfigurationDao {
+
+    private ObjectIndex objectIndex;
+
+    private AdvancedDatastore datastore;
+
+    private MongoApplicationDao mongoApplicationDao;
+
+    private ValidationHelper validationHelper;
+
+    private Mapper beanMapper;
+
+    private MongoDBUtils mongoDBUtils;
+
+    @Override
+    public MatchmakingApplicationConfiguration createOrUpdateInactiveApplicationConfiguration(
+            final String applicationNameOrId,
+            final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration) {
+
+        final MongoApplication mongoApplication;
+        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+
+        validate(matchmakingApplicationConfiguration);
+
+        final Query<MongoMatchmakingApplicationConfiguration> query;
+        query = getDatastore().createQuery(MongoMatchmakingApplicationConfiguration.class);
+
+        query.and(
+            query.criteria("active").equal(false),
+            query.criteria("parent").equal(mongoApplication),
+            query.criteria("category").equal(MATCHMAKING),
+            query.criteria("uniqueIdentifier").equal(matchmakingApplicationConfiguration.getScheme())
+        );
+
+        final UpdateOperations<MongoMatchmakingApplicationConfiguration> updateOperations;
+        updateOperations = getDatastore().createUpdateOperations(MongoMatchmakingApplicationConfiguration.class);
+
+        updateOperations.set("uniqueIdentifier", matchmakingApplicationConfiguration.getScheme().trim());
+        updateOperations.set("category", MATCHMAKING);
+        updateOperations.set("active", true);
+        updateOperations.set("success", matchmakingApplicationConfiguration.getSuccess());
+        updateOperations.set("parent", mongoApplication);
+
+        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
+            .returnNew(true)
+            .upsert(true);
+
+        final MongoMatchmakingApplicationConfiguration mongoMatchmakingApplicationProfile;
+
+        mongoMatchmakingApplicationProfile = getMongoDBUtils()
+            .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+
+        getObjectIndex().index(mongoMatchmakingApplicationProfile);
+        return getBeanMapper().map(mongoMatchmakingApplicationProfile, MatchmakingApplicationConfiguration.class);
+
+    }
+
+    @Override
+    public MatchmakingApplicationConfiguration getApplicationConfiguration(
+            final String applicationNameOrId,
+            final String applicationConfigurationNameOrId) {
+
+        final MongoApplication mongoApplication;
+        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+
+        final Query<MongoMatchmakingApplicationConfiguration> query;
+        query = getDatastore().createQuery(MongoMatchmakingApplicationConfiguration.class);
+
+        query.and(
+            query.criteria("active").equal(true),
+            query.criteria("parent").equal(mongoApplication),
+            query.criteria("category").equal(MATCHMAKING)
+        );
+
+        try {
+            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
+        } catch (IllegalArgumentException ex) {
+            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
+        }
+
+        final MongoMatchmakingApplicationConfiguration mongoMatchmakingApplicationProfile = query.get();
+
+        if (mongoMatchmakingApplicationProfile == null) {
+            throw new NotFoundException("application profile " + applicationConfigurationNameOrId + " not found.");
+        }
+
+        return getBeanMapper().map(mongoMatchmakingApplicationProfile, MatchmakingApplicationConfiguration.class);
+
+    }
+
+    @Override
+    public MatchmakingApplicationConfiguration updateApplicationConfiguration(
+            final String applicationNameOrId,
+            final String applicationProfileNameOrId,
+            final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration) {
+
+        final MongoApplication mongoApplication;
+        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        validate(matchmakingApplicationConfiguration);
+
+        final Query<MongoMatchmakingApplicationConfiguration> query;
+        query = getDatastore().createQuery(MongoMatchmakingApplicationConfiguration.class);
+
+        query.and(
+            query.criteria("active").equal(true),
+            query.criteria("parent").equal(mongoApplication),
+            query.criteria("category").equal(MATCHMAKING)
+        );
+
+        try {
+            query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
+        } catch (IllegalArgumentException ex) {
+            query.filter("uniqueIdentifier = ", applicationProfileNameOrId);
+        }
+
+        final UpdateOperations<MongoMatchmakingApplicationConfiguration> updateOperations;
+        updateOperations = getDatastore().createUpdateOperations(MongoMatchmakingApplicationConfiguration.class);
+
+        updateOperations.set("uniqueIdentifier", matchmakingApplicationConfiguration.getScheme().trim());
+        updateOperations.set("success", matchmakingApplicationConfiguration.getSuccess());
+        updateOperations.set("parent", mongoApplication);
+        updateOperations.set("category", MATCHMAKING);
+
+        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
+            .returnNew(true)
+            .upsert(false);
+
+        final MongoMatchmakingApplicationConfiguration mongoMatchmakingApplicationProfile;
+        mongoMatchmakingApplicationProfile = getMongoDBUtils()
+                .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+
+        if (mongoMatchmakingApplicationProfile == null) {
+            throw new NotFoundException("profile with ID not found: " + applicationProfileNameOrId);
+        }
+
+        getObjectIndex().index(matchmakingApplicationConfiguration);
+        return getBeanMapper().map(matchmakingApplicationConfiguration, MatchmakingApplicationConfiguration.class);
+
+    }
+
+    @Override
+    public void softDeleteApplicationConfiguration(
+            final String applicationNameOrId,
+            final String applicationConfigurationNameOrId) {
+
+        final MongoApplication mongoApplication;
+        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+
+        final Query<MongoMatchmakingApplicationConfiguration> query;
+        query = getDatastore().createQuery(MongoMatchmakingApplicationConfiguration.class);
+
+        query.and(
+            query.criteria("active").equal(true),
+            query.criteria("parent").equal(mongoApplication),
+            query.criteria("category").equal(MATCHMAKING)
+        );
+
+        try {
+            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
+        } catch (IllegalArgumentException ex) {
+            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
+        }
+
+        final UpdateOperations<MongoMatchmakingApplicationConfiguration> updateOperations;
+        updateOperations = getDatastore().createUpdateOperations(MongoMatchmakingApplicationConfiguration.class);
+
+        updateOperations.set("active", false);
+
+        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
+                .returnNew(true)
+                .upsert(false);
+
+        final MongoMatchmakingApplicationConfiguration mongoMatchmakingApplicationProfile;
+
+        mongoMatchmakingApplicationProfile = getMongoDBUtils()
+                .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+
+        if (mongoMatchmakingApplicationProfile == null) {
+            throw new NotFoundException("profile with ID not found: " + mongoMatchmakingApplicationProfile.getObjectId());
+        }
+
+        getObjectIndex().index(mongoMatchmakingApplicationProfile);
+
+    }
+
+    public void validate(final MatchmakingApplicationConfiguration psnApplicationProfile) {
+
+        if (psnApplicationProfile == null) {
+            throw new InvalidDataException("psnApplicationProfile must not be null.");
+        }
+
+        getValidationHelper().validateModel(psnApplicationProfile);
+
+    }
+
+    public ObjectIndex getObjectIndex() {
+        return objectIndex;
+    }
+
+    @Inject
+    public void setObjectIndex(ObjectIndex objectIndex) {
+        this.objectIndex = objectIndex;
+    }
+
+    public AdvancedDatastore getDatastore() {
+        return datastore;
+    }
+
+    @Inject
+    public void setDatastore(AdvancedDatastore datastore) {
+        this.datastore = datastore;
+    }
+
+    public MongoApplicationDao getMongoApplicationDao() {
+        return mongoApplicationDao;
+    }
+
+    @Inject
+    public void setMongoApplicationDao(MongoApplicationDao mongoApplicationDao) {
+        this.mongoApplicationDao = mongoApplicationDao;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
+    }
+
+    public Mapper getBeanMapper() {
+        return beanMapper;
+    }
+
+    @Inject
+    public void setBeanMapper(Mapper beanMapper) {
+        this.beanMapper = beanMapper;
+    }
+
+    public MongoDBUtils getMongoDBUtils() {
+        return mongoDBUtils;
+    }
+
+    @Inject
+    public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
+        this.mongoDBUtils = mongoDBUtils;
+    }
+
+}

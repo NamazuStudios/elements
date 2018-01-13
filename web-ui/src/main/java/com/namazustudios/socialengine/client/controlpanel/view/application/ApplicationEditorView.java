@@ -19,7 +19,7 @@ import com.namazustudios.socialengine.client.modal.ErrorModal;
 import com.namazustudios.socialengine.client.rest.client.ApplicationClient;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
-import com.namazustudios.socialengine.model.application.Platform;
+import com.namazustudios.socialengine.model.application.ConfigurationCategory;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.gwtbootstrap3.client.ui.*;
@@ -131,8 +131,8 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
         final Column<ApplicationConfiguration, String> profilePlatformColumn = new Column<ApplicationConfiguration, String>(new TextCell()) {
             @Override
             public String getValue(ApplicationConfiguration object) {
-                final Platform platform = object.getPlatform();
-                return platform == null ? "" : platform.toString();
+                final ConfigurationCategory configurationCategory = object.getCategory();
+                return configurationCategory == null ? "" : configurationCategory.toString();
             }
         };
 
@@ -162,7 +162,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
         deleteColumn.setFieldUpdater(((index, object, value) -> confirmDeleteConfiguration(object)));
 
         applicationConfigurationCellTable.addColumn(profileIdColumn, "Proile ID");
-        applicationConfigurationCellTable.addColumn(profilePlatformColumn, "Platform");
+        applicationConfigurationCellTable.addColumn(profilePlatformColumn, "ConfigurationCategory");
         applicationConfigurationCellTable.addColumn(profileUniqueIdentifierColumn, "Unique Identifier");
         applicationConfigurationCellTable.addColumn(editColumn);
         applicationConfigurationCellTable.addColumn(deleteColumn);
@@ -191,7 +191,7 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
 
         confirmationModal.getErrorTextLabel().setText(
-            "Are you sure you wish to delete " + configuration.getPlatform() + " configuration " +
+            "Are you sure you wish to delete " + configuration.getCategory() + " configuration " +
             "with unique identifier " + configuration.getUniqueIdentifier()
         );
 
@@ -207,24 +207,24 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
         lockOut();
 
         configurationUtils
-                .deleteConfiguration(configuration)
-                .perform(application.getId(), configuration.getId(), new MethodCallback<Void>() {
+            .deleteConfiguration(configuration)
+            .perform(application.getId(), configuration.getId(), new MethodCallback<Void>() {
 
-                    @Override
-                    public void onFailure(Method method, Throwable exception) {
-                        unlock();
-                        errorModal.setErrorMessage("There was a problem deleting the configuration.");
-                        errorModal.show();
-                        editApplication(application);
-                    }
+                @Override
+                public void onFailure(Method method, Throwable exception) {
+                    unlock();
+                    errorModal.setErrorMessage("There was a problem deleting the configuration.");
+                    errorModal.show();
+                    editApplication(application);
+                }
 
-                    @Override
-                    public void onSuccess(Method method, Void response) {
-                        unlock();
-                        Notify.notify("Successfully deleted " + configuration.getUniqueIdentifier());
-                    }
+                @Override
+                public void onSuccess(Method method, Void response) {
+                    unlock();
+                    Notify.notify("Successfully deleted " + configuration.getUniqueIdentifier());
+                }
 
-                });
+            });
     }
 
     public void lockOut() {

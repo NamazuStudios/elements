@@ -7,7 +7,7 @@ import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
- * Ties the {@link Application} model to one of its associated profiles as represented by the {@link Platform}
+ * Ties the {@link Application} model to one of its associated profiles as represented by the {@link ConfigurationCategory}
  * enumeration.  This is an abstract base class from which all application profiles are derived.
  *
  * Created by patricktwohig on 7/10/15.
@@ -15,14 +15,14 @@ import java.io.Serializable;
 @ApiModel
 public class ApplicationConfiguration implements Serializable {
 
-    @ApiModelProperty("The databased assigned ID for the application configuration.")
+    @ApiModelProperty("The database assigned ID for the application configuration.")
     private String id;
 
     @NotNull
-    @ApiModelProperty("The platform for the application configuration.")
-    private Platform platform;
+    @ApiModelProperty("The category for the application configuration.")
+    private ConfigurationCategory category;
 
-    @ApiModelProperty("The application-configuration specific uinique ID.  (Varies by Platform)")
+    @ApiModelProperty("The application-configuration specific uinique ID.  (Varies by ConfigurationCategory)")
     private String uniqueIdentifier;
 
     @ApiModelProperty("The parent application owning this configuration.")
@@ -52,21 +52,21 @@ public class ApplicationConfiguration implements Serializable {
      *
      * @return the identifier type
      */
-    public Platform getPlatform() {
-        return platform;
+    public ConfigurationCategory getCategory() {
+        return category;
     }
 
     /**
-     * Sets the platform identifier.
+     * Sets the category identifier.
      *
-     * @param platform the platform identifier type.
+     * @param category the category identifier type.
      */
-    public void setPlatform(Platform platform) {
-        this.platform = platform;
+    public void setCategory(ConfigurationCategory category) {
+        this.category = category;
     }
 
     /**
-     * Gets the unique identifier for the platform.
+     * Gets the unique identifier for the category.
      *
      * @return
      */
@@ -75,7 +75,7 @@ public class ApplicationConfiguration implements Serializable {
     }
 
     /**
-     * Sets the unique identifier for the platform.
+     * Sets the unique identifier for the category.
      *
      * @param uniqueIdentifier
      */
@@ -109,7 +109,7 @@ public class ApplicationConfiguration implements Serializable {
         ApplicationConfiguration that = (ApplicationConfiguration) o;
 
         if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
-        if (getPlatform() != that.getPlatform()) return false;
+        if (getCategory() != that.getCategory()) return false;
         if (getUniqueIdentifier() != null ? !getUniqueIdentifier().equals(that.getUniqueIdentifier()) : that.getUniqueIdentifier() != null)
             return false;
         return getParent() != null ? getParent().equals(that.getParent()) : that.getParent() == null;
@@ -118,7 +118,7 @@ public class ApplicationConfiguration implements Serializable {
     @Override
     public int hashCode() {
         int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + (getPlatform() != null ? getPlatform().hashCode() : 0);
+        result = 31 * result + (getCategory() != null ? getCategory().hashCode() : 0);
         result = 31 * result + (getUniqueIdentifier() != null ? getUniqueIdentifier().hashCode() : 0);
         result = 31 * result + (getParent() != null ? getParent().hashCode() : 0);
         return result;

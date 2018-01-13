@@ -8,10 +8,7 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.security.ProfileSupplierProvider;
 import com.namazustudios.socialengine.security.UserProvider;
 import com.namazustudios.socialengine.service.*;
-import com.namazustudios.socialengine.service.application.ApplicationConfigurationServiceProvider;
-import com.namazustudios.socialengine.service.application.ApplicationServiceProvider;
-import com.namazustudios.socialengine.service.application.FacebookApplicationConfigurationServiceProvider;
-import com.namazustudios.socialengine.service.application.PSNApplicationConfigurationServiceProvider;
+import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.AuthServiceProvider;
 import com.namazustudios.socialengine.service.auth.StandardFacebookAuthService;
 import com.namazustudios.socialengine.service.manifest.ManifestServiceProvider;
@@ -73,6 +70,10 @@ public class ServicesModule extends AbstractModule {
 
         bind(ManifestService.class)
                 .toProvider(ManifestServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
+        bind(MatchmakingApplicationConfigurationService.class)
+                .toProvider(MatchmakingConfigurationServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
         bind(FacebookAuthService.class).to(StandardFacebookAuthService.class);

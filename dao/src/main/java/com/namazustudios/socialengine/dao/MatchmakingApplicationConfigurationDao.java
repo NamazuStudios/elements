@@ -10,41 +10,30 @@ import com.namazustudios.socialengine.model.application.MatchmakingApplicationCo
 public interface MatchmakingApplicationConfigurationDao {
 
     /**
-     * Deletes an {@link MatchmakingApplicationConfiguration} using the ID as reference.
+     * Creates, or updates an inactive ApplicationConfiguration object.
      *
-     * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration} id
-     *
-     */
-    void deleteApplicationConfiguration(String applicationNameOrId, String applicationConfigurationNameOrId);
-
-    /**
-     * Gets an application with the specific name or identifier.
-     *
-     * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration} id
-     *
-     */
-    MatchmakingApplicationConfiguration getApplicationConfiguration(String applicationNameOrId,
-                                                                    String applicationConfigurationNameOrId);
-
-    /**
-     * Creates an application configuration with the specific name/identifiers.
-     *
-     * @param applicationNameOrId the {@link Application} name or id
-     * @param matchmakingApplicationConfiguration the {@link MatchmakingApplicationConfiguration} object to write
-     * @return the {@link MatchmakingApplicationConfiguration} object as it was persisted to the database.
-     *
+     * @param applicationNameOrId
+     * @param matchmakingApplicationConfiguration
+     * @return
      */
     MatchmakingApplicationConfiguration createOrUpdateInactiveApplicationConfiguration(
             String applicationNameOrId,
             MatchmakingApplicationConfiguration matchmakingApplicationConfiguration);
 
     /**
+     * Gets an {@link MatchmakingApplicationConfiguration} with the specific name or identifier.
+     *
+     * @param applicationNameOrId the {@link Application} name or id
+     * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration} id
+     */
+    MatchmakingApplicationConfiguration getApplicationConfiguration(String applicationNameOrId,
+                                                                    String applicationConfigurationNameOrId);
+
+    /**
      * Updates an application with the specific name/identifiers.
      *
      * @param applicationNameOrId the {@link Application} name or id
-     * @param applicationConfigurationNameOrId the {@link MatchmakingApplicationConfiguration} id
+     * @param applicationProfileNameOrId the {@link MatchmakingApplicationConfiguration} id
      * @param matchmakingApplicationConfiguration the {@link MatchmakingApplicationConfiguration} object to write
      *
      * @return the {@link MatchmakingApplicationConfiguration} object as it was persisted to the database.
@@ -52,7 +41,17 @@ public interface MatchmakingApplicationConfigurationDao {
      */
     MatchmakingApplicationConfiguration updateApplicationConfiguration(
             String applicationNameOrId,
-            String applicationConfigurationNameOrId,
+            String applicationProfileNameOrId,
             MatchmakingApplicationConfiguration matchmakingApplicationConfiguration);
+
+    /**
+     * Deletes a {@link MatchmakingApplicationConfiguration} using the ID as reference.
+     *
+     *  @param applicationNameOrId the {@link Application} name or id
+     * @param applicationConfigurationNameOrId the {@link MatchmakingApplicationConfiguration} id
+     *
+     */
+    void softDeleteApplicationConfiguration(String applicationNameOrId,
+                                            String applicationConfigurationNameOrId);
 
 }

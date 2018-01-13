@@ -17,7 +17,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 
-import static com.namazustudios.socialengine.model.application.Platform.ANDROID_GOOGLE_PLAY;
+import static com.namazustudios.socialengine.model.application.ConfigurationCategory.ANDROID_GOOGLE_PLAY;
 
 /**
  * Created by patricktwohig on 5/25/17.
@@ -52,7 +52,7 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
         query.and(
             query.criteria("active").equal(false),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").equal(ANDROID_GOOGLE_PLAY),
+            query.criteria( "category").equal(ANDROID_GOOGLE_PLAY),
             query.criteria("uniqueIdentifier").equal(googlePlayApplicationConfiguration.getApplicationId())
         );
 
@@ -61,7 +61,7 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
 
         updateOperations.set("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId().trim());
         updateOperations.set("active", true);
-        updateOperations.set("platform", googlePlayApplicationConfiguration.getPlatform());
+        updateOperations.set( "category", googlePlayApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
@@ -91,7 +91,7 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").equal(ANDROID_GOOGLE_PLAY)
+            query.criteria( "category").equal(ANDROID_GOOGLE_PLAY)
         );
 
         try {
@@ -126,7 +126,7 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").equal(ANDROID_GOOGLE_PLAY)
+            query.criteria( "category").equal(ANDROID_GOOGLE_PLAY)
         );
 
         try {
@@ -139,7 +139,7 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
         updateOperations = getDatastore().createUpdateOperations(MongoGooglePlayApplicationConfiguration.class);
 
         updateOperations.set("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId().trim());
-        updateOperations.set("platform", googlePlayApplicationConfiguration.getPlatform());
+        updateOperations.set( "category", googlePlayApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
@@ -173,7 +173,7 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").equal(ANDROID_GOOGLE_PLAY)
+            query.criteria( "category").equal(ANDROID_GOOGLE_PLAY)
         );
 
         try {
@@ -210,11 +210,11 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
             throw new InvalidDataException("psnApplicationProfile must not be null.");
         }
 
-        switch (googlePlayApplicationConfiguration.getPlatform()) {
+        switch (googlePlayApplicationConfiguration.getCategory()) {
             case ANDROID_GOOGLE_PLAY:
                 break;
             default:
-                throw new InvalidDataException("platform not supported: " + googlePlayApplicationConfiguration.getPlatform());
+                throw new InvalidDataException("platform not supported: " + googlePlayApplicationConfiguration.getCategory());
         }
 
         getValidationHelper().validateModel(googlePlayApplicationConfiguration);

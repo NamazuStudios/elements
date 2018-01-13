@@ -13,13 +13,14 @@ import static com.namazustudios.socialengine.Constants.Regexp.WORD_ONLY;
     value = "Matchmaking Applicaiont Configuration",
     description = "This configures the matchmaking system.  More specifically, this configures which scripts and" +
                   "methods will be called when a successful match has been made.")
-public class MatchmakingApplicationConfiguration {
+public class MatchmakingApplicationConfiguration extends ApplicationConfiguration {
 
     @NotNull
     @Pattern(regexp = WORD_ONLY)
     @ApiModelProperty("A user-sepecified unqiue identifier for the matching scheme.  It is possible to specify " +
                       "multiple schemes per application, but each must be uniquely named.  Each scheme allows for the " +
-                      "specification of different scripts to handle the successful match.")
+                      "specification of different scripts to handle the successful match.  When requesting matchmaking " +
+                      "services clients will specify the scheme to be used.")
     private String scheme;
 
     @NotNull

@@ -5,11 +5,12 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 
 @ApiModel(
     value = "Defines a Simple Script Callback.",
     description = "Defines a method and a module to invoke.")
-public class CallbackDefinition {
+public class CallbackDefinition implements Serializable {
 
     @NotNull
     @ApiModelProperty("Specifies the module to invoke.")

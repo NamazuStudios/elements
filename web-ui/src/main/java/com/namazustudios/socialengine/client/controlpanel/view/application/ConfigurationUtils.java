@@ -35,7 +35,7 @@ public class ConfigurationUtils {
 
         final PlaceRequest.Builder placeRequestBuilder = new PlaceRequest.Builder();
 
-        switch (applicationConfiguration.getPlatform()) {
+        switch (applicationConfiguration.getCategory()) {
             case FACEBOOK:
                 placeRequestBuilder
                     .nameToken(APPLICATION_CONFIG_FACEBOOK_EDIT)
@@ -43,7 +43,7 @@ public class ConfigurationUtils {
                     .with(FacebookApplicationConfigurationEditorPresenter.Param.configuration_id.name(), applicationConfiguration.getId());
                 break;
             default:
-                throw new IllegalStateException("Not supported: " + applicationConfiguration.getPlatform());
+                throw new IllegalStateException("Not supported: " + applicationConfiguration.getCategory());
         }
 
         final PlaceRequest placeRequest = placeRequestBuilder.build();
@@ -53,7 +53,7 @@ public class ConfigurationUtils {
 
     public DeleteOperation deleteConfiguration(final ApplicationConfiguration applicationConfiguration) {
 
-        switch (applicationConfiguration.getPlatform()) {
+        switch (applicationConfiguration.getCategory()) {
 
             case FACEBOOK:
                 return getFacebookApplicationConfigurationClient()::deleteApplicationConfiguration;
@@ -71,7 +71,7 @@ public class ConfigurationUtils {
             default:
                 return (applicationNameOrId, applicationConfigurationNameOrId, voidMethodCallback) -> {
                     voidMethodCallback.onSuccess(null, null);
-                    Notify.notify("TODO: Not implemented for platform: " + applicationConfiguration.getPlatform());
+                    Notify.notify("TODO: Not implemented for platform: " + applicationConfiguration.getCategory());
                 };
 
         }
