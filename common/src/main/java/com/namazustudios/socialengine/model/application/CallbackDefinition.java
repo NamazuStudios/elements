@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 
 @ApiModel(
@@ -13,10 +14,12 @@ import java.io.Serializable;
 public class CallbackDefinition implements Serializable {
 
     @NotNull
+    @Pattern(regexp = "[\\w]+[\\w\\.]*")
     @ApiModelProperty("Specifies the module to invoke.")
     private String module;
 
     @NotNull
+    @Pattern(regexp = "[A-Za-z]+[A-Za-z0-9]*")
     @ApiModelProperty("Specifies the method to invoke.")
     private String method;
 

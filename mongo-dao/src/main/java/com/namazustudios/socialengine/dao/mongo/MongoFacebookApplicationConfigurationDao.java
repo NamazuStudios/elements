@@ -177,16 +177,16 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
                 .returnNew(true)
                 .upsert(false);
 
-        final MongoFacebookApplicationConfiguration mongoFacebookApplicationProfile;
-        mongoFacebookApplicationProfile = getMongoDBUtils()
+        final MongoFacebookApplicationConfiguration mongoFacebookApplicationConfiguration;
+        mongoFacebookApplicationConfiguration = getMongoDBUtils()
                 .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
-        if (mongoFacebookApplicationProfile == null) {
+        if (mongoFacebookApplicationConfiguration == null) {
             throw new NotFoundException("profile with ID not found: " + applicationProfileNameOrId);
         }
 
-        getObjectIndex().index(mongoFacebookApplicationProfile);
-        return getBeanMapper().map(mongoFacebookApplicationProfile, FacebookApplicationConfiguration.class);
+        getObjectIndex().index(mongoFacebookApplicationConfiguration);
+        return getBeanMapper().map(mongoFacebookApplicationConfiguration, FacebookApplicationConfiguration.class);
 
     }
 

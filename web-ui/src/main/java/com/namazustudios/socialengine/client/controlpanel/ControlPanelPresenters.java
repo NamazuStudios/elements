@@ -74,8 +74,13 @@ public class ControlPanelPresenters extends AbstractPresenterModule {
                 FacebookApplicationConfigurationEditorPresenter.class,
                 FacebookApplicationConfigurationEditorPresenter.MyView.class,
                 FacebookApplicationConfigurationEditorView.class,
-                FacebookApplicationConfigurationEditorPresenter.MyProxy.class
-        );
+                FacebookApplicationConfigurationEditorPresenter.MyProxy.class);
+
+        bindPresenter(
+                MatchmakingApplicationConfigurationEditorPresenter.class,
+                MatchmakingApplicationConfigurationEditorPresenter.MyView.class,
+                MatchmakingApplicationConfigurationEditorView.class,
+                MatchmakingApplicationConfigurationEditorPresenter.MyProxy.class);
     }
 
 }

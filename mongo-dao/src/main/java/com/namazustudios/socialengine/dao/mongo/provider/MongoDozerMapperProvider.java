@@ -32,7 +32,8 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(ApplicationConfiguration.class, MongoApplicationConfiguration.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))
-                .fields("parent.id", "parent.objectId", customConverter(ObjectIdConverter.class));
+                .fields("parent.id", "parent.objectId", customConverter(ObjectIdConverter.class))
+                .fields("uniqueIdentifier", "uniqueIdentifier");
 
             mapping(PSNApplicationConfiguration.class, MongoPSNApplicationConfiguration.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))

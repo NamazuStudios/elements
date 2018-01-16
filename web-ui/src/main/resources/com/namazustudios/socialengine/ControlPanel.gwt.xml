@@ -35,7 +35,7 @@
   <inherits name="org.hibernate.validator.HibernateValidator" />
   <inherits name="org.gwtbootstrap3.extras.notify.Notify"/>
 
-  <replace-with class="com.namazustudios.socialengine.client.validation.ValidatiorFactory">
+  <replace-with class="com.namazustudios.socialengine.client.validation.ValidatorFactory">
     <when-type-is class="javax.validation.ValidatorFactory" />
   </replace-with>
 

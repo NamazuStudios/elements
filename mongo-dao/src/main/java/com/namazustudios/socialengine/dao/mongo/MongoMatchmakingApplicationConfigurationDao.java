@@ -62,6 +62,7 @@ public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingA
         updateOperations.set("active", true);
         updateOperations.set("success", getBeanMapper().map(matchmakingApplicationConfiguration.getSuccess(), MongoCallbackDefinition.class));
         updateOperations.set("parent", mongoApplication);
+        updateOperations.set("algorithm", matchmakingApplicationConfiguration.getAlgorithm());
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
             .returnNew(true)
@@ -142,20 +143,21 @@ public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingA
         updateOperations.set("success", getBeanMapper().map(matchmakingApplicationConfiguration.getSuccess(), MongoCallbackDefinition.class));
         updateOperations.set("parent", mongoApplication);
         updateOperations.set("category", MATCHMAKING);
+        updateOperations.set("algorithm", matchmakingApplicationConfiguration.getAlgorithm());
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
             .returnNew(true)
             .upsert(false);
 
-        final MongoMatchmakingApplicationConfiguration mongoMatchmakingApplicationProfile;
-        mongoMatchmakingApplicationProfile = getMongoDBUtils()
+        final MongoMatchmakingApplicationConfiguration mongoMatchmakingApplicationConfiguration;
+        mongoMatchmakingApplicationConfiguration = getMongoDBUtils()
                 .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
-        if (mongoMatchmakingApplicationProfile == null) {
+        if (mongoMatchmakingApplicationConfiguration == null) {
             throw new NotFoundException("profile with ID not found: " + applicationProfileNameOrId);
         }
 
-        getObjectIndex().index(matchmakingApplicationConfiguration);
+        getObjectIndex().index(mongoMatchmakingApplicationConfiguration);
         return getBeanMapper().map(matchmakingApplicationConfiguration, MatchmakingApplicationConfiguration.class);
 
     }
