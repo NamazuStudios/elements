@@ -35,6 +35,9 @@ public class Match implements Serializable {
     @ApiModelProperty("The time of the last modification of the match.")
     private long lastUpdatedTimestamp;
 
+    @ApiModelProperty("The system-assigned game ID of the match.  Null until the match is successfully made.")
+    private String gameId;
+
     /**
      * Gets the unique server-assigned ID of this match.
      *
@@ -124,28 +127,21 @@ public class Match implements Serializable {
         this.lastUpdatedTimestamp = lastUpdatedTimestamp;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Match)) return false;
-
-        Match match = (Match) o;
-
-        if (getLastUpdatedTimestamp() != match.getLastUpdatedTimestamp()) return false;
-        if (getId() != null ? !getId().equals(match.getId()) : match.getId() != null) return false;
-        if (getScheme() != null ? !getScheme().equals(match.getScheme()) : match.getScheme() != null) return false;
-        if (getPlayer() != null ? !getPlayer().equals(match.getPlayer()) : match.getPlayer() != null) return false;
-        return getOpponent() != null ? getOpponent().equals(match.getOpponent()) : match.getOpponent() == null;
+    /**
+     * Gets the system assigned game ID for the match.
+     *
+     * @return the system-assigned game id
+     */
+    public String getGameId() {
+        return gameId;
     }
 
-    @Override
-    public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + (getScheme() != null ? getScheme().hashCode() : 0);
-        result = 31 * result + (getPlayer() != null ? getPlayer().hashCode() : 0);
-        result = 31 * result + (getOpponent() != null ? getOpponent().hashCode() : 0);
-        result = 31 * result + (int) (getLastUpdatedTimestamp() ^ (getLastUpdatedTimestamp() >>> 32));
-        return result;
+    /**
+     * Sets the system assigned game ID for the match.
+     * @param gameId
+     */
+    public void setGameId(String gameId) {
+        this.gameId = gameId;
     }
 
 }

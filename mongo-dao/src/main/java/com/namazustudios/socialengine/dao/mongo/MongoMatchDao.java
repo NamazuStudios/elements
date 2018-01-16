@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.lang.System.currentTimeMillis;
@@ -270,6 +271,12 @@ public class MongoMatchDao implements MatchDao {
             .map(mongoMatchDelta -> getDozerMapper().map(mongoMatchDelta, MatchTimeDelta.class))
             .collect(Collectors.toList());
 
+    }
+
+    @Override
+    public boolean finalize(Matchmaker.SuccessfulMatchTuple successfulMatchTuple, Supplier<String> finalizer) {
+        // TODO Implement
+        throw new UnsupportedOperationException();
     }
 
     @Override

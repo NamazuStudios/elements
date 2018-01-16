@@ -101,7 +101,7 @@ public class UserMatchService implements MatchService {
         try {
             final Matchmaker.SuccessfulMatchTuple successfulMatchTuple;
             successfulMatchTuple = matchmaker.attemptToFindOpponent(matchCreationTuple.getMatch());
-            invokeMatchingContext(successfulMatchTuple, matchmakingApplicationConfiguration);
+            getMatchDao().finalize(successfulMatchTuple, () -> finalize(successfulMatchTuple, matchmakingApplicationConfiguration));
             return handleSuccessfulMatch(successfulMatchTuple);
         } catch (NoSuitableMatchException ex) {
             return redactOpponentUser(matchCreationTuple.getMatch());
@@ -131,9 +131,8 @@ public class UserMatchService implements MatchService {
 
     }
 
-    private void invokeMatchingContext(
-            final Matchmaker.SuccessfulMatchTuple successfulMatchTuple,
-            final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration) {
+    private String finalize(final Matchmaker.SuccessfulMatchTuple successfulMatchTuple,
+                            final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration) {
 
         final String module = matchmakingApplicationConfiguration.getSuccess().getModule();
         final String method = matchmakingApplicationConfiguration.getSuccess().getMethod();
@@ -144,23 +143,15 @@ public class UserMatchService implements MatchService {
         final Path path = new Path(randomUUID().toString());
         final ResourceId resourceId = context.getResourceContext().create(module, path);
 
-        try {
-\
-            context.getResourceContext().invoke(resourceId, method,
-                successfulMatchTuple.getPlayerMatch(),
-                successfulMatchTuple.getOpponentMatch());
+        final Object result = context.getResourceContext().invoke(resourceId, method,
+            successfulMatchTuple.getPlayerMatch(),
+            successfulMatchTuple.getOpponentMatch());
 
-            getMatchDao().deleteMatchAndLogDelta(
-                successfulMatchTuple.getPlayerMatch().getPlayer().getId(),
-                successfulMatchTuple.getPlayerMatch().getId());
-
-            getMatchDao().deleteMatchAndLogDelta(
-                successfulMatchTuple.getOpponentMatch().getPlayer().getId(),
-                successfulMatchTuple.getOpponentMatch().getId());
-
-        } finally {
-            context.getResourceContext().destroy(resourceId);
+        if (!(result instanceof String)) {
+            throw new InternalError("Returned value not string from match processor.");
         }
+
+        return (String) result;
 
     }
 
