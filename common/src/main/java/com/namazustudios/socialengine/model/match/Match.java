@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.io.Serializable;
 
@@ -19,6 +20,10 @@ public class Match implements Serializable {
     @ApiModelProperty("The unique ID of the match.")
     private String id;
 
+    @NotNull
+    @ApiModelProperty("The scheme to use when matching with other players.")
+    private String scheme;
+
     @ApiModelProperty("The player requesting the match.  If not specified, then the current profile will be inferred.")
     private Profile player;
 
@@ -27,10 +32,6 @@ public class Match implements Serializable {
     private Profile opponent;
 
     @Null
-    @ApiModelProperty("The ID of the game currently being played against the opponent.  null if the game " +
-                       "has not been initiated yet.")
-    private String gameId;
-
     @ApiModelProperty("The time of the last modification of the match.")
     private long lastUpdatedTimestamp;
 
@@ -50,6 +51,23 @@ public class Match implements Serializable {
      */
     public void setId(String id) {
         this.id = id;
+    }
+
+    /**
+     * Gets the desired matchmaking scheme.
+     *
+     * @return the desired matchmaking scheme.
+     */
+    public String getScheme() {
+        return scheme;
+    }
+
+    /**
+     * Sets the desired matchmaking scheme.
+     * @param scheme
+     */
+    public void setScheme(String scheme) {
+        this.scheme = scheme;
     }
 
     /**
@@ -89,23 +107,6 @@ public class Match implements Serializable {
     }
 
     /**
-     * Gets the ID of the game associated with this match.
-     *
-     * @return the game ID
-     */
-    public String getGameId() {
-        return gameId;
-    }
-
-    /**
-     * Sets the game ID associated with this match.
-     * @param gameId
-     */
-    public void setGameId(String gameId) {
-        this.gameId = gameId;
-    }
-
-    /**
      * Gets the date at which the last modification was made to this match.
      *
      * @return the last-updated date
@@ -132,16 +133,17 @@ public class Match implements Serializable {
 
         if (getLastUpdatedTimestamp() != match.getLastUpdatedTimestamp()) return false;
         if (getId() != null ? !getId().equals(match.getId()) : match.getId() != null) return false;
-        if (getOpponent() != null ? !getOpponent().equals(match.getOpponent()) : match.getOpponent() != null)
-            return false;
-        return getGameId() != null ? getGameId().equals(match.getGameId()) : match.getGameId() == null;
+        if (getScheme() != null ? !getScheme().equals(match.getScheme()) : match.getScheme() != null) return false;
+        if (getPlayer() != null ? !getPlayer().equals(match.getPlayer()) : match.getPlayer() != null) return false;
+        return getOpponent() != null ? getOpponent().equals(match.getOpponent()) : match.getOpponent() == null;
     }
 
     @Override
     public int hashCode() {
         int result = getId() != null ? getId().hashCode() : 0;
+        result = 31 * result + (getScheme() != null ? getScheme().hashCode() : 0);
+        result = 31 * result + (getPlayer() != null ? getPlayer().hashCode() : 0);
         result = 31 * result + (getOpponent() != null ? getOpponent().hashCode() : 0);
-        result = 31 * result + (getGameId() != null ? getGameId().hashCode() : 0);
         result = 31 * result + (int) (getLastUpdatedTimestamp() ^ (getLastUpdatedTimestamp() >>> 32));
         return result;
     }

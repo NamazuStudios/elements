@@ -41,6 +41,7 @@ public class MongoFIFOMatchmaker implements Matchmaker {
             .order(Sort.ascending("lastUpdatedTimestamp"))
             .and(
                 query.criteria("player").notEqual(mongoMatch.getPlayer()),
+                query.criteria("scheme").equal(match.getScheme()),
                 query.criteria("opponent").doesNotExist()
             );
 

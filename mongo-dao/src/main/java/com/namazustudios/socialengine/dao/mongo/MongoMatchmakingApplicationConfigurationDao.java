@@ -154,7 +154,7 @@ public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingA
                 .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
         if (mongoMatchmakingApplicationConfiguration == null) {
-            throw new NotFoundException("profile with ID not found: " + applicationProfileNameOrId);
+            throw new NotFoundException("configuration with ID not found: " + applicationProfileNameOrId);
         }
 
         getObjectIndex().index(mongoMatchmakingApplicationConfiguration);
@@ -200,20 +200,20 @@ public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingA
                 .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
         if (mongoMatchmakingApplicationProfile == null) {
-            throw new NotFoundException("profile with ID not found: " + mongoMatchmakingApplicationProfile.getObjectId());
+            throw new NotFoundException("configuration with ID not found: " + mongoMatchmakingApplicationProfile.getObjectId());
         }
 
         getObjectIndex().index(mongoMatchmakingApplicationProfile);
 
     }
 
-    public void validate(final MatchmakingApplicationConfiguration psnApplicationProfile) {
+    public void validate(final MatchmakingApplicationConfiguration configuration) {
 
-        if (psnApplicationProfile == null) {
-            throw new InvalidDataException("psnApplicationProfile must not be null.");
+        if (configuration == null) {
+            throw new InvalidDataException("configuration must not be null.");
         }
 
-        getValidationHelper().validateModel(psnApplicationProfile);
+        getValidationHelper().validateModel(configuration);
 
     }
 

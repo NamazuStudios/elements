@@ -19,6 +19,7 @@ import java.sql.Timestamp;
         processors = ObjectIdProcessor.class))
 @SearchableDocument(
         fields = {
+                @SearchableField(name = "scheme", path = "/scheme"),
                 @SearchableField(name = "lastUpdatedTimestamp", path = "/lastUpdatedTimestamp"),
                 @SearchableField(name = "playerId",  path = "/player/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class),
                 @SearchableField(name = "opponentId",  path = "/opponent/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class)
@@ -34,6 +35,10 @@ public class MongoMatch {
     private MongoProfile player;
 
     @Indexed
+    @Property
+    private String scheme;
+
+    @Indexed
     @Reference
     private MongoProfile opponent;
 
@@ -47,6 +52,14 @@ public class MongoMatch {
 
     public void setObjectId(ObjectId objectId) {
         this.objectId = objectId;
+    }
+
+    public String getScheme() {
+        return scheme;
+    }
+
+    public void setScheme(String scheme) {
+        this.scheme = scheme;
     }
 
     public MongoProfile getPlayer() {

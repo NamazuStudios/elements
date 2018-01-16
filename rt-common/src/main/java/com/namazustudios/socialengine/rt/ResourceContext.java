@@ -122,7 +122,7 @@ public interface ResourceContext {
 
         final Future<Object> future = invokeAsync(
                 object  -> logger.info("Invoked {}:{}({})", resourceId.toString(), method, Arrays.toString(args)),
-                throwable -> logger.info("Invvocation failed {}:{}({})", resourceId.toString(), method, Arrays.toString(args), throwable),
+                throwable -> logger.info("Invocation failed {}:{}({})", resourceId.toString(), method, Arrays.toString(args), throwable),
                 resourceId, method, args);
 
         return _waitAsync(logger, future);

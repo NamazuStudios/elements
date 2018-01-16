@@ -2,15 +2,20 @@ package com.namazustudios.socialengine.service.match;
 
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
+import com.namazustudios.socialengine.dao.MatchmakingApplicationConfigurationDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.TimeDelta;
+import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchTimeDelta;
-import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.Context;
+import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.service.MatchService;
 import com.namazustudios.socialengine.service.Topic;
 import com.namazustudios.socialengine.service.TopicService;
@@ -20,8 +25,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
+import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -34,6 +39,10 @@ public class UserMatchService implements MatchService {
     private MatchDao matchDao;
 
     private TopicService topicService;
+
+    private ContextFactory contextFactory;
+
+    private MatchmakingApplicationConfigurationDao matchmakingApplicationConfigurationDao;
 
     @Override
     public Match getMatch(final String matchId) {
@@ -62,6 +71,10 @@ public class UserMatchService implements MatchService {
 
         final Profile profile = getCurrentProfileSupplier().get();
 
+        final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration;
+        matchmakingApplicationConfiguration = getMatchmakingApplicationConfigurationDao()
+            .getApplicationConfiguration(profile.getApplication().getId(), match.getScheme());
+
         if (match.getPlayer() == null) {
             match.setPlayer(profile);
         } else if (!Objects.equals(profile, match.getPlayer())) {
@@ -83,11 +96,12 @@ public class UserMatchService implements MatchService {
             matchTimeDeltaPublisher.accept(matchCreationTuple.getTimeDelta());
         }
 
-        final Matchmaker matchmaker = getMatchDao().getMatchmaker(MatchingAlgorithm.FIFO);
+        final Matchmaker matchmaker = getMatchDao().getMatchmaker(matchmakingApplicationConfiguration.getAlgorithm());
 
         try {
             final Matchmaker.SuccessfulMatchTuple successfulMatchTuple;
             successfulMatchTuple = matchmaker.attemptToFindOpponent(matchCreationTuple.getMatch());
+            invokeMatchingContext(successfulMatchTuple, matchmakingApplicationConfiguration);
             return handleSuccessfulMatch(successfulMatchTuple);
         } catch (NoSuitableMatchException ex) {
             return redactOpponentUser(matchCreationTuple.getMatch());
@@ -97,7 +111,7 @@ public class UserMatchService implements MatchService {
 
     private Match handleSuccessfulMatch(Matchmaker.SuccessfulMatchTuple successfulMatchTuple) {
 
-        for(final MatchTimeDelta matchTimeDelta : successfulMatchTuple.getMatchDeltas()) {
+        for (final MatchTimeDelta matchTimeDelta : successfulMatchTuple.getMatchDeltas()) {
 
             final Topic<MatchTimeDelta> matchTimeDeltaTopic;
             final Profile profile = matchTimeDelta.getSnapshot().getPlayer();
@@ -114,6 +128,39 @@ public class UserMatchService implements MatchService {
         }
 
         return redactOpponentUser(successfulMatchTuple.getPlayerMatch());
+
+    }
+
+    private void invokeMatchingContext(
+            final Matchmaker.SuccessfulMatchTuple successfulMatchTuple,
+            final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration) {
+
+        final String module = matchmakingApplicationConfiguration.getSuccess().getModule();
+        final String method = matchmakingApplicationConfiguration.getSuccess().getMethod();
+
+        final Profile profile = getCurrentProfileSupplier().get();
+        final Context context = getContextFactory().getContextForApplication(profile.getApplication().getId());
+
+        final Path path = new Path(randomUUID().toString());
+        final ResourceId resourceId = context.getResourceContext().create(module, path);
+
+        try {
+\
+            context.getResourceContext().invoke(resourceId, method,
+                successfulMatchTuple.getPlayerMatch(),
+                successfulMatchTuple.getOpponentMatch());
+
+            getMatchDao().deleteMatchAndLogDelta(
+                successfulMatchTuple.getPlayerMatch().getPlayer().getId(),
+                successfulMatchTuple.getPlayerMatch().getId());
+
+            getMatchDao().deleteMatchAndLogDelta(
+                successfulMatchTuple.getOpponentMatch().getPlayer().getId(),
+                successfulMatchTuple.getOpponentMatch().getId());
+
+        } finally {
+            context.getResourceContext().destroy(resourceId);
+        }
 
     }
 
@@ -259,6 +306,24 @@ public class UserMatchService implements MatchService {
     @Inject
     public void setTopicService(TopicService topicService) {
         this.topicService = topicService;
+    }
+
+    public ContextFactory getContextFactory() {
+        return contextFactory;
+    }
+
+    @Inject
+    public void setContextFactory(ContextFactory contextFactory) {
+        this.contextFactory = contextFactory;
+    }
+
+    public MatchmakingApplicationConfigurationDao getMatchmakingApplicationConfigurationDao() {
+        return matchmakingApplicationConfigurationDao;
+    }
+
+    @Inject
+    public void setMatchmakingApplicationConfigurationDao(MatchmakingApplicationConfigurationDao matchmakingApplicationConfigurationDao) {
+        this.matchmakingApplicationConfigurationDao = matchmakingApplicationConfigurationDao;
     }
 
 }
