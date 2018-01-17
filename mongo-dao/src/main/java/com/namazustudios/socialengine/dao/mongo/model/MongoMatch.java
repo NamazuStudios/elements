@@ -25,7 +25,18 @@ import java.sql.Timestamp;
                 @SearchableField(name = "opponentId",  path = "/opponent/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class)
         })
 @Entity(value = "match", noClassnameStored = true)
+@Indexes({
+    @Index(fields = @Field(value = "expiry"), options = @IndexOptions(expireAfterSeconds = MongoMatch.MATCH_EXPIRATION_SECONDS))
+})
 public class MongoMatch {
+
+    /**
+     * The amount of seconds a {@link com.namazustudios.socialengine.model.match.Match}  This is set to something
+     * considerably larger than what will ever be practically necessary, but allows clients to read a history of the
+     * associated {@link MongoMatch} in order to sync state appropriately.  In reality a {@link MongoMatch} should
+     * only need to live for a short period after match has been completed.
+     */
+    public static final int MATCH_EXPIRATION_SECONDS = 5 * 60;
 
     @Id
     private ObjectId objectId;
@@ -48,6 +59,9 @@ public class MongoMatch {
 
     @Property
     private String gameId;
+
+    @Property
+    private Timestamp expiry;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -95,6 +109,14 @@ public class MongoMatch {
 
     public void setGameId(String gameId) {
         this.gameId = gameId;
+    }
+
+    public Timestamp getExpiry() {
+        return expiry;
+    }
+
+    public void setExpiry(Timestamp expiry) {
+        this.expiry = expiry;
     }
 
 }

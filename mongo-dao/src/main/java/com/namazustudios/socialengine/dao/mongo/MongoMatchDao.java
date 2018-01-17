@@ -217,6 +217,9 @@ public class MongoMatchDao implements MatchDao {
                 final MongoMatch m = getMongoMatchForPlayer(playerId, matchId);
 
                 if (m.getOpponent() == null) {
+                    final Query<MongoMatchDelta> deleteQuery = ds.createQuery(MongoMatchDelta.class);
+                    deleteQuery.criteria("_id.match").equal(m);
+                    ds.delete(deleteQuery);
                     ds.delete(m);
                 } else {
                     throw new InvalidDataException("unable to delete match with opponent assigned.");
@@ -297,6 +300,7 @@ public class MongoMatchDao implements MatchDao {
     @Override
     public Stream<TimeDeltaTuple> finalize(final SuccessfulMatchTuple successfulMatchTuple, final Supplier<String> finalizer) {
 
+        final Timestamp expiry = new Timestamp(currentTimeMillis());
         final ObjectId playerMatchId = new ObjectId(successfulMatchTuple.getPlayerMatch().getId());
         final ObjectId opponentMatchId = new ObjectId(successfulMatchTuple.getPlayerMatch().getId());
 
@@ -309,7 +313,10 @@ public class MongoMatchDao implements MatchDao {
                 if (playerMatch.getGameId() == null && opponentMatch.getGameId() == null) {
 
                     final String gameId = finalizer.get();
+
+                    playerMatch.setExpiry(expiry);
                     playerMatch.setGameId(gameId);
+                    opponentMatch.setExpiry(expiry);
                     opponentMatch.setGameId(gameId);
 
                     final MongoMatchDelta playerMongoMatchDelta = getMongoMatchUtils().insertDeltaForUpdate(playerMatch);

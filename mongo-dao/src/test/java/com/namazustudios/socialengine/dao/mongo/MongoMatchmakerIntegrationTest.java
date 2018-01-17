@@ -12,24 +12,22 @@ import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Guice;
+import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
 import static com.namazustudios.socialengine.model.match.MatchingAlgorithm.FIFO;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.Arrays.fill;
 import static java.util.stream.Collectors.toList;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.fail;
 
 @Guice(modules = IntegrationTestModule.class)
