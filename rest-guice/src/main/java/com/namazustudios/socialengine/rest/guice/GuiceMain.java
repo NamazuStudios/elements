@@ -14,6 +14,7 @@ import com.namazustudios.socialengine.dao.rt.guice.RTGitApplicationModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTDaoModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
+import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import org.apache.bval.guice.ValidationModule;
 
 import javax.servlet.ServletContext;
@@ -33,17 +34,28 @@ public class GuiceMain extends GuiceServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
+
         servletContext = servletContextEvent.getServletContext();
         super.contextInitialized(servletContextEvent);
         servletContext.setAttribute(GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME, injector);
+
+        final ConnectionMultiplexer connectionMultiplexer = injector.getInstance(ConnectionMultiplexer.class);
+        connectionMultiplexer.start();
+
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
+
         super.contextDestroyed(servletContextEvent);
+
+        final ConnectionMultiplexer connectionMultiplexer = injector.getInstance(ConnectionMultiplexer.class);
+        connectionMultiplexer.stop();
+
         servletContext.removeAttribute(GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME);
         servletContext = null;
         injector = null;
+
     }
 
     @Override
