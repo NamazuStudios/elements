@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
@@ -93,16 +94,19 @@ public class UserMatchService implements MatchService {
             .getSubtopicNamed(matchCreationTuple.getTimeDelta().getId());
 
         try (final Topic.Publisher<MatchTimeDelta> matchTimeDeltaPublisher = matchTimeDeltaTopic.getPublisher()) {
+
+            final Matchmaker matchmaker = getMatchDao().getMatchmaker(matchmakingApplicationConfiguration.getAlgorithm());
             matchTimeDeltaPublisher.accept(matchCreationTuple.getTimeDelta());
-        }
 
-        final Matchmaker matchmaker = getMatchDao().getMatchmaker(matchmakingApplicationConfiguration.getAlgorithm());
-
-        try {
             final Matchmaker.SuccessfulMatchTuple successfulMatchTuple;
             successfulMatchTuple = matchmaker.attemptToFindOpponent(matchCreationTuple.getMatch());
-            getMatchDao().finalize(successfulMatchTuple, () -> finalize(successfulMatchTuple, matchmakingApplicationConfiguration));
+
+            final Stream<MatchDao.TimeDeltaTuple> matchTimeDeltaStream;
+            matchTimeDeltaStream = getMatchDao().finalize(successfulMatchTuple, () -> finalize(successfulMatchTuple, matchmakingApplicationConfiguration));
+            matchTimeDeltaStream.forEach(t -> matchTimeDeltaPublisher.accept(t.getTimeDelta()));
+
             return handleSuccessfulMatch(successfulMatchTuple);
+
         } catch (NoSuitableMatchException ex) {
             return redactOpponentUser(matchCreationTuple.getMatch());
         }

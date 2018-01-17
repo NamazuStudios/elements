@@ -46,6 +46,9 @@ public class MongoMatch {
     @Property
     private Timestamp lastUpdatedTimestamp;
 
+    @Property
+    private String gameId;
+
     public ObjectId getObjectId() {
         return objectId;
     }
@@ -84,6 +87,14 @@ public class MongoMatch {
 
     public void setLastUpdatedTimestamp(Timestamp lastUpdatedTimestamp) {
         this.lastUpdatedTimestamp = lastUpdatedTimestamp;
+    }
+
+    public String getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(String gameId) {
+        this.gameId = gameId;
     }
 
 }

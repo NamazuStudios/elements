@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.common.collect.Streams;
+import com.namazustudios.socialengine.dao.Matchmaker.SuccessfulMatchTuple;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.System.currentTimeMillis;
 import static org.mongodb.morphia.query.Sort.ascending;
@@ -75,8 +77,8 @@ public class MongoMatchDao implements MatchDao {
         mongoMatchQuery = getDatastore().createQuery(MongoMatch.class);
 
         mongoMatchQuery.and(
-                mongoMatchQuery.criteria("_id").equal(objectId),
-                mongoMatchQuery.criteria("player").equal(playerProfile)
+            mongoMatchQuery.criteria("_id").equal(objectId),
+            mongoMatchQuery.criteria("player").equal(playerProfile)
         );
 
         final MongoMatch mongoMatch = mongoMatchQuery.get();
@@ -150,7 +152,22 @@ public class MongoMatchDao implements MatchDao {
         // Just checks to see if it's
         getMongoProfileDao().getActiveMongoProfile(match.getPlayer().getId());
 
+        // Pre-allocate the match id so we can lock the match in advance.  This prevents other players from matching
+        // to it until it's been fully created.
+
+        final ObjectId objectId = new ObjectId();
         final MongoMatch mongoMatch = getDozerMapper().map(match, MongoMatch.class);
+        mongoMatch.setObjectId(objectId);
+
+        try {
+            return getMongoConcurrentUtils().performOptimistic(ds -> getMongoMatchUtils().attemptLock(() -> doCreateMatchAndLogDelta(mongoMatch), objectId));
+        } catch (MongoConcurrentUtils.ConflictException ex) {
+            throw new TooBusyException(ex);
+        }
+
+    }
+
+    private TimeDeltaTuple doCreateMatchAndLogDelta(final MongoMatch mongoMatch) {
 
         final Timestamp now = new Timestamp(currentTimeMillis());
         mongoMatch.setLastUpdatedTimestamp(now);
@@ -169,6 +186,11 @@ public class MongoMatchDao implements MatchDao {
 
         getMongoDBUtils().perform(ds -> ds.save(mongoMatchDelta));
 
+        return tuple(mongoMatch, mongoMatchDelta);
+
+    }
+
+    private final TimeDeltaTuple tuple(final MongoMatch mongoMatch, final MongoMatchDelta mongoMatchDelta) {
         return new TimeDeltaTuple() {
 
             @Override
@@ -182,7 +204,6 @@ public class MongoMatchDao implements MatchDao {
             }
 
         };
-
     }
 
     @Override
@@ -274,9 +295,39 @@ public class MongoMatchDao implements MatchDao {
     }
 
     @Override
-    public boolean finalize(Matchmaker.SuccessfulMatchTuple successfulMatchTuple, Supplier<String> finalizer) {
-        // TODO Implement
-        throw new UnsupportedOperationException();
+    public Stream<TimeDeltaTuple> finalize(final SuccessfulMatchTuple successfulMatchTuple, final Supplier<String> finalizer) {
+
+        final ObjectId playerMatchId = new ObjectId(successfulMatchTuple.getPlayerMatch().getId());
+        final ObjectId opponentMatchId = new ObjectId(successfulMatchTuple.getPlayerMatch().getId());
+
+        try {
+            return getMongoConcurrentUtils().performOptimisticInsert(ds -> {
+
+                final MongoMatch playerMatch = getDatastore().get(MongoMatch.class, playerMatchId);
+                final MongoMatch opponentMatch = getDatastore().get(MongoMatch.class, opponentMatchId);
+
+                if (playerMatch.getGameId() == null && opponentMatch.getGameId() == null) {
+
+                    final String gameId = finalizer.get();
+                    playerMatch.setGameId(gameId);
+                    opponentMatch.setGameId(gameId);
+
+                    final MongoMatchDelta playerMongoMatchDelta = getMongoMatchUtils().insertDeltaForUpdate(playerMatch);
+                    final MongoMatchDelta opponentMongoMatchDelta = getMongoMatchUtils().insertDeltaForUpdate(opponentMatch);
+
+                    return Stream.of(
+                        tuple(playerMatch, playerMongoMatchDelta),
+                        tuple(opponentMatch, opponentMongoMatchDelta));
+
+                } else {
+                    return Stream.empty();
+                }
+
+            });
+        } catch (MongoConcurrentUtils.ConflictException e) {
+            throw new TooBusyException(e);
+        }
+
     }
 
     @Override

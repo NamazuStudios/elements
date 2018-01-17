@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoMatchLock;
 import com.namazustudios.socialengine.dao.mongo.model.MongoMatchSnapshot;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
-import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.model.TimeDelta;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchTimeDelta;
@@ -79,6 +78,44 @@ public class MongoMatchUtils {
             .map(m -> new MongoMatchLock(m.getObjectId()))
             .collect(Collectors.toList());
 
+        return attemptLock(resultProvider, matchLockList);
+
+    }
+
+    /**
+     * Intended to be used in the scope of
+     * {@link MongoConcurrentUtils#performOptimistic(MongoConcurrentUtils.CriticalOperation)},
+     * this will attempt to lock the {@link MongoMatch} using a unique {@link MongoMatchLock}.  If successful, this will
+     * perform the operation defined by the supplied {@link Provider<T>} instance.  If the lock fails, then this will
+     * throw an instance of {@link MongoConcurrentUtils.ContentionException} to indicate that a re-lock must be
+     * attempted or the process abandoned by the calling code.
+     *
+     * This is necessary because matching may happen at any time which involves controlling access to multiple
+     * documents.  Therefore code which mutates or deletes a {@link MongoMatch} should only be done within the context
+     * of a lock.  This allows for acquiring multiple {@link MongoMatchLock} instances and safely unlocking them even if
+     * the code specified in the {@link Provider<T> }fails to execute.
+     *
+     * @param resultProvider the {@link Provider<T>} defining the operation to perform
+     * @param mongoMatchIds one or {@link MongoMatch} instances to return
+     * @param <T> the return type
+     * @return the value returned by the supplied provider
+     * @throws MongoConcurrentUtils.ContentionException if locking fails
+     */
+    public <T> T attemptLock(
+            final Provider<T> resultProvider,
+            final ObjectId ... mongoMatchIds) throws MongoConcurrentUtils.ContentionException {
+
+        final List<MongoMatchLock> matchLockList = stream(mongoMatchIds)
+                .map(id -> new MongoMatchLock(id))
+                .collect(Collectors.toList());
+
+        return attemptLock(resultProvider, matchLockList);
+
+    }
+
+    private <T> T attemptLock(
+            final Provider<T> resultProvider,
+            final List<MongoMatchLock> matchLockList) throws MongoConcurrentUtils.ContentionException {
         try {
             getDatastore().insert(matchLockList);
             return resultProvider.get();
@@ -99,7 +136,6 @@ public class MongoMatchUtils {
         } finally {
             unlock(matchLockList);
         }
-
     }
 
     private void unlock(final List<MongoMatchLock> mongoMatchLockList) {
@@ -225,8 +261,8 @@ public class MongoMatchUtils {
             throw new InternalException("player or opponent match was deleted while processing match");
         }
 
-        final MongoMatchDelta playerDelta = deltaForUpdate(updatedPlayerMatch);
-        final MongoMatchDelta opponnentDelta = deltaForUpdate(updatedOpponentMatch);
+        final MongoMatchDelta playerDelta = insertDeltaForUpdate(updatedPlayerMatch);
+        final MongoMatchDelta opponnentDelta = insertDeltaForUpdate(updatedOpponentMatch);
 
         return new Matchmaker.SuccessfulMatchTuple() {
 
@@ -252,33 +288,25 @@ public class MongoMatchUtils {
 
     }
 
-    private MongoMatchDelta deltaForUpdate(final MongoMatch mongoMatch) {
-        try {
+    /**
+     * Generates a {@link MongoMatchDelta} for a recently {@link MongoMatch}.  This attempts to perform the operation
+     *
+     * @param mongoMatch
+     * @return
+     */
+    public MongoMatchDelta insertDeltaForUpdate(final MongoMatch mongoMatch) {
 
-            final MongoMatchSnapshot mongoMatchSnapshot = getDozerMapper().map(mongoMatch, MongoMatchSnapshot.class);
+        final MongoMatchSnapshot mongoMatchSnapshot = getDozerMapper().map(mongoMatch, MongoMatchSnapshot.class);
+        final MongoMatchDelta latestDelta = getLatestDelta(mongoMatch.getObjectId());
+        final MongoMatchDelta toInsert = new MongoMatchDelta();
 
-            return getMongoConcurrentUtils().performOptimisticInsert(ds -> {
+        toInsert.setKey(latestDelta.getKey().nextInSequence(mongoMatch.getLastUpdatedTimestamp().getTime()));
+        toInsert.setOperation(TimeDelta.Operation.UPDATED);
+        toInsert.setSnapshot(mongoMatchSnapshot);
+        getDatastore().insert(toInsert);
 
-                final MongoMatchDelta latestDelta = getLatestDelta(mongoMatch.getObjectId());
+        return toInsert;
 
-                if (latestDelta == null) {
-                    // This can happen if the match is matched very close to when it's created
-                    // and the latest delta hasn't even been inserted yet.
-                    throw new MongoConcurrentUtils.ContentionException();
-                }
-
-                final MongoMatchDelta toInsert = new MongoMatchDelta();
-                toInsert.setKey(latestDelta.getKey().nextInSequence(mongoMatch.getLastUpdatedTimestamp().getTime()));
-                toInsert.setOperation(TimeDelta.Operation.UPDATED);
-                toInsert.setSnapshot(mongoMatchSnapshot);
-                ds.insert(toInsert);
-
-                return toInsert;
-
-            });
-        } catch (MongoConcurrentUtils.ConflictException e) {
-            throw new TooBusyException(e);
-        }
     }
 
     public MongoMatchDelta getLatestDelta(final String matchId) {
