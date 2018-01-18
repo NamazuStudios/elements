@@ -25,6 +25,7 @@ import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 import java.sql.Timestamp;
@@ -209,6 +210,7 @@ public class MongoMatchDao implements MatchDao {
     @Override
     public MatchTimeDelta deleteMatchAndLogDelta(final String playerId, final String matchId) {
 
+        final Timestamp expiry = new Timestamp(currentTimeMillis());
         final MongoMatch toDelete = getMongoMatchForPlayer(playerId, matchId);
 
         try {
@@ -216,13 +218,19 @@ public class MongoMatchDao implements MatchDao {
 
                 final MongoMatch m = getMongoMatchForPlayer(playerId, matchId);
 
-                if (m.getOpponent() == null) {
-                    final Query<MongoMatchDelta> deleteQuery = ds.createQuery(MongoMatchDelta.class);
-                    deleteQuery.criteria("_id.match").equal(m);
-                    ds.delete(deleteQuery);
+                if (m.getOpponent() == null || m.getGameId() != null) {
+
+                    final Query<MongoMatchDelta> expiryQuery = ds.createQuery(MongoMatchDelta.class);
+                    expiryQuery.criteria("_id.match").equal(new ObjectId(matchId));
+
+                    final UpdateOperations<MongoMatchDelta> expiryUpdateOperations;
+                    expiryUpdateOperations = ds.createUpdateOperations(MongoMatchDelta.class);
+                    expiryUpdateOperations.set("expiry", expiry);
+                    ds.update(expiryQuery, expiryUpdateOperations);
                     ds.delete(m);
+
                 } else {
-                    throw new InvalidDataException("unable to delete match with opponent assigned.");
+                    throw new InvalidDataException("Unable to delete match with opponent assigned.");
                 }
 
                 return null;
@@ -245,6 +253,7 @@ public class MongoMatchDao implements MatchDao {
                     toInsert.setKey(existing.getKey().nextInSequence());
                 }
 
+                toInsert.setExpiry(new Timestamp(currentTimeMillis()));
                 toInsert.setOperation(MatchTimeDelta.Operation.REMOVED);
                 toInsert.setSnapshot(null);
 
@@ -302,10 +311,10 @@ public class MongoMatchDao implements MatchDao {
 
         final Timestamp expiry = new Timestamp(currentTimeMillis());
         final ObjectId playerMatchId = new ObjectId(successfulMatchTuple.getPlayerMatch().getId());
-        final ObjectId opponentMatchId = new ObjectId(successfulMatchTuple.getPlayerMatch().getId());
+        final ObjectId opponentMatchId = new ObjectId(successfulMatchTuple.getOpponentMatch().getId());
 
         try {
-            return getMongoConcurrentUtils().performOptimisticInsert(ds -> {
+            return getMongoConcurrentUtils().performOptimistic(ds -> getMongoMatchUtils().attemptLock(() -> {
 
                 final MongoMatch playerMatch = getDatastore().get(MongoMatch.class, playerMatchId);
                 final MongoMatch opponentMatch = getDatastore().get(MongoMatch.class, opponentMatchId);
@@ -319,8 +328,14 @@ public class MongoMatchDao implements MatchDao {
                     opponentMatch.setExpiry(expiry);
                     opponentMatch.setGameId(gameId);
 
-                    final MongoMatchDelta playerMongoMatchDelta = getMongoMatchUtils().insertDeltaForUpdate(playerMatch);
-                    final MongoMatchDelta opponentMongoMatchDelta = getMongoMatchUtils().insertDeltaForUpdate(opponentMatch);
+                    getDatastore().save(playerMatch);
+                    getDatastore().save(opponentMatch);
+
+                    final MongoMatchDelta playerMongoMatchDelta;
+                    playerMongoMatchDelta = getMongoMatchUtils().insertDeltaForUpdate(playerMatch);
+
+                    final MongoMatchDelta opponentMongoMatchDelta;
+                    opponentMongoMatchDelta = getMongoMatchUtils().insertDeltaForUpdate(opponentMatch);
 
                     return Stream.of(
                         tuple(playerMatch, playerMongoMatchDelta),
@@ -330,7 +345,7 @@ public class MongoMatchDao implements MatchDao {
                     return Stream.empty();
                 }
 
-            });
+            }, playerMatchId, opponentMatchId));
         } catch (MongoConcurrentUtils.ConflictException e) {
             throw new TooBusyException(e);
         }

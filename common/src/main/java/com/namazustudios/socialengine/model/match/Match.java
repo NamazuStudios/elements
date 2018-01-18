@@ -31,7 +31,6 @@ public class Match implements Serializable {
     @ApiModelProperty("The opposing player, or null if no suitable opponent has been found.")
     private Profile opponent;
 
-    @Null
     @ApiModelProperty("The time of the last modification of the match.")
     private long lastUpdatedTimestamp;
 

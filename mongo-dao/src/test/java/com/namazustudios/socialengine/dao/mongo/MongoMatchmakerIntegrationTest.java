@@ -1,7 +1,10 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.*;
+import com.namazustudios.socialengine.dao.mongo.model.MongoMatch;
+import com.namazustudios.socialengine.dao.mongo.model.MongoMatchDelta;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.match.Match;
@@ -10,6 +13,9 @@ import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -21,11 +27,16 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
 import static com.namazustudios.socialengine.model.match.MatchingAlgorithm.FIFO;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Arrays.fill;
+import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.fail;
@@ -49,9 +60,13 @@ public class MongoMatchmakerIntegrationTest {
 
     private MongodExecutable mongodExecutable;
 
+    private AdvancedDatastore advancedDatastore;
+
     private List<Match> intermediateMatches = new ArrayList<>();
 
     private List<Profile> intermediateProfiles = new ArrayList<>();
+
+    private List<Matchmaker.SuccessfulMatchTuple> intermediateSuccessfulMatchTuples = new ArrayList<>();
 
     @DataProvider
     public static Iterator<Object[]> matchingAlgorithms() {
@@ -92,11 +107,22 @@ public class MongoMatchmakerIntegrationTest {
         // Cross validates that the matches were made properly
         crossValidateMatch(successfulMatchTuple, profileb, profilea);
 
+        final MongoMatch mongoMatcha;
+        mongoMatcha = getAdvancedDatastore().get(MongoMatch.class, new ObjectId(successfulMatchTuple.getPlayerMatch().getId()));
+
+        final MongoMatch mongoMatchb;
+        mongoMatchb = getAdvancedDatastore().get(MongoMatch.class, new ObjectId(successfulMatchTuple.getOpponentMatch().getId()));
+
+        assertNull(mongoMatcha.getExpiry());
+        assertNull(mongoMatchb.getExpiry());
+
         intermediateMatches.add(matcha);
         intermediateMatches.add(matchb);
 
         intermediateProfiles.add(profilea);
         intermediateProfiles.add(profileb);
+
+        intermediateSuccessfulMatchTuples.add(successfulMatchTuple);
 
     }
 
@@ -127,6 +153,7 @@ public class MongoMatchmakerIntegrationTest {
     private Match makeMockMatch(final Profile profile) {
         final Match match = new Match();
         match.setPlayer(profile);
+        match.setScheme("pvp");
         return match;
     }
 
@@ -217,6 +244,73 @@ public class MongoMatchmakerIntegrationTest {
 
     }
 
+    @DataProvider
+    public Object[][] intermediateSuccessfulMatchTupleProvider() {
+        return intermediateSuccessfulMatchTuples
+            .stream()
+            .map(t -> new Object[]{t})
+            .collect(toList())
+            .toArray(new Object[][]{});
+    }
+
+    @Test(dataProvider = "intermediateSuccessfulMatchTupleProvider", dependsOnMethods = "testMatch")
+    public void testFinalizeMatchingProcess(final Matchmaker.SuccessfulMatchTuple successfulMatchTuple) {
+
+        final UUID gameUUID = randomUUID();
+        final Stream<MatchDao.TimeDeltaTuple> first = getMatchDao().finalize(successfulMatchTuple, gameUUID::toString);
+
+        final Stream<MatchDao.TimeDeltaTuple> second = getMatchDao().finalize(successfulMatchTuple, () -> {
+            fail("Did not expect a call here.");
+            return null;
+        });
+
+        assertEquals(first.count(), 2, "Expected two results for first call.");
+        assertEquals(second.count(), 0, "Expected zero results for second call.");
+
+        final Match matcha = getMatchDao().getMatchForPlayer(
+            successfulMatchTuple.getPlayerMatch().getPlayer().getId(),
+            successfulMatchTuple.getPlayerMatch().getId());
+
+        final Match matchb = getMatchDao().getMatchForPlayer(
+                successfulMatchTuple.getOpponentMatch().getPlayer().getId(),
+                successfulMatchTuple.getOpponentMatch().getId());
+
+        assertEquals(matcha.getGameId(), gameUUID.toString());
+        assertEquals(matchb.getGameId(), gameUUID.toString());
+
+        final MongoMatch mongoMatcha;
+        mongoMatcha = getAdvancedDatastore().get(MongoMatch.class, new ObjectId(successfulMatchTuple.getPlayerMatch().getId()));
+
+        final MongoMatch mongoMatchb;
+        mongoMatchb = getAdvancedDatastore().get(MongoMatch.class, new ObjectId(successfulMatchTuple.getOpponentMatch().getId()));
+
+        assertNotNull(mongoMatcha.getExpiry());
+        assertNotNull(mongoMatchb.getExpiry());
+
+    }
+
+    @Test(dataProvider = "intermediateMatchDataProvider", dependsOnMethods = "testFinalizeMatchingProcess", expectedExceptions = NotFoundException.class)
+    public void deleteIntermediateMatch(final Match match) {
+
+        final Query<MongoMatchDelta> preDeleteQuery = getAdvancedDatastore().createQuery(MongoMatchDelta.class)
+            .field("expiry").doesNotExist()
+            .field("_id.match").equal(new ObjectId(match.getId()));
+
+        final long preDeleteCount = preDeleteQuery.count();
+        assertTrue(preDeleteCount > 0, "Expected at least one delta pre-delete.");
+        getMatchDao().deleteMatchAndLogDelta(match.getPlayer().getId(), match.getId());
+
+        final Query<MongoMatchDelta> postDeleteQuery = getAdvancedDatastore().createQuery(MongoMatchDelta.class)
+            .field("expiry").exists()
+            .field("_id.match").equal(new ObjectId(match.getId()));
+
+        final long postDeleteCount = postDeleteQuery.count();
+        assertEquals(preDeleteCount + 1, postDeleteCount);
+
+        getMatchDao().getMatchForPlayer(match.getPlayer().getId(), match.getId());
+
+    }
+
     @AfterClass
     public void killProcess() {
         getMongodProcess().stop();
@@ -286,4 +380,12 @@ public class MongoMatchmakerIntegrationTest {
         this.facebookApplicationConfigurationDao = facebookApplicationConfigurationDao;
     }
 
+    public AdvancedDatastore getAdvancedDatastore() {
+        return advancedDatastore;
+    }
+
+    @Inject
+    public void setAdvancedDatastore(AdvancedDatastore advancedDatastore) {
+        this.advancedDatastore = advancedDatastore;
+    }
 }
