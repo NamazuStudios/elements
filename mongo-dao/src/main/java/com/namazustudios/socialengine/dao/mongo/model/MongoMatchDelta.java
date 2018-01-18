@@ -81,6 +81,28 @@ public class MongoMatchDelta {
         this.expiry = expiry;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MongoMatchDelta)) return false;
+
+        MongoMatchDelta that = (MongoMatchDelta) o;
+
+        if (getKey() != null ? !getKey().equals(that.getKey()) : that.getKey() != null) return false;
+        if (getOperation() != that.getOperation()) return false;
+        if (getExpiry() != null ? !getExpiry().equals(that.getExpiry()) : that.getExpiry() != null) return false;
+        return getSnapshot() != null ? getSnapshot().equals(that.getSnapshot()) : that.getSnapshot() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getKey() != null ? getKey().hashCode() : 0;
+        result = 31 * result + (getOperation() != null ? getOperation().hashCode() : 0);
+        result = 31 * result + (getExpiry() != null ? getExpiry().hashCode() : 0);
+        result = 31 * result + (getSnapshot() != null ? getSnapshot().hashCode() : 0);
+        return result;
+    }
+
     /**
      * A compound key type used to ensure only one delta per sequence and timestamp exists.
      * This supports the ability to easily and quickly increment the existing sequence number
@@ -175,7 +197,6 @@ public class MongoMatchDelta {
             result = 31 * result + (getTimeStamp() != null ? getTimeStamp().hashCode() : 0);
             return result;
         }
-
     }
 
 }

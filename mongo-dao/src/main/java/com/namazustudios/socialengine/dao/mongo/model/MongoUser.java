@@ -7,6 +7,8 @@ import com.namazustudios.socialengine.model.User;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
+import java.util.Arrays;
+
 /**
  * Created by patricktwohig on 3/31/15.
  */
@@ -127,6 +129,40 @@ public class MongoUser {
 
     public void setFacebookId(String facebookId) {
         this.facebookId = facebookId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MongoUser)) return false;
+
+        MongoUser mongoUser = (MongoUser) o;
+
+        if (isActive() != mongoUser.isActive()) return false;
+        if (getObjectId() != null ? !getObjectId().equals(mongoUser.getObjectId()) : mongoUser.getObjectId() != null)
+            return false;
+        if (getName() != null ? !getName().equals(mongoUser.getName()) : mongoUser.getName() != null) return false;
+        if (getEmail() != null ? !getEmail().equals(mongoUser.getEmail()) : mongoUser.getEmail() != null) return false;
+        if (getHashAlgorithm() != null ? !getHashAlgorithm().equals(mongoUser.getHashAlgorithm()) : mongoUser.getHashAlgorithm() != null)
+            return false;
+        if (!Arrays.equals(getSalt(), mongoUser.getSalt())) return false;
+        if (!Arrays.equals(getPasswordHash(), mongoUser.getPasswordHash())) return false;
+        if (getLevel() != mongoUser.getLevel()) return false;
+        return getFacebookId() != null ? getFacebookId().equals(mongoUser.getFacebookId()) : mongoUser.getFacebookId() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getObjectId() != null ? getObjectId().hashCode() : 0;
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
+        result = 31 * result + (getEmail() != null ? getEmail().hashCode() : 0);
+        result = 31 * result + (getHashAlgorithm() != null ? getHashAlgorithm().hashCode() : 0);
+        result = 31 * result + Arrays.hashCode(getSalt());
+        result = 31 * result + Arrays.hashCode(getPasswordHash());
+        result = 31 * result + (getLevel() != null ? getLevel().hashCode() : 0);
+        result = 31 * result + (isActive() ? 1 : 0);
+        result = 31 * result + (getFacebookId() != null ? getFacebookId().hashCode() : 0);
+        return result;
     }
 
 }
