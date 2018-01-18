@@ -28,14 +28,18 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.dao.mongo.model.MongoMatch.MATCH_EXPIRATION_SECONDS;
 import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mongodb.morphia.query.Sort.ascending;
 
 /**
@@ -219,16 +223,8 @@ public class MongoMatchDao implements MatchDao {
                 final MongoMatch m = getMongoMatchForPlayer(playerId, matchId);
 
                 if (m.getOpponent() == null) {
-
-                    final Query<MongoMatchDelta> expiryQuery = ds.createQuery(MongoMatchDelta.class);
-                    expiryQuery.criteria("_id.match").equal(new ObjectId(matchId));
-
-                    final UpdateOperations<MongoMatchDelta> expiryUpdateOperations;
-                    expiryUpdateOperations = ds.createUpdateOperations(MongoMatchDelta.class);
-                    expiryUpdateOperations.set("expiry", expiry);
-                    ds.update(expiryQuery, expiryUpdateOperations);
                     ds.delete(m);
-
+                    expireAllDeltasForMatch(new ObjectId(matchId), expiry);
                 } else {
                     throw new InvalidDataException("Unable to delete match with opponent assigned.");
                 }
@@ -240,17 +236,20 @@ public class MongoMatchDao implements MatchDao {
             throw new TooBusyException(ex);
         }
 
-        final MongoMatchDelta existing = getMongoMatchUtils().getLatestDelta(matchId);
-        final MongoMatchDelta toInsert = new MongoMatchDelta();
+        final MongoMatchDelta finalMatchDelta = logRemovalDelta(matchId, expiry);
+        return getDozerMapper().map(finalMatchDelta, MatchTimeDelta.class);
 
-        toInsert.setKey(existing.getKey().nextInSequence());
-        toInsert.setExpiry(expiry);
-        toInsert.setOperation(MatchTimeDelta.Operation.REMOVED);
-        toInsert.setSnapshot(null);
+    }
 
-        getDatastore().save(toInsert);
+    private void expireAllDeltasForMatch(final ObjectId matchId, final Timestamp expiry) {
 
-        return getDozerMapper().map(toInsert, MatchTimeDelta.class);
+        final Query<MongoMatchDelta> expiryQuery = getDatastore().createQuery(MongoMatchDelta.class);
+        expiryQuery.criteria("_id.match").equal(matchId);
+
+        final UpdateOperations<MongoMatchDelta> expiryUpdateOperations;
+        expiryUpdateOperations = getDatastore().createUpdateOperations(MongoMatchDelta.class);
+        expiryUpdateOperations.set("expiry", expiry);
+        getDatastore().update(expiryQuery, expiryUpdateOperations);
 
     }
 
@@ -300,7 +299,11 @@ public class MongoMatchDao implements MatchDao {
     @Override
     public Stream<TimeDeltaTuple> finalize(final SuccessfulMatchTuple successfulMatchTuple, final Supplier<String> finalizer) {
 
-        final Timestamp expiry = new Timestamp(currentTimeMillis());
+        final long now = currentTimeMillis();
+
+        final Timestamp matchExpiry = new Timestamp(now);
+        final Timestamp finalDeltaExpiry = new Timestamp(now + MILLISECONDS.convert(MATCH_EXPIRATION_SECONDS, TimeUnit.SECONDS));
+
         final ObjectId playerMatchId = new ObjectId(successfulMatchTuple.getPlayerMatch().getId());
         final ObjectId opponentMatchId = new ObjectId(successfulMatchTuple.getOpponentMatch().getId());
 
@@ -314,23 +317,24 @@ public class MongoMatchDao implements MatchDao {
 
                     final String gameId = finalizer.get();
 
-                    playerMatch.setExpiry(expiry);
+                    playerMatch.setExpiry(matchExpiry);
                     playerMatch.setGameId(gameId);
-                    opponentMatch.setExpiry(expiry);
+                    opponentMatch.setExpiry(matchExpiry);
                     opponentMatch.setGameId(gameId);
 
                     getDatastore().save(playerMatch);
                     getDatastore().save(opponentMatch);
 
-                    final MongoMatchDelta playerMongoMatchDelta;
-                    playerMongoMatchDelta = getMongoMatchUtils().insertDeltaForUpdate(playerMatch);
+                    expireAllDeltasForMatch(playerMatch.getObjectId(), finalDeltaExpiry);
+                    expireAllDeltasForMatch(opponentMatch.getObjectId(), finalDeltaExpiry);
 
-                    final MongoMatchDelta opponentMongoMatchDelta;
-                    opponentMongoMatchDelta = getMongoMatchUtils().insertDeltaForUpdate(opponentMatch);
+                    tuple(playerMatch, logFutureRemovalDelta(playerMatch.getObjectId(), matchExpiry, finalDeltaExpiry));
+                    tuple(playerMatch, logFutureRemovalDelta(opponentMatch.getObjectId(), matchExpiry, finalDeltaExpiry));
 
                     return Stream.of(
-                        tuple(playerMatch, playerMongoMatchDelta),
-                        tuple(opponentMatch, opponentMongoMatchDelta));
+                        tuple(playerMatch, getMongoMatchUtils().insertDeltaForUpdate(playerMatch)),
+                        tuple(opponentMatch, getMongoMatchUtils().insertDeltaForUpdate(opponentMatch))
+                    );
 
                 } else {
                     return Stream.empty();
@@ -340,6 +344,41 @@ public class MongoMatchDao implements MatchDao {
         } catch (MongoConcurrentUtils.ConflictException e) {
             throw new TooBusyException(e);
         }
+
+    }
+
+    private MongoMatchDelta logRemovalDelta(final String matchId, final Timestamp expiry) {
+        return logRemovalDelta(new ObjectId(matchId), expiry);
+    }
+
+    private MongoMatchDelta logRemovalDelta(final ObjectId matchId, final Timestamp expiry) {
+        final MongoMatchDelta existing = getMongoMatchUtils().getLatestDelta(matchId);
+        final MongoMatchDelta toInsert = new MongoMatchDelta();
+
+        toInsert.setKey(existing.getKey().nextInSequence());
+        toInsert.setExpiry(expiry);
+        toInsert.setOperation(MatchTimeDelta.Operation.REMOVED);
+        toInsert.setSnapshot(null);
+
+        getDatastore().save(toInsert);
+        return toInsert;
+
+    }
+
+    private MongoMatchDelta logFutureRemovalDelta(final ObjectId matchId,
+                                                  final Timestamp timestamp,
+                                                  final Timestamp expiry) {
+
+        final MongoMatchDelta existing = getMongoMatchUtils().getLatestDelta(matchId);
+        final MongoMatchDelta toInsert = new MongoMatchDelta();
+
+        toInsert.setKey(existing.getKey().nextInSequence(timestamp.getTime()));
+        toInsert.setExpiry(expiry);
+        toInsert.setOperation(MatchTimeDelta.Operation.REMOVED);
+        toInsert.setSnapshot(null);
+
+        getDatastore().save(toInsert);
+        return toInsert;
 
     }
 
