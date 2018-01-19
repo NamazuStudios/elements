@@ -10,10 +10,7 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterSuite;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import javax.inject.Inject;
 
@@ -67,6 +64,10 @@ public class MongoMatchDaoCreateDeleteIntegrationTest {
         return match;
     }
 
+    @BeforeClass
+    public void dropDatabase() {
+        getEmbeddedMongo().getMongoDatabase().drop();
+    }
 
     @AfterSuite
     public void killProcess() {

@@ -276,6 +276,11 @@ public class MongoMatchmakerIntegrationTest {
 
     }
 
+    @BeforeClass
+    public void dropDatabase() {
+        getEmbeddedMongo().getMongoDatabase().drop();
+    }
+
     @AfterSuite
     public void killProcess() {
         getEmbeddedMongo().stop();
