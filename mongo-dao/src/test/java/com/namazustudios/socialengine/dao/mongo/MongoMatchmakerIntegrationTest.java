@@ -17,10 +17,7 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -279,7 +276,7 @@ public class MongoMatchmakerIntegrationTest {
 
     }
 
-    @AfterClass
+    @AfterSuite
     public void killProcess() {
         getEmbeddedMongo().stop();
     }

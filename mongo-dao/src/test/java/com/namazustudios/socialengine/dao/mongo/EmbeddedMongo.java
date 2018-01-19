@@ -7,7 +7,6 @@ import javax.inject.Inject;
 
 public class EmbeddedMongo {
 
-
     private MongodProcess mongodProcess;
 
     private MongodExecutable mongodExecutable;

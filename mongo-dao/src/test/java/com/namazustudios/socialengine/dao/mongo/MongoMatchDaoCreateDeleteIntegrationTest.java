@@ -11,6 +11,7 @@ import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -66,7 +67,8 @@ public class MongoMatchDaoCreateDeleteIntegrationTest {
         return match;
     }
 
-    @AfterClass
+
+    @AfterSuite
     public void killProcess() {
         getEmbeddedMongo().stop();
     }
