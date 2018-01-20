@@ -113,7 +113,7 @@ public class UserMatchService implements MatchService {
 
     }
 
-    private Match handleSuccessfulMatch(Matchmaker.SuccessfulMatchTuple successfulMatchTuple) {
+    private Match handleSuccessfulMatch(final Matchmaker.SuccessfulMatchTuple successfulMatchTuple) {
 
         for (final MatchTimeDelta matchTimeDelta : successfulMatchTuple.getMatchDeltas()) {
 

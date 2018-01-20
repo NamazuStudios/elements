@@ -19,7 +19,7 @@ public class CallbackDefinition implements Serializable {
     private String module;
 
     @NotNull
-    @Pattern(regexp = "[A-Za-z]+[A-Za-z0-9]*")
+    @Pattern(regexp = "[A-Za-z_]+[\\w]*")
     @ApiModelProperty("Specifies the method to invoke.")
     private String method;
 
