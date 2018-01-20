@@ -14,12 +14,10 @@ import java.io.Serializable;
 public class CallbackDefinition implements Serializable {
 
     @NotNull
-    @Pattern(regexp = "[\\w]+[\\w\\.]*")
     @ApiModelProperty("Specifies the module to invoke.")
     private String module;
 
     @NotNull
-    @Pattern(regexp = "[A-Za-z_]+[\\w]*")
     @ApiModelProperty("Specifies the method to invoke.")
     private String method;
 
