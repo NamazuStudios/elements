@@ -88,7 +88,7 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
 
         query.and(
                 query.criteria("active").equal(true),
-                query.criteria( "configurationCategory").equal(FACEBOOK)
+                query.criteria( "category").equal(FACEBOOK)
         );
 
         try {
@@ -169,7 +169,7 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
         updateOperations = getDatastore().createUpdateOperations(MongoFacebookApplicationConfiguration.class);
 
         updateOperations.set("uniqueIdentifier", facebookApplicationConfiguration.getApplicationId().trim());
-        updateOperations.set( "category", facebookApplicationConfiguration.getCategory());
+        updateOperations.set("category", facebookApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
         updateOperations.set("applicationSecret", facebookApplicationConfiguration.getApplicationSecret().trim());
 
