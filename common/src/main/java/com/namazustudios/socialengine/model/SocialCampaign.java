@@ -24,11 +24,11 @@ import java.util.List;
 public class SocialCampaign implements Serializable {
 
     @NotNull
-    @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
+    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     private String name;
 
     @NotNull
-    @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
+    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     private String linkUrl;
 
     @NotNull

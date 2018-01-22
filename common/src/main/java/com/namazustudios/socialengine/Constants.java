@@ -98,7 +98,7 @@ public interface Constants {
         /**
          * Non-blank string.
          */
-        String NON_BLANK_STRING = "^\\S+$";
+        String NO_WHITE_SPACE = "^\\S+$";
 
         /**
          * Alpha-numeric only

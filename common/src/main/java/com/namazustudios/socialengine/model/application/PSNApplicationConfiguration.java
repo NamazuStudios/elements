@@ -14,11 +14,11 @@ import java.io.Serializable;
 public class PSNApplicationConfiguration extends ApplicationConfiguration implements Serializable {
 
     @NotNull
-    @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
+    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     private String npIdentifier;
 
     @NotNull
-    @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
+    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     private String clientSecret;
 
     /**

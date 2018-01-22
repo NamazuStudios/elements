@@ -18,15 +18,15 @@ import java.util.Date;
 public class BasicEntrantProfile implements Serializable {
 
     @NotNull
-    @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
+    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     private String salutation;
 
     @NotNull
-    @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
+    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     private String firstName;
 
     @NotNull
-    @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
+    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     private String lastName;
 
     @NotNull

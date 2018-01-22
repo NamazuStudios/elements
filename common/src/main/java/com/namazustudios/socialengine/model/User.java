@@ -19,7 +19,7 @@ public class User implements Serializable {
     private String id;
 
     @NotNull
-    @Pattern(regexp = Constants.Regexp.NON_BLANK_STRING)
+    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     private String name;
 
     @NotNull
