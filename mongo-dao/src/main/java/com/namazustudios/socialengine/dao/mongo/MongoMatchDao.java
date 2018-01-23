@@ -2,14 +2,11 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.common.collect.Streams;
 import com.namazustudios.socialengine.dao.Matchmaker.SuccessfulMatchTuple;
+import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
 import com.namazustudios.socialengine.dao.mongo.model.*;
-import com.namazustudios.socialengine.exception.BadQueryException;
-import com.namazustudios.socialengine.exception.InvalidDataException;
-import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.match.Match;
@@ -316,6 +313,10 @@ public class MongoMatchDao implements MatchDao {
                 if (playerMatch.getGameId() == null && opponentMatch.getGameId() == null) {
 
                     final String gameId = finalizer.get();
+
+                    if (gameId == null) {
+                        throw new InternalException("Supplied game ID must not be null.");
+                    }
 
                     playerMatch.setExpiry(matchExpiry);
                     playerMatch.setGameId(gameId);

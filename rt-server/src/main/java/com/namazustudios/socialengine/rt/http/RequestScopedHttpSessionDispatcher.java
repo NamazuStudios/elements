@@ -39,7 +39,11 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
         final Filter.Chain chain;
         chain = Filter.Chain.build(getFilterList(), (s, r, rr) -> createAndSchedule(httpRequest, s, r, rr));
 
-        final Request request = SimpleRequest.builder().from(httpRequest).build();
+        final Request request = SimpleRequest.builder()
+            .from(httpRequest)
+            .parameterizedPath(httpRequest.getManifestMetadata().getPreferredOperation().getPath())
+            .build();
+
         chain.next(session, request, responseConsumer);
 
     }

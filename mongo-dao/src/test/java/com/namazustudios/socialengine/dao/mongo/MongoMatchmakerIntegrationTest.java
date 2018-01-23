@@ -246,6 +246,8 @@ public class MongoMatchmakerIntegrationTest {
         final MongoMatch mongoMatchb;
         mongoMatchb = getAdvancedDatastore().get(MongoMatch.class, new ObjectId(successfulMatchTuple.getOpponentMatch().getId()));
 
+        assertEquals(mongoMatcha.getGameId(), gameUUID.toString());
+        assertEquals(mongoMatchb.getGameId(), gameUUID.toString());
         assertNotNull(mongoMatcha.getExpiry());
         assertNotNull(mongoMatchb.getExpiry());
 

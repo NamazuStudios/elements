@@ -19,6 +19,8 @@ import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.service.MatchService;
 import com.namazustudios.socialengine.service.Topic;
 import com.namazustudios.socialengine.service.TopicService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -34,6 +36,8 @@ import static java.util.stream.Collectors.toList;
  * Created by patricktwohig on 7/20/17.
  */
 public class UserMatchService implements MatchService {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserMatchService.class);
 
     private Supplier<Profile> currentProfileSupplier;
 
