@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.lua.guice;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

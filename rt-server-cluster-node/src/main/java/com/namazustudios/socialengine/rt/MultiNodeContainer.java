@@ -39,6 +39,8 @@ public class MultiNodeContainer implements AutoCloseable {
             exceptionList.add(ex);
         }
 
+        getNodeSet().forEach(node -> getConnectionDemultiplexer().open(node.getId()));
+
         exceptionList.addAll(getNodeSet().parallelStream().map(node -> {
             try {
                 node.start();

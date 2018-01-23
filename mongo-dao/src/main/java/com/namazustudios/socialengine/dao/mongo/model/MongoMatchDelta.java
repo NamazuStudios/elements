@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
 import com.namazustudios.socialengine.model.TimeDelta;
+import com.namazustudios.socialengine.model.match.Match;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 import org.mongodb.morphia.utils.IndexType;
@@ -18,23 +19,19 @@ import static java.lang.System.currentTimeMillis;
     @Index(fields = @Field(value = "_id.match")),
     @Index(fields = @Field(value = "_id.sequence", type = IndexType.ASC)),
     @Index(fields = @Field(value = "_id.sequence", type = IndexType.DESC)),
-    @Index(fields = @Field(value = "_id.timeStamp"), options = @IndexOptions(expireAfterSeconds = MongoMatchDelta.MATCH_DELTA_EXPIRATION_SECONDS))
+    @Index(fields = @Field(value = "_id.timeStamp")),
+    @Index(fields = @Field(value = "expiry"), options = @IndexOptions(expireAfterSeconds = MongoMatch.MATCH_EXPIRATION_SECONDS))
 })
 public class MongoMatchDelta {
-
-    /**
-     * The amount of seconds a delta will be available.  This is set to something considerably
-     * larger than what will ever be practically necessary, but allows clients to read a history
-     * of the associated {@link MongoMatch} in order to sync state appropriately.  In reality
-     * a {@link MongoMatchDelta} should only need to live for a few seconds.
-     */
-    public static final int MATCH_DELTA_EXPIRATION_SECONDS = 5 * 60;
 
     @Id
     private Key key;
 
     @Property
     private TimeDelta.Operation operation;
+
+    @Property
+    private Timestamp expiry;
 
     @Embedded
     private MongoMatchSnapshot snapshot;
@@ -61,6 +58,49 @@ public class MongoMatchDelta {
 
     public void setSnapshot(MongoMatchSnapshot snapshot) {
         this.snapshot = snapshot;
+    }
+
+    /**
+     * The expiry property is set to null until the {@link MongoMatchDelta} is ready to be destroyed.  Such as when
+     * the associated {@link MongoMatch} has been finalized or deleted.  The {@link MongoMatchDelta} will linger
+     * in the database for the amount of time after this date as specified by {@link MongoMatch#MATCH_EXPIRATION_SECONDS}.
+     *
+     * @return the expiry.
+     */
+    public Timestamp getExpiry() {
+        return expiry;
+    }
+
+    /**
+     * Sets the expiry time.  This should be set to the current time to ensure the {@link MongoMatchDelta} expires
+     * at the expected time.
+     *
+     * @param expiry the expiry time
+     */
+    public void setExpiry(Timestamp expiry) {
+        this.expiry = expiry;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MongoMatchDelta)) return false;
+
+        MongoMatchDelta that = (MongoMatchDelta) o;
+
+        if (getKey() != null ? !getKey().equals(that.getKey()) : that.getKey() != null) return false;
+        if (getOperation() != that.getOperation()) return false;
+        if (getExpiry() != null ? !getExpiry().equals(that.getExpiry()) : that.getExpiry() != null) return false;
+        return getSnapshot() != null ? getSnapshot().equals(that.getSnapshot()) : that.getSnapshot() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getKey() != null ? getKey().hashCode() : 0;
+        result = 31 * result + (getOperation() != null ? getOperation().hashCode() : 0);
+        result = 31 * result + (getExpiry() != null ? getExpiry().hashCode() : 0);
+        result = 31 * result + (getSnapshot() != null ? getSnapshot().hashCode() : 0);
+        return result;
     }
 
     /**
@@ -157,7 +197,6 @@ public class MongoMatchDelta {
             result = 31 * result + (getTimeStamp() != null ? getTimeStamp().hashCode() : 0);
             return result;
         }
-
     }
 
 }

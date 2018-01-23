@@ -4,7 +4,9 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.io.Serializable;
 
 /**
  * Created by patricktwohig on 7/18/17.
@@ -13,10 +15,14 @@ import javax.validation.constraints.Null;
         "Represents a single one-on-one match between the current player and an opponent.  Once " +
         "matched, the player will will be able to create a game against the supplied opposing player.  The " +
         "server may modify or delete matches based on a variety of circumstances.")
-public class Match {
+public class Match implements Serializable {
 
     @ApiModelProperty("The unique ID of the match.")
     private String id;
+
+    @NotNull
+    @ApiModelProperty("The scheme to use when matching with other players.")
+    private String scheme;
 
     @ApiModelProperty("The player requesting the match.  If not specified, then the current profile will be inferred.")
     private Profile player;
@@ -25,13 +31,11 @@ public class Match {
     @ApiModelProperty("The opposing player, or null if no suitable opponent has been found.")
     private Profile opponent;
 
-    @Null
-    @ApiModelProperty("The ID of the game currently being played against the opponent.  null if the game " +
-                       "has not been initiated yet.")
-    private String gameId;
-
     @ApiModelProperty("The time of the last modification of the match.")
     private long lastUpdatedTimestamp;
+
+    @ApiModelProperty("The system-assigned game ID of the match.  Null until the match is successfully made.")
+    private String gameId;
 
     /**
      * Gets the unique server-assigned ID of this match.
@@ -49,6 +53,23 @@ public class Match {
      */
     public void setId(String id) {
         this.id = id;
+    }
+
+    /**
+     * Gets the desired matchmaking scheme.
+     *
+     * @return the desired matchmaking scheme.
+     */
+    public String getScheme() {
+        return scheme;
+    }
+
+    /**
+     * Sets the desired matchmaking scheme.
+     * @param scheme
+     */
+    public void setScheme(String scheme) {
+        this.scheme = scheme;
     }
 
     /**
@@ -88,23 +109,6 @@ public class Match {
     }
 
     /**
-     * Gets the ID of the game associated with this match.
-     *
-     * @return the game ID
-     */
-    public String getGameId() {
-        return gameId;
-    }
-
-    /**
-     * Sets the game ID associated with this match.
-     * @param gameId
-     */
-    public void setGameId(String gameId) {
-        this.gameId = gameId;
-    }
-
-    /**
      * Gets the date at which the last modification was made to this match.
      *
      * @return the last-updated date
@@ -122,27 +126,21 @@ public class Match {
         this.lastUpdatedTimestamp = lastUpdatedTimestamp;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Match)) return false;
-
-        Match match = (Match) o;
-
-        if (getLastUpdatedTimestamp() != match.getLastUpdatedTimestamp()) return false;
-        if (getId() != null ? !getId().equals(match.getId()) : match.getId() != null) return false;
-        if (getOpponent() != null ? !getOpponent().equals(match.getOpponent()) : match.getOpponent() != null)
-            return false;
-        return getGameId() != null ? getGameId().equals(match.getGameId()) : match.getGameId() == null;
+    /**
+     * Gets the system assigned game ID for the match.
+     *
+     * @return the system-assigned game id
+     */
+    public String getGameId() {
+        return gameId;
     }
 
-    @Override
-    public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + (getOpponent() != null ? getOpponent().hashCode() : 0);
-        result = 31 * result + (getGameId() != null ? getGameId().hashCode() : 0);
-        result = 31 * result + (int) (getLastUpdatedTimestamp() ^ (getLastUpdatedTimestamp() >>> 32));
-        return result;
+    /**
+     * Sets the system assigned game ID for the match.
+     * @param gameId
+     */
+    public void setGameId(String gameId) {
+        this.gameId = gameId;
     }
 
 }

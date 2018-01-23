@@ -5,13 +5,15 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.ApiModel;
 
+import java.io.Serializable;
+
 /**
  * Represents a session authorized by Facebook.  This includes
  *
  * Created by patricktwohig on 6/22/17.
  */
 @ApiModel
-public class FacebookSession {
+public class FacebookSession implements Serializable {
 
     private User user;
 

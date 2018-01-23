@@ -14,6 +14,8 @@ public class NameTokens {
     public static final String APPLICATION_EDIT = "application_edit";
     public static final String APPLICATION_EDIT_TABLE = "application_edit_table";
     public static final String APPLICATION_CONFIG_FACEBOOK_EDIT = "application_config_facebook_edit";
+    public static final String APPLICATION_CONFIG_MATCHMAKING_EDIT = "application_config_matchmaking_edit";
+
 
     public static String getLogin() { return LOGIN; }
     public static String getUserEdit() {return USER_EDIT;}

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.namazustudios.socialengine.model.application.ConfigurationCategory;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.FacebookApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
@@ -8,7 +9,6 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
-import com.namazustudios.socialengine.model.application.Platform;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -18,7 +18,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 
-import static com.namazustudios.socialengine.model.application.Platform.FACEBOOK;
+import static com.namazustudios.socialengine.model.application.ConfigurationCategory.FACEBOOK;
 
 /**
  * Created by patricktwohig on 6/15/17.
@@ -53,7 +53,7 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
         query.and(
             query.criteria("active").equal(false),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").equal(FACEBOOK),
+            query.criteria("category").equal(FACEBOOK),
             query.criteria("uniqueIdentifier").equal(facebookApplicationConfiguration.getApplicationId())
         );
 
@@ -62,7 +62,7 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
 
         updateOperations.set("uniqueIdentifier", facebookApplicationConfiguration.getApplicationId().trim());
         updateOperations.set("active", true);
-        updateOperations.set("platform", facebookApplicationConfiguration.getPlatform());
+        updateOperations.set("category", facebookApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
         updateOperations.set("applicationSecret", facebookApplicationConfiguration.getApplicationSecret().trim());
 
@@ -88,7 +88,7 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
 
         query.and(
                 query.criteria("active").equal(true),
-                query.criteria("platform").equal(FACEBOOK)
+                query.criteria( "category").equal(FACEBOOK)
         );
 
         try {
@@ -121,7 +121,7 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").equal(FACEBOOK)
+            query.criteria( "category").equal(FACEBOOK)
         );
 
         try {
@@ -156,7 +156,7 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
         query.and(
                 query.criteria("active").equal(true),
                 query.criteria("parent").equal(mongoApplication),
-                query.criteria("platform").equal(FACEBOOK)
+                query.criteria( "category").equal(FACEBOOK)
         );
 
         try {
@@ -169,7 +169,7 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
         updateOperations = getDatastore().createUpdateOperations(MongoFacebookApplicationConfiguration.class);
 
         updateOperations.set("uniqueIdentifier", facebookApplicationConfiguration.getApplicationId().trim());
-        updateOperations.set("platform", facebookApplicationConfiguration.getPlatform());
+        updateOperations.set("category", facebookApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
         updateOperations.set("applicationSecret", facebookApplicationConfiguration.getApplicationSecret().trim());
 
@@ -177,16 +177,16 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
                 .returnNew(true)
                 .upsert(false);
 
-        final MongoFacebookApplicationConfiguration mongoFacebookApplicationProfile;
-        mongoFacebookApplicationProfile = getMongoDBUtils()
+        final MongoFacebookApplicationConfiguration mongoFacebookApplicationConfiguration;
+        mongoFacebookApplicationConfiguration = getMongoDBUtils()
                 .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
-        if (mongoFacebookApplicationProfile == null) {
+        if (mongoFacebookApplicationConfiguration == null) {
             throw new NotFoundException("profile with ID not found: " + applicationProfileNameOrId);
         }
 
-        getObjectIndex().index(mongoFacebookApplicationProfile);
-        return getBeanMapper().map(mongoFacebookApplicationProfile, FacebookApplicationConfiguration.class);
+        getObjectIndex().index(mongoFacebookApplicationConfiguration);
+        return getBeanMapper().map(mongoFacebookApplicationConfiguration, FacebookApplicationConfiguration.class);
 
     }
 
@@ -204,7 +204,7 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").equal(FACEBOOK)
+            query.criteria( "category").equal(FACEBOOK)
         );
 
         try {
@@ -241,15 +241,15 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
             throw new InvalidDataException("facebookApplicationConfiguration must not be null.");
         }
 
-        if (facebookApplicationConfiguration.getPlatform() == null) {
-            facebookApplicationConfiguration.setPlatform(Platform.FACEBOOK);
+        if (facebookApplicationConfiguration.getCategory() == null) {
+            facebookApplicationConfiguration.setCategory(ConfigurationCategory.FACEBOOK);
         }
 
-        switch (facebookApplicationConfiguration.getPlatform()) {
+        switch (facebookApplicationConfiguration.getCategory()) {
             case FACEBOOK:
                 break;
             default:
-                throw new InvalidDataException("platform not supported: " + facebookApplicationConfiguration.getPlatform());
+                throw new InvalidDataException("platform not supported: " + facebookApplicationConfiguration.getCategory());
         }
 
         getValidationHelper().validateModel(facebookApplicationConfiguration);

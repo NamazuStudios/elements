@@ -2,10 +2,11 @@ package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.exception.MultiException;
+import com.namazustudios.socialengine.rt.jeromq.Connection;
 import com.namazustudios.socialengine.rt.jeromq.Routing;
+import com.namazustudios.socialengine.rt.jeromq.RoutingCommand;
+import com.namazustudios.socialengine.rt.jeromq.RoutingTable;
 import com.namazustudios.socialengine.rt.remote.RoutingHeader;
-import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -13,20 +14,22 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 import org.zeromq.ZMsg;
 
-
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
+import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
+import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.CLOSE;
+import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.OPEN;
 import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.CONTINUE;
+import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
-import static java.util.stream.IntStream.*;
-import static org.zeromq.ZMQ.DEALER;
+import static java.util.UUID.randomUUID;
+import static java.util.stream.IntStream.range;
+import static org.zeromq.ZMQ.*;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
-import static org.zeromq.ZMQ.ROUTER;
 import static org.zeromq.ZMsg.recvMsg;
 import static zmq.ZError.EHOSTUNREACH;
 
@@ -36,8 +39,6 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
     public static final String CONNECT_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.connectAddress";
 
-    public static final String DESTINATION_IDS = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.destinationIds";
-
     private final AtomicReference<Thread> multiplexerThread = new AtomicReference<>();
 
     private Routing routing;
@@ -46,7 +47,7 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
     private String connectAddress;
 
-    private Set<String> destinationIds;
+    private final String controlAddress = format("inproc://%s.control", randomUUID());
 
     @Override
     public void start() {
@@ -85,6 +86,39 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
     }
 
+    @Override
+    public UUID getDestinationUUIDForNodeId(String destinationNodeId) {
+        return getRouting().getDestinationId(destinationNodeId);
+    }
+
+    @Override
+    public String getConnectAddress(UUID uuid) {
+        return getRouting().getMultiplexedAddressForDestinationId(uuid);
+    }
+
+    @Override
+    public void open(UUID destination) {
+        final RoutingCommand command = new RoutingCommand();
+        command.action.set(OPEN);
+        command.destination.set(destination);
+        issue(command);
+    }
+
+    @Override
+    public void close(UUID destination) {
+        final RoutingCommand command = new RoutingCommand();
+        command.action.set(CLOSE);
+        command.destination.set(destination);
+        issue(command);
+    }
+
+    private void issue(final RoutingCommand command) {
+        try (final Connection connection = from(getzContext(), c -> c.createSocket(PUSH))) {
+            connection.socket().connect(getControlAddress());
+            connection.socket().sendByteBuffer(command.getByteBuffer(), 0);
+        }
+    }
+
     public Routing getRouting() {
         return routing;
     }
@@ -112,13 +146,8 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
         this.connectAddress = connectAddress;
     }
 
-    public Set<String> getDestinationIds() {
-        return destinationIds;
-    }
-
-    @Inject
-    public void setDestinationIds(@Named(DESTINATION_IDS) Set<String> destinationIds) {
-        this.destinationIds = destinationIds;
+    public String getControlAddress() {
+        return controlAddress;
     }
 
     private class Multiplexer implements Runnable {
@@ -126,53 +155,57 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
         @Override
         public void run() {
 
-            FinallyAction action = FinallyAction.with(() -> {});
-
             try (final ZMQ.Poller poller = getzContext().createPoller(0);
-                 final ZMQ.Socket backend = getzContext().createSocket(DEALER);
-                 final Frontends frontends = new Frontends(poller)) {
+                 final Connection backend = from(getzContext(), c -> c.createSocket(DEALER));
+                 final Connection control = from(getzContext(), c -> c.createSocket(PULL));
+                 final RoutingTable frontends = new RoutingTable(getzContext(), poller, this::bind)) {
 
-                action = action.then(() -> getzContext().destroySocket(backend));
+                backend.socket().connect(getConnectAddress());
+                control.socket().bind(getControlAddress());
 
-                backend.connect(getConnectAddress());
-
-                final int backendIndex = poller.register(backend, POLLIN | POLLERR);
-
-                getDestinationIds().forEach(frontends::bind);
+                final int backendIndex = poller.register(backend.socket(), POLLIN | POLLERR);
+                final int controlIndex = poller.register(control.socket(), POLLIN | POLLERR);
 
                 while (!interrupted()) {
 
-                    final int nevents;
-
-                    if ((nevents = poller.poll(1000)) == 0) {
-                        continue;
-                    }
+                    poller.poll(2000);
 
                     range(0, poller.getNext()).filter(index -> poller.getItem(index) != null).forEach(index -> {
-                        routeMessages(poller, backend, backendIndex, frontends, index);
+
+                        final boolean input = poller.pollin(index);
+                        final boolean error = poller.pollerr(index);
+
+                        if (input) {
+                            if (index == backendIndex) {
+                                sendToFrontend(poller, index, frontends);
+                            } else if (index == controlIndex) {
+                                handleControlMessage(control.socket(), frontends);
+                            } else {
+                                sendToBackend(poller, index, frontends, backend.socket());
+                            }
+                        } else if (error) {
+                            throw new InternalException("Poller error on socket: " + poller.getSocket(index));
+                        }
+
                     });
 
                 }
 
             } catch (Exception ex) {
                 logger.error("Caught exception.  Exiting.", ex);
-            } finally {
-                action.perform();
             }
 
         }
 
-    }
+        private ZMQ.Socket bind(final UUID uuid) {
+            final ZMQ.Socket socket = getzContext().createSocket(ROUTER);
+            final String bindAddress = getRouting().getMultiplexedAddressForDestinationId(uuid);
+            socket.setRouterMandatory(true);
+            socket.bind(bindAddress);
+            return socket;
+        }
 
-    private void routeMessages(final ZMQ.Poller poller,
-                               final ZMQ.Socket backend, final int backendIndex,
-                               final Frontends frontends, final int  index) {
-
-        final boolean input = poller.pollin(index);
-        final boolean error = poller.pollerr(index);
-
-        if (input && backendIndex == index) {
-
+        private void sendToFrontend(final ZMQ.Poller poller, final int index, final RoutingTable frontends) {
             final ZMQ.Socket socket = poller.getSocket(index);
             final ZMsg msg = recvMsg(socket);
 
@@ -181,7 +214,7 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
             if (routingHeader.status.get() == CONTINUE) {
 
                 final UUID destination = routingHeader.destination.get();
-                final ZMQ.Socket frontend = frontends.getFrontend(destination);
+                final ZMQ.Socket frontend = frontends.getSocket(destination);
 
                 try {
                     msg.send(frontend);
@@ -197,7 +230,10 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
                 logger.error("Received {} route for destination {}", routingHeader.status.get(), routingHeader.destination.get());
             }
 
-        } else if (input) {
+        }
+
+        private void sendToBackend(final ZMQ.Poller poller, final int index,
+                                   final RoutingTable frontends, final ZMQ.Socket backend) {
 
             final ZMQ.Socket socket = poller.getSocket(index);
             final ZMsg msg = recvMsg(socket);
@@ -210,82 +246,13 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
             getRouting().insertRoutingHeader(msg, routingHeader);
             msg.send(backend);
 
-        } else if (error) {
-            throw new InternalException("Caught exception reading socket.");
         }
 
-    }
-
-    private class Frontends implements AutoCloseable {
-
-        private final Map<Integer, UUID> frontends = new LinkedHashMap<>();
-
-        private final Map<UUID, Integer> frontendsReverse = new LinkedHashMap<>();
-
-        private final ZMQ.Poller poller;
-
-        public Frontends(ZMQ.Poller poller) {
-            this.poller = poller;
-        }
-
-        @Override
-        public void close() {
-
-            final List<Exception> exceptionList = frontends.keySet().stream().map(frontend -> {
-
-                final ZMQ.Socket socket = poller.getSocket(frontend);
-
-                if (socket == null) {
-                    logger.warn("No frontend socket at index {}", frontend);
-                    return null;
-                }
-
-                poller.unregister(socket);
-
-                try {
-                    socket.close();
-                    return null;
-                } catch (Exception ex) {
-                    return ex;
-                } finally {
-                    getzContext().destroySocket(socket);
-                }
-
-            }).filter(e -> e != null).collect(Collectors.toList());
-
-            frontends.clear();
-            frontendsReverse.clear();
-
-            if (!exceptionList.isEmpty()) {
-                throw new MultiException(exceptionList);
-            }
-
-        }
-
-        public ZMQ.Socket getFrontend(UUID destination) {
-            final Integer index = frontendsReverse.get(destination);
-            return index == null ? null : poller.getSocket(index);
-        }
-
-        public UUID getDestination(final int index) {
-            return frontends.get(index);
-        }
-
-        public int bind(final String destinationNodeId) {
-
-            final ZMQ.Socket socket = getzContext().createSocket(ROUTER);
-            final UUID destinationId = getRouting().getDestinationId(destinationNodeId);
-            final String bindAddress = getRouting().getMultiplexedAddressForDestinationId(destinationId);
-
-            socket.setRouterMandatory(true);
-            socket.bind(bindAddress);
-
-            final int index = poller.register(socket, POLLIN | POLLERR);
-            frontends.put(index, destinationId);
-            frontendsReverse.put(destinationId, index);
-
-            return index;
-
+        private void handleControlMessage(final ZMQ.Socket control, final RoutingTable frontends) {
+            final ZMsg msg = ZMsg.recvMsg(control);
+            final RoutingCommand command = new RoutingCommand();
+            command.getByteBuffer().put(msg.getFirst().getData());
+            frontends.process(command);
         }
 
     }

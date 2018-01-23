@@ -1,19 +1,21 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.lua.guice;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
-import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
-import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
+import org.zeromq.ZContext;
 
 import javax.inject.Inject;
 
@@ -26,16 +28,25 @@ import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
+import static org.zeromq.ZContext.shadow;
 
 /**
  * Provides tests for various lua libraries by instantiating them and invoking specific methods.
  */
-@Guice(modules = LuaResourceIntegrationTest.Module.class)
 public class LuaResourceIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceIntegrationTest.class);
 
-    private Context context;
+    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService().start();
+
+    private final Node node = getEmbeddedTestService().getNode();
+
+    private final Context context = getEmbeddedTestService().getContext();
+
+    @AfterClass
+    public void teardown() {
+        getEmbeddedTestService().close();
+    }
 
     @Test(dataProvider = "resourcesToTest")
     public void performTest(final String moduleName, final String methodName) throws InterruptedException {
@@ -125,6 +136,8 @@ public class LuaResourceIntegrationTest {
             fail("Expected exception by this pointl");
         } catch (InternalException ex) {
             assertTrue((ex.getCause() instanceof LuaRuntimeException), "Expected cause to be LuaRuntimeException.");
+        } catch (Exception ex) {
+            fail("Failed with exception.", ex);
         } finally {
             getContext().getResourceContext().destroy(resourceId);
         }
@@ -136,35 +149,16 @@ public class LuaResourceIntegrationTest {
         getContext().getResourceContext().destroyAllResources();
     }
 
+    public JeroMQEmbeddedTestService getEmbeddedTestService() {
+        return embeddedTestService;
+    }
+
+    public Node getNode() {
+        return node;
+    }
+
     public Context getContext() {
         return context;
-    }
-
-    @Inject
-    public void setContext(Context context) {
-        this.context = context;
-    }
-
-    public static class Module extends AbstractModule {
-
-        @Override
-        protected void configure() {
-
-            install(new LuaModule() {
-                @Override
-                protected void configureFeatures() {
-                    super.configureFeatures();
-                    bindBuiltin(TestJavaModule.class).toModuleNamed("test.java.module");
-                }
-            });
-
-            install(new SimpleContextModule());
-            install(new GuiceIoCResolverModule());
-
-            bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(getClass().getClassLoader()));
-
-        }
-
     }
 
 }

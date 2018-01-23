@@ -55,6 +55,11 @@
             <version>${rocoto.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-server-cluster-client-jeromq-guice</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

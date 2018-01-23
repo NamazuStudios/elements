@@ -52,6 +52,8 @@
         <module>rt-client</module>
         <module>rt-dao</module>
         <module>rt-http-servlet</module>
+        <module>rt-fst</module>
+        <module>rt-fst-guice</module>
         <module>rt-jackson</module>
         <module>rt-jackson-guice</module>
         <module>rt-server-guice</module>

@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
 import org.omg.CORBA.DynAnyPackage.Invalid;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -70,17 +71,7 @@ public interface Attributes {
      * The empty {@link Attributes} implementation.  This returns an empty list of attribute names, and will return null
      * for any requested attribute.
      */
-    Attributes EMPTY = new Attributes() {
-        @Override
-        public Set<String> getAttributeNames() {
-            return emptySet();
-        }
-
-        @Override
-        public Object getAttribute(String name) {
-            return null;
-        }
-    };
+    Attributes EMPTY = new EmptyAttributes();
 
     /**
      * Returns {@link #EMPTY}.
@@ -92,3 +83,16 @@ public interface Attributes {
     }
 
 }
+
+class EmptyAttributes implements Attributes, Serializable {
+    @Override
+    public Set<String> getAttributeNames() {
+        return emptySet();
+    }
+
+    @Override
+    public Object getAttribute(String name) {
+        return null;
+    }
+}
+

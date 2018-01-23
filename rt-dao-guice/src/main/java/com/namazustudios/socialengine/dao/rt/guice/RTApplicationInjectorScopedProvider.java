@@ -17,7 +17,6 @@ public class RTApplicationInjectorScopedProvider<ProvidedT> implements Provider<
 
     private final Key<ProvidedT> providedTKey;
 
-
     public RTApplicationInjectorScopedProvider(final Class<ProvidedT> providedTClass) {
         this(Key.get(providedTClass));
     }

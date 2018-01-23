@@ -1,9 +1,13 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.remote.MultiplexSupport;
+
+import java.util.UUID;
+
 /**
  * Routes many incoming connections into a single connection.  Works in tandem wiht a demultiplxer on the other end.
  */
-public interface ConnectionMultiplexer {
+public interface ConnectionMultiplexer extends MultiplexSupport {
 
     /**
      * Starts this {@link ConnectionMultiplexer} connects to any remote endpoints and then begins routing connections
@@ -17,5 +21,13 @@ public interface ConnectionMultiplexer {
      * through this {@link ConnectionMultiplexer}
      */
     void stop();
+
+    /**
+     * Gets the connect address for the destination with the supplied {@link UUID}.
+     *
+     * @param uuid the uuid
+     * @return the connect address
+     */
+    String getConnectAddress(final UUID uuid);
 
 }

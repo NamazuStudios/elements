@@ -2,13 +2,14 @@ package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.annotation.Dispatch;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.List;
 
 /**
  * Represents a remote invocation.  This contains enough information to invoke the method remotely.
  */
-public class Invocation {
+public class Invocation implements Serializable {
 
     private String type;
 

@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -28,17 +29,23 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
 
     private ExceptionMapper.Resolver exceptionMapperResolver;
 
-    private ResourceContext resourceContext;
-
-    private SchedulerContext schedulerContext;
+    private Context context;
 
     @Override
     public void dispatch(final Session session,
                          final HttpRequest httpRequest,
                          final Consumer<Response> responseConsumer) {
+
         final Filter.Chain chain;
         chain = Filter.Chain.build(getFilterList(), (s, r, rr) -> createAndSchedule(httpRequest, s, r, rr));
-        chain.next(session, httpRequest, responseConsumer);
+
+        final Request request = SimpleRequest.builder()
+            .from(httpRequest)
+            .parameterizedPath(httpRequest.getManifestMetadata().getPreferredOperation().getPath())
+            .build();
+
+        chain.next(session, request, responseConsumer);
+
     }
 
     private void createAndSchedule(final HttpRequest httpRequest,
@@ -50,7 +57,10 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
         final HttpOperation httpOperation = httpRequest.getManifestMetadata().getPreferredOperation();
 
         final Path path = Path.fromComponents("http", "request", randomUUID().toString());
-        final ResourceId resourceId = getResourceContext().createAttributes(httpModule.getModule(), path, request.getAttributes());
+
+        final ResourceId resourceId = getContext()
+            .getResourceContext()
+            .createAttributes(httpModule.getModule(), path, request.getAttributes());
 
         logger.info("Created resource with id {} to handle request.", resourceId);
         schedule(httpOperation, resourceId, session, request, responseConsumer);
@@ -75,16 +85,17 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
                 logger.error("Resource did not return Response type.");
                 failure.accept(ex);
             } finally {
-                getResourceContext().destroyAsync(
+                getContext().getResourceContext().destroyAsync(
                     v  -> logger.info("Destroyed {}", resourceId),
                     th -> logger.error("Failed to destroy {}", resourceId, th), resourceId);
             }
         };
 
         try {
-            getResourceContext().invokeAsync(success, failure,
-                                             resourceId, httpOperation.getMethod(),
-                                             request.getPayload(), request, session);
+            getContext().getResourceContext().invokeAsync(
+                success, failure,
+                resourceId, httpOperation.getMethod(),
+                request.getPayload(), request, session);
         } catch (Throwable th) {
             logRequestFailure(request, th);
             failure.accept(th);
@@ -121,22 +132,13 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
         this.exceptionMapperResolver = exceptionMapperResolver;
     }
 
-    public ResourceContext getResourceContext() {
-        return resourceContext;
+    public Context getContext() {
+        return context;
     }
 
     @Inject
-    public void setResourceContext(ResourceContext resourceContext) {
-        this.resourceContext = resourceContext;
-    }
-
-    public SchedulerContext getSchedulerContext() {
-        return schedulerContext;
-    }
-
-    @Inject
-    public void setSchedulerContext(SchedulerContext schedulerContext) {
-        this.schedulerContext = schedulerContext;
+    public void setContext(Context context) {
+        this.context = context;
     }
 
 }

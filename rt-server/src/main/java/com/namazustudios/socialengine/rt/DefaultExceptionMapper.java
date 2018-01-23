@@ -18,7 +18,7 @@ import java.util.function.Consumer;
  */
 public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DefaultExceptionMapper.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultExceptionMapper.class);
 
     private static final DefaultExceptionMapper INSTANCE = new DefaultExceptionMapper();
 
@@ -28,6 +28,8 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
     public void map(final Throwable throwable, final Consumer<Response> responseReceiver) {
 
         final SimpleExceptionResponsePayload simpleExceptionResponsePayload = new SimpleExceptionResponsePayload();
+        logger.info("Mapping exception.", throwable);
+
         simpleExceptionResponsePayload.setMessage(throwable.getMessage());
 
         ResponseCode code;
@@ -51,7 +53,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
         try {
             responseReceiver.accept(simpleResponse);
         } catch (Exception ex) {
-            LOG.error("Caught exception mapping exception to response.", ex);
+            logger.error("Caught exception mapping exception to response.", ex);
         }
 
     }
@@ -72,10 +74,10 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
         } catch (BaseException bex) {
             code = bex.getResponseCode();
             code = code == null ? ResponseCode.INTERNAL_ERROR_FATAL : code;
-            LOG.warn("Caught exception handling request {}.", request, bex);
+            logger.warn("Caught exception handling request {}.", request, bex);
         } catch (Throwable th) {
             code = ResponseCode.INTERNAL_ERROR_FATAL;
-            LOG.error("Caught exception handling request {}.", request, th);
+            logger.error("Caught exception handling request {}.", request, th);
         }
 
         final SimpleResponse simpleResponse = SimpleResponse.builder()
@@ -87,7 +89,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
         try {
             responseReceiver.accept(simpleResponse);
         } catch (Exception ex) {
-            LOG.error("Caught exception mapping exception to response.", ex);
+            logger.error("Caught exception mapping exception to response.", ex);
         }
 
     }

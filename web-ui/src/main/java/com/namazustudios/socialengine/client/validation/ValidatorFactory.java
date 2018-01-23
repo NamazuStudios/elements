@@ -13,7 +13,7 @@ import javax.validation.Validator;
 /**
  * Created by patricktwohig on 5/7/15.
  */
-public class ValidatiorFactory extends AbstractGwtValidatorFactory {
+public class ValidatorFactory extends AbstractGwtValidatorFactory {
 
     @GwtValidation({
             User.class,
@@ -21,9 +21,11 @@ public class ValidatiorFactory extends AbstractGwtValidatorFactory {
             Application.class,
             ApplicationConfiguration.class,
             FacebookApplicationConfiguration.class,
+            MatchmakingApplicationConfiguration.class,
             IosApplicationConfiguration.class,
             GooglePlayApplicationConfiguration.class,
-            PSNApplicationConfiguration.class})
+            PSNApplicationConfiguration.class,
+            CallbackDefinition.class})
     public interface GwtValidator extends Validator {}
 
     @Override

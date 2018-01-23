@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.dao.mongo.model;
         import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
         import com.namazustudios.socialengine.fts.annotation.SearchableField;
         import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
-        import com.namazustudios.socialengine.model.application.Platform;
+        import com.namazustudios.socialengine.model.application.ConfigurationCategory;
         import org.bson.types.ObjectId;
         import org.mongodb.morphia.annotations.*;
 
@@ -21,12 +21,12 @@ package com.namazustudios.socialengine.dao.mongo.model;
         fields = {
                 @SearchableField(name = "uniqueIdentifier", path = "/uniqueIdentifier"),
                 @SearchableField(name = "applicationName", path = "/parent/name"),
-                @SearchableField(name = "platform", path = "/platform"),
+                @SearchableField(name = "category", path = "/category"),
                 @SearchableField(name = "active", path = "/active")
         }
 )
 @Indexes({
-        @Index(fields = {@Field("platform"), @Field("parent"), @Field("name") }, options = @IndexOptions(unique = true)),
+        @Index(fields = {@Field("category"), @Field("parent"), @Field("name") }, options = @IndexOptions(unique = true)),
 })
 @Entity(value = "application_configuration", noClassnameStored = true)
 public class MongoApplicationConfiguration {
@@ -43,8 +43,8 @@ public class MongoApplicationConfiguration {
     private MongoApplication parent;
 
     @Indexed
-    @Property("platform")
-    private Platform platform;
+    @Property("category")
+    private ConfigurationCategory category;
 
     @Indexed
     @Property("active")
@@ -74,12 +74,12 @@ public class MongoApplicationConfiguration {
         this.parent = parent;
     }
 
-    public Platform getPlatform() {
-        return platform;
+    public ConfigurationCategory getCategory() {
+        return category;
     }
 
-    public void setPlatform(Platform platform) {
-        this.platform = platform;
+    public void setCategory(ConfigurationCategory category) {
+        this.category = category;
     }
 
     public boolean isActive() {

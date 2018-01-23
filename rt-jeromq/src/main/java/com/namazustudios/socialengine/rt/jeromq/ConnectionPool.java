@@ -79,34 +79,6 @@ public interface ConnectionPool {
     int getHighWaterMark();
 
     /**
-     * Represents a connection to the remote node.
-     */
-    interface Connection extends AutoCloseable {
-
-        /**
-         * Returns the {@link ZContext} used by this {@link Connection}.
-         *
-         * @return the {@link ZContext} instance
-         */
-        ZContext context();
-
-        /**
-         * Obtains the {@link Socket} instance used to communicate with the remote node.  This must always return the
-         * same instance of {@link Socket} per {@link Connection} instance
-         *
-         * @return the {@link Socket} instance
-         */
-        Socket socket();
-
-        /**
-         * Closes the {@link Connection} an destroys the associated underlying {@link Socket}.
-         */
-        @Override
-        void close();
-
-    }
-
-    /**
      * A special type of {@link ExecutionException} which is used to indicate an expected exception while running the
      * function passed to {@link #process(Function)} or {@link #processV(Consumer)}.  If thrown, this will signal the
      * {@link ConnectionPool} keep the associated {@link Connection} alive.

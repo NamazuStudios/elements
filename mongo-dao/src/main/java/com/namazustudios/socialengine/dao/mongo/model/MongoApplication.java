@@ -75,4 +75,26 @@ public class MongoApplication {
         this.active = active;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MongoApplication)) return false;
+
+        MongoApplication that = (MongoApplication) o;
+
+        if (isActive() != that.isActive()) return false;
+        if (getObjectId() != null ? !getObjectId().equals(that.getObjectId()) : that.getObjectId() != null)
+            return false;
+        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
+        return getDescription() != null ? getDescription().equals(that.getDescription()) : that.getDescription() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getObjectId() != null ? getObjectId().hashCode() : 0;
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
+        result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
+        result = 31 * result + (isActive() ? 1 : 0);
+        return result;
+    }
 }

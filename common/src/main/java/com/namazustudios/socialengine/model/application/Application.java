@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import java.io.Serializable;
 
 /**
  * Represents an application.  This serves as place to house the
@@ -16,7 +17,7 @@ import javax.validation.constraints.Pattern;
  * Created by patricktwohig on 7/9/15.
  */
 @ApiModel
-public class Application {
+public class Application implements Serializable {
 
     /**
      * Used as the key for the application attribute where appropriate.  This is equivalent

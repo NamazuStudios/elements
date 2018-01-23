@@ -1,6 +1,10 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.namazustudios.socialengine.dao.*;
+import com.namazustudios.socialengine.dao.MatchDao;
+import com.namazustudios.socialengine.dao.Matchmaker;
+import com.namazustudios.socialengine.dao.mongo.model.MongoMatch;
+import com.namazustudios.socialengine.dao.mongo.model.MongoMatchDelta;
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
@@ -8,28 +12,26 @@ import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
-import de.flapdoodle.embed.mongo.MongodExecutable;
-import de.flapdoodle.embed.mongo.MongodProcess;
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.*;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.UUID;
+import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.model.User.Level.USER;
+import static com.google.common.collect.Lists.newArrayList;
 import static com.namazustudios.socialengine.model.match.MatchingAlgorithm.FIFO;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.Arrays.fill;
+import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.fail;
 
 @Guice(modules = IntegrationTestModule.class)
@@ -37,23 +39,19 @@ public class MongoMatchmakerIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoMatchmakerIntegrationTest.class);
 
-    private ApplicationDao applicationDao;
+    private EmbeddedMongo embeddedMongo;
 
-    private FacebookApplicationConfigurationDao facebookApplicationConfigurationDao;
-
-    private UserDao userDao;
-
-    private ProfileDao profileDao;
+    private MatchingMockObjects matchingMockObjects;
 
     private MatchDao matchDao;
 
-    private MongodProcess mongodProcess;
-
-    private MongodExecutable mongodExecutable;
+    private AdvancedDatastore advancedDatastore;
 
     private List<Match> intermediateMatches = new ArrayList<>();
 
     private List<Profile> intermediateProfiles = new ArrayList<>();
+
+    private List<Matchmaker.SuccessfulMatchTuple> intermediateSuccessfulMatchTuples = new ArrayList<>();
 
     @DataProvider
     public static Iterator<Object[]> matchingAlgorithms() {
@@ -69,13 +67,13 @@ public class MongoMatchmakerIntegrationTest {
 
         logger.info("Testing matching algorithm {}", matchingAlgorithm);
 
-        final Application application = getApplicationDao().createOrUpdateInactiveApplication(makeMockApplication());
+        final Application application = getMatchingMockObjects().makeMockApplication();
 
-        final User usera = getUserDao().createOrReactivateUser(makeMockUser("test-user-a"));
-        final User userb = getUserDao().createOrReactivateUser(makeMockUser("test-user-b"));
+        final User usera = getMatchingMockObjects().makeMockUser("test-user-a");
+        final User userb = getMatchingMockObjects().makeMockUser("test-user-b");
 
-        final Profile profilea = getProfileDao().createOrReactivateProfile(makeMockProfile(usera, application));
-        final Profile profileb = getProfileDao().createOrReactivateProfile(makeMockProfile(userb, application));
+        final Profile profilea = getMatchingMockObjects().makeMockProfile(usera, application);
+        final Profile profileb = getMatchingMockObjects().makeMockProfile(userb, application);
 
         final Match matcha = getMatchDao().createMatchAndLogDelta(makeMockMatch(profilea)).getMatch();
 
@@ -94,42 +92,31 @@ public class MongoMatchmakerIntegrationTest {
         // Cross validates that the matches were made properly
         crossValidateMatch(successfulMatchTuple, profileb, profilea);
 
+        final MongoMatch mongoMatcha;
+        mongoMatcha = getAdvancedDatastore().get(MongoMatch.class, new ObjectId(successfulMatchTuple.getPlayerMatch().getId()));
+
+        final MongoMatch mongoMatchb;
+        mongoMatchb = getAdvancedDatastore().get(MongoMatch.class, new ObjectId(successfulMatchTuple.getOpponentMatch().getId()));
+
+        assertNull(mongoMatcha.getExpiry());
+        assertNull(mongoMatchb.getExpiry());
+
         intermediateMatches.add(matcha);
         intermediateMatches.add(matchb);
 
         intermediateProfiles.add(profilea);
         intermediateProfiles.add(profileb);
 
-    }
+        intermediateSuccessfulMatchTuples.add(successfulMatchTuple);
 
-    private Application makeMockApplication() {
-        final Application application = new Application();
-        application.setName("mock");
-        application.setDescription("A mock application.");
-        return application;
-    }
-
-    private User makeMockUser(final String name) {
-        final User user = new User();
-        user.setName(name);
-        user.setEmail(format("%s@example.com", name));
-        user.setLevel(USER);
-        return user;
-    }
-
-    private Profile makeMockProfile(final User user, final Application application) {
-        final Profile profile =  new Profile();
-        profile.setUser(user);
-        profile.setApplication(application);
-        profile.setDisplayName(format("display-name-%s", user.getName()));
-        profile.setImageUrl(format("http://example.com/%s.png", user.getName()));
-        return profile;
     }
 
     private Match makeMockMatch(final Profile profile) {
         final Match match = new Match();
         match.setPlayer(profile);
+        match.setScheme("pvp");
         return match;
+
     }
 
     private void crossValidateMatch(final Matchmaker.SuccessfulMatchTuple successfulMatchTuple,
@@ -219,10 +206,95 @@ public class MongoMatchmakerIntegrationTest {
 
     }
 
-    @AfterClass
+    @DataProvider
+    public Object[][] intermediateSuccessfulMatchTupleProvider() {
+        return intermediateSuccessfulMatchTuples
+            .stream()
+            .map(t -> new Object[]{t})
+            .collect(toList())
+            .toArray(new Object[][]{});
+    }
+
+    @Test(dataProvider = "intermediateSuccessfulMatchTupleProvider", dependsOnMethods = "testMatch")
+    public void testFinalizeMatchingProcess(final Matchmaker.SuccessfulMatchTuple successfulMatchTuple) {
+
+        final UUID gameUUID = randomUUID();
+        final Stream<MatchDao.TimeDeltaTuple> first = getMatchDao().finalize(successfulMatchTuple, gameUUID::toString);
+
+        final Stream<MatchDao.TimeDeltaTuple> second = getMatchDao().finalize(successfulMatchTuple, () -> {
+            fail("Did not expect a call here.");
+            return null;
+        });
+
+        assertEquals(first.count(), 2, "Expected two results for first call.");
+        assertEquals(second.count(), 0, "Expected zero results for second call.");
+
+        final Match matcha = getMatchDao().getMatchForPlayer(
+            successfulMatchTuple.getPlayerMatch().getPlayer().getId(),
+            successfulMatchTuple.getPlayerMatch().getId());
+
+        final Match matchb = getMatchDao().getMatchForPlayer(
+                successfulMatchTuple.getOpponentMatch().getPlayer().getId(),
+                successfulMatchTuple.getOpponentMatch().getId());
+
+        assertEquals(matcha.getGameId(), gameUUID.toString());
+        assertEquals(matchb.getGameId(), gameUUID.toString());
+
+        final MongoMatch mongoMatcha;
+        mongoMatcha = getAdvancedDatastore().get(MongoMatch.class, new ObjectId(successfulMatchTuple.getPlayerMatch().getId()));
+
+        final MongoMatch mongoMatchb;
+        mongoMatchb = getAdvancedDatastore().get(MongoMatch.class, new ObjectId(successfulMatchTuple.getOpponentMatch().getId()));
+
+        assertEquals(mongoMatcha.getGameId(), gameUUID.toString());
+        assertEquals(mongoMatchb.getGameId(), gameUUID.toString());
+        assertNotNull(mongoMatcha.getExpiry());
+        assertNotNull(mongoMatchb.getExpiry());
+
+    }
+
+    @Test(dataProvider = "intermediateMatchDataProvider", dependsOnMethods = "testFinalizeMatchingProcess")
+    public void attemptDeleteIntermediateMatchesAfterFinalization(final Match match) {
+
+        final Query<MongoMatchDelta> preDeleteQuery = getAdvancedDatastore()
+                .createQuery(MongoMatchDelta.class)
+                .field("_id.match").equal(new ObjectId(match.getId()));
+
+        final List<MongoMatchDelta> preDeleteList = newArrayList(preDeleteQuery);
+
+        try {
+            getMatchDao().deleteMatchAndLogDelta(match.getPlayer().getId(), match.getId());
+            fail("Expected InvalidDataException here.");
+        } catch (InvalidDataException ex) {
+            // Test Passes
+        }
+
+        final Query<MongoMatchDelta> postDeleteQuery = getAdvancedDatastore()
+                .createQuery(MongoMatchDelta.class)
+                .field("_id.match").equal(new ObjectId(match.getId()));
+
+        final List<MongoMatchDelta> postDeleteList = newArrayList(postDeleteQuery);
+         assertEquals(preDeleteList, postDeleteList);
+
+    }
+
+    @BeforeClass
+    public void dropDatabase() {
+        getEmbeddedMongo().getMongoDatabase().drop();
+    }
+
+    @AfterSuite
     public void killProcess() {
-        getMongodProcess().stop();
-        getMongodExecutable().stop();
+        getEmbeddedMongo().stop();
+    }
+
+    public MatchingMockObjects getMatchingMockObjects() {
+        return matchingMockObjects;
+    }
+
+    @Inject
+    public void setMatchingMockObjects(MatchingMockObjects matchingMockObjects) {
+        this.matchingMockObjects = matchingMockObjects;
     }
 
     public MatchDao getMatchDao() {
@@ -234,58 +306,23 @@ public class MongoMatchmakerIntegrationTest {
         this.matchDao = matchDao;
     }
 
-    public MongodProcess getMongodProcess() {
-        return mongodProcess;
+    public AdvancedDatastore getAdvancedDatastore() {
+        return advancedDatastore;
     }
 
     @Inject
-    public void setMongodProcess(MongodProcess mongodProcess) {
-        this.mongodProcess = mongodProcess;
+    public void setAdvancedDatastore(AdvancedDatastore advancedDatastore) {
+        this.advancedDatastore = advancedDatastore;
     }
 
-    public MongodExecutable getMongodExecutable() {
-        return mongodExecutable;
-    }
-
-    @Inject
-    public void setMongodExecutable(MongodExecutable mongodExecutable) {
-        this.mongodExecutable = mongodExecutable;
-    }
-
-    public UserDao getUserDao() {
-        return userDao;
+    public EmbeddedMongo getEmbeddedMongo() {
+        return embeddedMongo;
     }
 
     @Inject
-    public void setUserDao(UserDao userDao) {
-        this.userDao = userDao;
-    }
-
-    public ProfileDao getProfileDao() {
-        return profileDao;
-    }
-
-    @Inject
-    public void setProfileDao(ProfileDao profileDao) {
-        this.profileDao = profileDao;
-    }
-
-    public ApplicationDao getApplicationDao() {
-        return applicationDao;
-    }
-
-    @Inject
-    public void setApplicationDao(ApplicationDao applicationDao) {
-        this.applicationDao = applicationDao;
-    }
-
-    public FacebookApplicationConfigurationDao getFacebookApplicationConfigurationDao() {
-        return facebookApplicationConfigurationDao;
-    }
-
-    @Inject
-    public void setFacebookApplicationConfigurationDao(FacebookApplicationConfigurationDao facebookApplicationConfigurationDao) {
-        this.facebookApplicationConfigurationDao = facebookApplicationConfigurationDao;
+    public void setEmbeddedMongo(EmbeddedMongo embeddedMongo) {
+        this.embeddedMongo = embeddedMongo;
     }
 
 }
+

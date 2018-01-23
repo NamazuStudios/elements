@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -12,7 +13,7 @@ import static java.util.Collections.emptyMap;
  *
  * Created by patricktwohig on 7/24/15.
  */
-public class SimpleRequestHeader implements RequestHeader {
+public class SimpleRequestHeader implements RequestHeader, Serializable {
 
     private int sequence;
 

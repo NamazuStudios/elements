@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
 
+import java.io.Serializable;
+
 /**
  * Created by patricktwohig on 7/27/15.
  */

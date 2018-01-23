@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.model;
 
 import io.swagger.annotations.ApiModel;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.stream.Stream;
  * Created by patricktwohig on 3/25/15.
  */
 @ApiModel
-public class Pagination<T> implements Iterable<T> {
+public class Pagination<T> implements Iterable<T>, Serializable {
 
     private int offset;
 

@@ -1,11 +1,13 @@
 package com.namazustudios.socialengine.model.match;
 
+import java.io.Serializable;
+
 /**
  * Represents the supported matching algorithms supported by SocialEngine.
  *
  * Created by patricktwohig on 7/27/17.
  */
-public enum MatchingAlgorithm {
+public enum MatchingAlgorithm implements Serializable {
 
     /**
      * The simplest form of matching.  Implements a FIFO, first in, first out.  That is to

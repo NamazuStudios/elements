@@ -18,8 +18,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 import javax.inject.Inject;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.namazustudios.socialengine.model.application.Platform.PSN_PS4;
-import static com.namazustudios.socialengine.model.application.Platform.PSN_VITA;
+import static com.namazustudios.socialengine.model.application.ConfigurationCategory.PSN_PS4;
+import static com.namazustudios.socialengine.model.application.ConfigurationCategory.PSN_VITA;
 import static java.util.Arrays.asList;
 
 
@@ -55,7 +55,7 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
         query.and(
             query.criteria("active").equal(false),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").in(asList(PSN_PS4, PSN_VITA)),
+            query.criteria( "category").in(asList(PSN_PS4, PSN_VITA)),
             query.criteria("uniqueIdentifier").equal(psnApplicationConfiguration.getNpIdentifier())
         );
 
@@ -65,7 +65,7 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
         updateOperations.set("uniqueIdentifier", psnApplicationConfiguration.getNpIdentifier().trim());
         updateOperations.set("client_secret", nullToEmpty(psnApplicationConfiguration.getClientSecret()).trim());
         updateOperations.set("active", false);
-        updateOperations.set("platform", psnApplicationConfiguration.getPlatform());
+        updateOperations.set( "category", psnApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
@@ -92,7 +92,7 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").in(asList(PSN_VITA, PSN_PS4))
+            query.criteria( "category").in(asList(PSN_VITA, PSN_PS4))
         );
 
         try {
@@ -126,7 +126,7 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").in(asList(PSN_VITA, PSN_PS4))
+            query.criteria( "category").in(asList(PSN_VITA, PSN_PS4))
         );
 
         try {
@@ -140,7 +140,7 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
 
         updateOperations.set("uniqueIdentifier", psnApplicationConfiguration.getNpIdentifier().trim());
         updateOperations.set("client_secret", nullToEmpty(psnApplicationConfiguration.getClientSecret()).trim());
-        updateOperations.set("platform", psnApplicationConfiguration.getPlatform());
+        updateOperations.set( "category", psnApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
 
         final MongoPSNApplicationConfiguration mongoPSNApplicationProfile;
@@ -174,7 +174,7 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").in(asList(PSN_VITA, PSN_PS4))
+            query.criteria( "category").in(asList(PSN_VITA, PSN_PS4))
         );
 
         try {
@@ -211,12 +211,12 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
             throw new InvalidDataException("psnApplicationProfile must not be null.");
         }
 
-        switch (psnApplicationProfile.getPlatform()) {
+        switch (psnApplicationProfile.getCategory()) {
             case PSN_PS4:
             case PSN_VITA:
                 break;
             default:
-                throw new InvalidDataException("platform not supported: " + psnApplicationProfile.getPlatform());
+                throw new InvalidDataException("platform not supported: " + psnApplicationProfile.getCategory());
         }
 
         getValidationHelper().validateModel(psnApplicationProfile);

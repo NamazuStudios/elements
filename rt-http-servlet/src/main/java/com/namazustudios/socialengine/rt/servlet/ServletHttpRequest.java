@@ -81,11 +81,11 @@ public class ServletHttpRequest implements HttpRequest {
 
     @Override
     public List<String> getParameterNames() {
-        return list(httpServletRequestSupplier.get().getHeaderNames());
+        return list(httpServletRequestSupplier.get().getParameterNames());
     }
 
     @Override
-    public List<Object> getParameters(String parameterName) {
+    public List<Object> getParameters(final String parameterName) {
         final HttpServletRequest httpServletRequest = httpServletRequestSupplier.get();
         final Enumeration<String> parameterNames = httpServletRequest.getParameterNames();
         return parameterNames != null && parameterNames.hasMoreElements() ? objectList(parameterNames) : null;

@@ -46,4 +46,25 @@ public class MongoMatchSnapshot {
         this.lastUpdatedTimestamp = lastUpdatedTimestamp;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MongoMatchSnapshot)) return false;
+
+        MongoMatchSnapshot that = (MongoMatchSnapshot) o;
+
+        if (getPlayer() != null ? !getPlayer().equals(that.getPlayer()) : that.getPlayer() != null) return false;
+        if (getOpponent() != null ? !getOpponent().equals(that.getOpponent()) : that.getOpponent() != null)
+            return false;
+        return getLastUpdatedTimestamp() != null ? getLastUpdatedTimestamp().equals(that.getLastUpdatedTimestamp()) : that.getLastUpdatedTimestamp() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getPlayer() != null ? getPlayer().hashCode() : 0;
+        result = 31 * result + (getOpponent() != null ? getOpponent().hashCode() : 0);
+        result = 31 * result + (getLastUpdatedTimestamp() != null ? getLastUpdatedTimestamp().hashCode() : 0);
+        return result;
+    }
+
 }

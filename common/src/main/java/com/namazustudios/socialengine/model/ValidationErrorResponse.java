@@ -2,13 +2,14 @@ package com.namazustudios.socialengine.model;
 
 import io.swagger.annotations.ApiModel;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * Created by patricktwohig on 5/7/15.
  */
 @ApiModel
-public class ValidationErrorResponse extends ErrorResponse {
+public class ValidationErrorResponse extends ErrorResponse implements Serializable {
 
     private List<String> validationFailureMessages;
 

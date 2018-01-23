@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +13,7 @@ import static com.namazustudios.socialengine.rt.Context._waitAsync;
 /**
  * Used to index various {@link Resource} instances by {@link Path}.
  */
+@Proxyable
 public interface IndexContext {
 
     /**
@@ -20,14 +22,12 @@ public interface IndexContext {
      * @param path the {@link Path} to match
      * @return a {@link Stream<Listing>} representing all matched {@link Path}s
      */
-    default Stream<Listing> list(final Path path) {
-
+    @RemotelyInvokable
+    default Stream<Listing> list(@Serialize final Path path) {
         final Logger logger = LoggerFactory.getLogger(getClass());
         final Future<Stream<Listing>> future = listAsync(path, v -> logger.info("Successfully listed {} ", path),
                                                                th -> logger.error("Failed to list {} ", path));
-
         return _waitAsync(logger, future);
-
     }
 
     /**
@@ -43,7 +43,10 @@ public interface IndexContext {
      * @param failure a {@link Consumer<Throwable>} which receives an exception indicating a failure reason.
      * @return a {@link Future<Stream<Listing>>} which can be used to obtain the result
      */
-    Future<Stream<Listing>> listAsync(Path path, Consumer<Stream<Listing>> success, Consumer<Throwable> failure);
+    @RemotelyInvokable
+    Future<Stream<Listing>> listAsync(@Serialize Path path,
+                                      @ResultHandler Consumer<Stream<Listing>> success,
+                                      @ErrorHandler  Consumer<Throwable> failure);
 
     /**
      * Performs the operations of {@link #linkAsync(ResourceId, Path, Consumer, Consumer)} synchronously.
@@ -52,7 +55,8 @@ public interface IndexContext {
      * @param destination the {@link Path} of the destination to link
      *
      */
-    default void link(final ResourceId resourceId, final Path destination) {
+    @RemotelyInvokable
+    default void link(@Serialize final ResourceId resourceId, @Serialize final Path destination) {
 
         final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -73,8 +77,13 @@ public interface IndexContext {
      * @param failure @ {@link Consumer<Throwable> which will be called on a failure
      * @return a {@link Future} which can be used to obtain the result of the operation
      *
-     * */
-    Future<Void> linkAsync(ResourceId resourceId, Path destination, Consumer<Void> success, Consumer<Throwable> failure);
+     *
+     */
+    @RemotelyInvokable
+    Future<Void> linkAsync(@Serialize ResourceId resourceId,
+                           @Serialize Path destination,
+                           @ResultHandler Consumer<Void> success,
+                           @ErrorHandler  Consumer<Throwable> failure);
 
     /**
      * Performs the operations {@link #linkPathAsync(Path, Path, Consumer, Consumer)} synchornously.
@@ -82,7 +91,8 @@ public interface IndexContext {
      * @param source the source {@link Path} to link
      * @param destination the {@link Path} of the destination to link
      */
-    default void linkPath(Path source, Path destination) {
+    @RemotelyInvokable
+    default void linkPath(@Serialize Path source, @Serialize Path destination) {
 
         final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -103,7 +113,10 @@ public interface IndexContext {
      * @param failure @ {@link Consumer<Throwable> which will be called on a failure
      * @return a {@link Future} which can be used to obtain the result of the operation
      */
-    Future<Void> linkPathAsync(Path source, Path destination, Consumer<Void> success, Consumer<Throwable> failure);
+    @RemotelyInvokable
+    Future<Void> linkPathAsync(@Serialize Path source, @Serialize Path destination,
+                               @ResultHandler Consumer<Void> success,
+                               @ErrorHandler  Consumer<Throwable> failure);
 
     /**
      * Performs the operations of {@link #unlinkAsync(Path, Consumer, Consumer)} synchronously.
@@ -111,7 +124,8 @@ public interface IndexContext {
      * @param path the path to unlink
      * @return an {@link Unlink} representing the result of the operation
      */
-    default Unlink unlink(Path path) {
+    @RemotelyInvokable
+    default Unlink unlink(@Serialize final Path path) {
 
         final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -136,7 +150,10 @@ public interface IndexContext {
      * @param failure a {@link Consumer<Throwable>} to receive an exception if one was generated
      * @return a {@link Future} which can be used to obtain the result of the operation
      */
-    Future<Unlink> unlinkAsync(Path path, Consumer<Unlink> success, Consumer<Throwable> failure);
+    @RemotelyInvokable
+    Future<Unlink> unlinkAsync(@Serialize Path path,
+                               @ResultHandler Consumer<Unlink> success,
+                               @ErrorHandler  Consumer<Throwable> failure);
 
     /**
      * The result of the {@link #unlinkAsync(Path, Consumer, Consumer)} and {@link #unlink(Path)} call.
@@ -168,7 +185,7 @@ public interface IndexContext {
          * The {@link Path} of the listing.
          *
          * @return the {@link Path}
-         */
+             */
         Path getPath();
 
         /**

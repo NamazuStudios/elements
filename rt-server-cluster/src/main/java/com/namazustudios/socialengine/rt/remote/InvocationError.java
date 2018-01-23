@@ -2,12 +2,13 @@ package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.annotation.ErrorHandler;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 
 /**
  * Returned when there exists an error.
  */
-public class InvocationError {
+public class InvocationError implements Serializable {
 
     private Throwable throwable;
 

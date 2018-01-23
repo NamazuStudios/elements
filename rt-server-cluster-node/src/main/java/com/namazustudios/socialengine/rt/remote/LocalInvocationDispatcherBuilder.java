@@ -207,6 +207,7 @@ public class LocalInvocationDispatcherBuilder {
         final Method method = getHandlerMethod(parameter);
 
         return new ProxyBuilder<>(method.getDeclaringClass())
+            .dontProxyDefaultMethods()
             .withToString("Proxy Error Handler for " + parameter.getType() + " " + parameter.getName())
             .withDefaultHashCodeAndEquals()
             .withSharedMethodHandleCache()
@@ -244,7 +245,8 @@ public class LocalInvocationDispatcherBuilder {
         final Method method = getHandlerMethod(parameter);
 
         return new ProxyBuilder<>(method.getDeclaringClass())
-            .withToString("Proxy Result Error Handler for " + parameter.getType() + " " + parameter.getName())
+            .withToString("Proxy Result Handler for " + parameter.getType() + " " + parameter.getName())
+            .dontProxyDefaultMethods()
             .withDefaultHashCodeAndEquals()
             .withSharedMethodHandleCache()
             .handler((proxy, m, args) -> {

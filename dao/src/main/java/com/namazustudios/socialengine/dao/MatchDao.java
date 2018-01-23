@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao;
 
 import com.namazustudios.socialengine.annotation.Expose;
+import com.namazustudios.socialengine.dao.Matchmaker.SuccessfulMatchTuple;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.Pagination;
@@ -11,6 +12,10 @@ import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
 
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Created by patricktwohig on 7/20/17.
@@ -112,6 +117,27 @@ public interface MatchDao {
      * @throws {@link NotImplementedException} if the supplied algorithm is not supported.
      */
     Matchmaker getMatchmaker(final MatchingAlgorithm matchingAlgorithm);
+
+    /**
+     * Finalizes the matching process by flagging the {@link Match} instances for deletion in the supplied
+     * {@link SuccessfulMatchTuple} and invoking the finalizer {@link Supplier<String>}.  The supplied
+     * {@link Supplier<String>} returns a system-wide unique ID used to process to identify the game
+     * that was created as the result of the {@link Match}.  The return value of this method will be assigned to the
+     * match using {@link Match#setGameId(String)}.
+     *
+     * Note that this method guarantees that the supplied {@link Supplier<String>} finalizer will only
+     * ever be called once per successful matching tuple as multiple players may attempt to finalize the pairing at
+     * the same time.  The return value indicates the affected {@link Match} instances, or returns an emnpty stream
+     * if no {@link Match} instances were affected by the finalization.
+     *
+     * Because both players may not have read the {@link Match}, the involved {@link Match} instances will be marked
+     * for timeout and deletion at a later time.
+     *
+     * @param successfulMatchTuple the resulting {@link SuccessfulMatchTuple}
+     * @param finalizer the {@linK Supplier<String>} used to finalize the match and provide the resulting game id
+     * @return a {@link Stream<TimeDeltaTuple>} of updates
+     */
+    Stream<TimeDeltaTuple> finalize(SuccessfulMatchTuple successfulMatchTuple, Supplier<String> finalizer);
 
     /**
      * Used as the return value for the various methods tracking {@link TimeDelta} isntances.

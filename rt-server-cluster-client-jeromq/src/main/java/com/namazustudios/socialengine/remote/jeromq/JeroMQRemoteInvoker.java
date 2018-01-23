@@ -2,9 +2,10 @@ package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
+import com.namazustudios.socialengine.rt.annotation.Dispatch;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.jeromq.Connection;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
-import com.namazustudios.socialengine.rt.jeromq.Identity;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,16 +22,18 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
+import static java.lang.Thread.currentThread;
 import static java.lang.Thread.interrupted;
 import static org.zeromq.ZMQ.SNDMORE;
+import static org.zeromq.ZMQ.poll;
 
 public class JeroMQRemoteInvoker implements RemoteInvoker {
 
-    public static final String NODE_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.nodeAddress";
+    public static final String CONNECT_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.connectAddress";
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQRemoteInvoker.class);
 
-    private String nodeAddress;
+    private String connectAddress;
 
     private PayloadReader payloadReader;
 
@@ -42,7 +45,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     public void start() {
         getConnectionPool().start(zContext -> {
             final ZMQ.Socket socket = zContext.createSocket(ZMQ.DEALER);
-            socket.connect(getNodeAddress());
+            socket.connect(getConnectAddress());
             return socket;
         }, JeroMQRemoteInvoker.class.getName());
     }
@@ -54,11 +57,12 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     @Override
     public Future<Object> invoke(final Invocation invocation,
-                                 final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList, final InvocationErrorConsumer asyncInvocationErrorConsumer) {
+                                 final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+                                 final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
         final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask = new RemoteInvocationFutureTask<>();
 
-        getConnectionPool().processV((ConnectionPool.Connection connection) -> {
+        getConnectionPool().processV((Connection connection) -> {
 
             try (final ZMQ.Poller poller = connection.context().createPoller(1)) {
 
@@ -104,6 +108,20 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
                 logger.info("Finished Invocation.");
 
+            } catch (Exception ex) {
+
+                // This is typical of an internal exception (such as a socket error, IO Exception etc.) and should be
+                // handed to the clients to ensure that they do not wait around for a response they're never going to
+                // get.  So, therefore, the exception is called on both the future task as well as the async handler.
+                // For good measure, the exception is re-thrown so the connection pool properly closes the connection
+                // as we can't assume that socket is still in a stable state.
+
+                final InvocationError invocationError = new InvocationError();
+                invocationError.setThrowable(ex);
+                remoteInvocationFutureTask.setException(ex);
+                asyncInvocationErrorConsumer.acceptAndLogError(logger, invocationError);
+                throw ex;
+
             }
 
         });
@@ -113,8 +131,21 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     }
 
     private boolean pollForResponse(final ZMQ.Poller poller, final int sIndex) {
-        while (poller.poll(1000) == 0 && !interrupted());
-        return poller.pollin(sIndex);
+
+        while (!interrupted()) {
+
+            poller.poll(2000);
+
+            if (poller.pollin(sIndex)) {
+                return true;
+            } else if (poller.pollerr(sIndex)) {
+                return false;
+            }
+
+        }
+
+        return false;
+
     }
 
     private void send(final ZMQ.Socket socket, final Invocation invocation, final int additionalCount) {
@@ -163,16 +194,9 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                              final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask,
                              final InvocationErrorConsumer asyncErrorConsumer) {
 
-        final InvocationError invocationError;
-
-        try {
-            final byte[] bytes = msg.pop().getData();
-            invocationError = getPayloadReader().read(InvocationError.class, bytes);
-        } catch (IOException e) {
-            throw new InternalException(e);
-        }
 
         final int part = responseHeader.part.get();
+        final InvocationError invocationError = extractInvocationError(msg);
 
         if (part == 0) {
 
@@ -194,6 +218,16 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     }
 
+    private InvocationError extractInvocationError(final ZMsg msg) {
+        try {
+            final byte[] bytes = msg.pop().getData();
+            return getPayloadReader().read(InvocationError.class, bytes);
+        } catch (Exception e) {
+            final InvocationError invocationError = new InvocationError();
+            invocationError.setThrowable(e);
+            return invocationError;
+        }
+    }
 
     private void handleResult(final ZMsg msg,
                               final ResponseHeader responseHeader,
@@ -243,13 +277,13 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         this.payloadWriter = payloadWriter;
     }
 
-    public String getNodeAddress() {
-        return nodeAddress;
+    public String getConnectAddress() {
+        return connectAddress;
     }
 
     @Inject
-    public void setNodeAddress(@Named(NODE_ADDRESS) String nodeAddress) {
-        this.nodeAddress = nodeAddress;
+    public void setConnectAddress(@Named(CONNECT_ADDRESS) String connectAddress) {
+        this.connectAddress = connectAddress;
     }
 
     public ConnectionPool getConnectionPool() {

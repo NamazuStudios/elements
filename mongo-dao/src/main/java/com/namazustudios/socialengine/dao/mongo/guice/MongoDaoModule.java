@@ -44,6 +44,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(IosApplicationConfigurationDao.class).to(MongoIosApplicationConfigurationDao.class);
         bind(GooglePlayApplicationConfigurationDao.class).to(MongoGoogePlayApplicationConfigurationDao.class);
         bind(FacebookApplicationConfigurationDao.class).to(MongoFacebookApplicationConfigurationDao.class);
+        bind(MatchmakingApplicationConfigurationDao.class).to(MongoMatchmakingApplicationConfigurationDao.class);
         bind(MatchDao.class).to(MongoMatchDao.class);
 
         bind(Datastore.class)
@@ -75,6 +76,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(IosApplicationConfigurationDao.class);
         expose(GooglePlayApplicationConfigurationDao.class);
         expose(FacebookApplicationConfigurationDao.class);
+        expose(MatchmakingApplicationConfigurationDao.class);
         expose(MatchDao.class);
 
     }

@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;

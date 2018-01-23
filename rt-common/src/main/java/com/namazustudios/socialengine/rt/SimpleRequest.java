@@ -2,13 +2,14 @@ package com.namazustudios.socialengine.rt;
 
 import com.google.common.collect.ListMultimap;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * Created by patricktwohig on 7/26/15.
  */
-public class SimpleRequest implements Request {
+public class SimpleRequest implements Request, Serializable {
 
     private SimpleRequestHeader header;
 
@@ -139,7 +140,7 @@ public class SimpleRequest implements Request {
 
                 for (final String parameterName : request.getParameterNames()) {
                     final List<Object> value = request.getParameters(parameterName);
-                    simpleRequestParameterMap.put(parameterName, new ArrayList<>(value));
+                    simpleRequestParameterMap.put(parameterName, value == null ? Collections.emptyList() : new ArrayList<>(value));
                 }
 
                 final RequestHeader header = request.getHeader();

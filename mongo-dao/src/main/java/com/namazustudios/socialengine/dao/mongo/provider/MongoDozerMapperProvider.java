@@ -32,7 +32,8 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(ApplicationConfiguration.class, MongoApplicationConfiguration.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))
-                .fields("parent.id", "parent.objectId", customConverter(ObjectIdConverter.class));
+                .fields("parent.id", "parent.objectId", customConverter(ObjectIdConverter.class))
+                .fields("uniqueIdentifier", "uniqueIdentifier");
 
             mapping(PSNApplicationConfiguration.class, MongoPSNApplicationConfiguration.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))
@@ -49,6 +50,10 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(FacebookApplicationConfiguration.class, MongoFacebookApplicationConfiguration.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                 .fields("applicationId","uniqueIdentifier");
+
+            mapping(MatchmakingApplicationConfiguration.class, MongoMatchmakingApplicationConfiguration.class)
+                .fields("id", "objectId", customConverter(ObjectIdConverter.class))
+                .fields("scheme", "uniqueIdentifier");
 
             mapping(Profile.class, MongoProfile.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))

@@ -47,6 +47,11 @@
             <artifactId>org.eclipse.jgit.http.server</artifactId>
             <version>${jgit.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-server-cluster-client-jeromq</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

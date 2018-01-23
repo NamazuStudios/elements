@@ -95,4 +95,33 @@ public class MongoProfile {
         this.displayName = displayName;
     }
 
+    @Override
+    public boolean equals(Object o) {
+
+        if (this == o) return true;
+        if (!(o instanceof MongoProfile)) return false;
+
+        MongoProfile that = (MongoProfile) o;
+
+        if (isActive() != that.isActive()) return false;
+        if (getObjectId() != null ? !getObjectId().equals(that.getObjectId()) : that.getObjectId() != null)
+            return false;
+        if (getUser() != null ? !getUser().equals(that.getUser()) : that.getUser() != null) return false;
+        if (getApplication() != null ? !getApplication().equals(that.getApplication()) : that.getApplication() != null)
+            return false;
+        if (getImageUrl() != null ? !getImageUrl().equals(that.getImageUrl()) : that.getImageUrl() != null)
+            return false;
+        return getDisplayName() != null ? getDisplayName().equals(that.getDisplayName()) : that.getDisplayName() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getObjectId() != null ? getObjectId().hashCode() : 0;
+        result = 31 * result + (isActive() ? 1 : 0);
+        result = 31 * result + (getUser() != null ? getUser().hashCode() : 0);
+        result = 31 * result + (getApplication() != null ? getApplication().hashCode() : 0);
+        result = 31 * result + (getImageUrl() != null ? getImageUrl().hashCode() : 0);
+        result = 31 * result + (getDisplayName() != null ? getDisplayName().hashCode() : 0);
+        return result;
+    }
 }

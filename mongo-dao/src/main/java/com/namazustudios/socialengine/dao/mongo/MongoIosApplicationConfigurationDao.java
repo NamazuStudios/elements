@@ -17,7 +17,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 
-import static com.namazustudios.socialengine.model.application.Platform.IOS_APP_STORE;
+import static com.namazustudios.socialengine.model.application.ConfigurationCategory.IOS_APP_STORE;
 
 /**
  * Created by patricktwohig on 5/25/17.
@@ -52,7 +52,7 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         query.and(
             query.criteria("active").equal(false),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").equal(IOS_APP_STORE),
+            query.criteria("category").equal(IOS_APP_STORE),
             query.criteria("uniqueIdentifier").equal(iosApplicationConfiguration.getApplicationId())
         );
 
@@ -61,7 +61,7 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
 
         updateOperations.set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim());
         updateOperations.set("active", true);
-        updateOperations.set("platform", iosApplicationConfiguration.getPlatform());
+        updateOperations.set( "category", iosApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
@@ -92,7 +92,7 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").equal(IOS_APP_STORE)
+            query.criteria( "category").equal(IOS_APP_STORE)
         );
 
         try {
@@ -127,7 +127,7 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").equal(IOS_APP_STORE)
+            query.criteria( "category").equal(IOS_APP_STORE)
         );
 
         try {
@@ -140,7 +140,7 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         updateOperations = getDatastore().createUpdateOperations(MongoIosApplicationConfiguration.class);
 
         updateOperations.set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim());
-        updateOperations.set("platform", iosApplicationConfiguration.getPlatform());
+        updateOperations.set( "category", iosApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
@@ -174,7 +174,7 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         query.and(
             query.criteria("active").equal(true),
             query.criteria("parent").equal(mongoApplication),
-            query.criteria("platform").equal(IOS_APP_STORE)
+            query.criteria( "category").equal(IOS_APP_STORE)
         );
 
         try {
@@ -211,11 +211,11 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
             throw new InvalidDataException("psnApplicationProfile must not be null.");
         }
 
-        switch (psnApplicationProfile.getPlatform()) {
+        switch (psnApplicationProfile.getCategory()) {
             case IOS_APP_STORE:
                 break;
             default:
-                throw new InvalidDataException("platform not supported: " + psnApplicationProfile.getPlatform());
+                throw new InvalidDataException("platform not supported: " + psnApplicationProfile.getCategory());
         }
 
         getValidationHelper().validateModel(psnApplicationProfile);

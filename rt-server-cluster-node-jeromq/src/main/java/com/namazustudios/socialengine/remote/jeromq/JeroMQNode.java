@@ -263,9 +263,7 @@ public class JeroMQNode implements Node {
 
                         while (running.get() && !interrupted()) {
 
-                            if (poller.poll(1000) == 0) {
-                                continue;
-                            }
+                            poller.poll(1000);
 
                             if (poller.pollin(index)) {
                                 dispatchMethodInvocation(connection.socket());
@@ -446,7 +444,7 @@ public class JeroMQNode implements Node {
                 logger.error("Could not write payload to byte stream.  Sending empty.", e);
                 final InvocationError invocationError = new InvocationError();
                 invocationError.setThrowable(e);
-                invocationErrorConsumer.accept(invocationError);
+                sendError(socket, invocationError, part, identity);
             }
 
         }
@@ -467,7 +465,7 @@ public class JeroMQNode implements Node {
 
             try {
                 payload = getPayloadWriter().write(invocationError);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 logger.error("Could not write payload to byte stream.  Sending empty payload.", e);
                 payload = new byte[0];
             }

@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.annotation.Proxyable;
+import com.namazustudios.socialengine.rt.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +26,10 @@ public interface ResourceContext {
      *
      * @return the system-assigned {@link ResourceId}
      */
-    default ResourceId create(final String module, final Path path, final Object... args) {
+    @RemotelyInvokable
+    default ResourceId create(@Serialize final String module,
+                              @Serialize final Path path,
+                              @Serialize final Object... args) {
 
         final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -50,8 +53,11 @@ public interface ResourceContext {
      * @param args the arguments to pass to the {@link Resource} on initialization
      * @return
      */
-    default Future<ResourceId> createAsync(Consumer<ResourceId> success, Consumer<Throwable> failure,
-                                           String module, Path path, Object... args) {
+    default Future<ResourceId> createAsync(@ResultHandler final Consumer<ResourceId> success,
+                                           @ErrorHandler  final Consumer<Throwable> failure,
+                                           @Serialize final String module,
+                                           @Serialize final Path path,
+                                           @Serialize final Object... args) {
         return createAttributesAsync(success, failure, module, path, emptyAttributes(), args);
     }
 
@@ -64,8 +70,11 @@ public interface ResourceContext {
      *
      * @return the system-assigned {@link ResourceId}
      */
-    default ResourceId createAttributes(final String module, final Path path,
-                                        final Attributes attributes, final Object... args) {
+    @RemotelyInvokable
+    default ResourceId createAttributes(@Serialize final String module,
+                                        @Serialize final Path path,
+                                        @Serialize final Attributes attributes,
+                                        @Serialize final Object... args) {
 
         final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -88,8 +97,13 @@ public interface ResourceContext {
      * @param path the {@link Path} for the {@link Resource}
      * @param args the arguments to pass to the {@link Resource} on initialization
      */
-    Future<ResourceId> createAttributesAsync(Consumer<ResourceId> success, Consumer<Throwable> failure,
-                                             String module, Path path, Attributes attributes, Object... args);
+    @RemotelyInvokable
+    Future<ResourceId> createAttributesAsync(@ResultHandler Consumer<ResourceId> success,
+                                             @ErrorHandler  Consumer<Throwable> failure,
+                                             @Serialize String module,
+                                             @Serialize Path path,
+                                             @Serialize Attributes attributes,
+                                             @Serialize Object... args);
 
     /**
      * Synchronous invoke of {@link #invokePathAsync(Consumer, Consumer, Path, String, Object...)}.
@@ -99,13 +113,16 @@ public interface ResourceContext {
      * @param args the argument array
      * @return the result of the invocation
      */
-    default Object invoke(final ResourceId resourceId, final String method, final Object... args) {
+    @RemotelyInvokable
+    default Object invoke(@Serialize final ResourceId resourceId,
+                          @Serialize final String method,
+                          @Serialize final Object... args) {
 
         final Logger logger = LoggerFactory.getLogger(getClass());
 
         final Future<Object> future = invokeAsync(
                 object  -> logger.info("Invoked {}:{}({})", resourceId.toString(), method, Arrays.toString(args)),
-                throwable -> logger.info("Invvocation failed {}:{}({})", resourceId.toString(), method, Arrays.toString(args), throwable),
+                throwable -> logger.info("Invocation failed {}:{}({})", resourceId.toString(), method, Arrays.toString(args), throwable),
                 resourceId, method, args);
 
         return _waitAsync(logger, future);
@@ -122,8 +139,12 @@ public interface ResourceContext {
      * @param args the args
      * @return
      */
-    Future<Object> invokeAsync(Consumer<Object> success, Consumer<Throwable> failure,
-                               ResourceId resourceId, String method, Object... args);
+    @RemotelyInvokable
+    Future<Object> invokeAsync(@ResultHandler Consumer<Object> success,
+                               @ErrorHandler  Consumer<Throwable> failure,
+                               @Serialize ResourceId resourceId,
+                               @Serialize String method,
+                               @Serialize Object... args);
 
     /**
      * Synchronous invoke of {@link #invokePathAsync(Consumer, Consumer, Path, String, Object...)}.
@@ -133,7 +154,10 @@ public interface ResourceContext {
      * @param args the argument array
      * @return the result of the invocation
      */
-    default Object invokePath(final Path path, final String method, final Object... args) {
+    @RemotelyInvokable
+    default Object invokePath(@Serialize final Path path,
+                              @Serialize final String method,
+                              @Serialize final Object... args) {
 
         final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -156,15 +180,18 @@ public interface ResourceContext {
      * @param args the args
      * @return
      */
-    Future<Object> invokePathAsync(Consumer<Object> success, Consumer<Throwable> failure,
-                                   Path path, String method, Object... args);
+    @RemotelyInvokable
+    Future<Object> invokePathAsync(@ResultHandler Consumer<Object> success,
+                                   @ErrorHandler  Consumer<Throwable> failure,
+                                   @Serialize Path path, @Serialize String method, @Serialize Object... args);
 
     /**
      * Destroys the {@link Resource} with the provided {@link ResourceId}.
      *
      * @param resourceId the {@link ResourceId}
      */
-    default void destroy(final ResourceId resourceId) {
+    @RemotelyInvokable
+    default void destroy(@Serialize final ResourceId resourceId) {
 
         final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -182,20 +209,27 @@ public interface ResourceContext {
      * @param failure called if the operation fails
      * @param resourceId the {@link ResourceId}
      */
-    Future<Void> destroyAsync(Consumer<Void> success, Consumer<Throwable> failure, ResourceId resourceId);
+    @RemotelyInvokable
+    Future<Void> destroyAsync(@ResultHandler Consumer<Void> success,
+                              @ErrorHandler  Consumer<Throwable> failure,
+                              @Serialize     ResourceId resourceId);
 
     /**
      * Destroys the {@link Resource} using the {@link ResourceId} {@link String}.
      *
      * @param resourceIdString the {@link ResourceId} {@link String}.
      */
-    default Future<Void> destroyAsync(Consumer<Void> success, Consumer<Throwable> failure, String resourceIdString) {
+    @RemotelyInvokable
+    default Future<Void> destroyAsync(@ResultHandler Consumer<Void> success,
+                                      @ErrorHandler  Consumer<Throwable> failure,
+                                      @Serialize     String resourceIdString) {
         return destroyAsync(success, failure, new ResourceId(resourceIdString));
     }
 
     /**
      * Performs the operations of {@link #destroyAllResourcesAsync(Consumer, Consumer)} in a synchronous fashion.
      */
+    @RemotelyInvokable
     default void destroyAllResources() {
 
         final Logger logger = LoggerFactory.getLogger(getClass());
@@ -216,6 +250,8 @@ public interface ResourceContext {
      * This may not exist for all implementations of {@link ResourceContext}, and may simply provide an exception
      * indicating so.
      */
-    Future<Void> destroyAllResourcesAsync(Consumer<Void> success, Consumer<Throwable> failure);
+    @RemotelyInvokable
+    Future<Void> destroyAllResourcesAsync(@ResultHandler Consumer<Void> success,
+                                          @ErrorHandler  Consumer<Throwable> failure);
 
 }

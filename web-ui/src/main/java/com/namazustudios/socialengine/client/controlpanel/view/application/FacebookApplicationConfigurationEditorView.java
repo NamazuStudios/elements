@@ -26,7 +26,7 @@ import javax.inject.Inject;
 import javax.validation.Validator;
 import java.util.function.Consumer;
 
-import static com.namazustudios.socialengine.model.application.Platform.FACEBOOK;
+import static com.namazustudios.socialengine.model.application.ConfigurationCategory.FACEBOOK;
 
 /**
  * Created by patricktwohig on 6/16/17.
@@ -245,7 +245,7 @@ public class FacebookApplicationConfigurationEditorView extends ViewImpl impleme
 
         boolean failed = false;
 
-        facebookApplicationConfiguration.setPlatform(FACEBOOK);
+        facebookApplicationConfiguration.setCategory(FACEBOOK);
 
         if (!validator.validateProperty(facebookApplicationConfiguration, "applicationId").isEmpty()) {
             failed = true;

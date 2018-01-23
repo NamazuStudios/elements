@@ -14,6 +14,7 @@ import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import org.apache.bval.guice.ValidationModule;
+import org.mongodb.morphia.AdvancedDatastore;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -50,11 +51,11 @@ public class IntegrationTestModule extends AbstractModule {
             return properties;
         }));
 
-        install(new MongoDaoModule() {
+        install(new MongoDaoModule(){
             @Override
             protected void configure() {
                 super.configure();
-//                expose(MongoMatchUtils.class);
+                expose(AdvancedDatastore.class);
             }
         });
 
