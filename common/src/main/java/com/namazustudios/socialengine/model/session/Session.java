@@ -13,7 +13,9 @@ import java.io.Serializable;
  * Created by patricktwohig on 6/22/17.
  */
 @ApiModel
-public class FacebookSession implements Serializable {
+public class Session implements Serializable {
+
+    private String id;
 
     private User user;
 
@@ -58,10 +60,11 @@ public class FacebookSession implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof FacebookSession)) return false;
+        if (!(o instanceof Session)) return false;
 
-        FacebookSession that = (FacebookSession) o;
+        Session that = (Session) o;
 
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (getUser() != null ? !getUser().equals(that.getUser()) : that.getUser() != null) return false;
         if (getProfile() != null ? !getProfile().equals(that.getProfile()) : that.getProfile() != null) return false;
         if (getApplication() != null ? !getApplication().equals(that.getApplication()) : that.getApplication() != null)
@@ -71,7 +74,8 @@ public class FacebookSession implements Serializable {
 
     @Override
     public int hashCode() {
-        int result = getUser() != null ? getUser().hashCode() : 0;
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (getUser() != null ? getUser().hashCode() : 0);
         result = 31 * result + (getProfile() != null ? getProfile().hashCode() : 0);
         result = 31 * result + (getApplication() != null ? getApplication().hashCode() : 0);
         result = 31 * result + (getUserAccessToken() != null ? getUserAccessToken().hashCode() : 0);
