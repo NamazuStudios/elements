@@ -17,6 +17,14 @@ public class Session implements Serializable {
 
     private String id;
 
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     private User user;
 
     private Profile profile;
@@ -59,27 +67,29 @@ public class Session implements Serializable {
 
     @Override
     public boolean equals(Object o) {
+
         if (this == o) return true;
         if (!(o instanceof Session)) return false;
 
-        Session that = (Session) o;
+        Session session = (Session) o;
 
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
-        if (getUser() != null ? !getUser().equals(that.getUser()) : that.getUser() != null) return false;
-        if (getProfile() != null ? !getProfile().equals(that.getProfile()) : that.getProfile() != null) return false;
-        if (getApplication() != null ? !getApplication().equals(that.getApplication()) : that.getApplication() != null)
+        if (getId() != null ? !getId().equals(session.getId()) : session.getId() != null) return false;
+        if (getUser() != null ? !getUser().equals(session.getUser()) : session.getUser() != null) return false;
+        if (getProfile() != null ? !getProfile().equals(session.getProfile()) : session.getProfile() != null)
             return false;
-        return getUserAccessToken() != null ? getUserAccessToken().equals(that.getUserAccessToken()) : that.getUserAccessToken() == null;
+        if (getApplication() != null ? !getApplication().equals(session.getApplication()) : session.getApplication() != null)
+            return false;
+        return getUserAccessToken() != null ? getUserAccessToken().equals(session.getUserAccessToken()) : session.getUserAccessToken() == null;
     }
 
     @Override
     public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
+        int result = getId() != null ? getId().hashCode() : 0;
         result = 31 * result + (getUser() != null ? getUser().hashCode() : 0);
         result = 31 * result + (getProfile() != null ? getProfile().hashCode() : 0);
         result = 31 * result + (getApplication() != null ? getApplication().hashCode() : 0);
         result = 31 * result + (getUserAccessToken() != null ? getUserAccessToken().hashCode() : 0);
         return result;
     }
-
+    
 }
