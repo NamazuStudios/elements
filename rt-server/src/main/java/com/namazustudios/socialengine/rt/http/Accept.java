@@ -36,20 +36,49 @@ public class Accept implements Comparable<Accept> {
         }
 
         final String mediaTypeString = acceptsIterator.next();
-        final String qualityString = acceptsIterator.hasNext() ? acceptsIterator.next() : "1.0";
+        final String qualityString = acceptsIterator.hasNext() ? acceptsIterator.next() : "q=1.0";
 
         if (acceptsIterator.hasNext()) {
             throw new BadRequestException("Invalid Accept header specification " + accepts);
         }
 
+        final MediaType mediaType;
+
         try {
-            final double quality = Double.parseDouble(qualityString);
-            final MediaType mediaType = MediaType.parse(mediaTypeString);
-            return new Accept(mediaType, quality);
-        } catch (NumberFormatException nfe) {
-            throw new BadRequestException(nfe);
+            mediaType = MediaType.parse(mediaTypeString);
         } catch (IllegalArgumentException ex) {
             throw new BadRequestException(ex);
+        }
+
+        final double quality = parseQualityString(qualityString);
+        return new Accept(mediaType, quality);
+
+    }
+
+    private static double parseQualityString(final String qualityString) {
+
+        final Iterator<String> qualityStringIterator = Splitter.on('=')
+            .trimResults()
+            .omitEmptyStrings()
+            .split(qualityString)
+            .iterator();
+
+        if (!qualityStringIterator.hasNext() ||
+            !"q".equals(qualityStringIterator.next()) ||
+            !qualityStringIterator.hasNext()) {
+            throw new BadRequestException("Invalid quality string.");
+        }
+
+        final String qualityValueString = qualityStringIterator.next();
+
+        if (qualityStringIterator.hasNext()) {
+            throw new BadRequestException("Invalid quality string.");
+        }
+
+        try {
+            return Double.parseDouble(qualityValueString);
+        } catch (NumberFormatException nfe) {
+            throw new BadRequestException(nfe);
         }
 
     }
