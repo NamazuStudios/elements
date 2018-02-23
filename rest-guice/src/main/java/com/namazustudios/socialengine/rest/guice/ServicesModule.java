@@ -76,8 +76,9 @@ public class ServicesModule extends AbstractModule {
                 .toProvider(MatchmakingConfigurationServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
-        bind(VersionService.class).to(BuildPropertiesVersionService.class);
         bind(FacebookAuthService.class).to(StandardFacebookAuthService.class);
+
+        bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
 
     }
 

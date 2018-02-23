@@ -34,6 +34,7 @@ public class UiGuiceServletContextListener extends GuiceServletContextListener {
     @Override
     protected Injector getInjector() {
         return injector =  Guice.createInjector(
+            new UIServicesModule(),
             new UiGuiceServletModule(),
             new UiGuiceConfigurationModule(servletContext::getClassLoader)
         );

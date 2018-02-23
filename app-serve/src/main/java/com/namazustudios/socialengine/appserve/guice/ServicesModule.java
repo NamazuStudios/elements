@@ -13,7 +13,7 @@ public class ServicesModule extends AbstractModule {
         bind(AuthService.class).to(AnonAuthService.class);
         bind(ApplicationService.class).to(SuperUserApplicationService.class);
         bind(FacebookAuthService.class).to(StandardFacebookAuthService.class);
-        bind(VersionService.class).to(BuildPropertiesVersionService.class);
+        bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
     }
 
 }
