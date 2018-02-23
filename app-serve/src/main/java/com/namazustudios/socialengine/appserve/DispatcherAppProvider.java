@@ -4,20 +4,22 @@ import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.appserve.guice.DispatcherModule;
 import com.namazustudios.socialengine.appserve.guice.DispatcherServletLoader;
+import com.namazustudios.socialengine.appserve.guice.VersionServletLoader;
+import com.namazustudios.socialengine.appserve.guice.VersionServletModule;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.jeromq.Routing;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.ClusterClientContextModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
+import com.namazustudios.socialengine.rt.servlet.DispatcherServlet;
 import com.namazustudios.socialengine.service.ApplicationService;
+import com.namazustudios.socialengine.servlet.security.VersionServlet;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.servlet.DispatcherType;
 import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -32,6 +36,8 @@ import java.util.concurrent.ConcurrentMap;
 import static java.util.EnumSet.allOf;
 
 public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
+
+    private static final String VERSION_ORIGIN_ID = "version";
 
     private static final Logger logger = LoggerFactory.getLogger(DispatcherAppProvider.class);
 
@@ -48,25 +54,50 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     private ConnectionMultiplexer connectionMultiplexer;
 
     @Override
-    public ContextHandler createContextHandler(App app) throws Exception {
+    public ContextHandler createContextHandler(final App app) throws Exception {
+        switch (app.getOriginId()) {
+            case VERSION_ORIGIN_ID: return createContextHandlerForVersion(app);
+            default:                return createContextHandlerForApplication(app);
+        }
+    }
 
-        final Application application = getApplicationService().getApplication(app.getOriginId());
+    public ContextHandler createContextHandlerForVersion(final App app) {
 
-        final Injector injector = injectFor(application);
-        final Context context = injector.getInstance(Context.class);
-        context.start();
+        if (!VERSION_ORIGIN_ID.equals(app.getOriginId())) {
+            throw new IllegalArgumentException("App must have origin ID: " + VERSION_ORIGIN_ID);
+        }
+
+        final Injector injector = getInjector().createChildInjector(new VersionServletModule());
+
+        final String path = "/" + VERSION_ORIGIN_ID;
+        final VersionServlet versionServlet = injector.getInstance(VersionServlet.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
-
-        servletContextHandler.addEventListener(new DispatcherServletLoader(injector));
-        servletContextHandler.setContextPath("/" + application.getName());
-        servletContextHandler.addFilter(GuiceFilter.class, "/*", allOf(DispatcherType.class));
-
+        servletContextHandler.setContextPath(path);
+        servletContextHandler.addServlet(new ServletHolder(versionServlet), "/*");
         return servletContextHandler;
 
     }
 
-    private Injector injectFor(final Application application) {
+    public ContextHandler createContextHandlerForApplication(final App app) {
+
+        final Application application = getApplicationService().getApplication(app.getOriginId());
+
+        final Injector injector = injectorFor(application);
+        final Context context = injector.getInstance(Context.class);
+        context.start();
+
+        final String path = "/" + application.getName();
+        final DispatcherServlet dispatcherServlet = injector.getInstance(DispatcherServlet.class);
+
+        final ServletContextHandler servletContextHandler = new ServletContextHandler();
+        servletContextHandler.setContextPath(path);
+        servletContextHandler.addServlet(new ServletHolder(dispatcherServlet), "/*");
+        return servletContextHandler;
+
+    }
+
+    private Injector injectorFor(final Application application) {
         return applicationInjectorMap.computeIfAbsent(application.getId(), k -> {
 
             final UUID uuid = getConnectionMultiplexer().getDestinationUUIDForNodeId(application.getId());
@@ -85,7 +116,12 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     @Override
     protected void doStart() throws Exception {
         getConnectionMultiplexer().start();
+
+        final App version = new App(getDeploymentManager(), this, VERSION_ORIGIN_ID);
+        getDeploymentManager().addApp(version);
+
         getApplicationService().getApplications().getObjects().forEach(this::deploy);
+
     }
 
     private void deploy(final Application application) {

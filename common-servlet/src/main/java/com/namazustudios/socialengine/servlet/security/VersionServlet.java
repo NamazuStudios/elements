@@ -28,6 +28,7 @@ public class VersionServlet extends HttpServlet {
                          final HttpServletResponse resp) throws ServletException, IOException {
         final Version version = getVersionService().getVersion();
         resp.setStatus(SC_OK);
+        resp.setContentType("application/json");
         getObjectMapper().writeValue(resp.getOutputStream(), version);
         super.doGet(req, resp);
     }
