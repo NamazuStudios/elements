@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.model.session;
 
-public class UsernamePasswordRequest {
+public class UsernamePasswordSessionRequest {
 
     private String userId;
 
@@ -25,9 +25,9 @@ public class UsernamePasswordRequest {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof UsernamePasswordRequest)) return false;
+        if (!(o instanceof UsernamePasswordSessionRequest)) return false;
 
-        UsernamePasswordRequest that = (UsernamePasswordRequest) o;
+        UsernamePasswordSessionRequest that = (UsernamePasswordSessionRequest) o;
 
         if (getUserId() != null ? !getUserId().equals(that.getUserId()) : that.getUserId() != null) return false;
         return getPassword() != null ? getPassword().equals(that.getPassword()) : that.getPassword() == null;
@@ -42,7 +42,7 @@ public class UsernamePasswordRequest {
 
     @Override
     public String toString() {
-        return "UsernamePasswordRequest{" +
+        return "UsernamePasswordSessionRequest{" +
                 "userId='" + userId + '\'' +
                 ", password='" + password + '\'' +
                 '}';
