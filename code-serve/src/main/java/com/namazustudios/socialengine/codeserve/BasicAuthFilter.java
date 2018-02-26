@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.security.AuthenticatedRequest;
 import com.namazustudios.socialengine.security.AuthorizationHeader;
 import com.namazustudios.socialengine.security.BasicAuthorizationHeader;
-import com.namazustudios.socialengine.service.AuthService;
+import com.namazustudios.socialengine.service.UsernamePasswordAuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ public class BasicAuthFilter implements Filter {
      */
     public static final String WWW_AUTHENTICATE = "WWW-Authenticate";
 
-    private AuthService authService;
+    private UsernamePasswordAuthService usernamePasswordAuthService;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {}
@@ -84,7 +84,7 @@ public class BasicAuthFilter implements Filter {
             throw new ForbiddenException(ex);
         }
 
-        final User user = getAuthService().loginUser(basicAuthHeader.getUsername(), basicAuthHeader.getPassword());
+        final User user = getUsernamePasswordAuthService().loginUser(basicAuthHeader.getUsername(), basicAuthHeader.getPassword());
         httpServletRequest.setAttribute(User.USER_ATTRIBUTE, user);
 
         return new AuthenticatedRequest(httpServletRequest, authorizationHeader);
@@ -94,13 +94,13 @@ public class BasicAuthFilter implements Filter {
     @Override
     public void destroy() {}
 
-    public AuthService getAuthService() {
-        return authService;
+    public UsernamePasswordAuthService getUsernamePasswordAuthService() {
+        return usernamePasswordAuthService;
     }
 
     @Inject
-    public void setAuthService(AuthService authService) {
-        this.authService = authService;
+    public void setUsernamePasswordAuthService(UsernamePasswordAuthService usernamePasswordAuthService) {
+        this.usernamePasswordAuthService = usernamePasswordAuthService;
     }
 
 }

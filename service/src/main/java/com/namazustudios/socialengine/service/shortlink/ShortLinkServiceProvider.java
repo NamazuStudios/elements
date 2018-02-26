@@ -1,9 +1,7 @@
 package com.namazustudios.socialengine.service.shortlink;
 
 import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.service.Services;
 import com.namazustudios.socialengine.service.ShortLinkService;
-import com.namazustudios.socialengine.service.auth.UserAuthService;
 
 import javax.inject.Inject;
 import javax.inject.Provider;

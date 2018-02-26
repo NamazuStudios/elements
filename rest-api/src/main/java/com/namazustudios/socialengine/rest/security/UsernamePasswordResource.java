@@ -1,25 +1,19 @@
 package com.namazustudios.socialengine.rest.security;
 
-import com.google.common.base.Strings;
 import com.namazustudios.socialengine.exception.InvalidDataException;
-import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.UsernamePasswordSessionRequest;
-import com.namazustudios.socialengine.service.AuthService;
+import com.namazustudios.socialengine.service.UsernamePasswordAuthService;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
 import javax.inject.Inject;
-import javax.print.attribute.standard.Media;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.common.base.Strings.nullToEmpty;
-import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
 
 /**
  * Created by patricktwohig on 4/2/15.
@@ -29,7 +23,7 @@ import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
 @Path("session/http")
 public class UsernamePasswordResource {
 
-    private AuthService authService;
+    private UsernamePasswordAuthService usernamePasswordAuthService;
 
     private HttpServletRequest httpServletRequest;
 
@@ -58,7 +52,7 @@ public class UsernamePasswordResource {
             throw new InvalidDataException("Password must be specified.");
         }
 
-        return getAuthService().createSessionWithLogin(userId, password);
+        return getUsernamePasswordAuthService().createSessionWithLogin(userId, password);
 
     }
 
@@ -66,16 +60,16 @@ public class UsernamePasswordResource {
     @ApiOperation(value = "Destroys the Session",
                   notes = "Simply invalidates the session and effectively logs the user out.")
     public void destroySession() {
-        getAuthService().destroyCurrentSession();
+        getUsernamePasswordAuthService().destroyCurrentSession();
     }
 
-    public AuthService getAuthService() {
-        return authService;
+    public UsernamePasswordAuthService getUsernamePasswordAuthService() {
+        return usernamePasswordAuthService;
     }
 
     @Inject
-    public void setAuthService(AuthService authService) {
-        this.authService = authService;
+    public void setUsernamePasswordAuthService(UsernamePasswordAuthService usernamePasswordAuthService) {
+        this.usernamePasswordAuthService = usernamePasswordAuthService;
     }
 
     public HttpServletRequest getHttpServletRequest() {

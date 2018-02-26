@@ -1,12 +1,11 @@
 package com.namazustudios.socialengine.service.auth;
 
-import com.mchange.rmi.NotAuthorizedException;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.session.Session;
-import com.namazustudios.socialengine.service.AuthService;
+import com.namazustudios.socialengine.service.UsernamePasswordAuthService;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -15,16 +14,11 @@ import javax.inject.Singleton;
  * Created by patricktwohig on 4/1/15.
  */
 @Singleton
-public class AnonAuthService implements AuthService  {
+public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthService {
 
     private UserDao userDao;
 
     private SessionDao sessionDao;
-
-    @Override
-    public Session getSession(final String sessionId) {
-        return getSessionDao().getBySessionId(sessionId);
-    }
 
     @Override
     public Session createSessionWithLogin(final String userId, final String password) {

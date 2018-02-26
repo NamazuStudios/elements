@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.model.session.Session;
 /**
  * Created by patricktwohig on 4/1/15.
  */
-public interface AuthService {
+public interface UsernamePasswordAuthService {
 
     /**
      * Generates an API key for the given userId and password.
@@ -22,23 +22,13 @@ public interface AuthService {
     }
 
     /**
-     * Finds an instance of {@link Session} based on the id, as determiend by {@link Session#getId()}.
-     *
-     * @param sessionId the {@link Session} identifier
-     *
-     * @return the {@link Session}, never null.  Throws the appropriate exception if session isn't found.
-     *
-     */
-    Session getSession(String sessionId);
-
-    /**
      * Creates a {@link Session} with the login credential for a {@link User}.
      *
-     * @param userId
-     * @param password
-     * @return
+     * @param userId the user ID
+     * @param password the password
+     * @return the {@link Session} created
      */
-    Session createSessionWithLogin(final String userId, final String password);
+    Session createSessionWithLogin(String userId, String password);
 
     /**
      * Destroys the {@link Session} instance currently in-use.
