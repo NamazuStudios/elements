@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.session.FacebookSession;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.service.FacebookAuthService;
 import com.restfb.DefaultFacebookClient;
@@ -50,8 +51,8 @@ public class StandardFacebookAuthService implements FacebookAuthService {
     private FacebookApplicationConfigurationDao facebookApplicationConfigurationDao;
 
     @Override
-    public Session authenticate(String applicationConfigurationNameOrId,
-                                String facebookOAuthAccessToken) {
+    public FacebookSession authenticate(String applicationConfigurationNameOrId,
+                                        String facebookOAuthAccessToken) {
         return doFacebookOperation(() -> {
 
             final FacebookApplicationConfiguration facebookApplicationConfiguration =
@@ -74,6 +75,8 @@ public class StandardFacebookAuthService implements FacebookAuthService {
             try {
 
                 final Session session = new Session();
+                final FacebookSession facebookSession = new FacebookSession();
+
                 final User user = getFacebookUserDao().findActiveByFacebookId(fbUser.getId());
                 final Profile profile = getProfileDao().getActiveProfile(
                     user.getId(),
@@ -82,9 +85,11 @@ public class StandardFacebookAuthService implements FacebookAuthService {
                 session.setUser(user);
                 session.setProfile(profile);
                 session.setApplication(facebookApplicationConfiguration.getParent());
-                session.setUserAccessToken(facebookOAuthAccessToken);
 
-                return session;
+                facebookSession.setSession(session);
+                facebookSession.setUserAccessToken(facebookOAuthAccessToken);
+
+                return facebookSession;
 
             } catch (NotFoundException ex) {
                 throw new ForbiddenException(ex);
@@ -94,7 +99,7 @@ public class StandardFacebookAuthService implements FacebookAuthService {
     }
 
     @Override
-    public Session createOrUpdateUserWithFacebookOAuthAccessToken(
+    public FacebookSession createOrUpdateUserWithFacebookOAuthAccessToken(
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId,
             final String facebookOAuthAccessToken) {
@@ -143,13 +148,16 @@ public class StandardFacebookAuthService implements FacebookAuthService {
                     profilePictureSource));
 
             final Session session = new Session();
+            final FacebookSession facebookSession = new FacebookSession();
 
             session.setUser(user);
             session.setProfile(profile);
             session.setApplication(facebookApplicationConfiguration.getParent());
-            session.setUserAccessToken(longLivedAccessToken.getAccessToken());
 
-            return session;
+            facebookSession.setSession(session);
+            facebookSession.setUserAccessToken(facebookOAuthAccessToken);
+
+            return facebookSession;
 
         });
     }

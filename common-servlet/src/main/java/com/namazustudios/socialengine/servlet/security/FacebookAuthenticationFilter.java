@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.exception.BaseException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.session.FacebookSession;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.security.AuthorizationHeader;
 import com.namazustudios.socialengine.security.FacebookAuthorizationHeader;
@@ -73,10 +74,10 @@ public class FacebookAuthenticationFilter implements Filter {
                 final FacebookAuthorizationHeader facebookAuthorizationHeader;
                 facebookAuthorizationHeader = authorizationHeader.asFacebookAuthHeader();
 
-                final Session session = getFacebookSession(facebookAuthorizationHeader);
-                request.setAttribute(User.USER_ATTRIBUTE, session.getUser());
-                request.setAttribute(Profile.PROFILE_ATTRIBUTE, session.getProfile());
-                request.setAttribute(Application.APPLICATION_ATTRIUTE, session.getApplication());
+                final FacebookSession facebookSession = getFacebookSession(facebookAuthorizationHeader);
+                request.setAttribute(User.USER_ATTRIBUTE, facebookSession.getSession().getUser());
+                request.setAttribute(Profile.PROFILE_ATTRIBUTE, facebookSession.getSession().getProfile());
+                request.setAttribute(Application.APPLICATION_ATTRIUTE, facebookSession.getSession().getApplication());
 
             }
 
@@ -86,7 +87,7 @@ public class FacebookAuthenticationFilter implements Filter {
 
     }
 
-    private Session getFacebookSession(final FacebookAuthorizationHeader facebookAuthorizationHeader) {
+    private FacebookSession getFacebookSession(final FacebookAuthorizationHeader facebookAuthorizationHeader) {
         final String applicationId = facebookAuthorizationHeader.getApplicationId();
         final String userAccessToken = facebookAuthorizationHeader.getAccessToken();
         return getFacebookAuthService().authenticate(applicationId, userAccessToken);
