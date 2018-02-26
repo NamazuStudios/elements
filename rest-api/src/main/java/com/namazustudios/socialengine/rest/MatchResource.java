@@ -117,8 +117,8 @@ public class MatchResource {
             @ApiParam("Filters deltas since the specified sequence.")
             final long timeStamp,
 
-            @HeaderParam(XHttpHeaders.X_REQUEST_LONG_POLL_TIMEOUT)
-            @ApiParam(XHttpHeaders.X_REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
+            @HeaderParam(XHttpHeaders.REQUEST_LONG_POLL_TIMEOUT)
+            @ApiParam(XHttpHeaders.REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
             final Long longPollTimeout) {
 
         final List<TimeDelta<String, Match>> timeDeltaList = getMatchService().getDeltas(timeStamp);
@@ -164,8 +164,8 @@ public class MatchResource {
             @ApiParam("Filters deltas since the specified sequence.")
             final long timeStamp,
 
-            @HeaderParam(XHttpHeaders.X_REQUEST_LONG_POLL_TIMEOUT)
-            @ApiParam(XHttpHeaders.X_REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
+            @HeaderParam(XHttpHeaders.REQUEST_LONG_POLL_TIMEOUT)
+            @ApiParam(XHttpHeaders.REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
             final Long longPollTimeout) {
 
         final List<TimeDelta<String, Match>> timeDeltaList = getMatchService().getDeltasForMatch(timeStamp, matchId);

@@ -1,9 +1,13 @@
 package com.namazustudios.socialengine.model.session;
 
+import javax.validation.constraints.NotNull;
+
 public class UsernamePasswordSessionRequest {
 
+    @NotNull
     private String userId;
 
+    @NotNull
     private String password;
 
     public String getUserId() {
