@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.service.auth;
 
+import com.mchange.rmi.NotAuthorizedException;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.dao.UserDao;
+import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.service.AuthService;
@@ -34,6 +36,11 @@ public class AnonAuthService implements AuthService  {
 
         return getSessionDao().create(session);
 
+    }
+
+    @Override
+    public void destroyCurrentSession() {
+        throw new ForbiddenException();
     }
 
     public UserDao getUserDao() {

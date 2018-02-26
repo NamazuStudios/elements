@@ -25,9 +25,9 @@ import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
  * Created by patricktwohig on 4/2/15.
  */
 @Api(value = "Session and Login",
-     description = "Starts a session by associating a User with the current HTTP session.")
+     description = "Creates a Session instance from a username and password.")
 @Path("session/http")
-public class HttpSessionResource {
+public class UsernamePasswordResource {
 
     private AuthService authService;
 
@@ -66,7 +66,7 @@ public class HttpSessionResource {
     @ApiOperation(value = "Destroys the Session",
                   notes = "Simply invalidates the session and effectively logs the user out.")
     public void destroySession() {
-        httpServletRequest.getSession().invalidate();
+        getAuthService().destroyCurrentSession();
     }
 
     public AuthService getAuthService() {

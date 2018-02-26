@@ -40,5 +40,9 @@ public interface AuthService {
      */
     Session createSessionWithLogin(final String userId, final String password);
 
+    /**
+     * Destroys the {@link Session} instance currently in-use.
+     */
+    void destroyCurrentSession();
 
 }

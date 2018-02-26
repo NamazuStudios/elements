@@ -78,4 +78,10 @@ public class Session implements Serializable {
         return result;
     }
 
+    /**
+     * Used as the key for the user attribute where appropriate.  This is equivalent
+     * to the FQN of the {@link Session} class.
+     */
+    public static final String SESSION_ATTRIBUTE = Session.class.getName();
+
 }

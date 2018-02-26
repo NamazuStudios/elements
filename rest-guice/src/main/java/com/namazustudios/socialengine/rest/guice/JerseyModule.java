@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.rest.application.ApplicationConfigurationR
 import com.namazustudios.socialengine.rest.application.ApplicationResource;
 import com.namazustudios.socialengine.rest.application.FacebookSessionResource;
 import com.namazustudios.socialengine.rest.application.PSNApplicationConfigurationResource;
-import com.namazustudios.socialengine.rest.security.HttpSessionResource;
+import com.namazustudios.socialengine.rest.security.UsernamePasswordResource;
 import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
@@ -83,12 +83,12 @@ public abstract class JerseyModule extends ServletModule {
     }
 
     /**
-     * Enables the {@link HttpSessionResource}.
+     * Enables the {@link UsernamePasswordResource}.
      *
      * @return this
      */
     public JerseyModule enableHttpSessionResource() {
-        bind(HttpSessionResource.class);
+        bind(UsernamePasswordResource.class);
         return this;
     }
 
@@ -152,7 +152,7 @@ public abstract class JerseyModule extends ServletModule {
         bind(VersionResource.class);
         bind(UserResource.class);
         bind(EntrantResource.class);
-        bind(HttpSessionResource.class);
+        bind(UsernamePasswordResource.class);
         bind(FacebookSessionResource.class);
         bind(ShortLinkResource.class);
         bind(SocialCampaignResource.class);
