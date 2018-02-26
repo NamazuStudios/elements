@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.session.Session;
 
 /**
@@ -40,5 +41,30 @@ public interface SessionDao {
     default void delete(final Session session) {
         delete(session.getId());
     }
+
+    /**
+     * Deletes all instances of {@link Session} for the provided {@link User}.
+     *
+     * @param userId the {@link User} id, as determinted by {@link User#getId()}.
+     */
+    void deleteAllSessionsForUser(String userId);
+
+    /**
+     * Deletes a specific instance of {@link Session} for the provided {@link User}.
+     *
+     * @param session the {@link Session} to destroy
+     * @param userId the {@link User} id, as determinted by {@link User#getId()}.
+     */
+    default void deleteSessionForUser(final Session session, String userId) {
+        deleteSessionForUser(session.getId(), userId);
+    }
+
+    /**
+     * Deletes a specific instance of {@link Session} for the provided {@link User}.
+     *
+     * @param sessionId the id of the {@link Session} to destroy as determined by {@link Session#getId()}
+     * @param userId the {@link User} id, as determinted by {@link User#getId()}.
+     */
+    void deleteSessionForUser(String sessionId, String userId);
 
 }

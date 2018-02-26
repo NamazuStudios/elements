@@ -14,4 +14,15 @@ public interface SessionService {
      */
     Session checkSession(String sessionId);
 
+    /**
+     * Destroys all sessions.
+     */
+    void destroySessions();
+
+    /**
+     * Destroys the {@link Session} instance currently in-use.
+     * @param session
+     */
+    void destroySession(String session);
+
 }

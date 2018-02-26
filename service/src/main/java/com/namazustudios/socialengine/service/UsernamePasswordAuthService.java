@@ -30,9 +30,4 @@ public interface UsernamePasswordAuthService {
      */
     Session createSessionWithLogin(String userId, String password);
 
-    /**
-     * Destroys the {@link Session} instance currently in-use.
-     */
-    void destroyCurrentSession();
-
 }

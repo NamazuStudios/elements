@@ -23,11 +23,6 @@ public class UserUsernamePasswordAuthService implements UsernamePasswordAuthServ
         throw new BadRequestException();
     }
 
-    @Override
-    public void destroyCurrentSession() {
-        getSessionDao().delete(getSession());
-    }
-
     public Session getSession() {
         return session;
     }

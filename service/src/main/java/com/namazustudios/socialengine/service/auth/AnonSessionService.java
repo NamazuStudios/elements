@@ -8,17 +8,27 @@ import com.namazustudios.socialengine.service.SessionService;
 
 import javax.inject.Inject;
 
-public class StandardSessionService implements SessionService {
+public class AnonSessionService implements SessionService {
 
     private SessionDao sessionDao;
 
     @Override
-    public Session checkSession(String sessionId) {
+    public Session checkSession(final String sessionId) {
         try {
             return getSessionDao().getBySessionId(sessionId);
         } catch (NotFoundException ex) {
             throw new ForbiddenException(ex);
         }
+    }
+
+    @Override
+    public void destroySessions() {
+
+    }
+
+    @Override
+    public void destroySession(String session) {
+
     }
 
     public SessionDao getSessionDao() {

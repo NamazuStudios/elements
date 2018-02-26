@@ -1,13 +1,24 @@
 package com.namazustudios.socialengine.model.session;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiParam;
 
+import javax.validation.constraints.NotNull;
+
+@ApiModel
 public class FacebookSessionRequest {
 
+    @NotNull
+    @ApiModelProperty
     private String applicationNameOrId;
 
+    @NotNull
+    @ApiModelProperty
     private String applicationConfigurationNameOrId;
 
+    @NotNull
+    @ApiModelProperty
     private String facebookOAuthAccessToken;
 
     public String getApplicationNameOrId() {

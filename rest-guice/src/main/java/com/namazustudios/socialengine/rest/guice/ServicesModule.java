@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.service.*;
 import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.AuthServiceProvider;
 import com.namazustudios.socialengine.service.auth.StandardFacebookAuthService;
-import com.namazustudios.socialengine.service.auth.StandardSessionService;
+import com.namazustudios.socialengine.service.auth.AnonSessionService;
 import com.namazustudios.socialengine.service.manifest.ManifestServiceProvider;
 import com.namazustudios.socialengine.service.match.MatchServiceProvider;
 import com.namazustudios.socialengine.service.profile.ProfileServiceProvider;
@@ -70,7 +70,7 @@ public class ServicesModule extends AbstractModule {
                 .toProvider(MatchmakingConfigurationServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
-        bind(SessionService.class).to(StandardSessionService.class);
+        bind(SessionService.class).to(AnonSessionService.class);
         bind(FacebookAuthService.class).to(StandardFacebookAuthService.class);
 
     }

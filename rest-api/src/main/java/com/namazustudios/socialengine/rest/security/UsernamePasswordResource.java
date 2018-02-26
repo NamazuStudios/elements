@@ -20,7 +20,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
  */
 @Api(value = "Session and Login",
      description = "Creates a Session instance from a username and password.")
-@Path("session/http")
+@Path("session")
 public class UsernamePasswordResource {
 
     private UsernamePasswordAuthService usernamePasswordAuthService;
@@ -54,13 +54,6 @@ public class UsernamePasswordResource {
 
         return getUsernamePasswordAuthService().createSessionWithLogin(userId, password);
 
-    }
-
-    @DELETE
-    @ApiOperation(value = "Destroys the Session",
-                  notes = "Simply invalidates the session and effectively logs the user out.")
-    public void destroySession() {
-        getUsernamePasswordAuthService().destroyCurrentSession();
     }
 
     public UsernamePasswordAuthService getUsernamePasswordAuthService() {

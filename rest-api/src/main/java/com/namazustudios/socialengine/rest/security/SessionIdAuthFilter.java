@@ -1,10 +1,10 @@
 package com.namazustudios.socialengine.rest.security;
 
-import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.service.SessionService;
 
 import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -23,38 +23,37 @@ import static com.namazustudios.socialengine.rest.HttpHeaders.SESSION_ID;
 @PreMatching
 public class SessionIdAuthFilter implements ContainerRequestFilter {
 
-    private SessionDao sessionDao;
+    private SessionService sessionService;
 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
-
         final String sessionId = requestContext.getHeaderString(SESSION_ID);
+        if (sessionId != null) checkSessionAndSetAttributes(requestContext, sessionId);
+    }
 
-        if (sessionId != null) {
+    private void checkSessionAndSetAttributes(final ContainerRequestContext requestContext, final String sessionId) {
 
-            final Session session = getSessionDao().getBySessionId(sessionId);
+        final Session session = getSessionService().checkSession(sessionId);
 
-            requestContext.setProperty(SESSION_ATTRIBUTE, session);
+        requestContext.setProperty(SESSION_ATTRIBUTE, session);
 
-            final User user = session.getUser();
-            final Profile profile = session.getProfile();
-            final Application application = session.getApplication();
+        final User user = session.getUser();
+        final Profile profile = session.getProfile();
+        final Application application = session.getApplication();
 
-            if (user != null) requestContext.setProperty(USER_ATTRIBUTE, user);
-            if (profile != null) requestContext.setProperty(PROFILE_ATTRIBUTE, profile);
-            if (application != null) requestContext.setProperty(APPLICATION_ATTRIUTE, application);
-
-        }
+        if (user != null) requestContext.setProperty(USER_ATTRIBUTE, user);
+        if (profile != null) requestContext.setProperty(PROFILE_ATTRIBUTE, profile);
+        if (application != null) requestContext.setProperty(APPLICATION_ATTRIUTE, application);
 
     }
 
-    public SessionDao getSessionDao() {
-        return sessionDao;
+    public SessionService getSessionService() {
+        return sessionService;
     }
 
     @Inject
-    public void setSessionDao(SessionDao sessionDao) {
-        this.sessionDao = sessionDao;
+    public void setSessionService(SessionService sessionService) {
+        this.sessionService = sessionService;
     }
 
 }

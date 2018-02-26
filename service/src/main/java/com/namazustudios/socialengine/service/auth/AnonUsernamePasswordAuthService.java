@@ -32,11 +32,6 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
 
     }
 
-    @Override
-    public void destroyCurrentSession() {
-        throw new ForbiddenException();
-    }
-
     public UserDao getUserDao() {
         return userDao;
     }
