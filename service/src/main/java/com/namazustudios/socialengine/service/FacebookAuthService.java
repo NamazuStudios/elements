@@ -3,8 +3,7 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
-import com.namazustudios.socialengine.model.session.FacebookSession;
-import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.model.session.FacebookSessionResponse;
 
 /**
  * Used to authorize requests users using Facebook OAuth access tokens.  This acts as the connection
@@ -23,7 +22,7 @@ public interface FacebookAuthService {
      * @return the user
      * @throws ForbiddenException if the user cannot be authorized by Facebook
      */
-    FacebookSession authenticate(String applicationConfigurationNameOrId, String facebookOAuthAccessToken);
+    FacebookSessionResponse authenticate(String applicationConfigurationNameOrId, String facebookOAuthAccessToken);
 
     /**
      * Creates a new session using the supplied application configuration as well as the Facebook token.  If the user
@@ -40,8 +39,8 @@ public interface FacebookAuthService {
      *
      * @return
      */
-    FacebookSession createOrUpdateUserWithFacebookOAuthAccessToken(String applicationNameOrId,
-                                                                   String applicationConfigurationNameOrId,
-                                                                   String facebookOAuthAccessToken);
+    FacebookSessionResponse createOrUpdateUserWithFacebookOAuthAccessToken(String applicationNameOrId,
+                                                                           String applicationConfigurationNameOrId,
+                                                                           String facebookOAuthAccessToken);
 
 }

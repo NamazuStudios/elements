@@ -1,12 +1,18 @@
 package com.namazustudios.socialengine.model.session;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * Represents a {@link Session} started from the usage of a Facebook OAuth token.
  */
-public class FacebookSession {
+@ApiModel(description = "Represents a response from the Facebook authentication service.")
+public class FacebookSessionResponse {
 
+    @ApiModelProperty("The Session that was created with the Facebook credentials")
     private Session session;
 
+    @ApiModelProperty("The Facebook user access token obtained via the Facebook API.")
     private String userAccessToken;
 
     public Session getSession() {

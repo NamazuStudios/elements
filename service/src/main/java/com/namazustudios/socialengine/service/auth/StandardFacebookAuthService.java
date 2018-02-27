@@ -11,7 +11,7 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.model.session.FacebookSession;
+import com.namazustudios.socialengine.model.session.FacebookSessionResponse;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.service.FacebookAuthService;
 import com.restfb.DefaultFacebookClient;
@@ -51,8 +51,8 @@ public class StandardFacebookAuthService implements FacebookAuthService {
     private FacebookApplicationConfigurationDao facebookApplicationConfigurationDao;
 
     @Override
-    public FacebookSession authenticate(String applicationConfigurationNameOrId,
-                                        String facebookOAuthAccessToken) {
+    public FacebookSessionResponse authenticate(String applicationConfigurationNameOrId,
+                                                String facebookOAuthAccessToken) {
         return doFacebookOperation(() -> {
 
             final FacebookApplicationConfiguration facebookApplicationConfiguration =
@@ -75,7 +75,7 @@ public class StandardFacebookAuthService implements FacebookAuthService {
             try {
 
                 final Session session = new Session();
-                final FacebookSession facebookSession = new FacebookSession();
+                final FacebookSessionResponse facebookSession = new FacebookSessionResponse();
 
                 final User user = getFacebookUserDao().findActiveByFacebookId(fbUser.getId());
                 final Profile profile = getProfileDao().getActiveProfile(
@@ -99,7 +99,7 @@ public class StandardFacebookAuthService implements FacebookAuthService {
     }
 
     @Override
-    public FacebookSession createOrUpdateUserWithFacebookOAuthAccessToken(
+    public FacebookSessionResponse createOrUpdateUserWithFacebookOAuthAccessToken(
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId,
             final String facebookOAuthAccessToken) {
@@ -148,7 +148,7 @@ public class StandardFacebookAuthService implements FacebookAuthService {
                     profilePictureSource));
 
             final Session session = new Session();
-            final FacebookSession facebookSession = new FacebookSession();
+            final FacebookSessionResponse facebookSession = new FacebookSessionResponse();
 
             session.setUser(user);
             session.setProfile(profile);

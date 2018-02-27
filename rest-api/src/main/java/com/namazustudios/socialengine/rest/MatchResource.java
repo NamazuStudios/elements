@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.Headers;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
@@ -117,8 +118,8 @@ public class MatchResource {
             @ApiParam("Filters deltas since the specified sequence.")
             final long timeStamp,
 
-            @HeaderParam(HttpHeaders.REQUEST_LONG_POLL_TIMEOUT)
-            @ApiParam(HttpHeaders.REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
+            @HeaderParam(Headers.REQUEST_LONG_POLL_TIMEOUT)
+            @ApiParam(Headers.REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
             final Long longPollTimeout) {
 
         final List<TimeDelta<String, Match>> timeDeltaList = getMatchService().getDeltas(timeStamp);
@@ -164,8 +165,8 @@ public class MatchResource {
             @ApiParam("Filters deltas since the specified sequence.")
             final long timeStamp,
 
-            @HeaderParam(HttpHeaders.REQUEST_LONG_POLL_TIMEOUT)
-            @ApiParam(HttpHeaders.REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
+            @HeaderParam(Headers.REQUEST_LONG_POLL_TIMEOUT)
+            @ApiParam(Headers.REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
             final Long longPollTimeout) {
 
         final List<TimeDelta<String, Match>> timeDeltaList = getMatchService().getDeltasForMatch(timeStamp, matchId);

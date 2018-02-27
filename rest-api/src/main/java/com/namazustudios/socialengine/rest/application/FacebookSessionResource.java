@@ -1,8 +1,7 @@
 package com.namazustudios.socialengine.rest.application;
 
 import com.namazustudios.socialengine.exception.InvalidDataException;
-import com.namazustudios.socialengine.model.session.FacebookSession;
-import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.model.session.FacebookSessionResponse;
 import com.namazustudios.socialengine.service.FacebookAuthService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -37,7 +36,7 @@ public class FacebookSessionResource {
                     "requests will behave based on the requested token.  Subsequent requests require that the supplied " +
                     "long-term Facebook token be supplied in authorization headers.")
     @Produces(MediaType.APPLICATION_JSON)
-    public FacebookSession createSession(
+    public FacebookSessionResponse createSession(
 
             @ApiParam("The application name or id")
             @PathParam("applicationNameOrId")
@@ -57,7 +56,7 @@ public class FacebookSessionResource {
             throw new InvalidDataException("Must specify OAuth Token.");
         }
 
-        final FacebookSession facebookSession;
+        final FacebookSessionResponse facebookSession;
 
         facebookSession = getFacebookAuthService().createOrUpdateUserWithFacebookOAuthAccessToken(
             applicationNameOrId,

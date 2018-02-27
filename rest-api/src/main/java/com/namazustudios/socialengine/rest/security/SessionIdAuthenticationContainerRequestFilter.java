@@ -17,11 +17,11 @@ import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.application.Application.APPLICATION_ATTRIUTE;
 import static com.namazustudios.socialengine.model.profile.Profile.PROFILE_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.session.Session.SESSION_ATTRIBUTE;
-import static com.namazustudios.socialengine.rest.HttpHeaders.SESSION_ID;
+import static com.namazustudios.socialengine.Headers.SESSION_ID;
 
 @Provider
 @PreMatching
-public class SessionIdAuthFilter implements ContainerRequestFilter {
+public class SessionIdAuthenticationContainerRequestFilter implements ContainerRequestFilter {
 
     private SessionService sessionService;
 

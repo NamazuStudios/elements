@@ -1,13 +1,13 @@
-package com.namazustudios.socialengine.rest;
+package com.namazustudios.socialengine;
 
-import com.namazustudios.socialengine.rt.handler.Session;
+import com.namazustudios.socialengine.model.session.Session;
 
 /**
  * A place to store the non-standard HTTP header (and related) constants.
  *
  * Created by patricktwohig on 6/26/17.
  */
-public interface HttpHeaders {
+public interface Headers {
 
     /**
      * Used to trigger a Long-Polling type of requests.  This requests that the server wait on a response until certain
