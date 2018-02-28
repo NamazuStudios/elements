@@ -11,6 +11,8 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+
 @Api(value = "Matchmaking Application Configuration",
         description = "These operations manage any variety of client side applications which " +
                 "may be communicating with the server.  This stores minimal information " +
@@ -18,7 +20,7 @@ import javax.ws.rs.core.MediaType;
                 "profiles.  Application metadata is typically used for client side apps to determine " +
                 "the latest version or to resolve any compatiblity issues.  This can also be used to " +
                 "perform force upgrades.",
-        authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
+        authorizations = {@Authorization(SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration/matchmaking")
 public class MatchmakingApplicationConfigurationResource {
 

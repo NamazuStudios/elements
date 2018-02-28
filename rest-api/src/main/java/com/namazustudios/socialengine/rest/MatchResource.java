@@ -43,7 +43,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
                   "game.  Note, this API only provides matching.  The players must separately create a game " +
                   "from the match.  A match only provides a token which can be used to create a game which will " +
                   "be private among the two players involved.",
-    authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
+    authorizations = {@Authorization(EnhancedApiListingResource.SESSION_SECRET)})
 @Path("match")
 public class MatchResource {
 

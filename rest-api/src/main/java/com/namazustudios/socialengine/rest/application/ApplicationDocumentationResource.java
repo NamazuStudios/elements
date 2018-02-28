@@ -35,6 +35,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Functions.identity;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 import static io.swagger.models.Scheme.forValue;
 import static io.swagger.models.auth.In.HEADER;
 import static java.util.Arrays.asList;
@@ -49,7 +50,7 @@ import static java.util.Collections.emptyList;
                 "application metadata for a particular configuration of deployment.  For example, " +
                 "an application may be deployed on both Android and iOS.  One application profile" +
                 "each for Android and iOS would be required.",
-        authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
+        authorizations = {@Authorization(SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/swagger.json")
 public class ApplicationDocumentationResource {
 

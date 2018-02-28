@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rest.swagger;
 
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.Headers;
 import com.namazustudios.socialengine.service.ApplicationService;
 import io.swagger.annotations.ApiKeyAuthDefinition;
 import io.swagger.annotations.SecurityDefinition;
@@ -20,6 +21,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 
+import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static io.swagger.models.Scheme.forValue;
 import static java.util.Arrays.asList;
 
@@ -29,21 +31,19 @@ import static java.util.Arrays.asList;
 @SwaggerDefinition(
     securityDefinition = @SecurityDefinition(
         apiKeyAuthDefinitions = {@ApiKeyAuthDefinition(
-            name = "Authorization",
+            name = SESSION_SECRET,
             description = "Uses a combination Facebook Application ID in combination with an OAuth Token " +
                           "in order to perform API operations.  Must be specified in the format Facebook " +
                           "Authorization Facebook appid:token.  Failure to specify both app ID and token " +
                           "will result in a failed request.",
             in = ApiKeyAuthDefinition.ApiKeyLocation.HEADER,
-            key = EnhancedApiListingResource.FACBOOK_OAUTH_KEY
+            key = EnhancedApiListingResource.SESSION_SECRET
         )}
     )
 )
 public class EnhancedApiListingResource extends ApiListingResource {
 
-    private static final Logger logger = LoggerFactory.getLogger(EnhancedApiListingResource.class);
-
-    public static final String FACBOOK_OAUTH_KEY = "facebook_oauth";
+    public static final String SESSION_SECRET = "session_secret";
 
     private URI apiOutsideUrl;
 

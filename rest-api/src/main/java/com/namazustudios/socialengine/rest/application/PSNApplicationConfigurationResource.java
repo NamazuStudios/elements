@@ -18,7 +18,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Api(value = "PSN Application Configurations",
     description = "Operations for the management of ApplictionConfigurations for the Playstation Network.",
-    authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
+    authorizations = {@Authorization(EnhancedApiListingResource.SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration/psn")
 public class PSNApplicationConfigurationResource {
 

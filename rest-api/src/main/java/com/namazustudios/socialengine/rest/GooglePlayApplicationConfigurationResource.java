@@ -11,6 +11,8 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+
 /**
  * Handles the management of {@link GooglePlayApplicationConfiguration} instances.
  *
@@ -18,7 +20,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Api(value = "Google Play Application Configuration",
      description = "Operations for the management of ApplictionConfigurations for Google Play.",
-     authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
+     authorizations = {@Authorization(SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration/google_play")
 public class GooglePlayApplicationConfigurationResource {
 

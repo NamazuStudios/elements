@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.Objects;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
 /**
  * Created by patricktwohig on 3/25/15.
@@ -27,7 +28,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 @Api(value = "Users",
      description = "Manages users in the server.  Users are single-end users typically associated " +
                    "with a login name or email address.",
-     authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
+     authorizations = {@Authorization(SESSION_SECRET)})
 public class UserResource {
 
     private UserService userService;
