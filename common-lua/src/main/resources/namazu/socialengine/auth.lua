@@ -68,7 +68,7 @@ function auth.add_facebook_oauth_header(security_manifest)
 
         spec = {
             name = "SocialEngine-SessionSecret",
-            description = "The session secret header.",
+            description = "The header containing the session secret.",
             type = "string"
         }
 
