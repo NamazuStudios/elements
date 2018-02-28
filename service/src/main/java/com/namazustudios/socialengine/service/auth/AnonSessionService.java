@@ -15,7 +15,7 @@ public class AnonSessionService implements SessionService {
     @Override
     public Session checkSession(final String sessionSecret) {
         try {
-            return getSessionDao().getBySessionId(sessionSecret);
+            return getSessionDao().getBySessionSecret(sessionSecret);
         } catch (NotFoundException ex) {
             throw new ForbiddenException(ex);
         }
@@ -23,12 +23,12 @@ public class AnonSessionService implements SessionService {
 
     @Override
     public void destroySessions() {
-
+        throw new ForbiddenException();
     }
 
     @Override
     public void destroySession(String session) {
-
+        throw new ForbiddenException();
     }
 
     public SessionDao getSessionDao() {

@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.service.auth;
 
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.dao.UserDao;
-import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
@@ -29,7 +28,7 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
         final Session session = new Session();
         session.setUser(user);
 
-        return getSessionDao().create(session);
+        return getSessionDao().create(user, session);
 
     }
 

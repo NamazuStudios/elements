@@ -25,9 +25,9 @@ public class SessionResource {
 
     @DELETE
     @ApiOperation(value = "Destroys the Session")
-    @Path("{sessionId}")
-    public void destroySession(@PathParam("sessionId") final String sessionId) {
-        getSessionService().destroySession(sessionId);
+    @Path("{sessionSecret}")
+    public void destroySession(@PathParam("sessionSecret") final String sessionSecret) {
+        getSessionService().destroySession(sessionSecret);
     }
 
     public SessionService getSessionService() {

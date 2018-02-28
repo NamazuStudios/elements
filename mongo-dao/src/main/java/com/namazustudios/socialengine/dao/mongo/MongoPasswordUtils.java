@@ -19,6 +19,8 @@ public class MongoPasswordUtils {
 
     public static final int SALT_LENGTH = 12;
 
+    private static final SecureRandom generator = new SecureRandom();
+
     private String passwordEncoding;
 
     private Provider<MessageDigest> messageDigestProvider;
@@ -42,8 +44,7 @@ public class MongoPasswordUtils {
         // Generate the hash
 
         final byte[] salt = new byte[SALT_LENGTH];
-        final SecureRandom secureRandom = new SecureRandom();
-        secureRandom.nextBytes(salt);
+        generator.nextBytes(salt);
 
         final MessageDigest digest = getMessageDigestProvider().get();
         digest.update(salt);

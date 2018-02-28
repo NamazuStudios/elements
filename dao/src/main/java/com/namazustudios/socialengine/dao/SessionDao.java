@@ -13,20 +13,22 @@ public interface SessionDao {
      * Gets the {@link Session} by it's session id, as returned by {@link SessionCreation#getSessionSecret()} ()}.
      * Throwing an appropriate exception type if the {@link Session} can't be found.
      *
-     * @param sessionId the session's ID
+     * @param sessionSecret the session's ID
      * @return the {@link Session} never null
      *
      */
-    Session getBySessionId(String sessionId);
+    Session getBySessionSecret(String sessionSecret);
 
     /**
      * Creates a {@link Session} with the provided {@link Session} object.  This will return an instance of
      * {@link SessionCreation} providing a secret key which can be used to access the {@link Session} in the future.
      *
+     *
+     * @param user
      * @param session
      * @return the {@link SessionCreation} as it was created in the database
      */
-    SessionCreation create(Session session);
+    SessionCreation create(User user, Session session);
 
     /**
      * Deletes the {@link Session} instance.  The secret is determined by {@link SessionCreation#getSessionSecret()}.
@@ -41,14 +43,5 @@ public interface SessionDao {
      * @param userId the {@link User} id, as determinted by {@link User#getId()}.
      */
     void deleteAllSessionsForUser(String userId);
-
-    /**
-     * Deletes a specific instance of {@link Session} for the provided {@link User}. The secret is determined by
-     * {@link SessionCreation#getSessionSecret()}.
-     *
-     *  @param sessionSecret the id of the {@link Session} to destroy
-     * @param userId the {@link User} id, as determinted by {@link User#getId()}.
-     */
-    void deleteSessionForUser(String sessionSecret, String userId);
 
 }
