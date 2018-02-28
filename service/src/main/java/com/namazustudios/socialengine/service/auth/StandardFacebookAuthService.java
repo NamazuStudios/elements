@@ -51,54 +51,6 @@ public class StandardFacebookAuthService implements FacebookAuthService {
     private FacebookApplicationConfigurationDao facebookApplicationConfigurationDao;
 
     @Override
-    public FacebookSessionCreation authenticate(String applicationConfigurationNameOrId,
-                                                String facebookOAuthAccessToken) {
-        return doFacebookOperation(() -> {
-
-            final FacebookApplicationConfiguration facebookApplicationConfiguration =
-                    getFacebookApplicationConfigurationDao()
-                            .getApplicationConfiguration(applicationConfigurationNameOrId);
-
-            final FacebookClient facebookClient = new DefaultFacebookClient(facebookOAuthAccessToken, Version.LATEST);
-
-            final String appsecretProof = facebookClient.obtainAppSecretProof(
-                    facebookOAuthAccessToken,
-                    facebookApplicationConfiguration.getApplicationSecret());
-
-            final com.restfb.types.User fbUser = facebookClient
-                    .fetchObject(
-                            "me",
-                            com.restfb.types.User.class,
-                            Parameter.with("fields", FIELDS_PARAMETER_VALUE),
-                            Parameter.with("appsecret_proof", appsecretProof));
-
-            try {
-
-                final Session session = new Session();
-                final FacebookSessionCreation facebookSession = new FacebookSessionCreation();
-
-                final User user = getFacebookUserDao().findActiveByFacebookId(fbUser.getId());
-                final Profile profile = getProfileDao().getActiveProfile(
-                    user.getId(),
-                    facebookApplicationConfiguration.getParent().getId());
-
-                session.setUser(user);
-                session.setProfile(profile);
-                session.setApplication(facebookApplicationConfiguration.getParent());
-
-                facebookSession.setSession(session);
-                facebookSession.setUserAccessToken(facebookOAuthAccessToken);
-
-                return facebookSession;
-
-            } catch (NotFoundException ex) {
-                throw new ForbiddenException(ex);
-            }
-
-        });
-    }
-
-    @Override
     public FacebookSessionCreation createOrUpdateUserWithFacebookOAuthAccessToken(
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId,
