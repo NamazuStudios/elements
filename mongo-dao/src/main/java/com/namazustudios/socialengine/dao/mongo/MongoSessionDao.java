@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.WriteResult;
+import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoSession;
 import com.namazustudios.socialengine.dao.mongo.model.MongoSessionSecret;
@@ -19,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 import java.security.MessageDigest;
 import java.sql.Timestamp;
@@ -66,7 +68,7 @@ public class MongoSessionDao implements SessionDao {
 
         if (mongoSession == null) {
             throw new NoSessionException("Session not valid.");
-        } else if (mongoSession.getExpiry().after(now)) {
+        } else if (mongoSession.getExpiry().before(now)) {
             throw new SessionExpiredException("Session expired.");
         }
 
@@ -89,6 +91,8 @@ public class MongoSessionDao implements SessionDao {
 
         final MongoSession mongoSession = getMapper().map(session, MongoSession.class);
         mongoSession.setSessionId(sessionId);
+
+        getDatastore().save(mongoSession);
 
         final SessionCreation sessionCreation = new SessionCreation();
         sessionCreation.setSessionSecret(mongoSessionSecret.getSessionSecret());
@@ -189,7 +193,7 @@ public class MongoSessionDao implements SessionDao {
     }
 
     @Inject
-    public void setMessageDigestProvider(Provider<MessageDigest> messageDigestProvider) {
+    public void setMessageDigestProvider(@Named(Constants.PASSWORD_DIGEST) Provider<MessageDigest> messageDigestProvider) {
         this.messageDigestProvider = messageDigestProvider;
     }
 

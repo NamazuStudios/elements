@@ -23,8 +23,8 @@ public interface SessionService {
 
     /**
      * Destroys the {@link Session} instance currently in-use.
-     * @param session
+     * @param sessionSecret the session secret
      */
-    void destroySession(String session);
+    void destroySession(String sessionSecret);
 
 }

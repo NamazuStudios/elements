@@ -34,8 +34,8 @@ public class UserSessionService implements SessionService {
     }
 
     @Override
-    public void destroySession(final String sessionId) {
-        getSessionDao().deleteSessionForUser(sessionId, getUser().getId());
+    public void destroySession(final String sessionSecret) {
+        getSessionDao().delete(sessionSecret);
     }
 
     public User getUser() {

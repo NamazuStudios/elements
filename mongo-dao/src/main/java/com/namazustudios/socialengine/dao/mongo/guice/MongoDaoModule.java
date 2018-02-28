@@ -79,6 +79,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(FacebookApplicationConfigurationDao.class);
         expose(MatchmakingApplicationConfigurationDao.class);
         expose(MatchDao.class);
+        expose(SessionDao.class);
 
     }
 

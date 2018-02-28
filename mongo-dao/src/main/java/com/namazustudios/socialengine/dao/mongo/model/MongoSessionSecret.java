@@ -58,8 +58,8 @@ public class MongoSessionSecret {
         secret = new byte[SECRET_HEADER_LENGTH + context.length];
         generator.nextBytes(secret);
         fill(secret, 0, SESSION_CHECKSUM_LENGTH, (byte)0);
-        writeChecksumHeader(secret);
         arraycopy(context, 0, secret, SECRET_HEADER_LENGTH, context.length);
+        writeChecksumHeader(secret);
     }
 
     public MongoSessionSecret(final String sessionSecret) {
@@ -73,7 +73,7 @@ public class MongoSessionSecret {
 
         secret = new byte[parsedSecret.length];
         arraycopy(parsedSecret, 0, secret, 0, parsedSecret.length);
-        fill(parsedSecret, 0, SECRET_HEADER_LENGTH, (byte)0);
+        fill(parsedSecret, 0, SESSION_CHECKSUM_LENGTH, (byte)0);
 
         writeChecksumHeader(parsedSecret);
 
