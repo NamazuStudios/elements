@@ -7,14 +7,15 @@ public interface SessionService {
 
     /**
      * Finds an instance of {@link Session} based on the id, as determined by
-     * {@link SessionCreation#getSessionSecret()}.
+     * {@link SessionCreation#getSessionSecret()}.  In addition to performing a check for a valid {@link Session}, this
+     * will reset the expiry of the {@link Session}.
      *
      * @param sessionSecret the {@link Session} identifier
      *
      * @return the {@link Session}, never null.  Throws the appropriate exception if session isn't found.
      *
      */
-    Session checkSession(String sessionSecret);
+    Session checkAndRefreshSessionIfNecessary(String sessionSecret);
 
     /**
      * Destroys all sessions.

@@ -16,7 +16,7 @@ public class UserSessionService implements SessionService {
     private SessionDao sessionDao;
 
     @Override
-    public Session checkSession(final String sessionSecret) {
+    public Session checkAndRefreshSessionIfNecessary(final String sessionSecret) {
 
         final Session session = getSessionDao().getBySessionSecret(sessionSecret);
 

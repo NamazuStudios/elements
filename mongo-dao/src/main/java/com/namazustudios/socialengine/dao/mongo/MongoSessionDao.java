@@ -15,7 +15,10 @@ import com.namazustudios.socialengine.util.ValidationHelper;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +79,57 @@ public class MongoSessionDao implements SessionDao {
 
     }
 
+    @Override
+    public Session refresh(final String sessionSecret, final long expiry) {
 
+        final ObjectId mongoUserId;
+        final MongoSessionSecret mongoSessionSecret;
+
+        try {
+            mongoSessionSecret = new MongoSessionSecret(sessionSecret);
+            mongoUserId = mongoSessionSecret.getContextAsObjectId();
+        } catch (IllegalArgumentException ex) {
+            throw new BadSessionSecretException(ex, "Bad Session Secret");
+        }
+
+        final MessageDigest messageDigest = getMessageDigestProvider().get();
+        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(mongoUserId);
+        final String sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
+
+        final Timestamp now = new Timestamp(currentTimeMillis());
+        final Query<MongoSession> query = getDatastore().createQuery(MongoSession.class);
+
+        query.and(
+            query.criteria("_id").equal(sessionId),
+            query.criteria("expiry").greaterThan(now)
+        );
+
+        final UpdateOperations<MongoSession> updates = getDatastore().createUpdateOperations(MongoSession.class);
+        updates.set("expiry", new Timestamp(expiry));
+        getDatastore().update(query, updates);
+
+        final UpdateResults updateResults;
+        updateResults = getDatastore().update(query, updates, new UpdateOptions().multi(false).upsert(false));
+
+
+        if (updateResults.getUpdatedCount() == 0) {
+
+            final MongoSession mongoSession = getDatastore().get(MongoSession.class, sessionId);
+
+            if (mongoSession == null) {
+                throw new NoSessionException("Session not valid.");
+            } else if (mongoSession.getExpiry().before(now)) {
+                throw new SessionExpiredException("Session expired.");
+            } else {
+                throw new InternalException("Unable to refresh session.");
+            }
+
+        } else {
+            final MongoSession mongoSession = getDatastore().get(MongoSession.class, sessionId);
+            return getMapper().map(mongoSession, Session.class);
+        }
+
+    }
 
     @Override
     public SessionCreation create(final User user, final Session session) {

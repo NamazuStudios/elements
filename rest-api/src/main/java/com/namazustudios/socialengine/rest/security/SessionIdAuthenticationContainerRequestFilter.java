@@ -33,7 +33,7 @@ public class SessionIdAuthenticationContainerRequestFilter implements ContainerR
 
     private void checkSessionAndSetAttributes(final ContainerRequestContext requestContext, final String sessionId) {
 
-        final Session session = getSessionService().checkSession(sessionId);
+        final Session session = getSessionService().checkAndRefreshSessionIfNecessary(sessionId);
 
         requestContext.setProperty(SESSION_ATTRIBUTE, session);
 

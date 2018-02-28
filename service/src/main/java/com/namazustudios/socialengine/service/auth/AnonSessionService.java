@@ -7,18 +7,30 @@ import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.service.SessionService;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+
+import static com.namazustudios.socialengine.Constants.SESSION_TIMEOUT_SECONDS;
+import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class AnonSessionService implements SessionService {
 
     private SessionDao sessionDao;
 
+    private long sessionTimeoutSeconds;
+
     @Override
-    public Session checkSession(final String sessionSecret) {
+    public Session checkAndRefreshSessionIfNecessary(final String sessionSecret) {
+
+        final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
+
         try {
-            return getSessionDao().getBySessionSecret(sessionSecret);
+            return getSessionDao().refresh(sessionSecret, expiry);
         } catch (NotFoundException ex) {
             throw new ForbiddenException(ex);
         }
+
     }
 
     @Override
@@ -38,6 +50,15 @@ public class AnonSessionService implements SessionService {
     @Inject
     public void setSessionDao(SessionDao sessionDao) {
         this.sessionDao = sessionDao;
+    }
+
+    public long getSessionTimeoutSeconds() {
+        return sessionTimeoutSeconds;
+    }
+
+    @Inject
+    public void setSessionTimeoutSeconds(@Named(SESSION_TIMEOUT_SECONDS) long sessionTimeoutSeconds) {
+        this.sessionTimeoutSeconds = sessionTimeoutSeconds;
     }
 
 }

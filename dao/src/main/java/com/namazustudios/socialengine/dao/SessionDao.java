@@ -20,6 +20,15 @@ public interface SessionDao {
     Session getBySessionSecret(String sessionSecret);
 
     /**
+     * Refreshs the {@link Session} with the supplied expiry.
+     *
+     * @param sessionSecret the session secret key
+     * @param expiry the expiry timestamp, as expression milliseconds since the Unix epoch
+     * @return the updated {@link Session}
+     */
+    Session refresh(String sessionSecret, long expiry);
+
+    /**
      * Creates a {@link Session} with the provided {@link Session} object.  This will return an instance of
      * {@link SessionCreation} providing a secret key which can be used to access the {@link Session} in the future.
      *

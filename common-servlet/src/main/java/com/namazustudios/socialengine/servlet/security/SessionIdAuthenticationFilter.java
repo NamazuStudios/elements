@@ -43,7 +43,7 @@ public class SessionIdAuthenticationFilter implements Filter {
         final Session session;
 
         try {
-            session = getSessionService().checkSession(sessionId);
+            session = getSessionService().checkAndRefreshSessionIfNecessary(sessionId);
         } catch (final ForbiddenException ex) {
             response.setStatus(SC_FORBIDDEN);
             return;
