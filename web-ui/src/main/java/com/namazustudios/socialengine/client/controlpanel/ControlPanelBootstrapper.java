@@ -2,16 +2,19 @@ package com.namazustudios.socialengine.client.controlpanel;
 
 import com.gwtplatform.mvp.client.Bootstrapper;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
+import com.namazustudios.socialengine.Headers;
 import com.namazustudios.socialengine.client.rest.client.CORSRequestDispatcher;
 import com.namazustudios.socialengine.client.rest.client.UiConfigClient;
 import com.namazustudios.socialengine.client.rest.service.LoginService;
 import com.namazustudios.socialengine.model.UiConfig;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.session.SessionCreation;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 
 import javax.inject.Inject;
 
+import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static org.fusesource.restygwt.client.Defaults.setDispatcher;
 import static org.fusesource.restygwt.client.Defaults.setServiceRoot;
 
@@ -21,19 +24,31 @@ import static org.fusesource.restygwt.client.Defaults.setServiceRoot;
 public class ControlPanelBootstrapper implements Bootstrapper {
 
     @Inject
-    private LoginService loginService;
-
-    @Inject
     private PlaceManager placeManager;
 
     @Inject
     private UiConfigClient uiConfigClient;
 
+    @Inject
+    private LoginService loginService;
+
     @Override
     public void onBootstrap() {
 
         setServiceRoot("ui");
-        setDispatcher(new CORSRequestDispatcher());
+        setDispatcher((method, builder) -> {
+
+            final SessionCreation sessionCreation = loginService.getSessionCreation();
+
+            if (sessionCreation != null) {
+                builder.setHeader(SESSION_SECRET, sessionCreation.getSessionSecret());
+            }
+
+            builder.setIncludeCredentials(true);
+
+            return builder.send();
+
+        });
 
         uiConfigClient.getUiConfig(new MethodCallback<UiConfig>() {
 

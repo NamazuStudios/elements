@@ -29,7 +29,7 @@ public class CORSFilter implements ContainerResponseFilter {
 
     public static final String AC_ALLOW_HEADERS = "Access-Control-Allow-Headers";
 
-    public static final String AC_ALLOW_HEADERS_VALUE = "X-HTTP-Method-Override, Content-Type";
+    public static final String AC_ALLOW_HEADERS_VALUE = "X-HTTP-Method-Override, Content-Type, SocialEngine-SessionSecret";
 
     public static final String AC_ALLOW_CREDENTIALS = "Access-Control-Allow-Credentials";
 
