@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rest.security;
 
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.model.session.UsernamePasswordSessionRequest;
 import com.namazustudios.socialengine.service.UsernamePasswordAuthService;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -37,7 +38,7 @@ public class UsernamePasswordResource {
                           "completion of this call, the user will be added to the current HTTP session.  If " +
                           "the session expires, the user will have to reestablish the session by supplying " +
                           "credentials again.  This is most useful for applications delivered in a web page.")
-    public Session createSession(final UsernamePasswordSessionRequest usernamePasswordSessionRequest) {
+    public SessionCreation createSession(final UsernamePasswordSessionRequest usernamePasswordSessionRequest) {
 
         getValidationHelper().validateModel(usernamePasswordSessionRequest);
 

@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.servlet.security;
 
-import com.namazustudios.socialengine.Headers;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
@@ -14,7 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static com.namazustudios.socialengine.Headers.SESSION_ID;
+import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.application.Application.APPLICATION_ATTRIUTE;
 import static com.namazustudios.socialengine.model.profile.Profile.PROFILE_ATTRIBUTE;
@@ -39,7 +38,7 @@ public class SessionIdAuthenticationFilter implements Filter {
         final HttpServletRequest request = (HttpServletRequest) _request;
         final HttpServletResponse response = (HttpServletResponse) _response;
 
-        final String sessionId = request.getHeader(SESSION_ID);
+        final String sessionId = request.getHeader(SESSION_SECRET);
 
         final Session session;
 

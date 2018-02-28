@@ -1,13 +1,19 @@
 package com.namazustudios.socialengine.model.session;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 import javax.validation.constraints.NotNull;
 
+@ApiModel
 public class UsernamePasswordSessionRequest {
 
     @NotNull
+    @ApiModelProperty("The user ID.")
     private String userId;
 
     @NotNull
+    @ApiModelProperty("The password.")
     private String password;
 
     public String getUserId() {

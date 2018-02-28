@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine;
 
-import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.model.session.SessionCreation;
 
 /**
  * A place to store the non-standard HTTP header (and related) constants.
@@ -29,9 +29,9 @@ public interface Headers {
             "the request as a normal request.";
 
     /**
-     * Specifies the Session ID used by social engine.  The Session ID corresponds to {@link Session#getId()} and
+     * Specifies the Session ID used by social engine.  The Session ID corresponds to {@link SessionCreation} and
      * is used for authentication.
      */
-    String SESSION_ID = "SocialEngine-SessionId";
+    String SESSION_SECRET = "SocialEngine-SessionSecret";
 
 }

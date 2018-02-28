@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.service.UsernamePasswordAuthService;
 
 import javax.inject.Inject;
@@ -21,7 +22,7 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
     private SessionDao sessionDao;
 
     @Override
-    public Session createSessionWithLogin(final String userId, final String password) {
+    public SessionCreation createSessionWithLogin(final String userId, final String password) {
 
         final User user = getUserDao().validateActiveUserPassword(userId, password);
 

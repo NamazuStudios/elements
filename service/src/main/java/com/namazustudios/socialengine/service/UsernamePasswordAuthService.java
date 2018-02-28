@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.model.session.SessionCreation;
 
 /**
  * Created by patricktwohig on 4/1/15.
@@ -17,8 +18,8 @@ public interface UsernamePasswordAuthService {
      * @deprecated user {@link #createSessionWithLogin(String, String)}
      */
     default User loginUser(final String userId, final String password) {
-        final Session session = createSessionWithLogin(userId, password);
-        return session.getUser();
+        final SessionCreation sessionCreation = createSessionWithLogin(userId, password);
+        return sessionCreation.getSession().getUser();
     }
 
     /**
@@ -28,6 +29,6 @@ public interface UsernamePasswordAuthService {
      * @param password the password
      * @return the {@link Session} created
      */
-    Session createSessionWithLogin(String userId, String password);
+    SessionCreation createSessionWithLogin(String userId, String password);
 
 }

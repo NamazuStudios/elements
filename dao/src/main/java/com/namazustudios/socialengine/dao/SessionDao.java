@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao;
 
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.model.session.SessionCreation;
 
 /**
  * Manages instances of {@link Session}.
@@ -9,8 +10,8 @@ import com.namazustudios.socialengine.model.session.Session;
 public interface SessionDao {
 
     /**
-     * Gets the {@link Session} by it's session id, as returned by {@link Session#getId()}.  Throwing an appropriate
-     * exception type if the {@link Session} can't be found.
+     * Gets the {@link Session} by it's session id, as returned by {@link SessionCreation#getSessionSecret()} ()}.
+     * Throwing an appropriate exception type if the {@link Session} can't be found.
      *
      * @param sessionId the session's ID
      * @return the {@link Session} never null
@@ -19,28 +20,20 @@ public interface SessionDao {
     Session getBySessionId(String sessionId);
 
     /**
-     * Creates a {@link Session} with the provided {@link Session} object.  This will include all information related
-     * to the {@link Session}.
+     * Creates a {@link Session} with the provided {@link Session} object.  This will return an instance of
+     * {@link SessionCreation} providing a secret key which can be used to access the {@link Session} in the future.
      *
      * @param session
-     * @return the {@link Session} as it was created in the database
+     * @return the {@link SessionCreation} as it was created in the database
      */
-    Session create(Session session);
+    SessionCreation create(Session session);
 
     /**
-     * Deletes the {@link Session} instance.  The id is determined by {@link Session#getId()}
-     * @param sessionId
-     */
-    void delete(String sessionId);
-
-    /**
-     * Delete the {@link Session} instance.
+     * Deletes the {@link Session} instance.  The secret is determined by {@link SessionCreation#getSessionSecret()}.
      *
-     * @param session
+     * @param sessionSecret
      */
-    default void delete(final Session session) {
-        delete(session.getId());
-    }
+    void delete(String sessionSecret);
 
     /**
      * Deletes all instances of {@link Session} for the provided {@link User}.
@@ -50,21 +43,12 @@ public interface SessionDao {
     void deleteAllSessionsForUser(String userId);
 
     /**
-     * Deletes a specific instance of {@link Session} for the provided {@link User}.
+     * Deletes a specific instance of {@link Session} for the provided {@link User}. The secret is determined by
+     * {@link SessionCreation#getSessionSecret()}.
      *
-     * @param session the {@link Session} to destroy
+     *  @param sessionSecret the id of the {@link Session} to destroy
      * @param userId the {@link User} id, as determinted by {@link User#getId()}.
      */
-    default void deleteSessionForUser(final Session session, String userId) {
-        deleteSessionForUser(session.getId(), userId);
-    }
-
-    /**
-     * Deletes a specific instance of {@link Session} for the provided {@link User}.
-     *
-     * @param sessionId the id of the {@link Session} to destroy as determined by {@link Session#getId()}
-     * @param userId the {@link User} id, as determinted by {@link User#getId()}.
-     */
-    void deleteSessionForUser(String sessionId, String userId);
+    void deleteSessionForUser(String sessionSecret, String userId);
 
 }

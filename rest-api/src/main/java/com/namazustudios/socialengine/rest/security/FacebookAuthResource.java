@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rest.security;
 
 import com.namazustudios.socialengine.exception.InvalidDataException;
-import com.namazustudios.socialengine.model.session.FacebookSessionResponse;
+import com.namazustudios.socialengine.model.session.FacebookSessionCreation;
 import com.namazustudios.socialengine.model.session.FacebookSessionRequest;
 import com.namazustudios.socialengine.service.FacebookAuthService;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -36,7 +36,7 @@ public class FacebookAuthResource {
             notes = "Begins a session by accepting a Facebook OAuth token, SocialEngine Application ID, and the " +
                     "configuration ID for the application.  This will generate a Session instance and return the " +
                     "result to the client.")
-    public FacebookSessionResponse createSession(final FacebookSessionRequest facebookSessionRequest) {
+    public FacebookSessionCreation createSession(final FacebookSessionRequest facebookSessionRequest) {
 
         getValidationHelper().validateModel(facebookSessionRequest);
 

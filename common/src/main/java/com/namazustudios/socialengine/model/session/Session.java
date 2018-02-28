@@ -5,31 +5,28 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.ApiModel;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
- * Represents a session authorized by Facebook.  This includes
+ * Represents a session authorized by Facebook.  This includes the associated {@link User}, {@link Profile}, and
+ * {@link Application}.  This has no ID, as the ID is sensitive information.  The only time a key for the
+ * {@link Session} is provided is through a the {@link SessionCreation#getSessionSecret()}.  The actual ID of the
+ * session is hashed in the database and should only be kept on the client.
  *
  * Created by patricktwohig on 6/22/17.
  */
 @ApiModel
 public class Session implements Serializable {
 
-    private String id;
-
+    @NotNull
     private User user;
 
     private Profile profile;
 
     private Application application;
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
+    private long expiry;
 
     public User getUser() {
         return user;
@@ -55,6 +52,14 @@ public class Session implements Serializable {
         this.application = application;
     }
 
+    public long getExpiry() {
+        return expiry;
+    }
+
+    public void setExpiry(long expiry) {
+        this.expiry = expiry;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -62,7 +67,7 @@ public class Session implements Serializable {
 
         Session session = (Session) o;
 
-        if (getId() != null ? !getId().equals(session.getId()) : session.getId() != null) return false;
+        if (getExpiry() != session.getExpiry()) return false;
         if (getUser() != null ? !getUser().equals(session.getUser()) : session.getUser() != null) return false;
         if (getProfile() != null ? !getProfile().equals(session.getProfile()) : session.getProfile() != null)
             return false;
@@ -71,11 +76,21 @@ public class Session implements Serializable {
 
     @Override
     public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + (getUser() != null ? getUser().hashCode() : 0);
+        int result = getUser() != null ? getUser().hashCode() : 0;
         result = 31 * result + (getProfile() != null ? getProfile().hashCode() : 0);
         result = 31 * result + (getApplication() != null ? getApplication().hashCode() : 0);
+        result = 31 * result + (int) (getExpiry() ^ (getExpiry() >>> 32));
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Session{" +
+                "user=" + user +
+                ", profile=" + profile +
+                ", application=" + application +
+                ", expiry=" + expiry +
+                '}';
     }
 
     /**

@@ -13,9 +13,9 @@ public class AnonSessionService implements SessionService {
     private SessionDao sessionDao;
 
     @Override
-    public Session checkSession(final String sessionId) {
+    public Session checkSession(final String sessionSecret) {
         try {
-            return getSessionDao().getBySessionId(sessionId);
+            return getSessionDao().getBySessionId(sessionSecret);
         } catch (NotFoundException ex) {
             throw new ForbiddenException(ex);
         }

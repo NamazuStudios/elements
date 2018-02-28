@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.service.auth;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.service.UsernamePasswordAuthService;
 
@@ -16,11 +17,9 @@ public class UserUsernamePasswordAuthService implements UsernamePasswordAuthServ
 
     private Session session;
 
-    private SessionDao sessionDao;
-
     @Override
-    public Session createSessionWithLogin(String userId, String password) {
-        throw new BadRequestException();
+    public SessionCreation createSessionWithLogin(String userId, String password) {
+        throw new BadRequestException("Session already active.");
     }
 
     public Session getSession() {
@@ -30,15 +29,6 @@ public class UserUsernamePasswordAuthService implements UsernamePasswordAuthServ
     @Inject
     public void setSession(Session session) {
         this.session = session;
-    }
-
-    public SessionDao getSessionDao() {
-        return sessionDao;
-    }
-
-    @Inject
-    public void setSessionDao(SessionDao sessionDao) {
-        this.sessionDao = sessionDao;
     }
 
 }

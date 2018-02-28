@@ -17,7 +17,7 @@ import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.application.Application.APPLICATION_ATTRIUTE;
 import static com.namazustudios.socialengine.model.profile.Profile.PROFILE_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.session.Session.SESSION_ATTRIBUTE;
-import static com.namazustudios.socialengine.Headers.SESSION_ID;
+import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 
 @Provider
 @PreMatching
@@ -27,7 +27,7 @@ public class SessionIdAuthenticationContainerRequestFilter implements ContainerR
 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
-        final String sessionId = requestContext.getHeaderString(SESSION_ID);
+        final String sessionId = requestContext.getHeaderString(SESSION_SECRET);
         if (sessionId != null) checkSessionAndSetAttributes(requestContext, sessionId);
     }
 
