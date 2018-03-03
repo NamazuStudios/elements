@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -109,9 +110,9 @@ public class DynamicConnectionPool implements ConnectionPool {
 
         private final String name;
 
-        private final AtomicReference<Supplier<Connection>> connectionSupplier = new AtomicReference<>(WorkerConnection::new);
+        private final ConcurrentMap<Thread, Connection> connectionMap = new ConcurrentHashMap<>();
 
-        private final ThreadLocal<Connection> connectionThreadLocal = new ThreadLocal<>();
+        private final AtomicReference<Supplier<Connection>> connectionSupplier = new AtomicReference<>(WorkerConnection::new);
 
         private final ThreadPoolExecutor executorService;
         {
@@ -119,36 +120,37 @@ public class DynamicConnectionPool implements ConnectionPool {
             final AtomicInteger count = new AtomicInteger();
 
             executorService = new ThreadPoolExecutor(
-                    0, Integer.MAX_VALUE,
-                    getTimeout(), SECONDS, new SynchronousQueue<>(),
-                    r -> {
+                0, Integer.MAX_VALUE,
+                getTimeout(), SECONDS, new SynchronousQueue<>(),
+                r -> {
+                    final Thread thread = new Thread(() -> {
+                        try {
+                            r.run();
+                        } finally {
+                            connectionMap.getOrDefault(currentThread(), new TerminalConnection()).close();
+                        }
+                    });
+                    thread.setDaemon(true);
+                    thread.setName(toString() + " worker #" + count.getAndIncrement());
+                    return thread;
+                },
+                (r, e) -> {
 
-                        final Thread thread = new Thread(() -> {
+                    final Connection existing = connectionMap.put(currentThread(), new TerminalConnection());
 
-                            final Connection connection = connectionSupplier.get().get();
-                            connectionThreadLocal.set(connection);
+                    try {
+                        // If it's rejected, then we allow the code to run, however, we perform it on the current thread
+                        // with a specific type of Connection which will throw an exception indicating so.  This only
+                        // happens when the
+                        r.run();
+                    } catch (TerminatedException ex) {
+                        logger.debug("{} pool terminated.", toString(), ex);
+                    } finally {
+                        connectionMap.remove(currentThread());
+                        if (existing != null) existing.close();
+                    }
 
-                            try {
-                                r.run();
-                            } catch (Throwable th) {
-                                connectionThreadLocal.set(null);
-                                logger.error("{} Caught error on connection pool.", toString(), th);
-                                connection.close();
-                                throw th;
-                            }
-
-                        });
-
-                        thread.setDaemon(true);
-                        thread.setName(toString() + " worker #" + count.getAndIncrement());
-                        return thread;
-                    }, (r, e) -> {
-                try {
-                    r.run();
-                } catch (TerminatedException tex) {
-                    logger.debug("{} Connection terminated.", toString());
-                }
-            });
+              });
         }
 
         private final Function<ZContext, ZMQ.Socket> socketSupplier;
@@ -179,7 +181,8 @@ public class DynamicConnectionPool implements ConnectionPool {
 
             final FutureTask<T> futureTask = new FutureTask<T>(() -> {
 
-                final Connection connection = connectionThreadLocal.get();
+                final Connection connection;
+                connection = connectionMap.computeIfAbsent(currentThread(), thread -> connectionSupplier.get().get());
 
                 try {
                     return connectionTFunction.apply(new Connection() {
@@ -208,6 +211,7 @@ public class DynamicConnectionPool implements ConnectionPool {
                         throw ex;
                     }
                 } catch (Exception ex) {
+                    connectionMap.remove(currentThread());
                     connection.close();
                     logger.error("{} Caught error on connection pool.", toString(), ex);
                     throw ex;
@@ -260,6 +264,8 @@ public class DynamicConnectionPool implements ConnectionPool {
                     logger.error("{} Caught exception destroying Socket.", toString(), ex);
                 }
 
+                logger.info("Successfully closed socket {} ", socket);
+
             }
 
         }
@@ -275,7 +281,9 @@ public class DynamicConnectionPool implements ConnectionPool {
         public ZMQ.Socket socket() { throw new TerminatedException(); }
 
         @Override
-        public void close() { throw new TerminatedException(); }
+        public void close() {
+            logger.warn("{} Attempting to close terminated connection.", toString(), new UnsupportedOperationException());
+        }
 
     }
 
