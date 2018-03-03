@@ -23,14 +23,13 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class DynamicConnectionPoolStressTest {
 
-    private static final long SLEEP_TIME = 500;
-    private static final long RESPONSE_DELAY = 100;
     private static final String ADDRESS = "inproc://mytest";
 
     private static final int SEND_BATCH = 1000;
     private static final int COOLDOWN_TIME = 20;
     private static final int CONNECTION_TIMEOUT_SECONDS = 10;
-    private static final int MINIMUM_CONNECTION_COUNT  = 10;
+    private static final int MINIMUM_CONNECTION_COUNT = 10;
+    private static final int MAXIMUM_CONNECTION_COUNT = 500 ;
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicConnectionPoolStressTest.class);
 
@@ -91,6 +90,7 @@ public class DynamicConnectionPoolStressTest {
             bind(ConnectionPool.class).to(DynamicConnectionPool.class).asEagerSingleton();
             bind(Integer.class).annotatedWith(Names.named(DynamicConnectionPool.TIMEOUT)).toInstance(CONNECTION_TIMEOUT_SECONDS);
             bind(Integer.class).annotatedWith(Names.named(DynamicConnectionPool.MIN_CONNECTIONS)).toInstance(MINIMUM_CONNECTION_COUNT);
+            bind(Integer.class).annotatedWith(Names.named(DynamicConnectionPool.MAX_CONNECTIONS)).toInstance(MAXIMUM_CONNECTION_COUNT);
         }
 
     }
@@ -99,8 +99,6 @@ public class DynamicConnectionPoolStressTest {
 
         @Inject
         private ZContext zContext;
-
-        private final SortedMap<Long, Runnable> responders = new TreeMap<>();
 
         public MockServer() {
             setName("MockServer");
@@ -115,16 +113,12 @@ public class DynamicConnectionPoolStressTest {
                 final int index = poller.register(socket, ZMQ.Poller.POLLIN);
 
                 while (!interrupted()) {
+                    poller.poll(1000);
                     doPoll(socket, poller, index);
-                    drainResponders();
-
-                    final long sleepTime = calculateSleep();
-                    poller.poll(calculateSleep());
-
                 }
 
             } catch (Exception ex) {
-                ex.printStackTrace();
+                logger.error("Caught error in mock server.", ex);
             }
         }
 
@@ -137,22 +131,6 @@ public class DynamicConnectionPoolStressTest {
         private void respond(final ZMQ.Socket socket) {
             final ZMsg zMsg = ZMsg.recvMsg(socket);
             zMsg.send(socket);
-            responders.put(currentTimeMillis() + RESPONSE_DELAY, () -> {});
-        }
-
-        private void drainResponders() {
-            final long now = currentTimeMillis();
-            final SortedMap<Long, Runnable> head = responders.headMap(now);
-            head.values().stream().forEach(r -> r.run());
-            head.clear();
-        }
-
-        private long calculateSleep() {
-            try {
-                return Math.max(0, responders.firstKey() - currentTimeMillis());
-            } catch (NoSuchElementException ex) {
-                return SLEEP_TIME;
-            }
         }
 
     }
