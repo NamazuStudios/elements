@@ -136,6 +136,11 @@ public enum ResponseCode {
     INTERNAL_ERROR_BAD_MANIFEST_FATAL,
 
     /**
+     * Indicates that a handler reached a timeout condition.
+     */
+    HANDLER_TIMEOUT,
+
+    /**
      * Indicates a custom response code.  A custom code is any code that is not masked by the
      * {@link #SYSTEM_RESERVED_MASK}.
      */
