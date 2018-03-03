@@ -66,4 +66,15 @@ public class JeroMQClientModule extends PrivateModule {
         return this;
     }
 
+    /**
+     * {@see {@link JeroMQRemoteInvokerModule#withMaximumConnections(int)}}
+     *
+     * @param maximumConnections the minimum number of connections to keep in each connection pool
+     * @return this instance
+     */
+    public JeroMQClientModule withMaximumConnections(int maximumConnections) {
+        jeroMQRemoteInvokerModule.withMaximumConnections(maximumConnections);
+        return this;
+    }
+
 }

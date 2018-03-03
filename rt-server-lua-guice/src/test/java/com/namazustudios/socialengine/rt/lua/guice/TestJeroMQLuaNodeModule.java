@@ -107,6 +107,17 @@ public class TestJeroMQLuaNodeModule extends PrivateModule {
     }
 
     /**
+     * {@see {@link JeroMQNodeModule#withMaximumConnections(int)}}
+     *
+     * @param maximumConnections the minimum number of connections to keep in each connection pool
+     * @return this instance
+     */
+    public TestJeroMQLuaNodeModule withMaximumConnections(int maximumConnections) {
+        jeroMQNodeModule.withMaximumConnections(maximumConnections);
+        return this;
+    }
+
+    /**
      * {@see {@link JeroMQNodeModule#withNumberOfDispatchers(int)}}
      *
      * @param numberOfDispatchers the number of dispatcher threads for incoming requests
