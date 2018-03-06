@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.annotation.ErrorHandler;
-import com.namazustudios.socialengine.rt.annotation.Proxyable;
-import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
-import com.namazustudios.socialengine.rt.annotation.ResultHandler;
+import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.exception.HandlerTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,9 +36,9 @@ public interface HandlerContext {
      */
     @RemotelyInvokable
     default Object invokeRemoteHandler(
-            final Attributes attributes,
-            final String module, final String method,
-            final Object ... args) {
+            @Serialize final Attributes attributes,
+            @Serialize final String module, @Serialize final String method,
+            @Serialize final Object ... args) {
 
         final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -78,7 +75,7 @@ public interface HandlerContext {
     @RemotelyInvokable
     Future<Object> invokeRemoteHandlerAsync(
             @ResultHandler Consumer<Object> success, @ErrorHandler Consumer<Throwable> failure,
-            Attributes attributes, String module,
-            String method, Object ... args);
+            @Serialize Attributes attributes, @Serialize String module,
+            @Serialize String method, @Serialize Object ... args);
 
 }
