@@ -1,10 +1,7 @@
 package com.namazustudios.socialengine.appserve;
 
 import com.google.inject.Injector;
-import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.appserve.guice.DispatcherModule;
-import com.namazustudios.socialengine.appserve.guice.DispatcherServletLoader;
-import com.namazustudios.socialengine.appserve.guice.VersionServletLoader;
 import com.namazustudios.socialengine.appserve.guice.VersionServletModule;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
@@ -29,14 +26,10 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.servlet.DispatcherType;
 import java.io.File;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.EnumSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import static java.util.EnumSet.allOf;
 
 public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
 
