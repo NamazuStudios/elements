@@ -93,6 +93,23 @@ public class MongoUserDao implements UserDao {
 
     }
 
+    public MongoUser getActiveMongoUser(final ObjectId mongoUserId) {
+
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
+
+        query.and(query.criteria("_id").equal(mongoUserId));
+        query.and(query.criteria("active").equal(true));
+
+        final MongoUser mongoUser = query.get();
+
+        if (mongoUser == null) {
+            throw new NotFoundException("User with id " + mongoUserId + " not found.");
+        }
+
+        return mongoUser;
+
+    }
+
     @Override
     public Pagination<User> getActiveUsers(int offset, int count) {
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);

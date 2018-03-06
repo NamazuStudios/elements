@@ -13,7 +13,7 @@ local Profile = java.require "com.namazustudios.socialengine.model.profile.Profi
 local auth = {}
 
 --- Defines the Facebook OAuth Scheme
-auth.FACEBOOK_OAUTH_SCHEME = "facebook_oauth"
+auth.SESSION_SECRET_SCHEME = "session_secret"
 
 --- Fetches the current User
 -- This fetches the current user executing the request.  This defers to the attributes set when the resoruce was
@@ -59,7 +59,7 @@ function auth.add_facebook_oauth_header(security_manifest)
         security_manifest.header = {}
     end
 
-    security_manifest.header[auth.FACEBOOK_OAUTH_SCHEME] = {
+    security_manifest.header[auth.SESSION_SECRET_SCHEME] = {
 
         description = "Uses a combination Facebook Application ID in combination with an OAuth Token " ..
                 "in order to perform API operations.  Must be specified in the format Facebook " ..
@@ -67,8 +67,8 @@ function auth.add_facebook_oauth_header(security_manifest)
                 "will result in a failed request.,",
 
         spec = {
-            name = "Authorization",
-            description = "The Standard HTTP Authorization Header",
+            name = "SocialEngine-SessionSecret",
+            description = "The header containing the session secret.",
             type = "string"
         }
 

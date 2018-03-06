@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.Headers;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
@@ -42,7 +43,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
                   "game.  Note, this API only provides matching.  The players must separately create a game " +
                   "from the match.  A match only provides a token which can be used to create a game which will " +
                   "be private among the two players involved.",
-    authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
+    authorizations = {@Authorization(EnhancedApiListingResource.SESSION_SECRET)})
 @Path("match")
 public class MatchResource {
 
@@ -117,8 +118,8 @@ public class MatchResource {
             @ApiParam("Filters deltas since the specified sequence.")
             final long timeStamp,
 
-            @HeaderParam(XHttpHeaders.X_REQUEST_LONG_POLL_TIMEOUT)
-            @ApiParam(XHttpHeaders.X_REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
+            @HeaderParam(Headers.REQUEST_LONG_POLL_TIMEOUT)
+            @ApiParam(Headers.REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
             final Long longPollTimeout) {
 
         final List<TimeDelta<String, Match>> timeDeltaList = getMatchService().getDeltas(timeStamp);
@@ -164,8 +165,8 @@ public class MatchResource {
             @ApiParam("Filters deltas since the specified sequence.")
             final long timeStamp,
 
-            @HeaderParam(XHttpHeaders.X_REQUEST_LONG_POLL_TIMEOUT)
-            @ApiParam(XHttpHeaders.X_REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
+            @HeaderParam(Headers.REQUEST_LONG_POLL_TIMEOUT)
+            @ApiParam(Headers.REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
             final Long longPollTimeout) {
 
         final List<TimeDelta<String, Match>> timeDeltaList = getMatchService().getDeltasForMatch(timeStamp, matchId);

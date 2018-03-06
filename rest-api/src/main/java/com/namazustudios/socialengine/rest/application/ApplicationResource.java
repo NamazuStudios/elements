@@ -26,7 +26,7 @@ import static com.google.common.base.Strings.nullToEmpty;
                    "profiles.  Application metadata is typically used for client side apps to determine " +
                    "the latest version or to resolve any compatiblity issues.  This can also be used to " +
                    "perform force upgrades.",
-     authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
+     authorizations = {@Authorization(EnhancedApiListingResource.SESSION_SECRET)})
 @Path("application")
 public class ApplicationResource {
 

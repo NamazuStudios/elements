@@ -6,12 +6,15 @@ import com.namazustudios.socialengine.annotation.FacebookPermissions;
 import com.namazustudios.socialengine.dao.FacebookApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.FacebookUserDao;
 import com.namazustudios.socialengine.dao.ProfileDao;
+import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.model.session.FacebookSession;
+import com.namazustudios.socialengine.model.session.FacebookSessionCreation;
+import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.service.FacebookAuthService;
 import com.restfb.DefaultFacebookClient;
 import com.restfb.FacebookClient;
@@ -22,11 +25,16 @@ import com.restfb.json.JsonObject;
 import com.restfb.types.ProfilePictureSource;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.function.Supplier;
 
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.namazustudios.socialengine.Constants.SESSION_TIMEOUT_SECONDS;
 import static java.lang.Math.min;
+import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * This is the basic {@link FacebookAuthService} used
@@ -45,56 +53,16 @@ public class StandardFacebookAuthService implements FacebookAuthService {
 
     private ProfileDao profileDao;
 
+    private SessionDao sessionDao;
+
     private FacebookUserDao facebookUserDao;
 
     private FacebookApplicationConfigurationDao facebookApplicationConfigurationDao;
 
-    @Override
-    public FacebookSession authenticate(String applicationConfigurationNameOrId,
-                                        String facebookOAuthAccessToken) {
-        return doFacebookOperation(() -> {
-
-            final FacebookApplicationConfiguration facebookApplicationConfiguration =
-                    getFacebookApplicationConfigurationDao()
-                            .getApplicationConfiguration(applicationConfigurationNameOrId);
-
-            final FacebookClient facebookClient = new DefaultFacebookClient(facebookOAuthAccessToken, Version.LATEST);
-
-            final String appsecretProof = facebookClient.obtainAppSecretProof(
-                    facebookOAuthAccessToken,
-                    facebookApplicationConfiguration.getApplicationSecret());
-
-            final com.restfb.types.User fbUser = facebookClient
-                    .fetchObject(
-                            "me",
-                            com.restfb.types.User.class,
-                            Parameter.with("fields", FIELDS_PARAMETER_VALUE),
-                            Parameter.with("appsecret_proof", appsecretProof));
-
-            try {
-
-                final FacebookSession facebookSession = new FacebookSession();
-                final User user = getFacebookUserDao().findActiveByFacebookId(fbUser.getId());
-                final Profile profile = getProfileDao().getActiveProfile(
-                    user.getId(),
-                    facebookApplicationConfiguration.getParent().getId());
-
-                facebookSession.setUser(user);
-                facebookSession.setProfile(profile);
-                facebookSession.setApplication(facebookApplicationConfiguration.getParent());
-                facebookSession.setUserAccessToken(facebookOAuthAccessToken);
-
-                return facebookSession;
-
-            } catch (NotFoundException ex) {
-                throw new ForbiddenException(ex);
-            }
-
-        });
-    }
+    private long sessionTimeoutSeconds;
 
     @Override
-    public FacebookSession createOrUpdateUserWithFacebookOAuthAccessToken(
+    public FacebookSessionCreation createOrUpdateUserWithFacebookOAuthAccessToken(
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId,
             final String facebookOAuthAccessToken) {
@@ -142,14 +110,22 @@ public class StandardFacebookAuthService implements FacebookAuthService {
                     facebookApplicationConfiguration,
                     profilePictureSource));
 
-            final FacebookSession facebookSession = new FacebookSession();
+            final Session session = new Session();
+            final FacebookSessionCreation facebookSessionCreation = new FacebookSessionCreation();
+            final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
 
-            facebookSession.setUser(user);
-            facebookSession.setProfile(profile);
-            facebookSession.setApplication(facebookApplicationConfiguration.getParent());
-            facebookSession.setUserAccessToken(longLivedAccessToken.getAccessToken());
+            session.setUser(user);
+            session.setProfile(profile);
+            session.setApplication(facebookApplicationConfiguration.getParent());
+            session.setExpiry(expiry);
 
-            return facebookSession;
+            final SessionCreation sessionCreation = getSessionDao().create(user, session);
+
+            facebookSessionCreation.setSession(sessionCreation.getSession());
+            facebookSessionCreation.setSessionSecret(sessionCreation.getSessionSecret());
+            facebookSessionCreation.setUserAccessToken(longLivedAccessToken.getAccessToken());
+
+            return facebookSessionCreation;
 
         });
     }
@@ -230,6 +206,24 @@ public class StandardFacebookAuthService implements FacebookAuthService {
     @Inject
     public void setFacebookApplicationConfigurationDao(FacebookApplicationConfigurationDao facebookApplicationConfigurationDao) {
         this.facebookApplicationConfigurationDao = facebookApplicationConfigurationDao;
+    }
+
+    public SessionDao getSessionDao() {
+        return sessionDao;
+    }
+
+    @Inject
+    public void setSessionDao(SessionDao sessionDao) {
+        this.sessionDao = sessionDao;
+    }
+
+    public long getSessionTimeoutSeconds() {
+        return sessionTimeoutSeconds;
+    }
+
+    @Inject
+    public void setSessionTimeoutSeconds(@Named(SESSION_TIMEOUT_SECONDS) long sessionTimeoutSeconds) {
+        this.sessionTimeoutSeconds = sessionTimeoutSeconds;
     }
 
 }
