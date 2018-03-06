@@ -298,7 +298,7 @@ public class ApplicationDocumentationResource {
             .entrySet()
             .stream()
             .map(entry -> {
-                final PathParameter parameter = new PathParameter();
+                final QueryParameter parameter = new QueryParameter();
                 parameter.setName(entry.getKey());
                 parameter.setType(entry.getValue().name());
                 return parameter;

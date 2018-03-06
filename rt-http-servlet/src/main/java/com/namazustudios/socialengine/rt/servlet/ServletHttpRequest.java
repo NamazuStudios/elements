@@ -17,16 +17,13 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Collections.list;
+import static java.util.stream.Collectors.toList;
 
 public class ServletHttpRequest implements HttpRequest {
-
-    public static List<Object> objectList(final Enumeration<?> enumeration) {
-        final List<Object> objectList = new ArrayList<>();
-        while (enumeration.hasMoreElements()) objectList.add(enumeration.nextElement());
-        return objectList;
-    }
 
     private final ServletRequestHeader servletRequestHeader;
 
@@ -87,8 +84,7 @@ public class ServletHttpRequest implements HttpRequest {
     @Override
     public List<Object> getParameters(final String parameterName) {
         final HttpServletRequest httpServletRequest = httpServletRequestSupplier.get();
-        final Enumeration<String> parameterNames = httpServletRequest.getParameterNames();
-        return parameterNames != null && parameterNames.hasMoreElements() ? objectList(parameterNames) : null;
+        return Stream.of(httpServletRequest.getParameterValues(parameterName)).collect(toList());
     }
 
     private Object deserializePayload() {

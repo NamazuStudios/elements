@@ -106,9 +106,9 @@ public interface Constants {
         String NO_WHITE_SPACE = "^\\S+$";
 
         /**
-         * Alpha-numeric only
+         * Alpha-numeric only.  Allows underscore, but does not allow the word to start with an underscore.
          */
-        String WORD_ONLY = "\\w+";
+        String WORD_ONLY = "[^_]\\w+";
 
         /**
          * A very simple validator

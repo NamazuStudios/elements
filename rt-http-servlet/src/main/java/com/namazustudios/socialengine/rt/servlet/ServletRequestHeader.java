@@ -7,16 +7,20 @@ import com.namazustudios.socialengine.rt.http.HttpManifestMetadata;
 import com.namazustudios.socialengine.rt.http.XHttpHeaders;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.list;
 
 public class ServletRequestHeader implements RequestHeader {
+
+
+    public static List<Object> objectList(final Enumeration<?> enumeration) {
+        final List<Object> objectList = new ArrayList<>();
+        while (enumeration.hasMoreElements()) objectList.add(enumeration.nextElement());
+        return objectList;
+    }
 
     private final HttpManifestMetadata httpManifestMetadata;
 
@@ -42,7 +46,7 @@ public class ServletRequestHeader implements RequestHeader {
     @Override
     public List<Object> getHeaders(final String name) {
         final Enumeration<String> headers = httpServletRequestSupplier.get().getHeaders(name);
-        return headers != null && headers.hasMoreElements() ? ServletHttpRequest.objectList(headers) : emptyList();
+        return headers != null && headers.hasMoreElements() ? objectList(headers) : emptyList();
     }
 
     @Override
