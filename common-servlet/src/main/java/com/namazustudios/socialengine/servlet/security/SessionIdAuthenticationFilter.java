@@ -40,25 +40,31 @@ public class SessionIdAuthenticationFilter implements Filter {
 
         final String sessionId = request.getHeader(SESSION_SECRET);
 
-        final Session session;
+        if (sessionId == null) {
+            chain.doFilter(request, response);
+        } else {
 
-        try {
-            session = getSessionService().checkAndRefreshSessionIfNecessary(sessionId);
-        } catch (final ForbiddenException ex) {
-            response.setStatus(SC_FORBIDDEN);
-            return;
+            final Session session;
+
+            try {
+                session = getSessionService().checkAndRefreshSessionIfNecessary(sessionId);
+            } catch (final ForbiddenException ex) {
+                response.setStatus(SC_FORBIDDEN);
+                return;
+            }
+
+            final User user = session.getUser();
+            final Profile profile = session.getProfile();
+            final Application application = session.getApplication();
+
+            request.setAttribute(SESSION_ATTRIBUTE, session);
+            if (user != null) request.setAttribute(USER_ATTRIBUTE, user);
+            if (profile != null) request.setAttribute(PROFILE_ATTRIBUTE, profile);
+            if (application != null) request.setAttribute(APPLICATION_ATTRIUTE, application);
+
+            chain.doFilter(request, response);
+
         }
-
-        final User user = session.getUser();
-        final Profile profile = session.getProfile();
-        final Application application = session.getApplication();
-
-        request.setAttribute(SESSION_ATTRIBUTE, session);
-        if (user != null) request.setAttribute(USER_ATTRIBUTE, user);
-        if (profile != null) request.setAttribute(PROFILE_ATTRIBUTE, profile);
-        if (application != null) request.setAttribute(APPLICATION_ATTRIUTE, application);
-
-        chain.doFilter(request, response);
 
     }
 
