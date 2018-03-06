@@ -22,7 +22,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
  */
 @Api(value = "Session and Login",
         description = "Creates a Session instance from a username and password.")
-@Path("session_facebook")
+@Path("facebook_session")
 public class FacebookAuthResource {
 
     private ValidationHelper validationHelper;

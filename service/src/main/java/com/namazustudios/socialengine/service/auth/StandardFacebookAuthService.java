@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.annotation.FacebookPermissions;
 import com.namazustudios.socialengine.dao.FacebookApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.FacebookUserDao;
 import com.namazustudios.socialengine.dao.ProfileDao;
+import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
@@ -13,6 +14,7 @@ import com.namazustudios.socialengine.model.application.FacebookApplicationConfi
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.FacebookSessionCreation;
 import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.service.FacebookAuthService;
 import com.restfb.DefaultFacebookClient;
 import com.restfb.FacebookClient;
@@ -23,11 +25,16 @@ import com.restfb.json.JsonObject;
 import com.restfb.types.ProfilePictureSource;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.function.Supplier;
 
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.namazustudios.socialengine.Constants.SESSION_TIMEOUT_SECONDS;
 import static java.lang.Math.min;
+import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * This is the basic {@link FacebookAuthService} used
@@ -46,9 +53,13 @@ public class StandardFacebookAuthService implements FacebookAuthService {
 
     private ProfileDao profileDao;
 
+    private SessionDao sessionDao;
+
     private FacebookUserDao facebookUserDao;
 
     private FacebookApplicationConfigurationDao facebookApplicationConfigurationDao;
+
+    private long sessionTimeoutSeconds;
 
     @Override
     public FacebookSessionCreation createOrUpdateUserWithFacebookOAuthAccessToken(
@@ -100,16 +111,21 @@ public class StandardFacebookAuthService implements FacebookAuthService {
                     profilePictureSource));
 
             final Session session = new Session();
-            final FacebookSessionCreation facebookSession = new FacebookSessionCreation();
+            final FacebookSessionCreation facebookSessionCreation = new FacebookSessionCreation();
+            final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
 
             session.setUser(user);
             session.setProfile(profile);
             session.setApplication(facebookApplicationConfiguration.getParent());
+            session.setExpiry(expiry);
 
-            facebookSession.setSession(session);
-            facebookSession.setUserAccessToken(facebookOAuthAccessToken);
+            final SessionCreation sessionCreation = getSessionDao().create(user, session);
 
-            return facebookSession;
+            facebookSessionCreation.setSession(sessionCreation.getSession());
+            facebookSessionCreation.setSessionSecret(sessionCreation.getSessionSecret());
+            facebookSessionCreation.setUserAccessToken(longLivedAccessToken.getAccessToken());
+
+            return facebookSessionCreation;
 
         });
     }
@@ -190,6 +206,24 @@ public class StandardFacebookAuthService implements FacebookAuthService {
     @Inject
     public void setFacebookApplicationConfigurationDao(FacebookApplicationConfigurationDao facebookApplicationConfigurationDao) {
         this.facebookApplicationConfigurationDao = facebookApplicationConfigurationDao;
+    }
+
+    public SessionDao getSessionDao() {
+        return sessionDao;
+    }
+
+    @Inject
+    public void setSessionDao(SessionDao sessionDao) {
+        this.sessionDao = sessionDao;
+    }
+
+    public long getSessionTimeoutSeconds() {
+        return sessionTimeoutSeconds;
+    }
+
+    @Inject
+    public void setSessionTimeoutSeconds(@Named(SESSION_TIMEOUT_SECONDS) long sessionTimeoutSeconds) {
+        this.sessionTimeoutSeconds = sessionTimeoutSeconds;
     }
 
 }

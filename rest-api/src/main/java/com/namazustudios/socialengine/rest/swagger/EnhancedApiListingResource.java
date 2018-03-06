@@ -32,10 +32,8 @@ import static java.util.Arrays.asList;
     securityDefinition = @SecurityDefinition(
         apiKeyAuthDefinitions = {@ApiKeyAuthDefinition(
             name = SESSION_SECRET,
-            description = "Uses a combination Facebook Application ID in combination with an OAuth Token " +
-                          "in order to perform API operations.  Must be specified in the format Facebook " +
-                          "Authorization Facebook appid:token.  Failure to specify both app ID and token " +
-                          "will result in a failed request.",
+            description = "Uses a server-assigned session key which is generated from various POST /session and " +
+                          "POST /facebook_session endpoints in the API.",
             in = ApiKeyAuthDefinition.ApiKeyLocation.HEADER,
             key = EnhancedApiListingResource.SESSION_SECRET
         )}
