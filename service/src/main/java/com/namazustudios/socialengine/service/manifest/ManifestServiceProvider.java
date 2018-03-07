@@ -14,15 +14,12 @@ public class ManifestServiceProvider implements Provider<ManifestService> {
 
     private User user;
 
-    private Provider<SuperUserManifestService> superUserManifestServiceProvider;
+    private Provider<ReadOnlyManifestService> readOnlyManifestServiceProvider;
 
     @Override
     public ManifestService get() {
         switch (getUser().getLevel()) {
-            case SUPERUSER:
-                return getSuperUserManifestServiceProvider().get();
-            default:
-                return Services.forbidden(ManifestService.class);
+            default: return getReadOnlyManifestServiceProvider().get();
         }
     }
 
@@ -35,13 +32,13 @@ public class ManifestServiceProvider implements Provider<ManifestService> {
         this.user = user;
     }
 
-    public Provider<SuperUserManifestService> getSuperUserManifestServiceProvider() {
-        return superUserManifestServiceProvider;
+    public Provider<ReadOnlyManifestService> getReadOnlyManifestServiceProvider() {
+        return readOnlyManifestServiceProvider;
     }
 
     @Inject
-    public void setSuperUserManifestServiceProvider(Provider<SuperUserManifestService> superUserManifestServiceProvider) {
-        this.superUserManifestServiceProvider = superUserManifestServiceProvider;
+    public void setReadOnlyManifestServiceProvider(Provider<ReadOnlyManifestService> readOnlyManifestServiceProvider) {
+        this.readOnlyManifestServiceProvider = readOnlyManifestServiceProvider;
     }
 
 }

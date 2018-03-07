@@ -15,6 +15,8 @@ public class AnonApplicationService implements ApplicationService {
 
     private ApplicationDao applicationDao;
 
+    private ApplicationUrls applicationUrls;
+
     @Override
     public Application createApplication(Application application) {
         throw new ForbiddenException();
@@ -37,7 +39,8 @@ public class AnonApplicationService implements ApplicationService {
 
     @Override
     public Application getApplication(String nameOrId) {
-        return getApplicationDao().getActiveApplication(nameOrId);
+        final Application application = getApplicationDao().getActiveApplication(nameOrId);
+        return getApplicationUrls().addPublicUrls(application);
     }
 
     @Override
@@ -57,6 +60,15 @@ public class AnonApplicationService implements ApplicationService {
     @Inject
     public void setApplicationDao(ApplicationDao applicationDao) {
         this.applicationDao = applicationDao;
+    }
+
+    public ApplicationUrls getApplicationUrls() {
+        return applicationUrls;
+    }
+
+    @Inject
+    public void setApplicationUrls(ApplicationUrls applicationUrls) {
+        this.applicationUrls = applicationUrls;
     }
 
 }

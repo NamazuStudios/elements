@@ -44,7 +44,7 @@ public interface URIs {
                     base.getUserInfo(),
                     base.getHost(),
                     base.getPort(),
-                    base.getPath()  + "/",
+                    base.getPath(),
                     query,
                     base.getFragment());
         } catch (URISyntaxException ex) {
