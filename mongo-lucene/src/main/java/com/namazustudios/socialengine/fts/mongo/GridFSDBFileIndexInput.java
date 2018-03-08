@@ -64,11 +64,13 @@ public class GridFSDBFileIndexInput extends BufferedIndexInput {
                 if (read < 0) {
                     pos = -1;
                     return;
+                } else {
+                    total += read;
                 }
 
             }
 
-            pos += total;
+            pos += length;
 
         }
 
