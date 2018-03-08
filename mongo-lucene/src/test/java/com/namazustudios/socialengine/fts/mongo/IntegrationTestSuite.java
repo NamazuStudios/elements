@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.fts.mongo;
 
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
