@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.fts;
 
-import java.io.IOException;
-
 /**
  * This is the final result from a query.  This provides a means to walk the collection
  * of documents requested through an {@link ObjectQuery}.  Additionally, this is capable
@@ -28,7 +26,7 @@ public interface SearchResult<DocumentT, EntryT extends DocumentEntry<DocumentT>
      *
      * @return the total number of results
      */
-    int total();
+    long total();
 
     /**
      * Returns the number of results available to this result.  This is not

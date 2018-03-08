@@ -52,12 +52,10 @@ public class IdentityObjectQuery<DocumentT> extends ObjectQuery<DocumentT> {
                                         getDocumentType());
         }
 
-        final BooleanQuery booleanQuery = new BooleanQuery();
-
-        booleanQuery.add(getTypeQuery(), BooleanClause.Occur.FILTER);
-        addTermsToQuery(booleanQuery, searchableField, identifier);
-
-        return booleanQuery;
+        final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+        booleanQueryBuilder.add(getTypeQuery(), BooleanClause.Occur.FILTER);
+        addTermsToQuery(booleanQueryBuilder, searchableField, identifier);
+        return booleanQueryBuilder.build();
 
     }
 

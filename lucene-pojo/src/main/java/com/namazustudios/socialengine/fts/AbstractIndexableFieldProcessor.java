@@ -15,27 +15,86 @@ public abstract class AbstractIndexableFieldProcessor<FieldT> implements Indexab
     }
 
     protected Field newIntegerField(final Number value, final FieldMetadata fieldMetadata) {
-        final Field out = new IntField(fieldMetadata.name(), value.intValue(), fieldMetadata.store());
+
+        final Field out;
+
+        switch (fieldMetadata.store()) {
+            case YES:
+                out = new StoredField(fieldMetadata.name(), value.intValue());
+                break;
+            case NO:
+                out = new IntPoint(fieldMetadata.name(), value.intValue());
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid store value: " + fieldMetadata.store());
+
+        }
+
         applyRemainingProperties(out, fieldMetadata);
         return out;
     }
 
     protected Field newLongField(final Number value, final FieldMetadata fieldMetadata) {
-        final Field out = new LongField(fieldMetadata.name(), value.longValue(), fieldMetadata.store());
+
+        final Field out;
+
+        switch (fieldMetadata.store()) {
+            case YES:
+                out = new StoredField(fieldMetadata.name(), value.longValue());
+                break;
+            case NO:
+                out = new LongPoint(fieldMetadata.name(), value.longValue());
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid store value: " + fieldMetadata.store());
+
+        }
+
         applyRemainingProperties(out, fieldMetadata);
         return out;
+
     }
 
     protected Field newFloatField(final Number value, final FieldMetadata fieldMetadata) {
-        final Field out = new FloatField(fieldMetadata.name(), value.floatValue(), fieldMetadata.store());
+
+        final Field out;
+
+        switch (fieldMetadata.store()) {
+            case YES:
+                out = new StoredField(fieldMetadata.name(), value.floatValue());
+                break;
+            case NO:
+                out = new FloatPoint(fieldMetadata.name(), value.floatValue());
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid store value: " + fieldMetadata.store());
+
+        }
+
         applyRemainingProperties(out, fieldMetadata);
         return out;
+
     }
 
     protected Field newDoubleField(final Number value, final FieldMetadata fieldMetadata) {
-        final Field out = new DoubleField(fieldMetadata.name(), value.doubleValue(), fieldMetadata.store());
+
+        final Field out;
+
+        switch (fieldMetadata.store()) {
+            case YES:
+                out = new StoredField(fieldMetadata.name(), value.doubleValue());
+                break;
+            case NO:
+                out = new DoublePoint(fieldMetadata.name(), value.doubleValue());
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid store value: " + fieldMetadata.store());
+
+        }
+
         applyRemainingProperties(out, fieldMetadata);
         return out;
+
     }
 
     protected Field newStringField(final String value, final FieldMetadata fieldMetadata) {
@@ -68,7 +127,8 @@ public abstract class AbstractIndexableFieldProcessor<FieldT> implements Indexab
         if (searchableField.boost() != SearchableField.DEFAULT_BOOST) {
             // setBoost can result in an IllegalArgumentException, so this prevents that from
             // happening if the boost is left as the default value.
-            field.setBoost(searchableField.boost());
+//            field.setBoost(searchableField.boost());
+
         }
 
     }

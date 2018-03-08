@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.fts;
 import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
-import org.apache.lucene.document.DoubleField;
 import org.apache.lucene.document.Field;
 
 import java.util.Random;

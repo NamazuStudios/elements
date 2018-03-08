@@ -113,20 +113,20 @@ public class MongoApplicationDao implements ApplicationDao {
     @Override
     public Pagination<Application> getActiveApplications(int offset, int count, String search) {
 
-        final BooleanQuery booleanQuery = new BooleanQuery();
+        final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
 
         try {
 
             final Term activeTerm = new Term("active", "true");
 
-            booleanQuery.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
-            booleanQuery.add(standardQueryParser.parse(search, "name"), BooleanClause.Occur.FILTER);
+            booleanQueryBuilder.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
+            booleanQueryBuilder.add(standardQueryParser.parse(search, "name"), BooleanClause.Occur.FILTER);
 
         } catch (QueryNodeException ex) {
             throw new BadQueryException(ex);
         }
 
-        return mongoDBUtils.paginationFromSearch(MongoApplication.class, booleanQuery, offset, count, (Function<MongoApplication, Application>) input -> transform(input));
+        return mongoDBUtils.paginationFromSearch(MongoApplication.class, booleanQueryBuilder.build(), offset, count, (Function<MongoApplication, Application>) input -> transform(input));
     }
 
     @Override

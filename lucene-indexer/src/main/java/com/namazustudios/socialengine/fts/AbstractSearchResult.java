@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.fts;
 
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 
 import java.io.IOException;
@@ -58,7 +57,7 @@ public abstract class AbstractSearchResult<DocumentT, EntryT extends DocumentEnt
         return new SearchResult<DocumentT, EntryT>() {
 
             @Override
-            public int total() {
+            public long total() {
                 return AbstractSearchResult.this.total();
             }
 

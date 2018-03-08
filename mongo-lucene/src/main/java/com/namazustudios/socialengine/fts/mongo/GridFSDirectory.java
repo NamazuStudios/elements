@@ -88,42 +88,38 @@ public class GridFSDirectory extends BaseDirectory {
     }
 
     @Override
-    public IndexOutput createOutput(String name, IOContext context) throws IOException {
+    public IndexOutput createOutput(final String name, final IOContext context) throws IOException {
 
         checkOpen();
 
         final GridFSInputFile gridFSInputFile = indexGridFSbucket.createFile(name);
 
         return new OutputStreamIndexOutput(
-                gridFSInputFile.toString(),
+                "gridfs://" + name, name,
                 gridFSInputFile.getOutputStream(),
                 bufferSize);
 
     }
 
     @Override
-    public void sync(Collection<String> names) throws IOException {
-
-        checkOpen();
-
-        // The javadoc for the directory class says this can be a no-op, and
-        // that's exactly what this is.
-
+    public IndexOutput createTempOutput(String prefix, String suffix, IOContext context) throws IOException {
+        return null;
     }
 
     @Override
-    public void renameFile(String source, String dest) throws IOException {
-
+    public void sync(Collection<String> names) throws IOException {
         checkOpen();
+        // The javadoc for the directory class says this can be a no-op, and that's exactly what this is.
+    }
 
-        final GridFSDBFile file = indexGridFSbucket.findOne(source);
+    @Override
+    public void syncMetaData() throws IOException {
+        checkOpen();
+        // The javadoc for the directory class says this can be a no-op, and that's exactly what this is.
+    }
 
-        if (file == null) {
-            throw new FileNotFoundException(source + " not found.");
-        }
-
-        file.put("filename", dest);
-        file.save();
+    @Override
+    public void rename(final String source, final String dest) throws IOException {
 
     }
 

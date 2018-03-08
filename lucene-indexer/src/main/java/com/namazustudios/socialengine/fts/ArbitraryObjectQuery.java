@@ -22,10 +22,10 @@ public class ArbitraryObjectQuery<DocumentT> extends ObjectQuery<DocumentT> {
 
     @Override
     public Query getQuery() {
-        final BooleanQuery booleanQuery = new BooleanQuery();
-        booleanQuery.add(getTypeQuery(), BooleanClause.Occur.FILTER);
-        booleanQuery.add(arbitraryQuery, BooleanClause.Occur.FILTER);
-        return booleanQuery;
+        final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+        booleanQueryBuilder.add(getTypeQuery(), BooleanClause.Occur.FILTER);
+        booleanQueryBuilder.add(arbitraryQuery, BooleanClause.Occur.FILTER);
+        return booleanQueryBuilder.build();
     }
 
 }
