@@ -53,10 +53,11 @@ public @interface SearchableField {
     /**
      * The index-time boost for the field.
      *
-     * Corresponds to {@link IndexableField#boost()}
+     * @Deprecated This seems to have been removed from Lucene or changed significantly since this was made.
      *
-     * @return
+     * @return the boost factor
      */
+    @Deprecated
     float boost() default DEFAULT_BOOST;
 
     /**
