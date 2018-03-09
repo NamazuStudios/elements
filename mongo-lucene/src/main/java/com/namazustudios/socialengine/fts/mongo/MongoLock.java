@@ -4,6 +4,7 @@ import com.mongodb.MongoCommandException;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndReplaceOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import org.apache.lucene.store.Lock;
@@ -15,10 +16,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.mongodb.client.model.Filters.*;
 import static java.lang.System.currentTimeMillis;
+import static java.util.UUID.randomUUID;
 
 /**
  * An implementation of a {@link Lock} stored in a {@link MongoCollection}.
@@ -29,6 +32,8 @@ public class MongoLock extends Lock {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoLock.class);
 
+    public static final String UUID_FIELD = "uuid";
+
     public static final String EXPIRES_FIELD = "expires";
 
     private final String name;
@@ -36,6 +41,8 @@ public class MongoLock extends Lock {
     private final MongoCollection<Document> lockCollection;
 
     private final AtomicBoolean open = new AtomicBoolean(true);
+
+    private final String uuid = randomUUID().toString();
 
     public MongoLock(final MongoCollection<Document> lockCollection,
                      final String name,
@@ -48,10 +55,11 @@ public class MongoLock extends Lock {
 
         final Document document = new Document();
         document.put("_id", name);
+        document.put(UUID_FIELD, uuid);
         document.put(EXPIRES_FIELD, expires);
 
         try {
-            final Bson query = and(eq("_id", name), gt(EXPIRES_FIELD, now));
+            final Bson query = and(eq("_id", name), lt(EXPIRES_FIELD, now));
             lockCollection.findOneAndReplace(query, document, new FindOneAndReplaceOptions().upsert(true));
         } catch (MongoException ex) {
             if (ex.getCode() == 11000) {
@@ -68,10 +76,10 @@ public class MongoLock extends Lock {
         try {
 
             final Timestamp now = new Timestamp(currentTimeMillis());
-            final Bson query = and(eq("_id", name), lt(EXPIRES_FIELD, now));
+            final Bson query = and(eq("_id", name), eq(UUID_FIELD, uuid), gt(EXPIRES_FIELD, now));
 
             if (lockCollection.find(query).first() == null) {
-                throw new IOException("Lock no longer valid.");
+                throw new LockExpiredException("Lock no longer valid.");
             }
 
         } catch (MongoCommandException ex) {
@@ -82,7 +90,13 @@ public class MongoLock extends Lock {
     @Override
     public void close() throws IOException {
         try {
-            open.set(false);
+            if (open.compareAndSet(true, false)) {
+                final Timestamp now = new Timestamp(currentTimeMillis());
+                final Bson query = and(eq("_id", name), eq(UUID_FIELD, uuid), gt(EXPIRES_FIELD, now));
+                lockCollection.deleteOne(query);
+            } else {
+                logger.warn("Attemping to close already closed MongoLock", new IllegalStateException());
+            }
         } catch (MongoException ex) {
             throw new IOException(ex);
         }
@@ -107,15 +121,20 @@ public class MongoLock extends Lock {
             throw new LockClosedException("Lock is closed.");
         }
 
+        logger.info("Refreshing lock {} with new expiry {}", name, expires);
+
         final Timestamp now = new Timestamp(currentTimeMillis());
 
         final Document document = new Document();
         document.put("_id", name);
+        document.put(UUID_FIELD, uuid);
         document.put(EXPIRES_FIELD, expires);
 
         try {
-            final Bson query = and(eq("_id", name), lt(EXPIRES_FIELD, now));
-            lockCollection.findOneAndReplace(query, document, new FindOneAndReplaceOptions().upsert(true));
+            final Bson query = and(eq("_id", name), eq(UUID_FIELD, uuid), gt(EXPIRES_FIELD, now));
+            final Document result;
+            result = lockCollection.findOneAndReplace(query, document, new FindOneAndReplaceOptions().upsert(false));
+            if (result == null) throw new LockRefreshException();
         } catch (MongoException ex) {
             throw new LockRefreshException(ex);
         }

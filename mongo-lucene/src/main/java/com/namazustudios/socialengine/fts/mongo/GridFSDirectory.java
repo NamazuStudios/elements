@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.fts.mongo;
 
-import com.mongodb.ReadConcern;
-import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSUploadStream;
@@ -17,13 +15,8 @@ import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-import static com.mongodb.ReadConcern.MAJORITY;
-import static com.mongodb.WriteConcern.ACKNOWLEDGED;
-import static com.mongodb.WriteConcern.FSYNCED;
-import static com.mongodb.WriteConcern.JOURNALED;
 import static com.mongodb.client.model.Filters.eq;
 import static java.lang.String.format;
-import static java.lang.Thread.sleep;
 import static java.util.Comparator.naturalOrder;
 import static java.util.UUID.randomUUID;
 
@@ -167,6 +160,10 @@ public class GridFSDirectory extends BaseDirectory {
         if (!open.get()) {
             throw new AlreadyClosedException(toString() + " is closed");
         }
+    }
+
+    public GridFSBucket getIndexGridFSbucket() {
+        return indexGridFSbucket;
     }
 
     @Override
