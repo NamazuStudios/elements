@@ -1,10 +1,8 @@
 package com.namazustudios.socialengine.fts.mongo;
 
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.IndexOptions;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.Lock;
 import org.apache.lucene.store.LockFactory;
 import org.bson.Document;
 import org.slf4j.Logger;
@@ -12,13 +10,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static com.namazustudios.socialengine.fts.mongo.MongoLock.EXPIRES_FIELD;
@@ -26,7 +24,6 @@ import static com.namazustudios.socialengine.fts.mongo.MongoLock.UUID_FIELD;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Created by patricktwohig on 5/17/15.

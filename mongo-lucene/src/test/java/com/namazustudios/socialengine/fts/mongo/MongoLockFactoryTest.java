@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.fts.mongo;
 
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
@@ -13,10 +12,12 @@ import org.junit.Test;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.regex;
 import static com.namazustudios.socialengine.fts.mongo.GridFSDirectoryTest.MONGO_DIRECTORY_BUCKET_NAME;
 import static com.namazustudios.socialengine.fts.mongo.GridFSDirectoryTest.MONGO_LOCK_COLLECTION_NAME;
 import static java.lang.System.currentTimeMillis;
