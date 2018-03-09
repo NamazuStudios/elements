@@ -14,7 +14,7 @@ public class ObjectIdProcessor extends AbstractIndexableFieldProcessor<ObjectId>
     public void process(final Document document, final ObjectId value, final FieldMetadata field) {
         if (value != null ) {
             final String hexString = value.toHexString();
-            document.add(newStringFields(hexString, field));
+            newStringFields(document::add, hexString, field);
         }
     }
 
