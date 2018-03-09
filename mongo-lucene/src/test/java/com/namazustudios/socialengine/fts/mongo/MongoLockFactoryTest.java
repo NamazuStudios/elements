@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.fts.mongo;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
@@ -10,11 +11,16 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.*;
+
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.regex;
 import static com.namazustudios.socialengine.fts.mongo.GridFSDirectoryTest.MONGO_DIRECTORY_BUCKET_NAME;
 import static com.namazustudios.socialengine.fts.mongo.GridFSDirectoryTest.MONGO_LOCK_COLLECTION_NAME;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static java.lang.System.currentTimeMillis;
+import static org.junit.Assert.*;
 
 public class MongoLockFactoryTest {
 
@@ -41,6 +47,49 @@ public class MongoLockFactoryTest {
     private GridFSBucket openGridFSBucket() {
         final MongoDatabase mongoDatabase = embeddedMongo.getMongoDatabase();
         return GridFSBuckets.create(mongoDatabase, MONGO_DIRECTORY_BUCKET_NAME);
+    }
+
+    @Test
+    public void testRapidFireAcquireAndReleaseLock() throws Exception {
+        try (final MongoLockFactory mongoLockFactory = openMongoLockFactory();
+             final GridFSDirectory gridFSDirectory = new GridFSDirectory(mongoLockFactory, openGridFSBucket())) {
+
+            for (int i = 0; i < 100; ++i) {
+                try (final MongoLock l = mongoLockFactory.obtainLock(gridFSDirectory, "mylock")){}
+            }
+
+            assertEquals(0, mongoLockFactory.getLockCollection().count());
+
+        }
+    }
+
+    @Test
+    public void testRapidFireConcurrentLocks() throws Exception {
+        try (final MongoLockFactory mongoLockFactory = openMongoLockFactory();
+             final GridFSDirectory gridFSDirectory = new GridFSDirectory(mongoLockFactory, openGridFSBucket())) {
+
+            final Set<Future<Void>> futureSet = new HashSet<>();
+            final ExecutorService executor = Executors.newCachedThreadPool();
+
+            for (int i = 0; i < 100; ++i) {
+                final int tn = i;
+                futureSet.add(executor.submit(() -> {
+                    try (final MongoLock l = mongoLockFactory.obtainLock(gridFSDirectory, "mylock." + tn)) {}
+                    return null;
+                }));
+            }
+
+            futureSet.forEach(f -> {
+                try {
+                    f.get();
+                } catch (Exception e) {
+                    fail("Caught execption in thread: " + e.getMessage());
+                }
+            });
+
+            assertEquals(0, mongoLockFactory.getLockCollection().count());
+
+        }
     }
 
     @Test
@@ -97,6 +146,42 @@ public class MongoLockFactoryTest {
             }
 
         }
+    }
+
+    @Test
+    public void testWaitForClose() throws Exception {
+
+        final long waitTime = 1000;
+
+        final Future<Void> future;
+        final long begin = currentTimeMillis();
+        final MongoCollection<Document> lockCollection;
+
+        try (final MongoLockFactory mongoLockFactory = openMongoLockFactory();
+             final GridFSDirectory gridFSDirectory = new GridFSDirectory(mongoLockFactory, openGridFSBucket())) {
+
+            lockCollection = mongoLockFactory.getLockCollection();
+
+            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            final ExecutorService executor = Executors.newCachedThreadPool();
+
+            future = executor.submit(() -> {
+                try (final MongoLock l = mongoLockFactory.obtainLock(gridFSDirectory, "mylock")) {
+                    countDownLatch.countDown();
+                    Thread.sleep(waitTime);
+                    return null;
+                }
+            });
+
+            countDownLatch.await();
+            assertEquals("Expected a single lock to exist.", 1, lockCollection.count());
+
+        }
+
+        assertEquals("Expected no locks to exist.", 0, lockCollection.count());
+        assertTrue("LockFactory took shorter to close than expected.", currentTimeMillis() - begin > waitTime);
+        future.get();
+
     }
 
 }

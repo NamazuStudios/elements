@@ -7,6 +7,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndReplaceOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.result.DeleteResult;
 import org.apache.lucene.store.Lock;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.bson.Document;
@@ -92,8 +93,9 @@ public class MongoLock extends Lock {
         try {
             if (open.compareAndSet(true, false)) {
                 final Timestamp now = new Timestamp(currentTimeMillis());
-                final Bson query = and(eq("_id", name), eq(UUID_FIELD, uuid), gt(EXPIRES_FIELD, now));
-                lockCollection.deleteOne(query);
+                final Bson query = and(eq("_id", name), eq(UUID_FIELD, uuid));
+                final DeleteResult deleteResult = lockCollection.deleteOne(query);
+                if (deleteResult.getDeletedCount() == 0) throw new IOException("Failed to release lock");
             } else {
                 logger.warn("Attemping to close already closed MongoLock", new IllegalStateException());
             }
