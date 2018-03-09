@@ -45,6 +45,8 @@ public class MongoLockFactory extends LockFactory implements AutoCloseable {
 
     public static final long DEFAULT_HEARTBEAT_INTERVAL_MILLISECONDS = DEFAULT_LOCK_TIMEOUT_MILLISECONDS / DEFAULT_HEARTBEAT_INTERVAL_FACTOR;
 
+    public static final long LOCK_GARBAGE_COLLECTION_TIME_MILLISECONDS = 30000;
+
     private final long lockTimeoutMilliseconds;
 
     private final MongoCollection<Document> lockCollection;
@@ -94,11 +96,11 @@ public class MongoLockFactory extends LockFactory implements AutoCloseable {
         lockCollection.createIndex(uuidIndex, new IndexOptions()
             .name(UUID_INDEX_NAME));
 
-//        final Document expiryIndex = new Document();
-//        expiryIndex.put(EXPIRES_FIELD, 1);
-//        lockCollection.createIndex(expiryIndex, new IndexOptions()
-//            .name(EXPIRY_INDEX_NAME)
-//            .expireAfter(30l, SECONDS));
+        final Document expiryIndex = new Document();
+        expiryIndex.put(EXPIRES_FIELD, 1);
+        lockCollection.createIndex(expiryIndex, new IndexOptions()
+            .name(EXPIRY_INDEX_NAME)
+            .expireAfter(LOCK_GARBAGE_COLLECTION_TIME_MILLISECONDS, MILLISECONDS));
 
         getRuntime().addShutdownHook(new Thread(this::close));
 
