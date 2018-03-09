@@ -19,8 +19,11 @@ import java.util.function.Consumer;
 
 import static com.mongodb.ReadConcern.MAJORITY;
 import static com.mongodb.WriteConcern.ACKNOWLEDGED;
+import static com.mongodb.WriteConcern.FSYNCED;
+import static com.mongodb.WriteConcern.JOURNALED;
 import static com.mongodb.client.model.Filters.eq;
 import static java.lang.String.format;
+import static java.lang.Thread.sleep;
 import static java.util.Comparator.naturalOrder;
 import static java.util.UUID.randomUUID;
 
@@ -58,7 +61,7 @@ public class GridFSDirectory extends BaseDirectory {
         super(lockFactory);
 
         this.bufferSize = bufferSize;
-        this.indexGridFSbucket = indexGridFSbucket.withWriteConcern(ACKNOWLEDGED);
+        this.indexGridFSbucket = indexGridFSbucket;
 
     }
 
@@ -95,16 +98,16 @@ public class GridFSDirectory extends BaseDirectory {
 
     @Override
     public IndexOutput createOutput(final String name, final IOContext context) throws IOException {
-        return createOutput(name, context, false);
+        return createOutput(name, false);
     }
 
     @Override
     public IndexOutput createTempOutput(final String prefix, final String suffix, final IOContext context) throws IOException {
         final String filename = format("%s%s%s.tmp", prefix, randomUUID(), suffix);
-        return createOutput(filename, context, true);
+        return createOutput(filename, true);
     }
 
-    public IndexOutput createOutput(final String name, final IOContext context, final boolean temporary) throws IOException {
+    public IndexOutput createOutput(final String name, final boolean temporary) throws IOException {
         checkOpen();
 
         final Document metadata = new Document();
@@ -120,7 +123,6 @@ public class GridFSDirectory extends BaseDirectory {
         return new OutputStreamIndexOutput(resourceDescription, name, uploadStream, bufferSize);
 
     }
-
 
     @Override
     public void sync(Collection<String> names) throws IOException {
@@ -151,9 +153,10 @@ public class GridFSDirectory extends BaseDirectory {
             throw new FileNotFoundException(name + " not found.");
         }
 
-        return new GridFSDBFileIndexInput("gridfs://" + name, context, indexGridFSbucket, name);
+        return new GridFSDBFileIndexInput("gridfs://" + name, indexGridFSbucket, file);
 
     }
+
 
     @Override
     public void close() throws IOException {

@@ -33,8 +33,6 @@ public class EmbeddedMongo implements AutoCloseable {
 
     private final MongoDatabase mongoDatabase;
 
-    private final DB db;
-
     public EmbeddedMongo() throws IOException {
 
         final IMongodConfig config = new MongodConfigBuilder()
@@ -49,7 +47,6 @@ public class EmbeddedMongo implements AutoCloseable {
         final ServerAddress testServerAddress = new ServerAddress(TEST_BIND_IP, TEST_MONGO_PORT);
         this.mongoClient = new MongoClient(testServerAddress);
         this.mongoDatabase = this.mongoClient.getDatabase(TEST_DATABASE);
-        this.db = mongoClient.getDB(TEST_DATABASE);
     }
 
     @Override
@@ -61,10 +58,6 @@ public class EmbeddedMongo implements AutoCloseable {
 
     public MongoDatabase getMongoDatabase() {
         return mongoDatabase;
-    }
-
-    public DB getDb() {
-        return db;
     }
 
 }

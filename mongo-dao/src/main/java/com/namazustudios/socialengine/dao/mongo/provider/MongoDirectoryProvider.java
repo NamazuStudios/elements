@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.dao.mongo.provider;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.gridfs.GridFS;
 import com.namazustudios.socialengine.fts.mongo.GridFSDirectory;
 import org.apache.lucene.store.Directory;
@@ -34,10 +36,10 @@ public class MongoDirectoryProvider implements Provider<Directory> {
     @Override
     public Directory get() {
         final MongoClient mongoClient = getMongoClientProvider().get();
-        final GridFS gridFS = new GridFS(mongoClient.getDB(getMongoDatabaseName()), getSearchIndexBucketName());
         final MongoDatabase mongoDatabase = mongoClient.getDatabase(getMongoDatabaseName());
+        final GridFSBucket gridFSBucket = GridFSBuckets.create(mongoDatabase);
         final MongoCollection<Document> mongoCollection = mongoDatabase.getCollection(getLockCollectionName());
-        return new GridFSDirectory(mongoCollection, gridFS);
+        return new GridFSDirectory(mongoCollection, gridFSBucket);
     }
 
     public String getSearchIndexBucketName() {
