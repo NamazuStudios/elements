@@ -53,7 +53,7 @@ public @interface SearchableField {
     /**
      * The index-time boost for the field.
      *
-     * @Deprecated This seems to have been removed from Lucene or changed significantly since this was made.
+     * @deprecated This seems to have been removed from Lucene or is no longer implemented the same way.
      *
      * @return the boost factor
      */
