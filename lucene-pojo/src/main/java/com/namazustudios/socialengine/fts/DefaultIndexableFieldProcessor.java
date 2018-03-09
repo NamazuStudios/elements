@@ -4,13 +4,10 @@ import com.namazustudios.socialengine.fts.annotation.DefaultType;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.index.Term;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * The default implementation for {@link IndexableFieldProcessor}.  This will
@@ -20,13 +17,13 @@ import java.util.List;
  * This implementation indexes each type as follows:
  *
  * <ul>
- *  <li>byte - 32-bit integer {@link IntField}</li>
+ *  <li>byte - 32-bit integer {@link IntPoint}</li>
  *  <li>char - a single-character in {@link StringField} or {@link TextField} depending on the fields of {@link SearchableField#text()}</li>
- *  <li>short - 32-bit integer {@link IntField}</li>
- *  <li>int - 32-bit integer {@link IntField}</li>
- *  <li>long - 64-bit integer {@link LongField}</li>
- *  <li>float - 32-bit float {@link FloatField}</li>
- *  <li>double - 64-bit integer {@link DoubleField}</li>
+ *  <li>short - 32-bit integer {@link IntPoint}</li>
+ *  <li>int - 32-bit integer {@link IntPoint}</li>
+ *  <li>long - 64-bit integer {@link LongPoint}</li>
+ *  <li>float - 32-bit float {@link FloatPoint}</li>
+ *  <li>double - 64-bit integer {@link DoublePoint}</li>
  *  <li>boolean - {@link StringField} stored with {@link Boolean#toString()}</li>
  *  <li>String - {@link StringField} or {@link TextField} depending on the value of {@link SearchableField#text()}</li>
  *  <li>{@link CharSequence} - {@link StringField} or {@link TextField} depending on the fields of {@link SearchableField#text()}</li>
@@ -52,54 +49,46 @@ public class DefaultIndexableFieldProcessor extends AbstractIndexableFieldProces
                     "type mismatch for " + fieldMetadata + " got " + value + " instead");
         }
 
-        for (final Field field : generateFields(value, fieldMetadata)) {
-            document.removeFields(field.name());
-            document.add(field);
-        }
+        document.removeFields(fieldMetadata.name());
+        generateFields(value, fieldMetadata, document::add);
 
-    }
-
-    private List<Field> generateFields(final Object value, final FieldMetadata fieldMetadata) {
-        final List<Field> fields = new ArrayList<>();
-        generateFields(value, fieldMetadata, fields);
-        return fields;
     }
 
     private void generateFields(final Object value,
                                 final FieldMetadata fieldMetadata,
-                                final List<Field> fields) {
+                                final Consumer<Field> fieldConsumer) {
 
         if (value instanceof Byte) {
-            fields.add(newIntegerField((Byte) value, fieldMetadata));
+            newIntegerFields(fieldConsumer, (Byte) value, fieldMetadata);
         } else if (value instanceof Character) {
-            fields.add(newTextOrStringField((Character) value, fieldMetadata));
+            newTextOrStringField(fieldConsumer, (Character) value, fieldMetadata);
         } else if (value instanceof Short) {
-            fields.add(newIntegerField((Short) value, fieldMetadata));
+            newIntegerFields(fieldConsumer, (Short) value, fieldMetadata);
         } else if (value instanceof Integer) {
-            fields.add(newIntegerField((Integer) value, fieldMetadata));
+            newIntegerFields(fieldConsumer, (Integer) value, fieldMetadata);
         } else if (value instanceof Long) {
-            fields.add(newLongField((Long) value, fieldMetadata));
+            newLongFields(fieldConsumer, (Long) value, fieldMetadata);
         } else if (value instanceof Float) {
-            fields.add(newFloatField((Float) value, fieldMetadata));
+            newFloatFields(fieldConsumer, (Float) value, fieldMetadata);
         } else if (value instanceof Double) {
-            fields.add(newDoubleField((Double) value, fieldMetadata));
+            newDoubleFields(fieldConsumer, (Double) value, fieldMetadata);
         } else if (value instanceof Boolean) {
-            fields.add(newStringField(value.toString(), fieldMetadata));
+            newStringFields(fieldConsumer, value.toString(), fieldMetadata);
         } else if ((value instanceof byte[]) && fieldMetadata.store().equals(Field.Store.YES)) {
-            fields.add(newStoredField((byte[]) value, fieldMetadata));
+            newStoredField(fieldConsumer, (byte[]) value, fieldMetadata);
         } else if (value instanceof char[]) {
-            fields.add(newTextOrStringField(new String((char[]) value), fieldMetadata));
+            newTextOrStringField(fieldConsumer, new String((char[]) value), fieldMetadata);
         } else if (value instanceof CharSequence) {
-            fields.add(newTextOrStringField((CharSequence) value, fieldMetadata));
+            newTextOrStringField(fieldConsumer, (CharSequence) value, fieldMetadata);
         } else if (value instanceof Iterable<?>) {
             for (final Object object : ((Iterable<?>) value)) {
-                generateFields(object, fieldMetadata, fields);
+                generateFields(object, fieldMetadata, fieldConsumer);
             }
         } else if (value instanceof Enum<?>) {
-            fields.add(newTextOrStringField(value.toString(), fieldMetadata));
+            newTextOrStringField(fieldConsumer, value.toString(), fieldMetadata);
         } else if (value instanceof Class<?>) {
             final Class<?> cls = (Class<?>)value;
-            fields.add(newStringField(cls.getName(), fieldMetadata));
+            newStringFields(fieldConsumer, cls.getName(), fieldMetadata);
         } else if (value != null) {
             LOG.warn("Unable to process field " + fieldMetadata +  "(" + value + ")");
         }

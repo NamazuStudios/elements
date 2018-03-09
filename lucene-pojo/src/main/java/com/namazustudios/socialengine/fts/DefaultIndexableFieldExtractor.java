@@ -72,11 +72,12 @@ public class DefaultIndexableFieldExtractor implements IndexableFieldExtractor<O
 
         try {
 
-            final String stringValue = document.get(fieldMetadata.name());
-
-            if (stringValue == null) {
-                throw new FieldExtractionException(fieldMetadata, document, "no string value for field " + fieldMetadata);
-            }
+            final String stringValue = document.getFields()
+                .stream()
+                .filter(f -> Objects.equals(f.name(), fieldMetadata.name()) && f.stringValue() != null)
+                .map(f -> f.stringValue())
+                .findFirst()
+                .orElseThrow(() -> new FieldExtractionException(fieldMetadata, document, "no string value for field " + fieldMetadata));
 
             if (Byte.class.isAssignableFrom(type) || byte.class.isAssignableFrom(type)) {
                 return new Byte(stringValue);

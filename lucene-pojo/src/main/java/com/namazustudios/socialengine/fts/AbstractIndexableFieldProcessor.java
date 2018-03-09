@@ -3,111 +3,104 @@ package com.namazustudios.socialengine.fts;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import org.apache.lucene.document.*;
 
+import java.util.function.Consumer;
+
 /**
  * Created by patricktwohig on 6/1/15.
  */
 public abstract class AbstractIndexableFieldProcessor<FieldT> implements IndexableFieldProcessor<FieldT> {
 
-    protected Field newStoredField(final byte[] value, final FieldMetadata fieldMetadata) {
+    protected void newStoredField(final Consumer<Field> fieldConsumer,
+                                  final byte[] value,
+                                  final FieldMetadata fieldMetadata) {
         final Field out = new StoredField(fieldMetadata.name(), value);
         applyRemainingProperties(out, fieldMetadata);
-        return out;
+        fieldConsumer.accept(out);
     }
 
-    protected Field newIntegerField(final Number value, final FieldMetadata fieldMetadata) {
+    protected void newIntegerFields(final Consumer<Field> fieldConsumer,
+                                    final Number value,
+                                    final FieldMetadata fieldMetadata) {
+        switch (fieldMetadata.store()) {
+            case YES:
+                fieldConsumer.andThen(f -> applyRemainingProperties(f, fieldMetadata))
+                             .accept(new StoredField(fieldMetadata.name(), value.intValue()));
+            case NO:
+                fieldConsumer.andThen(f -> applyRemainingProperties(f, fieldMetadata))
+                             .accept(new IntPoint(fieldMetadata.name(), value.intValue()));
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid store value: " + fieldMetadata.store());
+        }
+    }
 
-        final Field out;
+    protected void newLongFields(final Consumer<Field> fieldConsumer,
+                                 final Number value,
+                                 final FieldMetadata fieldMetadata) {
 
         switch (fieldMetadata.store()) {
             case YES:
-                out = new StoredField(fieldMetadata.name(), value.intValue());
-                break;
+                fieldConsumer.andThen(f -> applyRemainingProperties(f, fieldMetadata))
+                             .accept(new StoredField(fieldMetadata.name(), value.longValue()));
             case NO:
-                out = new IntPoint(fieldMetadata.name(), value.intValue());
+                fieldConsumer.andThen(f -> applyRemainingProperties(f, fieldMetadata))
+                             .accept(new LongPoint(fieldMetadata.name(), value.longValue()));
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid store value: " + fieldMetadata.store());
+
+        }
+    }
+
+    protected void newFloatFields(final Consumer<Field> fieldConsumer,
+                                  final Number value,
+                                  final FieldMetadata fieldMetadata) {
+
+        switch (fieldMetadata.store()) {
+            case YES:
+                fieldConsumer.andThen(f -> applyRemainingProperties(f, fieldMetadata))
+                             .accept(new StoredField(fieldMetadata.name(), value.floatValue()));
+            case NO:
+                fieldConsumer.andThen(f -> applyRemainingProperties(f, fieldMetadata))
+                             .accept(new FloatPoint(fieldMetadata.name(), value.floatValue()));
                 break;
             default:
                 throw new IllegalArgumentException("Invalid store value: " + fieldMetadata.store());
 
         }
 
-        applyRemainingProperties(out, fieldMetadata);
-        return out;
     }
 
-    protected Field newLongField(final Number value, final FieldMetadata fieldMetadata) {
-
-        final Field out;
+    protected void newDoubleFields(final Consumer<Field> fieldConsumer,
+                                   final Number value,
+                                   final FieldMetadata fieldMetadata) {
 
         switch (fieldMetadata.store()) {
             case YES:
-                out = new StoredField(fieldMetadata.name(), value.longValue());
-                break;
+                fieldConsumer.andThen(f -> applyRemainingProperties(f, fieldMetadata))
+                             .accept(new StoredField(fieldMetadata.name(), value.doubleValue()));
             case NO:
-                out = new LongPoint(fieldMetadata.name(), value.longValue());
+                fieldConsumer.andThen(f -> applyRemainingProperties(f, fieldMetadata))
+                             .accept(new DoublePoint(fieldMetadata.name(), value.doubleValue()));
                 break;
             default:
                 throw new IllegalArgumentException("Invalid store value: " + fieldMetadata.store());
 
         }
 
-        applyRemainingProperties(out, fieldMetadata);
-        return out;
-
     }
 
-    protected Field newFloatField(final Number value, final FieldMetadata fieldMetadata) {
-
-        final Field out;
-
-        switch (fieldMetadata.store()) {
-            case YES:
-                out = new StoredField(fieldMetadata.name(), value.floatValue());
-                break;
-            case NO:
-                out = new FloatPoint(fieldMetadata.name(), value.floatValue());
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid store value: " + fieldMetadata.store());
-
-        }
-
-        applyRemainingProperties(out, fieldMetadata);
-        return out;
-
-    }
-
-    protected Field newDoubleField(final Number value, final FieldMetadata fieldMetadata) {
-
-        final Field out;
-
-        switch (fieldMetadata.store()) {
-            case YES:
-                out = new StoredField(fieldMetadata.name(), value.doubleValue());
-                break;
-            case NO:
-                out = new DoublePoint(fieldMetadata.name(), value.doubleValue());
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid store value: " + fieldMetadata.store());
-
-        }
-
-        applyRemainingProperties(out, fieldMetadata);
-        return out;
-
-    }
-
-    protected Field newStringField(final String value, final FieldMetadata fieldMetadata) {
+    protected void newStringFields(final Consumer<Field> fieldConsumer, final String value, final FieldMetadata fieldMetadata) {
         final Field out = new StringField(fieldMetadata.name(), value, fieldMetadata.store());
         applyRemainingProperties(out, fieldMetadata);
-        return out;
+        fieldConsumer.accept(out);
     }
 
-    protected Field newTextOrStringField(final Character value, final FieldMetadata fieldMetadata) {
-        return newTextOrStringField(new String(new char[]{value.charValue()}), fieldMetadata);
+    protected void newTextOrStringField(final Consumer<Field> fieldConsumer, final Character value, final FieldMetadata fieldMetadata) {
+        newTextOrStringField(fieldConsumer, new String(new char[]{value.charValue()}), fieldMetadata);
     }
 
-    protected Field newTextOrStringField(final CharSequence value, final FieldMetadata fieldMetadata) {
+    protected void newTextOrStringField(final Consumer<Field> fieldConsumer, final CharSequence value, final FieldMetadata fieldMetadata) {
 
         final Field out;
 
@@ -118,7 +111,7 @@ public abstract class AbstractIndexableFieldProcessor<FieldT> implements Indexab
         }
 
         applyRemainingProperties(out, fieldMetadata);
-        return out;
+        fieldConsumer.accept(out);
 
     }
 

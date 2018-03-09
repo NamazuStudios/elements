@@ -1,8 +1,6 @@
 package com.namazustudios.socialengine.fts;
 
 import org.apache.lucene.document.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,7 +30,7 @@ public class TypeFieldProcessor extends AbstractIndexableFieldProcessor<Object> 
             Collections.reverse(hierarchy);
 
             for (final Class<?> cls : hierarchy) {
-                document.add(newStringField(cls.getName(), fieldMetadata));
+                newStringFields(document::add, cls.getName(), fieldMetadata);
             }
 
         } else {

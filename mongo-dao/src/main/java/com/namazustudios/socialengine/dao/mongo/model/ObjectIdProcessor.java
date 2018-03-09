@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.dao.mongo.model;
 
 import com.namazustudios.socialengine.fts.AbstractIndexableFieldProcessor;
 import com.namazustudios.socialengine.fts.FieldMetadata;
-import com.namazustudios.socialengine.fts.IndexableFieldProcessor;
 import org.apache.lucene.document.Document;
 import org.bson.types.ObjectId;
 
@@ -15,7 +14,7 @@ public class ObjectIdProcessor extends AbstractIndexableFieldProcessor<ObjectId>
     public void process(final Document document, final ObjectId value, final FieldMetadata field) {
         if (value != null ) {
             final String hexString = value.toHexString();
-            document.add(newStringField(hexString, field));
+            document.add(newStringFields(hexString, field));
         }
     }
 
