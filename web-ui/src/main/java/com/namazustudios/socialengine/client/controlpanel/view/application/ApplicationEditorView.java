@@ -91,6 +91,10 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
     @UiField
     @Ignore
+    Anchor swaggerUILink;
+
+    @UiField
+    @Ignore
     Anchor swaggerJsonLink;
 
     @Inject
@@ -288,6 +292,9 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
         configurationsTableRow.setVisible(true);
         addConfigurationDropDownRow.setVisible(true);
         applicationConfigurationDataProvider.setParentApplication(application);
+
+        swaggerUILink.setText("API Documentation");
+        swaggerUILink.setHref(application.getHttpDocumentationUiUrl());
 
         swaggerJsonLink.setText("OpenAPI Specification");
         swaggerJsonLink.setHref(application.getHttpDocumentationUrl());

@@ -12,7 +12,7 @@ import javax.inject.Inject;
 /**
  * Created by patricktwohig on 8/14/17.
  */
-public class SuperUserManifestService implements ManifestService {
+public class ReadOnlyManifestService implements ManifestService {
 
     private ManifestDao manifestDao;
 
