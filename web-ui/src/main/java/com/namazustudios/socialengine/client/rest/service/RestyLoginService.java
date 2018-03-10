@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.client.rest.service;
 import com.namazustudios.socialengine.client.rest.client.LoginClient;
 import com.namazustudios.socialengine.client.rest.client.UserClient;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.session.SessionCreation;
+import com.namazustudios.socialengine.model.session.UsernamePasswordSessionRequest;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 
@@ -21,30 +23,36 @@ public class RestyLoginService implements LoginService {
     @Inject
     private UserClient userClient;
 
-    private User currentUser = User.getUnprivileged();
+    private SessionCreation sessionCreation;
 
     @Override
-    public void login(String userId, String password, final MethodCallback<User> methodCallback) {
-        loginClient.login(userId, password, new MethodCallback<User>() {
+    public void login(final String userId, final String password, final MethodCallback<User> methodCallback) {
+
+        final UsernamePasswordSessionRequest usernamePasswordSessionRequest = new UsernamePasswordSessionRequest();
+        usernamePasswordSessionRequest.setUserId(userId);
+        usernamePasswordSessionRequest.setPassword(password);
+
+        loginClient.login(usernamePasswordSessionRequest, new MethodCallback<SessionCreation>() {
 
             @Override
-            public void onFailure(Method method, Throwable throwable) {
-                currentUser = User.getUnprivileged();
+            public void onFailure(final Method method, final Throwable throwable) {
+                RestyLoginService.this.sessionCreation = null;
                 methodCallback.onFailure(method, throwable);
             }
 
             @Override
-            public void onSuccess(Method method, User user) {
-                currentUser = user;
-                methodCallback.onSuccess(method, user);
+            public void onSuccess(final Method method, final SessionCreation sessionCreation) {
+                RestyLoginService.this.sessionCreation = sessionCreation;
+                methodCallback.onSuccess(method, sessionCreation.getSession().getUser());
             }
 
         });
+
     }
 
     @Override
     public void logout(MethodCallback<Void> methodCallback) {
-        currentUser = User.getUnprivileged();
+        sessionCreation = null;
         loginClient.logout(methodCallback);
     }
 
@@ -59,7 +67,7 @@ public class RestyLoginService implements LoginService {
 
             @Override
             public void onSuccess(Method method, User user) {
-                currentUser = user;
+                sessionCreation.getSession().setUser(user);
                 userMethodCallback.onSuccess(method, user);
             }
 
@@ -67,8 +75,8 @@ public class RestyLoginService implements LoginService {
     }
 
     @Override
-    public User getCurrentUser() {
-        return currentUser;
+    public SessionCreation getSessionCreation() {
+        return sessionCreation;
     }
 
 }

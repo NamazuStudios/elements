@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.Objects;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
 /**
  * Created by patricktwohig on 6/27/17.
@@ -27,7 +28,7 @@ import static com.google.common.base.Strings.nullToEmpty;
      description = "Allows for the manipulation of Profile objects.  Profile objects store the " +
                    "basic information for the users in the system as they are associated with " +
                    "Applications.",
-     authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
+     authorizations = {@Authorization(SESSION_SECRET)})
 @Path("profile")
 public class ProfileResource {
 

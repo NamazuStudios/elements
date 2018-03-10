@@ -11,6 +11,8 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+
 /**
  * Handles the management of {@link IosApplicationConfiguration} instances.
  *
@@ -19,7 +21,7 @@ import javax.ws.rs.core.MediaType;
 @Api(
     value = "iOS Application Configuration",
     description = "Operations for the management of ApplictionConfigurations for iOS Applications.",
-    authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
+    authorizations = {@Authorization(SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration/ios")
 public class IoSApplicationConfigurationResource {
 

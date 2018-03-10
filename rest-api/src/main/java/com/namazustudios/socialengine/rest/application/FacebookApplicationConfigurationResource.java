@@ -13,14 +13,14 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.Objects;
 
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.FACBOOK_OAUTH_KEY;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
 /**
  * Created by patricktwohig on 6/14/17.
  */
 @Api(value = "Facebook Application Configuration",
      description = "Operations for the management of ApplictionConfiguration instances for Facebook Applications.",
-     authorizations = {@Authorization(FACBOOK_OAUTH_KEY)})
+     authorizations = {@Authorization(SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration/facebook")
 public class FacebookApplicationConfigurationResource {
 

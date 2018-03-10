@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.client.rest.service;
 
 import com.namazustudios.socialengine.client.rest.client.LoginClient;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.session.SessionCreation;
 import org.fusesource.restygwt.client.MethodCallback;
 
 /**
@@ -35,9 +36,19 @@ public interface LoginService {
     void refreshCurrentUser(final MethodCallback<User> userMethodCallback);
 
     /**
-     * Gets the currently logged-in user;
+     * Gets the currently logged-in user.  If no user is logged in, this will return {@link User#getUnprivileged()} to
+     * indicate so.
+     *
+     * @return the currently logged-in user
+     */
+    default User getCurrentUser() {
+        return getSessionCreation() == null ? User.getUnprivileged() : getSessionCreation().getSession().getUser();
+    }
+
+    /**
+     * Returns the current {@link }
      * @return
      */
-    User getCurrentUser();
+    SessionCreation getSessionCreation();
 
 }

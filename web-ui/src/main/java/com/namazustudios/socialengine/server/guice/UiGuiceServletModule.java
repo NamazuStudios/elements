@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.servlet.ServletModule;
 import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
 import com.namazustudios.socialengine.server.UiConfigResource;
+import com.namazustudios.socialengine.server.VersionResource;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import javax.inject.Singleton;
@@ -23,6 +24,7 @@ public class UiGuiceServletModule extends ServletModule {
 
         // Setup JAX-RS resources
 
+        bind(VersionResource.class);
         bind(UiConfigResource.class);
         bind(DefaultExceptionMapper.class);
 

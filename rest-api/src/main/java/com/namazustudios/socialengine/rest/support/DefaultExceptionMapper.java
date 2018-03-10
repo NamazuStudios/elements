@@ -30,6 +30,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
     private static final Map<ErrorCode, Response.Status> HTTP_STATUS_MAP = Maps.immutableEnumMap(
             new ImmutableMap.Builder<ErrorCode, Response.Status>()
                     .put(ErrorCode.DUPLICATE, Response.Status.CONFLICT)
+                    .put(ErrorCode.UNAUTHORIZED, Response.Status.UNAUTHORIZED)
                     .put(ErrorCode.FORBIDDEN, Response.Status.FORBIDDEN)
                     .put(ErrorCode.INVALID_DATA, Response.Status.BAD_REQUEST)
                     .put(ErrorCode.INVALID_PARAMETER, Response.Status.BAD_REQUEST)

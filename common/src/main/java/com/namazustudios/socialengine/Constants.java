@@ -91,6 +91,11 @@ public interface Constants {
     String HTTP_TUNNEL_PORT = "com.namazustudios.socialengine.git.http.tunnel.port";
 
     /**
+     * Used to specify the session timeout, in seconds
+     */
+    String SESSION_TIMEOUT_SECONDS = "com.namazustudios.socialengine.session.timeout.seconds";
+
+    /**
      * Defines some useful regex patterns.
      */
     interface Regexp {
@@ -101,9 +106,9 @@ public interface Constants {
         String NO_WHITE_SPACE = "^\\S+$";
 
         /**
-         * Alpha-numeric only
+         * Alpha-numeric only.  Allows underscore, but does not allow the word to start with an underscore.
          */
-        String WORD_ONLY = "\\w+";
+        String WORD_ONLY = "[^_]\\w+";
 
         /**
          * A very simple validator

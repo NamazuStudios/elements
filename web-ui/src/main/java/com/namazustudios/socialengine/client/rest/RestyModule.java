@@ -26,7 +26,7 @@ public class RestyModule extends AbstractGinModule {
         binder().bind(FacebookApplicationConfigurationClient.class);
 
         binder().bind(User.class).toProvider(UserProvider.class);
-        binder().bind(LoginService.class).to(RestyLoginService.class);
+        binder().bind(LoginService.class).to(RestyLoginService.class).asEagerSingleton();
 
     }
 

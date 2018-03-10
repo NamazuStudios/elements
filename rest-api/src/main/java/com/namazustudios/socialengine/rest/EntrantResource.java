@@ -19,6 +19,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+
 /**
  * Created by patricktwohig on 3/19/15.
  */
@@ -27,7 +29,7 @@ import javax.ws.rs.core.MediaType;
                    "campaigns are essentially simple promotions which allow a user to " +
                    "receive some sort of reward or incentive for sharing a specific link " +
                    "which is tracked through a short linker.",
-     authorizations = {@Authorization(EnhancedApiListingResource.FACBOOK_OAUTH_KEY)})
+     authorizations = {@Authorization(SESSION_SECRET)})
 @Path("campaign/{name}")
 public class EntrantResource {
 
