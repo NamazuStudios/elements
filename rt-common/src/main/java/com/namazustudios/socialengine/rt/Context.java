@@ -46,6 +46,13 @@ public interface Context {
     IndexContext getIndexContext();
 
     /**
+     * Gets the {@Link HandlerContext}.
+     *
+     * @return the {@link HandlerContext}
+     */
+    HandlerContext getHandlerContext();
+
+    /**
      * Used to assist implementations with handling {@link Future} types.  Because this is provided at the interface
      * level, it must be public.  However, this should only be used within the implementation of {@link Context} and
      * its related types.

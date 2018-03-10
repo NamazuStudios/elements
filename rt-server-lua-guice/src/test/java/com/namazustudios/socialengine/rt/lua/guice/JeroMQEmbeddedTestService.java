@@ -30,6 +30,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
                 .withNodeId("integration-test-node")
                 .withNodeName("integration-test-node")
                 .withMinimumConnections(5)
+                .withMaximumConnections(250)
                 .withTimeout(60)
                 .withNumberOfDispatchers(10));
 
@@ -37,6 +38,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
                 .withZContext(shadow(zContext))
                 .withConnectAddress(INTERNAL_NODE_ADDRESS)
                 .withMinimumConnections(5)
+                .withMaximumConnections(250)
                 .withTimeout(60));
 
         node = nodeInjector.getInstance(Node.class);

@@ -26,7 +26,7 @@ import static org.testng.Assert.assertEquals;
 import static org.zeromq.ZMsg.*;
 
 @Guice(modules = DynamicConnectionPoolIntegrationTest.Module.class)
-public class DynamicConnectionPoolIntegrationTest {
+public class    DynamicConnectionPoolIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicConnectionPoolIntegrationTest.class);
 
@@ -156,6 +156,10 @@ public class DynamicConnectionPoolIntegrationTest {
             binder().bind(Integer.class)
                     .annotatedWith(named(DynamicConnectionPool.MIN_CONNECTIONS))
                     .toInstance(10);
+
+            binder().bind(Integer.class)
+                    .annotatedWith(named(DynamicConnectionPool.MAX_CONNECTIONS))
+                    .toInstance(250);
 
         }
     }

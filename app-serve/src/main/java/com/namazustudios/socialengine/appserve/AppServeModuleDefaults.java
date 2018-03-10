@@ -19,6 +19,7 @@ public class AppServeModuleDefaults implements ModuleDefaults {
         properties.put(CONNECT_ADDR, "tcp://localhost:28883");
         properties.setProperty(TIMEOUT, "60");
         properties.setProperty(MIN_CONNECTIONS, "10");
+        properties.setProperty(DynamicConnectionPool.MAX_CONNECTIONS, "10000");
         return properties;
     }
 

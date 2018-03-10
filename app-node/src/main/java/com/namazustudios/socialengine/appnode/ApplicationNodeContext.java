@@ -22,7 +22,14 @@ public class ApplicationNodeContext implements Context {
 
     private IndexContext indexContext;
 
+    private HandlerContext handlerContext;
+
     private AssetLoader assetLoader;
+
+    @Override
+    public HandlerContext getHandlerContext() {
+        return handlerContext;
+    }
 
     @Override
     public void start() {
@@ -99,6 +106,11 @@ public class ApplicationNodeContext implements Context {
     @Inject
     public void setIndexContext(IndexContext indexContext) {
         this.indexContext = indexContext;
+    }
+
+    @Inject
+    public void setHandlerContext(HandlerContext handlerContext) {
+        this.handlerContext = handlerContext;
     }
 
 }

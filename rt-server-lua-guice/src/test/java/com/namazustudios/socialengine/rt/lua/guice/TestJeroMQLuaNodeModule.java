@@ -36,6 +36,7 @@ public class TestJeroMQLuaNodeModule extends PrivateModule {
         install(new SimpleResourceContextModule());
         install(new SimpleIndexContextModule());
         install(new SimpleSchedulerContextModule());
+        install(new SimpleHandlerContextModule());
         install(new GuiceIoCResolverModule());
         install(jeroMQNodeModule);
 
@@ -103,6 +104,17 @@ public class TestJeroMQLuaNodeModule extends PrivateModule {
      */
     public TestJeroMQLuaNodeModule withMinimumConnections(int minimumConnections) {
         jeroMQNodeModule.withMinimumConnections(minimumConnections);
+        return this;
+    }
+
+    /**
+     * {@see {@link JeroMQNodeModule#withMaximumConnections(int)}}
+     *
+     * @param maximumConnections the minimum number of connections to keep in each connection pool
+     * @return this instance
+     */
+    public TestJeroMQLuaNodeModule withMaximumConnections(int maximumConnections) {
+        jeroMQNodeModule.withMaximumConnections(maximumConnections);
         return this;
     }
 

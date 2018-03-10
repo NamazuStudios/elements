@@ -52,6 +52,7 @@ public class SimpleContextModule extends PrivateModule {
         install(new SimpleIndexContextModule());
         install(new SimpleResourceContextModule());
         install(new SimpleSchedulerContextModule());
+        install(new SimpleHandlerContextModule());
 
     }
 

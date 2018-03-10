@@ -14,6 +14,8 @@ public class ClusterClientContext implements Context {
 
     private SchedulerContext schedulerContext;
 
+    private HandlerContext handlerContext;
+
     @Override
     public void start() {
         getRemoteInvoker().start();
@@ -61,6 +63,16 @@ public class ClusterClientContext implements Context {
     @Inject
     public void setSchedulerContext(SchedulerContext schedulerContext) {
         this.schedulerContext = schedulerContext;
+    }
+
+    @Override
+    public HandlerContext getHandlerContext() {
+        return handlerContext;
+    }
+
+    @Inject
+    public void setHandlerContext(HandlerContext handlerContext) {
+        this.handlerContext = handlerContext;
     }
 
 }

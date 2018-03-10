@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.*;
+import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.MAX_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.MIN_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.TIMEOUT;
 
@@ -21,6 +22,8 @@ public class JeroMQNodeModule extends PrivateModule {
     private Runnable bindNodeNameAction = () -> {};
 
     private Runnable bindMinConnectionsAction = () -> {};
+
+    private Runnable bindMaxConnectionsAction = () -> {};
 
     private Runnable bindTimeoutAction = () -> {};
 
@@ -88,6 +91,19 @@ public class JeroMQNodeModule extends PrivateModule {
     }
 
     /**
+     * Specifies the maximum number of connections to keep active, even if the timeout has expired.
+     *
+     * @param maximumConnections the minimum number of connections to keep open
+     * @return this instance
+     */
+    public JeroMQNodeModule withMaximumConnections(int maximumConnections) {
+        bindMaxConnectionsAction = () -> bind(Integer.class)
+                .annotatedWith(named(MAX_CONNECTIONS))
+                .toInstance(maximumConnections);
+        return this;
+    }
+
+    /**
      * Specifies the number of dispatcher threads used to handle incoming connections.  The number of threads is fixed
      * for the underlying {@link JeroMQNode} instance.
      *
@@ -114,10 +130,10 @@ public class JeroMQNodeModule extends PrivateModule {
         bindAddressAction.run();
         bindTimeoutAction.run();
         bindMinConnectionsAction.run();
+        bindMaxConnectionsAction.run();
         bindNumberOfDispatchersAction.run();
 
         expose(Node.class);
 
     }
-
 }

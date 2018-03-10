@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.CONNECT_ADDRESS;
+import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.MAX_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.MIN_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.TIMEOUT;
 
@@ -19,6 +20,9 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
     private Runnable bindTimeoutAction = () -> {};
 
     private Runnable bindMinConnectionsAction = () -> {};
+
+    private Runnable bindMaxConnectionsAction = () -> {};
+
 
     /**
      * Specifies the connect address used by the underlying {@link JeroMQRemoteInvoker}.  This provides a binding for
@@ -63,6 +67,19 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
         return this;
     }
 
+    /**
+     * Specifies the minimum number of connections to allow.
+     *
+     * @param maximumConnections the minimum number of connections to keep open
+     * @return this instance
+     */
+    public JeroMQRemoteInvokerModule withMaximumConnections(int maximumConnections) {
+        bindMaxConnectionsAction = () -> bind(Integer.class)
+                .annotatedWith(named(MAX_CONNECTIONS))
+                .toInstance(maximumConnections);
+        return this;
+    }
+
     @Override
     protected void configure() {
 
@@ -70,6 +87,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
 
         bindConnectAddressAction.run();
         bindMinConnectionsAction.run();
+        bindMaxConnectionsAction.run();
         bindTimeoutAction.run();
 
         bind(RemoteInvoker.class).to(JeroMQRemoteInvoker.class).asEagerSingleton();
