@@ -54,6 +54,10 @@
                                 <b:TextBox placeholder="(repo url)" ui:field="scriptRepoUrlTextBox"/>
                             </b:FormGroup>
 
+                            <b:FormGroup ui:field="applicationDocumentationUIFormGroup">
+                                <b:Anchor ui:field="swaggerUILink" text="(documentation)"/>
+                            </b:FormGroup>
+
                             <b:FormGroup ui:field="applicationJsonDocumentationFormGroup">
                                 <b:Anchor ui:field="swaggerJsonLink" text="(documentation metadata)"/>
                             </b:FormGroup>

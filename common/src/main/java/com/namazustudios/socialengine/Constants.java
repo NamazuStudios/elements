@@ -91,6 +91,11 @@ public interface Constants {
     String HTTP_TUNNEL_PORT = "com.namazustudios.socialengine.git.http.tunnel.port";
 
     /**
+     * Used to specify the session timeout, in seconds
+     */
+    String SESSION_TIMEOUT_SECONDS = "com.namazustudios.socialengine.session.timeout.seconds";
+
+    /**
      * Defines some useful regex patterns.
      */
     interface Regexp {

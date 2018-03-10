@@ -71,6 +71,9 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("player.objectId", "player.objectId", customConverter(ObjectIdConverter.class))
                 .fields("opponent.objectId", "opponent.objectId", customConverter(ObjectIdConverter.class));
 
+            mapping(Application.class, MongoApplication.class)
+                .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+
             }
         };
 

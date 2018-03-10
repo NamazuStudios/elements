@@ -5,9 +5,9 @@ import com.google.inject.servlet.ServletModule;
 import com.namazustudios.socialengine.rest.*;
 import com.namazustudios.socialengine.rest.application.ApplicationConfigurationResource;
 import com.namazustudios.socialengine.rest.application.ApplicationResource;
-import com.namazustudios.socialengine.rest.application.FacebookSessionResource;
 import com.namazustudios.socialengine.rest.application.PSNApplicationConfigurationResource;
-import com.namazustudios.socialengine.rest.security.HttpSessionResource;
+import com.namazustudios.socialengine.rest.security.FacebookAuthResource;
+import com.namazustudios.socialengine.rest.security.UsernamePasswordResource;
 import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
@@ -83,22 +83,12 @@ public abstract class JerseyModule extends ServletModule {
     }
 
     /**
-     * Enables the {@link HttpSessionResource}.
+     * Enables the {@link UsernamePasswordResource}.
      *
      * @return this
      */
     public JerseyModule enableHttpSessionResource() {
-        bind(HttpSessionResource.class);
-        return this;
-    }
-
-    /**
-     * Enables the {@link FacebookSessionResource}.
-     *
-     * @return this
-     */
-    public JerseyModule enableFacebookSessionResource() {
-        bind(FacebookSessionResource.class);
+        bind(UsernamePasswordResource.class);
         return this;
     }
 
@@ -152,8 +142,8 @@ public abstract class JerseyModule extends ServletModule {
         bind(VersionResource.class);
         bind(UserResource.class);
         bind(EntrantResource.class);
-        bind(HttpSessionResource.class);
-        bind(FacebookSessionResource.class);
+        bind(UsernamePasswordResource.class);
+        bind(FacebookAuthResource.class);
         bind(ShortLinkResource.class);
         bind(SocialCampaignResource.class);
         bind(ApplicationResource.class);
@@ -168,34 +158,6 @@ public abstract class JerseyModule extends ServletModule {
 
         bind(SwaggerSerializers.class);
         bind(EnhancedApiListingResource.class);
-
-//        final Reflections reflections = new Reflections(
-//                new ConfigurationBuilder()
-//                    .forPackages(swaggerPackage)
-//                    .filterInputsBy(new FilterBuilder().includePackage(swaggerPackage))
-//                    .setScanners(new SubTypesScanner(false)));
-//
-//        logger.info("Scanning package io.swagger.jaxrs.listing for inclusion into JAX-RS");
-//
-//        for (final String type : reflections.getAllTypes()) {
-//
-//            final Class<?> cls;
-//
-//            try {
-//
-//                cls = Class.forName(type);
-//
-//                if (ApiListingResource.class.equals(cls)) {
-//                    logger.info("Skipping binding for {}", cls.getName());
-//                } else if ((cls.getModifiers() & ABSTRACT) == 0) {
-//                    bind(cls);
-//                }
-//
-//            } catch (ClassNotFoundException ex) {
-//                throw new IllegalStateException(ex);
-//            }
-//
-//        }
 
     }
 }

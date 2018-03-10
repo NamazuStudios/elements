@@ -1,10 +1,7 @@
 package com.namazustudios.socialengine.appserve;
 
 import com.google.inject.Injector;
-import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.appserve.guice.DispatcherModule;
-import com.namazustudios.socialengine.appserve.guice.DispatcherServletLoader;
-import com.namazustudios.socialengine.appserve.guice.VersionServletLoader;
 import com.namazustudios.socialengine.appserve.guice.VersionServletModule;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
@@ -13,11 +10,13 @@ import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 import com.namazustudios.socialengine.rt.servlet.DispatcherServlet;
 import com.namazustudios.socialengine.service.ApplicationService;
+import com.namazustudios.socialengine.servlet.security.SessionIdAuthenticationFilter;
 import com.namazustudios.socialengine.servlet.security.VersionServlet;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
 import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
@@ -27,13 +26,10 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.servlet.DispatcherType;
 import java.io.File;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.util.EnumSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import static java.util.EnumSet.allOf;
 
 public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
 
@@ -89,10 +85,12 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         final String path = "/" + application.getName();
         final DispatcherServlet dispatcherServlet = injector.getInstance(DispatcherServlet.class);
+        final SessionIdAuthenticationFilter sessionIdAuthenticationFilter = injector.getInstance(SessionIdAuthenticationFilter.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath(path);
         servletContextHandler.addServlet(new ServletHolder(dispatcherServlet), "/*");
+        servletContextHandler.addFilter(new FilterHolder(sessionIdAuthenticationFilter), "/*", EnumSet.allOf(DispatcherType.class));
         return servletContextHandler;
 
     }

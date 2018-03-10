@@ -23,19 +23,9 @@ import static java.lang.String.format;
  */
 public class SuperUserApplicationService implements ApplicationService {
 
-    private static final String GIT_PREFIX = "git";
-
-    private static final String CONFIG_PARAM = "config";
-
-    private URI codeServeUrl;
-
-    private URI httpTunnelUrl;
-
-    private URI apiOutsideUrl;
-
-    private URI docOutsideUrl;
-
     private ApplicationDao applicationDao;
+
+    private ApplicationUrls applicationUrls;
 
     @Override
     public Pagination<Application> getApplications() {
@@ -44,64 +34,32 @@ public class SuperUserApplicationService implements ApplicationService {
 
     @Override
     public Application createApplication(Application application) {
-        return addPrivilegedUrls(getApplicationDao().createOrUpdateInactiveApplication(application));
+        return getApplicationUrls().addAllUrls(getApplicationDao().createOrUpdateInactiveApplication(application));
     }
 
     @Override
     public Pagination<Application> getApplications(int offset, int count) {
-        return getApplicationDao().getActiveApplications(offset, count).transform(this::addPrivilegedUrls);
+        return getApplicationDao().getActiveApplications(offset, count).transform(getApplicationUrls()::addAllUrls);
     }
 
     @Override
     public Pagination<Application> getApplications(int offset, int count, String search) {
-        return getApplicationDao().getActiveApplications(offset, count, search).transform(this::addPrivilegedUrls);
+        return getApplicationDao().getActiveApplications(offset, count, search).transform(getApplicationUrls()::addAllUrls);
     }
 
     @Override
     public Application getApplication(String nameOrId) {
-        return addPrivilegedUrls(getApplicationDao().getActiveApplication(nameOrId));
+        return getApplicationUrls().addAllUrls(getApplicationDao().getActiveApplication(nameOrId));
     }
 
     @Override
     public Application updateApplication(String nameOrId, Application application) {
-        return addPrivilegedUrls(getApplicationDao().updateActiveApplication(nameOrId, application));
+        return getApplicationUrls().addAllUrls(getApplicationDao().updateActiveApplication(nameOrId, application));
     }
 
     @Override
     public void deleteApplication(String nameOrId) {
         getApplicationDao().softDeleteApplication(nameOrId);
-    }
-
-    private Application addPrivilegedUrls(final Application application) {
-        addCodeServeUrl(application);
-        addHttpTunnelUrl(application);
-        addDocumentationUrl(application);
-        return application;
-    }
-
-    private void addCodeServeUrl(final Application application) {
-        final URI base = appendPath(getCodeServeUrl(), GIT_PREFIX, application.getName());
-        final URI repositoryRoot = base.resolve(application.getName());
-        application.setScriptRepoUrl(repositoryRoot.toString());
-    }
-
-    private void addHttpTunnelUrl(final Application application) {
-        final URI base = appendPath(getHttpTunnelUrl(), application.getName());
-        final URI httpTunnelEndpointUrl = base.resolve(application.getName());
-        application.setHttpTunnelEndpointUrl(httpTunnelEndpointUrl.toString());
-    }
-
-    private void addDocumentationUrl(final Application application) {
-        final URI httpDocumentationUrl = appendPath(getApiOutsideUrl(), "application", application.getId(), "swagger.json");
-        application.setHttpDocumentationUrl(httpDocumentationUrl.toString());
-        addDocumentationUiUrl(httpDocumentationUrl, application);
-    }
-
-    private void addDocumentationUiUrl(final URI httpDocumentationUrl, final Application application) {
-        final String encoded = urlFragmentEscaper().escape(httpDocumentationUrl.toString());
-        final String fragment = format("%s=%s", CONFIG_PARAM, encoded);
-        final URI documentationUiUri = appendOrReplaceQuery(getDocOutsideUrl(), fragment);
-        application.setHttpDocumentationUiUrl(documentationUiUri.toString());
     }
 
     public ApplicationDao getApplicationDao() {
@@ -113,40 +71,13 @@ public class SuperUserApplicationService implements ApplicationService {
         this.applicationDao = applicationDao;
     }
 
-    public URI getCodeServeUrl() {
-        return codeServeUrl;
+    public ApplicationUrls getApplicationUrls() {
+        return applicationUrls;
     }
 
     @Inject
-    public void setCodeServeUrl(@Named(CODE_SERVE_URL) URI codeServeUrl) {
-        this.codeServeUrl = codeServeUrl;
-    }
-
-    public URI getHttpTunnelUrl() {
-        return httpTunnelUrl;
-    }
-
-    @Inject
-    public void setHttpTunnelUrl(@Named(HTTP_TUNNEL_URL) URI httpTunnelUrl) {
-        this.httpTunnelUrl = httpTunnelUrl;
-    }
-
-    public URI getApiOutsideUrl() {
-        return apiOutsideUrl;
-    }
-
-    @Inject
-    public void setApiOutsideUrl(@Named(API_OUTSIDE_URL) URI apiOutsideUrl) {
-        this.apiOutsideUrl = apiOutsideUrl;
-    }
-
-    public URI getDocOutsideUrl() {
-        return docOutsideUrl;
-    }
-
-    @Inject
-    public void setDocOutsideUrl(@Named(DOC_OUTSIDE_URL) URI docOutsideUrl) {
-        this.docOutsideUrl = docOutsideUrl;
+    public void setApplicationUrls(ApplicationUrls applicationUrls) {
+        this.applicationUrls = applicationUrls;
     }
 
 }
