@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -24,6 +25,8 @@ public class DynamicConnectionPool implements ConnectionPool {
 
     public static final String MIN_CONNECTIONS = "com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.minConnections";
 
+    public static final String MAX_CONNECTIONS = "com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.maxConnections";
+
     private final AtomicInteger highWaterMark = new AtomicInteger();
 
     private final AtomicReference<Context> context = new AtomicReference<>();
@@ -33,6 +36,8 @@ public class DynamicConnectionPool implements ConnectionPool {
     private int timeout;
 
     private int minConnections;
+
+    private int maxConnections;
 
     @Override
     public void start(final Function<ZContext, ZMQ.Socket> socketSupplier, final String name) {
@@ -96,6 +101,15 @@ public class DynamicConnectionPool implements ConnectionPool {
         this.minConnections = minConnections;
     }
 
+    public int getMaxConnections() {
+        return maxConnections;
+    }
+
+    @Inject
+    public void setMaxConnections(@Named(MAX_CONNECTIONS) int maxConnections) {
+        this.maxConnections = maxConnections;
+    }
+
     public ZContext getzContext() {
         return zContext;
     }
@@ -109,9 +123,9 @@ public class DynamicConnectionPool implements ConnectionPool {
 
         private final String name;
 
-        private final AtomicReference<Supplier<Connection>> connectionSupplier = new AtomicReference<>(WorkerConnection::new);
+        private final ConcurrentMap<Thread, Connection> connectionMap = new ConcurrentHashMap<>();
 
-        private final ThreadLocal<Connection> connectionThreadLocal = new ThreadLocal<>();
+        private final AtomicReference<Supplier<Connection>> connectionSupplier = new AtomicReference<>(WorkerConnection::new);
 
         private final ThreadPoolExecutor executorService;
         {
@@ -119,36 +133,39 @@ public class DynamicConnectionPool implements ConnectionPool {
             final AtomicInteger count = new AtomicInteger();
 
             executorService = new ThreadPoolExecutor(
-                    0, Integer.MAX_VALUE,
-                    getTimeout(), SECONDS, new SynchronousQueue<>(),
-                    r -> {
+                0, getMaxConnections(),
+                getTimeout(), SECONDS, new SynchronousQueue<>(),
+                r -> {
+                    final Thread thread = new Thread(() -> {
+                        try {
+                            r.run();
+                        } finally {
+                            final Connection connection = connectionMap.get(currentThread());
+                            if (connection != null) connection.close();
+                        }
+                    });
+                    thread.setDaemon(true);
+                    thread.setName(toString() + " worker #" + count.getAndIncrement());
+                    return thread;
+                },
+                (r, e) -> {
 
-                        final Thread thread = new Thread(() -> {
+                    Connection existing = connectionMap.put(currentThread(), new TerminalConnection(ExhaustedException::new));
 
-                            final Connection connection = connectionSupplier.get().get();
-                            connectionThreadLocal.set(connection);
+                    try {
+                        // If it's rejected, then we allow the code to run, however, we perform it on the current thread
+                        // with a specific type of Connection which will throw an exception indicating so.  This only
+                        // happens when the
+                        r.run();
+                    } catch (TerminatedException ex) {
+                        logger.debug("{} pool terminated.", toString(), ex);
+                    } finally {
+                        if (existing != null) existing.close();
+                        existing = connectionMap.remove(currentThread());
+                        if (existing != null) existing.close();
+                    }
 
-                            try {
-                                r.run();
-                            } catch (Throwable th) {
-                                connectionThreadLocal.set(null);
-                                logger.error("{} Caught error on connection pool.", toString(), th);
-                                connection.close();
-                                throw th;
-                            }
-
-                        });
-
-                        thread.setDaemon(true);
-                        thread.setName(toString() + " worker #" + count.getAndIncrement());
-                        return thread;
-                    }, (r, e) -> {
-                try {
-                    r.run();
-                } catch (TerminatedException tex) {
-                    logger.debug("{} Connection terminated.", toString());
-                }
-            });
+              });
         }
 
         private final Function<ZContext, ZMQ.Socket> socketSupplier;
@@ -165,12 +182,16 @@ public class DynamicConnectionPool implements ConnectionPool {
         public void stop() {
 
             executorService.shutdownNow();
-            connectionSupplier.set(TerminalConnection::new);
+            connectionSupplier.set(() -> new TerminalConnection(TerminatedException::new));
 
             try {
                 executorService.awaitTermination(2, MINUTES);
             } catch (InterruptedException ex) {
                 throw new InternalError("Interrupted while shutting down connection pool.", ex);
+            }
+
+            if (!connectionMap.isEmpty()) {
+                logger.warn("Not all connections closed. {} lingering connections exist.", connectionMap.size());
             }
 
         }
@@ -179,7 +200,8 @@ public class DynamicConnectionPool implements ConnectionPool {
 
             final FutureTask<T> futureTask = new FutureTask<T>(() -> {
 
-                final Connection connection = connectionThreadLocal.get();
+                final Connection connection;
+                connection = connectionMap.computeIfAbsent(currentThread(), thread -> connectionSupplier.get().get());
 
                 try {
                     return connectionTFunction.apply(new Connection() {
@@ -207,10 +229,38 @@ public class DynamicConnectionPool implements ConnectionPool {
                     } else {
                         throw ex;
                     }
-                } catch (Exception ex) {
-                    connection.close();
-                    logger.error("{} Caught error on connection pool.", toString(), ex);
+                } catch (TerminatedException ex) {
+                    logger.info("{} Connection terminated.  Failing gracefully.", toString(), ex);
+
+                    // This is an expected exception type, so we dont' need to close the connection because it would
+                    // have been thrown from the connection itself which we have determined is dead.
+
+                    final Connection removed = connectionMap.remove(currentThread());
+
+                    if (removed != connection) {
+                        removed.close();
+                        logger.warn("Detected connection mismatch {} != {}", removed, connection);
+                    }
+
                     throw ex;
+
+                } catch (Exception ex) {
+
+                    // This must close out the connection because the underlying socket is now in an undefined state as
+                    // a future operation may end up with an unexpected response from a previous operation that did not
+                    // complete properly.
+
+                    logger.error("{} Caught error on connection pool.", toString(), ex);
+                    final Connection removed = connectionMap.remove(currentThread());
+
+                    if (removed != connection) {
+                        removed.close();
+                        logger.warn("Detected connection mismatch {} != {}", removed, connection);
+                    }
+
+                    connection.close();
+                    throw ex;
+
                 }
 
             });
@@ -222,7 +272,7 @@ public class DynamicConnectionPool implements ConnectionPool {
 
         @Override
         public String toString() {
-            return "Context{" +
+            return "DynamicConnectionPool{" +
                     "name='" + name + '\'' +
                     '}';
         }
@@ -260,6 +310,8 @@ public class DynamicConnectionPool implements ConnectionPool {
                     logger.error("{} Caught exception destroying Socket.", toString(), ex);
                 }
 
+                logger.info("Successfully closed socket {} ", socket);
+
             }
 
         }
@@ -268,15 +320,27 @@ public class DynamicConnectionPool implements ConnectionPool {
 
     private static class TerminalConnection  implements Connection {
 
-        @Override
-        public ZContext context() { throw new TerminatedException(); }
+        private final Supplier<RuntimeException> exceptionSupplier;
+
+        public TerminalConnection(Supplier<RuntimeException> exceptionSupplier) {
+            this.exceptionSupplier = exceptionSupplier;
+        }
 
         @Override
-        public ZMQ.Socket socket() { throw new TerminatedException(); }
+        public ZContext context() { throw exceptionSupplier.get(); }
 
         @Override
-        public void close() { throw new TerminatedException(); }
+        public ZMQ.Socket socket() { throw exceptionSupplier.get(); }
 
+        @Override
+        public void close() {}
+
+    }
+
+    private static class ExhaustedException extends RuntimeException {
+        public ExhaustedException() {
+            super("Connection pool exhausted.");
+        }
     }
 
     private static class TerminatedException extends RuntimeException {

@@ -25,6 +25,7 @@ import java.util.function.Consumer;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.*;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.CONNECT_ADDRESS;
+import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.MAX_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.MIN_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.TIMEOUT;
 import static java.util.UUID.randomUUID;
@@ -297,6 +298,7 @@ public class JeroMQEndToEndIntegrationTest {
 
             bind(String.class).annotatedWith(named(TIMEOUT)).toInstance("60");
             bind(String.class).annotatedWith(named(MIN_CONNECTIONS)).toInstance("5");
+            bind(String.class).annotatedWith(named(MAX_CONNECTIONS)).toInstance("250");
 
             bind(IocResolver.class).to(GuiceIoCResolver.class);
             bind(TestServiceInterface.class).to(IntegrationTestService.class);
@@ -328,7 +330,8 @@ public class JeroMQEndToEndIntegrationTest {
             bind(ZContext.class).toInstance(zContext);
 
             bind(String.class).annotatedWith(named(TIMEOUT)).toInstance("10");
-            bind(String.class).annotatedWith(named(MIN_CONNECTIONS)).toInstance("100");
+            bind(String.class).annotatedWith(named(MIN_CONNECTIONS)).toInstance("10");
+            bind(String.class).annotatedWith(named(MAX_CONNECTIONS)).toInstance("250");
 
             bind(String.class)
                 .annotatedWith(named(CONNECT_ADDRESS))
