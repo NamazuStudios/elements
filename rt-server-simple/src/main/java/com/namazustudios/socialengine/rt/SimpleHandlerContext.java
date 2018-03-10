@@ -24,7 +24,7 @@ public class SimpleHandlerContext implements HandlerContext {
             final String method, final Object... args) {
 
         final Path path = fromComponents("handler", randomUUID().toString());
-        final ResourceId resourceId = getResourceContext().create(module, path);
+        final ResourceId resourceId = getResourceContext().createAttributes(module, path, attributes);
 
         try {
             return getResourceContext().invokeAsync(
