@@ -36,6 +36,7 @@ public class TestJeroMQLuaNodeModule extends PrivateModule {
         install(new SimpleResourceContextModule());
         install(new SimpleIndexContextModule());
         install(new SimpleSchedulerContextModule());
+        install(new SimpleHandlerContextModule());
         install(new GuiceIoCResolverModule());
         install(jeroMQNodeModule);
 

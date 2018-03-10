@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.dao.rt.guice.RTFileAssetLoaderModule;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.ContextInvocationDispatcher;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
+import com.namazustudios.socialengine.rt.guice.SimpleHandlerContextModule;
 import com.namazustudios.socialengine.rt.guice.SimpleResourceContextModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
@@ -47,6 +48,7 @@ public class ApplicationModule extends AbstractModule {
         });
 
         install(new GuiceIoCResolverModule());
+        install(new SimpleHandlerContextModule());
         install(new SimpleResourceContextModule());
         install(new RTFileAssetLoaderModule(codeDirectory));
 

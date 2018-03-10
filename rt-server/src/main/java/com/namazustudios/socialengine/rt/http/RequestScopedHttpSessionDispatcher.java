@@ -56,23 +56,6 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
         final HttpModule httpModule = httpRequest.getManifestMetadata().getModule();
         final HttpOperation httpOperation = httpRequest.getManifestMetadata().getPreferredOperation();
 
-        final Path path = Path.fromComponents("http", "request", randomUUID().toString());
-
-        final ResourceId resourceId = getContext()
-            .getResourceContext()
-            .createAttributes(httpModule.getModule(), path, request.getAttributes());
-
-        logger.info("Created resource with id {} to handle request.", resourceId);
-        schedule(httpOperation, resourceId, session, request, responseConsumer);
-
-    }
-
-    private void schedule(final HttpOperation httpOperation,
-                          final ResourceId resourceId,
-                          final Session session,
-                          final Request request,
-                          final Consumer<Response> responseConsumer) {
-
         final Consumer<Throwable> failure = ex -> getExceptionMapperResolver()
                 .getExceptionMapper(ex)
                 .map(ex, request, responseConsumer);
@@ -84,18 +67,14 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
             } catch (ClassCastException ex) {
                 logger.error("Resource did not return Response type.");
                 failure.accept(ex);
-            } finally {
-                getContext().getResourceContext().destroyAsync(
-                    v  -> logger.info("Destroyed {}", resourceId),
-                    th -> logger.error("Failed to destroy {}", resourceId, th), resourceId);
             }
         };
 
         try {
-            getContext().getResourceContext().invokeAsync(
+            getContext().getHandlerContext().invokeRemoteHandlerAsync(
                 success, failure,
-                resourceId, httpOperation.getMethod(),
-                request.getPayload(), request, session);
+                request.getAttributes(), httpModule.getModule(),
+                httpOperation.getMethod(), request.getPayload(), request, session);
         } catch (Throwable th) {
             logRequestFailure(request, th);
             failure.accept(th);
