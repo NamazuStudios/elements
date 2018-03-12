@@ -149,7 +149,7 @@ public class JeroMQMuxDemuxIntegrationTest {
 
     }
 
-    @Test(dataProvider = "destinationIdDataSupplier", invocationCount = 2)
+    @Test(enabled = false, dataProvider = "destinationIdDataSupplier", invocationCount = 2)
     public void testMuxDemux(final String multiplexedAddress) throws InterruptedException, ExecutionException {
 
         final UUID uuid = randomUUID();
