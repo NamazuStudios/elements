@@ -45,7 +45,7 @@ public abstract class AbstractDocumentGeneratorTest {
         // an identity field.  That's a total of 13 fields.  We should only have generated
         // exactly that may fields.
 
-        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 15);
+        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 21);
 
         // Check that the identity is sane.  We need to make sure that the identity is
         // extracted properly and that the value matches.
@@ -81,7 +81,7 @@ public abstract class AbstractDocumentGeneratorTest {
 
         // In addition to the above test case, this has three more fields.  An additional
 
-        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 18);
+        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 24);
 
         // Check that the identity is sane.  We need to make sure that the identity is
         // extracted properly and that the value matches.  This is a littie bit more complicated
@@ -126,7 +126,7 @@ public abstract class AbstractDocumentGeneratorTest {
         testModel.setId(UUID.randomUUID().toString());
 
         final DocumentEntry<TestModel> testModelDocumentEntry = underTest.generate(testModel);
-        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 11);
+        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 17);
 
     }
 
@@ -137,7 +137,7 @@ public abstract class AbstractDocumentGeneratorTest {
         testModel.setId(UUID.randomUUID().toString());
 
         final DocumentEntry<TestModelSubclass> testModelDocumentEntry = underTest.generate(testModel);
-        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 12);
+        Assert.assertEquals(testModelDocumentEntry.getDocument().getFields().size(), 18);
 
     }
 

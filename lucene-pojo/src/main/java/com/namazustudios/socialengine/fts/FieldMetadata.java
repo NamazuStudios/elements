@@ -28,7 +28,9 @@ public interface FieldMetadata {
 
     /**
      * {@see {@link SearchableField#boost()}}
+     * @deprecated
      */
+    @Deprecated
     float boost();
 
     /**

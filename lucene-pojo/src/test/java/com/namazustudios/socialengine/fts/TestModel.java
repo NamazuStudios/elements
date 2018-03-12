@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.fts;
 import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
-import org.apache.lucene.document.DoubleField;
 import org.apache.lucene.document.Field;
 
 import java.util.Random;
@@ -17,18 +16,18 @@ import java.util.UUID;
 @SearchableIdentity(@SearchableField(name = "id", path = "/id", type = String.class))
 @SearchableDocument(
         fields ={
-            @SearchableField(name="byteValue", path="/byteValue", type = Byte.class),
-            @SearchableField(name="charValue", path="/charValue", type = Character.class),
-            @SearchableField(name="shortValue", path="/shortValue", type = Short.class),
-            @SearchableField(name="intValue", path="/intValue", type = Integer.class),
-            @SearchableField(name="longValue", path="/longValue", type = Long.class),
-            @SearchableField(name="floatValue", path="/floatValue", type = Float.class),
-            @SearchableField(name="doubleValue", path="/doubleValue", type = Double.class),
-            @SearchableField(name="booleanValue", path="/booleanValue", type = Boolean.class),
-            @SearchableField(name="stringValue", path="/stringValue", type = String.class),
-            @SearchableField(name="textValue", path="/textValue", type = String.class),
+            @SearchableField(name="byteValue", path="/byteValue", type = Byte.class, store = Field.Store.YES),
+            @SearchableField(name="charValue", path="/charValue", type = Character.class, store = Field.Store.YES),
+            @SearchableField(name="shortValue", path="/shortValue", type = Short.class, store = Field.Store.YES),
+            @SearchableField(name="intValue", path="/intValue", type = Integer.class, store = Field.Store.YES),
+            @SearchableField(name="longValue", path="/longValue", type = Long.class, store = Field.Store.YES),
+            @SearchableField(name="floatValue", path="/floatValue", type = Float.class, store = Field.Store.YES),
+            @SearchableField(name="doubleValue", path="/doubleValue", type = Double.class, store = Field.Store.YES),
+            @SearchableField(name="booleanValue", path="/booleanValue", type = Boolean.class, store = Field.Store.YES),
+            @SearchableField(name="stringValue", path="/stringValue", type = String.class, store = Field.Store.YES),
+            @SearchableField(name="textValue", path="/textValue", type = String.class, store = Field.Store.YES),
             @SearchableField(name="blobValue", path="/blobValue", type = byte[].class, store = Field.Store.YES),
-            @SearchableField(name="enumValue", path="/enumValue", type = TestEnum.class),
+            @SearchableField(name="enumValue", path="/enumValue", type = TestEnum.class, store = Field.Store.YES),
         }
 )
 public class TestModel {

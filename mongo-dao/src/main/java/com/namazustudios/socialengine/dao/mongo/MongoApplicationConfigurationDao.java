@@ -57,7 +57,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
                                                                                    final int offset, final int count,
                                                                                    final String search) {
 
-        final BooleanQuery booleanQuery = new BooleanQuery();
+        final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
 
         try {
 
@@ -65,16 +65,16 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             final Term applicationIdTerm = new Term("applicationId");
             final Term applicationNameTerm = new Term("applicationName");
 
-            booleanQuery.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
-            booleanQuery.add(new TermQuery(applicationIdTerm), BooleanClause.Occur.SHOULD);
-            booleanQuery.add(new TermQuery(applicationNameTerm), BooleanClause.Occur.SHOULD);
-            booleanQuery.add(getStandardQueryParser().parse(search, "name"), BooleanClause.Occur.FILTER);
+            booleanQueryBuilder.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
+            booleanQueryBuilder.add(new TermQuery(applicationIdTerm), BooleanClause.Occur.SHOULD);
+            booleanQueryBuilder.add(new TermQuery(applicationNameTerm), BooleanClause.Occur.SHOULD);
+            booleanQueryBuilder.add(getStandardQueryParser().parse(search, "name"), BooleanClause.Occur.FILTER);
 
         } catch (QueryNodeException ex) {
             throw new BadQueryException(ex);
         }
 
-        return getMongoDBUtils().paginationFromSearch(MongoApplicationConfiguration.class, booleanQuery, offset, count, input -> getBeanMapper().map(input, ApplicationConfiguration.class));
+        return getMongoDBUtils().paginationFromSearch(MongoApplicationConfiguration.class, booleanQueryBuilder.build(), offset, count, input -> getBeanMapper().map(input, ApplicationConfiguration.class));
 
     }
 

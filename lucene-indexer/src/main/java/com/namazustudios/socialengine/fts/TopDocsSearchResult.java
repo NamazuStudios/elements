@@ -47,7 +47,7 @@ public class TopDocsSearchResult<DocumentT> extends AbstractSearchResult<Documen
     }
 
     @Override
-    public int total() {
+    public long total() {
         return topDocs.totalHits;
     }
 

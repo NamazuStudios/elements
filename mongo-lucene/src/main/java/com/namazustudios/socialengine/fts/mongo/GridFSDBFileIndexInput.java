@@ -1,59 +1,69 @@
 package com.namazustudios.socialengine.fts.mongo;
 
-import com.mongodb.gridfs.GridFSDBFile;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSDownloadStream;
+import com.mongodb.client.gridfs.model.GridFSFile;
 import org.apache.lucene.store.AlreadyClosedException;
-import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.IndexInput;
-import org.apache.lucene.store.SimpleFSDirectory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.lang.String.format;
 
 /**
  * Created by patricktwohig on 5/21/15.
  */
 public class GridFSDBFileIndexInput extends IndexInput {
 
+    private static final Logger logger = LoggerFactory.getLogger(GridFSDBFileIndexInput.class);
+
     // Immutable members
 
-    private final Object lock;
-
-    private final GridFSDBFile gridFSDBFile;
+    private final AtomicBoolean open = new AtomicBoolean(true);
 
     private final long begin;
 
     private final long length;
 
+    private final GridFSBucket gridFSBucket;
+
+    private final GridFSFile gridFSFile;
+
     // Mutable members
 
     private long pos;  // position relative to beginning of the slice
 
-    private boolean open = true; // set to true until close is called, at which point all methods should throw
+    private GridFSDownloadStream inputStream;
 
-    private InputStream inputStream;
-
-    public GridFSDBFileIndexInput(final GridFSDBFile gridFSDBFile) throws IOException  {
-        this(gridFSDBFile.toString(), gridFSDBFile);
+    public GridFSDBFileIndexInput(final String resourceDescription,
+                                  final GridFSBucket gridFSBucket,
+                                  final GridFSFile gridFSFile)  throws IOException {
+        this(resourceDescription, gridFSBucket, gridFSFile, 0, gridFSFile.getLength());
     }
 
-    public GridFSDBFileIndexInput(final String resourceDescription, final GridFSDBFile gridFSDBFile)  throws IOException {
-        this(resourceDescription, gridFSDBFile, 0, gridFSDBFile.getLength());
+    private GridFSDBFileIndexInput(final String resourceDescription,
+                                   final GridFSBucket gridFSBucket,
+                                   final GridFSFile gridFSFile,
+                                   final long begin, final long length)  throws IOException {
+        this(resourceDescription, gridFSBucket, gridFSFile, 0, begin, length);
     }
 
-    public GridFSDBFileIndexInput(final String resourceDescription, final GridFSDBFile gridFSDBFile,
-                                       final long begin, final long length)  throws IOException {
-        this(new Object(), resourceDescription, gridFSDBFile, 0, begin, length);
-    }
-
-    private GridFSDBFileIndexInput(final Object lock, final String resourceDescription, final GridFSDBFile gridFSDBFile,
-                                  final long pos, final long begin, final long length) throws IOException {
+    private GridFSDBFileIndexInput(final String resourceDescription,
+                                   final GridFSBucket gridFSBucket,
+                                   final GridFSFile gridFSFile,
+                                   final long pos, final long begin, final long length) throws IOException {
 
         super(resourceDescription);
 
         if (begin < 0 || length < 0) {
             throw new IllegalArgumentException("begin or length cannot be less than zero");
-        } else if ((begin + length) > gridFSDBFile.getLength()) {
+        } else if ((begin + length) > gridFSFile.getLength()) {
             throw new IllegalArgumentException("length exceeds length of file");
         } else if (pos < 0) {
             throw new IllegalArgumentException("position must be positive");
@@ -61,57 +71,53 @@ public class GridFSDBFileIndexInput extends IndexInput {
             throw new IllegalArgumentException("position must not be greater than length");
         }
 
-        this.lock = lock;
         this.pos = pos;
         this.begin = begin;
         this.length = length;
-        this.gridFSDBFile = gridFSDBFile;
-        this.inputStream = gridFSDBFile.getInputStream();
+        this.gridFSFile = gridFSFile;
+        this.gridFSBucket = gridFSBucket;
+        this.inputStream = gridFSBucket.openDownloadStream(gridFSFile.getId());
         skipNBytes(begin + pos);
 
     }
 
     @Override
     public void close() throws IOException {
-        synchronized (lock) {
-            open = false;
+        if (!open.compareAndSet(true, false)) {
+            logger.warn("Index input already closed.");
         }
     }
 
     @Override
     public long getFilePointer() {
-        synchronized (lock) {
-            return pos;
-        }
+        return pos;
     }
 
     @Override
     public void seek(final long pos) throws IOException {
-        synchronized (lock) {
 
-            checkOpen();
+        checkOpen();
 
-            if (pos < 0) {
-                throw new IllegalArgumentException("position must be positive");
-            } else if (this.pos != pos) {
+        if (pos < 0) {
+            throw new IllegalArgumentException("position must be positive");
+        } else if (this.pos != pos) {
 
-                // Close an re-open the stream so we start back at the
-                // beginning of the file
+            // Close an re-open the stream so we start back at the
+            // beginning of the file
 
-                inputStream.close();
-                inputStream = gridFSDBFile.getInputStream();
+            inputStream.close();
+            inputStream = gridFSBucket.openDownloadStream(gridFSFile.getId());
 
-                // Skip to the absolute offset which is calculated as the
-                // beginning of the slice plus the position.  Mongo's documentation
-                // indicates that the mere skipping of bytes is a cheap operation
-                // and doesn't actually read anything form the database.
+            // Skip to the absolute offset which is calculated as the
+            // beginning of the slice plus the position.  Mongo's documentation
+            // indicates that the mere skipping of bytes is a cheap operation
+            // and doesn't actually read anything form the database.
 
-                skipNBytes(begin + pos);
-                this.pos = pos;
-
-            }
+            skipNBytes(begin + pos);
+            this.pos = pos;
 
         }
+
     }
 
     // Supports the seek function
@@ -120,10 +126,9 @@ public class GridFSDBFileIndexInput extends IndexInput {
         long total = 0;
         long remaining = toSkip;
 
-        if (toSkip > gridFSDBFile.getLength()) {
+        if (toSkip > gridFSFile.getLength()) {
             // This will loop infinitely if we don't throw in a check here.
-            final String msg = String.format("attempted to seek past end of file toSkip: %d limit: %d",
-                    toSkip, gridFSDBFile.getLength());
+            final String msg = format("attempted to seek past end of file toSkip: %d limit: %d", toSkip, gridFSFile.getLength());
             throw new EOFException(msg);
         }
 
@@ -148,22 +153,18 @@ public class GridFSDBFileIndexInput extends IndexInput {
 
     @Override
     public long length() {
-        synchronized (lock) {
-            return length;
-        }
+        return length;
     }
 
     @Override
     public GridFSDBFileIndexInput slice(String sliceDescription, final long offset, final long length) throws IOException {
-        synchronized (lock) {
 
-            if ((offset + length) > length()) {
-                throw new IllegalArgumentException("exceeds length of this slice " + length());
-            }
-
-            return new GridFSDBFileIndexInput(sliceDescription, gridFSDBFile, begin + offset, length);
-
+        if ((offset + length) > length()) {
+            throw new IllegalArgumentException("exceeds length of this slice " + length());
         }
+
+        return new GridFSDBFileIndexInput(sliceDescription, gridFSBucket, gridFSFile, begin + offset, length);
+
     }
 
     @Override
@@ -174,103 +175,63 @@ public class GridFSDBFileIndexInput extends IndexInput {
         // actual skip operation on the GridFS implementation seems to actually be
         // pretty light weight.
 
-        synchronized (lock) {
+        final int value = inputStream.read();
 
-            final int value = inputStream.read();
-
-            if (value < 0) {
-                throw new EOFException("reached end of stream");
-            }
-
-            ++pos;
-            return (byte) value;
-
+        if (value < 0) {
+            throw new EOFException("reached end of stream");
         }
+
+        ++pos;
+        return (byte) value;
 
     }
 
     @Override
     public void readBytes(final byte[] b, int offset, int length) throws IOException {
 
-        synchronized (lock) {
+        // From what I can tell, the reference implementation does not enforce
+        // an EOF in this method.  Rather, this will just read zero bytes.
 
-            // From what I can tell, the reference implementation does not enforce
-            // an EOF in this method.  Rather, this will just read zero bytes.
+        length = (int)Math.min(length, length());
 
-            length = (int)Math.min(length, length());
+        int total = 0;
 
-            int total = 0;
+        while (length > 0) {
 
-            while (length > 0) {
+            final int read = inputStream.read(b, offset, length);
 
-                final int read = inputStream.read(b, offset, length);
-
-                total += read;
-                offset += read;
-                length -= read;
-
-            }
-
-            // Lastly updates the read position because we need to know
-            // where we finally ended up.
-
-            pos += total;
+            total += read;
+            offset += read;
+            length -= read;
 
         }
+
+        // Lastly updates the read position because we need to know
+        // where we finally ended up.
+
+        pos += total;
 
     }
 
     protected void checkOpen() throws IOException {
-        synchronized (lock) {
-            if (!open) {
-                throw new AlreadyClosedException(toString() + " already closed");
-            }
+        if (!open.get()) {
+            throw new AlreadyClosedException(toString() + " already closed");
         }
     }
 
     @Override
     public GridFSDBFileIndexInput clone() {
 
-        final GridFSDBFileIndexInput cloneOfthis;
+        final GridFSDBFileIndexInput clone = (GridFSDBFileIndexInput) super.clone();
+        clone.inputStream = gridFSBucket.openDownloadStream(gridFSFile.getId());
 
-
-        // This one inherits the lock from the outer file.
-
-        synchronized (lock) {
-            try {
-                cloneOfthis = new GridFSDBFileIndexInput(lock, toString(), gridFSDBFile, pos, begin, length) {
-
-                    @Override
-                    protected void checkOpen() throws IOException {
-
-                        // We disregard this' open flag and delegate to the owning
-                        // instance's flag, not this object.
-
-                        GridFSDBFileIndexInput.this.checkOpen();
-
-                    }
-
-                    @Override
-                    public void close() throws IOException {
-
-                        // The API says it will never close the cloned instances of the
-                        // object and that it still has to signal properly with an
-                        // AlreadyClosedException.  However, if this should succeed
-                        // we simply want to throw an exception indicating that this
-                        // operation is not supported.
-
-                        throw new UnsupportedOperationException("close must not be called on clone");
-
-                    }
-
-                };
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-
-            return cloneOfthis;
-
+        try {
+            clone.skipNBytes(begin + pos);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
         }
+
+        return clone;
 
     }
 

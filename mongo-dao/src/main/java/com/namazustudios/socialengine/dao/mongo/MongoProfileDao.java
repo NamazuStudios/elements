@@ -81,17 +81,17 @@ public class MongoProfileDao implements ProfileDao {
     @Override
     public Pagination<Profile> getActiveProfiles(int offset, int count, String search) {
 
-        final BooleanQuery booleanQuery = new BooleanQuery();
+        final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
 
         try {
             final Term activeTerm = new Term("active", "true");
-            booleanQuery.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
-            booleanQuery.add(getStandardQueryParser().parse(search, "name"), BooleanClause.Occur.FILTER);
+            booleanQueryBuilder.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
+            booleanQueryBuilder.add(getStandardQueryParser().parse(search, "name"), BooleanClause.Occur.FILTER);
         } catch (QueryNodeException ex) {
             throw new BadQueryException(ex);
         }
 
-        return getMongoDBUtils().paginationFromSearch(MongoProfile.class, booleanQuery, offset, count, this::transform);
+        return getMongoDBUtils().paginationFromSearch(MongoProfile.class, booleanQueryBuilder.build(), offset, count, this::transform);
 
     }
 

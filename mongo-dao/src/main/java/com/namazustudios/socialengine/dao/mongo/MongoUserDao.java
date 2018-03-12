@@ -120,20 +120,20 @@ public class MongoUserDao implements UserDao {
     @Override
     public Pagination<User> getActiveUsers(int offset, int count, String queryString) {
 
-        final BooleanQuery booleanQuery = new BooleanQuery();
+        final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
 
         try {
 
             final Term activeTerm = new Term("active", "true");
 
-            booleanQuery.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
-            booleanQuery.add(getStandardQueryParser().parse(queryString, "name"), BooleanClause.Occur.FILTER);
+            booleanQueryBuilder.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
+            booleanQueryBuilder.add(getStandardQueryParser().parse(queryString, "name"), BooleanClause.Occur.FILTER);
 
         } catch (QueryNodeException ex) {
             throw new BadQueryException(ex);
         }
 
-        return getMongoDBUtils().paginationFromSearch(MongoUser.class, booleanQuery, offset, count, u -> getDozerMapper().map(u, User.class));
+        return getMongoDBUtils().paginationFromSearch(MongoUser.class, booleanQueryBuilder.build(), offset, count, u -> getDozerMapper().map(u, User.class));
 
     }
 

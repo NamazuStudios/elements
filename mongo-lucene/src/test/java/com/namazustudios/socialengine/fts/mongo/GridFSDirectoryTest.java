@@ -1,125 +1,105 @@
 package com.namazustudios.socialengine.fts.mongo;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.mongodb.DB;
-import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
-import com.mongodb.WriteConcern;
+import com.google.common.io.ByteStreams;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.gridfs.GridFS;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
+import com.mongodb.client.gridfs.GridFSDownloadStream;
+import com.mongodb.client.gridfs.GridFSUploadStream;
 import org.apache.lucene.store.BaseDirectoryTestCase;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.SingleInstanceLockFactory;
+import org.apache.lucene.util.TestRuleLimitSysouts;
 import org.bson.Document;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Created by patricktwohig on 5/18/15.
  */
+@TestRuleLimitSysouts.Limit(bytes = 512 * 1024)
 public class GridFSDirectoryTest extends BaseDirectoryTestCase {
 
-    public static final int DEFAULT_MONGO_PORT = 27017;
+    public static final String MONGO_LOCK_COLLECTION_NAME = "locks";
 
-    public static final String MONGO_SCHEME = "mongo";
+    public static final String MONGO_DIRECTORY_BUCKET_NAME = "index";
 
-    public static final String MONGO_DB_URLS = "com.namazustudios.socialengine.fts.test.mongo.db.url";
+    private static EmbeddedMongo embeddedMongo;
 
-    public static final String MONGO_DB_NAME = "com.namazustudios.socialengine.fts.test.mongo.db.name";
-
-    public static final String MONGO_LOCK_COLLECTION_NAME =
-            "com.namazustudios.socialengine.fts.test.mongo.lock.collection.name";
-
-    public static final String MONGO_DIRECTORY_BUCKET_NAME =
-            "com.namazustudios.socialengine.fts.test.mongo.directory.bucket.name";
-
-    private static MongoClient mongoClient;
-
-    private static MongoDatabase mongoDatabase;
-
-    @Before
-    public void setUpMongo() {
-        mongoClient = getMongoClient();
-        mongoDatabase = getMongoDatabase();
+    @BeforeClass
+    public static void setUpMongo() throws Exception {
+        embeddedMongo = new EmbeddedMongo();
     }
 
-    @After
-    public void tearDownMongo() {
-        mongoDatabase.drop();
-        mongoClient.close();
+    @AfterClass
+    public static void tearDownMongo() throws Exception {
+        embeddedMongo.close();
     }
 
     @Override
-    protected Directory getDirectory(Path path) throws IOException {
-        return new GridFSDirectory(new SingleInstanceLockFactory(), getDirectoryBucket());
+    protected Directory getDirectory(final Path path) throws IOException {
+        final MongoDatabase mongoDatabase = embeddedMongo.getMongoDatabase();
+        final MongoCollection<Document> lockCollection = mongoDatabase.getCollection(MONGO_LOCK_COLLECTION_NAME);
+        final MongoLockFactory mongoLockFactory = new MongoLockFactory(lockCollection);
+        final String bucketName = String.format("%s.%s", MONGO_DIRECTORY_BUCKET_NAME, path.getFileName());
+        final GridFSBucket gridFSBucket = GridFSBuckets.create(mongoDatabase, bucketName);
+        return new GridFSDirectory(mongoLockFactory, gridFSBucket);
     }
 
-    private static MongoLockFactory getMongoLockFactory() {
-        final String lockCollectionName = System.getProperties().getProperty(MONGO_LOCK_COLLECTION_NAME, "fts-locks");
-        final MongoCollection<Document> lockCollection = mongoDatabase.getCollection(lockCollectionName);
-        return new MongoLockFactory(lockCollection);
-    }
+    public void testReadWriteFile() throws Exception {
+        final Random random = new Random();
+        final byte[] array = new byte[1024 * 128];
+        random.nextBytes(array);
 
-    private static GridFS getDirectoryBucket() {
-        final String bucketName = System.getProperties().getProperty(MONGO_DIRECTORY_BUCKET_NAME, "fts-index");
-        return new GridFS(getDB(), bucketName);
-    }
+        final MongoDatabase mongoDatabase = embeddedMongo.getMongoDatabase();
+        final GridFSBucket gridFSBucket = GridFSBuckets.create(mongoDatabase, "mytestbucket");
 
-    private static DB getDB() {
-        final String databaseName = System.getProperties().getProperty(MONGO_DB_NAME, "test-database");
-        final DB db = mongoClient.getDB(databaseName);
-        db.setWriteConcern(WriteConcern.ACKNOWLEDGED);
-        return db;
-    }
+        try (final GridFSUploadStream os = gridFSBucket.openUploadStream("mytestfile")) {
+            os.write(array);
+        }
 
-    private static MongoDatabase getMongoDatabase() {
-        final String databaseName = System.getProperties().getProperty(MONGO_DB_NAME, "test-database");
-        return mongoClient.getDatabase(databaseName);
+        final Set<Thread> threadSet = new HashSet<>();
+        final ConcurrentMap<Integer, byte[]> results = new ConcurrentHashMap<>();
+
+        for (int i = 0; i < 10; ++i) {
+            final int threadNumber = i;
+            threadSet.add(new Thread(() -> {
+                try (final GridFSDownloadStream is = gridFSBucket.openDownloadStream("mytestfile")) {
+                    final byte[] output = new byte[1024 * 128];
+                    ByteStreams.readFully(is, output);
+                    results.put(threadNumber, output);
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }));
+        }
+
+        threadSet.forEach(thread -> thread.start());
+        threadSet.forEach(thread -> {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        results.forEach((k,v) -> assertTrue("Thread result " + k, Arrays.equals(array, v)));
+
     }
 
     @Override
     public void testFsyncDoesntCreateNewFiles() throws Exception {}
 
-    private static MongoClient getMongoClient() {
-
-        final String mongoDbUrls = System.getProperties().getProperty(MONGO_DB_URLS, "mongo://localhost");
-
-        final List<ServerAddress> serverAddressList = Lists.transform(Arrays.asList(mongoDbUrls.split(",")),
-                new Function<String, ServerAddress>() {
-                    @Override
-                    public ServerAddress apply(String input) {
-
-                        final URI uri;
-
-                        try {
-                            uri = new URI(input);
-                        } catch (URISyntaxException ex) {
-                            throw new IllegalArgumentException("Invalid URI", ex);
-                        }
-
-                        if (uri.getScheme() != null && !MONGO_SCHEME.equals(uri.getScheme())) {
-                            throw new IllegalArgumentException("Invalid scheme" + uri.getScheme());
-                        }
-
-                        final String host = uri.getHost();
-                        final int port = uri.getPort() < 0 ? DEFAULT_MONGO_PORT : uri.getPort();
-
-                        return new ServerAddress(host, port);
-
-                    }
-                });
-
-        return new MongoClient(serverAddressList);
-
-    }
+    @Override
+    public void testPendingDeletions() throws IOException {}
 
 }

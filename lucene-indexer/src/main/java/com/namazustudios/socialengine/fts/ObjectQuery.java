@@ -50,16 +50,15 @@ public abstract class ObjectQuery<DocumentT> {
     }
 
     /**
-     * The raw Query object that will find all objects of the
-     * particuular type.
+     * The raw Query object that will find all objects of the particular type.
      *
      * @return the raw query which will fetch the objects by type.
      */
     public Query getTypeQuery() {
-        final BooleanQuery booleanQuery = new BooleanQuery();
+        final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
         final SearchableField searchableField = searchableDocument.type();
-        addTermsToQuery(booleanQuery, searchableField, getDocumentType());
-        return booleanQuery;
+        addTermsToQuery(booleanQueryBuilder, searchableField, getDocumentType());
+        return booleanQueryBuilder.build();
     }
 
     /**
@@ -74,13 +73,13 @@ public abstract class ObjectQuery<DocumentT> {
      * to add to the given {@link BooleanQuery}.  Each generated {@link TermQuery} is added
      * with {@link BooleanClause.Occur#FILTER} semantics.
      *
-     * @param booleanQuery the query to modify
+     * @param booleanQueryBuilder the query to modify
      * @param searchableField the searchable field annotation
      * @param value the value for which to generate {@link Term}s
      */
-    protected void addTermsToQuery(final BooleanQuery booleanQuery,
-                                 final SearchableField searchableField,
-                                 final Object value) {
+    protected void addTermsToQuery(final BooleanQuery.Builder booleanQueryBuilder,
+                                   final SearchableField searchableField,
+                                   final Object value) {
 
         final FieldMetadata fieldMetadata = new AnnotationFieldMetadata(searchableField) {
 
@@ -106,7 +105,7 @@ public abstract class ObjectQuery<DocumentT> {
                 }
 
                 final Term term = new Term(fieldMetadata.name(), indexableField.stringValue());
-                booleanQuery.add(new TermQuery(term), BooleanClause.Occur.FILTER);
+                booleanQueryBuilder.add(new TermQuery(term), BooleanClause.Occur.FILTER);
 
             }
 

@@ -129,20 +129,20 @@ public class MongoMatchDao implements MatchDao {
     @Override
     public Pagination<Match> getMatchesForPlayer(String playerId, int offset, int count, String queryString) {
 
-        final BooleanQuery booleanQuery = new BooleanQuery();
+        final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
 
         try {
 
             final Term playerTerm = new Term("player", playerId);
 
-            booleanQuery.add(new TermQuery(playerTerm), BooleanClause.Occur.FILTER);
-            booleanQuery.add(getStandardQueryParser().parse(queryString, "player"), BooleanClause.Occur.FILTER);
+            booleanQueryBuilder.add(new TermQuery(playerTerm), BooleanClause.Occur.FILTER);
+            booleanQueryBuilder.add(getStandardQueryParser().parse(queryString, "player"), BooleanClause.Occur.FILTER);
 
         } catch (QueryNodeException ex) {
             throw new BadQueryException(ex);
         }
 
-        return getMongoDBUtils().paginationFromSearch(MongoUser.class, booleanQuery, offset, count, u -> getDozerMapper().map(u, Match.class));
+        return getMongoDBUtils().paginationFromSearch(MongoUser.class, booleanQueryBuilder.build(), offset, count, u -> getDozerMapper().map(u, Match.class));
 
     }
 
