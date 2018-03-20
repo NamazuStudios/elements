@@ -31,6 +31,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static java.lang.String.format;
+
 public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
 
     private static final String VERSION_ORIGIN_ID = "version";
@@ -65,12 +67,11 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         final Injector injector = getInjector().createChildInjector(new VersionServletModule());
 
-        final String path = "/" + VERSION_ORIGIN_ID;
         final VersionServlet versionServlet = injector.getInstance(VersionServlet.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
-        servletContextHandler.setContextPath(path);
-        servletContextHandler.addServlet(new ServletHolder(versionServlet), "/*");
+        servletContextHandler.setContextPath("/");
+        servletContextHandler.addServlet(new ServletHolder(versionServlet), format("/%s/*", VERSION_ORIGIN_ID));
         return servletContextHandler;
 
     }
