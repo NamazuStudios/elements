@@ -10,6 +10,11 @@ import joptsimple.OptionSpec;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolation;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Created by patricktwohig on 5/8/15.
@@ -21,36 +26,46 @@ public abstract class AbstractUserCommand implements Command {
 
     private final OptionParser optionParser = new OptionParser();
 
-    private OptionSpec<String> usernameOptionSpec;
+    private final OptionSpec<String> usernameOptionSpec;
 
-    private OptionSpec<String> passwordOptionSpec;
+    private final OptionSpec<String> passwordOptionSpec;
 
-    private OptionSpec<String> emailOptionSpec;
+    private final OptionSpec<String> emailOptionSpec;
 
-    private OptionSpec<User.Level> levelOptionSpec;
+    private final OptionSpec<User.Level> levelOptionSpec;
 
-    private OptionSpec<Boolean> strictOptionSpec;
+    private final OptionSpec<Boolean> strictOptionSpec;
 
     private User user;
 
     private String password;
 
     public AbstractUserCommand() {
-        usernameOptionSpec = getOptionParser().accepts("user", "Username/Unique Identity.  (ex. bobsmith)")
+
+        usernameOptionSpec = getOptionParser().accepts("user", "The user's login/username.  (ex. bobsmith)")
                 .withRequiredArg()
                 .ofType(String.class);
-        emailOptionSpec = getOptionParser().accepts("email", "Email Address.  (ex. bobsmith@yourcompany.com)")
+
+        emailOptionSpec = getOptionParser().accepts("email", "The user's email Address.  (ex. bobsmith@yourcompany.com)")
                 .withRequiredArg()
                 .ofType(String.class);
-        passwordOptionSpec = getOptionParser().accepts("password", "Password  The user's password.")
+
+        passwordOptionSpec = getOptionParser().accepts("password", "The user's password.  If unset this will prompt for a value.")
                 .withOptionalArg()
                 .ofType(String.class);
-        levelOptionSpec = getOptionParser().accepts("level", "User Level.  One of the several predefined levels.")
+
+        final String levelDescription = "The user level one of: " + stream(User.Level.values())
+                .map(l -> l.toString())
+                .collect(joining());
+
+        levelOptionSpec = getOptionParser().accepts("level", levelDescription)
                 .withRequiredArg()
                 .ofType(User.Level.class);
+
         strictOptionSpec = getOptionParser().accepts("strict", "Flag to toggle strict mode.  Default true.")
                 .withOptionalArg()
                 .ofType(boolean.class);
+
     }
 
     public OptionParser getOptionParser() {
@@ -91,12 +106,12 @@ public abstract class AbstractUserCommand implements Command {
 
         try {
             optionSet = optionParser.parse(args);
-            readOptions(optionSet);
+            user = readOptions(optionSet);
         } catch (OptionException ex) {
             optionParser.printHelpOn(System.err);
             return;
         } catch (Setup.ConsoleException ex) {
-            System.err.println(ex.getMessage());
+            System.err.printf("\nFailed to Read Input: %s\n\n", ex.getMessage());
             optionParser.printHelpOn(System.err);
             return;
         }
@@ -115,14 +130,21 @@ public abstract class AbstractUserCommand implements Command {
 
     }
 
-    private void readOptions(final OptionSet optionSet) {
+    /**
+     * Reads the {@link OptionSet} and generates a {@link User} instance from the options supplied to this command.
+     *
+     * The returned {@link User} will be made available using subsequent calls using {@link #getUser()}.
+     *
+     * @param optionSet the {@link OptionSet} made from the arguments passed to {@link #run(String[])}.
+     */
+    protected User readOptions(final OptionSet optionSet) {
 
-        user = new User();
+        final User user = new User();
 
-        getUser().setName(optionSet.valueOf(usernameOptionSpec));
-        getUser().setEmail(optionSet.valueOf(emailOptionSpec));
-        getUser().setLevel(optionSet.valueOf(levelOptionSpec));
-        getUser().setActive(true);
+        user.setName(optionSet.valueOf(usernameOptionSpec));
+        user.setEmail(optionSet.valueOf(emailOptionSpec));
+        user.setLevel(optionSet.valueOf(levelOptionSpec));
+        user.setActive(true);
 
         if (optionSet.has(passwordOptionSpec)) {
             password = optionSet.valueOf(passwordOptionSpec);
@@ -133,8 +155,13 @@ public abstract class AbstractUserCommand implements Command {
             password = setup.reads(prompt);
         }
 
+        return user;
     }
 
+    /**
+     * Performs the actual changes and commits them to the database.
+     * @param optionSet
+     */
     protected abstract void writeUserToDatabase(OptionSet optionSet);
 
 }

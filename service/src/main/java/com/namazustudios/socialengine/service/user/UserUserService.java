@@ -93,10 +93,4 @@ public class UserUserService extends AbstractUserService implements UserService 
         userDao.softDeleteUser(userId);
     }
 
-    @Override
-    public User updateUserPassword(String userId, String password) {
-        checkForCurrentUser(userId);
-        return userDao.updateActiveUserPassword(userId, password);
-    }
-
 }

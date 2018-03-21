@@ -208,7 +208,7 @@ public class UserEditorView extends ViewImpl implements UserEditorPresenter.MyVi
     }
 
     private void updateUser(final User user, final String password) {
-        userClient.updateUser(user.getName(), password, user, new MethodCallback<User>() {
+        userClient.updateUser(user.getId(), password, user, new MethodCallback<User>() {
 
             @Override
             public void onFailure(Method method, Throwable throwable) {

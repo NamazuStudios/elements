@@ -139,9 +139,9 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
         editColumn.setFieldUpdater((index, object, value) -> {
 
             final PlaceRequest placeRequest = new PlaceRequest.Builder()
-                    .nameToken(NameTokens.USER_EDIT)
-                    .with(UserEditorPresenter.Param.user.toString(), object.getName())
-                    .build();
+                .nameToken(NameTokens.USER_EDIT)
+                .with(UserEditorPresenter.Param.user.toString(), object.getId())
+                .build();
 
             placeManager.revealPlace(placeRequest);
 
@@ -188,7 +188,7 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
     }
 
     private void save(final User user, final int toRedraw, final Runnable unwwind) {
-        userClient.updateUser(user.getName(), null, user, new MethodCallback<User>() {
+        userClient.updateUser(user.getId(), null, user, new MethodCallback<User>() {
 
             @Override
             public void onFailure(Method method, Throwable throwable) {
@@ -226,7 +226,7 @@ public class UserEditorTableView extends ViewImpl implements UserEditorTablePres
     }
 
     private void delete(final User user) {
-        userClient.deleteUser(user.getName(), new MethodCallback<Void>() {
+        userClient.deleteUser(user.getId(), new MethodCallback<Void>() {
 
             @Override
             public void onFailure(Method method, Throwable throwable) {

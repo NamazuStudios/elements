@@ -51,22 +51,22 @@ public interface UserClient extends RestService {
     /**
      * Uses a GET request to fetch the user with the given user name.
      *
-     * @param userName the user name
+     * @param userId the User id as determined by {@link User#getId()}
      * @param userMethodCallback the user method callback
      */
     @GET
-    @Path("{userName}")
-    void getUser(final @PathParam("userName") String userName,
+    @Path("{userId}")
+    void getUser(final @PathParam("userId") String userId,
                  final MethodCallback<User> userMethodCallback);
 
     /**
      * Deletes the user with teh given username.
      *
-     * @param methodCallback
+     * @param userId the User id as determined by {@link User#getId()}
      */
     @DELETE
-    @Path("{userName}")
-    void deleteUser(final @PathParam("userName") String userName,
+    @Path("{userId}")
+    void deleteUser(final @PathParam("userId") String userId,
                     final MethodCallback<Void> methodCallback);
 
     /**
@@ -83,16 +83,15 @@ public interface UserClient extends RestService {
 
     /**
      * Updates a user with the given credentials.
-     *
-     * @param name the user name or email address
+     * @param userId the User id as determined by {@link User#getId()}
      * @param password the user's password
      * @param user the user JSON object
      * @param userMethodCallback the method callback
      */
     @PUT
-    @Path("{name}")
+    @Path("{userId}")
     void updateUser(
-            final @PathParam("name") String name,
+            final @PathParam("userId") String userId,
             final @QueryParam("password") String password,
             final User user,
             final MethodCallback<User> userMethodCallback);
