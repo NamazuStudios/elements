@@ -129,7 +129,7 @@ public abstract class AbstractUserCommand implements Command {
         }
 
         if (Strings.isNullOrEmpty(password)) {
-            final String prompt = String.format("Please enter password for user %s: " + user.getEmail());
+            final String prompt = String.format("Please enter password for user %s: ", user.getEmail());
             password = setup.reads(prompt);
         }
 
