@@ -274,7 +274,7 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     private MongoUser getMongoUserFromProfile(final Profile profile) {
-        return getMongoUserDao().getActiveMongoUser(profile.getUser().getName());
+        return getMongoUserDao().getActiveMongoUser(profile.getUser().getId());
     }
 
     private MongoApplication getMongoApplicationFromProfile(final Profile profile) {
