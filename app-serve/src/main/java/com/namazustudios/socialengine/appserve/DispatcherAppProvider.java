@@ -35,6 +35,8 @@ import static java.lang.String.format;
 
 public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
 
+    private static final String PATH_PREFIX = "app-serve";
+
     private static final String VERSION_ORIGIN_ID = "version";
 
     private static final Logger logger = LoggerFactory.getLogger(DispatcherAppProvider.class);
@@ -84,7 +86,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         final Context context = injector.getInstance(Context.class);
         context.start();
 
-        final String path = "/" + application.getName();
+        final String path = format("/%s/%s", PATH_PREFIX, application.getName());
         final DispatcherServlet dispatcherServlet = injector.getInstance(DispatcherServlet.class);
         final SessionIdAuthenticationFilter sessionIdAuthenticationFilter = injector.getInstance(SessionIdAuthenticationFilter.class);
 
