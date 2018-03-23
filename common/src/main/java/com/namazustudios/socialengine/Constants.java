@@ -83,7 +83,7 @@ public interface Constants {
      * The HTTP tunneling root URL.  This is the base URL where the http rt-http service
      * services requests.
      */
-    String HTTP_TUNNEL_URL = "com.namazustudios.socialengine.git.http.tunnel.url";
+    String HTTP_TUNNEL_URL = "com.namazustudios.socialengine.http.tunnel.url";
 
     /**
      * Used to specify the port that the http tunnel will run against.

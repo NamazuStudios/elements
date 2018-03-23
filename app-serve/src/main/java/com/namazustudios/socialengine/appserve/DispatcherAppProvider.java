@@ -32,10 +32,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
+import static java.util.UUID.randomUUID;
 
 public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
 
-    private static final String VERSION_ORIGIN_ID = "version";
+    private static final String PATH_PREFIX = "app-serve";
+    private static final String VERSION_PREFIX = "app-serve-version";
+    private static final String VERSION_ORIGIN_ID = "31a020f2-1df1-4b1a-8bc1-a50d2cabd823";
 
     private static final Logger logger = LoggerFactory.getLogger(DispatcherAppProvider.class);
 
@@ -71,7 +74,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath("/");
-        servletContextHandler.addServlet(new ServletHolder(versionServlet), format("/%s/*", VERSION_ORIGIN_ID));
+        servletContextHandler.addServlet(new ServletHolder(versionServlet), format("/%s/*", VERSION_PREFIX));
         return servletContextHandler;
 
     }
@@ -84,7 +87,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         final Context context = injector.getInstance(Context.class);
         context.start();
 
-        final String path = "/" + application.getName();
+        final String path = format("/%s/%s", PATH_PREFIX, application.getName());
         final DispatcherServlet dispatcherServlet = injector.getInstance(DispatcherServlet.class);
         final SessionIdAuthenticationFilter sessionIdAuthenticationFilter = injector.getInstance(SessionIdAuthenticationFilter.class);
 

@@ -57,19 +57,19 @@ public class UserEditorPresenter extends Presenter<UserEditorPresenter.MyView, U
 
         super.prepareFromRequest(request);
 
-        final String userName = request.getParameter(user.name().toLowerCase(), "").trim();
+        final String userId = request.getParameter(user.name().toLowerCase(), "").trim();
 
-        if (Strings.isNullOrEmpty(userName)) {
+        if (Strings.isNullOrEmpty(userId)) {
             getView().createUser();
             getProxy().manualReveal(this);
         } else {
-            loadUserAndShow(userName);
+            loadUserAndShow(userId);
         }
 
     }
 
-    private void loadUserAndShow(final String userName) {
-        userClient.getUser(userName, new MethodCallback<User>() {
+    private void loadUserAndShow(final String userId) {
+        userClient.getUser(userId, new MethodCallback<User>() {
 
             @Override
             public void onFailure(Method method, Throwable throwable) {

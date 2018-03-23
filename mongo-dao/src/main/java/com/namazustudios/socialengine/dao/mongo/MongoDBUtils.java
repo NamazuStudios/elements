@@ -58,13 +58,13 @@ public class MongoDBUtils {
     }
 
     /**
-     * Parses the given ObjectID string using {@link ObjectId}.  If this fails, this
-     * throws the appropriate exception type.
+     * Parses the given ObjectID string using {@link ObjectId}.  If this fails, this throws the appropriate exception
+     * type of {@link NotFoundException}.
      *
-     * @param objectId
-     * @return
+     * @param objectId the object ID to parse
+     * @return an {@link ObjectId} (never null)
      */
-    public ObjectId parse(final String objectId) {
+    public ObjectId parseOrThrowNotFoundException(final String objectId) {
         try {
             return new ObjectId(objectId);
         } catch (IllegalArgumentException ex) {
@@ -74,8 +74,8 @@ public class MongoDBUtils {
 
     /**
      * Transforms the given {@link Query} to the resulting {@link Pagination}.
-            *
-            * @param query the query
+     *
+     * @param query the query
      * @param offset the offset
      * @param count the count
      * @param function the function to transform the values

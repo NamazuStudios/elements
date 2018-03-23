@@ -105,7 +105,7 @@ public class MongoProfileDao implements ProfileDao {
     public MongoProfile getActiveMongoProfile(String profileId) {
 
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
-        final ObjectId objectId = getMongoDBUtils().parse(profileId);
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileId);
 
         query.and(
                 query.criteria("active").equal(true),
@@ -149,7 +149,7 @@ public class MongoProfileDao implements ProfileDao {
 
         validate(profile);
 
-        final ObjectId objectId = getMongoDBUtils().parse(profile.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profile.getId());
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
         query.and(
@@ -274,7 +274,7 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     private MongoUser getMongoUserFromProfile(final Profile profile) {
-        return getMongoUserDao().getActiveMongoUser(profile.getUser().getName());
+        return getMongoUserDao().getActiveMongoUser(profile.getUser().getId());
     }
 
     private MongoApplication getMongoApplicationFromProfile(final Profile profile) {
@@ -284,7 +284,7 @@ public class MongoProfileDao implements ProfileDao {
     @Override
     public void softDeleteProfile(String profileId) {
 
-        final ObjectId objectId = getMongoDBUtils().parse(profileId);
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileId);
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
         query.and(

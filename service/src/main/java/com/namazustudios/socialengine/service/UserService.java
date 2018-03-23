@@ -96,14 +96,4 @@ public interface UserService {
      */
     void deleteUser(final String userId);
 
-    /**
-     * UPdates the password for a given user.
-     *
-     * @param userId the user's name
-     * @param password the user's password
-     *
-     * @return the user.
-     */
-    User updateUserPassword(final String userId, final String password);
-
 }

@@ -37,8 +37,7 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
 
     @Override
     public User createUser(User user, String password) {
-        final User out = userDao.createOrRectivateUserWithPassword(user, password);
-        return out;
+        return userDao.createOrRectivateUserWithPassword(user, password);
     }
 
     @Override
@@ -54,11 +53,6 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     @Override
     public void deleteUser(String userId) {
         userDao.softDeleteUser(userId);
-    }
-
-    @Override
-    public User updateUserPassword(String userId, String password) {
-        return userDao.updateActiveUserPassword(userId, password);
     }
 
 }

@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
-import com.namazustudios.socialengine.rt.annotation.Dispatch;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.jeromq.Connection;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
@@ -22,10 +21,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
-import static java.lang.Thread.currentThread;
 import static java.lang.Thread.interrupted;
 import static org.zeromq.ZMQ.SNDMORE;
-import static org.zeromq.ZMQ.poll;
 
 public class JeroMQRemoteInvoker implements RemoteInvoker {
 
@@ -106,7 +103,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
                 }
 
-                logger.info("Finished Invocation.");
+                logger.debug("Finished Invocation.");
 
             } catch (Exception ex) {
 
@@ -353,7 +350,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
          * @return true if the set was successful
          */
         public boolean setResult(final T result) {
-            logger.info("Setting remote result {}", result);
+            logger.debug("Setting remote result {}", result);
             return setResultCallable(() -> result);
         }
 
@@ -364,7 +361,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
          */
         public boolean setException(final Exception exception) {
 
-            logger.info("Setting remote exception {}", exception);
+            logger.debug("Setting remote exception {}", exception);
 
             return setResultCallable(() -> {
                 throw exception;

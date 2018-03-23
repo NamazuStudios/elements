@@ -32,7 +32,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 
 /**
@@ -68,18 +67,10 @@ public class MongoUserDao implements UserDao {
     public MongoUser getActiveMongoUser(final String userId) {
 
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
-
-        try {
-            final ObjectId objectId = getMongoDBUtils().parse(userId);
-            query.and(query.criteria("_id").equal(objectId));
-        } catch (NotFoundException ex) {
-            query.or(
-                query.criteria("name").equal(userId),
-                query.criteria("email").equal(userId)
-            );
-        }
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(userId);
 
         query.and(
+            query.criteria("_id").equal(objectId),
             query.criteria("active").equal(true)
         );
 
@@ -111,7 +102,7 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public Pagination<User> getActiveUsers(int offset, int count) {
+    public Pagination<User> getActiveUsers(final int offset, final int count) {
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         query.filter("active = ", true);
         return paginationFromQuery(query, offset, count);
@@ -142,7 +133,7 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User createUserStrict(User user) {
+    public User createUserStrict(final User user) {
 
         validate(user);
 
@@ -209,7 +200,6 @@ public class MongoUserDao implements UserDao {
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
-
         query.or(
             query.criteria("name").equal(user.getName()),
             query.criteria("email").equal(user.getEmail())
@@ -233,7 +223,6 @@ public class MongoUserDao implements UserDao {
         try {
 
             final FindAndModifyOptions options = new FindAndModifyOptions()
-
                     .returnNew(true)
                     .upsert(true);
 
@@ -252,7 +241,7 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User createOrReactivateUser(User user) {
+    public User createOrReactivateUser(final User user) {
         validate(user);
 
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
@@ -298,11 +287,11 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User updateUserStrict(User user) {
+    public User updateUserStrict(final User user) {
 
         validate(user);
 
-        final ObjectId objectId = getMongoDBUtils().parse(user.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
@@ -337,11 +326,11 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User updateUserStrict(User user, final String password) {
+    public User updateUserStrict(final User user, final String password) {
 
         validate(user);
 
-        final ObjectId objectId = getMongoDBUtils().parse(user.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
@@ -378,11 +367,11 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User updateActiveUser(User user) {
+    public User updateActiveUser(final User user) {
 
         validate(user);
 
-        final ObjectId objectId = getMongoDBUtils().parse(user.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
@@ -411,11 +400,11 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User updateActiveUser(User user, String password) {
+    public User updateActiveUser(final User user, final String password) {
 
         validate(user);
 
-        final ObjectId objectId = getMongoDBUtils().parse(user.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
@@ -446,23 +435,15 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public void softDeleteUser(String userId) {
-
+    public void softDeleteUser(final String userId) {
 
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
-        try {
-            final ObjectId objectId = getMongoDBUtils().parse(userId);
-            query.and(query.criteria("_id").equal(objectId));
-        } catch (NotFoundException ex) {
-            query.or(
-                query.criteria("name").equal(userId),
-                query.criteria("email").equal(userId)
-            );
-        }
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(userId);
 
         query.and(
+            query.criteria("_id").equal(objectId),
             query.criteria("active").equal(true)
         );
 
@@ -476,66 +457,6 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User with userid does not exist:" + userId);
         }
 
-    }
-
-    @Override
-    public User updateActiveUserPassword(String userId, String password) {
-
-        password = nullToEmpty(password).trim();
-
-        if (isNullOrEmpty(password)) {
-            throw new InvalidDataException("Password must not be blank.");
-        }
-
-        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
-        final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
-
-        try {
-            final ObjectId objectId = getMongoDBUtils().parse(userId);
-            query.and(query.criteria("_id").equal(objectId));
-        } catch (NotFoundException ex) {
-            query.or(
-                query.criteria("name").equal(userId),
-                query.criteria("email").equal(userId)
-            );
-        }
-
-        query.and(
-            query.criteria("active").equal(true)
-        );
-
-        // Generate the password bytes from the encoding
-
-        final byte[] passwordBytes;
-
-        try {
-            passwordBytes = password.getBytes(getPasswordEncoding());
-        } catch (UnsupportedEncodingException ex) {
-            throw new InternalException(ex);
-        }
-
-        // Generate the hash
-
-        final byte[] salt = new byte[MongoPasswordUtils.SALT_LENGTH];
-        final SecureRandom secureRandom = new SecureRandom();
-        secureRandom.nextBytes(salt);
-
-        final MessageDigest digest = getMongoPasswordUtils().newPasswordMessageDigest();
-        digest.update(salt);
-        digest.update(passwordBytes);
-
-        operations.set("salt", salt);
-        operations.set("passwordHash", digest.digest());
-        operations.set("hashAlgorithm", digest.getAlgorithm());
-
-        final MongoUser mongoUser = getDatastore().findAndModify(query, operations);
-        getObjectIndex().index(mongoUser);
-
-        if (mongoUser == null) {
-            throw new NotFoundException("User with userid does not exist:" + userId);
-        }
-
-        return getDozerMapper().map(mongoUser, User.class);
     }
 
     public void validate(final User user) {
@@ -552,13 +473,13 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User validateActiveUserPassword(String userId, String password) {
+    public User validateActiveUserPassword(final String userNameOrEmail, final String password) {
 
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
 
         query.or(
-            query.criteria("name").equal(userId),
-            query.criteria("email").equal(userId)
+            query.criteria("name").equal(userNameOrEmail),
+            query.criteria("email").equal(userNameOrEmail)
         ).and(
             query.criteria("active").equal(true)
         );
@@ -566,7 +487,7 @@ public class MongoUserDao implements UserDao {
         final MongoUser mongoUser = query.get();
 
         if (mongoUser == null) {
-            throw new ForbiddenException("Invalid credentials for " + userId);
+            throw new ForbiddenException("Invalid credentials for " + userNameOrEmail);
         }
 
         final byte[] passwordBytes;
@@ -601,7 +522,7 @@ public class MongoUserDao implements UserDao {
             return getDozerMapper().map(mongoUser, User.class);
         }
 
-        throw new ForbiddenException("Invalid credentials for " + userId);
+        throw new ForbiddenException("Invalid credentials for " + userNameOrEmail);
 
     }
 

@@ -22,7 +22,8 @@ public interface UserDao {
      * Gets the user with the userId, which may be either email address or name.  Additionally,
      * the user requested must be active.
      *
-     * @param userId
+     * @param userId the user's as determined by {@link User#getId()}
+     *
      * @return
      */
     User getActiveUser(String userId);
@@ -56,7 +57,7 @@ public interface UserDao {
      *
      * @return the User as it was created.
      */
-    User createUserStrict(final User user);
+    User createUserStrict(User user);
 
     /**
      * Creates a user with the given User object and password.  Using "Strict" semantics, if the
@@ -67,7 +68,7 @@ public interface UserDao {
      * @param password
      * @return
      */
-    User createUserWithPasswordStrict(final User user, final String password);
+    User createUserWithPasswordStrict(User user, String password);
 
     /**
      * Creates or activates a user, or if the user is currently inactive
@@ -81,7 +82,7 @@ public interface UserDao {
      * @param user the user
      * @return the User, as written to the database
      */
-    User createOrReactivateUser(final User user);
+    User createOrReactivateUser(User user);
 
     /**
      * Creates a user and sets the user's password.  If the user exists
@@ -92,7 +93,7 @@ public interface UserDao {
      *
      * @return the User, as was written to the database
      */
-    User createOrRectivateUserWithPassword(final User user, final String password);
+    User createOrRectivateUserWithPassword(User user, String password);
 
     /**
      * Updates the given user, regardless of active status and then returns
@@ -107,7 +108,7 @@ public interface UserDao {
      * @param user the user to update
      * @return the user as was written to the database
      */
-    User updateUserStrict(final User user);
+    User updateUserStrict(User user);
 
     /**
      * Updates the given user, regardless of active status and then returns
@@ -122,7 +123,7 @@ public interface UserDao {
      * @param user the user to update
      * @return the user as was written to the database
      */
-    User updateUserStrict(User user, final String password);
+    User updateUserStrict(User user, String password);
 
     /**
      * Updates the given active user.  If the user has been deleted or has been
@@ -137,7 +138,7 @@ public interface UserDao {
      *
      * @return the User as written to the database
      */
-    User updateActiveUser(final User user);
+    User updateActiveUser(User user);
 
     /**
      * Updates the given active user.  If the user has been deleted or has been
@@ -151,34 +152,26 @@ public interface UserDao {
      *
      * @return the User, as written to the database
      */
-    User updateActiveUser(final User user, final String password);
+    User updateActiveUser(User user, String password);
 
     /**
      * Deletes a user from the database.  In actuality, this isn't a true delete, but
      * rather just flags the user as inactive.  LazyValue flagged inactive, a user will
      * not show up in any results for active users.
      *
-     * @param userId the user's id (name or email address)
+     * @param userId the user's as determined by {@link User#getId()}
      */
-    void softDeleteUser(final String userId);
-
-    /**
-     * Updates the user's password and returns the user object.
-     *
-     * @param userId the userId of the user (which may be email or name)
-     * @return the udpated user object
-     */
-    User updateActiveUserPassword(final String userId, final String password);
+    void softDeleteUser(String userId);
 
     /**
      * Validates the user's password and returns the current User instance.  If the password validation fails,
      * then this simply throws an instance of {@link com.namazustudios.socialengine.exception.ForbiddenException}
      *
-     * @param userId the userId
+     * @param userNameOrEmail the user's name or email address
      * @param password the password
      *
      * @return the User, never null
      */
-    User validateActiveUserPassword(final String userId, final String password);
+    User validateActiveUserPassword(String userNameOrEmail, String password);
 
 }

@@ -25,7 +25,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -72,7 +71,7 @@ public class MongoMatchDao implements MatchDao {
 
     public MongoMatch getMongoMatchForPlayer(String playerId, String matchId) {
 
-        final ObjectId objectId = getMongoDBUtils().parse(matchId);
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(matchId);
         final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
 
         final Query<MongoMatch> mongoMatchQuery;
@@ -94,7 +93,7 @@ public class MongoMatchDao implements MatchDao {
 
     public MongoMatch getMongoMatch(final String matchId) {
 
-        final ObjectId objectId = getMongoDBUtils().parse(matchId);
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(matchId);
 
         final Query<MongoMatch> mongoMatchQuery;
         mongoMatchQuery = getDatastore().createQuery(MongoMatch.class);

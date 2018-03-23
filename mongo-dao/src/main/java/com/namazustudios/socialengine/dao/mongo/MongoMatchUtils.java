@@ -310,7 +310,7 @@ public class MongoMatchUtils {
     }
 
     public MongoMatchDelta getLatestDelta(final String matchId) {
-        final ObjectId objectId = getMongoDBUtils().parse(matchId);
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(matchId);
         return getLatestDelta(objectId);
     }
 
