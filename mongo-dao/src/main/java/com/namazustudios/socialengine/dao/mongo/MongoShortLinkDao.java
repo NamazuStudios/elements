@@ -72,7 +72,7 @@ public class MongoShortLinkDao implements ShortLinkDao {
     @Override
     public ShortLink getShortLinkWithId(String id) {
 
-        final ObjectId objectId = mongoDBUtils.parse(id);
+        final ObjectId objectId = mongoDBUtils.parseOrThrowNotFoundException(id);
         final MongoShortLink mongoShortLink = datastore.get(MongoShortLink.class, objectId);
 
         if (mongoShortLink == null) {

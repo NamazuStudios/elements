@@ -32,7 +32,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 
 /**
@@ -68,7 +67,7 @@ public class MongoUserDao implements UserDao {
     public MongoUser getActiveMongoUser(final String userId) {
 
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
-        final ObjectId objectId = getMongoDBUtils().parse(userId);
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(userId);
 
         query.and(
             query.criteria("_id").equal(objectId),
@@ -292,7 +291,7 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final ObjectId objectId = getMongoDBUtils().parse(user.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
@@ -331,7 +330,7 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final ObjectId objectId = getMongoDBUtils().parse(user.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
@@ -372,7 +371,7 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final ObjectId objectId = getMongoDBUtils().parse(user.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
@@ -405,7 +404,7 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final ObjectId objectId = getMongoDBUtils().parse(user.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
@@ -441,7 +440,7 @@ public class MongoUserDao implements UserDao {
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
-        final ObjectId objectId = getMongoDBUtils().parse(userId);
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(userId);
 
         query.and(
             query.criteria("_id").equal(objectId),
