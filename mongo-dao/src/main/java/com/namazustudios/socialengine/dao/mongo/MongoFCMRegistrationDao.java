@@ -99,7 +99,7 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
     public void deleteRegistrationWithRequestingProfile(final Profile profile, final String fcmRegistrationId) {
 
         final ObjectId registrationId = getMongoDBUtils().parseOrThrowNotFoundException(fcmRegistrationId);
-        final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(fcmRegistrationId);
+        final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
 
         final Query<MongoFCMRegistration> query = getDatastore().createQuery(MongoFCMRegistration.class);
 

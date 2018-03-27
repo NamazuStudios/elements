@@ -38,7 +38,7 @@ public class UserFCMRegistrationService implements FCMRegistrationService {
 
         if (fcmRegistration.getProfile() == null) {
             fcmRegistration.setProfile(profile);
-        } else if (!Objects.equals(fcmRegistration.getProfile(), profile.getId())) {
+        } else if (!Objects.equals(fcmRegistration.getProfile().getId(), profile.getId())) {
             throw new ForbiddenException("Profile mismatch when registering Firebase Token.");
         }
 
