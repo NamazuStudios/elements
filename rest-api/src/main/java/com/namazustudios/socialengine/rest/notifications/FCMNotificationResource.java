@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rest.notifications;
 
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
-import com.namazustudios.socialengine.service.FCMNotificationService;
+import com.namazustudios.socialengine.service.FCMRegistrationService;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -24,7 +24,7 @@ public class FCMNotificationResource {
 
     private ValidationHelper validationHelper;
 
-    private FCMNotificationService fcmNotificationService;
+    private FCMRegistrationService fcmRegistrationService;
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
@@ -41,7 +41,7 @@ public class FCMNotificationResource {
             throw new InvalidDataException("Registration token must not specify ID.");
         }
 
-        return getFcmNotificationService().createRegistrationToken(fcmRegistration);
+        return getFcmRegistrationService().createRegistration(fcmRegistration);
 
     }
 
@@ -66,7 +66,7 @@ public class FCMNotificationResource {
             throw new InvalidDataException("ID Mismatch in Firebase Registration.  (Value in Object does not match path.)");
         }
 
-        return getFcmNotificationService().updateRegistrationToken(fcmRegistration);
+        return getFcmRegistrationService().updateRegistration(fcmRegistration);
 
     }
 
@@ -77,7 +77,7 @@ public class FCMNotificationResource {
             @PathParam("fcmRegistrationId")
             final String fcmRegistrationId,
             final FCMRegistration fcmRegistration) {
-        getFcmNotificationService().deleteRegistration(fcmRegistrationId);
+        getFcmRegistrationService().deleteRegistration(fcmRegistrationId);
     }
 
     public ValidationHelper getValidationHelper() {
@@ -89,13 +89,13 @@ public class FCMNotificationResource {
         this.validationHelper = validationHelper;
     }
 
-    public FCMNotificationService getFcmNotificationService() {
-        return fcmNotificationService;
+    public FCMRegistrationService getFcmRegistrationService() {
+        return fcmRegistrationService;
     }
 
     @Inject
-    public void setFcmNotificationService(FCMNotificationService fcmNotificationService) {
-        this.fcmNotificationService = fcmNotificationService;
+    public void setFcmRegistrationService(FCMRegistrationService fcmRegistrationService) {
+        this.fcmRegistrationService = fcmRegistrationService;
     }
 
 }

@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.model.notification.FCMRegistration;
  * Manages instance of {@link FCMRegistration}.  This provides methods to create, update, and delete registrations
  * with the Firebase Notification Service.
  */
-public interface FCMNotificationService {
+public interface FCMRegistrationService {
 
     /**
      * Creates a new instance of {@link FCMRegistration}.  In addition to ensuring the token has been written to the
@@ -16,7 +16,7 @@ public interface FCMNotificationService {
      *
      * @return the {@link FCMRegistration} instance as it was written to the database
      */
-    FCMRegistration createRegistrationToken(FCMRegistration fcmRegistration);
+    FCMRegistration createRegistration(FCMRegistration fcmRegistration);
 
     /**
      * Updates an existing instance of {@link FCMRegistration}.  In addition to ensuring the token has been written to
@@ -27,7 +27,7 @@ public interface FCMNotificationService {
      *
      * @return the {@link FCMRegistration} instance as it was written to the database
      */
-    FCMRegistration updateRegistrationToken(FCMRegistration fcmRegistration);
+    FCMRegistration updateRegistration(FCMRegistration fcmRegistration);
 
     /**
      * Delets an instance of {@link FCMRegistration} based on the supplied ID.  The ID can be obtained by
