@@ -47,6 +47,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(MatchmakingApplicationConfigurationDao.class).to(MongoMatchmakingApplicationConfigurationDao.class);
         bind(MatchDao.class).to(MongoMatchDao.class);
         bind(SessionDao.class).to(MongoSessionDao.class);
+        bind(FCMRegistrationDao.class).to(MongoFCMRegistrationDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoAdvancedDatastoreProvider.class)
@@ -79,6 +80,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(FacebookApplicationConfigurationDao.class);
         expose(MatchmakingApplicationConfigurationDao.class);
         expose(MatchDao.class);
+        expose(FCMRegistrationDao.class);
         expose(SessionDao.class);
 
     }
