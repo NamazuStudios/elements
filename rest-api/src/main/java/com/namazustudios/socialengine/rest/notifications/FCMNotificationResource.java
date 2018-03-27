@@ -1,9 +1,14 @@
 package com.namazustudios.socialengine.rest.notifications;
 
-import com.namazustudios.socialengine.model.notification.FCMRegistrationToken;
+import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.model.notification.FCMRegistration;
+import com.namazustudios.socialengine.service.FCMNotificationService;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 
+import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
@@ -17,41 +22,80 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
 @Path("notification/fcm")
 public class FCMNotificationResource {
 
+    private ValidationHelper validationHelper;
+
+    private FCMNotificationService fcmNotificationService;
+
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public FCMRegistrationToken createRegistrationToken(
-            final FCMRegistrationToken fcmRegistrationToken) {
-        /// TODO Implement this
-        return null;
+    @ApiOperation(
+        value = "Creates an FCM Registration Token",
+        notes = "Supplying FCM registration token, this will create a new token based on the information supplied to " +
+                "the endpoint.  The response will contain the token as it was written to the database.  Clients may " +
+                "subsequently update the token string with new values as they are issued by Firebase.")
+    public FCMRegistration createRegistration(final FCMRegistration fcmRegistration) {
+
+        getValidationHelper().validateModel(fcmRegistration);
+
+        if (fcmRegistration.getId() != null) {
+            throw new InvalidDataException("Registration token must not specify ID.");
+        }
+
+        return getFcmNotificationService().createRegistrationToken(fcmRegistration);
+
     }
 
     @PUT
-    @Path("{fcmRegistrationTokenId}")
+    @Path("{fcmRegistrationId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public FCMRegistrationToken updateRegistrationToken(
+    @ApiOperation(
+            value = "Update an FCM Registration Token",
+            notes = "Supplying FCM registration token, this will update the token string with the supplied values.  " +
+                    "Clients may update the same registration with a different token issued with Firebase if they " +
+                    "wish to simply retain the association with the ")
+    public FCMRegistration updateRegistration(
+            @PathParam("fcmRegistrationId")
+            final String fcmRegistrationId,
+            final FCMRegistration fcmRegistration) {
 
-            @PathParam("fcmRegistrationTokenId")
-            final String fcmRegistrationTokenId,
+        getValidationHelper().validateModel(fcmRegistration);
 
-            final FCMRegistrationToken fcmRegistrationToken) {
+        if (fcmRegistration.getId() == null) {
+            fcmRegistration.setId(fcmRegistrationId);
+        } else if (!fcmRegistration.getId().equals(fcmRegistrationId)) {
+            throw new InvalidDataException("ID Mismatch in Firebase Registration.  (Value in Object does not match path.)");
+        }
 
-        /// TODO Implement this
-        return null;
+        return getFcmNotificationService().updateRegistrationToken(fcmRegistration);
+
     }
 
     @DELETE
-    @Path("{fcmRegistrationTokenId}")
+    @Path("{fcmRegistrationId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public FCMRegistrationToken deleteRegistrationToken(
+    public void deleteRegistration(
+            @PathParam("fcmRegistrationId")
+            final String fcmRegistrationId,
+            final FCMRegistration fcmRegistration) {
+        getFcmNotificationService().deleteRegistration(fcmRegistrationId);
+    }
 
-            @PathParam("fcmRegistrationTokenId")
-            final String fcmRegistrationTokenId,
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
 
-            final FCMRegistrationToken fcmRegistrationToken) {
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
+    }
 
-        /// TODO Implement this
-        return null;
+    public FCMNotificationService getFcmNotificationService() {
+        return fcmNotificationService;
+    }
 
+    @Inject
+    public void setFcmNotificationService(FCMNotificationService fcmNotificationService) {
+        this.fcmNotificationService = fcmNotificationService;
     }
 
 }
