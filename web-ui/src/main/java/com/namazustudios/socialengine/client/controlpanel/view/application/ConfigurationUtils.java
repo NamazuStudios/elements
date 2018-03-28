@@ -12,6 +12,7 @@ import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 import javax.inject.Inject;
 
 import static com.namazustudios.socialengine.client.controlpanel.NameTokens.APPLICATION_CONFIG_FACEBOOK_EDIT;
+import static com.namazustudios.socialengine.client.controlpanel.NameTokens.APPLICATION_CONFIG_FIREBASE_EDIT;
 import static com.namazustudios.socialengine.client.controlpanel.NameTokens.APPLICATION_CONFIG_MATCHMAKING_EDIT;
 
 /**
@@ -31,6 +32,8 @@ public class ConfigurationUtils {
 
     private MatchmakingApplicationConfigurationClient matchmakingApplicationConfigurationClient;
 
+    private FirebaseApplicationConfigurationClient firebaseApplicationConfigurationClient;
+
     public void editConfiguration(final Application application,
                                   final ApplicationConfiguration applicationConfiguration) {
 
@@ -46,6 +49,12 @@ public class ConfigurationUtils {
             case MATCHMAKING:
                 placeRequestBuilder
                     .nameToken(APPLICATION_CONFIG_MATCHMAKING_EDIT)
+                    .with(MatchmakingApplicationConfigurationEditorPresenter.Param.application_id.name(), application.getId())
+                    .with(MatchmakingApplicationConfigurationEditorPresenter.Param.configuration_id.name(), applicationConfiguration.getId());
+                break;
+            case FIREBASE:
+                placeRequestBuilder
+                    .nameToken(APPLICATION_CONFIG_FIREBASE_EDIT)
                     .with(FacebookApplicationConfigurationEditorPresenter.Param.application_id.name(), application.getId())
                     .with(FacebookApplicationConfigurationEditorPresenter.Param.configuration_id.name(), applicationConfiguration.getId());
                 break;
@@ -77,6 +86,9 @@ public class ConfigurationUtils {
 
             case MATCHMAKING:
                 return getMatchmakingApplicationConfigurationClient()::deleteApplicationConfiguration;
+
+            case FIREBASE:
+                return getFirebaseApplicationConfigurationClient()::deleteApplicationConfiguration;
 
             default:
                 return (applicationNameOrId, applicationConfigurationNameOrId, voidMethodCallback) -> {
@@ -139,6 +151,15 @@ public class ConfigurationUtils {
     @Inject
     public void setMatchmakingApplicationConfigurationClient(MatchmakingApplicationConfigurationClient matchmakingApplicationConfigurationClient) {
         this.matchmakingApplicationConfigurationClient = matchmakingApplicationConfigurationClient;
+    }
+
+    public FirebaseApplicationConfigurationClient getFirebaseApplicationConfigurationClient() {
+        return firebaseApplicationConfigurationClient;
+    }
+
+    @Inject
+    public void setFirebaseApplicationConfigurationClient(FirebaseApplicationConfigurationClient firebaseApplicationConfigurationClient) {
+        this.firebaseApplicationConfigurationClient = firebaseApplicationConfigurationClient;
     }
 
     interface DeleteOperation {

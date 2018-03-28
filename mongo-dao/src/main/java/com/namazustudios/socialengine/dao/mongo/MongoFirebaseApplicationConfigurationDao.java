@@ -18,7 +18,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 
-import static com.namazustudios.socialengine.model.application.ConfigurationCategory.FACEBOOK;
+import static com.namazustudios.socialengine.model.application.ConfigurationCategory.FIREBASE;
+import static com.namazustudios.socialengine.model.application.ConfigurationCategory.FIREBASE;
 
 public class MongoFirebaseApplicationConfigurationDao implements FirebaseApplicationConfigurationDao {
 
@@ -48,10 +49,10 @@ public class MongoFirebaseApplicationConfigurationDao implements FirebaseApplica
         query = getDatastore().createQuery(MongoFirebaseApplicationConfiguration.class);
 
         query.and(
-                query.criteria("active").equal(false),
-                query.criteria("parent").equal(mongoApplication),
-                query.criteria("category").equal(FACEBOOK),
-                query.criteria("uniqueIdentifier").equal(firebaseApplicationConfiguration.getProjectId().trim())
+            query.criteria("active").equal(false),
+            query.criteria("parent").equal(mongoApplication),
+            query.criteria("category").equal(FIREBASE),
+            query.criteria("uniqueIdentifier").equal(firebaseApplicationConfiguration.getProjectId().trim())
         );
 
         final UpdateOperations<MongoFirebaseApplicationConfiguration> updateOperations;
@@ -61,7 +62,7 @@ public class MongoFirebaseApplicationConfigurationDao implements FirebaseApplica
         updateOperations.set("active", true);
         updateOperations.set("category", firebaseApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
-        updateOperations.set("serviceAccountKey", firebaseApplicationConfiguration.getServiceAccountKey().trim());
+        updateOperations.set("serviceAccountCredentials", firebaseApplicationConfiguration.getServiceAccountCredentials().trim());
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
                 .returnNew(true)
@@ -85,7 +86,7 @@ public class MongoFirebaseApplicationConfigurationDao implements FirebaseApplica
 
         query.and(
                 query.criteria("active").equal(true),
-                query.criteria( "category").equal(FACEBOOK)
+                query.criteria( "category").equal(FIREBASE)
         );
 
         try {
@@ -118,7 +119,7 @@ public class MongoFirebaseApplicationConfigurationDao implements FirebaseApplica
         query.and(
                 query.criteria("active").equal(true),
                 query.criteria("parent").equal(mongoApplication),
-                query.criteria( "category").equal(FACEBOOK)
+                query.criteria( "category").equal(FIREBASE)
         );
 
         try {
@@ -153,7 +154,7 @@ public class MongoFirebaseApplicationConfigurationDao implements FirebaseApplica
         query.and(
                 query.criteria("active").equal(true),
                 query.criteria("parent").equal(mongoApplication),
-                query.criteria( "category").equal(FACEBOOK)
+                query.criteria( "category").equal(FIREBASE)
         );
 
         try {
@@ -168,7 +169,7 @@ public class MongoFirebaseApplicationConfigurationDao implements FirebaseApplica
         updateOperations.set("uniqueIdentifier", firebaseApplicationConfiguration.getProjectId().trim());
         updateOperations.set("category", firebaseApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
-        updateOperations.set("serviceAccountKey", firebaseApplicationConfiguration.getServiceAccountKey().trim());
+        updateOperations.set("serviceAccountCredentials", firebaseApplicationConfiguration.getServiceAccountCredentials().trim());
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
                 .returnNew(true)
@@ -201,7 +202,7 @@ public class MongoFirebaseApplicationConfigurationDao implements FirebaseApplica
         query.and(
                 query.criteria("active").equal(true),
                 query.criteria("parent").equal(mongoApplication),
-                query.criteria( "category").equal(FACEBOOK)
+                query.criteria( "category").equal(FIREBASE)
         );
 
         try {

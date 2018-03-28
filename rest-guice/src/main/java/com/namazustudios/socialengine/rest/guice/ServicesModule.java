@@ -70,6 +70,10 @@ public class ServicesModule extends AbstractModule {
                 .toProvider(MatchmakingConfigurationServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
+        bind(FirebaseApplicationConfigurationService.class)
+                .toProvider(FirebaseApplicationConfigurationServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
         bind(SessionService.class).to(AnonSessionService.class);
         bind(FacebookAuthService.class).to(StandardFacebookAuthService.class);
 

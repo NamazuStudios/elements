@@ -200,7 +200,7 @@ public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingA
                 .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
         if (mongoMatchmakingApplicationProfile == null) {
-            throw new NotFoundException("configuration with ID not found: " + mongoMatchmakingApplicationProfile.getObjectId());
+            throw new NotFoundException("configuration with ID not found: " + applicationConfigurationNameOrId);
         }
 
         getObjectIndex().index(mongoMatchmakingApplicationProfile);

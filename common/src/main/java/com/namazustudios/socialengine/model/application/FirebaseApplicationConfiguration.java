@@ -9,12 +9,12 @@ import javax.validation.constraints.NotNull;
 public class FirebaseApplicationConfiguration extends ApplicationConfiguration {
 
     @NotNull
-    @ApiModelProperty("The contents of the serviceAccountKey.json file.")
+    @ApiModelProperty("The contents of the serviceAccountCredentials.json file.")
     private String projectId;
 
     @NotNull
-    @ApiModelProperty("The contents of the serviceAccountKey.json file.")
-    private String serviceAccountKey;
+    @ApiModelProperty("The contents of the serviceAccountCredentials.json file.")
+    private String serviceAccountCredentials;
 
     public String getProjectId() {
         return projectId;
@@ -24,12 +24,12 @@ public class FirebaseApplicationConfiguration extends ApplicationConfiguration {
         this.projectId = projectId;
     }
 
-    public String getServiceAccountKey() {
-        return serviceAccountKey;
+    public String getServiceAccountCredentials() {
+        return serviceAccountCredentials;
     }
 
-    public void setServiceAccountKey(String serviceAccountKey) {
-        this.serviceAccountKey = serviceAccountKey;
+    public void setServiceAccountCredentials(String serviceAccountCredentials) {
+        this.serviceAccountCredentials = serviceAccountCredentials;
     }
 
     @Override
@@ -42,14 +42,14 @@ public class FirebaseApplicationConfiguration extends ApplicationConfiguration {
 
         if (getProjectId() != null ? !getProjectId().equals(that.getProjectId()) : that.getProjectId() != null)
             return false;
-        return getServiceAccountKey() != null ? getServiceAccountKey().equals(that.getServiceAccountKey()) : that.getServiceAccountKey() == null;
+        return getServiceAccountCredentials() != null ? getServiceAccountCredentials().equals(that.getServiceAccountCredentials()) : that.getServiceAccountCredentials() == null;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (getProjectId() != null ? getProjectId().hashCode() : 0);
-        result = 31 * result + (getServiceAccountKey() != null ? getServiceAccountKey().hashCode() : 0);
+        result = 31 * result + (getServiceAccountCredentials() != null ? getServiceAccountCredentials().hashCode() : 0);
         return result;
     }
 

@@ -77,6 +77,7 @@
                 <b:DropDownMenu>
                     <b:AnchorListItem ui:field="createFacebook" icon="FACEBOOK">Facebook</b:AnchorListItem>
                     <b:AnchorListItem ui:field="createMatchmaking" icon="BOLT">Matchmaking</b:AnchorListItem>
+                    <b:AnchorListItem ui:field="createFirebase" icon="FIRE">Firebase</b:AnchorListItem>
                     <b:AnchorListItem ui:field="createIos" icon="MOBILE_PHONE">iOS AppStore</b:AnchorListItem>
                     <b:AnchorListItem ui:field="createAndroidGooglePlay" icon="MOBILE_PHONE">Android Google Play</b:AnchorListItem>
                     <b:AnchorListItem ui:field="createPS4" icon="GAMEPAD">Playstation Network (PS4)</b:AnchorListItem>

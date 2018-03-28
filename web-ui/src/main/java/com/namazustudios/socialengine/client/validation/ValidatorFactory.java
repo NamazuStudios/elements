@@ -25,7 +25,8 @@ public class ValidatorFactory extends AbstractGwtValidatorFactory {
             IosApplicationConfiguration.class,
             GooglePlayApplicationConfiguration.class,
             PSNApplicationConfiguration.class,
-            CallbackDefinition.class})
+            CallbackDefinition.class,
+            FirebaseApplicationConfiguration.class})
     public interface GwtValidator extends Validator {}
 
     @Override

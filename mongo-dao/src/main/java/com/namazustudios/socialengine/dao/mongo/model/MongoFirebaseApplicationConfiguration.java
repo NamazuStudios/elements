@@ -9,14 +9,14 @@ import org.mongodb.morphia.annotations.Property;
 public class MongoFirebaseApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property
-    private String serviceAccountKey;
+    private String serviceAccountCredentials;
 
-    public String getServiceAccountKey() {
-        return serviceAccountKey;
+    public String getServiceAccountCredentials() {
+        return serviceAccountCredentials;
     }
 
-    public void setServiceAccountKey(String serviceAccountKey) {
-        this.serviceAccountKey = serviceAccountKey;
+    public void setServiceAccountCredentials(String serviceAccountCredentials) {
+        this.serviceAccountCredentials = serviceAccountCredentials;
     }
 
     @Override
@@ -26,12 +26,12 @@ public class MongoFirebaseApplicationConfiguration extends MongoApplicationConfi
 
         MongoFirebaseApplicationConfiguration that = (MongoFirebaseApplicationConfiguration) o;
 
-        return getServiceAccountKey() != null ? getServiceAccountKey().equals(that.getServiceAccountKey()) : that.getServiceAccountKey() == null;
+        return getServiceAccountCredentials() != null ? getServiceAccountCredentials().equals(that.getServiceAccountCredentials()) : that.getServiceAccountCredentials() == null;
     }
 
     @Override
     public int hashCode() {
-        return getServiceAccountKey() != null ? getServiceAccountKey().hashCode() : 0;
+        return getServiceAccountCredentials() != null ? getServiceAccountCredentials().hashCode() : 0;
     }
 
 }
