@@ -102,7 +102,11 @@ public class MongoProfileDao implements ProfileDao {
 
     }
 
-    public MongoProfile getActiveMongoProfile(String profileId) {
+    public MongoProfile getActiveMongoProfile(final Profile profile) {
+        return getActiveMongoProfile(profile.getId());
+    }
+
+    public MongoProfile getActiveMongoProfile(final String profileId) {
 
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileId);
