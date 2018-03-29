@@ -16,7 +16,7 @@ public class StandardNotificationService implements NotificationService {
 
     @Override
     public NotificationBuilder getBuilder() {
-        return getNotificationBuilderProvider().get().withSender(getCurrentProfileSupplier().get());
+        return getNotificationBuilderProvider().get().sender(getCurrentProfileSupplier().get());
     }
 
     public Supplier<Profile> getCurrentProfileSupplier() {

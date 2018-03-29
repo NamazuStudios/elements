@@ -29,8 +29,8 @@ public interface NotificationBuilder {
      * @param sourceProfile the {@link Profile} of the source of the {@link Notification}
      * @return this instance
      */
-    default NotificationBuilder withSender(final Profile sourceProfile) {
-        return withApplication(sourceProfile.getApplication());
+    default NotificationBuilder sender(final Profile sourceProfile) {
+        return application(sourceProfile.getApplication());
     }
 
     /**
@@ -41,7 +41,7 @@ public interface NotificationBuilder {
      * @param application the {@link Application} sending the {@link Notification}
      * @return this instance
      */
-    NotificationBuilder withApplication(Application application);
+    NotificationBuilder application(Application application);
 
     /**
      * Specifies the {@link Profile} which will receive the {@link Notification}.
@@ -49,7 +49,7 @@ public interface NotificationBuilder {
      * @param recipient the {@link Profile} which will recieve the {@link Notification}
      * @return this instance
      */
-    NotificationBuilder withRecipient(Profile recipient);
+    NotificationBuilder recipient(Profile recipient);
 
     /**
      * Specifies the title text of the {@link Notification}.
@@ -57,7 +57,7 @@ public interface NotificationBuilder {
      * @param title the title text
      * @return this instance
      */
-    NotificationBuilder withTitle(String title);
+    NotificationBuilder title(String title);
 
     /**
      * Specifies the text to send along with the {@link Notification}.
@@ -65,7 +65,7 @@ public interface NotificationBuilder {
      * @param message the message to send
      * @return this instance
      */
-    NotificationBuilder withMessage(String message);
+    NotificationBuilder message(String message);
 
     /**
      * Constructs the instance of {@link Notification} with all of the configured information.  This returns a new

@@ -23,25 +23,25 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
     private NotificationFactory notificationFactory;
 
     @Override
-    public NotificationBuilder withApplication(final Application application) {
+    public NotificationBuilder application(final Application application) {
         this.application = application;
         return this;
     }
 
     @Override
-    public NotificationBuilder withRecipient(final Profile recipient) {
+    public NotificationBuilder recipient(final Profile recipient) {
         this.recipient = recipient;
         return this;
     }
 
     @Override
-    public NotificationBuilder withTitle(final String title) {
+    public NotificationBuilder title(final String title) {
         this.title = title;
         return this;
     }
 
     @Override
-    public NotificationBuilder withMessage(final String message) {
+    public NotificationBuilder message(final String message) {
         this.message = message;
         return this;
     }
