@@ -48,6 +48,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(FirebaseApplicationConfigurationDao.class).to(MongoFirebaseApplicationConfigurationDao.class);
         bind(MatchDao.class).to(MongoMatchDao.class);
         bind(SessionDao.class).to(MongoSessionDao.class);
+        bind(FCMRegistrationDao.class).to(MongoFCMRegistrationDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoAdvancedDatastoreProvider.class)
@@ -81,6 +82,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(MatchmakingApplicationConfigurationDao.class);
         expose(FirebaseApplicationConfigurationDao.class);
         expose(MatchDao.class);
+        expose(FCMRegistrationDao.class);
         expose(SessionDao.class);
 
     }

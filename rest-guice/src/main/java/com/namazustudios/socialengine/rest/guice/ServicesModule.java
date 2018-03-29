@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.service.auth.StandardFacebookAuthService;
 import com.namazustudios.socialengine.service.auth.AnonSessionService;
 import com.namazustudios.socialengine.service.manifest.ManifestServiceProvider;
 import com.namazustudios.socialengine.service.match.MatchServiceProvider;
+import com.namazustudios.socialengine.service.notification.FCMRegistrationServiceProvider;
 import com.namazustudios.socialengine.service.profile.ProfileServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
@@ -74,9 +75,12 @@ public class ServicesModule extends AbstractModule {
                 .toProvider(FirebaseApplicationConfigurationServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
+        bind(FCMRegistrationService.class)
+                .toProvider(FCMRegistrationServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
         bind(SessionService.class).to(AnonSessionService.class);
         bind(FacebookAuthService.class).to(StandardFacebookAuthService.class);
-
         bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
 
     }

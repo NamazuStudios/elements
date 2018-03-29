@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.service.notification;
 
-import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.service.Notification;
 import com.namazustudios.socialengine.service.NotificationParameters;
 
