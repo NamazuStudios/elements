@@ -52,6 +52,7 @@ public class StandardNotificationDestinationProvider implements Provider<Notific
 
                 apiFuture.addListener(() -> {
                     try {
+
                         final String result = apiFuture.get();
 
                         if (TOKEN_NOT_REGISTERED.equals(result)) {

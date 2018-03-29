@@ -1,0 +1,13 @@
+package com.namazustudios.socialengine.service.notification.guice;
+
+import com.google.inject.assistedinject.Assisted;
+import com.namazustudios.socialengine.service.Notification;
+import com.namazustudios.socialengine.service.NotificationParameters;
+import com.namazustudios.socialengine.service.notification.NotificationFactory;
+
+public interface GuiceStandardNotificationFactory extends NotificationFactory {
+
+    @Override
+    Notification apply(@Assisted NotificationParameters parameters);
+
+}
