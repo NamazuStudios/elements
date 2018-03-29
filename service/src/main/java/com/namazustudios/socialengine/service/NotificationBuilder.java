@@ -52,6 +52,14 @@ public interface NotificationBuilder {
     NotificationBuilder withRecipient(Profile recipient);
 
     /**
+     * Specifies the title text of the {@link Notification}.
+     *
+     * @param title the title text
+     * @return this instance
+     */
+    NotificationBuilder withTitle(String title);
+
+    /**
      * Specifies the text to send along with the {@link Notification}.
      *
      * @param message the message to send

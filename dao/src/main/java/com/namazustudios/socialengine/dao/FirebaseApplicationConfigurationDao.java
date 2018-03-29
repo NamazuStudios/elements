@@ -1,8 +1,12 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.exception.InternalException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
+
+import java.util.List;
 
 public interface FirebaseApplicationConfigurationDao {
 
@@ -24,6 +28,35 @@ public interface FirebaseApplicationConfigurationDao {
      * @param applicationConfigurationNameOrId the {@link Application} name or id
      */
     FirebaseApplicationConfiguration getApplicationConfiguration(String applicationConfigurationNameOrId);
+
+    /**
+     * Gets the first and only {@link FirebaseApplicationConfiguration} from for the supplied {@link Application} using
+     * the {@link Application#getName()} or {@link Application#getId()} method.
+     *
+     * @param applicationNameOrId the application name or id
+     * @return the {@link FirebaseApplicationConfiguration}
+     */
+    default FirebaseApplicationConfiguration getFirebaseApplicationConfigurationForApplication(final String applicationNameOrId) {
+        final List<FirebaseApplicationConfiguration> firebaseApplicationConfigurationList;
+        firebaseApplicationConfigurationList = getFirebaseApplicationConfigurationsForApplication(applicationNameOrId);
+
+        if (firebaseApplicationConfigurationList.isEmpty()) {
+            throw new NotFoundException("No Firebase configuration for " + applicationNameOrId);
+        } else if (firebaseApplicationConfigurationList.size() > 1) {
+            throw new InternalException(firebaseApplicationConfigurationList.size() + " Firebase configurations for " + applicationNameOrId);
+        } else {
+            return firebaseApplicationConfigurationList.get(0);
+        }
+
+    }
+
+    /**
+     * Returns all {@link FirebaseApplicationConfiguration} instances for the supplied {@link Application} id.
+     *
+     * @param applicationNameOrId
+     * @return a {@link List <FirebaseApplicationConfiguration>} associated with the {@link Application}
+     */
+    List<FirebaseApplicationConfiguration> getFirebaseApplicationConfigurationsForApplication(String applicationNameOrId);
 
     /**
      * Gets an {@link FirebaseApplicationConfiguration} with the specific name or identifier
@@ -54,7 +87,7 @@ public interface FirebaseApplicationConfigurationDao {
     /**
      * Delets an {@link FirebaseApplicationConfiguration} using the ID as reference.
      *
-     *  @param applicationNameOrId the {@link Application} name or id
+     * @param applicationNameOrId the {@link Application} name or id
      * @param applicationConfigurationNameOrId the {@link FirebaseApplicationConfiguration} id
      *
      */

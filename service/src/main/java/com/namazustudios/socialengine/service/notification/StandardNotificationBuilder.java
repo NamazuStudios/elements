@@ -16,9 +16,11 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
 
     private Application application;
 
+    private String title;
+
     private String message;
 
-    private Function<NotificationParameters, Notification> notificationFactory;
+    private NotificationFactory notificationFactory;
 
     @Override
     public NotificationBuilder withApplication(final Application application) {
@@ -29,6 +31,12 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
     @Override
     public NotificationBuilder withRecipient(final Profile recipient) {
         this.recipient = recipient;
+        return this;
+    }
+
+    @Override
+    public NotificationBuilder withTitle(final String title) {
+        this.title = title;
         return this;
     }
 
@@ -49,6 +57,11 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
     }
 
     @Override
+    public String getTitle() {
+        return title;
+    }
+
+    @Override
     public String getMessage() {
         return message;
     }
@@ -63,7 +76,7 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
     }
 
     @Inject
-    public void setNotificationFactory(Function<NotificationParameters, Notification> notificationFactory) {
+    public void setNotificationFactory(NotificationFactory notificationFactory) {
         this.notificationFactory = notificationFactory;
     }
 

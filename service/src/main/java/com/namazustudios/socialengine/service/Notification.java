@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service;
 
+import com.namazustudios.socialengine.model.profile.Profile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,9 +16,9 @@ public interface Notification {
     /**
      * Invokes {@link #send(Consumer, Consumer)} with callbacks which simply logs the result.
      */
-    default void send() {
+    default int send() {
         final Logger logger = LoggerFactory.getLogger(getClass());
-        send(v -> logger.info("{} successfully sent."), ex -> logger.error("Failed to send.", ex));
+        return send(v -> logger.info("{} successfully sent."), ex -> logger.error("Failed to send.", ex));
     }
 
     /**
@@ -28,9 +29,28 @@ public interface Notification {
      * For example, this may ensure that the message was received by the underlying message service but will not
      * provide a guarantee that it was delivered when it returns.
      *
-     * @param success called when a message was successfully sent
+     * Not that either lambda may be called multiple times, or never called.
+     *
+     * @param success called when a message was successfully sent, note this may be called multiple times
      * @param failure called when a message failed
+     *
+     * @return the number of destinations that recieved the {@link Notification}
      */
-    void send(Consumer<Void> success, Consumer<Exception> failure);
+    int send(Consumer<NotificationEvent> success, Consumer<Exception> failure);
+
+    /**
+     * Represents a notification event.  This is supplied to the success function of {@link #send(Consumer, Consumer)}
+     * when a notification is successfully sent.
+     */
+    interface NotificationEvent {
+
+        /**
+         * The {@link NotificationParameters} used to send the event.
+         *
+         * @return
+         */
+        NotificationParameters getParameters();
+
+    }
 
 }

@@ -20,6 +20,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
 import javax.inject.Inject;
+import java.util.List;
 
 public class MongoFCMRegistrationDao implements FCMRegistrationDao {
 
@@ -124,6 +125,12 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
             throw new InvalidDataException("FCM Registration Missing Profile.");
         }
 
+    }
+
+    @Override
+    public List<FCMRegistration> getRegistrationsForRecipient(String applicationId, String recipientId) {
+        // TODO Implement this
+        return null;
     }
 
     public Mapper getMapper() {
