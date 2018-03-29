@@ -145,7 +145,7 @@ public class MongoApplicationDao implements ApplicationDao {
         final MongoApplication mongoApplication = query.get();
 
         if (mongoApplication == null) {
-            throw new NotFoundException("Application " + nameOrId + " not found.");
+            throw new ApplicationNotFoundException("Application " + nameOrId + " not found.");
         }
 
         return transform(mongoApplication);
@@ -245,7 +245,7 @@ public class MongoApplicationDao implements ApplicationDao {
         final MongoApplication mongoApplication = query.get();
 
         if (mongoApplication == null) {
-            throw new NotFoundException("application not found: " + mongoApplicationNameOrId);
+            throw new ApplicationNotFoundException("application not found: " + mongoApplicationNameOrId);
         }
 
         return mongoApplication;

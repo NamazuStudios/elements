@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.exception.FirebaseApplicationConfigurationNotFoundException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.NotificationConfigurationException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
@@ -34,16 +36,16 @@ public interface FirebaseApplicationConfigurationDao {
      * the {@link Application#getName()} or {@link Application#getId()} method.
      *
      * @param applicationNameOrId the application name or id
-     * @return the {@link FirebaseApplicationConfiguration}
+     * @return the single {@link FirebaseApplicationConfiguration} for the supplied {@link Application}
      */
-    default FirebaseApplicationConfiguration getFirebaseApplicationConfigurationForApplication(final String applicationNameOrId) {
+    default FirebaseApplicationConfiguration getDefaultFirebaseApplicationConfigurationForApplication(final String applicationNameOrId) {
         final List<FirebaseApplicationConfiguration> firebaseApplicationConfigurationList;
         firebaseApplicationConfigurationList = getFirebaseApplicationConfigurationsForApplication(applicationNameOrId);
 
         if (firebaseApplicationConfigurationList.isEmpty()) {
-            throw new NotFoundException("No Firebase configuration for " + applicationNameOrId);
+            throw new FirebaseApplicationConfigurationNotFoundException("No Firebase configuration for " + applicationNameOrId);
         } else if (firebaseApplicationConfigurationList.size() > 1) {
-            throw new InternalException(firebaseApplicationConfigurationList.size() + " Firebase configurations for " + applicationNameOrId);
+            throw new NotificationConfigurationException(firebaseApplicationConfigurationList.size() + " Firebase configurations for " + applicationNameOrId);
         } else {
             return firebaseApplicationConfigurationList.get(0);
         }

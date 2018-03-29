@@ -1,11 +1,10 @@
 package com.namazustudios.socialengine.dao;
 
-import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Manipulates instances of {@link FCMRegistration} in the underlying database.
@@ -48,13 +47,12 @@ public interface FCMRegistrationDao {
     void deleteRegistrationWithRequestingProfile(Profile profile, String fcmRegistrationId);
 
     /**
-     * Gets a {@link List<FCMRegistration>} containing all currently registered {@link FCMRegistration} instances
+     * Gets a {@link Stream<FCMRegistration>} containing all currently registered {@link FCMRegistration} instances
      * associated witht he supplied {@link Profile} id of the recipient.
      *
-     * @param applicationId the {@link Application} id, as returned by {@link Application#getId()}
      * @param recipientId the {@link Profile} id of the recipient, as returned by {@link Profile#getId()}
      * @return
      */
-    List<FCMRegistration> getRegistrationsForRecipient(String applicationId, String recipientId);
+    Stream<FCMRegistration> getRegistrationsForRecipient(String recipientId);
 
 }

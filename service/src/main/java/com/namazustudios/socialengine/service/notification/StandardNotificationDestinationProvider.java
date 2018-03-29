@@ -16,6 +16,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 
 public class StandardNotificationDestinationProvider implements Provider<NotificationDestinationFactory> {
 
@@ -39,9 +40,11 @@ public class StandardNotificationDestinationProvider implements Provider<Notific
             final Application application = parameters.getApplication();
 
             final FirebaseMessaging firebaseMessaging = firebaseMessagingFactory.apply(application);
-            final List<FCMRegistration> fcmRegistrationList = fcmRegistrationDao.getRegistrationsForRecipient(application.getId(), recipient.getId());
 
-            return fcmRegistrationList.stream().map(fcmRegistration -> (p, success, failure) -> {
+            final Stream<FCMRegistration> fcmRegistrationList;
+            fcmRegistrationList = fcmRegistrationDao.getRegistrationsForRecipient(recipient.getId());
+
+            return fcmRegistrationList.map(fcmRegistration -> (p, success, failure) -> {
 
                 final Message message = Message.builder()
                     .setNotification(new Notification(p.getTitle(), p.getMessage()))

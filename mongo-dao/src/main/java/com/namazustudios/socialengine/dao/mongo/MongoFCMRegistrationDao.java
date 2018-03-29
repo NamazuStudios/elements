@@ -1,11 +1,10 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 import com.namazustudios.socialengine.dao.FCMRegistrationDao;
+import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFCMRegistration;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
-import com.namazustudios.socialengine.dao.mongo.model.MongoSession;
 import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -13,7 +12,6 @@ import com.namazustudios.socialengine.util.ValidationHelper;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.DeleteOptions;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -21,6 +19,8 @@ import org.mongodb.morphia.query.UpdateResults;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 public class MongoFCMRegistrationDao implements FCMRegistrationDao {
 
@@ -29,6 +29,8 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
     private Datastore datastore;
 
     private MongoProfileDao mongoProfileDao;
+
+    private MongoApplicationDao mongoApplicationDao;
 
     private ValidationHelper validationHelper;
 
@@ -128,9 +130,16 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
     }
 
     @Override
-    public List<FCMRegistration> getRegistrationsForRecipient(String applicationId, String recipientId) {
-        // TODO Implement this
-        return null;
+    public Stream<FCMRegistration> getRegistrationsForRecipient(final String recipientId) {
+
+        final MongoProfile recipient = getMongoProfileDao().getActiveMongoProfile(recipientId);
+        final Query<MongoFCMRegistration> query = getDatastore().createQuery(MongoFCMRegistration.class);
+
+        query.and(
+            query.criteria("profile").equal(recipient)
+        );
+
+        return query.asList().stream().map(p -> getMapper().map(p, FCMRegistration.class));
     }
 
     public Mapper getMapper() {
@@ -162,6 +171,15 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
 
     public ValidationHelper getValidationHelper() {
         return validationHelper;
+    }
+
+    public MongoApplicationDao getMongoApplicationDao() {
+        return mongoApplicationDao;
+    }
+
+    @Inject
+    public void setMongoApplicationDao(MongoApplicationDao mongoApplicationDao) {
+        this.mongoApplicationDao = mongoApplicationDao;
     }
 
     @Inject

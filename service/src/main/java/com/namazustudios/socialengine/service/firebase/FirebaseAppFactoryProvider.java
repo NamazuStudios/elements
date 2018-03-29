@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.service.firebase;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.FirebaseApplicationConfigurationDao;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
@@ -38,7 +37,7 @@ public class FirebaseAppFactoryProvider implements Provider<FirebaseAppFactory> 
         final FirebaseApplicationConfiguration firebaseApplicationConfiguration;
         try {
             firebaseApplicationConfiguration = firebaseApplicationConfigurationDao
-                .getFirebaseApplicationConfigurationForApplication(application.getId());
+                .getDefaultFirebaseApplicationConfigurationForApplication(application.getId());
         } catch (NotFoundException ex) {
             throw new InternalException(ex);
         }
