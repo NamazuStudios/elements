@@ -13,8 +13,9 @@ import java.util.function.Supplier;
 
 public class UserFCMRegistrationService implements FCMRegistrationService {
 
-    @Inject
-    private NotificationService notificationService;
+// TODO Remove this once we are satisfied with the end-to-end-testing
+//    @Inject
+//    private NotificationService notificationService;
 
     private FCMRegistrationDao fcmRegistrationDao;
 
@@ -33,12 +34,13 @@ public class UserFCMRegistrationService implements FCMRegistrationService {
 
         final FCMRegistration registration = getFcmRegistrationDao().createRegistration(fcmRegistration);
 
-        notificationService.getBuilder()
-            .recipient(registration.getProfile())
-            .title("Hello World!")
-            .message("Hello World!")
-            .build()
-            .send();
+// TODO Remove this once we are satisfied with the end-to-end-testing
+//        notificationService.getBuilder()
+//            .recipient(registration.getProfile())
+//            .title("Hello World!")
+//            .message("Hello World!")
+//            .build()
+//            .send();
 
         return registration;
 

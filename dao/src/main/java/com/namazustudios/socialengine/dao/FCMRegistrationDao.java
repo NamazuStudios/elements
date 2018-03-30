@@ -4,6 +4,9 @@ import com.namazustudios.socialengine.model.notification.FCMRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 /**
@@ -51,8 +54,21 @@ public interface FCMRegistrationDao {
      * associated witht he supplied {@link Profile} id of the recipient.
      *
      * @param recipientId the {@link Profile} id of the recipient, as returned by {@link Profile#getId()}
-     * @return
+     * @return a {@link Stream<FCMRegistration>} containing all matching {@link FCMRegistration} instances
      */
     Stream<FCMRegistration> getRegistrationsForRecipient(String recipientId);
+
+    /**
+     * Ensures that the {@link Stream} returned will only contain each {@link FCMRegistration} once, and only once.
+     * The default implementation of this method uses a technique similar to {@link Stream#distinct()}, but
+     * implementations may opt to use the underlying database to optimize this operation.
+     *
+     * @param recipientId the {@link Profile} id of the recipient, as returned by {@link Profile#getId()}
+     * @return a {@link Stream<FCMRegistration>} containing all matching {@link FCMRegistration} instances
+     */
+    default Stream<FCMRegistration> getDistinctRegistrationsForRecipient(final String recipientId) {
+        final Set<Object> dups = ConcurrentHashMap.newKeySet();
+        return getRegistrationsForRecipient(recipientId).filter(r -> dups.add(r.getRegistrationToken()));
+    }
 
 }

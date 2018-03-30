@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service.notification;
 
 import com.namazustudios.socialengine.service.Notification;
+import com.namazustudios.socialengine.service.NotificationEvent;
 import com.namazustudios.socialengine.service.NotificationParameters;
 
 import javax.inject.Inject;

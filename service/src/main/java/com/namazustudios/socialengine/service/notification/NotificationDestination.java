@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service.notification;
 
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.Notification;
+import com.namazustudios.socialengine.service.NotificationEvent;
 import com.namazustudios.socialengine.service.NotificationParameters;
 
 import java.util.function.Consumer;
@@ -21,6 +22,6 @@ public interface NotificationDestination {
      * @param success
      * @param failure
      */
-    void send(NotificationParameters parameters, Consumer<Notification.NotificationEvent> success, Consumer<Exception> failure);
+    void send(NotificationParameters parameters, Consumer<NotificationEvent> success, Consumer<Exception> failure);
 
 }

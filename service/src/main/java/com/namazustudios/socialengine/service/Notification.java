@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.service;
 
-import com.namazustudios.socialengine.model.profile.Profile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,20 +36,5 @@ public interface Notification {
      * @return the number of destinations that recieved the {@link Notification}
      */
     int send(Consumer<NotificationEvent> success, Consumer<Exception> failure);
-
-    /**
-     * Represents a notification event.  This is supplied to the success function of {@link #send(Consumer, Consumer)}
-     * when a notification is successfully sent.
-     */
-    interface NotificationEvent {
-
-        /**
-         * The {@link NotificationParameters} used to send the event.
-         *
-         * @return
-         */
-        NotificationParameters getParameters();
-
-    }
 
 }
