@@ -1,32 +1,22 @@
 package com.namazustudios.socialengine.service.notification.guice;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
 import com.google.inject.PrivateModule;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.namazustudios.socialengine.service.Notification;
+import com.namazustudios.socialengine.config.ModuleDefaults;
 import com.namazustudios.socialengine.service.NotificationBuilder;
-import com.namazustudios.socialengine.service.firebase.FirebaseAppFactory;
-import com.namazustudios.socialengine.service.firebase.FirebaseAppFactoryProvider;
-import com.namazustudios.socialengine.service.notification.NotificationDestinationFactory;
-import com.namazustudios.socialengine.service.notification.NotificationFactory;
-import com.namazustudios.socialengine.service.notification.StandardNotificationBuilder;
-import com.namazustudios.socialengine.service.notification.StandardNotificationDestinationProvider;
+import com.namazustudios.socialengine.service.notification.*;
+import com.namazustudios.socialengine.service.notification.firebase.FirebaseMessagingFactory;
+import com.namazustudios.socialengine.service.notification.firebase.FirebaseMessagingFactoryProvider;
 
-public class GuiceStandardNotificationFactoryModule extends PrivateModule {
+public class GuiceStandardNotificationFactoryModule extends AbstractModule {
 
     @Override
     protected void configure() {
-
-        install(new FactoryModuleBuilder()
-            .implement(Notification.class, GuiceStandardNotification.class)
-            .build(GuiceStandardNotificationFactory.class));
-
         bind(NotificationBuilder.class).to(StandardNotificationBuilder.class);
-        bind(NotificationFactory.class).to(GuiceStandardNotificationFactory.class);
-        bind(FirebaseAppFactory.class).toProvider(FirebaseAppFactoryProvider.class);
-        bind(NotificationDestinationFactory.class).toProvider(StandardNotificationDestinationProvider.class);
-
-        expose(NotificationBuilder.class);
-
+        bind(NotificationFactory.class).toProvider(StandardNotificationFactoryProvider.class);
+        bind(NotificationDestinationFactory.class).toProvider(StandardNotificationDestinationFactoryProvider.class);
+        bind(FirebaseMessagingFactory.class).toProvider(FirebaseMessagingFactoryProvider.class);
     }
 
 }

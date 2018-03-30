@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.model.application.FirebaseApplicationConfi
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +19,7 @@ import java.nio.charset.Charset;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+@Singleton
 public class FirebaseAppFactoryProvider implements Provider<FirebaseAppFactory> {
 
     private Provider<FirebaseApplicationConfigurationDao> firebaseApplicationConfigurationDaoProvider;
@@ -35,6 +37,7 @@ public class FirebaseAppFactoryProvider implements Provider<FirebaseAppFactory> 
                                        final Application application) {
 
         final FirebaseApplicationConfiguration firebaseApplicationConfiguration;
+
         try {
             firebaseApplicationConfiguration = firebaseApplicationConfigurationDao
                 .getDefaultFirebaseApplicationConfigurationForApplication(application.getId());
@@ -42,7 +45,8 @@ public class FirebaseAppFactoryProvider implements Provider<FirebaseAppFactory> 
             throw new InternalException(ex);
         }
 
-        return firebaseAppCache.computeIfAbsent(application.getId(), applicationId -> loadCredentialsAndReturnApp(applicationId, firebaseApplicationConfiguration));
+        return firebaseAppCache.computeIfAbsent(application.getId(), applicationId ->
+            loadCredentialsAndReturnApp(applicationId, firebaseApplicationConfiguration));
 
     }
 

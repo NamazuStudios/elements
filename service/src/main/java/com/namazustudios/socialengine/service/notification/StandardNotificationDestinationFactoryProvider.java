@@ -14,11 +14,10 @@ import com.namazustudios.socialengine.service.notification.firebase.FirebaseMess
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
-public class StandardNotificationDestinationProvider implements Provider<NotificationDestinationFactory> {
+public class StandardNotificationDestinationFactoryProvider implements Provider<NotificationDestinationFactory> {
 
     private static final String MESSAGE_ERROR_PREFIX = "messaging";
 

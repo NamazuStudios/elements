@@ -18,7 +18,7 @@ public interface Notification {
      */
     default int send() {
         final Logger logger = LoggerFactory.getLogger(getClass());
-        return send(v -> logger.info("{} successfully sent."), ex -> logger.error("Failed to send.", ex));
+        return send(v -> logger.info("{} successfully sent.", v), ex -> logger.error("Failed to send.", ex));
     }
 
     /**
