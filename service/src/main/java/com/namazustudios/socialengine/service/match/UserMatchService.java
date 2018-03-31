@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -150,7 +151,11 @@ public class UserMatchService implements MatchService {
         final Context context = getContextFactory().getContextForApplication(profile.getApplication().getId());
 
         final Path path = new Path(randomUUID().toString());
-        final Attributes attributes = new SimpleAttributes.Builder().from(attributesProvider.get()).build();
+
+        final Attributes attributes = new SimpleAttributes.Builder()
+            .from(attributesProvider.get(), (n, v) -> v instanceof Serializable)
+            .build();
+
         final ResourceId resourceId = context.getResourceContext().createAttributes(module, path, attributes);
 
         final Object result = context.getResourceContext().invoke(resourceId, method,
