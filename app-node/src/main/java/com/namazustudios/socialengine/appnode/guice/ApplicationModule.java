@@ -53,7 +53,6 @@ public class ApplicationModule extends AbstractModule {
         install(new SimpleHandlerContextModule());
         install(new SimpleResourceContextModule());
         install(new RTFileAssetLoaderModule(codeDirectory));
-        install(new GuiceStandardNotificationFactoryModule());
         install(new FirebaseAppFactoryModule());
 
         bind(InvocationDispatcher.class).to(ContextInvocationDispatcher.class);

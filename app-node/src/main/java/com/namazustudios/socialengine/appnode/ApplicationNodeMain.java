@@ -12,6 +12,7 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.rt.MultiNodeContainer;
+import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNotificationFactoryModule;
 import org.apache.bval.guice.ValidationModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,8 @@ public class ApplicationNodeMain {
                 new MongoSearchModule(),
                 new RTFilesystemGitLoaderModule(),
                 new SharedContextModule(),
-                new MultiNodeContainerModule()
+                new MultiNodeContainerModule(),
+                new GuiceStandardNotificationFactoryModule()
         );
 
         final Object lock = new Object();
