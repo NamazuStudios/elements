@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rest.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.servlet.ServletScopes;
+import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.service.*;
 import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.AuthServiceProvider;
@@ -78,6 +79,8 @@ public class ServicesModule extends AbstractModule {
         bind(FCMRegistrationService.class)
                 .toProvider(FCMRegistrationServiceProvider.class)
                 .in(ServletScopes.REQUEST);
+
+        bind(Attributes.class).toProvider(AttributesProvider.class);
 
         bind(SessionService.class).to(AnonSessionService.class);
         bind(FacebookAuthService.class).to(StandardFacebookAuthService.class);

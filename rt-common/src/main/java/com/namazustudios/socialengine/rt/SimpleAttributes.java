@@ -64,6 +64,22 @@ public class SimpleAttributes implements Attributes, Serializable {
         }
 
         /**
+         * Copies all values from another {@link Attributes} into this {@link Builder}.
+         *
+         * @param attributes the {@link Attributes}
+         * @return this instance
+         */
+        public Builder from(final Attributes attributes) {
+
+            for (final String name : attributes.getAttributeNames()) {
+                setAttribute(name, attributes.getAttribute(name));
+            }
+
+            return this;
+
+        }
+
+        /**
          * Returns a new instance of {@link SimpleAttributes} based on this builder.
          *
          * @return a new instance of {@link SimpleAttributes}

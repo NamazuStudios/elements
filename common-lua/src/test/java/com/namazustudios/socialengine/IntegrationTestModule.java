@@ -13,11 +13,16 @@ import org.testng.annotations.Guice;
 @Guice(modules = IntegrationTestModule.class)
 public class IntegrationTestModule extends AbstractModule {
 
+    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService();
+
     @Override
     protected void configure() {
-        final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService().start();
         bind(Context.class).toProvider(embeddedTestService::getContext);
-        bind(JeroMQEmbeddedTestService.class).toInstance(embeddedTestService);
+        bind(JeroMQEmbeddedTestService.class).toInstance(embeddedTestService.start());
+    }
+
+    public JeroMQEmbeddedTestService getEmbeddedTestService() {
+        return embeddedTestService;
     }
 
 }

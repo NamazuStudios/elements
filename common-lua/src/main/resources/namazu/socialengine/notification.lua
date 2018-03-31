@@ -20,7 +20,7 @@ local notification = {}
 --
 -- Note that the returned NotificationBuilder will allow for reconfiguring any desired attribute.
 --
--- @return the logged-in user making the request, or the unprivileged user.  Never nil
+-- @return a new instance of NotificationBuilder
 function notification.builder()
     local builder = application_builder_provider:get()
     local application = attributes:getAttribute(Application.APPLICATION_ATTRIUTE)
