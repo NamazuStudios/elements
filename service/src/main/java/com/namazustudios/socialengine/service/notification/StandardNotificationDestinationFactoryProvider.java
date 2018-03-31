@@ -83,7 +83,8 @@ public class StandardNotificationDestinationFactoryProvider implements Provider<
             if (result.startsWith(MESSAGE_ERROR_PREFIX)) {
                 failure.accept(new InternalException(result));
             } else {
-                success.accept(() -> parameters);
+                final NotificationEvent ev = new StandardNotificationEvent(fcmRegistration.getId(), parameters);
+                success.accept(ev);
             }
 
         } catch (ExecutionException e) {

@@ -80,4 +80,15 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
         this.notificationFactory = notificationFactory;
     }
 
+    @Override
+    public String toString() {
+        return "StandardNotificationBuilder{" +
+                "recipient=" + recipient +
+                ", application=" + application +
+                ", title='" + title + '\'' +
+                ", message='" + message + '\'' +
+                ", notificationFactory=" + notificationFactory +
+                '}';
+    }
+
 }
