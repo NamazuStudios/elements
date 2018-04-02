@@ -68,6 +68,7 @@
         <module>rt-server-lua-testkit</module>
         <module>socialengine-jnlua/jnlua</module>
         <module>common-lua</module>
+    <module>service-guice</module>
   </modules>
 
     <properties>
@@ -106,6 +107,7 @@
         <jopt.version>4.9-beta-1</jopt.version>
         <jeromq.version>0.4.3</jeromq.version>
         <javolution.version>6.0.0</javolution.version>
+        <firebase.admin.vrsion>5.9.0</firebase.admin.vrsion>
     </properties>
 
     <dependencies>

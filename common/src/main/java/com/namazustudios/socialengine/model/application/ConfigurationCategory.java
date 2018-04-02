@@ -42,6 +42,11 @@ public enum ConfigurationCategory implements Serializable {
     /**
      * Represents a Facebook application configuration
      */
-    FACEBOOK
+    FACEBOOK,
+
+    /**
+     * Represents the Firebase application configuration type.
+     */
+    FIREBASE
 
 }

@@ -50,6 +50,11 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>service-guice</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>dao</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -61,6 +66,11 @@
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>rt-dao</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-http-servlet</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

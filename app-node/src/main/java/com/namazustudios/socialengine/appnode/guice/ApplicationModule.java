@@ -12,6 +12,8 @@ import com.namazustudios.socialengine.rt.guice.SimpleResourceContextModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
+import com.namazustudios.socialengine.service.firebase.guice.FirebaseAppFactoryModule;
+import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNotificationFactoryModule;
 import org.reflections.Reflections;
 
 import java.io.File;

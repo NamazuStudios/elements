@@ -407,6 +407,20 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
     }
 
+    @UiHandler("createFirebase")
+    public void onClickCreateFirebaseConfiguration(ClickEvent ev) {
+
+        final Application application = driver.flush();
+
+        final PlaceRequest placeRequest = new PlaceRequest.Builder()
+                .nameToken(NameTokens.APPLICATION_CONFIG_FIREBASE_EDIT)
+                .with(FirebaseApplicationConfigurationEditorPresenter.Param.application_id.name(), application.getId())
+                .build();
+
+        placeManager.revealPlace(placeRequest);
+
+    }
+
     @UiHandler("createIos")
     public void onClickCreateIosConfiguration(ClickEvent ev) {
         Notify.notify("Not implemented - iOS");

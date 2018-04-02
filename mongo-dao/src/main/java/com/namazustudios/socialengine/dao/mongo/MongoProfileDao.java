@@ -1,14 +1,11 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
-import com.namazustudios.socialengine.exception.BadQueryException;
-import com.namazustudios.socialengine.exception.InvalidDataException;
-import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -119,7 +116,7 @@ public class MongoProfileDao implements ProfileDao {
         final MongoProfile mongoProfile = query.get();
 
         if (mongoProfile == null) {
-            throw new NotFoundException("No profile exists with id " + profileId);
+            throw new ProfileNotFoundException("No profile exists with id " + profileId);
         }
 
         return mongoProfile;

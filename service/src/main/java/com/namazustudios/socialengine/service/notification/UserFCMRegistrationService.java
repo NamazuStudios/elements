@@ -5,12 +5,17 @@ import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.FCMRegistrationService;
+import com.namazustudios.socialengine.service.NotificationService;
 
 import javax.inject.Inject;
 import java.util.Objects;
 import java.util.function.Supplier;
 
 public class UserFCMRegistrationService implements FCMRegistrationService {
+
+// TODO Remove this once we are satisfied with the end-to-end-testing
+//    @Inject
+//    private NotificationService notificationService;
 
     private FCMRegistrationDao fcmRegistrationDao;
 
@@ -27,7 +32,17 @@ public class UserFCMRegistrationService implements FCMRegistrationService {
             throw new ForbiddenException("Profile mismatch when registering Firebase Token.");
         }
 
-        return getFcmRegistrationDao().createRegistration(fcmRegistration);
+        final FCMRegistration registration = getFcmRegistrationDao().createRegistration(fcmRegistration);
+
+// TODO Remove this once we are satisfied with the end-to-end-testing
+//        notificationService.getBuilder()
+//            .recipient(registration.getProfile())
+//            .title("Hello World!")
+//            .message("Hello World!")
+//            .build()
+//            .send();
+
+        return registration;
 
     }
 

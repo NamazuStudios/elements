@@ -12,9 +12,7 @@ import com.namazustudios.socialengine.model.application.MatchmakingApplicationCo
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.service.MatchService;
 import com.namazustudios.socialengine.service.Topic;
@@ -23,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -38,6 +38,8 @@ import static java.util.stream.Collectors.toList;
 public class UserMatchService implements MatchService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserMatchService.class);
+
+    private Provider<Attributes> attributesProvider;
 
     private Supplier<Profile> currentProfileSupplier;
 
@@ -149,7 +151,12 @@ public class UserMatchService implements MatchService {
         final Context context = getContextFactory().getContextForApplication(profile.getApplication().getId());
 
         final Path path = new Path(randomUUID().toString());
-        final ResourceId resourceId = context.getResourceContext().create(module, path);
+
+        final Attributes attributes = new SimpleAttributes.Builder()
+            .from(attributesProvider.get(), (n, v) -> v instanceof Serializable)
+            .build();
+
+        final ResourceId resourceId = context.getResourceContext().createAttributes(module, path, attributes);
 
         final Object result = context.getResourceContext().invoke(resourceId, method,
             successfulMatchTuple.getPlayerMatch(),
@@ -278,6 +285,15 @@ public class UserMatchService implements MatchService {
 
         return stringMatchTimeDelta;
 
+    }
+
+    public Provider<Attributes> getAttributesProvider() {
+        return attributesProvider;
+    }
+
+    @Inject
+    public void setAttributesProvider(Provider<Attributes> attributesProvider) {
+        this.attributesProvider = attributesProvider;
     }
 
     public Supplier<Profile> getCurrentProfileSupplier() {

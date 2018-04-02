@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.dao.FCMRegistrationDao;
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.FCMRegistrationService;
+import com.namazustudios.socialengine.service.NotificationService;
 
 import javax.inject.Inject;
 import java.util.function.Supplier;

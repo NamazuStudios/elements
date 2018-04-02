@@ -3,6 +3,12 @@ package com.namazustudios.socialengine.dao;
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
+
 /**
  * Manipulates instances of {@link FCMRegistration} in the underlying database.
  */
@@ -42,5 +48,27 @@ public interface FCMRegistrationDao {
      * @param fcmRegistrationId the id of the {@link FCMRegistration} as supplied by {@link FCMRegistration#getId()}
      */
     void deleteRegistrationWithRequestingProfile(Profile profile, String fcmRegistrationId);
+
+    /**
+     * Gets a {@link Stream<FCMRegistration>} containing all currently registered {@link FCMRegistration} instances
+     * associated witht he supplied {@link Profile} id of the recipient.
+     *
+     * @param recipientId the {@link Profile} id of the recipient, as returned by {@link Profile#getId()}
+     * @return a {@link Stream<FCMRegistration>} containing all matching {@link FCMRegistration} instances
+     */
+    Stream<FCMRegistration> getRegistrationsForRecipient(String recipientId);
+
+    /**
+     * Ensures that the {@link Stream} returned will only contain each {@link FCMRegistration} once, and only once.
+     * The default implementation of this method uses a technique similar to {@link Stream#distinct()}, but
+     * implementations may opt to use the underlying database to optimize this operation.
+     *
+     * @param recipientId the {@link Profile} id of the recipient, as returned by {@link Profile#getId()}
+     * @return a {@link Stream<FCMRegistration>} containing all matching {@link FCMRegistration} instances
+     */
+    default Stream<FCMRegistration> getDistinctRegistrationsForRecipient(final String recipientId) {
+        final Set<Object> dups = ConcurrentHashMap.newKeySet();
+        return getRegistrationsForRecipient(recipientId).filter(r -> dups.add(r.getRegistrationToken()));
+    }
 
 }

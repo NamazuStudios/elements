@@ -20,7 +20,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
                    "the system.",
      authorizations = {@Authorization(SESSION_SECRET)})
 @Path("notification/fcm")
-public class FCMNotificationResource {
+public class FCMRegistrationResource {
 
     private ValidationHelper validationHelper;
 

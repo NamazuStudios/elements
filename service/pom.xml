@@ -74,6 +74,11 @@
             <artifactId>rt-server-lua-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-admin</artifactId>
+            <version>${firebase.admin.vrsion}</version>
+        </dependency>
     </dependencies>
 
 </project>

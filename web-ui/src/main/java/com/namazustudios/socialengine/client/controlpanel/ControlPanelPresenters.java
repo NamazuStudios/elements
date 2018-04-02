@@ -81,6 +81,13 @@ public class ControlPanelPresenters extends AbstractPresenterModule {
                 MatchmakingApplicationConfigurationEditorPresenter.MyView.class,
                 MatchmakingApplicationConfigurationEditorView.class,
                 MatchmakingApplicationConfigurationEditorPresenter.MyProxy.class);
+
+        bindPresenter(
+                FirebaseApplicationConfigurationEditorPresenter.class,
+                FirebaseApplicationConfigurationEditorPresenter.MyView.class,
+                FirebaseApplicationConfigurationEditorView.class,
+                FirebaseApplicationConfigurationEditorPresenter.MyProxy.class);
+
     }
 
 }
