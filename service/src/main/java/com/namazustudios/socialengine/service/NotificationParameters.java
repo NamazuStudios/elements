@@ -35,4 +35,11 @@ public interface NotificationParameters {
      */
     String getMessage();
 
+    /**
+     * Gets the sound to play when delivering the message.  Null indicates no sound will be played.
+     *
+     * @return the sound name or null
+     */
+    String getSound();
+
 }

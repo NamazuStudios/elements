@@ -22,6 +22,8 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
 
     private NotificationFactory notificationFactory;
 
+    private String sound;
+
     @Override
     public NotificationBuilder application(final Application application) {
         this.application = application;
@@ -47,6 +49,12 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
     }
 
     @Override
+    public NotificationBuilder sound(final String sound) {
+        this.sound = sound;
+        return this;
+    }
+
+    @Override
     public Profile getRecipient() {
         return recipient;
     }
@@ -64,6 +72,11 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
     @Override
     public String getMessage() {
         return message;
+    }
+
+    @Override
+    public String getSound() {
+        return null;
     }
 
     @Override
