@@ -186,47 +186,47 @@ public class LuaResource implements Resource {
     public MethodDispatcher getMethodDispatcher(final String name) {
         return params -> (consumer, throwableConsumer) -> {
 
-                final LuaState luaState = getLuaState();
-                FinallyAction finalOperation = () -> luaState.setTop(0);
+            final LuaState luaState = getLuaState();
+            FinallyAction finalOperation = () -> luaState.setTop(0);
 
-                try {
+            try {
 
-                    luaState.getGlobal(REQUIRE);
-                    luaState.pushString(CoroutineBuiltin.MODULE_NAME);
-                    luaState.call(1, 1);
-                    luaState.getField(-1, CoroutineBuiltin.START);
-                    luaState.remove(-2);
+                luaState.getGlobal(REQUIRE);
+                luaState.pushString(CoroutineBuiltin.MODULE_NAME);
+                luaState.call(1, 1);
+                luaState.getField(-1, CoroutineBuiltin.START);
+                luaState.remove(-2);
 
-                    luaState.getField(REGISTRYINDEX, MODULE);
-                    luaState.getField(-1, name);
-                    luaState.remove(-2);
+                luaState.getField(REGISTRYINDEX, MODULE);
+                luaState.getField(-1, name);
+                luaState.remove(-2);
 
-                    if (!luaState.isFunction(-1)){
-                        getScriptLog().error("No such method {}", name);
-                        throw new MethodNotFoundException("No such method: " + name);
-                    }
+                if (!luaState.isFunction(-1)){
+                    getScriptLog().error("No such method {}", name);
+                    throw new MethodNotFoundException("No such method: " + name);
+                }
 
-                    luaState.newThread();
-                    for (Object param : params) luaState.pushJavaObject(param);
+                luaState.newThread();
+                for (Object param : params) luaState.pushJavaObject(param);
 
-                    luaState.call(params.length + 1, 3);
+                luaState.call(params.length + 1, 3);
 
-                    final String taskId = luaState.checkString(1);                        // task id
-                    final int status = luaState.checkInteger(2);                          // thread status
-                    final Object result = luaState.checkJavaObject(3, Object.class);      // the return value
+                final TaskId taskId = new TaskId(luaState.checkString(1));            // task id
+                final int status = luaState.checkInteger(2);                          // thread status
+                final Object result = luaState.checkJavaObject(3, Object.class);      // result
+                final PendingTask pendingTask = new PendingTask(taskId, consumer, throwableConsumer);
 
-                    if (status == YIELD) {
-                        final PendingTask pendingTask = new PendingTask(consumer, throwableConsumer);
-                        taskIdPendingTaskMap.put(new TaskId(taskId), pendingTask);
-                    } else {
-                        finalOperation = finalOperation.then(() -> consumer.accept(result));
-                    }
+                if (status == YIELD) {
+                    taskIdPendingTaskMap.put(taskId, pendingTask);
+                } else {
+                    pendingTask.finish(result);
+                }
 
-                return new TaskId(taskId);
+                return taskId;
 
-            } catch (Throwable th) {
-                logAssist.error("Error dispatching method: " + name, th);
-                throw th;
+            } catch (Exception ex) {
+                logAssist.error("Error dispatching method: " + name, ex);
+                throw ex;
             } finally {
                 finalOperation.perform();
             }
@@ -267,14 +267,13 @@ public class LuaResource implements Resource {
                 getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
                 throw new IllegalStateException("task ID mismatch");
             } else if (status == YIELD) {
-                getScriptLog().info("Task {} yielded.  Resuming later.", taskId);
-            } else {
-                finalOperation = finalOperation.then(() -> pendingTask.resultConsumer.accept(result));
+                getScriptLog().info("Resuming task {} from network yielded.  Resuming later.", taskId);
             }
 
-        } catch (Throwable th) {
-            getScriptLog().error("Caught exception resuming task {}.", taskId, th);
-            pendingTask.throwableConsumer.accept(th);
+        } catch (Exception ex) {
+            getScriptLog().error("Caught exception resuming task {}.", taskId, ex);
+            pendingTask.fail(ex);
+            throw ex;
         } finally {
             finalOperation.perform();
         }
@@ -312,20 +311,18 @@ public class LuaResource implements Resource {
 
             final String taskIdString = luaState.checkString(1);                        // task id
             final int status = luaState.checkInteger(2);                                // thread status
-            final Object result = luaState.checkJavaObject(3, Object.class);            // the return value
 
             if (!taskId.asString().equals(taskIdString)) {
                 getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
                 throw new IllegalStateException("task ID mismatch");
             } else if (status == YIELD) {
-                getScriptLog().info("Task {} yielded.  Resuming later.", taskId);
-            } else {
-                finalOperation = finalOperation.then(() -> pendingTask.resultConsumer.accept(result));
+                getScriptLog().info("Resuming task {} with error yielded.  Resuming later.", taskId);
             }
 
-        } catch (Throwable th) {
-            getScriptLog().error("Caught exception resuming task {}.", taskId, th);
-            pendingTask.throwableConsumer.accept(th);
+        } catch (Exception ex) {
+            getScriptLog().error("Caught exception resuming task {}.", taskId, ex);
+            pendingTask.fail(ex);
+            throw ex;
         } finally {
             finalOperation.perform();
         }
@@ -360,15 +357,12 @@ public class LuaResource implements Resource {
 
             final String taskIdString = luaState.checkString(1);                        // task id
             final int status = luaState.checkInteger(2);                                // thread status
-            final Object result = luaState.checkJavaObject(3, Object.class);            // the return value
 
             if (!taskId.asString().equals(taskIdString)) {
                 getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
                 throw new IllegalStateException("task ID mismatch");
             } else if (status == YIELD) {
-                getScriptLog().info("Task {} yielded.  Resuming later.", taskId);
-            } else {
-                finalOperation = finalOperation.then(() -> pendingTask.resultConsumer.accept(result));
+                getScriptLog().info("Scheduler resumed task {} yielded.  Resuming later.", taskId);
             }
 
         } catch (Throwable th) {
@@ -378,6 +372,30 @@ public class LuaResource implements Resource {
             finalOperation.perform();
         }
 
+    }
+
+    /**
+     * Finishes a pending task by driving the associated {@link Consumer<Object>} used to receive the successful
+     * result.
+     *
+     * @param taskId the {@link TaskId} of the task to fail
+     * @param result the result {@link Object}
+     */
+    public void finishPendingTask(final TaskId taskId, final Object result) {
+        final PendingTask pendingTask = taskIdPendingTaskMap.remove(taskId);
+        if (pendingTask != null) pendingTask.finish(result);
+    }
+
+    /**
+     * Fails a {@link PendingTask} with the supplied {@link Throwable}, handing it to the associated
+     * {@Link Consumer<Throwable>}.
+     *
+     * @param taskId the {@link TaskId} of the task to fail
+     * @param error the {@link Throwable} which caused the failure
+     */
+    public void failPendingTask(final TaskId taskId, final Throwable error) {
+        final PendingTask pendingTask = taskIdPendingTaskMap.remove(taskId);
+        if (pendingTask != null) pendingTask.fail(error);
     }
 
     /**
@@ -409,13 +427,35 @@ public class LuaResource implements Resource {
 
     private static class PendingTask {
 
+        private final TaskId taskId;
+
         private final Consumer<Object> resultConsumer;
 
         private final Consumer<Throwable> throwableConsumer;
 
-        public PendingTask(Consumer<Object> resultConsumer, Consumer<Throwable> throwableConsumer) {
+        public PendingTask(final TaskId taskId,
+                           final Consumer<Object> resultConsumer,
+                           final Consumer<Throwable> throwableConsumer) {
+            this.taskId = taskId;
             this.resultConsumer = resultConsumer;
             this.throwableConsumer = throwableConsumer;
+        }
+
+        public void finish(final Object result) {
+            try {
+                resultConsumer.accept(result);
+            } catch (Exception ex) {
+                fail(ex);
+            }
+        }
+
+        public void fail(final Throwable th) {
+            try {
+                logger.info("Task failed with exception.", taskId, th);
+                throwableConsumer.accept(th);
+            } catch (Exception ex) {
+                logger.error("Caught exception failing task {} ", taskId, ex);
+            }
         }
 
     }

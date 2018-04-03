@@ -195,6 +195,9 @@ public class CoroutineBuiltin implements Builtin {
                 luaState.pushString(taskId.toString());
                 luaState.insert(1);
 
+                final Object result = luaState.getTop() == 2 ? null : luaState.checkJavaObject(3, Object.class);
+                getLuaResource().finishPendingTask(taskId, result);
+
                 return returned + 2;
 
             }
@@ -202,6 +205,7 @@ public class CoroutineBuiltin implements Builtin {
         } catch (Throwable th) {
             // All exceptions will clean up the coroutine such that it will no longer be in the table.
             cleanup(taskId, luaState);
+            getLuaResource().failPendingTask(taskId, th);
             throw th;
         }
 
