@@ -3,10 +3,12 @@ package com.namazustudios.socialengine.dao.mongo.model;
 import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
-import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Reference;
+import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.friend.Friendship;
+import org.mongodb.morphia.annotations.*;
+
+import java.sql.Timestamp;
+import java.util.List;
 
 @SearchableIdentity(@SearchableField(
         name = "id",
@@ -15,26 +17,38 @@ import org.mongodb.morphia.annotations.Reference;
         extractor = MongoFriendIdExtractor.class,
         processors = MongoFriendIdProcessor.class))
 @SearchableDocument(fields = {
-        @SearchableField(name = "name", path = "/name"),
-        @SearchableField(name = "email", path = "/email"),
-        @SearchableField(name = "active", path = "/active"),
-        @SearchableField(name = "level", path = "/level"),
-        @SearchableField(name = "facebookId", path = "/facebookId")
+        @SearchableField(name = "userId", path = "/user/objectId", extractor = ObjectIdExtractor.class),
+        @SearchableField(name = "name", path = "/friend/name"),
+        @SearchableField(name = "friendship", path = "/friendship")
+})
+@Indexes({
+        @Index(fields = @Field(value = "_id.user")),
+        @Index(fields = @Field(value = "_id.friend")),
+        @Index(fields = @Field(value = "user")),
+        @Index(fields = @Field(value = "friend")),
 })
 public class MongoFriend {
 
     @Id
     private MongoFriendId objectId;
 
-    @Indexed
     @Reference
-    private MongoUser user;
+    private User user;
 
-    @Indexed
     @Reference
-    private MongoUser friend;
+    private User friend;
+
+    @Property
+    private Timestamp creation;
+
+    @Transient
+    private Friendship friendship;
+
+    @Transient
+    private List<MongoProfile> profiles;
 
     public MongoFriendId getObjectId() {
+
         return objectId;
     }
 
@@ -42,41 +56,44 @@ public class MongoFriend {
         this.objectId = objectId;
     }
 
-    public MongoUser getUser() {
+    public User getUser() {
         return user;
     }
 
-    public void setUser(MongoUser user) {
+    public void setUser(User user) {
         this.user = user;
     }
 
-    public MongoUser getFriend() {
+    public User getFriend() {
         return friend;
     }
 
-    public void setFriend(MongoUser friend) {
+    public void setFriend(User friend) {
         this.friend = friend;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof MongoFriend)) return false;
-
-        MongoFriend that = (MongoFriend) o;
-
-        if (getObjectId() != null ? !getObjectId().equals(that.getObjectId()) : that.getObjectId() != null)
-            return false;
-        if (getUser() != null ? !getUser().equals(that.getUser()) : that.getUser() != null) return false;
-        return getFriend() != null ? getFriend().equals(that.getFriend()) : that.getFriend() == null;
+    public Timestamp getCreation() {
+        return creation;
     }
 
-    @Override
-    public int hashCode() {
-        int result = getObjectId() != null ? getObjectId().hashCode() : 0;
-        result = 31 * result + (getUser() != null ? getUser().hashCode() : 0);
-        result = 31 * result + (getFriend() != null ? getFriend().hashCode() : 0);
-        return result;
+    public void setCreation(Timestamp creation) {
+        this.creation = creation;
+    }
+
+    public Friendship getFriendship() {
+        return friendship;
+    }
+
+    public void setFriendship(Friendship friendship) {
+        this.friendship = friendship;
+    }
+
+    public List<MongoProfile> getProfiles() {
+        return profiles;
+    }
+
+    public void setProfiles(List<MongoProfile> profiles) {
+        this.profiles = profiles;
     }
 
 }

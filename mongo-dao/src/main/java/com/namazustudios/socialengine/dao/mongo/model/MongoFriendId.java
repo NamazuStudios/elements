@@ -5,9 +5,14 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Property;
 
 import java.util.Base64;
+import java.util.function.Function;
 
 import static java.lang.System.arraycopy;
 
+/**
+ * Represents a unique id between two {@link MongoUser} instances, forming a {@link MongoFriend}.  This derives the
+ * ID value itself as a compound value
+ */
 public class MongoFriendId {
 
     public static final int VERSION = 0;
@@ -17,6 +22,26 @@ public class MongoFriendId {
     public static final int OID_LENGTH_BYTES = 12;
 
     public static final int LENGTH_BYTES = (2 * OID_LENGTH_BYTES) + VERSION_LENGTH;
+
+    /**
+     * Attempts to parse the supplied string into a {@link MongoFriendId}.  If parsing fails, then the supplied
+     * {@link Function<Throwable, ExceptionT>} will be used to generate an {@link Exception} to throw.
+     *
+     * @param hexStringRepresentation the hex string representation of the {@link MongoFriendId}
+     * @param exceptionSupplier the {@link Function<Throwable, ExceptionT>} to generate an exception if necessary
+     * @param <ExceptionT> the exception type
+     * @return the {@link MongoFriendId} instance (never null).
+     * @throws ExceptionT if parsing fails
+     */
+    public static <ExceptionT extends Exception> MongoFriendId parseOrThrow(
+            final String hexStringRepresentation,
+            final Function<Throwable, ExceptionT> exceptionSupplier) throws ExceptionT {
+        try {
+            return new MongoFriendId(hexStringRepresentation);
+        } catch (IllegalArgumentException ex) {
+            throw exceptionSupplier.apply(ex);
+        }
+    }
 
     @Indexed
     @Property
