@@ -1,10 +1,9 @@
 package com.namazustudios.socialengine.rest.friends;
 
-import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.notification.FCMRegistration;
+import com.namazustudios.socialengine.model.friend.Friend;
+import com.namazustudios.socialengine.service.FriendService;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -15,7 +14,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.google.common.base.Strings.repeat;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
 @Path("friend")
@@ -27,12 +25,14 @@ public class FriendResource {
 
     private ValidationHelper validationHelper;
 
+    private FriendService friendService;
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Search Users",
-            notes = "Searches all users in the system and returning the metadata for all matches against " +
-                    "the given search filter.")
-    public Pagination<User> getUsers(
+    @ApiOperation(value = "Search Friends",
+            notes = "Searches all friends in the system and returning the metadata for all matches against the given " +
+                    "search filter.")
+    public Pagination<Friend> getFriends(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
             @QueryParam("search") final String search) {
@@ -47,31 +47,32 @@ public class FriendResource {
 
         final String query = nullToEmpty(search).trim();
 
-        return null;
-//        return query.isEmpty() ?
-//                getUserService().getUsers(offset, count) :
-//                getUserService().getUsers(offset, count, search);
+        return query.isEmpty() ?
+                getFriendService().getFriends(offset, count) :
+                getFriendService().getFriends(offset, count, search);
 
     }
 
     @GET
-    @Path("{name}")
+    @Path("{friendId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets a Specific User",
-            notes = "Gets a specific user by email or unique user ID.")
-    public User getUser(@PathParam("name") final String name) {
-        return null;
-//        return getUserService().getUser(name);
+    @ApiOperation(
+            value = "Gets a Specific Friend",
+            notes = "Gets a specific friend using the ID of the friend.")
+    public Friend getUser(@PathParam("friendId") final String friendId) {
+        return getFriendService().getFriend(friendId);
     }
 
     @DELETE
-    @Path("{fcmRegistrationId}")
+    @Path("{friendId}")
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            value = "Deletes a Friend",
+            notes = "Once a friend is deleted, re-creating a friend will set the friendship status to outgoing.")
     public void deleteRegistration(
-            @PathParam("fcmRegistrationId")
-            final String fcmRegistrationId,
-            final FCMRegistration fcmRegistration) {
-//        getFcmRegistrationService().deleteRegistration(fcmRegistrationId);
+            @PathParam("friendId")
+            final String friendId) {
+        getFriendService().deleteFriend(friendId);
     }
 
     public ValidationHelper getValidationHelper() {
@@ -81,6 +82,15 @@ public class FriendResource {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
+    }
+
+    public FriendService getFriendService() {
+        return friendService;
+    }
+
+    @Inject
+    public void setFriendService(FriendService friendService) {
+        this.friendService = friendService;
     }
 
 }
