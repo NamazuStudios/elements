@@ -51,5 +51,5 @@ public class UserFriendService implements FriendService {
     public void setFriendDao(FriendDao friendDao) {
         this.friendDao = friendDao;
     }
-    
+
 }

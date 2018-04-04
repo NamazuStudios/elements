@@ -1,9 +1,11 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
+import com.namazustudios.socialengine.dao.mongo.converter.MongoFriendIdConverter;
 import com.namazustudios.socialengine.dao.mongo.converter.ObjectIdConverter;
 import com.namazustudios.socialengine.dao.mongo.model.*;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.*;
+import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
@@ -80,8 +82,11 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(FCMRegistration.class, MongoFCMRegistration.class)
-                .fields("id", "objectId")
-                .fields("profile.id", "profile.objectId");
+                .fields("id", "objectId", customConverter(ObjectIdConverter.class))
+                .fields("profile.id", "profile.objectId", customConverter(ObjectIdConverter.class));
+
+            mapping(Friend.class, MongoFriend.class)
+                .fields("id", "objectId", customConverter(MongoFriendIdConverter.class));
 
             }
         };
