@@ -37,12 +37,6 @@ public class MongoFriendship {
     @Property
     private boolean greaterAccepted;
 
-    @Transient
-    private Friendship friendship;
-
-    @Transient
-    private List<MongoProfile> profiles;
-
     public MongoFriendshipId getObjectId() {
         return objectId;
     }
@@ -67,22 +61,6 @@ public class MongoFriendship {
         this.greaterAccepted = greaterAccepted;
     }
 
-    public Friendship getFriendship() {
-        return friendship;
-    }
-
-    public void setFriendship(Friendship friendship) {
-        this.friendship = friendship;
-    }
-
-    public List<MongoProfile> getProfiles() {
-        return profiles;
-    }
-
-    public void setProfiles(List<MongoProfile> profiles) {
-        this.profiles = profiles;
-    }
-
     @Override
     public boolean equals(Object o) {
 
@@ -91,17 +69,16 @@ public class MongoFriendship {
 
         MongoFriendship that = (MongoFriendship) o;
 
-        if (getObjectId() != null ? !getObjectId().equals(that.getObjectId()) : that.getObjectId() != null)
-            return false;
-        if (getFriendship() != that.getFriendship()) return false;
-        return getProfiles() != null ? getProfiles().equals(that.getProfiles()) : that.getProfiles() == null;
+        if (isLesserAccepted() != that.isLesserAccepted()) return false;
+        if (isGreaterAccepted() != that.isGreaterAccepted()) return false;
+        return getObjectId() != null ? getObjectId().equals(that.getObjectId()) : that.getObjectId() == null;
     }
 
     @Override
     public int hashCode() {
         int result = getObjectId() != null ? getObjectId().hashCode() : 0;
-        result = 31 * result + (getFriendship() != null ? getFriendship().hashCode() : 0);
-        result = 31 * result + (getProfiles() != null ? getProfiles().hashCode() : 0);
+        result = 31 * result + (isLesserAccepted() ? 1 : 0);
+        result = 31 * result + (isGreaterAccepted() ? 1 : 0);
         return result;
     }
 

@@ -4,7 +4,6 @@ import com.mongodb.WriteResult;
 import com.namazustudios.socialengine.dao.FriendDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFriendship;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFriendshipId;
-import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.BadQueryException;
 import com.namazustudios.socialengine.exception.FriendNotFoundException;
@@ -13,6 +12,7 @@ import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.friend.Friend;
+import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -26,8 +26,6 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
-import java.util.List;
-import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.model.friend.Friendship.*;
 import static java.util.stream.Collectors.toList;
@@ -58,8 +56,8 @@ public class MongoFriendDao implements FriendDao {
 
         query.and(
             query.or(
-                query.criteria("_id.lesser").equal(user.getId()),
-                query.criteria("_id.greater").equal(user.getId())
+                query.criteria("_id.lesser").equal(mongoUser.getObjectId()),
+                query.criteria("_id.greater").equal(mongoUser.getObjectId())
             ),
             query.or(
                 query.criteria("lesserAccepted").equal(true),
@@ -151,30 +149,32 @@ public class MongoFriendDao implements FriendDao {
 
     private Friend transform(final MongoUser mongoUser, final MongoFriendship mongoFriendship) {
 
+        final Friend friend = getDozerMapper().map(mongoFriendship, Friend.class);
+
         final ObjectId lesserObjectId = mongoFriendship.getObjectId().getLesser();
         final ObjectId greaterObjectId = mongoFriendship.getObjectId().getGreater();
 
         if (mongoFriendship.isLesserAccepted() && mongoFriendship.isGreaterAccepted()) {
-            mongoFriendship.setFriendship(MUTUAL);
+            friend.setFriendship(MUTUAL);
         } else if (lesserObjectId.equals(mongoUser.getObjectId())) {
-            mongoFriendship.setFriendship(mongoFriendship.isLesserAccepted() ? OUTGOING : INCOMING);
+            friend.setFriendship(mongoFriendship.isLesserAccepted() ? OUTGOING : INCOMING);
         } else if (greaterObjectId.equals(mongoUser.getObjectId())) {
-            mongoFriendship.setFriendship(mongoFriendship.isGreaterAccepted() ? OUTGOING : INCOMING);
+            friend.setFriendship(mongoFriendship.isGreaterAccepted() ? OUTGOING : INCOMING);
         } else {
-            mongoFriendship.setFriendship(NONE);
+            friend.setFriendship(NONE);
         }
 
         final MongoUser lesser = getDatastore().get(MongoUser.class, lesserObjectId);
         final MongoUser greater = getDatastore().get(MongoUser.class, greaterObjectId);
+        final MongoUser friendUser = lesser.equals(mongoUser) ? greater : lesser;
 
-        final List<MongoProfile> profiles = Stream.of(lesser, greater)
-            .filter(u -> u != null && !u.equals(mongoUser))
-            .flatMap(u -> getMongoProfileDao().getActiveMongoProfilesForUser(mongoUser))
-            .collect(toList());
+        friend.setUser(getDozerMapper().map(friendUser, User.class));
+        friend.setProfiles(getMongoProfileDao()
+            .getActiveMongoProfilesForUser(friendUser)
+            .map(p -> getDozerMapper().map(p, Profile.class))
+            .collect(toList()));
 
-        mongoFriendship.setProfiles(profiles);
-
-        return getDozerMapper().map(mongoFriendship, Friend.class);
+        return friend;
 
     }
 

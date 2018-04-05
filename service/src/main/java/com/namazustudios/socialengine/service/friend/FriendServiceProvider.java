@@ -19,7 +19,7 @@ public class FriendServiceProvider implements Provider<FriendService> {
         switch (getUser().getLevel()) {
             case USER:
             case SUPERUSER: return getUserFriendServiceProvider().get();
-            default:        return forbidden(UserFriendService.class);
+            default:        return forbidden(FriendService.class);
         }
     }
 

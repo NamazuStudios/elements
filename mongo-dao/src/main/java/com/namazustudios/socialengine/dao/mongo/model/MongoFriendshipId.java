@@ -43,12 +43,12 @@ public class MongoFriendshipId {
         }
     }
 
-    private static ObjectId lesser(final ObjectId a, final ObjectId b) {
+    public static ObjectId lesser(final ObjectId a, final ObjectId b) {
         if (a.compareTo(b) == 0) throw new IllegalArgumentException("Identifiers must not match.");
         return a.compareTo(b) < 0 ? a : b;
     }
 
-    private static ObjectId greater(final ObjectId a, final ObjectId b) {
+    public static ObjectId greater(final ObjectId a, final ObjectId b) {
         if (a.compareTo(b) == 0) throw new IllegalArgumentException("Identifiers must not match.");
         return a.compareTo(b) > 0 ? a : b;
     }
