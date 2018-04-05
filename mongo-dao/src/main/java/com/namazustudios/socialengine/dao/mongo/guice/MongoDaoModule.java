@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.dao.mongo.provider.MongoAdvancedDatastoreP
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoMatchmakerFunctionProvider;
 import com.namazustudios.socialengine.fts.ObjectIndex;
+import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -49,6 +50,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(MatchDao.class).to(MongoMatchDao.class);
         bind(SessionDao.class).to(MongoSessionDao.class);
         bind(FCMRegistrationDao.class).to(MongoFCMRegistrationDao.class);
+        bind(FriendDao.class).to(MongoFriendDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoAdvancedDatastoreProvider.class)
@@ -84,6 +86,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(MatchDao.class);
         expose(FCMRegistrationDao.class);
         expose(SessionDao.class);
+        expose(FriendDao.class);
 
     }
 

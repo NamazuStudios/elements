@@ -85,7 +85,7 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                 .fields("profile.id", "profile.objectId", customConverter(ObjectIdConverter.class));
 
-            mapping(Friend.class, MongoFriend.class)
+            mapping(Friend.class, MongoFriendship.class)
                 .fields("id", "objectId", customConverter(MongoFriendIdConverter.class));
 
             }
