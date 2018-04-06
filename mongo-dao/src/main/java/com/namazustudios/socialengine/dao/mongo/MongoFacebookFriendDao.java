@@ -69,6 +69,8 @@ public class MongoFacebookFriendDao implements FacebookFriendDao {
             final UpdateResults r = getDatastore().update(query, update, new UpdateOptions().upsert(true));
             logger.debug("Updated {}.  Inserted {}", r.getUpdatedCount(), r.getInsertedCount());
 
+            getObjectIndex().index(query.get());
+
         }
     }
 

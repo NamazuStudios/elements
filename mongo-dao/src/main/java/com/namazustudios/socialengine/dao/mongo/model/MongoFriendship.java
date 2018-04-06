@@ -3,12 +3,7 @@ package com.namazustudios.socialengine.dao.mongo.model;
 import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
-import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.friend.Friendship;
 import org.mongodb.morphia.annotations.*;
-
-import java.util.List;
-import java.util.Set;
 
 @SearchableIdentity(@SearchableField(
         name = "id",
@@ -16,10 +11,7 @@ import java.util.Set;
         type = MongoFriendshipId.class,
         extractor = MongoFriendIdExtractor.class,
         processors = MongoFriendIdProcessor.class))
-@SearchableDocument(fields = {
-    @SearchableField(name = "user", path = "/objectId/lesser"),
-    @SearchableField(name = "user", path = "/objectId/greater")
-})
+@SearchableDocument()
 @Indexes({
     @Index(fields = @Field("_id.lesser")),
     @Index(fields = @Field("_id.greater")),

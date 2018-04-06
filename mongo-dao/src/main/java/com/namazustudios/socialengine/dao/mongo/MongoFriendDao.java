@@ -76,9 +76,9 @@ public class MongoFriendDao implements FriendDao {
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user.getId());
 
         try {
-            final Term userTerm = new Term("user", user.getId());
+            final Term userTerm = new Term("id", user.getId());
             booleanQueryBuilder.add(new TermQuery(userTerm), BooleanClause.Occur.FILTER);
-            booleanQueryBuilder.add(getStandardQueryParser().parse(search, "user"), BooleanClause.Occur.FILTER);
+            booleanQueryBuilder.add(getStandardQueryParser().parse(search, "id"), BooleanClause.Occur.FILTER);
         } catch (QueryNodeException ex) {
             throw new BadQueryException(ex);
         }
