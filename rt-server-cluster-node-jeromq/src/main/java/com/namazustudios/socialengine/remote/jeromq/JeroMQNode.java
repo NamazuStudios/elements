@@ -262,13 +262,11 @@ public class JeroMQNode implements Node {
                         final int index = poller.register(connection.socket(), POLLIN | POLLERR);
 
                         while (running.get() && !interrupted()) {
-
-                            poller.poll(1000);
-
-                            if (poller.pollin(index)) {
+                            if (poller.poll(1000) < 0) {
+                                break;
+                            } else if (poller.pollin(index)) {
                                 dispatchMethodInvocation(connection.socket());
                             }
-
                         }
 
                     }
@@ -307,6 +305,7 @@ public class JeroMQNode implements Node {
                           .then(() -> getzContext().destroySocket(inbound))
                           .then(() -> getzContext().destroySocket(outbound));
 
+                frontend.setRouterMandatory(true);
                 frontend.bind(getBindAddress());
 
                 inbound.bind(getInboundAddr());
@@ -320,9 +319,7 @@ public class JeroMQNode implements Node {
 
                 while (running.get() && !interrupted()) {
 
-                    if (poller.poll(1000) == 0) {
-                        continue;
-                    }
+                    poller.poll(5000);
 
                     if (poller.pollin(frontendIndex)) {
                         final ZMsg msg = ZMsg.recvMsg(frontend);
