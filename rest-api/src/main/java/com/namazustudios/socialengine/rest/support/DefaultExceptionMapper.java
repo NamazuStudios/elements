@@ -18,6 +18,9 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Created by patricktwohig on 4/10/15.
@@ -59,15 +62,10 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
             errorResponse.setMessage(ex.getMessage());
             errorResponse.setCode(ex.getCode().toString());
-            errorResponse.setValidationFailureMessages(Lists.transform(violationList,
-                    new Function<ConstraintViolation<?>, String>() {
-
-                        @Override
-                        public String apply(ConstraintViolation<?> input) {
-                            return input.getPropertyPath() + " " + input.getMessage();
-                        }
-
-                    }));
+            errorResponse.setValidationFailureMessages(violationList
+                .stream()
+                .map(v -> v.getPropertyPath() + " - " + v.getMessage())
+                .collect(toList()));
 
             return Response
                     .status(getStatusForCode(ex.getCode()))
