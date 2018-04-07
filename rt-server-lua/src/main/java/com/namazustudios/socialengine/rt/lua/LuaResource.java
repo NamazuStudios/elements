@@ -44,6 +44,8 @@ public class LuaResource implements Resource {
 
     public static final String RESOURCE_BUILTIN = "namazu.resource.this";
 
+    private static final PendingTask DEFAULT_PENDING_TASK = new PendingTask(new TaskId(), o -> {}, e -> {});
+
     private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
 
     private final Map<TaskId, PendingTask> taskIdPendingTaskMap = new HashMap<>();
@@ -235,13 +237,9 @@ public class LuaResource implements Resource {
     }
 
     @Override
-    public void resumeFromNetwork(TaskId taskId, Object networkResult) {
+    public void resumeFromNetwork(final TaskId taskId, final Object networkResult) {
 
-        final PendingTask pendingTask = taskIdPendingTaskMap.get(taskId);
-
-        if (pendingTask == null) {
-            throw new InternalException("no pending task with id " + taskId);
-        }
+        final PendingTask pendingTask = taskIdPendingTaskMap.getOrDefault(taskId, DEFAULT_PENDING_TASK);
 
         final LuaState luaState = getLuaState();
         FinallyAction finalOperation = () -> luaState.setTop(0);
@@ -259,6 +257,10 @@ public class LuaResource implements Resource {
             luaState.pushJavaObject(networkResult);
             luaState.call(3, 3);
 
+            if (luaState.isNil(1)) {
+                throw new NoSuchTaskException(taskId);
+            }
+
             final String taskIdString = luaState.checkString(1);                        // task id
             final int status = luaState.checkInteger(2);                                // thread status
             final Object result = luaState.checkJavaObject(3, Object.class);            // the return value
@@ -270,6 +272,8 @@ public class LuaResource implements Resource {
                 getScriptLog().info("Resuming task {} from network yielded.  Resuming later.", taskId);
             }
 
+        } catch (NoSuchTaskException ex) {
+            throw ex;
         } catch (Exception ex) {
             getScriptLog().error("Caught exception resuming task {}.", taskId, ex);
             pendingTask.fail(ex);
@@ -283,11 +287,7 @@ public class LuaResource implements Resource {
     @Override
     public void resumeWithError(TaskId taskId, Throwable throwable) {
 
-        final PendingTask pendingTask = taskIdPendingTaskMap.get(taskId);
-
-        if (pendingTask == null) {
-            throw new InternalException("no pending task with id " + taskId);
-        }
+        final PendingTask pendingTask = taskIdPendingTaskMap.getOrDefault(taskId, DEFAULT_PENDING_TASK);
 
         final LuaState luaState = getLuaState();
         FinallyAction finalOperation = () -> luaState.setTop(0);
@@ -309,6 +309,10 @@ public class LuaResource implements Resource {
             luaState.pushInteger(responseCode.getCode());
             luaState.call(3, 3);
 
+            if (luaState.isNil(1)) {
+                throw new NoSuchTaskException(taskId);
+            }
+
             final String taskIdString = luaState.checkString(1);                        // task id
             final int status = luaState.checkInteger(2);                                // thread status
 
@@ -319,10 +323,11 @@ public class LuaResource implements Resource {
                 getScriptLog().info("Resuming task {} with error yielded.  Resuming later.", taskId);
             }
 
+        } catch (NoSuchTaskException ex) {
+            throw ex;
         } catch (Exception ex) {
             getScriptLog().error("Caught exception resuming task {}.", taskId, ex);
             pendingTask.fail(ex);
-            throw ex;
         } finally {
             finalOperation.perform();
         }
@@ -332,11 +337,7 @@ public class LuaResource implements Resource {
     @Override
     public void resumeFromScheduler(final TaskId taskId, final double elapsedTime) {
 
-        final PendingTask pendingTask = taskIdPendingTaskMap.get(taskId);
-
-        if (pendingTask == null) {
-            throw new InternalException("no pending task with id " + taskId);
-        }
+        final PendingTask pendingTask = taskIdPendingTaskMap.getOrDefault(taskId, DEFAULT_PENDING_TASK);
 
         final LuaState luaState = getLuaState();
         FinallyAction finalOperation = () -> luaState.setTop(0);
@@ -355,6 +356,10 @@ public class LuaResource implements Resource {
             luaState.pushString(TimeUnit.SECONDS.toString());
             luaState.call(4, 3);
 
+            if (luaState.isNil(1)) {
+                throw new NoSuchTaskException(taskId);
+            }
+
             final String taskIdString = luaState.checkString(1);                        // task id
             final int status = luaState.checkInteger(2);                                // thread status
 
@@ -365,9 +370,11 @@ public class LuaResource implements Resource {
                 getScriptLog().info("Scheduler resumed task {} yielded.  Resuming later.", taskId);
             }
 
-        } catch (Throwable th) {
-            getScriptLog().error("Caught exception resuming task {}.", taskId, th);
-            pendingTask.throwableConsumer.accept(th);
+        } catch (NoSuchTaskException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            getScriptLog().error("Caught exception resuming task {}.", taskId, ex);
+            pendingTask.throwableConsumer.accept(ex);
         } finally {
             finalOperation.perform();
         }
