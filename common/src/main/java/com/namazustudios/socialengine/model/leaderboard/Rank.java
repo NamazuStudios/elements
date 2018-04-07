@@ -30,4 +30,31 @@ public class Rank {
     public void setScore(Score score) {
         this.score = score;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Rank)) return false;
+
+        Rank rank = (Rank) o;
+
+        if (getPosition() != rank.getPosition()) return false;
+        return getScore() != null ? getScore().equals(rank.getScore()) : rank.getScore() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getPosition();
+        result = 31 * result + (getScore() != null ? getScore().hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Rank{" +
+                "position=" + position +
+                ", score=" + score +
+                '}';
+    }
+
 }

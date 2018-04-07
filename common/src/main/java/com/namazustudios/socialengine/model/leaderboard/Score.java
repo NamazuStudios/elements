@@ -84,4 +84,14 @@ public class Score {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "Score{" +
+                "id='" + id + '\'' +
+                ", profile=" + profile +
+                ", pointValue=" + pointValue +
+                ", pointUnits='" + pointUnits + '\'' +
+                '}';
+    }
+
 }
