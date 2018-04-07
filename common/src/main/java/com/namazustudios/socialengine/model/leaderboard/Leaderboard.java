@@ -11,15 +11,16 @@ import javax.validation.groups.Default;
 @ApiModel
 public class Leaderboard {
 
-    @ApiModelProperty("The id of the group.")
     @Null(groups = ValidationGroups.Create.class)
     @NotNull(groups = ValidationGroups.Update.class)
     private String id;
 
     @NotNull
+    @ApiModelProperty("The unique-name of the leaderboard.  This must be unique across all leaderboards.")
     private String name;
 
     @NotNull
+    @ApiModelProperty("The user-presentable name or title for for the leaderboard.")
     private String title;
 
     public String getId() {
