@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
 import com.google.common.base.Stopwatch;
+import com.namazustudios.socialengine.rt.exception.NoSuchTaskException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -129,9 +132,17 @@ public interface Scheduler {
         final Stopwatch stopwatch = Stopwatch.createStarted();
 
         return performV(resourceId, r -> {
+
             final double mills = stopwatch.elapsed(MILLISECONDS);
             final double secondsPerMills = MILLISECONDS.convert(1, SECONDS);
-            r.resumeFromScheduler(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
+
+            try {
+                r.resumeFromScheduler(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
+            } catch (NoSuchTaskException ex) {
+                final Logger logger = LoggerFactory.getLogger(getClass());
+                logger.info("Ignoring dead task: {}", ex.getTaskId());
+            }
+
         }, failure);
 
     }
@@ -154,9 +165,17 @@ public interface Scheduler {
         final Stopwatch stopwatch = Stopwatch.createStarted();
 
         return performAfterDelayV(resourceId, time, timeUnit, r -> {
+
             final double mills = stopwatch.elapsed(MILLISECONDS);
             final double secondsPerMills = MILLISECONDS.convert(1, SECONDS);
-            r.resumeFromScheduler(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
+
+            try {
+                r.resumeFromScheduler(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
+            } catch (NoSuchTaskException ex) {
+                final Logger logger = LoggerFactory.getLogger(getClass());
+                logger.info("Ignoring dead task: {}", ex.getTaskId());
+            }
+
         }, failure);
 
     }

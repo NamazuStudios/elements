@@ -126,7 +126,8 @@ public class CoroutineBuiltin implements Builtin {
             luaState.getField(-1, taskId.toString());
 
             if (!luaState.isThread(-1)) {
-                throw new InternalException("no such task " + taskId + " instead got " + luaState.typeName(-1));
+                logger.warn("no such task " + taskId + " instead got " + luaState.typeName(-1));
+                return 0;
             }
 
             luaState.replace(1);  // Pops the thread
