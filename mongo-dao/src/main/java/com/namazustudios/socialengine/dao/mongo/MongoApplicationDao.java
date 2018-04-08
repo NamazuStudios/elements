@@ -267,21 +267,6 @@ public class MongoApplicationDao implements ApplicationDao {
 
     }
 
-    public MongoApplication transform(final Application application) {
-
-        final MongoApplication mongoApplication = new MongoApplication();
-
-        if (application.getId() != null) {
-            mongoApplication.setObjectId(new ObjectId(application.getId()));
-        }
-
-        mongoApplication.setName(application.getName());
-        mongoApplication.setDescription(application.getDescription());
-
-        return mongoApplication;
-
-    }
-
     public void validate(final Application application) {
 
         if (application == null) {

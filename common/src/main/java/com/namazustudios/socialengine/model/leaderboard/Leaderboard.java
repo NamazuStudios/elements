@@ -11,8 +11,7 @@ import javax.validation.groups.Default;
 @ApiModel
 public class Leaderboard {
 
-    @Null(groups = ValidationGroups.Create.class)
-    @NotNull(groups = ValidationGroups.Update.class)
+    @Null
     private String id;
 
     @NotNull

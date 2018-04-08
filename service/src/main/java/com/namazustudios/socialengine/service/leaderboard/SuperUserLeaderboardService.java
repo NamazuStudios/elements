@@ -32,8 +32,8 @@ public class SuperUserLeaderboardService implements LeaderboardService {
     }
 
     @Override
-    public Leaderboard updateLeaderboard(final String nameOrId, final Leaderboard leaderboard) {
-        return getLeaderboardDao().updateLeaderboard(leaderboard);
+    public Leaderboard updateLeaderboard(final String leaderboardNameOrId, final Leaderboard leaderboard) {
+        return getLeaderboardDao().updateLeaderboard(leaderboardNameOrId, leaderboard);
     }
 
     @Override

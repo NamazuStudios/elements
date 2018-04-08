@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.dao.mongo.converter.ObjectIdConverter;
 import com.namazustudios.socialengine.dao.mongo.model.*;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.*;
+import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
@@ -82,6 +83,9 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(FCMRegistration.class, MongoFCMRegistration.class)
                 .fields("id", "objectId")
                 .fields("profile.id", "profile.objectId");
+
+            mapping(Leaderboard.class, MongoLeaderboard.class)
+                .fields("id", "objectId");
 
             }
         };
