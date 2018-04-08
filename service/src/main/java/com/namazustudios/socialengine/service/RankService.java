@@ -7,10 +7,10 @@ public interface RankService {
 
     Pagination<Rank> getRanksForFriends(int offset, int count);
 
-    Pagination<Rank> getRanksForFriends(int offset, int count, String profileIdTrimmed);
+    Pagination<Rank> getRanksForFriends(int offset, int count, String profileId);
 
     Pagination<Rank> getRanksForGlobal(int offset, int count);
 
-    Pagination<Rank> getRanksForGlobal(int offset, int count, String profileIdTrimmed);
+    Pagination<Rank> getRanksForGlobal(int offset, int count, String profileId);
 
 }

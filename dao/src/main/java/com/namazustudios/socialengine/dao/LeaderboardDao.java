@@ -1,13 +1,9 @@
-package com.namazustudios.socialengine.service;
+package com.namazustudios.socialengine.dao;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
 
-/**
- * Manages instances of {@link Leaderboard}.
- * 
- */
-public interface LeaderboardService {
+public interface LeaderboardDao {
 
     Pagination<Leaderboard> getLeaderboards(int offset, int count);
 
@@ -17,7 +13,7 @@ public interface LeaderboardService {
 
     Leaderboard createLeaderboard(Leaderboard leaderboard);
 
-    Leaderboard updateLeaderboard(String nameOrId, Leaderboard leaderboard);
+    Leaderboard updateLeaderboard(Leaderboard leaderboard);
 
     void deleteLeaderboard(String nameOrId);
 

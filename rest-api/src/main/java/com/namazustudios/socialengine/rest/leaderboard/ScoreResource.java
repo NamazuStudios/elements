@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rest.leaderboard;
 
-import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.ScoreService;
