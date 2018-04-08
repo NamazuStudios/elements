@@ -23,6 +23,10 @@ public class Leaderboard {
     @ApiModelProperty("The user-presentable name or title for for the leaderboard.")
     private String title;
 
+    @NotNull
+    @ApiModelProperty("The units-of measure for the score type of the leaderboard.")
+    private String scoreUnits;
+
     public String getId() {
         return id;
     }
@@ -47,6 +51,14 @@ public class Leaderboard {
         this.title = title;
     }
 
+    public String getScoreUnits() {
+        return scoreUnits;
+    }
+
+    public void setScoreUnits(String scoreUnits) {
+        this.scoreUnits = scoreUnits;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -56,7 +68,8 @@ public class Leaderboard {
 
         if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
-        return getTitle() != null ? getTitle().equals(that.getTitle()) : that.getTitle() == null;
+        if (getTitle() != null ? !getTitle().equals(that.getTitle()) : that.getTitle() != null) return false;
+        return getScoreUnits() != null ? getScoreUnits().equals(that.getScoreUnits()) : that.getScoreUnits() == null;
     }
 
     @Override
@@ -64,6 +77,7 @@ public class Leaderboard {
         int result = getId() != null ? getId().hashCode() : 0;
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getTitle() != null ? getTitle().hashCode() : 0);
+        result = 31 * result + (getScoreUnits() != null ? getScoreUnits().hashCode() : 0);
         return result;
     }
 
@@ -73,6 +87,7 @@ public class Leaderboard {
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", title='" + title + '\'' +
+                ", scoreUnits='" + scoreUnits + '\'' +
                 '}';
     }
 
