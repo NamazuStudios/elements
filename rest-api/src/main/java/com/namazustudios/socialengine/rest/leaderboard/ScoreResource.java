@@ -36,7 +36,7 @@ public class ScoreResource {
             final String leaderboardNameOrId,
             final Score score) {
         getValidationHelper().validateModel(score);
-        return getScoreService().createScore(score);
+        return getScoreService().createOrUpdateScore(leaderboardNameOrId, score);
     }
 
     public ValidationHelper getValidationHelper() {

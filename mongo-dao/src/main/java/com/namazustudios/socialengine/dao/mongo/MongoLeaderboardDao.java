@@ -85,6 +85,12 @@ public class MongoLeaderboardDao implements LeaderboardDao {
 
     @Override
     public Leaderboard getLeaderboard(final String nameOrId) {
+        final MongoLeaderboard mongoLeaderboard = getMongoLeaderboard(nameOrId);
+        return getBeanMapper().map(mongoLeaderboard, Leaderboard.class);
+
+    }
+
+    public MongoLeaderboard getMongoLeaderboard(final String nameOrId) {
 
         final Query<MongoLeaderboard> query = datastore.createQuery(MongoLeaderboard.class);
 
@@ -100,7 +106,7 @@ public class MongoLeaderboardDao implements LeaderboardDao {
             throw new LeaderboardNotFoundException("Leaderboard " + nameOrId + " not found.");
         }
 
-        return getBeanMapper().map(mongoLeaderboard, Leaderboard.class);
+        return mongoLeaderboard;
 
     }
 
