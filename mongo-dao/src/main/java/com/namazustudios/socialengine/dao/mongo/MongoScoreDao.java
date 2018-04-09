@@ -6,7 +6,6 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoScore;
 import com.namazustudios.socialengine.dao.mongo.model.MongoScoreId;
 import com.namazustudios.socialengine.model.ValidationGroups;
-import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
 import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.dozer.Mapper;

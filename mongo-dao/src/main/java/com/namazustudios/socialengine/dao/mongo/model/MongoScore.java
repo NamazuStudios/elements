@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
 import org.mongodb.morphia.annotations.*;
+import org.mongodb.morphia.utils.IndexType;
 
 /**
  * Created by patricktwohig on 6/28/17.
@@ -8,7 +9,8 @@ import org.mongodb.morphia.annotations.*;
 @Entity(value = "score", noClassnameStored = true)
 @Indexes({
     @Index(fields = @Field("profile")),
-    @Index(fields = @Field("leaderboard"))
+    @Index(fields = @Field("leaderboard")),
+    @Index(fields = @Field(value = "pointValue", type = IndexType.DESC))
 })
 public class MongoScore {
 

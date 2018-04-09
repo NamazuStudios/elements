@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvide
 import com.namazustudios.socialengine.dao.mongo.provider.MongoMatchmakerFunctionProvider;
 import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
+import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -53,6 +54,8 @@ public class MongoDaoModule extends PrivateModule {
         bind(LeaderboardDao.class).to(MongoLeaderboardDao.class);
         bind(ScoreDao.class).to(MongoScoreDao.class);
         bind(RankDao.class).to(MongoRankDao.class);
+        bind(FriendDao.class).to(MongoFriendDao.class);
+        bind(FacebookFriendDao.class).to(MongoFacebookFriendDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoAdvancedDatastoreProvider.class)
@@ -91,6 +94,8 @@ public class MongoDaoModule extends PrivateModule {
         expose(LeaderboardDao.class);
         expose(ScoreDao.class);
         expose(RankDao.class);
+        expose(FriendDao.class);
+        expose(FacebookFriendDao.class);
 
     }
 

@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.service.auth.AnonSessionService;
 import com.namazustudios.socialengine.service.leaderboard.LeaderboardServiceProvider;
 import com.namazustudios.socialengine.service.leaderboard.RankServiceProvider;
 import com.namazustudios.socialengine.service.leaderboard.ScoreServiceProvider;
+import com.namazustudios.socialengine.service.friend.FriendServiceProvider;
 import com.namazustudios.socialengine.service.manifest.ManifestServiceProvider;
 import com.namazustudios.socialengine.service.match.MatchServiceProvider;
 import com.namazustudios.socialengine.service.notification.FCMRegistrationServiceProvider;
@@ -93,6 +94,10 @@ public class ServicesModule extends AbstractModule {
 
         bind(LeaderboardService.class)
                 .toProvider(LeaderboardServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
+        bind(FriendService.class)
+                .toProvider(FriendServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
         bind(Attributes.class).toProvider(AttributesProvider.class);

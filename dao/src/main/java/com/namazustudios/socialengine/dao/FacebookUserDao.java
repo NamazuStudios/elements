@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.dao;
 
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.friend.Friend;
+
+import java.util.List;
 
 /**
  * Similar to the {@link UserDao} but contains {@link User} operations related to Facebook
@@ -31,5 +34,6 @@ public interface FacebookUserDao {
      * @return the User, as written to the database
      */
     User createReactivateOrUpdateUser(final User user);
+
 
 }

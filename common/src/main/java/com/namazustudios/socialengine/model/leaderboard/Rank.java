@@ -9,17 +9,17 @@ import javax.validation.constraints.NotNull;
 public class Rank {
 
     @ApiModelProperty("The position of the associated score in the result set.")
-    private int position;
+    private long position;
 
     @NotNull
     @ApiModelProperty("The Score value for the particular rank")
     private Score score;
 
-    public int getPosition() {
+    public long getPosition() {
         return position;
     }
 
-    public void setPosition(int position) {
+    public void setPosition(long position) {
         this.position = position;
     }
 
@@ -44,7 +44,7 @@ public class Rank {
 
     @Override
     public int hashCode() {
-        int result = getPosition();
+        int result = (int) (getPosition() ^ (getPosition() >>> 32));
         result = 31 * result + (getScore() != null ? getScore().hashCode() : 0);
         return result;
     }

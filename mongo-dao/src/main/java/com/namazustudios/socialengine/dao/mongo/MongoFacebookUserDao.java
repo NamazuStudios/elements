@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.common.base.Strings;
+import com.namazustudios.socialengine.dao.mongo.model.MongoFriendship;
+import com.namazustudios.socialengine.dao.mongo.model.MongoFriendshipId;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.FacebookUserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
@@ -12,14 +14,22 @@ import com.namazustudios.socialengine.model.User;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.List;
 
 /**
  * Created by patricktwohig on 6/25/17.
  */
 public class MongoFacebookUserDao implements FacebookUserDao {
+
+    private static final Logger logger = LoggerFactory.getLogger(MongoFacebookUserDao.class);
 
     private AdvancedDatastore datastore;
 
@@ -35,14 +45,20 @@ public class MongoFacebookUserDao implements FacebookUserDao {
 
     private MongoConcurrentUtils mongoConcurrentUtils;
 
-    @Override
-    public User findActiveByFacebookId(String facebookId) {
+    private MongoUserDao mongoUserDao;
 
+    @Override
+    public User findActiveByFacebookId(final String facebookId) {
+        final MongoUser mongoUser = findActiveMongoUserByFacebookId(facebookId);
+        return getDozerMapper().map(mongoUser, User.class);
+    }
+
+    public MongoUser findActiveMongoUserByFacebookId(final String facebookId) {
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
 
         query.and(
-            query.criteria("active").equal(true),
-            query.criteria("facebookId").equal(facebookId)
+                query.criteria("active").equal(true),
+                query.criteria("facebookId").equal(facebookId)
         );
 
         final MongoUser mongoUser = query.get();
@@ -51,8 +67,7 @@ public class MongoFacebookUserDao implements FacebookUserDao {
             throw new NotFoundException("User with Facebook ID " + facebookId + " not found.");
         }
 
-        return getDozerMapper().map(mongoUser, User.class);
-
+        return mongoUser;
     }
 
     @Override
@@ -173,4 +188,12 @@ public class MongoFacebookUserDao implements FacebookUserDao {
         this.mongoConcurrentUtils = mongoConcurrentUtils;
     }
 
+    public MongoUserDao getMongoUserDao() {
+        return mongoUserDao;
+    }
+
+    @Inject
+    public void setMongoUserDao(MongoUserDao mongoUserDao) {
+        this.mongoUserDao = mongoUserDao;
+    }
 }
