@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.dao.mongo.model;
 import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.fts.annotation.SearchableField;
 import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
 @SearchableIdentity(@SearchableField(

@@ -97,16 +97,12 @@ public class MongoFriendshipId {
         return lesser;
     }
 
-    public void setLesser(ObjectId lesser) {
-        this.lesser = lesser;
-    }
-
     public ObjectId getGreater() {
         return greater;
     }
 
-    public void setGreater(ObjectId greater) {
-        this.greater = greater;
+    public ObjectId getOpposite(final ObjectId objectId) {
+        return getLesser().equals(objectId) ? getGreater() : getLesser();
     }
 
     public byte[] toByteArray() {

@@ -1,22 +1,22 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.RankDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoLeaderboard;
-import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
-import com.namazustudios.socialengine.dao.mongo.model.MongoScore;
-import com.namazustudios.socialengine.dao.mongo.model.MongoScoreId;
+import com.namazustudios.socialengine.dao.mongo.model.*;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.leaderboard.Rank;
 import com.namazustudios.socialengine.model.profile.Profile;
+import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static java.lang.Math.max;
+import static java.util.stream.Collectors.toList;
 
 public class MongoRankDao implements RankDao {
 
@@ -25,6 +25,8 @@ public class MongoRankDao implements RankDao {
     private MongoProfileDao mongoProfileDao;
 
     private MongoLeaderboardDao mongoLeaderboardDao;
+
+    private MongoFriendDao mongoFriendDao;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -64,25 +66,77 @@ public class MongoRankDao implements RankDao {
             startIndex = query.count();
         } else {
             startIndex = query.cloneQuery()
-                .field("pointValue").lessThan(mongoScore.getPointValue())
+                .field("pointValue").greaterThan(mongoScore.getPointValue())
                 .count();
         }
 
-        return getMongoDBUtils().paginationFromQuery(query, (int) max(0, offset + startIndex), count, new Counter(0));
+        final int adjustedOffset = (int) max(0, offset + startIndex);
+        return getMongoDBUtils().paginationFromQuery(query, adjustedOffset, count, new Counter(startIndex));
 
     }
 
     @Override
     public Pagination<Rank> getRanksForFriends(final String leaderboardNameOrId, final Profile profileId,
                                                final int offset, final int count) {
-        return null;
+
+        final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profileId);
+        final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
+
+        final List<MongoProfile> profiles = getMongoFriendDao()
+                .getAllMongoFriendshipsForUser(mongoProfile.getUser())
+                .stream()
+                .map(friendship -> friendship.getObjectId().getOpposite(mongoProfile.getUser().getObjectId()))
+                .flatMap(userId -> getMongoProfileDao().getActiveMongoProfilesForUser(userId))
+                .collect(toList());
+
+        profiles.add(mongoProfile);
+
+        final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
+
+        query.field("profile").in(profiles)
+             .field("leaderboard").equal(mongoLeaderboard);
+
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(0));
+
     }
 
     @Override
     public Pagination<Rank> getRanksForFriendsRelative(final String leaderboardNameOrId, final Profile profileId,
                                                        final int offset, final int count) {
-        // TODO Needt o merge the friends stuff
-        return null;
+
+        final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profileId);
+        final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
+        final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard);
+        final MongoScore mongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
+
+        final List<MongoProfile> profiles = getMongoFriendDao()
+                .getAllMongoFriendshipsForUser(mongoProfile.getUser())
+                .stream()
+                .map(friendship -> friendship.getObjectId().getOpposite(mongoProfile.getUser().getObjectId()))
+                .flatMap(userId -> getMongoProfileDao().getActiveMongoProfilesForUser(userId))
+                .collect(toList());
+
+        profiles.add(mongoProfile);
+
+        final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
+        query.field("leaderboard").equal(mongoLeaderboard);
+
+        final long startIndex;
+
+        if (mongoScore == null) {
+            // Asssume player is dead last in the result set because no scores have been submitted.
+            startIndex = query.count();
+        } else {
+            startIndex = query.cloneQuery()
+                    .field("pointValue").greaterThan(mongoScore.getPointValue())
+                    .count();
+        }
+
+        query.field("profile").in(profiles);
+
+        final int adjustedOffset = (int) max(0, offset + startIndex);
+        return getMongoDBUtils().paginationFromQuery(query, adjustedOffset, count, new Counter(startIndex));
+
     }
 
     public Datastore getDatastore() {
@@ -128,6 +182,15 @@ public class MongoRankDao implements RankDao {
     @Inject
     public void setDozerMapper(Mapper dozerMapper) {
         this.dozerMapper = dozerMapper;
+    }
+
+    public MongoFriendDao getMongoFriendDao() {
+        return mongoFriendDao;
+    }
+
+    @Inject
+    public void setMongoFriendDao(MongoFriendDao mongoFriendDao) {
+        this.mongoFriendDao = mongoFriendDao;
     }
 
     private class Counter implements Function<MongoScore, Rank> {
