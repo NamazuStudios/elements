@@ -52,6 +52,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(FCMRegistrationDao.class).to(MongoFCMRegistrationDao.class);
         bind(LeaderboardDao.class).to(MongoLeaderboardDao.class);
         bind(ScoreDao.class).to(MongoScoreDao.class);
+        bind(RankDao.class).to(MongoRankDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoAdvancedDatastoreProvider.class)
@@ -89,6 +90,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(SessionDao.class);
         expose(LeaderboardDao.class);
         expose(ScoreDao.class);
+        expose(RankDao.class);
 
     }
 

@@ -13,23 +13,26 @@ public class AnonRankService implements RankService {
     private RankDao rankDao;
 
     @Override
-    public Pagination<Rank> getRanksForFriends(final int offset, final int count) {
+    public Pagination<Rank> getRanksForFriends(final String leaderboardNameOrId,
+                                               final int offset, final int count) {
         throw new UnauthorizedException();
     }
 
     @Override
-    public Pagination<Rank> getRanksForFriends(final int offset, final int count, final String profileIdTrimmed) {
+    public Pagination<Rank> getRanksForFriends(final String leaderboardNameOrId,
+                                               final int offset, final int count) {
         throw new UnauthorizedException();
     }
 
     @Override
-    public Pagination<Rank> getRanksForGlobal(final int offset, final int count) {
+    public Pagination<Rank> getRanksForGlobal(final String leaderboardNameOrId, final int offset, final int count) {
         return getRankDao().getRanksForGlobal(offset, count);
     }
 
     @Override
-    public Pagination<Rank> getRanksForGlobal(final int offset, final int count, final String profileIdTrimmed) {
-        return getRankDao().getRanksForGlobal(offset, count, profileIdTrimmed);
+    public Pagination<Rank> getRanksForGlobal(final String leaderboardNameOrId, final String profileId,
+                                              final int offset, final int count) {
+        return getRankDao().getRanksForGlobal(offset, count, profileId);
     }
 
     public RankDao getRankDao() {

@@ -16,23 +16,27 @@ public class UserRankService implements RankService {
     private Supplier<Profile> profileSupplier;
 
     @Override
-    public Pagination<Rank> getRanksForFriends(final int offset, final int count) {
-        return getRankDao().getRanksForFriends(profileSupplier.get(), offset, count);
+    public Pagination<Rank> getRanksForGlobal(final String leaderboardNameOrId,
+                                              final int offset, final int count) {
+        return getRankDao().getRanksForGlobal(leaderboardNameOrId, offset, count);
     }
 
     @Override
-    public Pagination<Rank> getRanksForFriends(final int offset, final int count, final String profileId) {
-        return getRankDao().getRanksForFriends(profileSupplier.get(), offset, count, profileId);
+    public Pagination<Rank> getRanksForGlobalRelative(final String leaderboardNameOrId, final String profileId,
+                                                      final int offset, final int count) {
+        return getRankDao().getRanksForGlobalRelative(leaderboardNameOrId, profileId, offset, count);
     }
 
     @Override
-    public Pagination<Rank> getRanksForGlobal(final int offset, final int count) {
-        return getRankDao().getRanksForGlobal(offset, count);
+    public Pagination<Rank> getRanksForFriends(final String leaderboardNameOrId,
+                                               final int offset, final int count) {
+        return getRankDao().getRanksForFriends(leaderboardNameOrId, getProfileSupplier().get(), offset, count);
     }
 
     @Override
-    public Pagination<Rank> getRanksForGlobal(final int offset, final int count, final String profileId) {
-        return getRankDao().getRanksForGlobal(offset, count, profileId);
+    public Pagination<Rank> getRanksForFriendsRelative(final String leaderboardNameOrId,
+                                                       final int offset, final int count) {
+        return getRankDao().getRanksForFriendsRelative(leaderboardNameOrId, getProfileSupplier().get(), offset, count);
     }
 
     public RankDao getRankDao() {

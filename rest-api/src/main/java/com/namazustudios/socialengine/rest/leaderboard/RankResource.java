@@ -39,13 +39,13 @@ public class RankResource {
             @ApiParam("The number of results to return in the page.")
             final int count,
 
-            @ApiParam("The profile ID of the user.  If supplied this will skip ahead in the result set automatically " +
-                      "allowing the player to find his or her rank.  Unlike other API methods, the supplied offset " +
-                      "can be specified in reverse as a negative number allowing the user to be placed in the middle " +
-                      "of the page.")
-            @QueryParam("profileId") final String profileId,
 
-            @QueryParam("leaderboardNameOrId")
+            @QueryParam("count")
+            @DefaultValue("false")
+            @ApiParam("Indicates whether or not to fetch results in a relative fashion.")
+            final boolean relative,
+
+            @PathParam("leaderboardNameOrId")
             @ApiParam("Specifies the leaderboard name or ID.")
             final String leaderboardNameOrId) {
 
@@ -53,11 +53,13 @@ public class RankResource {
             throw new InvalidParameterException("Count must have positive value.");
         }
 
-        final String profileIdTrimmed = nullToEmpty(profileId).trim();
+        if (!relative && offset < 0) {
+            throw new InvalidParameterException("Offset must have positive value when using non-relative offset.");
+        }
 
-        return profileIdTrimmed.isEmpty() ?
-                getRankService().getRanksForFriends(offset, count) :
-                getRankService().getRanksForFriends(offset, count, profileIdTrimmed);
+        return relative ?
+                getRankService().getRanksForFriends(leaderboardNameOrId, offset, count) :
+                getRankService().getRanksForFriendsRelative(leaderboardNameOrId, offset, count);
 
     }
 
@@ -77,13 +79,12 @@ public class RankResource {
             final int count,
 
             @ApiParam("The profile ID of the user.  If supplied this will skip ahead in the result set automatically " +
-                      "allowing the player to find his or her rank.  Unlike other API methods, the supplied offset " +
-                      "can be specified in reverse as a negative number allowing the user to be placed in the middle " +
-                      "of the page.")
-            @QueryParam("profileId")
-            final String profileId,
+                    "allowing the player to find his or her rank.  Unlike other API methods, the supplied offset " +
+                    "can be specified in reverse as a negative number allowing the user to be placed in the middle " +
+                    "of the page.")
+            @QueryParam("profileId") final String profileId,
 
-            @QueryParam("leaderboardNameOrId")
+            @PathParam("leaderboardNameOrId")
             @ApiParam("Specifies the leaderboard name or ID.")
             final String leaderboardNameOrId) {
 
@@ -92,10 +93,15 @@ public class RankResource {
         }
 
         final String profileIdTrimmed = nullToEmpty(profileId).trim();
+        final boolean relative = !profileIdTrimmed.isEmpty();
 
-        return profileIdTrimmed.isEmpty() ?
-            getRankService().getRanksForGlobal(offset, count) :
-            getRankService().getRanksForGlobal(offset, count, profileIdTrimmed);
+        if (!relative && offset < 0) {
+            throw new InvalidParameterException("Offset must have positive value when using non-relative offset.");
+        }
+
+        return relative ?
+            getRankService().getRanksForGlobal(leaderboardNameOrId, offset, count) :
+            getRankService().getRanksForGlobalRelative(leaderboardNameOrId, profileIdTrimmed, offset, count);
 
     }
 
