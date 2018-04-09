@@ -63,7 +63,7 @@ public class RankResource {
 
     }
 
-    @GET @Path("friends/{leaderboardNameOrId}")
+    @GET @Path("global/{leaderboardNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets Rank Among all Players",
                   notes = "Gets the current Profile's rank among all players for the particular leaderboard.")

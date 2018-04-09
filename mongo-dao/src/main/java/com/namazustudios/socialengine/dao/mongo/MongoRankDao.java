@@ -1,18 +1,19 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.RankDao;
-import com.namazustudios.socialengine.dao.mongo.model.*;
+import com.namazustudios.socialengine.dao.mongo.model.MongoLeaderboard;
+import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
+import com.namazustudios.socialengine.dao.mongo.model.MongoScore;
+import com.namazustudios.socialengine.dao.mongo.model.MongoScoreId;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.leaderboard.Rank;
 import com.namazustudios.socialengine.model.profile.Profile;
-import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static java.lang.Math.max;
@@ -83,11 +84,11 @@ public class MongoRankDao implements RankDao {
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
 
         final List<MongoProfile> profiles = getMongoFriendDao()
-                .getAllMongoFriendshipsForUser(mongoProfile.getUser())
-                .stream()
-                .map(friendship -> friendship.getObjectId().getOpposite(mongoProfile.getUser().getObjectId()))
-                .flatMap(userId -> getMongoProfileDao().getActiveMongoProfilesForUser(userId))
-                .collect(toList());
+            .getAllMongoFriendshipsForUser(mongoProfile.getUser())
+            .stream()
+            .map(friendship -> friendship.getObjectId().getOpposite(mongoProfile.getUser().getObjectId()))
+            .flatMap(userId -> getMongoProfileDao().getActiveMongoProfilesForUser(userId))
+            .collect(toList());
 
         profiles.add(mongoProfile);
 

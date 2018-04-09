@@ -92,7 +92,7 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(Score.class, MongoScore.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))
-                .fields("pointValue", "leaderboard.pointValue");
+                .fields("pointValue", "leaderboard.scoreUnits");
 
             mapping(Friend.class, MongoFriendship.class)
                 .fields("id", "objectId", customConverter(MongoFriendIdConverter.class));

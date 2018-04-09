@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.namazustudios.socialengine.dao.LeaderboardDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoLeaderboard;
@@ -51,6 +52,8 @@ public class MongoLeaderboardDao implements LeaderboardDao {
             } else {
                 throw new InternalException(ex);
             }
+        } catch (DuplicateKeyException ex) {
+            throw new DuplicateException(ex);
         }
 
         objectIndex.index(mongoLeaderboard);

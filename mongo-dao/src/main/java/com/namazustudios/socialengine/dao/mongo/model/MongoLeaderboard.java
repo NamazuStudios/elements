@@ -24,12 +24,16 @@ import org.mongodb.morphia.annotations.*;
 })
 public class MongoLeaderboard {
 
+    @Id
     private ObjectId objectId;
 
+    @Property
     private String name;
 
+    @Property
     private String title;
 
+    @Property
     private String scoreUnits;
 
     public ObjectId getObjectId() {
