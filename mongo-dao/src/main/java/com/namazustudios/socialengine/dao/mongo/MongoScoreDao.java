@@ -44,9 +44,10 @@ public class MongoScoreDao implements ScoreDao {
         updateOperations.set("_id", mongoScoreId);
         updateOperations.set("profile", mongoProfile);
         updateOperations.set("leaderboard", mongoLeaderboard);
-        updateOperations.set("scoreValue", score.getPointValue());
+        updateOperations.set("pointValue", score.getPointValue());
 
-        final MongoScore mongoScore = getDatastore().findAndModify(query, updateOperations, new FindAndModifyOptions()
+        final MongoScore mongoScore = getDatastore()
+            .findAndModify(query, updateOperations, new FindAndModifyOptions()
             .returnNew(true)
             .upsert(true));
 

@@ -22,10 +22,10 @@ public class Score {
     @ApiModelProperty("The point value of the score.")
     private double pointValue;
 
-    @NotNull
+    @Null
     @ApiModelProperty("The the units of measure for the points.  For example, if the points in the game were called " +
                       "\"coins\" instead of \"points\" this would be used to designate as such in the UI.")
-    private String pointUnits;
+    private String scoreUnits;
 
     public String getId() {
         return id;
@@ -51,12 +51,12 @@ public class Score {
         this.pointValue = pointValue;
     }
 
-    public String getPointUnits() {
-        return pointUnits;
+    public String getScoreUnits() {
+        return scoreUnits;
     }
 
-    public void setPointUnits(String pointUnits) {
-        this.pointUnits = pointUnits;
+    public void setScoreUnits(String scoreUnits) {
+        this.scoreUnits = scoreUnits;
     }
 
     @Override
@@ -69,7 +69,7 @@ public class Score {
         if (Double.compare(score.getPointValue(), getPointValue()) != 0) return false;
         if (getId() != null ? !getId().equals(score.getId()) : score.getId() != null) return false;
         if (getProfile() != null ? !getProfile().equals(score.getProfile()) : score.getProfile() != null) return false;
-        return getPointUnits() != null ? getPointUnits().equals(score.getPointUnits()) : score.getPointUnits() == null;
+        return getScoreUnits() != null ? getScoreUnits().equals(score.getScoreUnits()) : score.getScoreUnits() == null;
     }
 
     @Override
@@ -80,7 +80,7 @@ public class Score {
         result = 31 * result + (getProfile() != null ? getProfile().hashCode() : 0);
         temp = Double.doubleToLongBits(getPointValue());
         result = 31 * result + (int) (temp ^ (temp >>> 32));
-        result = 31 * result + (getPointUnits() != null ? getPointUnits().hashCode() : 0);
+        result = 31 * result + (getScoreUnits() != null ? getScoreUnits().hashCode() : 0);
         return result;
     }
 
@@ -90,7 +90,7 @@ public class Score {
                 "id='" + id + '\'' +
                 ", profile=" + profile +
                 ", pointValue=" + pointValue +
-                ", pointUnits='" + pointUnits + '\'' +
+                ", scoreUnits='" + scoreUnits + '\'' +
                 '}';
     }
 
