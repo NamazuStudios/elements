@@ -15,13 +15,17 @@ public class AnonRankService implements RankService {
     @Override
     public Pagination<Rank> getRanksForGlobal(final String leaderboardNameOrId,
                                               final int offset, final int count) {
-        return getRankDao().getRanksForGlobal(leaderboardNameOrId, offset, count);
+        return getRankDao()
+            .getRanksForGlobal(leaderboardNameOrId, offset, count)
+            .transform(this::redactPrivateInfo);
     }
 
     @Override
     public Pagination<Rank> getRanksForGlobalRelative(final String leaderboardNameOrId, final String profileId,
                                                       final int offset, final int count) {
-        return getRankDao().getRanksForGlobalRelative(leaderboardNameOrId, profileId, offset, count);
+        return getRankDao()
+            .getRanksForGlobalRelative(leaderboardNameOrId, profileId, offset, count)
+            .transform(this::redactPrivateInfo);
     }
 
     @Override
@@ -34,6 +38,11 @@ public class AnonRankService implements RankService {
     public Pagination<Rank> getRanksForFriendsRelative(final String leaderboardNameOrId,
                                                        final int offset, final int count) {
         throw new UnauthorizedException();
+    }
+
+    private Rank redactPrivateInfo(final Rank rank) {
+        rank.getScore().getProfile().setUser(null);
+        return rank;
     }
 
     public RankDao getRankDao() {

@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoScore;
 import com.namazustudios.socialengine.dao.mongo.model.MongoScoreId;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.leaderboard.Rank;
+import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.profile.Profile;
 import org.dozer.Mapper;
 import org.mongodb.morphia.Datastore;
@@ -204,9 +205,15 @@ public class MongoRankDao implements RankDao {
 
         @Override
         public Rank apply(MongoScore mongoScore) {
+
             final Rank rank = getDozerMapper().map(mongoScore, Rank.class);
             rank.setPosition(index++);
+
+            final Score score = getDozerMapper().map(mongoScore, Score.class);
+            rank.setScore(score);
+
             return rank;
+
         }
 
     }

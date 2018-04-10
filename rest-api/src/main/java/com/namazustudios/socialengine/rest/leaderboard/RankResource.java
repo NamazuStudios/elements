@@ -57,7 +57,7 @@ public class RankResource {
             throw new InvalidParameterException("Offset must have positive value when using non-relative offset.");
         }
 
-        return relative ?
+        return !relative ?
                 getRankService().getRanksForFriends(leaderboardNameOrId, offset, count) :
                 getRankService().getRanksForFriendsRelative(leaderboardNameOrId, offset, count);
 
@@ -99,7 +99,7 @@ public class RankResource {
             throw new InvalidParameterException("Offset must have positive value when using non-relative offset.");
         }
 
-        return relative ?
+        return !relative ?
             getRankService().getRanksForGlobal(leaderboardNameOrId, offset, count) :
             getRankService().getRanksForGlobalRelative(leaderboardNameOrId, profileIdTrimmed, offset, count);
 
