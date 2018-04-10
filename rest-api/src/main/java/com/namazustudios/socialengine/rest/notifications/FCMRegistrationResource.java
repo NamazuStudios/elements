@@ -75,8 +75,7 @@ public class FCMRegistrationResource {
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteRegistration(
             @PathParam("fcmRegistrationId")
-            final String fcmRegistrationId,
-            final FCMRegistration fcmRegistration) {
+            final String fcmRegistrationId) {
         getFcmRegistrationService().deleteRegistration(fcmRegistrationId);
     }
 

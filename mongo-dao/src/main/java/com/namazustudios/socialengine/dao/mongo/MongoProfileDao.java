@@ -24,7 +24,11 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.google.common.base.Strings.repeat;
 
 /**
  *
@@ -142,6 +146,19 @@ public class MongoProfileDao implements ProfileDao {
         }
 
         return transform(mongoProfile);
+
+    }
+
+    public Stream<MongoProfile> getActiveMongoProfilesForUser(final MongoUser user) {
+
+        final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
+
+        query.and(
+            query.criteria("user").equal(user),
+            query.criteria("active").equal(true)
+        );
+
+        return query.asList().stream();
 
     }
 

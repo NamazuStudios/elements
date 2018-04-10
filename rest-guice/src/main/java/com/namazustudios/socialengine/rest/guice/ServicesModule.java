@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.AuthServiceProvider;
 import com.namazustudios.socialengine.service.auth.StandardFacebookAuthService;
 import com.namazustudios.socialengine.service.auth.AnonSessionService;
+import com.namazustudios.socialengine.service.friend.FriendServiceProvider;
 import com.namazustudios.socialengine.service.manifest.ManifestServiceProvider;
 import com.namazustudios.socialengine.service.match.MatchServiceProvider;
 import com.namazustudios.socialengine.service.notification.FCMRegistrationServiceProvider;
@@ -78,6 +79,10 @@ public class ServicesModule extends AbstractModule {
 
         bind(FCMRegistrationService.class)
                 .toProvider(FCMRegistrationServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
+        bind(FriendService.class)
+                .toProvider(FriendServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
         bind(Attributes.class).toProvider(AttributesProvider.class);
