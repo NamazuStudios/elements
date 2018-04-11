@@ -6,7 +6,9 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoFriendshipId;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.fts.ObjectIndex;
+import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.friend.FacebookFriend;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
@@ -72,6 +74,11 @@ public class MongoFacebookFriendDao implements FacebookFriendDao {
             getObjectIndex().index(query.get());
 
         }
+    }
+
+    @Override
+    public Pagination<FacebookFriend> getUninvitedFriends(User user, List<String> friendFacebookUserIds) {
+        return null;
     }
 
     public Datastore getDatastore() {

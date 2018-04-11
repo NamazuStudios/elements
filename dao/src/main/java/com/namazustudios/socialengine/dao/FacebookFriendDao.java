@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.friend.FacebookFriend;
 import com.namazustudios.socialengine.model.friend.Friend;
 
 import java.util.List;
@@ -19,4 +21,7 @@ public interface FacebookFriendDao {
      *
      */
     void associateFriends(User user, List<String> facebookIds);
+
+    Pagination<FacebookFriend> getUninvitedFriends(User user, List<String> friendFacebookUserIds);
+
 }
