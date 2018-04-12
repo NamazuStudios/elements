@@ -1,11 +1,8 @@
-package com.namazustudios.socialengine.remote.jeromq;
+    package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.jeromq.Connection;
-import com.namazustudios.socialengine.rt.jeromq.Routing;
-import com.namazustudios.socialengine.rt.jeromq.RoutingCommand;
-import com.namazustudios.socialengine.rt.jeromq.RoutingTable;
+import com.namazustudios.socialengine.rt.jeromq.*;
 import com.namazustudios.socialengine.rt.remote.RoutingHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -158,8 +155,10 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
             try (final ZMQ.Poller poller = getzContext().createPoller(0);
                  final Connection backend = from(getzContext(), c -> c.createSocket(DEALER));
                  final Connection control = from(getzContext(), c -> c.createSocket(PULL));
-                 final RoutingTable frontends = new RoutingTable(getzContext(), poller, this::bind)) {
+                 final RoutingTable frontends = new RoutingTable(getzContext(), poller, this::bind);
+                 final MonitorThread monitorThread = new MonitorThread(logger, getzContext(), backend.socket())) {
 
+                monitorThread.start();
                 backend.socket().connect(getConnectAddress());
                 control.socket().bind(getControlAddress());
 
@@ -168,7 +167,10 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
                 while (!interrupted()) {
 
-                    poller.poll(2000);
+                    if (poller.poll(2000) < 0) {
+                        logger.info("Interrupted.  Exiting gracefully.");
+                        break;
+                    }
 
                     range(0, poller.getNext()).filter(index -> poller.getItem(index) != null).forEach(index -> {
 

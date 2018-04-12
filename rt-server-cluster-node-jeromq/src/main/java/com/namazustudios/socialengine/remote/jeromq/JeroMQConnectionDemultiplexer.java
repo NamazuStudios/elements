@@ -174,8 +174,10 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
             try (final ZMQ.Poller poller = getzContext().createPoller(1);
                  final Connection frontend = from(getzContext(), c -> c.createSocket(ROUTER));
                  final Connection control = from(getzContext(), c -> c.createSocket(PULL));
-                 final RoutingTable backends = new RoutingTable(getzContext(), poller, this::connect)) {
+                 final RoutingTable backends = new RoutingTable(getzContext(), poller, this::connect);
+                 final MonitorThread monitorThread = new MonitorThread(logger, getzContext(), frontend.socket())) {
 
+                monitorThread.start();
                 frontend.socket().setRouterMandatory(true);
                 frontend.socket().bind(getBindAddress());
                 control.socket().bind(getControlAddress());
@@ -187,7 +189,10 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
                 while (!interrupted()) {
 
-                    poller.poll(2000);
+                    if (poller.poll(2000) < 0) {
+                        logger.info("Interrupted.  Exiting gracefully.");
+                        break;
+                    }
 
                     range(0, poller.getNext()).filter(index -> poller.getItem(index) != null).forEach(index -> {
 
