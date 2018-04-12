@@ -12,13 +12,13 @@ public class FacebookFriendServiceProvider implements Provider<FacebookFriendSer
 
     private User user;
 
-    private Provider<FacebookFriendService> facebookFriendServiceProvider;
+    private Provider<UserFacebookFriendService> userFacebookFriendServiceProvider;
 
     @Override
     public FacebookFriendService get() {
         switch (getUser().getLevel()) {
             case USER:
-            case SUPERUSER:    return getFacebookFriendServiceProvider().get();
+            case SUPERUSER:    return getUserFacebookFriendServiceProvider().get();
             default:           return forbidden(FacebookFriendService.class);
         }
     }
@@ -32,13 +32,13 @@ public class FacebookFriendServiceProvider implements Provider<FacebookFriendSer
         this.user = user;
     }
 
-    public Provider<FacebookFriendService> getFacebookFriendServiceProvider() {
-        return facebookFriendServiceProvider;
+    public Provider<UserFacebookFriendService> getUserFacebookFriendServiceProvider() {
+        return userFacebookFriendServiceProvider;
     }
 
     @Inject
-    public void setFacebookFriendServiceProvider(Provider<FacebookFriendService> facebookFriendServiceProvider) {
-        this.facebookFriendServiceProvider = facebookFriendServiceProvider;
+    public void setUserFacebookFriendServiceProvider(Provider<UserFacebookFriendService> userFacebookFriendServiceProvider) {
+        this.userFacebookFriendServiceProvider = userFacebookFriendServiceProvider;
     }
 
 }

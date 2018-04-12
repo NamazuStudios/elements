@@ -16,6 +16,10 @@ import java.util.stream.Stream;
 @ApiModel
 public class Pagination<T> implements Iterable<T>, Serializable {
 
+    public static <T> Pagination<T> empty() {
+        return new Pagination<>();
+    }
+
     private int offset;
 
     private int total;

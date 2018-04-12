@@ -76,11 +76,6 @@ public class MongoFacebookFriendDao implements FacebookFriendDao {
         }
     }
 
-    @Override
-    public Pagination<FacebookFriend> getUninvitedFriends(User user, List<String> friendFacebookUserIds) {
-        return null;
-    }
-
     public Datastore getDatastore() {
         return datastore;
     }

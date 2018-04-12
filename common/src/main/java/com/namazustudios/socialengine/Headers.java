@@ -37,6 +37,6 @@ public interface Headers {
     /**
      * Specifies the user's Facebook OAuth token used to interact with the Facebook API.
      */
-    String FACEBOOK_OAUTH_TOKEN = "Facebook-OAuthToken;";
+    String FACEBOOK_OAUTH_TOKEN = "Facebook-OAuthToken";
 
 }

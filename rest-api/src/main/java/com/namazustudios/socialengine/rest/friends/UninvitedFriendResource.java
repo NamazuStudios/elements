@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rest.friends;
 
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.friend.FacebookFriend;
@@ -24,15 +25,15 @@ public class UninvitedFriendResource {
 
     private FacebookFriendService facebookFriendService;
 
-    @GET @Path("facebook/{applicationConfigurationNameOrId}")
+    @GET @Path("facebook")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
         value = "Get Univited Facebook Friends",
         notes = "Returns the list of all Facebook friends who have not created a profile for the current application.")
     public Pagination<FacebookFriend> getUnivitedFacebookFriends(
                 @HeaderParam(FACEBOOK_OAUTH_TOKEN)              final String facebookOAuthAccessToken,
-                @QueryParam("applicationNameOrId")              final String applicationNameOrId,
-                @QueryParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId,
+                @QueryParam("application")                      final String applicationNameOrId,
+                @QueryParam("applicationConfiguration")         final String applicationConfigurationNameOrId,
                 @QueryParam("offset") @DefaultValue("0")        final int offset,
                 @QueryParam("count")  @DefaultValue("20")       final int count) {
 
@@ -44,7 +45,11 @@ public class UninvitedFriendResource {
             throw new InvalidParameterException("Count must have positive value.");
         }
 
-        return getFacebookFriendService().getUnivitedFacebookFriends(
+        if (facebookOAuthAccessToken == null) {
+            throw new InvalidDataException("must specify Facebook OAuth Token");
+        }
+
+        return getFacebookFriendService().getUninvitedFacebookFriends(
             applicationNameOrId,
             applicationConfigurationNameOrId,
             facebookOAuthAccessToken,

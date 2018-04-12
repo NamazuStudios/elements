@@ -43,6 +43,11 @@
             <artifactId>redisson</artifactId>
             <version>${redisson.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.restfb</groupId>
+            <artifactId>restfb</artifactId>
+            <version>${restfb.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

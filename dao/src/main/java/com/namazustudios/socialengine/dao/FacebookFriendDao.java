@@ -22,6 +22,4 @@ public interface FacebookFriendDao {
      */
     void associateFriends(User user, List<String> facebookIds);
 
-    Pagination<FacebookFriend> getUninvitedFriends(User user, List<String> friendFacebookUserIds);
-
 }

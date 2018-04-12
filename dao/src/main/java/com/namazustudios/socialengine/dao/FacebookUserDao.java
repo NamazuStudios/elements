@@ -4,6 +4,8 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.friend.Friend;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Similar to the {@link UserDao} but contains {@link User} operations related to Facebook
@@ -23,6 +25,14 @@ public interface FacebookUserDao {
     User findActiveByFacebookId(String facebookId);
 
     /**
+     * Finds all {@link User}s in the supplied {@link List<String>} containing facebook IDs.
+     *
+     * @param facebookIds the facebook ID
+     * @return the {@link Map<String, User>} that are found mapping Facebook ID to {@link User}
+     */
+    Map<String, User> findActiveUsersWithFacebookIds(List<String> facebookIds);
+
+    /**
      * Creates, reactivates, or updates a user.  Unlike the operations in {@link UserDao}, this
      * queries for user based on Facebook ID.
      *
@@ -34,6 +44,5 @@ public interface FacebookUserDao {
      * @return the User, as written to the database
      */
     User createReactivateOrUpdateUser(final User user);
-
 
 }
