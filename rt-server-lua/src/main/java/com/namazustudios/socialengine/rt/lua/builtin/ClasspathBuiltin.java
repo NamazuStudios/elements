@@ -56,7 +56,7 @@ public class ClasspathBuiltin implements Builtin {
 
             @Override
             public InputStream getInputStream() throws IOException {
-                logger.info("Opening resource {}", resource);
+                logger.debug("Opening resource {}", resource);
                 return resource.openStream();
             }
 

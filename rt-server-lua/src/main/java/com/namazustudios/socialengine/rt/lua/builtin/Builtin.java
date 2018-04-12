@@ -80,15 +80,15 @@ public interface Builtin {
             final Module module = luaState.checkJavaObject(2, Module.class);
 
             final String chunkName = module.getChunkName();
-            logger.info("Loading builtin module {} -> {} ", name, chunkName);
+            logger.debug("Loading builtin module {} -> {} ", name, chunkName);
 
             try (final InputStream inputStream = module.getInputStream()) {
 
                 luaState.load(inputStream, module.getChunkName(), "bt");
-                logger.info("Successfully parsed builtin module {} ", chunkName);
+                logger.debug("Successfully parsed builtin module {} ", chunkName);
 
                 luaState.call(0, 1);
-                logger.info("Successfully executed module code {} ", chunkName);
+                logger.debug("Successfully executed module code {} ", chunkName);
 
                 return 1;
 

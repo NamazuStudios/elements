@@ -123,31 +123,34 @@ public class DispatcherServlet extends HttpServlet {
                                            final HttpRequest httpRequest,
                                            final HttpServletResponse httpServletResponse) {
 
+        final String prefix = httpRequest.toString();
         final AtomicBoolean complete = new AtomicBoolean();
+        logger.info("{} - Dispatching.", prefix);
 
         asyncContext.addListener(new AsyncListener() {
 
             @Override
             public void onComplete(AsyncEvent event) throws IOException {
-                logger.info("Completed request.");
+                logger.info("{} - Completed request.", prefix, event.getThrowable());
                 complete.set(true);
             }
 
             @Override
             public void onTimeout(AsyncEvent event) throws IOException {
-                logger.info("Request timed out.");
+                logger.info("{} - Request timed out.", prefix, event.getThrowable());
                 complete.set(true);
             }
 
             @Override
             public void onError(AsyncEvent event) throws IOException {
-                logger.error("Error in AsyncContext.", event.getThrowable());
+                final HttpServletRequest r = (HttpServletRequest) event.getSuppliedRequest();
+                logger.error("{} - Error in async context.", prefix, event.getThrowable());
                 complete.set(true);
             }
 
             @Override
             public void onStartAsync(AsyncEvent event) throws IOException {
-                logger.info("Started AsyncRequest {}", event.getAsyncContext());
+                logger.info("{} - Started AsyncRequest {}", prefix, event.getThrowable());
             }
 
         });
@@ -156,6 +159,8 @@ public class DispatcherServlet extends HttpServlet {
             if (!complete.getAndSet(true)) {
                 assembleAndWrite(httpRequest, response, httpServletResponse);
                 asyncContext.complete();
+            } else {
+                logger.warn("{} - Request already completed", prefix);
             }
         };
 
