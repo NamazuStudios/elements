@@ -17,7 +17,7 @@ import static com.namazustudios.socialengine.service.RedissonFacebookFriendCache
 /**
  * Created by patricktwohig on 7/28/17.
  */
-public class RedisServicesModule extends AbstractModule {
+public class RedissonServicesModule extends AbstractModule {
 
     @Override
     protected void configure() {
@@ -30,7 +30,7 @@ public class RedisServicesModule extends AbstractModule {
             .annotatedWith(named(CACHE_NAME))
             .toProvider(new RedissonObjectProvider<>(r -> {
                 final RListMultimapCache<String, FacebookFriend> cache = r.getListMultimapCache(CACHE_NAME);
-                cache.expire(1, TimeUnit.SECONDS);
+                cache.expire(1, TimeUnit.MINUTES);
                 return cache;
             })).asEagerSingleton();
 

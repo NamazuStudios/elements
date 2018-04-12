@@ -86,7 +86,7 @@ public class GuiceMain extends GuiceServletContextListener {
             new NotificationServiceModule(),
             new GuiceStandardNotificationFactoryModule(),
             new FirebaseAppFactoryModule(),
-            new RedisServicesModule(),
+            new RedissonServicesModule(),
             new SecurityModule(),
             new MongoCoreModule(),
             new MongoDaoModule(),
