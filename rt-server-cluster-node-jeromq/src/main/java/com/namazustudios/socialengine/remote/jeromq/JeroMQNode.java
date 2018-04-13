@@ -263,13 +263,17 @@ public class JeroMQNode implements Node {
 
                         while (running.get() && !interrupted()) {
                             if (poller.poll(1000) < 0) {
+                                logger.info("Poller signaled interruption.  Terminating inbound connection.");
                                 break;
                             } else if (poller.pollin(index)) {
                                 dispatchMethodInvocation(connection.socket());
                             }
                         }
 
+                    } finally {
+                        logger.info("Terminating inbound connection.");
                     }
+
                 });
             }
 
@@ -319,7 +323,9 @@ public class JeroMQNode implements Node {
 
                 while (running.get() && !interrupted()) {
 
-                    poller.poll(5000);
+                    if (poller.poll(5000) < 0) {
+                        logger.error("Poller signaled interruption.  Terminating frontend socket.");
+                    }
 
                     if (poller.pollin(frontendIndex)) {
                         final ZMsg msg = ZMsg.recvMsg(frontend);
