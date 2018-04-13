@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 import org.zeromq.ZPoller;
+import zmq.ZError;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -23,6 +24,7 @@ import java.util.function.Consumer;
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
 import static java.lang.Thread.interrupted;
 import static org.zeromq.ZMQ.SNDMORE;
+import static org.zeromq.ZMQ.poll;
 
 public class JeroMQRemoteInvoker implements RemoteInvoker {
 
@@ -131,12 +133,17 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         while (!interrupted()) {
 
-            poller.poll(2000);
+            if (poller.poll(2000) < 0) {
+                throw new InternalException("Interrupted.  Shutting down.");
+            }
 
             if (poller.pollin(sIndex)) {
                 return true;
             } else if (poller.pollerr(sIndex)) {
-                return false;
+                final ZMQ.Socket socket = poller.getSocket(sIndex);
+                final String error = socket == null ? "UNKNOWN" : Integer.toString(socket.errno());
+                logger.error("Socket Error {}" + error);
+                throw new InternalException("Socket error: " + error);
             }
 
         }
