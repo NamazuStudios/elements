@@ -45,9 +45,10 @@ public class SimpleHandlerContext implements HandlerContext {
 
     }
 
-    private <T> Consumer<T> success(
+    private Consumer<Object> success(
             final ResourceId resourceId,
-            final Consumer<T> consumer,
+            final Consumer<Object> success,
+            final Consumer<Throwable> failure,
             final String module,
             final String method,
             final Object[] args) {
@@ -57,7 +58,10 @@ public class SimpleHandlerContext implements HandlerContext {
                     Stream.of(args)
                           .map(a -> a == null ? null : a.toString())
                           .collect(joining(",")));
-                consumer.accept(o);
+                success.accept(o);
+            } catch (Exception ex) {
+                logger.error("Exception in handler context.", ex);
+                failure.accept(ex);
             } finally {
                 destroyAndLog(resourceId);
             }
@@ -78,7 +82,7 @@ public class SimpleHandlerContext implements HandlerContext {
                           .collect(joining(",")), th);
                 consumer.accept(th);
             } catch (Exception ex) {
-                logger.error("Exception", ex);
+                logger.error("Exception in handler context.", ex);
             } finally {
                 destroyAndLog(resourceId);
             }
