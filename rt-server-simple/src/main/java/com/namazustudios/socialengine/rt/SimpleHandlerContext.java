@@ -30,7 +30,7 @@ public class SimpleHandlerContext implements HandlerContext {
 
         try {
             return getResourceContext().invokeAsync(
-                success(resourceId, success, module, method, args),
+                success(resourceId, success, failure, module, method, args),
                 failure(resourceId, failure, module, method, args),
                 resourceId, method, args);
         } catch (RuntimeException ex) {

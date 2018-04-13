@@ -157,6 +157,7 @@ public class DispatcherServlet extends HttpServlet {
 
         return response -> {
             if (!complete.getAndSet(true)) {
+                logger.info("{} - Sending response.", prefix);
                 assembleAndWrite(httpRequest, response, httpServletResponse);
                 asyncContext.complete();
             } else {
