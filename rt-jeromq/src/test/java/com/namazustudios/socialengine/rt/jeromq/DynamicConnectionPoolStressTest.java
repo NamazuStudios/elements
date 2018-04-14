@@ -113,8 +113,13 @@ public class DynamicConnectionPoolStressTest {
                 final int index = poller.register(socket, ZMQ.Poller.POLLIN);
 
                 while (!interrupted()) {
-                    poller.poll(1000);
+
+                    if (poller.poll(5000) < 0) {
+                        break;
+                    }
+
                     doPoll(socket, poller, index);
+
                 }
 
             } catch (Exception ex) {

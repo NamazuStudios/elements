@@ -189,7 +189,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
                 while (!interrupted()) {
 
-                    if (poller.poll(2000) < 0) {
+                    if (poller.poll(5000) < 0) {
                         logger.info("Interrupted.  Exiting gracefully.");
                         break;
                     }

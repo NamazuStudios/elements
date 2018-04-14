@@ -19,8 +19,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
  * Created by patricktwohig on 6/14/17.
  */
 @Api(value = "Facebook Application Configuration",
-     description = "Operations for the management of ApplictionConfiguration instances for Facebook Applications.",
-     authorizations = {@Authorization(SESSION_SECRET)})
+     description = "Operations for the management of ApplictionConfiguration instances for Facebook Applications.")
 @Path("application/{applicationNameOrId}/configuration/facebook")
 public class FacebookApplicationConfigurationResource {
 
@@ -61,7 +60,8 @@ public class FacebookApplicationConfigurationResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
             value = "Creates a new Facebook ApplicationConfiguration",
-            notes = "Creates a new Facebook ApplicationConfiguration with the specific ID or application.")
+            notes = "Creates a new Facebook ApplicationConfiguration with the specific ID or application.",
+            authorizations = {@Authorization(SESSION_SECRET)})
     public FacebookApplicationConfiguration createFacebookApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             final FacebookApplicationConfiguration facebookApplicationConfiguration) {
@@ -91,7 +91,8 @@ public class FacebookApplicationConfigurationResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
             value = "Updates a Facebook ApplicationConfiguration",
-            notes = "Updates an existing Facebook Application profile if it is known to the server.")
+            notes = "Updates an existing Facebook Application profile if it is known to the server.",
+            authorizations = {@Authorization(SESSION_SECRET)})
     public FacebookApplicationConfiguration updateApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId,
@@ -122,7 +123,8 @@ public class FacebookApplicationConfigurationResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
             value = "Deletes a Facebook ApplicationConfiguration",
-            notes = "Deletes an existing Facebook Application profile if it is known to the server.")
+            notes = "Deletes an existing Facebook Application profile if it is known to the server.",
+            authorizations = {@Authorization(SESSION_SECRET)})
     public void deleteFacebookApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId) {

@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 import org.zeromq.ZPoller;
@@ -17,6 +18,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -59,10 +61,12 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                                  final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
                                  final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
+        final Map<String, String > mdcContext = MDC.getCopyOfContextMap();
         final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask = new RemoteInvocationFutureTask<>();
 
         getConnectionPool().processV((Connection connection) -> {
 
+            MDC.setContextMap(mdcContext);
             try (final ZMQ.Poller poller = connection.context().createPoller(1)) {
 
                 send(connection.socket(), invocation, asyncInvocationResultConsumerList.size());
@@ -115,12 +119,16 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                 // For good measure, the exception is re-thrown so the connection pool properly closes the connection
                 // as we can't assume that socket is still in a stable state.
 
+                logger.error("Caught error running remote invocation.", ex);
+
                 final InvocationError invocationError = new InvocationError();
                 invocationError.setThrowable(ex);
                 remoteInvocationFutureTask.setException(ex);
                 asyncInvocationErrorConsumer.acceptAndLogError(logger, invocationError);
                 throw ex;
 
+            } finally {
+                MDC.clear();
             }
 
         });
@@ -133,7 +141,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         while (!interrupted()) {
 
-            if (poller.poll(2000) < 0) {
+            if (poller.poll(5000) < 0) {
                 throw new InternalException("Interrupted.  Shutting down.");
             }
 

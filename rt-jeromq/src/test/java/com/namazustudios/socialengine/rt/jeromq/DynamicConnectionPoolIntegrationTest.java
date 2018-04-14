@@ -51,7 +51,9 @@ public class    DynamicConnectionPoolIntegrationTest {
 
             while (!interrupted() && acceptingConnections.get()) {
 
-                poller.poll(200);
+                if (poller.poll(5000) < 0) {
+                    break;
+                }
 
                 if (poller.pollin(0)) {
                     recvMsg(socket).send(socket, true);

@@ -23,7 +23,7 @@ import static java.util.concurrent.Executors.newScheduledThreadPool;
  */
 public class SimpleServicesModule extends PrivateModule {
 
-    private static final int CORE_POOL_SIZE = 5;
+    private static final int CORE_POOL_SIZE = 500;
 
     @Override
     protected void configure() {
