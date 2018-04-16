@@ -23,6 +23,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static java.util.function.Function.identity;
 
 /**
  * Created by patricktwohig on 6/25/17.
@@ -105,6 +110,23 @@ public class MongoFacebookUserDao implements FacebookUserDao {
 
         getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
+
+    }
+
+    @Override
+    public Map<String, User> findActiveUsersWithFacebookIds(final List<String> facebookIds) {
+
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
+
+        query.and(
+            query.criteria("active").equal(true),
+            query.criteria("facebookId").in(facebookIds)
+        );
+
+        return query.asList()
+            .stream()
+            .map(u -> getDozerMapper().map(u, User.class))
+            .collect(Collectors.toMap(u -> u.getFacebookId(), identity()));
 
     }
 
