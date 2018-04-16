@@ -257,7 +257,7 @@ public class JeroMQNode implements Node {
 
             for (int i = 0; i < toDispatch; ++i) {
                 inboundConnectionPool.processV(connection -> {
-                    try (final Poller poller = getzContext().createPoller(1)) {
+                    try (final Poller poller = connection.context().createPoller(1)) {
 
                         final int index = poller.register(connection.socket(), POLLIN | POLLERR);
 
@@ -273,7 +273,6 @@ public class JeroMQNode implements Node {
                     } finally {
                         logger.info("Terminating inbound connection.");
                     }
-
                 });
             }
 
@@ -298,16 +297,11 @@ public class JeroMQNode implements Node {
 
         private void bindFrontendSocketAndPerformWork() {
 
-            FinallyAction actions = () -> {};
-
-            try (final Socket frontend = getzContext().createSocket(ROUTER);
-                 final Socket inbound = getzContext().createSocket(PUSH);
-                 final Socket outbound = getzContext().createSocket(PULL);
-                 final Poller poller = getzContext().createPoller(4)) {
-
-                actions = with(() -> getzContext().destroySocket(frontend))
-                          .then(() -> getzContext().destroySocket(inbound))
-                          .then(() -> getzContext().destroySocket(outbound));
+            try (final ZContext context = ZContext.shadow(getzContext());
+                 final Socket frontend = context.createSocket(ROUTER);
+                 final Socket inbound = context.createSocket(PUSH);
+                 final Socket outbound = context.createSocket(PULL);
+                 final Poller poller = context.createPoller(4)) {
 
                 frontend.setRouterMandatory(true);
                 frontend.bind(getBindAddress());
@@ -344,9 +338,8 @@ public class JeroMQNode implements Node {
 
                 }
 
-            } finally {
-                actions.perform();
             }
+
         }
 
         private void dispatchMethodInvocation(final Socket inbound) {

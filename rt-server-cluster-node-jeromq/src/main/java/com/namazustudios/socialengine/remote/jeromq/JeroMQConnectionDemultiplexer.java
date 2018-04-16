@@ -1,9 +1,7 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
-import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
 import com.namazustudios.socialengine.rt.jeromq.*;
 import com.namazustudios.socialengine.rt.remote.MalformedMessageException;
 import com.namazustudios.socialengine.rt.remote.RoutingHeader;
@@ -171,11 +169,12 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         @Override
         public void run() {
 
-            try (final ZMQ.Poller poller = getzContext().createPoller(1);
+            try (final ZContext context = ZContext.shadow(getzContext());
+                 final ZMQ.Poller poller = context.createPoller(1);
                  final Connection frontend = from(getzContext(), c -> c.createSocket(ROUTER));
                  final Connection control = from(getzContext(), c -> c.createSocket(PULL));
                  final RoutingTable backends = new RoutingTable(getzContext(), poller, this::connect);
-                 final MonitorThread monitorThread = new MonitorThread(logger, getzContext(), frontend.socket())) {
+                 final MonitorThread monitorThread = new MonitorThread(logger, context, frontend.socket())) {
 
                 monitorThread.start();
                 frontend.socket().setRouterMandatory(true);

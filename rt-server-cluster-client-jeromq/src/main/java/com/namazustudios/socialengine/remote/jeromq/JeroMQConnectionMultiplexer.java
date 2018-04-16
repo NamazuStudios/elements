@@ -110,7 +110,8 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
     }
 
     private void issue(final RoutingCommand command) {
-        try (final Connection connection = from(getzContext(), c -> c.createSocket(PUSH))) {
+        try (final ZContext context = ZContext.shadow(getzContext());
+             final Connection connection = from(context, c -> c.createSocket(PUSH))) {
             connection.socket().connect(getControlAddress());
             connection.socket().sendByteBuffer(command.getByteBuffer(), 0);
         }

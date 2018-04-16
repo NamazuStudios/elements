@@ -106,8 +106,9 @@ public class DynamicConnectionPoolStressTest {
 
         @Override
         public void run() {
-            try (final ZMQ.Socket socket = zContext.createSocket(ZMQ.ROUTER);
-                 final ZMQ.Poller poller = zContext.createPoller(1)) {
+            try (final ZContext context = ZContext.shadow(zContext);
+                 final ZMQ.Socket socket = context.createSocket(ZMQ.ROUTER);
+                 final ZMQ.Poller poller = context.createPoller(1)) {
 
                 socket.bind(ADDRESS);
                 final int index = poller.register(socket, ZMQ.Poller.POLLIN);

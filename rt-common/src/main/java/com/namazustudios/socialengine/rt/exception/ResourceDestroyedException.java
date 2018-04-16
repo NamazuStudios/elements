@@ -17,7 +17,7 @@ public class ResourceDestroyedException extends BaseException {
 
     @Override
     public ResponseCode getResponseCode() {
-        return null;
+        return ResponseCode.RESOURCE_DESTROYED;
     }
 
 }
