@@ -13,6 +13,8 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.io.IOException;
 
+import static org.apache.lucene.index.IndexWriterConfig.OpenMode.CREATE_OR_APPEND;
+
 /**
  * Created by patricktwohig on 5/17/15.
  */
@@ -28,21 +30,16 @@ public class MongoObjectIndexProvider implements Provider<ObjectIndex> {
     public ObjectIndex get() {
 
         final IOContext.Provider<IndexWriter> indexWriterProvider  = () -> {
-
-            final Directory directory = directoryProvider.get();
-
-            final IndexWriterConfig indexWriterConfig =
-                    new IndexWriterConfig(analyzerProvider.get())
-                        .setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
-
+            final Analyzer analyzer = getAnalyzerProvider().get();
+            final Directory directory = getDirectoryProvider().get();
+            final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer).setOpenMode(CREATE_OR_APPEND);
             final IndexWriter indexWriter = new IndexWriter(directory, indexWriterConfig);
             return new DefaultIOContext<>(indexWriter);
-
         };
 
         final IOContext.Provider<IndexSearcher> indexSearcherProvider = () -> {
 
-            final Directory directory = directoryProvider.get();
+            final Directory directory = getDirectoryProvider().get();
             final IndexReader indexReader = DirectoryReader.open(directory);
             final IndexSearcher indexSearcher = new IndexSearcher(indexReader);
 
@@ -64,8 +61,27 @@ public class MongoObjectIndexProvider implements Provider<ObjectIndex> {
             throw new RuntimeException("could not create search index", ex);
         }
 
-        return new DefaultObjectIndex(indexWriterProvider, indexSearcherProvider);
+        return new DefaultObjectIndex(indexWriterProvider.cached(), indexSearcherProvider);
 
+    }
+
+
+    public Provider<Analyzer> getAnalyzerProvider() {
+        return analyzerProvider;
+    }
+
+    @Inject
+    public void setAnalyzerProvider(Provider<Analyzer> analyzerProvider) {
+        this.analyzerProvider = analyzerProvider;
+    }
+
+    public Provider<Directory> getDirectoryProvider() {
+        return directoryProvider;
+    }
+
+    @Inject
+    public void setDirectoryProvider(Provider<Directory> directoryProvider) {
+        this.directoryProvider = directoryProvider;
     }
 
 }

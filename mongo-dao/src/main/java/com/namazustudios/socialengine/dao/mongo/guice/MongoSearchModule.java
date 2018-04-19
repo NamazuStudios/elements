@@ -27,11 +27,11 @@ public class MongoSearchModule extends AbstractModule {
 
         binder().bind(Directory.class)
                 .toProvider(MongoDirectoryProvider.class)
-                .in(Singleton.class);
+                .asEagerSingleton();
 
         binder().bind(ObjectIndex.class)
                 .toProvider(MongoObjectIndexProvider.class)
-                .in(Singleton.class);
+                .asEagerSingleton();
 
     }
 
