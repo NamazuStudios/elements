@@ -40,7 +40,7 @@ public class RankResource {
             final int count,
 
 
-            @QueryParam("count")
+            @QueryParam("relative")
             @DefaultValue("false")
             @ApiParam("Indicates whether or not to fetch results in a relative fashion.")
             final boolean relative,
