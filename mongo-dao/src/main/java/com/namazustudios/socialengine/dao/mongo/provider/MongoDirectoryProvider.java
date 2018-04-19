@@ -6,7 +6,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.gridfs.GridFS;
-import com.namazustudios.socialengine.fts.mongo.GridFSDirectory;
+import com.namazustudios.elements.fts.mongo.GridFSDirectory;
 import org.apache.lucene.store.Directory;
 import org.bson.Document;
 

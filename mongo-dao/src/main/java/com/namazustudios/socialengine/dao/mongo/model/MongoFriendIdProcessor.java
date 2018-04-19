@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
-import com.namazustudios.socialengine.fts.AbstractIndexableFieldProcessor;
-import com.namazustudios.socialengine.fts.FieldMetadata;
+import com.namazustudios.elements.fts.AbstractIndexableFieldProcessor;
+import com.namazustudios.elements.fts.FieldMetadata;
 import org.apache.lucene.document.Document;
 
 public class MongoFriendIdProcessor extends AbstractIndexableFieldProcessor<MongoFriendshipId> {

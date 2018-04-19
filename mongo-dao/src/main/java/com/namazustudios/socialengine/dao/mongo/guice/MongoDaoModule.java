@@ -9,7 +9,7 @@ import com.namazustudios.socialengine.dao.mongo.*;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoAdvancedDatastoreProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoMatchmakerFunctionProvider;
-import com.namazustudios.socialengine.fts.ObjectIndex;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import org.dozer.Mapper;

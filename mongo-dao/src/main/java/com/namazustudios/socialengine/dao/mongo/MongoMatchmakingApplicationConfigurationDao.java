@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoCallbackDefinition;
 import com.namazustudios.socialengine.dao.mongo.model.MongoMatchmakingApplicationConfiguration;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.fts.ObjectIndex;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.bson.types.ObjectId;

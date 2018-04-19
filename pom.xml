@@ -30,9 +30,8 @@
         <module>guice</module>
         <module>rest-guice</module>
         <module>web-ui-war</module>
-        <module>lucene-pojo</module>
-        <module>lucene-indexer</module>
-        <module>mongo-lucene</module>
+        <module>search-tools</module>
+        <module>index-storage</module>
         <module>rt-common</module>
         <module>rt-jeromq</module>
         <module>rt-server</module>
@@ -102,7 +101,6 @@
         <commons.logging.version>1.2</commons.logging.version>
         <restfb.version>2.0.0-rc.2</restfb.version>
         <jgit.version>4.8.0.201706111038-r</jgit.version>
-        <jxpath.version>1.3</jxpath.version>
         <mockito.version>2.11.0</mockito.version>
         <jopt.version>4.9-beta-1</jopt.version>
         <jeromq.version>0.4.3</jeromq.version>

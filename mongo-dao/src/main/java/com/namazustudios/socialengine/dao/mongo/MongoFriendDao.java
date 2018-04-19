@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.BadQueryException;
 import com.namazustudios.socialengine.exception.FriendNotFoundException;
 import com.namazustudios.socialengine.exception.InternalException;
-import com.namazustudios.socialengine.fts.ObjectIndex;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.friend.Friend;

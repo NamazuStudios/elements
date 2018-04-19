@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
-import com.namazustudios.socialengine.fts.ObjectIndex;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.Profile;
 import org.apache.lucene.index.Term;

@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
-import com.namazustudios.socialengine.fts.*;
+import com.namazustudios.elements.fts.*;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;

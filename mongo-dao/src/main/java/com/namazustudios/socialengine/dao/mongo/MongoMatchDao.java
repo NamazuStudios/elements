@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
 import com.namazustudios.socialengine.dao.mongo.model.*;
-import com.namazustudios.socialengine.fts.ObjectIndex;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchTimeDelta;
