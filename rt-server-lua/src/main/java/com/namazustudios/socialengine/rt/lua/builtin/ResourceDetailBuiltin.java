@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -141,8 +142,22 @@ public class ResourceDetailBuiltin implements Builtin {
             final ResourceId thisResourceId = getLuaResource().getId();
 
             getContext().getResourceContext().destroyAsync(
-                object -> getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, null),
-                throwable -> getContext().getSchedulerContext().resumeWithError(thisResourceId, taskId, throwable),
+                object -> {
+                    if (thisResourceId.equals(resourceId)) {
+                        logger.info("Destroyed {}", resourceId);
+                    } else {
+                        getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, null);
+                    }
+                },
+                throwable -> {
+
+                    if (thisResourceId.equals(resourceId)) {
+                        logger.error("Could not self-destruct resource {}", resourceId);
+                    }
+
+                    getContext().getSchedulerContext().resumeWithError(thisResourceId, taskId, throwable);
+
+                },
                 resourceId
             );
 

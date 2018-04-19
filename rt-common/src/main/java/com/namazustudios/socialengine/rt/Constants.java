@@ -50,4 +50,6 @@ public interface Constants {
      */
     String MAX_ENVELOPE_SIZE = "com.namazustudios.socialengine.rt.MAX_ENVELOPE_SIZE";
 
+    String MDC_HTTP_REQUEST = "HTTP_REQUEST";
+
 }

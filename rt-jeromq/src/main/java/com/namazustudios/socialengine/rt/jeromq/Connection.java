@@ -1,11 +1,12 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
-import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Socket;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * Represents a connection to the remote node.
@@ -34,12 +35,8 @@ public interface Connection extends AutoCloseable {
     void close();
 
     /**
-     * Creates a {@link Connection} from the supplied {@link ZContext} and {@link Function<ZContext, Socket>}.  The returned
-     * {@link Connection} will automatically close and destroy the link {@link Socket} returned by the
-     * supplier.
      *
-     * The {@link Function<ZContext, Socket>} is only called once and the return value cached in the provided
-     * {@link Connection}.
+     * {@see {@link #from(ZContext, Function, Logger) }
      *
      * @param context the {@link com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.Context}
      * @param socketSupplier the {@link Function<ZContext, Socket>}
@@ -47,14 +44,31 @@ public interface Connection extends AutoCloseable {
      * @throws IllegalArgumentException if the supplied {@link Socket} is not part of the {@link ZContext}
      */
     static Connection from(final ZContext context, final Function<ZContext, Socket> socketSupplier) {
+        final Logger logger = LoggerFactory.getLogger(Connection.class);
+        return from(context, socketSupplier, logger);
+    }
+
+    /**
+     * Creates a {@link Connection} from the supplied {@link ZContext} and {@link Function<ZContext, Socket>}.  The returned
+     * {@link Connection} will automatically close and destroy the link {@link Socket} returned by the
+     * supplier.
+     *
+     * The {@link Function<ZContext, Socket>} is only called once and the return value cached in the provided
+     * {@link Connection}.
+     *
+     * @param context the {@link DynamicConnectionPool.Context}
+     * @param socketSupplier the {@link Function<ZContext, Socket>}
+     * @param logger the {@link Logger} to use
+     * @return the {@link Connection}
+     * @throws IllegalArgumentException if the supplied {@link Socket} is not part of the {@link ZContext}
+     */
+    static Connection from(final ZContext context, final Function<ZContext, Socket> socketSupplier, final Logger logger) {
 
         final Socket socket = socketSupplier.apply(context);
-
-        if (!context.getSockets().contains(socket)) {
-            throw new IllegalArgumentException("Returned socket must match the connection.");
-        }
+        final AtomicBoolean open = new AtomicBoolean(true);
 
         return new Connection() {
+
             @Override
             public ZContext context() {
                 return context;
@@ -67,7 +81,23 @@ public interface Connection extends AutoCloseable {
 
             @Override
             public void close() {
-                context.destroySocket(socket);
+
+                if (!open.compareAndSet(true, false)) throw new IllegalStateException("Connection closed.");
+
+                try {
+                    socket.close();
+                } catch (final Exception ex) {
+                    logger.error("{} Caught exception closing Socket.", toString(), ex);
+                }
+
+                try {
+                    context.destroySocket(socket);
+                } catch (final Exception ex) {
+                    logger.error("{} Caught exception destroying Socket.", toString(), ex);
+                }
+
+                logger.info("Successfully closed socket {} ", socket);
+
             }
         };
 

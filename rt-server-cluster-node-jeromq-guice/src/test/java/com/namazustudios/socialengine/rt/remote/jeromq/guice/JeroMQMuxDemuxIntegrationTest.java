@@ -88,7 +88,9 @@ public class JeroMQMuxDemuxIntegrationTest {
 
                 while (!interrupted()) {
 
-                    poller.poll(2000);
+                    if (poller.poll(5000) < 0) {
+                        break;
+                    }
 
                     range(0, poller.getNext()).filter(index -> poller.getItem(index) != null).forEach(index -> {
 
@@ -168,7 +170,9 @@ public class JeroMQMuxDemuxIntegrationTest {
 
             while (!interrupted()) {
 
-                poller.poll(1000);
+                if (poller.poll(5000) < 0) {
+                    break;
+                }
 
                 if (poller.pollin(index)) {
                     break;

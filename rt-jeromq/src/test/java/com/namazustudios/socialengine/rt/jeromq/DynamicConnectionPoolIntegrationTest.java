@@ -41,8 +41,9 @@ public class    DynamicConnectionPoolIntegrationTest {
     private final AtomicBoolean acceptingConnections = new AtomicBoolean(true);
 
     private final Thread acceptor = new Thread(() -> {
-        try (final ZMQ.Socket socket = getzContext().createSocket(ZMQ.ROUTER);
-             final ZMQ.Poller poller = getzContext().createPoller(1)) {
+        try (final ZContext context = ZContext.shadow(getzContext());
+             final ZMQ.Socket socket = context.createSocket(ZMQ.ROUTER);
+             final ZMQ.Poller poller = context.createPoller(1)) {
 
             socket.bind(TEST_ADDRESS);
             startupLatch.countDown();
@@ -51,7 +52,9 @@ public class    DynamicConnectionPoolIntegrationTest {
 
             while (!interrupted() && acceptingConnections.get()) {
 
-                poller.poll(200);
+                if (poller.poll(5000) < 0) {
+                    break;
+                }
 
                 if (poller.pollin(0)) {
                     recvMsg(socket).send(socket, true);

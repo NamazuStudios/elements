@@ -10,9 +10,12 @@ import org.testng.annotations.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
+import static java.util.Arrays.fill;
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -192,6 +195,35 @@ public class SimpleResourceServiceUnitTest {
     @Test(dependsOnMethods = {"testRemove"}, dataProvider = "intermediateDataProvider", expectedExceptions = ResourceNotFoundException.class)
     public void testDoubleRemove(final ResourceId resourceId, final Path path, final Resource resource) {
         getResourceService().removeResource(resourceId);
+    }
+
+    @Test(dependsOnMethods = "testDoubleRemove")
+    public void testAllPathsUnlinked() {
+        final Stream<ResourceService.Listing> listingStream = getResourceService().listStream(new Path("*"));
+        final List<ResourceService.Listing> listingList = listingStream.collect(toList());
+        assertEquals(listingList.size(), 0);
+    }
+
+    @Test
+    public void testDeleteWithPaths() {
+        final ResourceId resourceId = new ResourceId();
+        final Resource resource = Mockito.mock(Resource.class);
+        Mockito.when(resource.getId()).thenReturn(resourceId);
+
+        final Path path = new Path(randomUUID().toString());
+        getResourceService().addResource(path, resource);
+
+        final Path a = new Path(path, Path.fromComponents("a"));
+        final Path b = new Path(path, Path.fromComponents("b"));
+        getResourceService().link(resourceId, a);
+        getResourceService().link(resourceId, b);
+
+        getResourceService().destroy(resourceId);
+
+        final Stream<ResourceService.Listing> listingStream = getResourceService().listStream(new Path("*"));
+        final List<ResourceService.Listing> listingList = listingStream.collect(toList());
+        assertEquals(listingList.size(), 0);
+
     }
 
     public ResourceService getResourceService() {
