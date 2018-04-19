@@ -8,11 +8,13 @@ import org.zeromq.ZMQ;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -125,7 +127,7 @@ public class DynamicConnectionPool implements ConnectionPool {
 
         private final ConcurrentMap<Thread, Connection> connectionMap = new ConcurrentHashMap<>();
 
-        private final AtomicReference<Supplier<Connection>> connectionSupplier = new AtomicReference<>(WorkerConnection::new);
+        private final AtomicReference<Function<ZContext, Connection>> connectionSupplier = new AtomicReference<>();
 
         private final ThreadPoolExecutor executorService;
         {
@@ -137,16 +139,25 @@ public class DynamicConnectionPool implements ConnectionPool {
                 getTimeout(), SECONDS, new SynchronousQueue<>(),
                 r -> {
                     final Thread thread = new Thread(() -> {
-                        try {
-                            r.run();
-                        } finally {
-                            final Connection connection = connectionMap.get(currentThread());
-                            if (connection != null) connection.close();
+
+                        if (connectionMap.containsKey(currentThread())) {
+                            throw new IllegalStateException("Connection map already contains a connection.");
                         }
+
+                        try (final ZContext shadow = ZContext.shadow(getzContext());
+                             final Connection c = connectionMap.computeIfAbsent(currentThread(), t -> connectionSupplier.get().apply(shadow))) {
+                            logger.info("Starting connection thread {} for connection {}", currentThread().getName(), c);
+                            r.run();
+                            logger.info("Terminating connection thread {} for connection {}", currentThread().getName(), c);
+                        } finally {
+                            connectionMap.remove(currentThread());
+                        }
+
                     });
                     thread.setDaemon(true);
                     thread.setName(toString() + " worker #" + count.getAndIncrement());
                     return thread;
+
                 },
                 (r, e) -> {
 
@@ -173,6 +184,7 @@ public class DynamicConnectionPool implements ConnectionPool {
         public Context(final Function<ZContext, ZMQ.Socket> socketSupplier, final String name) {
             this.name = name;
             this.socketSupplier = socketSupplier;
+            this.connectionSupplier.set(c -> from(c, socketSupplier));
         }
 
         public void start() {
@@ -182,7 +194,7 @@ public class DynamicConnectionPool implements ConnectionPool {
         public void stop() {
 
             executorService.shutdownNow();
-            connectionSupplier.set(() -> new TerminalConnection(TerminatedException::new));
+            connectionSupplier.set(z -> new TerminalConnection(TerminatedException::new));
 
             try {
                 executorService.awaitTermination(2, MINUTES);
@@ -200,8 +212,11 @@ public class DynamicConnectionPool implements ConnectionPool {
 
             final FutureTask<T> futureTask = new FutureTask<T>(() -> {
 
-                final Connection connection;
-                connection = connectionMap.computeIfAbsent(currentThread(), thread -> connectionSupplier.get().get());
+                final Connection connection = connectionMap.getOrDefault(currentThread(), null);
+
+                if (connection == null) {
+                    throw new IllegalStateException("No connection for thread " + currentThread());
+                }
 
                 try {
                     return connectionTFunction.apply(new Connection() {
@@ -279,39 +294,57 @@ public class DynamicConnectionPool implements ConnectionPool {
 
         private class WorkerConnection implements Connection, AutoCloseable {
 
-            private final ZMQ.Socket socket = socketSupplier.apply(getzContext());
+            private final ZContext zContext;
 
-            public WorkerConnection() {
+            private final ZMQ.Socket socket;
+
+            private final AtomicBoolean open = new AtomicBoolean(true);
+
+            public WorkerConnection(final ZContext zContext) {
                 highWaterMark.incrementAndGet();
+                this.zContext = zContext;
+                socket = socketSupplier.apply(zContext);
             }
 
             @Override
             public ZContext context() {
+                if (!open.get()) throw new IllegalStateException("Connection closed");
                 return getzContext();
             }
 
             @Override
             public ZMQ.Socket socket() {
+                if (!open.get()) throw new IllegalStateException("Connection closed");
                 return socket;
             }
 
             @Override
             public void close() {
 
+                if (!open.compareAndSet(true, false)) throw new IllegalStateException("Connection closed.");
+
                 try {
-                    socket().close();
+                    socket.close();
                 } catch (final Exception ex) {
                     logger.error("{} Caught exception closing Socket.", toString(), ex);
                 }
 
                 try {
-                    getzContext().destroySocket(socket());
+                    zContext.destroySocket(socket);
                 } catch (final Exception ex) {
                     logger.error("{} Caught exception destroying Socket.", toString(), ex);
                 }
 
                 logger.info("Successfully closed socket {} ", socket);
 
+            }
+
+            @Override
+            public String toString() {
+                return "WorkerConnection{" +
+                        "socket=" + socket +
+                        ", open=" + open.get() +
+                        '}';
             }
 
         }

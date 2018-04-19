@@ -108,6 +108,7 @@
         <jeromq.version>0.4.3</jeromq.version>
         <javolution.version>6.0.0</javolution.version>
         <firebase.admin.vrsion>5.9.0</firebase.admin.vrsion>
+        <netty.version>4.1.22.Final</netty.version>
     </properties>
 
     <dependencies>

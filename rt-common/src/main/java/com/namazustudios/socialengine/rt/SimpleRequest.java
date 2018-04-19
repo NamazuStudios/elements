@@ -6,6 +6,8 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.lang.String.format;
+
 /**
  * Created by patricktwohig on 7/26/15.
  */
@@ -18,6 +20,8 @@ public class SimpleRequest implements Request, Serializable {
     private Object payload;
 
     private Map<String, List<Object>> parameterMap;
+
+    private String toString;
 
     @Override
     public SimpleRequestHeader getHeader() {
@@ -87,10 +91,10 @@ public class SimpleRequest implements Request, Serializable {
 
     @Override
     public String toString() {
-        return "SimpleRequest{" +
+        return toString == null ? "SimpleRequest{" +
                 "header=" + header +
                 ", payload=" + payload +
-                '}';
+                '}' : toString;
     }
 
     /**
@@ -117,11 +121,13 @@ public class SimpleRequest implements Request, Serializable {
 
         private ParameterizedPath parameterizedPath;
 
-        final Map<String, Object> simpleAttributesMap = new HashMap<>();
+        private String toString;
 
-        final Map<String, List<Object> > simpleRequestHeaderMap = new LinkedHashMap<>();
+        private final Map<String, Object> simpleAttributesMap = new HashMap<>();
 
-        final Map<String, List<Object> > simpleRequestParameterMap = new LinkedHashMap<>();
+        private final Map<String, List<Object> > simpleRequestHeaderMap = new LinkedHashMap<>();
+
+        private final Map<String, List<Object> > simpleRequestParameterMap = new LinkedHashMap<>();
 
         /**
          * Builds an instance of {@link SimpleRequest} copying all vauues fromt he given {@link Request}.
@@ -148,6 +154,7 @@ public class SimpleRequest implements Request, Serializable {
                 path = header.getPath();
                 method = header.getMethod();
                 sequence = header.getSequence();
+                toString = request.toString();
 
                 simpleRequestHeaderMap.clear();
 
@@ -296,6 +303,7 @@ public class SimpleRequest implements Request, Serializable {
             simpleRequestHeader.setHeaders(new LinkedHashMap<>(simpleRequestHeaderMap));
 
             simpleRequest.setHeader(simpleRequestHeader);
+            simpleRequest.toString = format("Simple Request For (%s)", toString);
 
             return simpleRequest;
 

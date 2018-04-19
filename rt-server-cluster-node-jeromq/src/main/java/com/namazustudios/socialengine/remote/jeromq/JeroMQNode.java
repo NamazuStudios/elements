@@ -257,18 +257,21 @@ public class JeroMQNode implements Node {
 
             for (int i = 0; i < toDispatch; ++i) {
                 inboundConnectionPool.processV(connection -> {
-                    try (final Poller poller = getzContext().createPoller(1)) {
+                    try (final Poller poller = connection.context().createPoller(1)) {
 
                         final int index = poller.register(connection.socket(), POLLIN | POLLERR);
 
                         while (running.get() && !interrupted()) {
-                            if (poller.poll(1000) < 0) {
+                            if (poller.poll(5000) < 0) {
+                                logger.info("Poller signaled interruption.  Terminating inbound connection.");
                                 break;
                             } else if (poller.pollin(index)) {
                                 dispatchMethodInvocation(connection.socket());
                             }
                         }
 
+                    } finally {
+                        logger.info("Terminating inbound connection.");
                     }
                 });
             }
@@ -294,16 +297,11 @@ public class JeroMQNode implements Node {
 
         private void bindFrontendSocketAndPerformWork() {
 
-            FinallyAction actions = () -> {};
-
-            try (final Socket frontend = getzContext().createSocket(ROUTER);
-                 final Socket inbound = getzContext().createSocket(PUSH);
-                 final Socket outbound = getzContext().createSocket(PULL);
-                 final Poller poller = getzContext().createPoller(4)) {
-
-                actions = with(() -> getzContext().destroySocket(frontend))
-                          .then(() -> getzContext().destroySocket(inbound))
-                          .then(() -> getzContext().destroySocket(outbound));
+            try (final ZContext context = ZContext.shadow(getzContext());
+                 final Socket frontend = context.createSocket(ROUTER);
+                 final Socket inbound = context.createSocket(PUSH);
+                 final Socket outbound = context.createSocket(PULL);
+                 final Poller poller = context.createPoller(4)) {
 
                 frontend.setRouterMandatory(true);
                 frontend.bind(getBindAddress());
@@ -319,7 +317,10 @@ public class JeroMQNode implements Node {
 
                 while (running.get() && !interrupted()) {
 
-                    poller.poll(5000);
+                    if (poller.poll(5000) < 0) {
+                        logger.error("Poller signaled interruption.  Terminating frontend socket.");
+                        break;
+                    }
 
                     if (poller.pollin(frontendIndex)) {
                         final ZMsg msg = ZMsg.recvMsg(frontend);
@@ -337,9 +338,8 @@ public class JeroMQNode implements Node {
 
                 }
 
-            } finally {
-                actions.perform();
             }
+
         }
 
         private void dispatchMethodInvocation(final Socket inbound) {
@@ -366,7 +366,7 @@ public class JeroMQNode implements Node {
 
             final Consumer<InvocationError> asyncInvocationErrorConsumer = invocationError -> {
                 if (remaining.getAndSet(0) <= 0) {
-                    logger.info("Suppressing invocation error.  Already sent.", invocationError.getThrowable());
+                    logger.error("Suppressing invocation error.  Already sent.", invocationError.getThrowable());
                 } else {
                     outboundConnectionPool.processV(outbound -> sendError(outbound.socket(), invocationError, 1, identity));
                 }

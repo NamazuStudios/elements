@@ -49,9 +49,14 @@ public enum ResponseCode {
     DUPLICATE_RESOURCE,
 
     /**
-     * A particular path could not be found.
+     * A particular path or resource ID could not be found.
      */
     RESOURCE_NOT_FOUND,
+
+    /**
+     * A resource was destroyed while waiting for a response.
+     */
+    RESOURCE_DESTROYED,
 
     /**
      * Indicates that the requested asset is not found.

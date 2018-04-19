@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.ResourceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
+import org.testng.annotations.TestInstance;
 
 import java.util.concurrent.Future;
 
@@ -65,6 +66,31 @@ public class TestYielding {
 
         assertEquals(shortYieldFuture.get(), "OK");
 
+    }
+
+    @Test
+    public void testKillAndRestart() throws Exception {
+
+        final Path path = new Path(randomUUID().toString());
+        final ResourceId resourceId = getContext().getResourceContext().create("test.restarting_coroutine", path);
+
+        final Future<Object> startFuture = getContext()
+            .getResourceContext()
+            .invokeAsync(
+                r -> logger.info("Start Success: {}", r),
+                ex -> logger.error("Start Failure", ex),
+                resourceId, "start");
+
+        logger.info("Awaking Coroutine.");
+        final Future<Object> resumeFuture = getContext()
+                .getResourceContext()
+                .invokeAsync(
+                        r -> logger.info("Resume Success: {}", r),
+                        ex -> logger.error("Resume Failure", ex),
+                        resourceId, "resume");
+
+        startFuture.get();
+        resumeFuture.get();
     }
 
     public Context getContext() {

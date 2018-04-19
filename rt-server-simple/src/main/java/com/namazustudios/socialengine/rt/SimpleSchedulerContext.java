@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.exception.NoSuchTaskException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,14 +21,30 @@ public class SimpleSchedulerContext implements SchedulerContext {
 
     @Override
     public void resumeFromNetwork(ResourceId resourceId, TaskId taskId, Object result) {
-        getScheduler().performV(resourceId, resource -> resource.resumeFromNetwork(taskId, result),
+        getScheduler().performV(resourceId, resource -> resumeFromNetwork(resource, taskId, result),
                                             th -> logger.error("Caught exception resuming.", th));
     }
 
+    private void resumeFromNetwork(final Resource resource, final TaskId taskId, final Object result) {
+        try {
+            resource.resumeFromNetwork(taskId, result);
+        } catch (NoSuchTaskException ex) {
+            logger.info("Ignoring dead task: {}", ex.getTaskId());
+        }
+    }
+
     @Override
-    public void resumeWithError(ResourceId resourceId, TaskId taskId, Throwable throwable) {
-        getScheduler().performV(resourceId, resource -> resource.resumeWithError(taskId, throwable),
+    public void resumeWithError(final ResourceId resourceId, final TaskId taskId, final Throwable throwable) {
+        getScheduler().performV(resourceId, resource -> resumeWithError(resource, taskId, throwable),
                                             th -> logger.error("Caught exception resuming.", th));
+    }
+
+    private void resumeWithError(final Resource resource, final TaskId taskId, final Throwable throwable) {
+        try {
+            resource.resumeWithError(taskId, throwable);
+        } catch (NoSuchTaskException ex) {
+            logger.info("Ignoring dead task: {}", ex.getTaskId());
+        }
     }
 
     public Scheduler getScheduler() {

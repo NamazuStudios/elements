@@ -34,4 +34,9 @@ public interface Headers {
      */
     String SESSION_SECRET = "SocialEngine-SessionSecret";
 
+    /**
+     * Specifies the user's Facebook OAuth token used to interact with the Facebook API.
+     */
+    String FACEBOOK_OAUTH_TOKEN = "Facebook-OAuthToken";
+
 }

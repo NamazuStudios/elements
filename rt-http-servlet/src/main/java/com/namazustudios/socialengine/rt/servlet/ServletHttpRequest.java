@@ -15,15 +15,19 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.lang.String.format;
 import static java.util.Collections.list;
 import static java.util.stream.Collectors.toList;
 
 public class ServletHttpRequest implements HttpRequest {
+
+    private final UUID uniqueId = UUID.randomUUID();
 
     private final ServletRequestHeader servletRequestHeader;
 
@@ -90,6 +94,11 @@ public class ServletHttpRequest implements HttpRequest {
     private Object deserializePayload() {
         final HttpContent requestContent = getManifestMetadata().getPreferredRequestContent();
         return payloadDeserializerFunction.apply(requestContent);
+    }
+
+    @Override
+    public String toString() {
+        return format("%s -> %s %s", uniqueId, getVerb(), getHeader().getPath());
     }
 
 }

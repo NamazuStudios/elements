@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.servlet;
 
 import com.google.common.net.HttpHeaders;
+import com.namazustudios.socialengine.rt.Constants;
 import com.namazustudios.socialengine.rt.ExceptionMapper;
 import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.handler.Session;
@@ -9,6 +10,7 @@ import com.namazustudios.socialengine.rt.http.HttpManifestMetadata;
 import com.namazustudios.socialengine.rt.http.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import javax.inject.Inject;
 import javax.servlet.AsyncContext;
@@ -24,7 +26,13 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.Constants.MDC_HTTP_REQUEST;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 public class DispatcherServlet extends HttpServlet {
+
+    private static final long ASYNC_TIMEOUT = MILLISECONDS.convert(5, MINUTES);
 
     private static final Logger logger = LoggerFactory.getLogger(DispatcherServlet.class);
 
@@ -110,6 +118,8 @@ public class DispatcherServlet extends HttpServlet {
                                            final HttpServletResponse httpServletResponse) {
 
         final AsyncContext asyncContext = httpServletRequest.startAsync();
+        asyncContext.setTimeout(ASYNC_TIMEOUT);
+
 
         final Session session = getHttpSessionService().getSession(httpServletRequest);
         final HttpRequest httpRequest = getHttpRequestService().getAsyncRequest(asyncContext);
@@ -123,39 +133,46 @@ public class DispatcherServlet extends HttpServlet {
                                            final HttpRequest httpRequest,
                                            final HttpServletResponse httpServletResponse) {
 
+        final String prefix = httpRequest.toString();
         final AtomicBoolean complete = new AtomicBoolean();
+        MDC.put(MDC_HTTP_REQUEST, prefix);
+        logger.info("{} - Dispatching Request.", prefix);
 
         asyncContext.addListener(new AsyncListener() {
 
             @Override
             public void onComplete(AsyncEvent event) throws IOException {
-                logger.info("Completed request.");
+                logger.info("{} - Completed request.", prefix, event.getThrowable());
                 complete.set(true);
             }
 
             @Override
             public void onTimeout(AsyncEvent event) throws IOException {
-                logger.info("Request timed out.");
+                logger.warn("{} - Request timed out.", prefix, event.getThrowable());
                 complete.set(true);
             }
 
             @Override
             public void onError(AsyncEvent event) throws IOException {
-                logger.error("Error in AsyncContext.", event.getThrowable());
+                final HttpServletRequest r = (HttpServletRequest) event.getSuppliedRequest();
+                logger.error("{} - Error in async context.", prefix, event.getThrowable());
                 complete.set(true);
             }
 
             @Override
             public void onStartAsync(AsyncEvent event) throws IOException {
-                logger.info("Started AsyncRequest {}", event.getAsyncContext());
+                logger.info("{} - Started AsyncRequest {}", prefix, event.getThrowable());
             }
 
         });
 
         return response -> {
             if (!complete.getAndSet(true)) {
+                logger.info("{} - Sending response.", prefix);
                 assembleAndWrite(httpRequest, response, httpServletResponse);
                 asyncContext.complete();
+            } else {
+                logger.warn("{} - Request already completed", prefix);
             }
         };
 

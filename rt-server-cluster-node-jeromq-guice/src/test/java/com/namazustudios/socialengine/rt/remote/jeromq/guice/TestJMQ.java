@@ -90,8 +90,8 @@ public class TestJMQ {
                     request.send(socket);
 
                     while (!interrupted()) {
-                        if (poller.poll(1000) <= 0) {
-                            continue;
+                        if (poller.poll(1) < 0) {
+                            break;
                         } else if (poller.pollin(index)) {
                             break;
                         } else {
