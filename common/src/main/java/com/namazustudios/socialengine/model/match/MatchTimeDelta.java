@@ -8,7 +8,7 @@ import java.io.Serializable;
 /**
  * Created by patricktwohig on 7/20/17.
  */
-@ApiModel("A TimeDelta type for Match instance.")
+@ApiModel
 public class MatchTimeDelta extends TimeDelta<String, Match> implements Serializable {
 
     public static final String ROOT_DELTA_TOPIC = "match";

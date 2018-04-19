@@ -10,7 +10,6 @@ import javax.validation.constraints.Pattern;
 import static com.namazustudios.socialengine.Constants.Regexp.WORD_ONLY;
 
 @ApiModel(
-    value = "Matchmaking Applicaiont Configuration",
     description = "This configures the matchmaking system.  More specifically, this configures which scripts and" +
                   "methods will be called when a successful match has been made.")
 public class MatchmakingApplicationConfiguration extends ApplicationConfiguration {

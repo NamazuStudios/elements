@@ -1,13 +1,12 @@
 package com.namazustudios.socialengine.model;
 
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.io.Serializable;
 
-@ApiModel("Represents a delta, or change, in a resource.  This, for example, is used to poll for when an " +
-          "object (or set of objects) changes such that the client may update state accordingly.")
+@ApiModel(description = "Represents a delta, or change, in a resource.  This, for example, is used to poll for when " +
+                        "an object (or set of objects) changes such that the client may update state accordingly.")
 public abstract class TimeDelta<IdentifierT, ModelT> implements Serializable {
 
     @ApiModelProperty("The id of the object chich changed.  This must always be present and must match the snapshot's unique ID.")

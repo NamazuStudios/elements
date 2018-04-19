@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
  * Represents a notification registration with Firebase.  This associates a Firebase registration token with a
  * particular {@link Profile} in the database.
  */
-@ApiModel("Represents a Firebase Cloud Messaging Registration Token")
+@ApiModel(description = "Represents a Firebase Cloud Messaging Registration Token")
 public class FCMRegistration {
 
     @ApiModelProperty("The the unique id of the token stored in the database.")
