@@ -44,8 +44,6 @@ public class LuaResource implements Resource {
 
     public static final String RESOURCE_BUILTIN = "namazu.resource.this";
 
-    private static final PendingTask DEFAULT_PENDING_TASK = new PendingTask(new TaskId(), o -> {}, e -> {});
-
     private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
 
     private final Map<TaskId, PendingTask> taskIdPendingTaskMap = new HashMap<>();
@@ -181,7 +179,14 @@ public class LuaResource implements Resource {
      */
     @Override
     public void close() {
+
+        taskIdPendingTaskMap.values().forEach(pendingTask -> {
+            final ResourceDestroyedException resourceDestroyedException = new ResourceDestroyedException(getId());
+            pendingTask.fail(resourceDestroyedException);
+        });
+
         getLuaState().close();
+
     }
 
     @Override
@@ -239,7 +244,9 @@ public class LuaResource implements Resource {
     @Override
     public void resumeFromNetwork(final TaskId taskId, final Object networkResult) {
 
-        final PendingTask pendingTask = taskIdPendingTaskMap.getOrDefault(taskId, DEFAULT_PENDING_TASK);
+        final PendingTask pendingTask = taskIdPendingTaskMap.getOrDefault(taskId, new PendingTask(taskId,
+            o -> scriptLog.info("Discarding {} for task {}", o, taskId),
+            e -> scriptLog.info("Discarding exception for task {}", taskId, e)));
 
         final LuaState luaState = getLuaState();
         FinallyAction finalOperation = () -> luaState.setTop(0);
@@ -287,7 +294,9 @@ public class LuaResource implements Resource {
     @Override
     public void resumeWithError(TaskId taskId, Throwable throwable) {
 
-        final PendingTask pendingTask = taskIdPendingTaskMap.getOrDefault(taskId, DEFAULT_PENDING_TASK);
+        final PendingTask pendingTask = taskIdPendingTaskMap.getOrDefault(taskId, new PendingTask(taskId,
+            o -> scriptLog.info("Discarding {} for task {}", o, taskId),
+            e -> scriptLog.info("Discarding exception for task {}", taskId, e)));
 
         final LuaState luaState = getLuaState();
         FinallyAction finalOperation = () -> luaState.setTop(0);
@@ -337,7 +346,9 @@ public class LuaResource implements Resource {
     @Override
     public void resumeFromScheduler(final TaskId taskId, final double elapsedTime) {
 
-        final PendingTask pendingTask = taskIdPendingTaskMap.getOrDefault(taskId, DEFAULT_PENDING_TASK);
+        final PendingTask pendingTask = taskIdPendingTaskMap.getOrDefault(taskId, new PendingTask(taskId,
+            o -> scriptLog.info("Discarding {} for task {}", o, taskId),
+            e -> scriptLog.info("Discarding exception for task {}", taskId, e)));
 
         final LuaState luaState = getLuaState();
         FinallyAction finalOperation = () -> luaState.setTop(0);

@@ -267,7 +267,7 @@ public class CoroutineBuiltin implements Builtin {
 
     private long timeValueInMilliseconds(final LuaState luaState) {
 
-        if (luaState.getTop() < 2) {
+         if (luaState.getTop() < 2) {
             throw new IllegalArgumentException("time value must be specified");
         }
 

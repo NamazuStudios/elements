@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.servlet;
 
 import com.google.common.net.HttpHeaders;
+import com.namazustudios.socialengine.rt.Constants;
 import com.namazustudios.socialengine.rt.ExceptionMapper;
 import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.handler.Session;
@@ -9,6 +10,7 @@ import com.namazustudios.socialengine.rt.http.HttpManifestMetadata;
 import com.namazustudios.socialengine.rt.http.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import javax.inject.Inject;
 import javax.servlet.AsyncContext;
@@ -24,7 +26,13 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.Constants.MDC_HTTP_REQUEST;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 public class DispatcherServlet extends HttpServlet {
+
+    private static final long ASYNC_TIMEOUT = MILLISECONDS.convert(5, MINUTES);
 
     private static final Logger logger = LoggerFactory.getLogger(DispatcherServlet.class);
 
@@ -110,6 +118,8 @@ public class DispatcherServlet extends HttpServlet {
                                            final HttpServletResponse httpServletResponse) {
 
         final AsyncContext asyncContext = httpServletRequest.startAsync();
+        asyncContext.setTimeout(ASYNC_TIMEOUT);
+
 
         final Session session = getHttpSessionService().getSession(httpServletRequest);
         final HttpRequest httpRequest = getHttpRequestService().getAsyncRequest(asyncContext);
@@ -125,7 +135,8 @@ public class DispatcherServlet extends HttpServlet {
 
         final String prefix = httpRequest.toString();
         final AtomicBoolean complete = new AtomicBoolean();
-        logger.info("{} - Dispatching.", prefix);
+        MDC.put(MDC_HTTP_REQUEST, prefix);
+        logger.info("{} - Dispatching Request.", prefix);
 
         asyncContext.addListener(new AsyncListener() {
 
@@ -137,7 +148,7 @@ public class DispatcherServlet extends HttpServlet {
 
             @Override
             public void onTimeout(AsyncEvent event) throws IOException {
-                logger.info("{} - Request timed out.", prefix, event.getThrowable());
+                logger.warn("{} - Request timed out.", prefix, event.getThrowable());
                 complete.set(true);
             }
 
