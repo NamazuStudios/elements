@@ -19,7 +19,6 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(DynamicConnectionPool.MIN_CONNECTIONS, "10");
         properties.setProperty(DynamicConnectionPool.MAX_CONNECTIONS, "10000");
         properties.setProperty(JeroMQConnectionDemultiplexer.BIND_ADDR, "tcp://*:28883");
-        properties.setProperty(Constants.HTTP_TIMEOUT_MSEC, "180000");
         properties.setProperty(Constants.HANDLER_TIMEOUT_MSEC, "180000");
         return properties;
     }

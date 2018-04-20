@@ -98,7 +98,7 @@ public interface HandlerContext {
 
         final Logger logger = LoggerFactory.getLogger(getClass());
 
-        final Future<Object> objectFuture = invokeSingleUseHandlerAsync(
+        final Future<Object> objectFuture = invokeRetainedHandlerAsync(
                 o -> logger.debug("Got response: {}", o),
                 th -> logger.error("Got error from remote", th),
                 attributes, module, method, args);

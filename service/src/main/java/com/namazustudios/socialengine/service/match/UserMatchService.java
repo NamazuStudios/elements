@@ -150,15 +150,11 @@ public class UserMatchService implements MatchService {
         final Profile profile = getCurrentProfileSupplier().get();
         final Context context = getContextFactory().getContextForApplication(profile.getApplication().getId());
 
-        final Path path = new Path(randomUUID().toString());
-
         final Attributes attributes = new SimpleAttributes.Builder()
             .from(attributesProvider.get(), (n, v) -> v instanceof Serializable)
             .build();
 
-        final ResourceId resourceId = context.getResourceContext().createAttributes(module, path, attributes);
-
-        final Object result = context.getResourceContext().invoke(resourceId, method,
+        final Object result = context.getHandlerContext().invokeRetainedHandler(attributes, module, method,
             successfulMatchTuple.getPlayerMatch(),
             successfulMatchTuple.getOpponentMatch());
 
