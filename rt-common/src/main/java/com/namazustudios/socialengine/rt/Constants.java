@@ -50,6 +50,20 @@ public interface Constants {
      */
     String MAX_ENVELOPE_SIZE = "com.namazustudios.socialengine.rt.MAX_ENVELOPE_SIZE";
 
+    /**
+     * The MDC Context key for the HTTP request.
+     */
     String MDC_HTTP_REQUEST = "HTTP_REQUEST";
+
+    /**
+     * The timeout for the {@link HandlerContext} in milliseconds.
+     */
+    String HTTP_TIMEOUT_MSEC = "com.namazustudios.socialengine.rt.HTTP_TIMEOUT_MSEC";
+
+    /**
+     * The timeout for the {@link HandlerContext} in milliseconds.
+     */
+    String HANDLER_TIMEOUT_MSEC = "com.namazustudios.socialengine.rt.HANDLER_TIMEOUT_MSEC";
+
 
 }
