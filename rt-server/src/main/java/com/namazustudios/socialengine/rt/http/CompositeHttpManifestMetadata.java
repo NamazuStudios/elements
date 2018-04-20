@@ -85,7 +85,7 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
                 throw new BadRequestException(ex);
             }
 
-            return consumedMediaType.is(contentType);
+            return contentType.is(consumedMediaType);
 
         };
 
@@ -253,7 +253,7 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
             .getConsumesContentByType()
             .values()
             .stream()
-            .filter(c -> MediaType.parse(c.getType()).is(contentType))
+            .filter(c -> contentType.is(MediaType.parse(c.getType())))
             .collect(Collectors.toList());
 
         if (preferredContentList.size() > 1) {
