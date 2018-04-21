@@ -58,7 +58,8 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
             .withMaximumConnections(250)
             .withTimeout(60)
             .withNumberOfDispatchers(10)
-            .withHandlerTimeout(3, MINUTES));
+            .withHandlerTimeout(3, MINUTES)
+            .withSchedulerThreads(1));
 
         final Injector nodeInjector = Guice.createInjector(nodeModules);
 

@@ -65,5 +65,9 @@ public interface Constants {
      */
     String HANDLER_TIMEOUT_MSEC = "com.namazustudios.socialengine.rt.HANDLER_TIMEOUT_MSEC";
 
+    /**
+     * The number of threads used by the {@link SchedulerContext} for timing/scheduling.
+     */
+    String SCHEDULER_THREADS = "com.namazustudios.socialengine.rt.SCHEDULER_THREADS";
 
 }

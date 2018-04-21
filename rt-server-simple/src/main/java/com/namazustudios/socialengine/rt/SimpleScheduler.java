@@ -24,16 +24,15 @@ public class SimpleScheduler implements Scheduler {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleScheduler.class);
 
-    /**
-     * The SimpleScheduler uses an {@link ExecutorService} to process requests and dispatch
-     * events to the various {@link Resource}s.  This names the specific {@link ExecutorService}
-     * to use for injectiong using {@link Named}
-     */
     public static final String SCHEDULED_EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.SimpleScheduler.scheduledExecutorService";
+
+    public static final String DISPATCHER_EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.SimpleScheduler.dispatcherExecutorService";
 
     private ResourceLockService resourceLockService;
 
     private ResourceService resourceService;
+
+    private ExecutorService dispatcherExecutorService;
 
     private ScheduledExecutorService scheduledExecutorService;
 
@@ -44,14 +43,14 @@ public class SimpleScheduler implements Scheduler {
     public <T> Future<T> perform(final ResourceId resourceId,
                                  final Function<Resource, T> operation,
                                  final Consumer<Throwable> failure) {
-        return getScheduledExecutorService().submit(protectedCallable(resourceId, operation, failure));
+        return getDispatcherExecutorService().submit(protectedCallable(resourceId, operation, failure));
     }
 
     @Override
     public <T> Future<T> perform(final Path path,
                                  final Function<Resource, T> operation,
                                  final Consumer<Throwable> failure) {
-        return getScheduledExecutorService().submit(protectedCallable(path, operation, failure));
+        return getDispatcherExecutorService().submit(protectedCallable(path, operation, failure));
     }
 
     @Override
@@ -59,7 +58,9 @@ public class SimpleScheduler implements Scheduler {
                                            final long time, final TimeUnit timeUnit,
                                            final Function<Resource, T> operation,
                                            final Consumer<Throwable> failure) {
-        return getScheduledExecutorService().schedule(protectedCallable(resourceId, operation, failure), time, timeUnit);
+        final FutureTask<T> task = new FutureTask<T>(protectedCallable(resourceId, operation, failure));
+        getScheduledExecutorService().schedule(task, time, timeUnit);
+        return task;
     }
 
     private <T> Callable<T> protectedCallable(final ResourceId resourceId,
@@ -109,6 +110,15 @@ public class SimpleScheduler implements Scheduler {
             logger.trace("Unlocked resource {}", resource.getId());
         }
 
+    }
+
+    public ExecutorService getDispatcherExecutorService() {
+        return dispatcherExecutorService;
+    }
+
+    @Inject
+    public void setDispatcherExecutorService(@Named(DISPATCHER_EXECUTOR_SERVICE) ExecutorService dispatcherExecutorService) {
+        this.dispatcherExecutorService = dispatcherExecutorService;
     }
 
     public ScheduledExecutorService getScheduledExecutorService() {

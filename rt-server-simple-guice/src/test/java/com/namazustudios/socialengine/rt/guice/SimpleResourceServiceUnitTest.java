@@ -240,7 +240,7 @@ public class SimpleResourceServiceUnitTest {
         @Override
         protected void configure() {
 
-            install(new SimpleServicesModule());
+            install(new SimpleServicesModule().withSchedulerThreads(1));
 
             final AssetLoader mockAssetLoader = Mockito.mock(AssetLoader.class);
             bind(AssetLoader.class).toInstance(mockAssetLoader);

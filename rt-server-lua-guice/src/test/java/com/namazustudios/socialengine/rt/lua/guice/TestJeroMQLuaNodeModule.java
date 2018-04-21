@@ -21,7 +21,12 @@ public class TestJeroMQLuaNodeModule extends PrivateModule {
 
     private final JeroMQNodeModule jeroMQNodeModule = new JeroMQNodeModule();
 
+    private final SimpleServicesModule simpleServicesModule = new SimpleServicesModule();
+
     private final SimpleHandlerContextModule simpleHandlerContextModule = new SimpleHandlerContextModule();
+
+    private final SimpleSchedulerContextModule simpleSchedulerContextModule = new SimpleSchedulerContextModule();
+
 
     @Override
     protected void configure() {
@@ -43,13 +48,13 @@ public class TestJeroMQLuaNodeModule extends PrivateModule {
         });
 
         bind(Context.class).to(SimpleContext.class).asEagerSingleton();
-        install(new SimpleServicesModule());
+        install(simpleServicesModule);
         install(new SimpleResourceContextModule());
         install(new SimpleIndexContextModule());
-        install(new SimpleSchedulerContextModule());
         install(new GuiceIoCResolverModule());
         install(jeroMQNodeModule);
         install(simpleHandlerContextModule);
+        install(simpleSchedulerContextModule);
 
     }
 
@@ -149,6 +154,17 @@ public class TestJeroMQLuaNodeModule extends PrivateModule {
      */
     public TestJeroMQLuaNodeModule withHandlerTimeout(final long duration, final TimeUnit sourceUnits) {
         handlerTimeoutBindAction = () -> simpleHandlerContextModule.withTimeout(duration, sourceUnits);
+        return this;
+    }
+
+    /**
+     * {@see {@link SimpleServicesModule#withSchedulerThreads(int)}}
+     *
+     * @param schedulerThreads scheduler threads
+     * @return this instance
+     */
+    public TestJeroMQLuaNodeModule withSchedulerThreads(final int schedulerThreads) {
+        simpleServicesModule.withSchedulerThreads(schedulerThreads);
         return this;
     }
 

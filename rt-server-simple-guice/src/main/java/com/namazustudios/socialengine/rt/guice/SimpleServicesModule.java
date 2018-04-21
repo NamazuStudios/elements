@@ -1,16 +1,23 @@
 package com.namazustudios.socialengine.rt.guice;
 
+import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.provider.CachedThreadPoolProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Provider;
 import java.util.Deque;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
+import static com.namazustudios.socialengine.rt.SimpleScheduler.DISPATCHER_EXECUTOR_SERVICE;
 import static com.namazustudios.socialengine.rt.SimpleScheduler.SCHEDULED_EXECUTOR_SERVICE;
 import static java.lang.String.format;
 import static java.util.concurrent.Executors.newScheduledThreadPool;
@@ -23,11 +30,22 @@ import static java.util.concurrent.Executors.newScheduledThreadPool;
  */
 public class SimpleServicesModule extends PrivateModule {
 
-    private static final int CORE_POOL_SIZE = 500;
+
+    private Runnable bindSchedulerThreads = () -> {};
+
+    public SimpleServicesModule withSchedulerThreads(int threads) {
+        bindSchedulerThreads = () -> bind(Integer.class)
+                .annotatedWith(named(SCHEDULER_THREADS))
+                .toInstance(threads);
+        return this;
+    }
 
     @Override
     protected void configure() {
 
+        bindSchedulerThreads.run();
+
+        final Provider<Integer> schedulerPoolSizeProvider = getProvider(Key.get(Integer.class, named(SCHEDULER_THREADS)));
 
         // The actual underlying services
         bind(Scheduler.class).to(SimpleScheduler.class).asEagerSingleton();
@@ -35,24 +53,29 @@ public class SimpleServicesModule extends PrivateModule {
         bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();
 
         bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>() {})
-                .toProvider(() -> new ProxyLockService<>(Deque.class));
+            .toProvider(() -> new ProxyLockService<>(Deque.class));
 
         bind(new TypeLiteral<OptimisticLockService<ResourceId>>() {})
-                .to(SimpleResourceIdOptimisticLockService.class);
+            .to(SimpleResourceIdOptimisticLockService.class);
 
         bind(ScheduledExecutorService.class)
-                .annotatedWith(Names.named(SCHEDULED_EXECUTOR_SERVICE))
-                .toProvider(() -> scheduledExecutorService(SCHEDULED_EXECUTOR_SERVICE));
+            .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE))
+            .toProvider(() -> scheduledExecutorService(schedulerPoolSizeProvider, SCHEDULED_EXECUTOR_SERVICE));
+
+        bind(ExecutorService.class)
+            .annotatedWith(named(DISPATCHER_EXECUTOR_SERVICE))
+            .toProvider(new CachedThreadPoolProvider(SimpleScheduler.class));
 
         expose(Scheduler.class);
         expose(ResourceService.class);
 
     }
 
-    private ScheduledExecutorService scheduledExecutorService(final String name) {
+    private ScheduledExecutorService scheduledExecutorService(final Provider<Integer> schedulerPoolSizeProvider,
+                                                              final String name) {
         final AtomicInteger threadCount = new AtomicInteger();
         final Logger logger = LoggerFactory.getLogger(SCHEDULED_EXECUTOR_SERVICE);
-        return newScheduledThreadPool(CORE_POOL_SIZE, r -> newThread(r, name, threadCount, logger));
+        return newScheduledThreadPool(schedulerPoolSizeProvider.get(), r -> newThread(r, name, threadCount, logger));
     }
 
     private Thread newThread(final Runnable runnable, final String name,
