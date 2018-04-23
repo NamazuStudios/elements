@@ -13,6 +13,7 @@ import com.namazustudios.socialengine.fts.TopDocsSearchResult;
 import com.namazustudios.socialengine.model.Pagination;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
@@ -87,18 +88,18 @@ public class MongoDBUtils {
             final Query<MongoModelT> query, final int offset, final int count,
             final Function<MongoModelT,  ModelT> function) {
 
+
         final Pagination<ModelT> pagination = new Pagination<>();
 
         pagination.setOffset(offset);
         pagination.setTotal((int) query.count());
 
-        final int limit = min(queryMaxResults, count);
+        final int limit = min(getQueryMaxResults(), count);
 
         final Iterable<ModelT> userIterable;
 
         final List<ModelT> modelTList;
-
-        List<MongoModelT> l = query.asList();
+        final List<MongoModelT> l = query.asList(new FindOptions().skip(offset));
 
         modelTList = stream(query.spliterator(), false)
             .map(function)
