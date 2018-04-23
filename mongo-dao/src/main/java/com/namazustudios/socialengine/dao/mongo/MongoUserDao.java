@@ -206,7 +206,7 @@ public class MongoUserDao implements UserDao {
         );
 
         query.and(
-            query.criteria("aFctive").equal(false)
+            query.criteria("active").equal(false)
         );
 
         operations.set("active", true);
