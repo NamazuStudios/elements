@@ -7,10 +7,8 @@ import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.TimeDelta;
 import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
 import com.namazustudios.socialengine.model.match.Match;
-import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.dao.ContextFactory;
@@ -29,7 +27,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -90,31 +87,31 @@ public class UserMatchService implements MatchService {
             throw new InvalidDataException("must not specifcy opponent when creating a match.");
         }
 
-        final MatchDao.TimeDeltaTuple matchCreationTuple = getMatchDao().createMatchAndLogDelta(match);
+        final Match newMatch = getMatchDao().createMatch(match);
 
-        final Topic<MatchTimeDelta> matchTimeDeltaTopic;
+        final Topic<Match> matchTopic;
 
-        matchTimeDeltaTopic = getTopicService()
-            .getTopicForTypeNamed(MatchTimeDelta.class, MatchTimeDelta.ROOT_DELTA_TOPIC)
+        matchTopic = getTopicService()
+            .getTopicForTypeNamed(Match.class, Match.ROOT_TOPIC)
             .getSubtopicNamed(profile.getId())
-            .getSubtopicNamed(matchCreationTuple.getTimeDelta().getId());
+            .getSubtopicNamed(newMatch.getId());
 
-        try (final Topic.Publisher<MatchTimeDelta> matchTimeDeltaPublisher = matchTimeDeltaTopic.getPublisher()) {
+        try (final Topic.Publisher<Match> matchTopicPublisher = matchTopic.getPublisher()) {
 
             final Matchmaker matchmaker = getMatchDao().getMatchmaker(matchmakingApplicationConfiguration.getAlgorithm());
-            matchTimeDeltaPublisher.accept(matchCreationTuple.getTimeDelta());
+            matchTopicPublisher.accept(newMatch);
 
             final Matchmaker.SuccessfulMatchTuple successfulMatchTuple;
-            successfulMatchTuple = matchmaker.attemptToFindOpponent(matchCreationTuple.getMatch());
+            successfulMatchTuple = matchmaker.attemptToFindOpponent(newMatch);
 
-            final Stream<MatchDao.TimeDeltaTuple> matchTimeDeltaStream;
-            matchTimeDeltaStream = getMatchDao().finalize(successfulMatchTuple, () -> finalize(successfulMatchTuple, matchmakingApplicationConfiguration));
-            matchTimeDeltaStream.forEach(t -> matchTimeDeltaPublisher.accept(t.getTimeDelta()));
+            final Match completeMatch;
+            completeMatch = getMatchDao().finalize(successfulMatchTuple, () -> finalize(successfulMatchTuple, matchmakingApplicationConfiguration));
+            matchTopicPublisher.accept(completeMatch);
 
             return handleSuccessfulMatch(successfulMatchTuple);
 
         } catch (NoSuitableMatchException ex) {
-            return redactOpponentUser(matchCreationTuple.getMatch());
+            return redactOpponentUser(newMatch);
         }
 
     }

@@ -36,7 +36,7 @@ public class MongoMatchDaoCreateDeleteIntegrationTest {
 
         final Profile profile = getMatchingMockObjects().makeMockProfile(user, application);
 
-        final Match match = getMatchDao().createMatchAndLogDelta(makeMockMatch(profile)).getMatch();
+        final Match match = getMatchDao().createMatch(makeMockMatch(profile)).getMatch();
 
         final Query<MongoMatchDelta> preDeleteQuery = getAdvancedDatastore().createQuery(MongoMatchDelta.class)
                 .field("expiry").doesNotExist()

@@ -1,11 +1,8 @@
 package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.TimeDelta;
 import com.namazustudios.socialengine.model.match.Match;
-import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -61,60 +58,20 @@ public interface MatchService {
     void deleteMatch(String matchId);
 
     /**
-     * Gets a list of {@link TimeDelta <String, Match>} instances starting at the timestamp.
+     * Waits for a {@link Match} to be updated by another request.  Upon update, this will pass the update into the
+     * supplied supplied {@link Consumer}.  Either {@link Consumer} will be called exactly once
      *
+     * {@see {@link Topic.Subscription#subscribeNext(Consumer, Consumer)}} on the underpinnings on how this works.
+     *
+     * @param matchId the match ID {@link Match#getId()}.
      * @param timeStamp timeStamp
+     * @param matchConsumer a {@link Consumer<Match>} used to receive the {@link Match} instance
+     * @param exceptionConsumer a {@link Consumer<Exception>} used to receive any error encountered in the process
      *
-     * @return all availble {@link TimeDelta} instances
-     */
-    List<TimeDelta<String, Match>> getDeltas(long timeStamp);
-
-    /**
-     * Gets a lists of {@link TimeDelta<String, Match>} instances starting at the timestamp
-     * for the {@link Match} with the particular ID.
-     *
-     * @param timeStamp the timestamp of the earliest delta to find
-     * @param matchId the match ID as represented by {@link Match#getId()}
-     *
-     * @return a {@link List<TimeDelta<String, Match>>} instances.
-     */
-    List<TimeDelta<String,Match>> getDeltasForMatch(long timeStamp, String matchId);
-
-    /**
-     * Waits for a {@link List<TimeDelta<String, Match>>} to become available as changes are
-     * made to {@link Match} instances.  This will listen for changes to all {@link Match}
-     * instances.
-     *
-     * Either supplied {@link Consumer} instance will be called exactly once.
-     *
-     * {@see {@link Topic.Subscription#subscribeNext(Consumer, Consumer)}}
-     *
-     * @param timeStamp timeStamp
-     *
-     * @param timeDeltaListConsumer
      * @return a {@link Runnable} which may be used to cancel the pending request
      */
-    Topic.Subscription waitForDeltas(long timeStamp,
-                                     final Consumer<List<MatchTimeDelta>> timeDeltaListConsumer,
-                                     final Consumer<Exception> exceptionConsumer);
-
-    /**
-     * Waits for a {@link List<TimeDelta<String, Match>>} to become available as changes are
-     * made to {@link Match} instances.  This will listen for changes to a specific {@link Match}
-     * instance.
-     *
-     * Either supplied {@link Consumer} instance will be called exactly once.
-     *
-     * {@see {@link Topic.Subscription#subscribeNext(Consumer, Consumer)}}
-     *
-     * @param timeStamp timeStamp
-     * @param matchId the Match ID as specified by {@link Match#getId()}
-     *
-     * @param timeDeltaListConsumer
-     * @return a {@link Runnable} which may be used to cancel the pending request
-     */
-    Topic.Subscription waitForDeltas(long timeStamp, String matchId,
-                                    final Consumer<List<MatchTimeDelta>> timeDeltaListConsumer,
-                                    final Consumer<Exception> exceptionConsumer);
+    Topic.Subscription waitForUpdate(
+        String matchId, long timeStamp,
+        Consumer<Match> matchConsumer, Consumer<Exception> exceptionConsumer);
 
 }

@@ -17,6 +17,8 @@ import java.io.Serializable;
         "server may modify or delete matches based on a variety of circumstances.")
 public class Match implements Serializable {
 
+    public static final String ROOT_TOPIC = "match";
+
     @ApiModelProperty("The unique ID of the match.")
     private String id;
 

@@ -146,7 +146,7 @@ public class MongoMatchDao implements MatchDao {
     }
 
     @Override
-    public TimeDeltaTuple createMatchAndLogDelta(Match match) {
+    public TimeDeltaTuple createMatch(Match match) {
 
         validate(match);
 

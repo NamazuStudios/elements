@@ -75,7 +75,7 @@ public class MongoMatchmakerIntegrationTest {
         final Profile profilea = getMatchingMockObjects().makeMockProfile(usera, application);
         final Profile profileb = getMatchingMockObjects().makeMockProfile(userb, application);
 
-        final Match matcha = getMatchDao().createMatchAndLogDelta(makeMockMatch(profilea)).getMatch();
+        final Match matcha = getMatchDao().createMatch(makeMockMatch(profilea)).getMatch();
 
         try {
             getMatchDao().getMatchmaker(matchingAlgorithm).attemptToFindOpponent(matcha);
@@ -84,7 +84,7 @@ public class MongoMatchmakerIntegrationTest {
             logger.info("Caught expected exception.");
         }
 
-        final Match matchb = getMatchDao().createMatchAndLogDelta(makeMockMatch(profileb)).getMatch();
+        final Match matchb = getMatchDao().createMatch(makeMockMatch(profileb)).getMatch();
 
         final Matchmaker.SuccessfulMatchTuple successfulMatchTuple;
         successfulMatchTuple = getMatchDao().getMatchmaker(FIFO).attemptToFindOpponent(matchb);

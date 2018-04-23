@@ -2,16 +2,14 @@ package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.Headers;
-import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.TimeDelta;
 import com.namazustudios.socialengine.model.match.Match;
-import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.MatchService;
 import com.namazustudios.socialengine.service.Topic;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -23,11 +21,10 @@ import javax.ws.rs.*;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static java.lang.Math.min;
-import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -87,102 +84,62 @@ public class MatchResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
         value = "Gets a Specific Match",
-        notes = "Gets a specific match given the match's unique ID.")
-    public Match getMatch(@PathParam("matchId") String matchId) {
-
-        matchId = nullToEmpty(matchId).trim();
-
-        if (matchId.isEmpty()) {
-            throw new NotFoundException();
-        }
-
-        return getMatchService().getMatch(matchId);
-
-    }
-
-    @GET
-    @Path("delta")
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(
-        value = "Gets Deltas of All Matches",
-        notes = "Streams a list of TimeDelta objects for any or all match.",
-        response = MatchTimeDelta.class,
+        notes = "Gets a specific match given the match's unique ID.  Additionally, it is possible to instruct the " +
+                "API to wait for a period of time before sending the response.  The request will intentionally hang " +
+                "until the requested Match with ID has been updated in the database.",
+        response = Match.class,
         responseContainer = "List")
-    public void getDeltasForMatches(
-
-            @Suspended
-            final AsyncResponse asyncResponse,
-
-            @QueryParam("timeStamp")
-            @DefaultValue("0")
-            @ApiParam("Filters deltas since the specified sequence.")
-            final long timeStamp,
-
-            @HeaderParam(Headers.REQUEST_LONG_POLL_TIMEOUT)
-            @ApiParam(Headers.REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
-            final Long longPollTimeout) {
-
-        final List<TimeDelta<String, Match>> timeDeltaList = getMatchService().getDeltas(timeStamp);
-
-        if (longPollTimeout == null || !timeDeltaList.isEmpty()) {
-            asyncResponse.resume(timeDeltaList);
-        } else {
-
-            final Topic.Subscription subscription = getMatchService().waitForDeltas(
-                timeStamp,
-                diffList -> asyncResponse.resume(diffList),
-                exception -> asyncResponse.resume(exception));
-
-            asyncResponse.setTimeoutHandler(r -> {
-                subscription.close();
-                r.resume(emptyList());
-            });
-
-            asyncResponse.setTimeout(calculateLongPollTimeout(longPollTimeout), SECONDS);
-
-        }
-
-    }
-
-    @GET
-    @Path("{matchId}/delta")
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(
-            value = "Gets Deltas for a single Match",
-            notes = "Streams a list of TimeDelta objects for any or all match.",
-            response = MatchTimeDelta.class,
-            responseContainer = "List")
-    public void getDeltasForMatch(
-
-            @Suspended
-            final AsyncResponse asyncResponse,
-
+    public void getMatch(
             @PathParam("matchId")
             final String matchId,
 
-            @QueryParam("timeStamp")
+            @Suspended
+            final AsyncResponse asyncResponse,
+
             @DefaultValue("0")
-            @ApiParam("Filters deltas since the specified sequence.")
-            final long timeStamp,
+            @QueryParam("lastUpdatedTimestamp")
+            @ApiParam("Used in conjuction with the long poll paramter.  The match will return immediately only if " +
+                      "supplied timestamp is before than the current time stamp.")
+            final long lastUpdatedTimestamp,
 
             @HeaderParam(Headers.REQUEST_LONG_POLL_TIMEOUT)
             @ApiParam(Headers.REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
             final Long longPollTimeout) {
 
-        final List<TimeDelta<String, Match>> timeDeltaList = getMatchService().getDeltasForMatch(timeStamp, matchId);
+        final String _matchId = nullToEmpty(matchId).trim();
 
-        if (longPollTimeout == null || !timeDeltaList.isEmpty()) {
-            asyncResponse.resume(timeDeltaList);
+        if (_matchId.isEmpty()) {
+            throw new NotFoundException();
+        }
+
+        final Match match = getMatchService().getMatch(_matchId);
+
+        if (longPollTimeout == null || lastUpdatedTimestamp < match.getLastUpdatedTimestamp()) {
+            asyncResponse.resume(match);
         } else {
 
-            final Topic.Subscription subscription = getMatchService().waitForDeltas(
-                timeStamp, matchId,
-                diffList -> asyncResponse.resume(diffList),
-                exception -> asyncResponse.resume(exception));
+            final AtomicReference<Topic.Subscription> subscription = new AtomicReference<>();
+
+            subscription.set(getMatchService().waitForUpdate(
+                _matchId, lastUpdatedTimestamp,
+                m -> {
+                    try {
+                        asyncResponse.resume(m);
+                    } finally {
+                        subscription.get().close();
+                    }
+                },
+                ex -> {
+                    try {
+                        asyncResponse.resume(ex);
+                    } finally {
+                        subscription.get().close();
+                    }
+                }));
 
             asyncResponse.setTimeoutHandler(r -> {
-                subscription.close();
-                r.resume(emptyList());
+                subscription.get().close();
+                r.resume(match);
             });
 
             asyncResponse.setTimeout(calculateLongPollTimeout(longPollTimeout), SECONDS);

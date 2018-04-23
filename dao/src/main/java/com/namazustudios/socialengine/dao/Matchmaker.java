@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.dao;
 
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.match.Match;
-import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 
 import java.util.List;
@@ -65,15 +64,6 @@ public interface Matchmaker {
          * @return
          */
         Match getOpponentMatch();
-
-        /**
-         * A list of {@link MatchTimeDelta<MatchTimeDelta>} instances which were generated
-         * as the result of the requested operation.  This may include deltas for both
-         * players involved in the match.
-         *
-         * @return a {@Link List<MatchTimeDelta>}
-         */
-        List<MatchTimeDelta> getMatchDeltas();
 
     }
 
