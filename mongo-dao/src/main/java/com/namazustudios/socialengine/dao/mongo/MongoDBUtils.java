@@ -101,7 +101,7 @@ public class MongoDBUtils {
         final List<ModelT> modelTList;
         final List<MongoModelT> l = query.asList(new FindOptions().skip(offset));
 
-        modelTList = stream(query.spliterator(), false)
+        modelTList = l.stream()
             .map(function)
             .limit(limit)
             .collect(Collectors.toList());
