@@ -58,9 +58,9 @@ public class SimpleScheduler implements Scheduler {
                                            final long time, final TimeUnit timeUnit,
                                            final Function<Resource, T> operation,
                                            final Consumer<Throwable> failure) {
-        final FutureTask<T> task = new FutureTask<T>(protectedCallable(resourceId, operation, failure));
-        getScheduledExecutorService().schedule(task, time, timeUnit);
-        return task;
+        final FutureTask<T> scheduled = new FutureTask<T>(protectedCallable(resourceId, operation, failure));
+        getScheduledExecutorService().schedule(() -> getDispatcherExecutorService().submit(scheduled), time, timeUnit);
+        return scheduled;
     }
 
     private <T> Callable<T> protectedCallable(final ResourceId resourceId,
