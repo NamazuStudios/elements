@@ -1,20 +1,18 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.google.common.collect.Streams;
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
 import com.namazustudios.socialengine.dao.mongo.model.MongoMatch;
-import com.namazustudios.socialengine.dao.mongo.model.MongoMatchDelta;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.match.Match;
-import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.*;
@@ -30,6 +28,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.namazustudios.socialengine.model.match.MatchingAlgorithm.FIFO;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.fail;
@@ -75,19 +74,22 @@ public class MongoMatchmakerIntegrationTest {
         final Profile profilea = getMatchingMockObjects().makeMockProfile(usera, application);
         final Profile profileb = getMatchingMockObjects().makeMockProfile(userb, application);
 
-        final Match matcha = getMatchDao().createMatch(makeMockMatch(profilea)).getMatch();
+        final Match matcha = getMatchDao().createMatch(makeMockMatch(profilea));
 
         try {
-            getMatchDao().getMatchmaker(matchingAlgorithm).attemptToFindOpponent(matcha);
+            getMatchDao().getMatchmaker(matchingAlgorithm)
+                         .attemptToFindOpponent(matcha,  (p, o) -> "fail");
             fail("Matched when not matches were expected.");
         } catch (NoSuitableMatchException ex) {
             logger.info("Caught expected exception.");
         }
 
-        final Match matchb = getMatchDao().createMatch(makeMockMatch(profileb)).getMatch();
+        final Match matchb = getMatchDao().createMatch(makeMockMatch(profileb));
 
         final Matchmaker.SuccessfulMatchTuple successfulMatchTuple;
-        successfulMatchTuple = getMatchDao().getMatchmaker(FIFO).attemptToFindOpponent(matchb);
+        successfulMatchTuple = getMatchDao()
+            .getMatchmaker(FIFO)
+            .attemptToFindOpponent(matchb, (p, o) -> Stream.of(p.getId(), o.getId()).sorted().collect(joining("+")));
 
         // Cross validates that the matches were made properly
         crossValidateMatch(successfulMatchTuple, profileb, profilea);
@@ -100,6 +102,9 @@ public class MongoMatchmakerIntegrationTest {
 
         assertNull(mongoMatcha.getExpiry());
         assertNull(mongoMatchb.getExpiry());
+
+        assertEquals(mongoMatcha.getGameId(), Stream.of(matcha.getId(), matchb.getId()).sorted().collect(joining("+")));
+        assertEquals(mongoMatchb.getGameId(), Stream.of(matcha.getId(), matchb.getId()).sorted().collect(joining("+")));
 
         intermediateMatches.add(matcha);
         intermediateMatches.add(matchb);
@@ -116,7 +121,6 @@ public class MongoMatchmakerIntegrationTest {
         match.setPlayer(profile);
         match.setScheme("pvp");
         return match;
-
     }
 
     private void crossValidateMatch(final Matchmaker.SuccessfulMatchTuple successfulMatchTuple,
@@ -143,33 +147,6 @@ public class MongoMatchmakerIntegrationTest {
             .toArray(new Object[][]{});
     }
 
-    @Test(dataProvider = "intermediateMatchDataProvider", dependsOnMethods = "testMatch")
-    public void testDeltasForMatch(final Match match) {
-        final Profile player = match.getPlayer();
-        List<MatchTimeDelta> matchTimeDeltas;
-
-        // Because we're trying to examine the list of deltas for a specific match, burning down the list should always
-        // reduce by one until we get zero match deltas.
-
-        matchTimeDeltas = getMatchDao().getDeltasForPlayerAfter(player.getId(), 0, match.getId());
-        assertFalse(matchTimeDeltas.isEmpty(), "Expected at least one match.");
-
-        while (!matchTimeDeltas.isEmpty()) {
-
-            final long timestamp = matchTimeDeltas.stream()
-                .mapToLong(matchTimeDelta -> matchTimeDelta.getTimeStamp())
-                .reduce(Math::min)
-                .getAsLong();
-
-            final List<MatchTimeDelta> intermediateTimeDeltas;
-            intermediateTimeDeltas = getMatchDao().getDeltasForPlayerAfter(player.getId(), timestamp, match.getId());
-            assertEquals(intermediateTimeDeltas.size(), matchTimeDeltas.size() - 1);
-            matchTimeDeltas = intermediateTimeDeltas;
-
-        }
-
-    }
-
     @DataProvider
     public Object[][] intermediateProfileDataProvider() {
         return intermediateProfiles
@@ -179,32 +156,6 @@ public class MongoMatchmakerIntegrationTest {
                 .toArray(new Object[][]{});
     }
 
-    @Test(dataProvider = "intermediateProfileDataProvider", dependsOnMethods = "testMatch")
-    public void testDeltasForPlayer(final Profile player) {
-        List<MatchTimeDelta> matchTimeDeltas;
-
-        // This is a tricky scenario to test because there can be any number of matches pending for a specific user,
-        // however we can test that the list burns-down properly by seeing if we get progressively fewer match deltas
-        // until the count reaches zero.
-
-        matchTimeDeltas = getMatchDao().getDeltasForPlayerAfter(player.getId(), 0);
-        assertFalse(matchTimeDeltas.isEmpty(), "Expected at least one match.");
-
-        while (!matchTimeDeltas.isEmpty()) {
-
-            final long timestamp = matchTimeDeltas.stream()
-                    .mapToLong(matchTimeDelta -> matchTimeDelta.getTimeStamp())
-                    .reduce(Math::min)
-                    .getAsLong();
-
-            final List<MatchTimeDelta> intermediateTimeDeltas;
-            intermediateTimeDeltas = getMatchDao().getDeltasForPlayerAfter(player.getId(), timestamp);
-            assertTrue(intermediateTimeDeltas.size() < matchTimeDeltas.size());
-            matchTimeDeltas = intermediateTimeDeltas;
-
-        }
-
-    }
 
     @DataProvider
     public Object[][] intermediateSuccessfulMatchTupleProvider() {
@@ -215,67 +166,14 @@ public class MongoMatchmakerIntegrationTest {
             .toArray(new Object[][]{});
     }
 
-    @Test(dataProvider = "intermediateSuccessfulMatchTupleProvider", dependsOnMethods = "testMatch")
-    public void testFinalizeMatchingProcess(final Matchmaker.SuccessfulMatchTuple successfulMatchTuple) {
-
-        final UUID gameUUID = randomUUID();
-        final Stream<MatchDao.TimeDeltaTuple> first = getMatchDao().finalize(successfulMatchTuple, gameUUID::toString);
-
-        final Stream<MatchDao.TimeDeltaTuple> second = getMatchDao().finalize(successfulMatchTuple, () -> {
-            fail("Did not expect a call here.");
-            return null;
-        });
-
-        assertEquals(first.count(), 2, "Expected two results for first call.");
-        assertEquals(second.count(), 0, "Expected zero results for second call.");
-
-        final Match matcha = getMatchDao().getMatchForPlayer(
-            successfulMatchTuple.getPlayerMatch().getPlayer().getId(),
-            successfulMatchTuple.getPlayerMatch().getId());
-
-        final Match matchb = getMatchDao().getMatchForPlayer(
-                successfulMatchTuple.getOpponentMatch().getPlayer().getId(),
-                successfulMatchTuple.getOpponentMatch().getId());
-
-        assertEquals(matcha.getGameId(), gameUUID.toString());
-        assertEquals(matchb.getGameId(), gameUUID.toString());
-
-        final MongoMatch mongoMatcha;
-        mongoMatcha = getAdvancedDatastore().get(MongoMatch.class, new ObjectId(successfulMatchTuple.getPlayerMatch().getId()));
-
-        final MongoMatch mongoMatchb;
-        mongoMatchb = getAdvancedDatastore().get(MongoMatch.class, new ObjectId(successfulMatchTuple.getOpponentMatch().getId()));
-
-        assertEquals(mongoMatcha.getGameId(), gameUUID.toString());
-        assertEquals(mongoMatchb.getGameId(), gameUUID.toString());
-        assertNotNull(mongoMatcha.getExpiry());
-        assertNotNull(mongoMatchb.getExpiry());
-
-    }
-
-    @Test(dataProvider = "intermediateMatchDataProvider", dependsOnMethods = "testFinalizeMatchingProcess")
+    @Test(dataProvider = "intermediateMatchDataProvider", dependsOnMethods = "testMatch")
     public void attemptDeleteIntermediateMatchesAfterFinalization(final Match match) {
-
-        final Query<MongoMatchDelta> preDeleteQuery = getAdvancedDatastore()
-                .createQuery(MongoMatchDelta.class)
-                .field("_id.match").equal(new ObjectId(match.getId()));
-
-        final List<MongoMatchDelta> preDeleteList = newArrayList(preDeleteQuery);
-
         try {
-            getMatchDao().deleteMatchAndLogDelta(match.getPlayer().getId(), match.getId());
+            getMatchDao().deleteMatch(match.getPlayer().getId(), match.getId());
             fail("Expected InvalidDataException here.");
         } catch (InvalidDataException ex) {
             // Test Passes
         }
-
-        final Query<MongoMatchDelta> postDeleteQuery = getAdvancedDatastore()
-                .createQuery(MongoMatchDelta.class)
-                .field("_id.match").equal(new ObjectId(match.getId()));
-
-        final List<MongoMatchDelta> postDeleteList = newArrayList(postDeleteQuery);
-         assertEquals(preDeleteList, postDeleteList);
-
     }
 
     @BeforeClass

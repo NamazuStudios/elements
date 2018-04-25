@@ -7,7 +7,6 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.*;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.match.Match;
-import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
 import org.dozer.DozerBeanMapper;
@@ -68,11 +67,6 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(Match.class, MongoMatch.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class));
-
-            mapping(MatchTimeDelta.class, MongoMatchDelta.class)
-                .fields("id", "key.match", customConverter(ObjectIdConverter.class))
-                .fields("snapshot.id", "key.match", customConverter(ObjectIdConverter.class))
-                .fields("timeStamp", "key.timeStamp");
 
             mapping(MongoMatch.class, MongoMatchSnapshot.class)
                 .fields("player.objectId", "player.objectId", customConverter(ObjectIdConverter.class))

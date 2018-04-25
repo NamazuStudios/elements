@@ -10,7 +10,6 @@ import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
 
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 /**
  * Created by patricktwohig on 7/20/17.
@@ -82,24 +81,12 @@ public interface MatchDao {
     Matchmaker getMatchmaker(final MatchingAlgorithm matchingAlgorithm);
 
     /**
-     * Finalizes the matching process by flagging the {@link Match} instances for deletion in the supplied
-     * {@link SuccessfulMatchTuple} and invoking the finalizer {@link Supplier<String>}.  The supplied
-     * {@link Supplier<String>} returns a system-wide unique ID used to process to identify the game
-     * that was created as the result of the {@link Match}.  The return value of this method will be assigned to the
-     * match using {@link Match#setGameId(String)}.
+     * Delets a {@link Match}, specyifying the id of the {@link Match}.  Note that a {@link Match} may not be deleted
+     * if it is already matched to an opponent.
      *
-     * Note that this method guarantees that the supplied {@link Supplier<String>} finalizer will only
-     * ever be called once per successful matching tuple as multiple players may attempt to finalize the pairing at
-     * the same time.  The return value indicates the affected {@link Match} instances, or returns an emnpty stream
-     * if no {@link Match} instances were affected by the finalization.
-     *
-     * Because both players may not have read the {@link Match}, the involved {@link Match} instances will be marked
-     * for timeout and deletion at a later time.
-     *
-     * @param successfulMatchTuple the resulting {@link SuccessfulMatchTuple}
-     * @param finalizer the {@linK Supplier<String>} used to finalize the match and provide the resulting game id
-     * @return a {@link Match} as it was updated
+     * @param profileId the id of the {@link Profile} as determined by {@link Profile#getId()}
+     * @param matchId the id of the {@link Match}, specified by {@link Match#getId()}
      */
-    Match finalize(SuccessfulMatchTuple successfulMatchTuple, Supplier<String> finalizer);
+    void deleteMatch(String profileId, String matchId);
 
 }

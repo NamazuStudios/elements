@@ -113,8 +113,8 @@ public class MongoProfileDao implements ProfileDao {
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileId);
 
         query.and(
-                query.criteria("active").equal(true),
-                query.criteria("_id").equal(objectId)
+            query.criteria("active").equal(true),
+            query.criteria("_id").equal(objectId)
         );
 
         final MongoProfile mongoProfile = query.get();

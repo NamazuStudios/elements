@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.match.Match;
+import com.namazustudios.socialengine.service.Topic.Subscription;
 
 import java.util.function.Consumer;
 
@@ -59,9 +60,11 @@ public interface MatchService {
 
     /**
      * Waits for a {@link Match} to be updated by another request.  Upon update, this will pass the update into the
-     * supplied supplied {@link Consumer}.  Either {@link Consumer} will be called exactly once
+     * supplied supplied {@link Consumer}.  In the event the {@link Match} has been deleted, the {@link Consumer} will
+     * receive a null value indicating so.
      *
-     * {@see {@link Topic.Subscription#subscribeNext(Consumer, Consumer)}} on the underpinnings on how this works.
+     * The returned {@link Subscription} need not be closed, unless explicitly requesting un-subscription.
+     * {@see {@link Subscription#subscribeNext(Consumer, Consumer)}}.
      *
      * @param matchId the match ID {@link Match#getId()}.
      * @param timeStamp timeStamp
@@ -70,7 +73,7 @@ public interface MatchService {
      *
      * @return a {@link Runnable} which may be used to cancel the pending request
      */
-    Topic.Subscription waitForUpdate(
+    Subscription waitForUpdate(
         String matchId, long timeStamp,
         Consumer<Match> matchConsumer, Consumer<Exception> exceptionConsumer);
 

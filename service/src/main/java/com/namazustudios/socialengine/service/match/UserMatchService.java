@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.match;
 
+import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
 import com.namazustudios.socialengine.dao.MatchmakingApplicationConfigurationDao;
@@ -10,8 +11,9 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.dao.ContextFactory;
+import com.namazustudios.socialengine.rt.Attributes;
+import com.namazustudios.socialengine.rt.Context;
+import com.namazustudios.socialengine.rt.SimpleAttributes;
 import com.namazustudios.socialengine.service.MatchService;
 import com.namazustudios.socialengine.service.Topic;
 import com.namazustudios.socialengine.service.TopicService;
@@ -21,13 +23,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * Created by patricktwohig on 7/20/17.
@@ -89,24 +87,12 @@ public class UserMatchService implements MatchService {
 
         final Match newMatch = getMatchDao().createMatch(match);
 
-        final Topic<Match> matchTopic;
-
-        matchTopic = getTopicService()
-            .getTopicForTypeNamed(Match.class, Match.ROOT_TOPIC)
-            .getSubtopicNamed(profile.getId())
-            .getSubtopicNamed(newMatch.getId());
-
-        try (final Topic.Publisher<Match> matchTopicPublisher = matchTopic.getPublisher()) {
+        try {
 
             final Matchmaker matchmaker = getMatchDao().getMatchmaker(matchmakingApplicationConfiguration.getAlgorithm());
-            matchTopicPublisher.accept(newMatch);
 
-            final Matchmaker.SuccessfulMatchTuple successfulMatchTuple;
-            successfulMatchTuple = matchmaker.attemptToFindOpponent(newMatch);
-
-            final Match completeMatch;
-            completeMatch = getMatchDao().finalize(successfulMatchTuple, () -> finalize(successfulMatchTuple, matchmakingApplicationConfiguration));
-            matchTopicPublisher.accept(completeMatch);
+            final Matchmaker.SuccessfulMatchTuple successfulMatchTuple = matchmaker
+                .attemptToFindOpponent(newMatch, (p, o) -> finalize(p, o, matchmakingApplicationConfiguration));
 
             return handleSuccessfulMatch(successfulMatchTuple);
 
@@ -117,28 +103,24 @@ public class UserMatchService implements MatchService {
     }
 
     private Match handleSuccessfulMatch(final Matchmaker.SuccessfulMatchTuple successfulMatchTuple) {
-
-        for (final MatchTimeDelta matchTimeDelta : successfulMatchTuple.getMatchDeltas()) {
-
-            final Topic<MatchTimeDelta> matchTimeDeltaTopic;
-            final Profile profile = matchTimeDelta.getSnapshot().getPlayer();
-
-            matchTimeDeltaTopic = getTopicService()
-                    .getTopicForTypeNamed(MatchTimeDelta.class, MatchTimeDelta.ROOT_DELTA_TOPIC)
-                    .getSubtopicNamed(profile.getId())
-                    .getSubtopicNamed(matchTimeDelta.getId());
-
-            try (final Topic.Publisher<MatchTimeDelta> matchTimeDeltaPublisher = matchTimeDeltaTopic.getPublisher()) {
-                matchTimeDeltaPublisher.accept(matchTimeDelta);
-            }
-
-        }
-
+        notifyComplete(successfulMatchTuple.getPlayerMatch());
+        notifyComplete(successfulMatchTuple.getOpponentMatch());
         return redactOpponentUser(successfulMatchTuple.getPlayerMatch());
+    }
+
+    private void notifyComplete(final Match match) {
+
+        final Topic<Match> matchTopic = getTopicService()
+                .getTopicForTypeNamed(Match.class, Match.ROOT_TOPIC)
+                .getSubtopicNamed(match.getId());
+
+        try (final Topic.Publisher<Match> matchPublisher = matchTopic.getPublisher()) {
+            matchPublisher.accept(match);
+        }
 
     }
 
-    private String finalize(final Matchmaker.SuccessfulMatchTuple successfulMatchTuple,
+    private String finalize(final Match player, final Match opponent,
                             final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration) {
 
         final String module = matchmakingApplicationConfiguration.getSuccess().getModule();
@@ -148,12 +130,12 @@ public class UserMatchService implements MatchService {
         final Context context = getContextFactory().getContextForApplication(profile.getApplication().getId());
 
         final Attributes attributes = new SimpleAttributes.Builder()
-            .from(attributesProvider.get(), (n, v) -> v instanceof Serializable)
+            .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
             .build();
 
-        final Object result = context.getHandlerContext().invokeRetainedHandler(attributes, module, method,
-            successfulMatchTuple.getPlayerMatch(),
-            successfulMatchTuple.getOpponentMatch());
+        final Object result = context
+            .getHandlerContext()
+            .invokeRetainedHandler(attributes, module, method, player, opponent);
 
         if (!(result instanceof String)) {
             throw new InternalError("Returned value not string from match processor.");
@@ -164,95 +146,33 @@ public class UserMatchService implements MatchService {
     }
 
     @Override
-    public void deleteMatch(final String matchId) {
-
-        final Profile profile = getCurrentProfileSupplier().get();
-        final MatchTimeDelta matchTimeDelta = getMatchDao().deleteMatchAndLogDelta(profile.getId(), matchId);
-
-        final Topic<MatchTimeDelta> matchTimeDeltaTopic;
-
-        matchTimeDeltaTopic = getTopicService()
-            .getTopicForTypeNamed(MatchTimeDelta.class, MatchTimeDelta.ROOT_DELTA_TOPIC)
-            .getSubtopicNamed(profile.getId())
-            .getSubtopicNamed(matchTimeDelta.getId());
-
-        try (final Topic.Publisher<MatchTimeDelta> matchTimeDeltaPublisher = matchTimeDeltaTopic.getPublisher()) {
-            matchTimeDeltaPublisher.accept(matchTimeDelta);
-        }
-
-    }
-
-    @Override
-    public List<TimeDelta<String, Match>> getDeltas(final long timeStamp) {
-
-        final Profile profile = getCurrentProfileSupplier().get();
-
-        return getMatchDao()
-            .getDeltasForPlayerAfter(profile.getId(), timeStamp)
-            .stream()
-            .map(this::redactOpponentUser)
-            .collect(toList());
-
-    }
-
-    @Override
-    public List<TimeDelta<String, Match>> getDeltasForMatch(final  long timeStamp, final String matchId) {
-
-        final Profile profile = getCurrentProfileSupplier().get();
-
-        return getMatchDao()
-            .getDeltasForPlayerAfter(profile.getId(), timeStamp, matchId)
-            .stream()
-            .map(this::redactOpponentUser)
-            .collect(toList());
-
-    }
-
-    @Override
-    public Topic.Subscription waitForDeltas(
-            final long timeStamp,
-            final Consumer<List<MatchTimeDelta>> timeDeltaListConsumer,
-            final Consumer<Exception> exceptionConsumer) {
-
-        final Profile profile = getCurrentProfileSupplier().get();
-
-        final Topic<MatchTimeDelta> matchTimeDeltaTopic = getTopicService()
-            .getTopicForTypeNamed(MatchTimeDelta.class, MatchTimeDelta.ROOT_DELTA_TOPIC)
-            .getSubtopicNamed(profile.getId());
-
-        return matchTimeDeltaTopic.subscribeNext(matchTimeDelta -> {
-            if (matchTimeDelta.getTimeStamp() > timeStamp) {
-                final List<MatchTimeDelta> matchTimeDeltaList;
-                matchTimeDeltaList = getMatchDao().getDeltasForPlayerAfter(profile.getId(), timeStamp);
-                timeDeltaListConsumer.accept(matchTimeDeltaList);
-            }
-        }, exceptionConsumer);
-
-    }
-
-    @Override
-    public Topic.Subscription waitForDeltas(
-            final long timeStamp,
-            final String matchId,
-            final Consumer<List<MatchTimeDelta>> timeDeltaListConsumer,
-            final Consumer<Exception> exceptionConsumer) {
+    public Topic.Subscription waitForUpdate(
+            final String matchId, final long timeStamp,
+            final Consumer<Match> matchConsumer, final Consumer<Exception> exceptionConsumer) {
 
         final Profile profile = getCurrentProfileSupplier().get();
         final Match match = getMatchDao().getMatchForPlayer(profile.getId(), matchId);
 
-        final Topic<MatchTimeDelta> matchTimeDeltaTopic;
-        matchTimeDeltaTopic = getTopicService()
-            .getTopicForTypeNamed(MatchTimeDelta.class, MatchTimeDelta.ROOT_DELTA_TOPIC)
-            .getSubtopicNamed(profile.getId())
-            .getSubtopicNamed(match.getId());
+        return getTopicService().getTopicForTypeNamed(Match.class, Match.ROOT_TOPIC)
+            .getSubtopicNamed(match.getId())
+            .subscribeNext(m -> matchConsumer.accept(redactOpponentUser(m)), exceptionConsumer);
 
-        return matchTimeDeltaTopic.subscribeNext(matchTimeDelta ->  {
-            if (matchTimeDelta.getTimeStamp() > timeStamp) {
-                final List<MatchTimeDelta> matchTimeDeltaList;
-                matchTimeDeltaList = getMatchDao().getDeltasForPlayerAfter(profile.getId(), timeStamp, matchId);
-                timeDeltaListConsumer.accept(matchTimeDeltaList);
-            }
-        }, exceptionConsumer);
+    }
+
+    @Override
+    public void deleteMatch(final String matchId) {
+
+        final Profile profile = getCurrentProfileSupplier().get();
+        getMatchDao().deleteMatch(profile.getId(), matchId);
+
+        final Topic<Exception> exceptionTopic = getTopicService()
+            .getTopicForTypeNamed(Exception.class, Match.ROOT_TOPIC)
+            .getSubtopicNamed(profile.getId())
+            .getSubtopicNamed(matchId);
+
+        try (final Topic.Publisher<Exception> exceptionPublisher = exceptionTopic.getPublisher()) {
+            exceptionPublisher.accept(null);
+        }
 
     }
 
@@ -265,18 +185,6 @@ public class UserMatchService implements MatchService {
         }
 
         return match;
-
-    }
-
-    private TimeDelta<String, Match> redactOpponentUser(final TimeDelta<String, Match> stringMatchTimeDelta) {
-
-        final Match match = stringMatchTimeDelta.getSnapshot();
-
-        if (match != null) {
-            stringMatchTimeDelta.setSnapshot(redactOpponentUser(match));
-        }
-
-        return stringMatchTimeDelta;
 
     }
 

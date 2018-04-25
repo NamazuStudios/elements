@@ -13,6 +13,7 @@ import com.namazustudios.elements.fts.TopDocsSearchResult;
 import com.namazustudios.socialengine.model.Pagination;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
@@ -94,13 +95,8 @@ public class MongoDBUtils {
 
         final int limit = min(queryMaxResults, count);
 
-        final Iterable<ModelT> userIterable;
-
-        final List<ModelT> modelTList;
-
-        List<MongoModelT> l = query.asList();
-
-        modelTList = stream(query.spliterator(), false)
+        final List<ModelT> modelTList = query.asList(new FindOptions().skip(offset))
+            .stream()
             .map(function)
             .limit(limit)
             .collect(Collectors.toList());

@@ -21,11 +21,13 @@ import javax.ws.rs.*;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static java.lang.Math.min;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
 /**
  * Manages match resources
@@ -87,8 +89,7 @@ public class MatchResource {
         notes = "Gets a specific match given the match's unique ID.  Additionally, it is possible to instruct the " +
                 "API to wait for a period of time before sending the response.  The request will intentionally hang " +
                 "until the requested Match with ID has been updated in the database.",
-        response = Match.class,
-        responseContainer = "List")
+        response = Match.class)
     public void getMatch(
             @PathParam("matchId")
             final String matchId,
@@ -118,27 +119,13 @@ public class MatchResource {
             asyncResponse.resume(match);
         } else {
 
-            final AtomicReference<Topic.Subscription> subscription = new AtomicReference<>();
-
-            subscription.set(getMatchService().waitForUpdate(
+            final Topic.Subscription subscription = getMatchService().waitForUpdate(
                 _matchId, lastUpdatedTimestamp,
-                m -> {
-                    try {
-                        asyncResponse.resume(m);
-                    } finally {
-                        subscription.get().close();
-                    }
-                },
-                ex -> {
-                    try {
-                        asyncResponse.resume(ex);
-                    } finally {
-                        subscription.get().close();
-                    }
-                }));
+                m -> asyncResponse.resume(m == null ? Response.status(NOT_FOUND).build() : m),
+                ex -> asyncResponse.resume(ex));
 
             asyncResponse.setTimeoutHandler(r -> {
-                subscription.get().close();
+                subscription.close();
                 r.resume(match);
             });
 

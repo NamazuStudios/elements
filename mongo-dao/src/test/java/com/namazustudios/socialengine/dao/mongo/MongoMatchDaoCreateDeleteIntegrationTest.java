@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.MatchDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoMatchDelta;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
@@ -35,24 +34,9 @@ public class MongoMatchDaoCreateDeleteIntegrationTest {
         final Application application = getMatchingMockObjects().makeMockApplication();
 
         final Profile profile = getMatchingMockObjects().makeMockProfile(user, application);
+        final Match match = getMatchDao().createMatch(makeMockMatch(profile));
 
-        final Match match = getMatchDao().createMatch(makeMockMatch(profile)).getMatch();
-
-        final Query<MongoMatchDelta> preDeleteQuery = getAdvancedDatastore().createQuery(MongoMatchDelta.class)
-                .field("expiry").doesNotExist()
-                .field("_id.match").equal(new ObjectId(match.getId()));
-
-        final long preDeleteCount = preDeleteQuery.count();
-        assertTrue(preDeleteCount > 0, "Expected at least one delta pre-delete.");
-        getMatchDao().deleteMatchAndLogDelta(match.getPlayer().getId(), match.getId());
-
-        final Query<MongoMatchDelta> postDeleteQuery = getAdvancedDatastore().createQuery(MongoMatchDelta.class)
-                .field("expiry").exists()
-                .field("_id.match").equal(new ObjectId(match.getId()));
-
-        final long postDeleteCount = postDeleteQuery.count();
-        assertEquals(preDeleteCount + 1, postDeleteCount);
-
+        getMatchDao().deleteMatch(match.getPlayer().getId(), match.getId());
         getMatchDao().getMatchForPlayer(match.getPlayer().getId(), match.getId());
 
     }
