@@ -92,7 +92,7 @@ public class SimpleResourceContext implements ResourceContext {
 
     }
 
-    private Object doInvoke(final Consumer<Object> success, final Consumer<Throwable> failure,
+    private TaskId doInvoke(final Consumer<Object> success, final Consumer<Throwable> failure,
                                     final Resource resource, final String method, final Object... args) {
         try {
             return resource.getMethodDispatcher(method).params(args).dispatch(success, failure);

@@ -142,7 +142,7 @@ public class MongoMatchDao implements MatchDao {
 
     @Override
     public Match createMatch(Match match) {
-        // TODO Implement Create
+
         validate(match);
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(match.getPlayer().getId());

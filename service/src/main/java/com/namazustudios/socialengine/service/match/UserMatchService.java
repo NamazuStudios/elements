@@ -82,7 +82,7 @@ public class UserMatchService implements MatchService {
         } else if (!Objects.equals(profile, match.getPlayer())) {
             throw new ForbiddenException("player must match current profile");
         } else if (match.getOpponent() != null) {
-            throw new InvalidDataException("must not specifcy opponent when creating a match.");
+            throw new InvalidDataException("must not specify opponent when creating a match.");
         }
 
         final Match newMatch = getMatchDao().createMatch(match);
