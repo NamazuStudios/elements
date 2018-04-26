@@ -1,14 +1,11 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.namazustudios.socialengine.rt.util.SyncWait;
 
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-
-import static com.namazustudios.socialengine.rt.Context._waitAsync;
 
 /**
  * Used to index various {@link Resource} instances by {@link Path}.
@@ -22,12 +19,10 @@ public interface IndexContext {
      * @param path the {@link Path} to match
      * @return a {@link Stream<Listing>} representing all matched {@link Path}s
      */
-    @RemotelyInvokable
     default Stream<Listing> list(@Serialize final Path path) {
-        final Logger logger = LoggerFactory.getLogger(getClass());
-        final Future<Stream<Listing>> future = listAsync(path, v -> logger.info("Successfully listed {} ", path),
-                                                               th -> logger.error("Failed to list {} ", path));
-        return _waitAsync(logger, future);
+        final SyncWait<Stream<Listing>> streamSyncWait = new SyncWait<>(getClass());
+        listAsync(path, v -> streamSyncWait.getResultConsumer(), streamSyncWait.getErrorConsumer());
+        return streamSyncWait.get();
     }
 
     /**
@@ -44,9 +39,9 @@ public interface IndexContext {
      * @return a {@link Future<Stream<Listing>>} which can be used to obtain the result
      */
     @RemotelyInvokable
-    Future<Stream<Listing>> listAsync(@Serialize Path path,
-                                      @ResultHandler Consumer<Stream<Listing>> success,
-                                      @ErrorHandler  Consumer<Throwable> failure);
+    void listAsync(@Serialize Path path,
+                   @ResultHandler Consumer<Stream<Listing>> success,
+                   @ErrorHandler  Consumer<Throwable> failure);
 
     /**
      * Performs the operations of {@link #linkAsync(ResourceId, Path, Consumer, Consumer)} synchronously.
@@ -55,17 +50,11 @@ public interface IndexContext {
      * @param destination the {@link Path} of the destination to link
      *
      */
-    @RemotelyInvokable
-    default void link(@Serialize final ResourceId resourceId, @Serialize final Path destination) {
-
-        final Logger logger = LoggerFactory.getLogger(getClass());
-
-        final Future<Void> future = linkAsync(resourceId, destination,
-                v -> logger.info("Successsfully linked {} -> {}", resourceId, destination),
-                th -> logger.error("Failed to link {} -> {}", resourceId, destination));
-
-        _waitAsync(logger, future);
-
+    default void link(@Serialize final ResourceId resourceId,
+                      @Serialize final Path destination) {
+        final SyncWait<Void> linkSyncWait = new SyncWait<>(getClass());
+        linkAsync(resourceId, destination, linkSyncWait.getResultConsumer(), linkSyncWait.getErrorConsumer());
+        linkSyncWait.get();
     }
 
     /**
@@ -80,28 +69,21 @@ public interface IndexContext {
      *
      */
     @RemotelyInvokable
-    Future<Void> linkAsync(@Serialize ResourceId resourceId,
-                           @Serialize Path destination,
-                           @ResultHandler Consumer<Void> success,
-                           @ErrorHandler  Consumer<Throwable> failure);
+    void linkAsync(@Serialize ResourceId resourceId,
+                   @Serialize Path destination,
+                   @ResultHandler Consumer<Void> success,
+                   @ErrorHandler  Consumer<Throwable> failure);
 
     /**
-     * Performs the operations {@link #linkPathAsync(Path, Path, Consumer, Consumer)} synchornously.
+     * Performs the operations {@link #linkPathAsync(Path, Path, Consumer, Consumer)} synchronously.
      *
      * @param source the source {@link Path} to link
      * @param destination the {@link Path} of the destination to link
      */
-    @RemotelyInvokable
     default void linkPath(@Serialize Path source, @Serialize Path destination) {
-
-        final Logger logger = LoggerFactory.getLogger(getClass());
-
-        final Future<Void> future = linkPathAsync(source, destination,
-                v -> logger.info("Successsfully linked {} -> {}", source, destination),
-                th -> logger.error("Failed to link {} -> {}", source, destination));
-
-        _waitAsync(logger, future);
-
+        final SyncWait<Void> linkSyncWait = new SyncWait<>(getClass());
+        linkPathAsync(source, destination, linkSyncWait.getResultConsumer(), linkSyncWait.getErrorConsumer());
+        linkSyncWait.get();
     }
 
     /**
@@ -114,9 +96,9 @@ public interface IndexContext {
      * @return a {@link Future} which can be used to obtain the result of the operation
      */
     @RemotelyInvokable
-    Future<Void> linkPathAsync(@Serialize Path source, @Serialize Path destination,
-                               @ResultHandler Consumer<Void> success,
-                               @ErrorHandler  Consumer<Throwable> failure);
+    void linkPathAsync(@Serialize Path source, @Serialize Path destination,
+                       @ResultHandler Consumer<Void> success,
+                       @ErrorHandler  Consumer<Throwable> failure);
 
     /**
      * Performs the operations of {@link #unlinkAsync(Path, Consumer, Consumer)} synchronously.
@@ -124,16 +106,10 @@ public interface IndexContext {
      * @param path the path to unlink
      * @return an {@link Unlink} representing the result of the operation
      */
-    @RemotelyInvokable
     default Unlink unlink(@Serialize final Path path) {
-
-        final Logger logger = LoggerFactory.getLogger(getClass());
-
-        final Future<Unlink> future = unlinkAsync(path, ul -> logger.info("Successsfully linked {}", path),
-                                                        th -> logger.error("Failed to link {}", path));
-
-        return _waitAsync(logger, future);
-
+        final SyncWait<Unlink> unlinkSyncWait = new SyncWait<>(getClass());
+        unlinkAsync(path, ul -> unlinkSyncWait.getResultConsumer(), unlinkSyncWait.getErrorConsumer());
+        return unlinkSyncWait.get();
     }
 
     /**
@@ -151,9 +127,9 @@ public interface IndexContext {
      * @return a {@link Future} which can be used to obtain the result of the operation
      */
     @RemotelyInvokable
-    Future<Unlink> unlinkAsync(@Serialize Path path,
-                               @ResultHandler Consumer<Unlink> success,
-                               @ErrorHandler  Consumer<Throwable> failure);
+    void unlinkAsync(@Serialize Path path,
+                     @ResultHandler Consumer<Unlink> success,
+                     @ErrorHandler  Consumer<Throwable> failure);
 
     /**
      * The result of the {@link #unlinkAsync(Path, Consumer, Consumer)} and {@link #unlink(Path)} call.

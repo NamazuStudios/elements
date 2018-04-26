@@ -9,9 +9,7 @@ import java.io.Serializable;
 
 import static com.namazustudios.socialengine.Constants.Regexp.NO_WHITE_SPACE;
 
-@ApiModel(
-    value = "Defines a Simple Script Callback.",
-    description = "Defines a method and a module to invoke.")
+@ApiModel(description = "Defines a script method and a module to invoke.")
 public class CallbackDefinition implements Serializable {
 
     @NotNull

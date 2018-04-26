@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
-import com.namazustudios.socialengine.fts.annotation.SearchableDocument;
-import com.namazustudios.socialengine.fts.annotation.SearchableField;
-import com.namazustudios.socialengine.fts.annotation.SearchableIdentity;
+import com.namazustudios.elements.fts.annotation.SearchableDocument;
+import com.namazustudios.elements.fts.annotation.SearchableField;
+import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.model.User;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;

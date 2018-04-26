@@ -1,17 +1,19 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.google.common.collect.Streams;
-import com.namazustudios.socialengine.dao.Matchmaker.SuccessfulMatchTuple;
-import com.namazustudios.socialengine.exception.*;
-import com.namazustudios.socialengine.util.ValidationHelper;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
-import com.namazustudios.socialengine.dao.mongo.model.*;
-import com.namazustudios.socialengine.fts.ObjectIndex;
+import com.namazustudios.socialengine.dao.mongo.model.MongoMatch;
+import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
+import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
+import com.namazustudios.socialengine.exception.BadQueryException;
+import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.match.Match;
-import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -21,22 +23,14 @@ import org.apache.lucene.search.TermQuery;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.dao.mongo.model.MongoMatch.MATCH_EXPIRATION_SECONDS;
 import static java.lang.System.currentTimeMillis;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.mongodb.morphia.query.Sort.ascending;
 
 /**
  * Created by patricktwohig on 7/25/17.
@@ -69,7 +63,7 @@ public class MongoMatchDao implements MatchDao {
         return getDozerMapper().map(mongoMatch, Match.class);
     }
 
-    public MongoMatch getMongoMatchForPlayer(String playerId, String matchId) {
+    public MongoMatch getMongoMatchForPlayer(final String playerId, final String matchId) {
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(matchId);
         final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
@@ -89,6 +83,7 @@ public class MongoMatchDao implements MatchDao {
         }
 
         return mongoMatch;
+
     }
 
     public MongoMatch getMongoMatch(final String matchId) {
@@ -146,239 +141,61 @@ public class MongoMatchDao implements MatchDao {
     }
 
     @Override
-    public TimeDeltaTuple createMatchAndLogDelta(Match match) {
+    public Match createMatch(Match match) {
 
         validate(match);
 
-        // Just checks to see if it's
-        getMongoProfileDao().getActiveMongoProfile(match.getPlayer().getId());
+        final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(match.getPlayer().getId());
 
-        // Pre-allocate the match id so we can lock the match in advance.  This prevents other players from matching
-        // to it until it's been fully created.
+//        // Pre-allocate the match id so we can lock the match in advance.  This prevents other players from matching
+//        // to it until it's been fully created.
 
         final ObjectId objectId = new ObjectId();
         final MongoMatch mongoMatch = getDozerMapper().map(match, MongoMatch.class);
         mongoMatch.setObjectId(objectId);
+        mongoMatch.setPlayer(mongoProfile);
 
         try {
-            return getMongoConcurrentUtils().performOptimistic(ds -> getMongoMatchUtils().attemptLock(() -> doCreateMatchAndLogDelta(mongoMatch), objectId));
+            return getMongoConcurrentUtils().performOptimistic(ds -> getMongoMatchUtils().attemptLock(() -> doCreateMatch(ds, mongoMatch), objectId));
         } catch (MongoConcurrentUtils.ConflictException ex) {
             throw new TooBusyException(ex);
         }
 
     }
 
-    private TimeDeltaTuple doCreateMatchAndLogDelta(final MongoMatch mongoMatch) {
+    private Match doCreateMatch(final Datastore ds, final MongoMatch mongoMatch) {
 
         final Timestamp now = new Timestamp(currentTimeMillis());
         mongoMatch.setLastUpdatedTimestamp(now);
 
-        getMongoDBUtils().perform(ds -> ds.save(mongoMatch));
+        ds.save(mongoMatch);
         getObjectIndex().index(mongoMatch);
 
-        final MongoMatchDelta mongoMatchDelta = new MongoMatchDelta();
-        final MongoMatchDelta.Key mongoMatchDeltaKey = new MongoMatchDelta.Key(mongoMatch);
+        return getDozerMapper().map(mongoMatch, Match.class);
 
-        mongoMatchDelta.setKey(mongoMatchDeltaKey);
-        mongoMatchDelta.setOperation(MatchTimeDelta.Operation.CREATED);
-
-        final MongoMatchSnapshot mongoMatchSnapshot = getDozerMapper().map(mongoMatch, MongoMatchSnapshot.class);
-        mongoMatchDelta.setSnapshot(mongoMatchSnapshot);
-
-        getMongoDBUtils().perform(ds -> ds.save(mongoMatchDelta));
-
-        return tuple(mongoMatch, mongoMatchDelta);
-
-    }
-
-    private final TimeDeltaTuple tuple(final MongoMatch mongoMatch, final MongoMatchDelta mongoMatchDelta) {
-        return new TimeDeltaTuple() {
-
-            @Override
-            public Match getMatch() {
-                return getDozerMapper().map(mongoMatch, Match.class);
-            }
-
-            @Override
-            public MatchTimeDelta getTimeDelta() {
-                return getDozerMapper().map(mongoMatchDelta, MatchTimeDelta.class);
-            }
-
-        };
     }
 
     @Override
-    public MatchTimeDelta deleteMatchAndLogDelta(final String playerId, final String matchId) {
+    public void deleteMatch(final String profileId, final String matchId) {
 
-        final Timestamp expiry = new Timestamp(currentTimeMillis());
-        final MongoMatch toDelete = getMongoMatchForPlayer(playerId, matchId);
+        final MongoMatch toDelete = getMongoMatchForPlayer(profileId, matchId);
 
         try {
             getMongoConcurrentUtils().performOptimistic(ds -> getMongoMatchUtils().attemptLock(() -> {
 
-                final MongoMatch m = getMongoMatchForPlayer(playerId, matchId);
+                final MongoMatch m = ds.get(toDelete);
 
-                if (m.getOpponent() == null) {
-                    ds.delete(m);
-                    expireAllDeltasForMatch(new ObjectId(matchId), expiry);
-                } else {
-                    throw new InvalidDataException("Unable to delete match with opponent assigned.");
+                if (m.getOpponent() != null) {
+                    throw new InvalidDataException("Already Matched");
                 }
 
+                ds.delete(m);
                 return null;
 
             }, toDelete));
         } catch (MongoConcurrentUtils.ConflictException ex) {
             throw new TooBusyException(ex);
         }
-
-        final MongoMatchDelta finalMatchDelta = logRemovalDelta(matchId, expiry);
-        return getDozerMapper().map(finalMatchDelta, MatchTimeDelta.class);
-
-    }
-
-    private void expireAllDeltasForMatch(final ObjectId matchId, final Timestamp expiry) {
-
-        final Query<MongoMatchDelta> expiryQuery = getDatastore().createQuery(MongoMatchDelta.class);
-        expiryQuery.criteria("_id.match").equal(matchId);
-
-        final UpdateOperations<MongoMatchDelta> expiryUpdateOperations;
-        expiryUpdateOperations = getDatastore().createUpdateOperations(MongoMatchDelta.class);
-        expiryUpdateOperations.set("expiry", expiry);
-        getDatastore().update(expiryQuery, expiryUpdateOperations);
-
-    }
-
-    @Override
-    public List<MatchTimeDelta> getDeltasForPlayerAfter(final String playerId, final long timeStamp) {
-
-        final Timestamp now = new Timestamp(currentTimeMillis());
-        final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
-        final Query<MongoMatchDelta> matchTimeDeltaQuery = getDatastore().createQuery(MongoMatchDelta.class);
-
-        matchTimeDeltaQuery.order(ascending("_id.sequence")).and(
-            matchTimeDeltaQuery.criteria("_id.timeStamp").greaterThan(new Timestamp(timeStamp)),
-            matchTimeDeltaQuery.criteria("snapshot.player").equal(playerProfile),
-            matchTimeDeltaQuery.or(
-                matchTimeDeltaQuery.criteria("expiry").doesNotExist(),
-                matchTimeDeltaQuery.criteria("expiry").lessThanOrEq(now)
-            )
-        );
-
-        return Streams.stream(matchTimeDeltaQuery)
-            .map(mongoMatchDelta -> getDozerMapper().map(mongoMatchDelta, MatchTimeDelta.class))
-            .collect(Collectors.toList());
-
-    }
-
-    @Override
-    public List<MatchTimeDelta> getDeltasForPlayerAfter(final String playerId,
-                                                        final long timeStamp,
-                                                        final String matchId) {
-
-        final MongoMatch mongoMatch = getMongoMatchForPlayer(playerId, matchId);
-        final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
-        final Query<MongoMatchDelta> matchTimeDeltaQuery = getDatastore().createQuery(MongoMatchDelta.class);
-
-        matchTimeDeltaQuery.order(ascending("_id.sequence")).and(
-            matchTimeDeltaQuery.criteria("_id.match").equal(mongoMatch.getObjectId()),
-            matchTimeDeltaQuery.criteria("_id.timeStamp").greaterThan(new Timestamp(timeStamp)),
-            matchTimeDeltaQuery.criteria("snapshot.player").equal(playerProfile)
-        );
-
-        return Streams.stream(matchTimeDeltaQuery)
-            .map(mongoMatchDelta -> getDozerMapper().map(mongoMatchDelta, MatchTimeDelta.class))
-            .collect(Collectors.toList());
-
-    }
-
-    @Override
-    public Stream<TimeDeltaTuple> finalize(final SuccessfulMatchTuple successfulMatchTuple, final Supplier<String> finalizer) {
-
-        final long now = currentTimeMillis();
-
-        final Timestamp matchExpiry = new Timestamp(now);
-        final Timestamp finalDeltaExpiry = new Timestamp(now + MILLISECONDS.convert(MATCH_EXPIRATION_SECONDS, TimeUnit.SECONDS));
-
-        final ObjectId playerMatchId = new ObjectId(successfulMatchTuple.getPlayerMatch().getId());
-        final ObjectId opponentMatchId = new ObjectId(successfulMatchTuple.getOpponentMatch().getId());
-
-        try {
-            return getMongoConcurrentUtils().performOptimistic(ds -> getMongoMatchUtils().attemptLock(() -> {
-
-                final MongoMatch playerMatch = getDatastore().get(MongoMatch.class, playerMatchId);
-                final MongoMatch opponentMatch = getDatastore().get(MongoMatch.class, opponentMatchId);
-
-                if (playerMatch.getGameId() == null && opponentMatch.getGameId() == null) {
-
-                    final String gameId = finalizer.get();
-
-                    if (gameId == null) {
-                        throw new InternalException("Supplied game ID must not be null.");
-                    }
-
-                    playerMatch.setExpiry(matchExpiry);
-                    playerMatch.setGameId(gameId);
-                    opponentMatch.setExpiry(matchExpiry);
-                    opponentMatch.setGameId(gameId);
-
-                    getDatastore().save(playerMatch);
-                    getDatastore().save(opponentMatch);
-
-                    expireAllDeltasForMatch(playerMatch.getObjectId(), finalDeltaExpiry);
-                    expireAllDeltasForMatch(opponentMatch.getObjectId(), finalDeltaExpiry);
-
-                    tuple(playerMatch, logFutureRemovalDelta(playerMatch.getObjectId(), matchExpiry, finalDeltaExpiry));
-                    tuple(playerMatch, logFutureRemovalDelta(opponentMatch.getObjectId(), matchExpiry, finalDeltaExpiry));
-
-                    return Stream.of(
-                        tuple(playerMatch, getMongoMatchUtils().insertDeltaForUpdate(playerMatch)),
-                        tuple(opponentMatch, getMongoMatchUtils().insertDeltaForUpdate(opponentMatch))
-                    );
-
-                } else {
-                    return Stream.empty();
-                }
-
-            }, playerMatchId, opponentMatchId));
-        } catch (MongoConcurrentUtils.ConflictException e) {
-            throw new TooBusyException(e);
-        }
-
-    }
-
-    private MongoMatchDelta logRemovalDelta(final String matchId, final Timestamp expiry) {
-        return logRemovalDelta(new ObjectId(matchId), expiry);
-    }
-
-    private MongoMatchDelta logRemovalDelta(final ObjectId matchId, final Timestamp expiry) {
-        final MongoMatchDelta existing = getMongoMatchUtils().getLatestDelta(matchId);
-        final MongoMatchDelta toInsert = new MongoMatchDelta();
-
-        toInsert.setKey(existing.getKey().nextInSequence());
-        toInsert.setExpiry(expiry);
-        toInsert.setOperation(MatchTimeDelta.Operation.REMOVED);
-        toInsert.setSnapshot(null);
-
-        getDatastore().save(toInsert);
-        return toInsert;
-
-    }
-
-    private MongoMatchDelta logFutureRemovalDelta(final ObjectId matchId,
-                                                  final Timestamp timestamp,
-                                                  final Timestamp expiry) {
-
-        final MongoMatchDelta existing = getMongoMatchUtils().getLatestDelta(matchId);
-        final MongoMatchDelta toInsert = new MongoMatchDelta();
-
-        toInsert.setKey(existing.getKey().nextInSequence(timestamp.getTime()));
-        toInsert.setExpiry(expiry);
-        toInsert.setOperation(MatchTimeDelta.Operation.REMOVED);
-        toInsert.setSnapshot(null);
-
-        getDatastore().save(toInsert);
-        return toInsert;
 
     }
 

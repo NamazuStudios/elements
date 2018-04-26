@@ -4,14 +4,10 @@ import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 import com.namazustudios.socialengine.dao.Matchmaker;
 import com.namazustudios.socialengine.dao.mongo.model.MongoMatch;
-import com.namazustudios.socialengine.dao.mongo.model.MongoMatchDelta;
 import com.namazustudios.socialengine.dao.mongo.model.MongoMatchLock;
-import com.namazustudios.socialengine.dao.mongo.model.MongoMatchSnapshot;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
-import com.namazustudios.socialengine.model.TimeDelta;
 import com.namazustudios.socialengine.model.match.Match;
-import com.namazustudios.socialengine.model.match.MatchTimeDelta;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -26,12 +22,11 @@ import javax.inject.Provider;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import static java.lang.System.currentTimeMillis;
-import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
-import static org.mongodb.morphia.query.Sort.descending;
 
 /**
  * Used to actually perform the match between two players.  This ensures that two matches are made
@@ -48,8 +43,6 @@ public class MongoMatchUtils {
     private Mapper dozerMapper;
 
     private MongoDBUtils mongoDBUtils;
-
-    private MongoConcurrentUtils mongoConcurrentUtils;
 
     /**
      * Intended to be used in the scope of
@@ -145,7 +138,7 @@ public class MongoMatchUtils {
                 final Query<MongoMatchLock> qbe = getDatastore().queryByExample(lock);
                 final WriteResult writeResult = getDatastore().delete(qbe);
 
-                if (writeResult.getN() != 1) {
+                if (writeResult.getN() > 1) {
                     logger.error("Unexpected delete count for lock {}.  Expected 1.  Got {}", lock, writeResult.getN());
                 }
 
@@ -159,7 +152,8 @@ public class MongoMatchUtils {
 
     public Matchmaker.SuccessfulMatchTuple attemptToPairCandidates(
             final MongoMatch playerMatch,
-            final List<MongoMatch> candidatesList) throws NoSuitableMatchException {
+            final List<MongoMatch> candidatesList,
+            final BiFunction<Match, Match, String> finalizer) throws NoSuitableMatchException {
 
         for (final MongoMatch candidateMatch : candidatesList) {
 
@@ -168,7 +162,7 @@ public class MongoMatchUtils {
             }
 
             try {
-                return attemptToPairCandidates(playerMatch, candidateMatch);
+                return attemptToPairCandidates(playerMatch, candidateMatch, finalizer);
             } catch (NoSuitableMatchException ex) {
                 // We keep attempting until we have exhausted all possible options
                 // in the supplied list.
@@ -195,10 +189,11 @@ public class MongoMatchUtils {
      */
     public Matchmaker.SuccessfulMatchTuple attemptToPairCandidates(
             final MongoMatch playerMatch,
-            final MongoMatch opponentMatch) throws NoSuitableMatchException {
+            final MongoMatch opponentMatch,
+            final BiFunction<Match, Match, String> finalizer) throws NoSuitableMatchException {
 
         try {
-            return attemptLock(() -> doAttempt(playerMatch, opponentMatch), playerMatch, opponentMatch);
+            return attemptLock(() -> doAttempt(playerMatch, opponentMatch, finalizer), playerMatch, opponentMatch);
         } catch (MongoConcurrentUtils.ContentionException ex) {
             // Failing to acquire a lock is a very good reason to say there's no suitable match.  So we simply skip this
             // attempt and provide the exception.
@@ -208,7 +203,8 @@ public class MongoMatchUtils {
     }
 
     private Matchmaker.SuccessfulMatchTuple doAttempt(MongoMatch playerMatch,
-                                                      MongoMatch opponentMatch) throws NoSuitableMatchException {
+                                                      MongoMatch opponentMatch,
+                                                      BiFunction<Match, Match, String> finalizer) throws NoSuitableMatchException {
 
         // Now that both entities are locked, we can now update both objects to match player and
         // opponent together, driving any deltas as necessary.
@@ -230,6 +226,13 @@ public class MongoMatchUtils {
             throw new NoSuitableMatchException("player or opponent already matched");
         }
 
+        playerMatch.setOpponent(opponentMatch.getPlayer());
+        opponentMatch.setOpponent(playerMatch.getPlayer());
+
+        final String gameId = finalizer.apply(
+            getDozerMapper().map(playerMatch, Match.class),
+            getDozerMapper().map(opponentMatch, Match.class));
+
         final Timestamp now = new Timestamp(currentTimeMillis());
 
         final UpdateOperations<MongoMatch> playerUpdateOperations;
@@ -238,8 +241,15 @@ public class MongoMatchUtils {
         final UpdateOperations<MongoMatch> oppponentUpdateOperations;
         oppponentUpdateOperations = getDatastore().createUpdateOperations(MongoMatch.class);
 
-        playerUpdateOperations.set("opponent", opponentMatch.getPlayer()).set("lastUpdatedTimestamp", now);
-        oppponentUpdateOperations.set("opponent", playerMatch.getPlayer()).set("lastUpdatedTimestamp", now);
+        playerUpdateOperations
+            .set("opponent", opponentMatch.getPlayer())
+            .set("lastUpdatedTimestamp", now)
+            .set("gameId", gameId);
+
+        oppponentUpdateOperations
+            .set("opponent", playerMatch.getPlayer())
+            .set("lastUpdatedTimestamp", now)
+            .set("gameId", gameId);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
             .upsert(false)
@@ -261,9 +271,6 @@ public class MongoMatchUtils {
             throw new InternalException("player or opponent match was deleted while processing match");
         }
 
-        final MongoMatchDelta playerDelta = insertDeltaForUpdate(updatedPlayerMatch);
-        final MongoMatchDelta opponnentDelta = insertDeltaForUpdate(updatedOpponentMatch);
-
         return new Matchmaker.SuccessfulMatchTuple() {
 
             @Override
@@ -276,48 +283,8 @@ public class MongoMatchUtils {
                 return getDozerMapper().map(updatedOpponentMatch, Match.class);
             }
 
-            @Override
-            public List<MatchTimeDelta> getMatchDeltas() {
-                return asList(
-                    getDozerMapper().map(playerDelta, MatchTimeDelta.class),
-                    getDozerMapper().map(opponnentDelta, MatchTimeDelta.class)
-                );
-            }
-
         };
 
-    }
-
-    /**
-     * Generates a {@link MongoMatchDelta} for a recently {@link MongoMatch}.  This attempts to perform the operation
-     *
-     * @param mongoMatch
-     * @return
-     */
-    public MongoMatchDelta insertDeltaForUpdate(final MongoMatch mongoMatch) {
-
-        final MongoMatchSnapshot mongoMatchSnapshot = getDozerMapper().map(mongoMatch, MongoMatchSnapshot.class);
-        final MongoMatchDelta latestDelta = getLatestDelta(mongoMatch.getObjectId());
-        final MongoMatchDelta toInsert = new MongoMatchDelta();
-
-        toInsert.setKey(latestDelta.getKey().nextInSequence(mongoMatch.getLastUpdatedTimestamp().getTime()));
-        toInsert.setOperation(TimeDelta.Operation.UPDATED);
-        toInsert.setSnapshot(mongoMatchSnapshot);
-        getDatastore().insert(toInsert);
-
-        return toInsert;
-
-    }
-
-    public MongoMatchDelta getLatestDelta(final String matchId) {
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(matchId);
-        return getLatestDelta(objectId);
-    }
-
-    public MongoMatchDelta getLatestDelta(final ObjectId objectId) {
-        final Query<MongoMatchDelta> matchTimeDeltaQuery = getDatastore().createQuery(MongoMatchDelta.class);
-        matchTimeDeltaQuery.order(descending("_id.sequence")).criteria("_id.match").equal(objectId);
-        return matchTimeDeltaQuery.get();
     }
 
     public AdvancedDatastore getDatastore() {
@@ -345,15 +312,6 @@ public class MongoMatchUtils {
     @Inject
     public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
         this.mongoDBUtils = mongoDBUtils;
-    }
-
-    public MongoConcurrentUtils getMongoConcurrentUtils() {
-        return mongoConcurrentUtils;
-    }
-
-    @Inject
-    public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
-        this.mongoConcurrentUtils = mongoConcurrentUtils;
     }
 
 }

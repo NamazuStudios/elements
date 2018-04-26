@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
+import com.namazustudios.socialengine.rt.util.SyncWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +10,6 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.Attributes.emptyAttributes;
-import static com.namazustudios.socialengine.rt.Context._waitAsync;
 
 /**
  * The interface for manipulating {@link Resource}s in the cluster.
@@ -26,20 +26,13 @@ public interface ResourceContext {
      *
      * @return the system-assigned {@link ResourceId}
      */
-    @RemotelyInvokable
     default ResourceId create(@Serialize final String module,
                               @Serialize final Path path,
                               @Serialize final Object... args) {
-
-        final Logger logger = LoggerFactory.getLogger(getClass());
-
-        final Future<ResourceId> future = createAsync(
-                resourceId  -> logger.info("Created {} -> {}", resourceId, path),
-                th -> logger.error("Failed create at {}", path, th),
-                module, path, args);
-
-        return _waitAsync(logger, future);
-
+        final SyncWait<ResourceId> resourceIdSyncWait = new SyncWait<>(getClass());
+        createAsync(resourceIdSyncWait.getResultConsumer(), resourceIdSyncWait.getErrorConsumer(),
+                    module, path, args);
+        return resourceIdSyncWait.get();
     }
 
     /**
@@ -51,14 +44,14 @@ public interface ResourceContext {
      * @param module module name to instantiate
      * @param path the {@link Path} for the {@link Resource}
      * @param args the arguments to pass to the {@link Resource} on initialization
-     * @return
+     *
      */
-    default Future<ResourceId> createAsync(@ResultHandler final Consumer<ResourceId> success,
-                                           @ErrorHandler  final Consumer<Throwable> failure,
-                                           @Serialize final String module,
-                                           @Serialize final Path path,
-                                           @Serialize final Object... args) {
-        return createAttributesAsync(success, failure, module, path, emptyAttributes(), args);
+    default void createAsync(@ResultHandler final Consumer<ResourceId> success,
+                             @ErrorHandler  final Consumer<Throwable> failure,
+                             @Serialize final String module,
+                             @Serialize final Path path,
+                             @Serialize final Object... args) {
+        createAttributesAsync(success, failure, module, path, emptyAttributes(), args);
     }
 
     /**
@@ -70,21 +63,14 @@ public interface ResourceContext {
      *
      * @return the system-assigned {@link ResourceId}
      */
-    @RemotelyInvokable
     default ResourceId createAttributes(@Serialize final String module,
                                         @Serialize final Path path,
                                         @Serialize final Attributes attributes,
                                         @Serialize final Object... args) {
-
-        final Logger logger = LoggerFactory.getLogger(getClass());
-
-        final Future<ResourceId> future = createAttributesAsync(
-            resourceId  -> logger.info("Created {} -> {}", resourceId, path),
-            th -> logger.error("Failed create at {}", path, th),
-            module, path, attributes, args);
-
-        return _waitAsync(logger, future);
-
+        final SyncWait<ResourceId> resourceIdSyncWait = new SyncWait<>(getClass());
+        createAttributesAsync(resourceIdSyncWait.getResultConsumer(), resourceIdSyncWait.getErrorConsumer(),
+                              module, path, attributes, args);
+        return resourceIdSyncWait.get();
     }
 
     /**
@@ -98,12 +84,12 @@ public interface ResourceContext {
      * @param args the arguments to pass to the {@link Resource} on initialization
      */
     @RemotelyInvokable
-    Future<ResourceId> createAttributesAsync(@ResultHandler Consumer<ResourceId> success,
-                                             @ErrorHandler  Consumer<Throwable> failure,
-                                             @Serialize String module,
-                                             @Serialize Path path,
-                                             @Serialize Attributes attributes,
-                                             @Serialize Object... args);
+    void createAttributesAsync(@ResultHandler Consumer<ResourceId> success,
+                               @ErrorHandler  Consumer<Throwable> failure,
+                               @Serialize String module,
+                               @Serialize Path path,
+                               @Serialize Attributes attributes,
+                               @Serialize Object... args);
 
     /**
      * Synchronous invoke of {@link #invokePathAsync(Consumer, Consumer, Path, String, Object...)}.
@@ -113,20 +99,13 @@ public interface ResourceContext {
      * @param args the argument array
      * @return the result of the invocation
      */
-    @RemotelyInvokable
     default Object invoke(@Serialize final ResourceId resourceId,
                           @Serialize final String method,
                           @Serialize final Object... args) {
-
-        final Logger logger = LoggerFactory.getLogger(getClass());
-
-        final Future<Object> future = invokeAsync(
-                object  -> logger.info("Invoked {}:{}({})", resourceId.toString(), method, Arrays.toString(args)),
-                throwable -> logger.info("Invocation failed {}:{}({})", resourceId.toString(), method, Arrays.toString(args), throwable),
-                resourceId, method, args);
-
-        return _waitAsync(logger, future);
-
+        final SyncWait<Object> resultSyncWait = new SyncWait<>(getClass());
+        invokeAsync(resultSyncWait.getResultConsumer(), resultSyncWait.getErrorConsumer(),
+                    resourceId, method, args);
+        return resultSyncWait.get();
     }
 
     /**
@@ -140,11 +119,11 @@ public interface ResourceContext {
      * @return
      */
     @RemotelyInvokable
-    Future<Object> invokeAsync(@ResultHandler Consumer<Object> success,
-                               @ErrorHandler  Consumer<Throwable> failure,
-                               @Serialize ResourceId resourceId,
-                               @Serialize String method,
-                               @Serialize Object... args);
+    void invokeAsync(@ResultHandler Consumer<Object> success,
+                     @ErrorHandler  Consumer<Throwable> failure,
+                     @Serialize ResourceId resourceId,
+                     @Serialize String method,
+                     @Serialize Object... args);
 
     /**
      * Synchronous invoke of {@link #invokePathAsync(Consumer, Consumer, Path, String, Object...)}.
@@ -154,20 +133,13 @@ public interface ResourceContext {
      * @param args the argument array
      * @return the result of the invocation
      */
-    @RemotelyInvokable
     default Object invokePath(@Serialize final Path path,
                               @Serialize final String method,
                               @Serialize final Object... args) {
-
-        final Logger logger = LoggerFactory.getLogger(getClass());
-
-        final Future<Object> future = invokePathAsync(
-            object  -> logger.info("Invoked {}:{}({})", path.toNormalizedPathString(), method, Arrays.toString(args)),
-            throwable -> logger.info("Invvocation failed {}:{}({})", path.toNormalizedPathString(), method, Arrays.toString(args), throwable),
-            path, method, args);
-
-        return _waitAsync(logger, future);
-
+        final SyncWait<Object> resultSyncWait = new SyncWait<>(getClass());
+        invokePathAsync(resultSyncWait.getResultConsumer(), resultSyncWait.getErrorConsumer(),
+                        path, method, args);
+        return resultSyncWait.get();
     }
 
     /**
@@ -181,26 +153,19 @@ public interface ResourceContext {
      * @return
      */
     @RemotelyInvokable
-    Future<Object> invokePathAsync(@ResultHandler Consumer<Object> success,
-                                   @ErrorHandler  Consumer<Throwable> failure,
-                                   @Serialize Path path, @Serialize String method, @Serialize Object... args);
+    void invokePathAsync(@ResultHandler Consumer<Object> success,
+                         @ErrorHandler  Consumer<Throwable> failure,
+                         @Serialize Path path, @Serialize String method, @Serialize Object... args);
 
     /**
      * Destroys the {@link Resource} with the provided {@link ResourceId}.
      *
      * @param resourceId the {@link ResourceId}
      */
-    @RemotelyInvokable
     default void destroy(@Serialize final ResourceId resourceId) {
-
-        final Logger logger = LoggerFactory.getLogger(getClass());
-
-        final Future<Void> future = destroyAsync(
-            v  -> logger.info("Destroyed {}", resourceId),
-            th -> logger.error("Failed to destroy {}", resourceId, th), resourceId);
-
-        _waitAsync(logger, future);
-
+        final SyncWait<Void> resultSyncWait = new SyncWait<>(getClass());
+        destroyAsync(resultSyncWait.getResultConsumer(), resultSyncWait.getErrorConsumer(), resourceId);
+        resultSyncWait.get();
     }
 
     /**
@@ -210,36 +175,28 @@ public interface ResourceContext {
      * @param resourceId the {@link ResourceId}
      */
     @RemotelyInvokable
-    Future<Void> destroyAsync(@ResultHandler Consumer<Void> success,
-                              @ErrorHandler  Consumer<Throwable> failure,
-                              @Serialize     ResourceId resourceId);
+    void destroyAsync(@ResultHandler Consumer<Void> success,
+                      @ErrorHandler  Consumer<Throwable> failure,
+                      @Serialize     ResourceId resourceId);
 
     /**
      * Destroys the {@link Resource} using the {@link ResourceId} {@link String}.
      *
      * @param resourceIdString the {@link ResourceId} {@link String}.
      */
-    @RemotelyInvokable
-    default Future<Void> destroyAsync(@ResultHandler Consumer<Void> success,
-                                      @ErrorHandler  Consumer<Throwable> failure,
-                                      @Serialize     String resourceIdString) {
-        return destroyAsync(success, failure, new ResourceId(resourceIdString));
+    default void destroyAsync(@ResultHandler Consumer<Void> success,
+                              @ErrorHandler  Consumer<Throwable> failure,
+                              @Serialize     String resourceIdString) {
+        destroyAsync(success, failure, new ResourceId(resourceIdString));
     }
 
     /**
      * Performs the operations of {@link #destroyAllResourcesAsync(Consumer, Consumer)} in a synchronous fashion.
      */
-    @RemotelyInvokable
     default void destroyAllResources() {
-
-        final Logger logger = LoggerFactory.getLogger(getClass());
-
-        final Future<Void> future = destroyAllResourcesAsync(
-                v  -> logger.info("Destroyed all resources."),
-                th -> logger.error("Failed to destroy all resources", th));
-
-        _waitAsync(logger, future);
-
+        final SyncWait<Void> resultSyncWait = new SyncWait<>(getClass());
+        destroyAllResourcesAsync(resultSyncWait.getResultConsumer(), resultSyncWait.getErrorConsumer());
+        resultSyncWait.get();
     }
 
     /**
@@ -251,7 +208,7 @@ public interface ResourceContext {
      * indicating so.
      */
     @RemotelyInvokable
-    Future<Void> destroyAllResourcesAsync(@ResultHandler Consumer<Void> success,
-                                          @ErrorHandler  Consumer<Throwable> failure);
+    void destroyAllResourcesAsync(@ResultHandler Consumer<Void> success,
+                                  @ErrorHandler  Consumer<Throwable> failure);
 
 }

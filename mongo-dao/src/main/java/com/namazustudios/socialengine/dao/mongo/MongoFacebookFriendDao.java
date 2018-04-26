@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoFriendship;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFriendshipId;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.fts.ObjectIndex;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.friend.FacebookFriend;

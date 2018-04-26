@@ -2,10 +2,10 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.LeaderboardDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoLeaderboard;
 import com.namazustudios.socialengine.exception.*;
-import com.namazustudios.socialengine.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;

@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.servlet;
 
 import com.google.common.net.HttpHeaders;
-import com.namazustudios.socialengine.rt.Constants;
 import com.namazustudios.socialengine.rt.ExceptionMapper;
 import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.handler.Session;
@@ -13,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.servlet.AsyncContext;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
@@ -26,13 +26,12 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.Constants.HTTP_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.Constants.MDC_HTTP_REQUEST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class DispatcherServlet extends HttpServlet {
-
-    private static final long ASYNC_TIMEOUT = MILLISECONDS.convert(5, MINUTES);
 
     private static final Logger logger = LoggerFactory.getLogger(DispatcherServlet.class);
 
@@ -45,6 +44,8 @@ public class DispatcherServlet extends HttpServlet {
     private SessionRequestDispatcher<HttpRequest> sessionRequestDispatcher;
 
     private ExceptionMapper.Resolver exceptionMapperResolver;
+
+    private long asyncTimeoutMillisecoinds;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -118,8 +119,7 @@ public class DispatcherServlet extends HttpServlet {
                                            final HttpServletResponse httpServletResponse) {
 
         final AsyncContext asyncContext = httpServletRequest.startAsync();
-        asyncContext.setTimeout(ASYNC_TIMEOUT);
-
+        asyncContext.setTimeout(getAsyncTimeoutMillisecoinds());
 
         final Session session = getHttpSessionService().getSession(httpServletRequest);
         final HttpRequest httpRequest = getHttpRequestService().getAsyncRequest(asyncContext);
@@ -136,13 +136,13 @@ public class DispatcherServlet extends HttpServlet {
         final String prefix = httpRequest.toString();
         final AtomicBoolean complete = new AtomicBoolean();
         MDC.put(MDC_HTTP_REQUEST, prefix);
-        logger.info("{} - Dispatching Request.", prefix);
+        logger.debug("{} - Dispatching Request.", prefix);
 
         asyncContext.addListener(new AsyncListener() {
 
             @Override
             public void onComplete(AsyncEvent event) throws IOException {
-                logger.info("{} - Completed request.", prefix, event.getThrowable());
+                logger.debug("{} - Completed request.", prefix, event.getThrowable());
                 complete.set(true);
             }
 
@@ -161,14 +161,14 @@ public class DispatcherServlet extends HttpServlet {
 
             @Override
             public void onStartAsync(AsyncEvent event) throws IOException {
-                logger.info("{} - Started AsyncRequest {}", prefix, event.getThrowable());
+                logger.debug("{} - Started AsyncRequest {}", prefix, event.getThrowable());
             }
 
         });
 
         return response -> {
             if (!complete.getAndSet(true)) {
-                logger.info("{} - Sending response.", prefix);
+                logger.debug("{} - Sending response.", prefix);
                 assembleAndWrite(httpRequest, response, httpServletResponse);
                 asyncContext.complete();
             } else {
@@ -251,6 +251,15 @@ public class DispatcherServlet extends HttpServlet {
     @Inject
     public void setExceptionMapperResolver(ExceptionMapper.Resolver exceptionMapperResolver) {
         this.exceptionMapperResolver = exceptionMapperResolver;
+    }
+
+    public long getAsyncTimeoutMillisecoinds() {
+        return asyncTimeoutMillisecoinds;
+    }
+
+    @Inject
+    public void setAsyncTimeoutMillisecoinds(@Named(HTTP_TIMEOUT_MSEC) long asyncTimeoutMillisecoinds) {
+        this.asyncTimeoutMillisecoinds = asyncTimeoutMillisecoinds;
     }
 
 }

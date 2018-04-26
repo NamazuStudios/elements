@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 
-@ApiModel("Represents the Firebase Application Configuration")
+@ApiModel
 public class FirebaseApplicationConfiguration extends ApplicationConfiguration {
 
     @NotNull

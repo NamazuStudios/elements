@@ -12,7 +12,6 @@ import java.util.List;
  * Created by patricktwohig on 6/14/17.
  */
 @ApiModel(
-    value = "The Facebook Application Configuration",
     description = "Houses the various parameters required which allow communication with " +
                   "the Faceook API.  The Facebook API will ")
 public class FacebookApplicationConfiguration extends ApplicationConfiguration implements Serializable {

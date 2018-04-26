@@ -72,7 +72,7 @@ public class LocalInvocationDispatcherBuilder {
                 break;
 
             default:
-                throw new IllegalArgumentException("Dispatch type " + getDispatchType() + " is not supported.");
+                throw new IllegalArgumentException("Dispatch type " + getDispatchType() + " is not supported for method " + method);
 
         }
 

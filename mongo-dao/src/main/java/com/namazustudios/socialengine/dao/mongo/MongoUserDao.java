@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.*;
-import com.namazustudios.socialengine.fts.ObjectIndex;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import org.apache.lucene.index.Term;

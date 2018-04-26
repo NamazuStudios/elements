@@ -10,11 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 import java.util.function.Consumer;
-
-import static java.util.UUID.randomUUID;
 
 /**
  * Loads an instance of {@link Resource} into the {@link ResourceService}, executes the {@link Request}, collects the
@@ -57,21 +54,21 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
         final HttpOperation httpOperation = httpRequest.getManifestMetadata().getPreferredOperation();
 
         final Consumer<Throwable> failure = ex -> getExceptionMapperResolver()
-                .getExceptionMapper(ex)
-                .map(ex, request, responseConsumer);
+            .getExceptionMapper(ex)
+            .map(ex, request, responseConsumer);
 
         final Consumer<Object> success = result -> {
             try {
                 final Response response = (Response) result;
                 responseConsumer.accept(response);
             } catch (ClassCastException ex) {
-                logger.error("Resource did not return Response type.");
+                logger.error("Resource did not return Response type.", ex);
                 failure.accept(ex);
             }
         };
 
         try {
-            getContext().getHandlerContext().invokeRemoteHandlerAsync(
+            getContext().getHandlerContext().invokeSingleUseHandlerAsync(
                 success, failure,
                 request.getAttributes(), httpModule.getModule(),
                 httpOperation.getMethod(), request.getPayload(), request, session);
@@ -86,8 +83,8 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
     private void logRequestFailure(final Request request, final Throwable th) {
         try {
             logger.error("Error with request {} {}",
-                    request.getHeader().getMethod(),
-                    request.getHeader().getParsedPath().toNormalizedPathString(), th);
+                request.getHeader().getMethod(),
+                request.getHeader().getParsedPath().toNormalizedPathString(), th);
         } catch (Exception ex) {
             logger.error("Error with request {} {}", ex);
         }

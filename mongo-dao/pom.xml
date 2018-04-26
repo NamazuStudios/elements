@@ -33,17 +33,17 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>com.namazustudios.elements</groupId>
             <artifactId>lucene-indexer</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>com.namazustudios.elements</groupId>
             <artifactId>lucene-pojo</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>com.namazustudios.elements</groupId>
             <artifactId>mongo-lucene</artifactId>
             <version>${project.version}</version>
         </dependency>

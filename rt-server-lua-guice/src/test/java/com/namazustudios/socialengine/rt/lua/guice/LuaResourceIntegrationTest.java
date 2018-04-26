@@ -127,8 +127,9 @@ public class LuaResourceIntegrationTest {
         try {
             getContext().getResourceContext().invoke(resourceId, "lua_runtime_exception");
             fail("Expected exception by this pointl");
-        } catch (InternalException ex) {
-            assertTrue((ex.getCause() instanceof LuaRuntimeException), "Expected cause to be LuaRuntimeException.");
+        } catch (LuaRuntimeException ex) {
+            // Pass Test
+            return;
         } catch (Exception ex) {
             fail("Failed with exception.", ex);
         } finally {

@@ -10,7 +10,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoShortLink;
 import com.namazustudios.socialengine.exception.BadQueryException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.fts.ObjectIndex;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ShortLink;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;

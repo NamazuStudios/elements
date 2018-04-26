@@ -8,11 +8,25 @@ import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import org.zeromq.ZContext;
 
+import java.util.concurrent.TimeUnit;
+
+import static com.google.inject.name.Names.named;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 public class TestJeroMQLuaNodeModule extends PrivateModule {
+
+    private Runnable handlerTimeoutBindAction = () -> {};
+
+    private Runnable contextBindAction = () -> bind(ZContext.class).asEagerSingleton();
 
     private final JeroMQNodeModule jeroMQNodeModule = new JeroMQNodeModule();
 
-    private Runnable contextBindAction = () -> bind(ZContext.class).asEagerSingleton();
+    private final SimpleServicesModule simpleServicesModule = new SimpleServicesModule();
+
+    private final SimpleHandlerContextModule simpleHandlerContextModule = new SimpleHandlerContextModule();
+
+    private final SimpleSchedulerContextModule simpleSchedulerContextModule = new SimpleSchedulerContextModule();
+
 
     @Override
     protected void configure() {
@@ -20,6 +34,8 @@ public class TestJeroMQLuaNodeModule extends PrivateModule {
         expose(Node.class);
 
         contextBindAction.run();
+        handlerTimeoutBindAction.run();
+
         bind(InvocationDispatcher.class).to(ContextInvocationDispatcher.class).asEagerSingleton();
         bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(getClass().getClassLoader()));
 
@@ -32,13 +48,13 @@ public class TestJeroMQLuaNodeModule extends PrivateModule {
         });
 
         bind(Context.class).to(SimpleContext.class).asEagerSingleton();
-        install(new SimpleServicesModule());
+        install(simpleServicesModule);
         install(new SimpleResourceContextModule());
         install(new SimpleIndexContextModule());
-        install(new SimpleSchedulerContextModule());
-        install(new SimpleHandlerContextModule());
         install(new GuiceIoCResolverModule());
         install(jeroMQNodeModule);
+        install(simpleHandlerContextModule);
+        install(simpleSchedulerContextModule);
 
     }
 
@@ -126,6 +142,29 @@ public class TestJeroMQLuaNodeModule extends PrivateModule {
      */
     public TestJeroMQLuaNodeModule withNumberOfDispatchers(int numberOfDispatchers) {
         jeroMQNodeModule.withNumberOfDispatchers(numberOfDispatchers);
+        return this;
+    }
+
+    /**
+     * {@see {@link SimpleHandlerContextModule#withTimeout(long, TimeUnit)}}
+     *
+     * @param duration the duration
+     * @param sourceUnits the source units of measure
+     * @return this instance
+     */
+    public TestJeroMQLuaNodeModule withHandlerTimeout(final long duration, final TimeUnit sourceUnits) {
+        handlerTimeoutBindAction = () -> simpleHandlerContextModule.withTimeout(duration, sourceUnits);
+        return this;
+    }
+
+    /**
+     * {@see {@link SimpleServicesModule#withSchedulerThreads(int)}}
+     *
+     * @param schedulerThreads scheduler threads
+     * @return this instance
+     */
+    public TestJeroMQLuaNodeModule withSchedulerThreads(final int schedulerThreads) {
+        simpleServicesModule.withSchedulerThreads(schedulerThreads);
         return this;
     }
 

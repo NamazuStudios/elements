@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.appserve;
 
 import com.namazustudios.socialengine.config.ModuleDefaults;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer;
+import com.namazustudios.socialengine.rt.Constants;
 import com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool;
 
 import java.util.Properties;
@@ -20,6 +21,7 @@ public class AppServeModuleDefaults implements ModuleDefaults {
         properties.setProperty(TIMEOUT, "60");
         properties.setProperty(MIN_CONNECTIONS, "10");
         properties.setProperty(DynamicConnectionPool.MAX_CONNECTIONS, "10000");
+        properties.setProperty(Constants.HTTP_TIMEOUT_MSEC, "180000");
         return properties;
     }
 

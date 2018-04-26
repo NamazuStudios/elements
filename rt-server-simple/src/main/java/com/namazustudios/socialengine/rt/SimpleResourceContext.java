@@ -33,9 +33,9 @@ public class SimpleResourceContext implements ResourceContext {
     }
 
     @Override
-    public Future<ResourceId> createAttributesAsync(final Consumer<ResourceId> success, final Consumer<Throwable> failure,
-                                                    final String module, final Path path, final Attributes attributes, final Object... args) {
-        return getExecutorService().submit(() -> {
+    public void createAttributesAsync(final Consumer<ResourceId> success, final Consumer<Throwable> failure,
+                                      final String module, final Path path, final Attributes attributes, final Object... args) {
+        getExecutorService().submit(() -> {
             try {
                 final ResourceId resourceId = createAttributes(module, path, attributes, args);
                 success.accept(resourceId);
@@ -48,13 +48,13 @@ public class SimpleResourceContext implements ResourceContext {
         });
     }
 
-    public Future<Void> destroyAsync(final Consumer<Void> success,
-                                     final Consumer<Throwable> failure,
-                                     final ResourceId resourceId) {
+    public void destroyAsync(final Consumer<Void> success,
+                             final Consumer<Throwable> failure,
+                             final ResourceId resourceId) {
         // The Resource must be locked in order to properly destroy it because it invovles mutating the Resource itself.
         // if we try to destroy it without using the scheduler, we could end up with two threads accessing it at the
         // same time, which is no good.
-        return getScheduler().performV(resourceId, r -> {
+        getScheduler().performV(resourceId, r -> {
             try {
                 getResourceService().destroy(resourceId);
                 success.accept(null);
@@ -65,35 +65,19 @@ public class SimpleResourceContext implements ResourceContext {
     }
 
     @Override
-    public Future<Object> invokeAsync(final Consumer<Object> success, final Consumer<Throwable> failure,
-                                      final ResourceId resourceId, final String method, final Object... args) {
-
-        final InvocationFuture invocationFuture = new InvocationFuture();
-
-        getScheduler().perform(resourceId, resource -> doInvoke(invocationFuture.success().andThen(success),
-                                                                invocationFuture.failure().andThen(failure),
-                                                                resource, method, args), failure);
-
-        return invocationFuture;
-
+    public void invokeAsync(final Consumer<Object> success, final Consumer<Throwable> failure,
+                            final ResourceId resourceId, final String method, final Object... args) {
+        getScheduler().perform(resourceId, resource -> doInvoke(success, failure, resource, method, args), failure);
     }
 
     @Override
-    public Future<Object> invokePathAsync(final Consumer<Object> success, final Consumer<Throwable> failure,
-                                          final Path path, final String method, final Object... args) {
-
-        final InvocationFuture invocationFuture = new InvocationFuture();
-
-        getScheduler().perform(path, resource -> doInvoke(invocationFuture.success().andThen(success),
-                                                          invocationFuture.failure().andThen(failure),
-                                                          resource, method, args), failure);
-
-        return invocationFuture;
-
+    public void invokePathAsync(final Consumer<Object> success, final Consumer<Throwable> failure,
+                                final Path path, final String method, final Object... args) {
+        getScheduler().perform(path, resource -> doInvoke(success, failure, resource, method, args), failure);
     }
 
-    private Object doInvoke(final Consumer<Object> success, final Consumer<Throwable> failure,
-                                    final Resource resource, final String method, final Object... args) {
+    private TaskId doInvoke(final Consumer<Object> success, final Consumer<Throwable> failure,
+                            final Resource resource, final String method, final Object... args) {
         try {
             return resource.getMethodDispatcher(method).params(args).dispatch(success, failure);
         } catch (Throwable th) {
@@ -138,94 +122,14 @@ public class SimpleResourceContext implements ResourceContext {
         this.executorService = executorService;
     }
 
-    private static class InvocationFuture implements Future<Object> {
-
-        private final CountDownLatch countDownLatch = new CountDownLatch(1);
-
-        private final AtomicReference<State> state = new AtomicReference<>(State.PENDING);
-
-        private final AtomicReference<Object> result = new AtomicReference<>();
-
-        private final AtomicReference<Throwable> throwable = new AtomicReference<>();
-
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            if (state.compareAndSet(State.PENDING, State.CANCELED)) {
-                countDownLatch.countDown();
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return state.get() == State.CANCELED;
-        }
-
-        @Override
-        public boolean isDone() {
-            switch (state.get()) {
-                case DONE:
-                case CANCELED:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        @Override
-        public Object get() throws InterruptedException, ExecutionException {
-            countDownLatch.await();
-            return getResultOrThrow();
-        }
-
-        @Override
-        public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-            countDownLatch.await(timeout, unit);
-            return getResultOrThrow();
-        }
-
-        private Object getResultOrThrow() throws ExecutionException {
-
-            final Throwable throwable = this.throwable.get();
-
-            if (this.throwable.get() != null) {
-                throw new ExecutionException(throwable);
-            }
-
-            return result.get();
-
-        }
-
-        private enum State { PENDING, DONE, CANCELED }
-
-        public Consumer<Object> success() {
-            return object -> {
-                if (throwable.get() == null && result.compareAndSet(null, object)) {
-                    countDownLatch.countDown();
-                }
-            };
-        }
-
-        public Consumer<Throwable> failure() {
-            return th -> {
-                if (throwable.compareAndSet(null, th)) {
-                    countDownLatch.countDown();
-                }
-            };
-        }
-
-    }
-
     @Override
     public void destroyAllResources() {
         getResourceService().removeAndCloseAllResources();
     }
 
     @Override
-    public Future<Void> destroyAllResourcesAsync(Consumer<Void> success, Consumer<Throwable> failure) {
-        return getExecutorService().submit(() -> {
+    public void destroyAllResourcesAsync(Consumer<Void> success, Consumer<Throwable> failure) {
+        getExecutorService().submit(() -> {
 
             try {
                 getResourceService().removeAndCloseAllResources();

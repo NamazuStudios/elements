@@ -13,7 +13,7 @@ public class RedissonTopicService implements TopicService {
 
     @Override
     public <T> Topic<T> getTopicForTypeNamed(final Class<T> tClass, final String named) {
-        return new RedissonTopic<>(getRedisson(), named);
+        return new RedissonTopic<>(getRedisson(), tClass, named);
     }
 
     public RedissonClient getRedisson() {

@@ -12,6 +12,7 @@ import org.mongodb.morphia.query.Sort;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.function.BiFunction;
 
 /**
  * Created by patricktwohig on 7/27/17.
@@ -32,7 +33,8 @@ public class MongoFIFOMatchmaker implements Matchmaker {
     @Override
     public SuccessfulMatchTuple attemptToFindOpponent(
             final Match match,
-            final int maxCandidatesToConsider) throws NoSuitableMatchException {
+            final int maxCandidatesToConsider,
+            final BiFunction<Match, Match, String> finalizer) throws NoSuitableMatchException {
 
         final Query<MongoMatch> query = getDatastore().createQuery(MongoMatch.class);
         final MongoMatch mongoMatch = getMongoMatchDao().getMongoMatch(match.getId());
@@ -47,7 +49,7 @@ public class MongoFIFOMatchmaker implements Matchmaker {
 
         final FindOptions findOptions = new FindOptions().limit(maxCandidatesToConsider);
         final List<MongoMatch> mongoMatchList = query.asList(findOptions);
-        return getMongoMatchUtils().attemptToPairCandidates(mongoMatch, mongoMatchList);
+        return getMongoMatchUtils().attemptToPairCandidates(mongoMatch, mongoMatchList, finalizer);
 
     }
 

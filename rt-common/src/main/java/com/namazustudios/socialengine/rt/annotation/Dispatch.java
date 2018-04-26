@@ -36,9 +36,9 @@ public @interface Dispatch {
         /**
          * The method is dispatched, blocking until the method returns or an exception is thrown.
          *
-         * This mode is automatically selected if a {@link Method} returns an object and neither
-         * {@link ResultHandler} or {@link ErrorHandler} are specified in the parameters.  This implies that the return
-         * type must be serializable.  The invocation will block until the remote end produces a result.
+         * This mode is automatically selected if a {@link Method} returns an object and neither {@link ResultHandler}
+         * or {@link ErrorHandler} are specified in the parameters.  This implies that the return type must be
+         * serializable.  The invocation will block until the remote end produces a result.
          */
         SYNCHRONOUS,
 
@@ -46,7 +46,6 @@ public @interface Dispatch {
          * This behaves similar to {@link #SYNCHRONOUS}, except the calling method must return some type of
          * {@link Future<?>}.  The result is obtained through {@link Future#get()}, or {@link ExecutionException}
          * in the event of a failure.
-         *
          *
          * The method may use {@link ResultHandler} or {@link ErrorHandler} to receive results in addition to the
          * returned {@link Future}.

@@ -6,10 +6,10 @@ import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.fts.NoResultException;
-import com.namazustudios.socialengine.fts.ObjectIndex;
-import com.namazustudios.socialengine.fts.SearchException;
-import com.namazustudios.socialengine.fts.TopDocsSearchResult;
+import com.namazustudios.elements.fts.NoResultException;
+import com.namazustudios.elements.fts.ObjectIndex;
+import com.namazustudios.elements.fts.SearchException;
+import com.namazustudios.elements.fts.TopDocsSearchResult;
 import com.namazustudios.socialengine.model.Pagination;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -96,12 +96,8 @@ public class MongoDBUtils {
 
         final int limit = min(getQueryMaxResults(), count);
 
-        final Iterable<ModelT> userIterable;
-
-        final List<ModelT> modelTList;
-        final List<MongoModelT> l = query.asList(new FindOptions().skip(offset));
-
-        modelTList = l.stream()
+        final List<ModelT> modelTList = query.asList(new FindOptions().skip(offset))
+            .stream()
             .map(function)
             .limit(limit)
             .collect(Collectors.toList());
