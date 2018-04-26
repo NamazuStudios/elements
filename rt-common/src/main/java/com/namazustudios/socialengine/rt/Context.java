@@ -52,30 +52,4 @@ public interface Context {
      */
     HandlerContext getHandlerContext();
 
-    /**
-     * Used to assist implementations with handling {@link Future} types.  Because this is provided at the interface
-     * level, it must be public.  However, this should only be used within the implementation of {@link Context} and
-     * its related types.
-     *
-     *
-     * @param tFuture the {@link Future}
-     * @param <T> the type of the {@link Future}
-     * @return the result of {@link Future#get()}
-     */
-    static <T> T _waitAsync(final Logger logger, Future<T> tFuture) {
-        try {
-            return tFuture.get();
-        } catch (InterruptedException e) {
-            logger.error("Interrupted.", e);
-            throw new InternalException(e);
-        } catch (ExecutionException e) {
-            final Throwable cause = e.getCause();
-            if (cause instanceof BaseException) {
-                throw (BaseException) e.getCause();
-            } else {
-                throw new InternalException(e.getCause());
-            }
-        }
-    }
-
 }

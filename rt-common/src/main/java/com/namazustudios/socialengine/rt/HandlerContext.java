@@ -2,13 +2,12 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.exception.HandlerTimeoutException;
+import com.namazustudios.socialengine.rt.util.SyncWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
-
-import static com.namazustudios.socialengine.rt.Context._waitAsync;
 
 /**
  * Used to manage handler-type {@link Resource} instances.  These are intended to be short-lived and managed entirely
@@ -24,8 +23,6 @@ import static com.namazustudios.socialengine.rt.Context._waitAsync;
 @Proxyable
 public interface HandlerContext {
 
-
-
     /**
      * Synchronously invokes {@link #invokeSingleUseHandlerAsync(Consumer, Consumer, Attributes, String, String, Object...)}
      * blocking until the call returns.
@@ -36,21 +33,14 @@ public interface HandlerContext {
      * @param args the arguments passed to the method {@see {@link MethodDispatcher#params(Object...)}}
      * @return the invocation result
      */
-    @RemotelyInvokable
     default Object invokeSingleUseHandler(
             @Serialize final Attributes attributes,
             @Serialize final String module, @Serialize final String method,
             @Serialize final Object ... args) {
-
-        final Logger logger = LoggerFactory.getLogger(getClass());
-
-        final Future<Object> objectFuture = invokeSingleUseHandlerAsync(
-            o -> logger.debug("Got response: {}", o),
-            th -> logger.error("Got error from remote", th),
-            attributes, module, method, args);
-
-        return _waitAsync(logger, objectFuture);
-
+        final SyncWait<Object> resultSyncWait = new SyncWait<>(getClass());
+        invokeSingleUseHandlerAsync(resultSyncWait.getResultConsumer(), resultSyncWait.getErrorConsumer(),
+                                    attributes, module, method, args);
+        return resultSyncWait.get();
     }
 
     /**
@@ -75,7 +65,7 @@ public interface HandlerContext {
      * @return {@link Future<Object>} which can be used to obtain the result of the invocation.
      */
     @RemotelyInvokable
-    Future<Object> invokeSingleUseHandlerAsync(
+    void invokeSingleUseHandlerAsync(
         @ResultHandler Consumer<Object> success, @ErrorHandler Consumer<Throwable> failure,
         @Serialize Attributes attributes, @Serialize String module,
         @Serialize String method, @Serialize Object ... args);
@@ -90,21 +80,14 @@ public interface HandlerContext {
      * @param args the arguments passed to the method {@see {@link MethodDispatcher#params(Object...)}}
      * @return the invocation result
      */
-    @RemotelyInvokable
     default Object invokeRetainedHandler(
             @Serialize final Attributes attributes,
             @Serialize final String module, @Serialize final String method,
             @Serialize final Object ... args) {
-
-        final Logger logger = LoggerFactory.getLogger(getClass());
-
-        final Future<Object> objectFuture = invokeRetainedHandlerAsync(
-                o -> logger.debug("Got response: {}", o),
-                th -> logger.error("Got error from remote", th),
-                attributes, module, method, args);
-
-        return _waitAsync(logger, objectFuture);
-
+        final SyncWait<Object> resultSyncWait = new SyncWait<>(getClass());
+        invokeRetainedHandlerAsync(resultSyncWait.getResultConsumer(), resultSyncWait.getErrorConsumer(),
+                                   attributes, module, method, args);
+        return resultSyncWait.get();
     }
 
     /**
@@ -129,7 +112,7 @@ public interface HandlerContext {
      * @return the {@link Future<Object>} of the result.
      */
     @RemotelyInvokable
-    Future<Object> invokeRetainedHandlerAsync(
+    void invokeRetainedHandlerAsync(
         @ResultHandler Consumer<Object> success, @ErrorHandler Consumer<Throwable> failure,
         @Serialize Attributes attributes, @Serialize String module,
         @Serialize String method, @Serialize Object ... args);

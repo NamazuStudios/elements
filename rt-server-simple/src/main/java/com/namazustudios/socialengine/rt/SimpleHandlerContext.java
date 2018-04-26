@@ -36,7 +36,7 @@ public class SimpleHandlerContext implements HandlerContext {
     });
 
     @Override
-    public Future<Object> invokeSingleUseHandlerAsync(
+    public void invokeSingleUseHandlerAsync(
             final Consumer<Object> success, final Consumer<Throwable> failure,
             final Attributes attributes, final String module,
             final String method, final Object... args) {
@@ -47,7 +47,7 @@ public class SimpleHandlerContext implements HandlerContext {
         final ScheduledFuture<?> timeoutScheduledFuture = scheduleTimeout(finished, resourceId, failure);
 
         try {
-            return getResourceContext().invokeAsync(
+            getResourceContext().invokeAsync(
                 succeedAndDestroy(finished, timeoutScheduledFuture, resourceId, success, failure),
                 failure(finished, timeoutScheduledFuture, resourceId, failure, module, method, args),
                 resourceId, method, args);
@@ -64,7 +64,7 @@ public class SimpleHandlerContext implements HandlerContext {
     }
 
     @Override
-    public Future<Object> invokeRetainedHandlerAsync(
+    public void invokeRetainedHandlerAsync(
             final Consumer<Object> success, final Consumer<Throwable> failure,
             final Attributes attributes, final String module,
             final String method, final Object... args) {
@@ -75,7 +75,7 @@ public class SimpleHandlerContext implements HandlerContext {
         final ScheduledFuture<?> timeoutScheduledFuture = scheduleTimeout(finished, resourceId, failure);
 
         try {
-            return getResourceContext().invokeAsync(
+            getResourceContext().invokeAsync(
                 succeedAndUnlink(finished, timeoutScheduledFuture, path, success, failure),
                 failure(finished, timeoutScheduledFuture, resourceId, failure, module, method, args),
                 resourceId, method, args);

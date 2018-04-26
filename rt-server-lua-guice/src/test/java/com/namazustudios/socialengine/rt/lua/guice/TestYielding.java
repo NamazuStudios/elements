@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.lua.guice;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.util.SyncWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -27,25 +28,28 @@ public class TestYielding {
         final Path path = new Path(randomUUID().toString());
         final ResourceId resourceId = getContext().getResourceContext().create("test.concurrent_coroutine", path);
 
+        final SyncWait<Object> blockSyncWait = new SyncWait<>(getClass());
         logger.info("Starting blocking co-routine.");
 
-        final Future<Object> blockedFuture = getContext()
+        getContext()
             .getResourceContext()
             .invokeAsync(
-                r -> logger.info("Block Success: {}", r),
-                ex -> logger.error("Failure", ex),
+                blockSyncWait.getResultConsumer(),
+                blockSyncWait.getErrorConsumer(),
                 resourceId, "block");
 
+        final SyncWait<Object> awakeSyncWait = new SyncWait<>(getClass());
         logger.info("Awaking Coroutine.");
-        final Future<Object> awokeFuture = getContext()
+
+        getContext()
             .getResourceContext()
             .invokeAsync(
-                r -> logger.info("Awake Success: {}", r),
-                ex -> logger.error("Failure", ex),
+                awakeSyncWait.getResultConsumer(),
+                awakeSyncWait.getErrorConsumer(),
                 resourceId, "awake");
 
-        assertEquals(blockedFuture.get(), "OK");
-        assertEquals(awokeFuture.get(), "OK");
+        assertEquals(blockSyncWait.get(), "OK");
+        assertEquals(awakeSyncWait.get(), "OK");
 
     }
 
@@ -57,14 +61,16 @@ public class TestYielding {
 
         logger.info("Starting blocking co-routine.");
 
-        final Future<Object> shortYieldFuture = getContext()
-                .getResourceContext()
-                .invokeAsync(
-                        r -> logger.info("Success: {}", r),
-                        ex -> logger.error("Failure", ex),
-                        resourceId, "short_yield");
+        final SyncWait<Object> shortYieldSyncWait = new SyncWait<>(getClass());
 
-        assertEquals(shortYieldFuture.get(), "OK");
+        getContext()
+            .getResourceContext()
+            .invokeAsync(
+                shortYieldSyncWait.getResultConsumer(),
+                shortYieldSyncWait.getErrorConsumer(),
+                resourceId, "short_yield");
+
+        assertEquals(shortYieldSyncWait.get(), "OK");
 
     }
 
@@ -74,23 +80,27 @@ public class TestYielding {
         final Path path = new Path(randomUUID().toString());
         final ResourceId resourceId = getContext().getResourceContext().create("test.restarting_coroutine", path);
 
-        final Future<Object> startFuture = getContext()
+        final SyncWait<Object> startSyncWait = new SyncWait<>(getClass());
+
+        getContext()
             .getResourceContext()
             .invokeAsync(
-                r -> logger.info("Start Success: {}", r),
-                ex -> logger.error("Start Failure", ex),
+                startSyncWait.getResultConsumer(),
+                startSyncWait.getErrorConsumer(),
                 resourceId, "start");
 
-        logger.info("Awaking Coroutine.");
-        final Future<Object> resumeFuture = getContext()
-                .getResourceContext()
-                .invokeAsync(
-                        r -> logger.info("Resume Success: {}", r),
-                        ex -> logger.error("Resume Failure", ex),
-                        resourceId, "resume");
+        final SyncWait<Object> resumeSyncWait = new SyncWait<>(getClass());
 
-        startFuture.get();
-        resumeFuture.get();
+        getContext()
+            .getResourceContext()
+            .invokeAsync(
+                resumeSyncWait.getResultConsumer(),
+                resumeSyncWait.getErrorConsumer(),
+                resourceId, "resume");
+
+        startSyncWait.get();
+        resumeSyncWait.get();
+
     }
 
     public Context getContext() {

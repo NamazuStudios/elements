@@ -21,10 +21,10 @@ public class SimpleIndexContext implements IndexContext {
     private ResourceService resourceService;
 
     @Override
-    public Future<Stream<Listing>> listAsync(final Path path,
-                                             final Consumer<Stream<Listing>> success,
-                                             final Consumer<Throwable> failure) {
-        return getExecutorService().submit(() -> {
+    public void listAsync(final Path path,
+                          final Consumer<Stream<Listing>> success,
+                          final Consumer<Throwable> failure) {
+        getExecutorService().submit(() -> {
             try {
                 final Stream<Listing> stream = getResourceService().listParallelStream(path).map(this::transform);
                 success.accept(stream);
@@ -52,9 +52,9 @@ public class SimpleIndexContext implements IndexContext {
     }
 
     @Override
-    public Future<Void> linkAsync(final ResourceId resourceId, final Path destination,
-                                  final Consumer<Void> success, final Consumer<Throwable> failure) {
-        return getExecutorService().submit(() -> {
+    public void linkAsync(final ResourceId resourceId, final Path destination,
+                           final Consumer<Void> success, final Consumer<Throwable> failure) {
+        getExecutorService().submit(() -> {
             try {
                 getResourceService().link(resourceId, destination);
                 success.accept(null);
@@ -68,9 +68,9 @@ public class SimpleIndexContext implements IndexContext {
     }
 
     @Override
-    public Future<Void> linkPathAsync(final Path source, final Path destination,
-                                      final Consumer<Void> success, final Consumer<Throwable> failure) {
-        return getExecutorService().submit(() -> {
+    public void linkPathAsync(final Path source, final Path destination,
+                              final Consumer<Void> success, final Consumer<Throwable> failure) {
+        getExecutorService().submit(() -> {
             try {
                 getResourceService().linkPath(source, destination);
                 success.accept(null);
@@ -84,10 +84,10 @@ public class SimpleIndexContext implements IndexContext {
     }
 
     @Override
-    public Future<Unlink> unlinkAsync(final Path path,
-                                      final Consumer<Unlink> success,
-                                      final Consumer<Throwable> failure) {
-        return getExecutorService().submit(() -> {
+    public void unlinkAsync(final Path path,
+                            final Consumer<Unlink> success,
+                            final Consumer<Throwable> failure) {
+        getExecutorService().submit(() -> {
             try {
 
                 final Unlink result = new Unlink() {
