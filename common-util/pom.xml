@@ -16,6 +16,11 @@
     <version>1.0-SNAPSHOT</version>
     <name>common-util</name>
 
+
+    <properties>
+        <beanutils.version>1.9.3</beanutils.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
@@ -43,6 +48,35 @@
             <version>${javax.servlet.api.version}</version>
             <optional>true</optional>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.bval</groupId>
+            <artifactId>bval-core</artifactId>
+            <version>${bval.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.bval</groupId>
+            <artifactId>bval-guice</artifactId>
+            <version>${bval.guice.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${testng.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>${beanutils.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>${guice.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

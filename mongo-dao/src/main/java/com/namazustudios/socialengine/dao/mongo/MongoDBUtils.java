@@ -88,12 +88,13 @@ public class MongoDBUtils {
             final Query<MongoModelT> query, final int offset, final int count,
             final Function<MongoModelT,  ModelT> function) {
 
+
         final Pagination<ModelT> pagination = new Pagination<>();
 
         pagination.setOffset(offset);
         pagination.setTotal((int) query.count());
 
-        final int limit = min(queryMaxResults, count);
+        final int limit = min(getQueryMaxResults(), count);
 
         final List<ModelT> modelTList = query.asList(new FindOptions().skip(offset))
             .stream()

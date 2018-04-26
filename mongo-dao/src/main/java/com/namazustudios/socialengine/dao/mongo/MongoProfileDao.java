@@ -19,6 +19,7 @@ import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -160,6 +161,12 @@ public class MongoProfileDao implements ProfileDao {
 
         return query.asList().stream();
 
+    }
+
+    public Stream<MongoProfile> getActiveMongoProfilesForUser(final ObjectId mongoUserObjectId) {
+        final MongoUser mongoUser = new MongoUser();
+        mongoUser.setObjectId(mongoUserObjectId);
+        return getActiveMongoProfilesForUser(mongoUser);
     }
 
     @Override

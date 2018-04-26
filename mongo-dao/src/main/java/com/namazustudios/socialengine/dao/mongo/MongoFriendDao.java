@@ -27,6 +27,8 @@ import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
 
+import java.util.List;
+
 import static com.namazustudios.socialengine.model.friend.Friendship.*;
 import static java.util.stream.Collectors.toList;
 
@@ -107,6 +109,25 @@ public class MongoFriendDao implements FriendDao {
 
         final MongoFriendship mongoFriendship = getDatastore().get(MongoFriendship.class, mongoFriendshipId);
         return transform(mongoUser, mongoFriendship);
+
+    }
+
+    public List<MongoFriendship> getAllMongoFriendshipsForUser(final MongoUser mongoUser) {
+
+        final Query<MongoFriendship> query = getDatastore().createQuery(MongoFriendship.class);
+
+        query.and(
+            query.or(
+                query.criteria("_id.lesser").equal(mongoUser.getObjectId()),
+                query.criteria("_id.greater").equal(mongoUser.getObjectId())
+            ),
+            query.or(
+                query.criteria("lesserAccepted").equal(true),
+                query.criteria("greaterAccepted").equal(true)
+            )
+        );
+
+        return query.asList();
 
     }
 

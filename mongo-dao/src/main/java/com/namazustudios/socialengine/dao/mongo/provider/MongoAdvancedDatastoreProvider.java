@@ -40,7 +40,6 @@ public class MongoAdvancedDatastoreProvider implements Provider<AdvancedDatastor
             MongoSteamEntrant.class,
             MongoUser.class,
             MongoMatch.class,
-//            MongoMatchDelta.class,
             MongoMatchmakingApplicationConfiguration.class
         );
 
