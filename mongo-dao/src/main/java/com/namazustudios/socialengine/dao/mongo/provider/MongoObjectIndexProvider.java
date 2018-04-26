@@ -53,7 +53,7 @@ public class MongoObjectIndexProvider implements Provider<ObjectIndex> {
         };
 
         // Before anything else, Lucene requires an index be created with the
-        // the
+        // redaer can be opened.
 
         try (final IOContext<IndexWriter> indexWriterIOContext = indexWriterProvider.get()) {
             indexWriterIOContext.instance().commit();

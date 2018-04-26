@@ -40,7 +40,7 @@ public class MongoDirectoryProvider implements Provider<Directory> {
         final MongoDatabase mongoDatabase = mongoClient.getDatabase(getMongoDatabaseName());
         final GridFSBucket gridFSBucket = GridFSBuckets.create(mongoDatabase, getSearchIndexBucketName());
         final MongoCollection<Document> mongoCollection = mongoDatabase.getCollection(getLockCollectionName());
-        return new SleepingLockWrapper(new GridFSDirectory(mongoCollection, gridFSBucket), 500);
+        return new SleepingLockWrapper(new GridFSDirectory(mongoCollection, gridFSBucket), 250);
     }
 
     public String getSearchIndexBucketName() {
