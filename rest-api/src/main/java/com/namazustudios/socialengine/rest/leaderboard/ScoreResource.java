@@ -35,7 +35,6 @@ public class ScoreResource {
             @PathParam("leaderboardNameOrId")
             final String leaderboardNameOrId,
             final Score score) {
-        getValidationHelper().validateModel(score);
         return getScoreService().createOrUpdateScore(leaderboardNameOrId, score);
     }
 

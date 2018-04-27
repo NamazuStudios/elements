@@ -38,7 +38,7 @@ public class MongoScoreId {
     }
 
     public MongoScoreId(final MongoProfile mongoProfile, final MongoLeaderboard mongoLeaderboard) {
-        this(mongoProfile.getObjectId(), mongoProfile.getObjectId());
+        this(mongoProfile.getObjectId(), mongoLeaderboard.getObjectId());
     }
 
     public MongoScoreId(final ObjectId profileId, final ObjectId leaderboardId) {
