@@ -12,6 +12,7 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import org.dozer.Mapper;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -41,9 +42,8 @@ public class MongoRankDao implements RankDao {
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
 
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
-        query.filter("leaderboard", mongoLeaderboard);
-
-
+        query.filter("leaderboard", mongoLeaderboard)
+             .order(Sort.descending("pointValue"));
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(0));
 
@@ -59,7 +59,8 @@ public class MongoRankDao implements RankDao {
         final MongoScore mongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
 
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
-        query.field("leaderboard").equal(mongoLeaderboard);
+        query.field("leaderboard").equal(mongoLeaderboard)
+             .order(Sort.descending("pointValue"));
 
         final long startIndex;
 
@@ -96,7 +97,8 @@ public class MongoRankDao implements RankDao {
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
 
         query.field("profile").in(profiles)
-             .field("leaderboard").equal(mongoLeaderboard);
+             .field("leaderboard").equal(mongoLeaderboard)
+             .order(Sort.descending("pointValue"));
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(0));
 
@@ -121,7 +123,8 @@ public class MongoRankDao implements RankDao {
         profiles.add(mongoProfile);
 
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
-        query.field("leaderboard").equal(mongoLeaderboard);
+        query.field("leaderboard").equal(mongoLeaderboard)
+             .order(Sort.descending("pointValue"));
 
         final long startIndex;
 
