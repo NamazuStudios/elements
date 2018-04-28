@@ -22,7 +22,6 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static java.lang.Math.min;
@@ -91,17 +90,12 @@ public class MatchResource {
                 "until the requested Match with ID has been updated in the database.",
         response = Match.class)
     public void getMatch(
+
             @PathParam("matchId")
             final String matchId,
 
             @Suspended
             final AsyncResponse asyncResponse,
-
-            @DefaultValue("0")
-            @QueryParam("lastUpdatedTimestamp")
-            @ApiParam("Used in conjuction with the long poll paramter.  The match will return immediately only if " +
-                      "supplied timestamp is before than the current time stamp.")
-            final long lastUpdatedTimestamp,
 
             @HeaderParam(Headers.REQUEST_LONG_POLL_TIMEOUT)
             @ApiParam(Headers.REQUEST_LONG_POLL_TIMEOUT_DESCRIPTION)
@@ -115,12 +109,12 @@ public class MatchResource {
 
         final Match match = getMatchService().getMatch(_matchId);
 
-        if (longPollTimeout == null || lastUpdatedTimestamp < match.getLastUpdatedTimestamp()) {
+        if (longPollTimeout == null) {
             asyncResponse.resume(match);
         } else {
 
-            final Topic.Subscription subscription = getMatchService().waitForUpdate(
-                _matchId, lastUpdatedTimestamp,
+            final Topic.Subscription subscription = getMatchService().waitForComplete(
+                _matchId,
                 m -> asyncResponse.resume(m == null ? Response.status(NOT_FOUND).build() : m),
                 ex -> asyncResponse.resume(ex));
 
