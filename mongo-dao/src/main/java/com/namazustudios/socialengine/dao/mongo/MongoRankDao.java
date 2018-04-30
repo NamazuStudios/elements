@@ -12,6 +12,7 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import org.dozer.Mapper;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -41,9 +42,8 @@ public class MongoRankDao implements RankDao {
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
 
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
-        query.filter("leaderboard", mongoLeaderboard);
-
-
+        query.filter("leaderboard", mongoLeaderboard)
+             .order(Sort.descending("pointValue"));
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(0));
 
@@ -58,19 +58,21 @@ public class MongoRankDao implements RankDao {
         final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard);
         final MongoScore mongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
 
-        final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
-        query.field("leaderboard").equal(mongoLeaderboard);
+        final Query<MongoScore> query = getDatastore()
+            .createQuery(MongoScore.class)
+            .field("leaderboard").equal(mongoLeaderboard)
+            .order(Sort.descending("pointValue"));
 
-        final long startIndex;
+        final long startIndex = mongoScore == null ? 0 : query
+            .cloneQuery()
+            .field("profile").notEqual(mongoProfile)
+            .field("pointValue").greaterThan(mongoScore.getPointValue())
+            .count();
 
-        if (mongoScore == null) {
-            // Asssume player is dead last in the result set because no scores have been submitted.
-            startIndex = query.count();
-        } else {
-            startIndex = query.cloneQuery()
-                .field("pointValue").greaterThan(mongoScore.getPointValue())
-                .count();
-        }
+        final Object qq = query
+                .cloneQuery()
+                .field("profile").notEqual(mongoProfile)
+                .field("pointValue").greaterThan(mongoScore.getPointValue());
 
         final int adjustedOffset = (int) max(0, offset + startIndex);
         return getMongoDBUtils().paginationFromQuery(query, adjustedOffset, count, new Counter(startIndex));
@@ -96,7 +98,8 @@ public class MongoRankDao implements RankDao {
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
 
         query.field("profile").in(profiles)
-             .field("leaderboard").equal(mongoLeaderboard);
+             .field("leaderboard").equal(mongoLeaderboard)
+             .order(Sort.descending("pointValue"));
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(0));
 
@@ -112,29 +115,25 @@ public class MongoRankDao implements RankDao {
         final MongoScore mongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
 
         final List<MongoProfile> profiles = getMongoFriendDao()
-                .getAllMongoFriendshipsForUser(mongoProfile.getUser())
-                .stream()
-                .map(friendship -> friendship.getObjectId().getOpposite(mongoProfile.getUser().getObjectId()))
-                .flatMap(userId -> getMongoProfileDao().getActiveMongoProfilesForUser(userId))
-                .collect(toList());
+            .getAllMongoFriendshipsForUser(mongoProfile.getUser())
+            .stream()
+            .map(friendship -> friendship.getObjectId().getOpposite(mongoProfile.getUser().getObjectId()))
+            .flatMap(userId -> getMongoProfileDao().getActiveMongoProfilesForUser(userId))
+            .collect(toList());
 
         profiles.add(mongoProfile);
 
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
-        query.field("leaderboard").equal(mongoLeaderboard);
 
-        final long startIndex;
+        query.field("leaderboard").equal(mongoLeaderboard)
+             .order(Sort.descending("pointValue"))
+             .field("profile").in(profiles);
 
-        if (mongoScore == null) {
-            // Asssume player is dead last in the result set because no scores have been submitted.
-            startIndex = query.count();
-        } else {
-            startIndex = query.cloneQuery()
-                    .field("pointValue").greaterThan(mongoScore.getPointValue())
-                    .count();
-        }
-
-        query.field("profile").in(profiles);
+        final long startIndex = mongoScore == null ? 0 : query
+            .cloneQuery()
+            .field("profile").notEqual(mongoProfile)
+            .field("pointValue").greaterThan(mongoScore.getPointValue())
+            .count();
 
         final int adjustedOffset = (int) max(0, offset + startIndex);
         return getMongoDBUtils().paginationFromQuery(query, adjustedOffset, count, new Counter(startIndex));

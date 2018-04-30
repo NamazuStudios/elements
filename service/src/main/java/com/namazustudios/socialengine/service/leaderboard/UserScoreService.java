@@ -9,22 +9,23 @@ import com.namazustudios.socialengine.service.ScoreService;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public class UserScoreService implements ScoreService {
 
     private ScoreDao scoreDao;
 
-    private Provider<Profile> profileProvider;
+    private Supplier<Profile> currentProfileSupplier;
 
     @Override
     public Score createOrUpdateScore(final String leaderboardNameOrId, final Score score) {
 
-        final Profile profile = getProfileProvider().get();
+        final Profile profile = getCurrentProfileSupplier().get();
         final Profile scoreProfile = score.getProfile();
 
         if (scoreProfile == null) {
             score.setProfile(profile);
-        } else if (!Objects.equals(profile.getId(), score.getId())) {
+        } else if (!Objects.equals(profile.getId(), scoreProfile.getId())) {
             throw new ForbiddenException("Profiles does not match.");
         } else {
             getScoreDao().createOrUpdateScore(leaderboardNameOrId, score);
@@ -43,13 +44,13 @@ public class UserScoreService implements ScoreService {
         this.scoreDao = scoreDao;
     }
 
-    public Provider<Profile> getProfileProvider() {
-        return profileProvider;
+    public Supplier<Profile> getCurrentProfileSupplier() {
+        return currentProfileSupplier;
     }
 
     @Inject
-    public void setProfileProvider(Provider<Profile> profileProvider) {
-        this.profileProvider = profileProvider;
+    public void setCurrentProfileSupplier(Supplier<Profile> currentProfileSupplier) {
+        this.currentProfileSupplier = currentProfileSupplier;
     }
 
 }

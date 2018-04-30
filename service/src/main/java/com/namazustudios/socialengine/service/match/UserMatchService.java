@@ -146,8 +146,8 @@ public class UserMatchService implements MatchService {
     }
 
     @Override
-    public Topic.Subscription waitForUpdate(
-            final String matchId, final long timeStamp,
+    public Topic.Subscription waitForComplete(
+            final String matchId,
             final Consumer<Match> matchConsumer, final Consumer<Exception> exceptionConsumer) {
 
         final Profile profile = getCurrentProfileSupplier().get();

@@ -18,6 +18,7 @@ import org.mongodb.morphia.annotations.*;
     @Index(fields = @Field("lesserAccepted")),
     @Index(fields = @Field("greaterAccepted"))
 })
+@Entity(value = "friendship", noClassnameStored = true)
 public class MongoFriendship {
 
     @Id

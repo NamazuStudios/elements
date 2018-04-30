@@ -67,14 +67,11 @@ public interface MatchService {
      * {@see {@link Subscription#subscribeNext(Consumer, Consumer)}}.
      *
      * @param matchId the match ID {@link Match#getId()}.
-     * @param timeStamp timeStamp
      * @param matchConsumer a {@link Consumer<Match>} used to receive the {@link Match} instance
      * @param exceptionConsumer a {@link Consumer<Exception>} used to receive any error encountered in the process
      *
      * @return a {@link Runnable} which may be used to cancel the pending request
      */
-    Subscription waitForUpdate(
-        String matchId, long timeStamp,
-        Consumer<Match> matchConsumer, Consumer<Exception> exceptionConsumer);
+    Subscription waitForComplete(String matchId, Consumer<Match> matchConsumer, Consumer<Exception> exceptionConsumer);
 
 }
