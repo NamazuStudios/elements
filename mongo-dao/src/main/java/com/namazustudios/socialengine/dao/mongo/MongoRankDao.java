@@ -69,11 +69,6 @@ public class MongoRankDao implements RankDao {
             .field("pointValue").greaterThan(mongoScore.getPointValue())
             .count();
 
-        final Object qq = query
-                .cloneQuery()
-                .field("profile").notEqual(mongoProfile)
-                .field("pointValue").greaterThan(mongoScore.getPointValue());
-
         final int adjustedOffset = (int) max(0, offset + startIndex);
         return getMongoDBUtils().paginationFromQuery(query, adjustedOffset, count, new Counter(startIndex));
 
