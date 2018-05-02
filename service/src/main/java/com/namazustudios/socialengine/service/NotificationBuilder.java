@@ -68,6 +68,24 @@ public interface NotificationBuilder {
     NotificationBuilder message(String message);
 
     /**
+     * Specifies the default sound to play when sending a message.  The default implementation just specifies the
+     * sound using "default." passed to {@link #sound(String)}.
+     *
+     * @return this instance
+     */
+    default NotificationBuilder sound() {
+        return sound("default");
+    }
+    
+    /**
+     * Specifies the sound to play when delivering the message.
+     *
+     * @param sound the sound to play when delivering the message
+     * @return this instance
+     */
+    NotificationBuilder sound(String sound);
+
+    /**
      * Constructs the instance of {@link Notification} with all of the configured information.  This returns a new
      * instance of {@link Notification} for each call which can be treated independently.
      *

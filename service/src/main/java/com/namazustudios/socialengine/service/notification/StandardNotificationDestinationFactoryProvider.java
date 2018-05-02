@@ -2,10 +2,7 @@ package com.namazustudios.socialengine.service.notification;
 
 import com.google.api.core.ApiFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
-import com.google.firebase.messaging.Message;
-import com.google.firebase.messaging.Notification;
+import com.google.firebase.messaging.*;
 import com.namazustudios.socialengine.dao.FCMRegistrationDao;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.model.application.Application;
@@ -56,7 +53,19 @@ public class StandardNotificationDestinationFactoryProvider implements Provider<
                 final Message message = Message.builder()
                     .setNotification(new Notification(p.getTitle(), p.getMessage()))
                     .setToken(fcmRegistration.getRegistrationToken())
-                    .build();
+                    .setAndroidConfig(AndroidConfig.builder()
+                        .setNotification(AndroidNotification.builder()
+                            .setSound(p.getSound())
+                            .setTitle(p.getTitle())
+                            .setBody(p.getMessage())
+                            .build())
+                        .build())
+                    .setApnsConfig(ApnsConfig.builder()
+                        .setAps(Aps.builder()
+                            .setSound(p.getSound())
+                        .build())
+                    .build())
+                .build();
 
                 final ApiFuture<String> apiFuture = firebaseMessaging.sendAsync(message);
 
