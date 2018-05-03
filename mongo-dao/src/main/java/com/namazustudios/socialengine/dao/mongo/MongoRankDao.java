@@ -63,14 +63,13 @@ public class MongoRankDao implements RankDao {
             .field("leaderboard").equal(mongoLeaderboard)
             .order(Sort.descending("pointValue"));
 
-        final long startIndex = mongoScore == null ? 0 : query
+        final long playerRank = mongoScore == null ? 0 : query
             .cloneQuery()
-            .field("profile").notEqual(mongoProfile)
             .field("pointValue").greaterThan(mongoScore.getPointValue())
             .count();
 
-        final int adjustedOffset = (int) max(0, offset + startIndex);
-        return getMongoDBUtils().paginationFromQuery(query, adjustedOffset, count, new Counter(startIndex));
+        final long adjustedOffset = max(0, offset + playerRank);
+        return getMongoDBUtils().paginationFromQuery(query, (int) adjustedOffset, count, new Counter(adjustedOffset));
 
     }
 
@@ -121,17 +120,17 @@ public class MongoRankDao implements RankDao {
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
 
         query.field("leaderboard").equal(mongoLeaderboard)
-             .order(Sort.descending("pointValue"))
-             .field("profile").in(profiles);
+             .field("profile").in(profiles)
+             .order(Sort.descending("pointValue"));
 
-        final long startIndex = mongoScore == null ? 0 : query
+        final long playerRank = mongoScore == null ? 0 : query
             .cloneQuery()
             .field("profile").notEqual(mongoProfile)
             .field("pointValue").greaterThan(mongoScore.getPointValue())
             .count();
 
-        final int adjustedOffset = (int) max(0, offset + startIndex);
-        return getMongoDBUtils().paginationFromQuery(query, adjustedOffset, count, new Counter(startIndex));
+        final long adjustedOffset = max(0, offset + playerRank);
+        return getMongoDBUtils().paginationFromQuery(query, (int) adjustedOffset, count, new Counter(adjustedOffset));
 
     }
 
@@ -194,14 +193,14 @@ public class MongoRankDao implements RankDao {
         private long index;
 
         public Counter(final long index) {
-            this.index = index + 1;
+            this.index = index;
         }
 
         @Override
         public Rank apply(MongoScore mongoScore) {
 
             final Rank rank = getDozerMapper().map(mongoScore, Rank.class);
-            rank.setPosition(index++);
+            rank.setPosition(++index);
 
             final Score score = getDozerMapper().map(mongoScore, Score.class);
             rank.setScore(score);
