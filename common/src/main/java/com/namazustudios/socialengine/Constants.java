@@ -96,6 +96,16 @@ public interface Constants {
     String SESSION_TIMEOUT_SECONDS = "com.namazustudios.socialengine.session.timeout.seconds";
 
     /**
+     * Used to specify the mock session timeout.  If this is
+     */
+    String MOCK_SESSION_TIMEOUT_SECONDS = "com.namazustudios.socialengine.mock.session.timeout.seconds";
+
+    /**
+     * Used to specify the randomly generated password.
+     */
+    String GENERATED_PASSWORD_LENGTH = "com.namazustudios.socialengine.mock.generated.password.length";
+
+    /**
      * Defines some useful regex patterns.
      */
     interface Regexp {

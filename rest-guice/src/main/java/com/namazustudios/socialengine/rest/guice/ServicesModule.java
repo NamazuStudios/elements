@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.service.*;
 import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.AuthServiceProvider;
+import com.namazustudios.socialengine.service.auth.MockSessionServiceProvider;
 import com.namazustudios.socialengine.service.auth.StandardFacebookAuthService;
 import com.namazustudios.socialengine.service.auth.AnonSessionService;
 import com.namazustudios.socialengine.service.friend.FacebookFriendServiceProvider;
@@ -109,8 +110,13 @@ public class ServicesModule extends AbstractModule {
                 .toProvider(FacebookFriendServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
+        bind(MockSessionService.class)
+                .toProvider(MockSessionServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
         bind(Attributes.class).toProvider(AttributesProvider.class);
 
+        bind(PasswordGenerator.class).asEagerSingleton();
         bind(SessionService.class).to(AnonSessionService.class);
         bind(FacebookAuthService.class).to(StandardFacebookAuthService.class);
         bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();

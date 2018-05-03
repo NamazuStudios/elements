@@ -94,7 +94,7 @@ public class MongoUserDao implements UserDao {
         final MongoUser mongoUser = query.get();
 
         if (mongoUser == null) {
-            throw new NotFoundException("User with id " + mongoUserId + " not found.");
+            throw new UserNotFoundException("User with id " + mongoUserId + " not found.");
         }
 
         return mongoUser;
