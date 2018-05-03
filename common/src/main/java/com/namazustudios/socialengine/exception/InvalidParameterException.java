@@ -26,7 +26,7 @@ public class InvalidParameterException extends BaseException {
 
     @Override
     public ErrorCode getCode() {
-        return null;
+        return ErrorCode.INVALID_PARAMETER;
     }
 
 }
