@@ -58,7 +58,7 @@ public class MongoMatchDao implements MatchDao {
     private MongoMatchUtils mongoMatchUtils;
 
     @Override
-    public Match getMatchForPlayer(String playerId, String matchId) throws NotFoundException {
+    public Match getMatchForPlayer(final String playerId, final String matchId) throws NotFoundException {
         final MongoMatch mongoMatch = getMongoMatchForPlayer(playerId, matchId);
         return getDozerMapper().map(mongoMatch, Match.class);
     }
@@ -68,13 +68,9 @@ public class MongoMatchDao implements MatchDao {
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(matchId);
         final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
 
-        final Query<MongoMatch> mongoMatchQuery;
-        mongoMatchQuery = getDatastore().createQuery(MongoMatch.class);
-
-        mongoMatchQuery.and(
-            mongoMatchQuery.criteria("_id").equal(objectId),
-            mongoMatchQuery.criteria("player").equal(playerProfile)
-        );
+        final Query<MongoMatch> mongoMatchQuery = getDatastore().createQuery(MongoMatch.class)
+            .field("_id").equal(objectId)
+            .field("player").equal(playerProfile);
 
         final MongoMatch mongoMatch = mongoMatchQuery.get();
 
@@ -89,12 +85,7 @@ public class MongoMatchDao implements MatchDao {
     public MongoMatch getMongoMatch(final String matchId) {
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(matchId);
-
-        final Query<MongoMatch> mongoMatchQuery;
-        mongoMatchQuery = getDatastore().createQuery(MongoMatch.class);
-        mongoMatchQuery.criteria("_id").equal(objectId);
-
-        final MongoMatch mongoMatch = mongoMatchQuery.get();
+        final MongoMatch mongoMatch = getDatastore().get(MongoMatch.class, objectId);
 
         if (mongoMatch == null) {
             throw new NotFoundException("match with id " + matchId + " not found.");
@@ -105,16 +96,13 @@ public class MongoMatchDao implements MatchDao {
     }
 
     @Override
-    public Pagination<Match> getMatchesForPlayer(String playerId, int offset, int count) {
+    public Pagination<Match> getMatchesForPlayer(final String playerId, final int offset, final int count) {
 
         final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
 
-        final Query<MongoMatch> mongoMatchQuery;
-        mongoMatchQuery = getDatastore().createQuery(MongoMatch.class);
-
-        mongoMatchQuery.and(
-                mongoMatchQuery.criteria("player").equal(playerProfile)
-        );
+        final Query<MongoMatch> mongoMatchQuery = getDatastore()
+            .createQuery(MongoMatch.class)
+            .field("payer").equal(playerProfile);
 
         return getMongoDBUtils().paginationFromQuery(mongoMatchQuery, offset, count, m -> getDozerMapper().map(m, Match.class));
 
@@ -141,34 +129,20 @@ public class MongoMatchDao implements MatchDao {
     }
 
     @Override
-    public Match createMatch(Match match) {
+    public Match createMatch(final Match match) {
 
         validate(match);
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(match.getPlayer().getId());
-
-//        // Pre-allocate the match id so we can lock the match in advance.  This prevents other players from matching
-//        // to it until it's been fully created.
-
-        final ObjectId objectId = new ObjectId();
         final MongoMatch mongoMatch = getDozerMapper().map(match, MongoMatch.class);
-        mongoMatch.setObjectId(objectId);
-        mongoMatch.setPlayer(mongoProfile);
-
-        try {
-            return getMongoConcurrentUtils().performOptimistic(ds -> getMongoMatchUtils().attemptLock(() -> doCreateMatch(ds, mongoMatch), objectId));
-        } catch (MongoConcurrentUtils.ConflictException ex) {
-            throw new TooBusyException(ex);
-        }
-
-    }
-
-    private Match doCreateMatch(final Datastore ds, final MongoMatch mongoMatch) {
 
         final Timestamp now = new Timestamp(currentTimeMillis());
         mongoMatch.setLastUpdatedTimestamp(now);
 
-        ds.save(mongoMatch);
+        mongoMatch.setPlayer(mongoProfile);
+        mongoMatch.setLastUpdatedTimestamp(now);
+
+        getDatastore().save(mongoMatch);
         getObjectIndex().index(mongoMatch);
 
         return getDozerMapper().map(mongoMatch, Match.class);

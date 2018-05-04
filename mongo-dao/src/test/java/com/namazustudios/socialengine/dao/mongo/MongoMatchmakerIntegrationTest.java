@@ -100,8 +100,8 @@ public class MongoMatchmakerIntegrationTest {
         final MongoMatch mongoMatchb;
         mongoMatchb = getAdvancedDatastore().get(MongoMatch.class, new ObjectId(successfulMatchTuple.getOpponentMatch().getId()));
 
-        assertNull(mongoMatcha.getExpiry());
-        assertNull(mongoMatchb.getExpiry());
+        assertNotNull(mongoMatcha.getExpiry());
+        assertNotNull(mongoMatchb.getExpiry());
 
         assertEquals(mongoMatcha.getGameId(), Stream.of(matcha.getId(), matchb.getId()).sorted().collect(joining("+")));
         assertEquals(mongoMatchb.getGameId(), Stream.of(matcha.getId(), matchb.getId()).sorted().collect(joining("+")));

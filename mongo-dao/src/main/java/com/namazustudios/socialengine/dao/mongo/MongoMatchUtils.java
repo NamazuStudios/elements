@@ -135,7 +135,11 @@ public class MongoMatchUtils {
         mongoMatchLockList.forEach(lock -> {
             try {
 
-                final Query<MongoMatchLock> qbe = getDatastore().queryByExample(lock);
+                final Query<MongoMatchLock> qbe = getDatastore()
+                    .createQuery(MongoMatchLock.class)
+                    .field("_id").equal(lock.getPlayerMatchId())
+                    .field("lockUuid").equal(lock.getLockUuid());
+
                 final WriteResult writeResult = getDatastore().delete(qbe);
 
                 if (writeResult.getN() > 1) {
@@ -147,6 +151,7 @@ public class MongoMatchUtils {
                 // unlock the other locks.
                 logger.warn("Failed to unlock match {} ", lock.getPlayerMatchId(), ex);
             }
+
         });
     }
 
@@ -243,11 +248,13 @@ public class MongoMatchUtils {
 
         playerUpdateOperations
             .set("opponent", opponentMatch.getPlayer())
+            .set("expiry", now)
             .set("lastUpdatedTimestamp", now)
             .set("gameId", gameId);
 
         oppponentUpdateOperations
             .set("opponent", playerMatch.getPlayer())
+            .set("expiry", now)
             .set("lastUpdatedTimestamp", now)
             .set("gameId", gameId);
 
