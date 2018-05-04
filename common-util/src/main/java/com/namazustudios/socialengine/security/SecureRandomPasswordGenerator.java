@@ -1,7 +1,6 @@
-package com.namazustudios.socialengine.service;
+package com.namazustudios.socialengine.security;
 
-import com.google.common.io.CharStreams;
-import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.security.PasswordGenerator;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -9,7 +8,7 @@ import java.security.SecureRandom;
 
 import static com.namazustudios.socialengine.Constants.GENERATED_PASSWORD_LENGTH;
 
-public class PasswordGenerator {
+public class SecureRandomPasswordGenerator implements PasswordGenerator {
 
     private static final String CANDIDATES = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!#$%^&*()){}";
 
@@ -17,6 +16,7 @@ public class PasswordGenerator {
 
     private final SecureRandom secureRandom = new SecureRandom();
 
+    @Override
     public String generate() {
 
         final int length = getLength();

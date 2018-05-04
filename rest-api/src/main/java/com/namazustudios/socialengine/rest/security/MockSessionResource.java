@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rest.security;
 
-import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.session.MockSessionRequest;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.service.MockSessionService;
@@ -16,13 +15,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
 @Api(value = "Mock Sessions",
      description = "Creates mock sessions for running tests against the server.  This will generate valid sessions, " +
-                   "profiles, and users which can be used for testing.  The users created by this API will, " +
-                   "automatically disappear after a specified amount of time.",
+                   "profiles, and users which can be used for testing.  The system may opt to delete or destroy test " +
+                   "users automatically after they have been generated.",
      authorizations = {@Authorization(SESSION_SECRET)})
 @Path("mock_session")
 public class MockSessionResource {
@@ -36,7 +34,7 @@ public class MockSessionResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Creates a Mock Session",
                   notes = "Begins a session by accepting a mock session request.  The request must be made with an " +
-                          "authenticated user.")
+                          "authenticated super-user.")
     public SessionCreation createSession(final MockSessionRequest mockSessionRequest) {
         getValidationHelper().validateModel(mockSessionRequest);
         return getMockSessionService().createMockSession(mockSessionRequest);
