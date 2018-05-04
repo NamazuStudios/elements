@@ -3,9 +3,12 @@ package com.namazustudios.socialengine.rest.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.servlet.ServletScopes;
 import com.namazustudios.socialengine.rt.Attributes;
+import com.namazustudios.socialengine.security.PasswordGenerator;
+import com.namazustudios.socialengine.security.SecureRandomPasswordGenerator;
 import com.namazustudios.socialengine.service.*;
 import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.AuthServiceProvider;
+import com.namazustudios.socialengine.service.auth.MockSessionServiceProvider;
 import com.namazustudios.socialengine.service.auth.StandardFacebookAuthService;
 import com.namazustudios.socialengine.service.auth.AnonSessionService;
 import com.namazustudios.socialengine.service.friend.FacebookFriendServiceProvider;
@@ -20,6 +23,8 @@ import com.namazustudios.socialengine.service.profile.ProfileServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
+import com.namazustudios.socialengine.util.DisplayNameGenerator;
+import com.namazustudios.socialengine.util.SimpleDisplayNameGenerator;
 
 /**
  * Created by patricktwohig on 3/19/15.
@@ -109,11 +114,17 @@ public class ServicesModule extends AbstractModule {
                 .toProvider(FacebookFriendServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
+        bind(MockSessionService.class)
+                .toProvider(MockSessionServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
         bind(Attributes.class).toProvider(AttributesProvider.class);
 
         bind(SessionService.class).to(AnonSessionService.class);
         bind(FacebookAuthService.class).to(StandardFacebookAuthService.class);
         bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
+        bind(PasswordGenerator.class).to(SecureRandomPasswordGenerator.class).asEagerSingleton();
+        bind(DisplayNameGenerator.class).to(SimpleDisplayNameGenerator.class).asEagerSingleton();
 
     }
 

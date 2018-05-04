@@ -144,6 +144,8 @@ public class MongoMatchUtils {
 
                 if (writeResult.getN() > 1) {
                     logger.error("Unexpected delete count for lock {}.  Expected 1.  Got {}", lock, writeResult.getN());
+                } else if (writeResult.getN() == 0) {
+                    logger.error("Expected a single lock to delete {}.  Expected 1.  Got {}", lock, writeResult.getN());
                 }
 
             } catch (Exception ex) {

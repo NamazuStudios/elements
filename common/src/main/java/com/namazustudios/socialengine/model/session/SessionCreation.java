@@ -28,4 +28,23 @@ public class SessionCreation {
         this.session = session;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SessionCreation)) return false;
+
+        SessionCreation that = (SessionCreation) o;
+
+        if (getSessionSecret() != null ? !getSessionSecret().equals(that.getSessionSecret()) : that.getSessionSecret() != null)
+            return false;
+        return getSession() != null ? getSession().equals(that.getSession()) : that.getSession() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getSessionSecret() != null ? getSessionSecret().hashCode() : 0;
+        result = 31 * result + (getSession() != null ? getSession().hashCode() : 0);
+        return result;
+    }
+
 }

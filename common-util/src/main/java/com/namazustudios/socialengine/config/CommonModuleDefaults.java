@@ -23,6 +23,7 @@ public class CommonModuleDefaults implements ModuleDefaults {
         defaultProperties.setProperty(Constants.ASYNC_TIMEOUT_LIMIT, Integer.toString(0));
         defaultProperties.setProperty(Constants.CODE_SERVE_URL, "http://localhost:8080/git/code-serve");
         defaultProperties.setProperty(Constants.HTTP_TUNNEL_URL, "http://localhost:8080/rt");
+        defaultProperties.setProperty(Constants.GENERATED_PASSWORD_LENGTH, "24");
         return defaultProperties;
     }
 
