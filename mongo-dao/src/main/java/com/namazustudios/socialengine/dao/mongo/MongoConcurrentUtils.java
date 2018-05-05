@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.mongodb.MongoException;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
@@ -11,7 +11,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Objects;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
+
+import static java.lang.Thread.sleep;
 
 /**
  * A class that helps reduce the boilerplate code when atomic operations are necessary.
@@ -21,9 +25,17 @@ import java.util.function.BiConsumer;
 @Singleton
 public class MongoConcurrentUtils {
 
-    public static final String FALLOFF_TIME_MS = "com.namazustudios.socialengine.mongo.optimistic.falloff.time.ms";
-
     public static final String OPTIMISTIC_RETRY_COUNT = "com.namazustudios.socialengine.mongo.optimistic.retry.count";
+
+    /**
+     * Defines the minimum time an optimistic operation will wait before retrying.
+     */
+    public static final String FALLOFF_TIME_MIN_MS = "com.namazustudios.socialengine.mongo.optimistic.falloff.time.min.msec";
+
+    /**
+     * Defines the maximum time an optimistic operation will wait before retrying.
+     */
+    public static final String FALLOFF_TIME_MAX_MS = "com.namazustudios.socialengine.mongo.optimistic.falloff.time.max.msec";
 
     @Inject
     private AdvancedDatastore datastore;
@@ -33,69 +45,16 @@ public class MongoConcurrentUtils {
     private int numberOfRetries = 5;
 
     @Inject
-    @Named(FALLOFF_TIME_MS)
-    private int falloffTime = 100;
+    @Named(FALLOFF_TIME_MIN_MS)
+    private int falloffTimeMin;
+
+    @Inject
+    @Named(FALLOFF_TIME_MAX_MS)
+    private int falloffTimeMax;
 
     /**
-     * Often times it's necessary to ensure that code is only executed once in order
-     * to properly satisfy an Optimistic operation.  THis provides a simple interface
-     * to defince a {@link java.util.concurrent.Callable} that is only called once.
-     *
-     * @param once the Callable to execute once
-     * @param <ReturnT> the return type
-     * @return an instance of Callable which guarantees that once is only called ocne
-     */
-    public <ReturnT> Once<ReturnT> once(final Once<ReturnT> once) {
-
-        return new Once<ReturnT>() {
-
-            boolean called = false;
-
-            ReturnT out = null;
-
-            @Override
-            public ReturnT call() {
-                return  called && (called = true) ? (out = once.call()) : out;
-            }
-
-        };
-
-    }
-
-    /**
-     * An interface to some code that is only called once.
-     * @param <ReturnT>
-     */
-    @FunctionalInterface
-    public interface Once<ReturnT> {
-
-        /**
-         * Called to get the fields of the code, or get it on the first call.
-         *
-         * @return the fields of the ReturnT
-         * @throws OptimistcException if there was an Exception raised in the process.
-         */
-        ReturnT call();
-
-    }
-
-    public <ReturnT> ReturnT performOptimisticInsert(final CriticalOperation<ReturnT> criticalOperation) throws ConflictException {
-        return performOptimistic(ds -> {
-            try {
-                return criticalOperation.attempt(ds);
-            } catch (MongoException ex) {
-                if (ex.getCode() == 11000) {
-                    throw new ContentionException(ex);
-                } else {
-                    throw ex;
-                }
-            }
-        });
-    }
-
-    /**
-     * Attempts to complete the given criticalOperation and, in the event of a failure,
-     * attempts to rety the criticalOperation several times until giving up.
+     * Attempts to complete the given criticalOperation and, in the event of a failure, attempts to retry the
+     * criticalOperation several times until giving up.
      *
      * @param criticalOperation the criticalOperation to attempt
      * @param <ReturnT> the type to return
@@ -115,10 +74,13 @@ public class MongoConcurrentUtils {
                 return criticalOperation.attempt(datastore);
             } catch (ContentionException e) {
                 try {
-                    Thread.sleep(falloff += falloffTime);
+                    // Random spread helps ensure that we don't get repeat contention among the operations.
+                    final Random random = ThreadLocalRandom.current();
+                    final int sleepTime = falloffTimeMin + random.nextInt(falloffTimeMax - falloffTimeMin);
+                    sleep(falloff += sleepTime);
                     continue;
                 } catch (InterruptedException ex) {
-                    throw new IllegalStateException("Interrupted while falling off.", ex);
+                    throw new InternalException("Interrupted while falling off.", ex);
                 }
             }
 

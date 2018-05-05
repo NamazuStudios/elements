@@ -36,7 +36,7 @@ public class MongoMatch {
      * associated {@link MongoMatch} in order to sync state appropriately.  In reality a {@link MongoMatch} should
      * only need to live for a short period after match has been completed.
      */
-    public static final int MATCH_EXPIRATION_SECONDS = 5 * 60;
+    public static final int MATCH_EXPIRATION_SECONDS = 90;
 
     @Id
     private ObjectId objectId;

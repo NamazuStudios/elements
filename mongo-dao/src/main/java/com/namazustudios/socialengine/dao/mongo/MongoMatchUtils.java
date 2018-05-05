@@ -135,13 +135,15 @@ public class MongoMatchUtils {
         mongoMatchLockList.forEach(lock -> {
             try {
 
-                final Query<MongoMatchLock> qbe = getDatastore().queryByExample(lock);
+                final Query<MongoMatchLock> qbe = getDatastore()
+                    .createQuery(MongoMatchLock.class)
+                    .field("_id").equal(lock.getPlayerMatchId())
+                    .field("lockUuid").equal(lock.getLockUuid());
+
                 final WriteResult writeResult = getDatastore().delete(qbe);
 
                 if (writeResult.getN() > 1) {
                     logger.error("Unexpected delete count for lock {}.  Expected 1.  Got {}", lock, writeResult.getN());
-                } else if (writeResult.getN() == 0) {
-                    logger.error("Expected a single lock to delete {}.  Expected 1.  Got {}", lock, writeResult.getN());
                 }
 
             } catch (Exception ex) {
@@ -245,11 +247,13 @@ public class MongoMatchUtils {
 
         playerUpdateOperations
             .set("opponent", opponentMatch.getPlayer())
+            .set("expiry", now)
             .set("lastUpdatedTimestamp", now)
             .set("gameId", gameId);
 
         oppponentUpdateOperations
             .set("opponent", playerMatch.getPlayer())
+            .set("expiry", now)
             .set("lastUpdatedTimestamp", now)
             .set("gameId", gameId);
 

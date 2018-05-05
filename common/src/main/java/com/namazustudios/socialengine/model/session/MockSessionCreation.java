@@ -45,4 +45,5 @@ public class MockSessionCreation extends SessionCreation {
         result = 31 * result + (getPassword() != null ? getPassword().hashCode() : 0);
         return result;
     }
+
 }

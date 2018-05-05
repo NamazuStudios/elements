@@ -61,10 +61,11 @@ public class MongoObjectIndexProvider implements Provider<ObjectIndex> {
             throw new RuntimeException("could not create search index", ex);
         }
 
-        return new DefaultObjectIndex(indexWriterProvider.cached(), indexSearcherProvider);
+
+        // TODO Fix performacne bottlenecks with search index
+        return new NullObjectIndex(indexWriterProvider.cached(), indexSearcherProvider);
 
     }
-
 
     public Provider<Analyzer> getAnalyzerProvider() {
         return analyzerProvider;
