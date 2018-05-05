@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rest.security;
 
+import com.namazustudios.socialengine.model.session.MockSessionCreation;
 import com.namazustudios.socialengine.model.session.MockSessionRequest;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.service.MockSessionService;
@@ -35,7 +36,7 @@ public class MockSessionResource {
     @ApiOperation(value = "Creates a Mock Session",
                   notes = "Begins a session by accepting a mock session request.  The request must be made with an " +
                           "authenticated super-user.")
-    public SessionCreation createSession(final MockSessionRequest mockSessionRequest) {
+    public MockSessionCreation createSession(final MockSessionRequest mockSessionRequest) {
         getValidationHelper().validateModel(mockSessionRequest);
         return getMockSessionService().createMockSession(mockSessionRequest);
     }
