@@ -8,7 +8,6 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoMatchLock;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.match.Match;
-import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -27,6 +26,7 @@ import java.util.stream.Collectors;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Used to actually perform the match between two players.  This ensures that two matches are made
@@ -67,92 +67,122 @@ public class MongoMatchUtils {
             final Provider<T> resultProvider,
             final MongoMatch ... mongoMatches) throws MongoConcurrentUtils.ContentionException {
 
-        final List<MongoMatchLock> matchLockList = stream(mongoMatches)
-            .map(m -> new MongoMatchLock(m.getObjectId()))
-            .collect(Collectors.toList());
+        // TODO Define proper constant or static method to determine the lock timestamp
+        final Timestamp timeout = new Timestamp(currentTimeMillis() - 5000);
 
-        return attemptLock(resultProvider, matchLockList);
+        final List<MatchLockContext> contexts = stream(mongoMatches)
+            .map(m -> new MatchLockContext(m, timeout))
+            .collect(toList());
 
-    }
-
-    /**
-     * Intended to be used in the scope of
-     * {@link MongoConcurrentUtils#performOptimistic(MongoConcurrentUtils.CriticalOperation)},
-     * this will attempt to lock the {@link MongoMatch} using a unique {@link MongoMatchLock}.  If successful, this will
-     * perform the operation defined by the supplied {@link Provider<T>} instance.  If the lock fails, then this will
-     * throw an instance of {@link MongoConcurrentUtils.ContentionException} to indicate that a re-lock must be
-     * attempted or the process abandoned by the calling code.
-     *
-     * This is necessary because matching may happen at any time which involves controlling access to multiple
-     * documents.  Therefore code which mutates or deletes a {@link MongoMatch} should only be done within the context
-     * of a lock.  This allows for acquiring multiple {@link MongoMatchLock} instances and safely unlocking them even if
-     * the code specified in the {@link Provider<T> }fails to execute.
-     *
-     * @param resultProvider the {@link Provider<T>} defining the operation to perform
-     * @param mongoMatchIds one or {@link MongoMatch} instances to return
-     * @param <T> the return type
-     * @return the value returned by the supplied provider
-     * @throws MongoConcurrentUtils.ContentionException if locking fails
-     */
-    public <T> T attemptLock(
-            final Provider<T> resultProvider,
-            final ObjectId ... mongoMatchIds) throws MongoConcurrentUtils.ContentionException {
-
-        final List<MongoMatchLock> matchLockList = stream(mongoMatchIds)
-                .map(id -> new MongoMatchLock(id))
-                .collect(Collectors.toList());
-
-        return attemptLock(resultProvider, matchLockList);
-
-    }
-
-    private <T> T attemptLock(
-            final Provider<T> resultProvider,
-            final List<MongoMatchLock> matchLockList) throws MongoConcurrentUtils.ContentionException {
         try {
-            getDatastore().insert(matchLockList);
+            for (final MatchLockContext c : contexts) c.attempt();
             return resultProvider.get();
-        } catch (MongoException ex) {
-
-            if (ex.getCode() == 11000) {
-
-                // The only expected exception here is the duplicate key exception, which happens if the lock is is
-                // currently acquired by another thread.  In the case of any exception, the finally block attached to
-                // this block will ensure that only the locks we have acquired will be released.
-
-                throw new MongoConcurrentUtils.ContentionException(ex);
-
-            } else {
-                throw new InternalException(ex);
-            }
-
         } finally {
-            unlock(matchLockList);
+            for (final MatchLockContext c : contexts) c.release();
         }
+
     }
 
-    private void unlock(final List<MongoMatchLock> mongoMatchLockList) {
-        mongoMatchLockList.forEach(lock -> {
-            try {
+    private class MatchLockContext {
 
-                final Query<MongoMatchLock> qbe = getDatastore()
-                    .createQuery(MongoMatchLock.class)
-                    .field("_id").equal(lock.getPlayerMatchId())
-                    .field("lockUuid").equal(lock.getLockUuid());
+        private final MongoMatch match;
 
-                final WriteResult writeResult = getDatastore().delete(qbe);
+        private final Timestamp timeout;
 
-                if (writeResult.getN() > 1) {
-                    logger.error("Unexpected delete count for lock {}.  Expected 1.  Got {}", lock, writeResult.getN());
-                }
+        private final MongoMatchLock lock = new MongoMatchLock();
 
-            } catch (Exception ex) {
-                // Just in case we try to unlock an object we didn't create we must ensure that we at least attempt to
-                // unlock the other locks.
-                logger.warn("Failed to unlock match {} ", lock.getPlayerMatchId(), ex);
+        public MatchLockContext(final MongoMatch match, final Timestamp timeout) {
+            this.match = match;
+            this.timeout = timeout;
+        }
+
+        public void attempt() throws MongoConcurrentUtils.ContentionException {
+            final Query<MongoMatch> query = getDatastore().createQuery(MongoMatch.class);
+
+            query.field("_id").equal(match.getObjectId())
+                    .or(
+                            query.criteria("lock").doesNotExist(),
+                            query.criteria("lock.timestamp").lessThan(timeout)
+                    );
+
+            final UpdateOperations<MongoMatch> updates = getDatastore()
+                    .createUpdateOperations(MongoMatch.class)
+                    .set("lock", lock);
+
+            final MongoMatch result = getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
+                    .returnNew(true)
+                    .upsert(false));
+
+            if (result == null) {
+                throw new MongoConcurrentUtils.ContentionException();
             }
-        });
+        }
+
+        public void release() {
+
+            final Query<MongoMatch> query = getDatastore().createQuery(MongoMatch.class);
+
+            query.field("_id").equal(match.getObjectId())
+                    .field("lock.uuid").equal(lock.getUuid());
+
+            final UpdateOperations<MongoMatch> updates = getDatastore()
+                    .createUpdateOperations(MongoMatch.class)
+                    .unset("lock");
+
+            getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
+                    .returnNew(true)
+                    .upsert(false));
+        }
+
     }
+
+//    private <T> T attemptLock(
+//            final Provider<T> resultProvider,
+//            final List<MongoMatchLock> matchLockList) throws MongoConcurrentUtils.ContentionException {
+//        try {
+//            getDatastore().insert(matchLockList);
+//            return resultProvider.get();
+//        } catch (MongoException ex) {
+//
+//            if (ex.getCode() == 11000) {
+//
+//                // The only expected exception here is the duplicate key exception, which happens if the lock is is
+//                // currently acquired by another thread.  In the case of any exception, the finally block attached to
+//                // this block will ensure that only the locks we have acquired will be released.
+//
+//                throw new MongoConcurrentUtils.ContentionException(ex);
+//
+//            } else {
+//                throw new InternalException(ex);
+//            }
+//
+//        } finally {
+//            unlock(matchLockList);
+//        }
+//    }
+//
+//    private void unlock(final List<MongoMatchLock> mongoMatchLockList) {
+//        mongoMatchLockList.forEach(lock -> {
+//            try {
+//
+//                final Query<MongoMatchLock> qbe = getDatastore()
+//                    .createQuery(MongoMatchLock.class)
+//                    .field("_id").equal(lock.getPlayerMatchId())
+//                    .field("lockUuid").equal(lock.getUuid());
+//
+//                final WriteResult writeResult = getDatastore().delete(qbe);
+//
+//                if (writeResult.getN() > 1) {
+//                    logger.error("Unexpected delete count for lock {}.  Expected 1.  Got {}", lock, writeResult.getN());
+//                }
+//
+//            } catch (Exception ex) {
+//                // Just in case we try to unlock an object we didn't create we must ensure that we at least attempt to
+//                // unlock the other locks.
+//                logger.warn("Failed to unlock match {} ", lock.getPlayerMatchId(), ex);
+//            }
+//        });
+//    }
 
     public Matchmaker.SuccessfulMatchTuple attemptToPairCandidates(
             final MongoMatch playerMatch,

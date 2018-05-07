@@ -39,13 +39,11 @@ public class MongoFIFOMatchmaker implements Matchmaker {
         final Query<MongoMatch> query = getDatastore().createQuery(MongoMatch.class);
         final MongoMatch mongoMatch = getMongoMatchDao().getMongoMatch(match.getId());
 
-        query
-            .order(Sort.ascending("lastUpdatedTimestamp"))
-            .and(
-                query.criteria("player").notEqual(mongoMatch.getPlayer()),
-                query.criteria("scheme").equal(match.getScheme()),
-                query.criteria("opponent").doesNotExist()
-            );
+        query.order(Sort.ascending("lastUpdatedTimestamp"))
+             .field("player").notEqual(mongoMatch.getPlayer())
+             .field("scheme").equal(match.getScheme())
+             .field("opponent").doesNotExist()
+             .field("lock").doesNotExist();
 
         final FindOptions findOptions = new FindOptions().limit(maxCandidatesToConsider);
         final List<MongoMatch> mongoMatchList = query.asList(findOptions);
