@@ -113,7 +113,7 @@ public class MatchResource {
             asyncResponse.resume(match);
         } else {
 
-            final Topic.Subscription subscription = getMatchService().waitForComplete(
+            final Topic.Subscription subscription = getMatchService().attemptRematchAndPoll(
                 _matchId,
                 m -> asyncResponse.resume(m == null ? Response.status(NOT_FOUND).build() : m),
                 ex -> asyncResponse.resume(ex));

@@ -83,107 +83,6 @@ public class MongoMatchUtils {
 
     }
 
-    private class MatchLockContext {
-
-        private final MongoMatch match;
-
-        private final Timestamp timeout;
-
-        private final MongoMatchLock lock = new MongoMatchLock();
-
-        public MatchLockContext(final MongoMatch match, final Timestamp timeout) {
-            this.match = match;
-            this.timeout = timeout;
-        }
-
-        public void attempt() throws MongoConcurrentUtils.ContentionException {
-            final Query<MongoMatch> query = getDatastore().createQuery(MongoMatch.class);
-
-            query.field("_id").equal(match.getObjectId())
-                    .or(
-                            query.criteria("lock").doesNotExist(),
-                            query.criteria("lock.timestamp").lessThan(timeout)
-                    );
-
-            final UpdateOperations<MongoMatch> updates = getDatastore()
-                    .createUpdateOperations(MongoMatch.class)
-                    .set("lock", lock);
-
-            final MongoMatch result = getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
-                    .returnNew(true)
-                    .upsert(false));
-
-            if (result == null) {
-                throw new MongoConcurrentUtils.ContentionException();
-            }
-        }
-
-        public void release() {
-
-            final Query<MongoMatch> query = getDatastore().createQuery(MongoMatch.class);
-
-            query.field("_id").equal(match.getObjectId())
-                    .field("lock.uuid").equal(lock.getUuid());
-
-            final UpdateOperations<MongoMatch> updates = getDatastore()
-                    .createUpdateOperations(MongoMatch.class)
-                    .unset("lock");
-
-            getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
-                    .returnNew(true)
-                    .upsert(false));
-        }
-
-    }
-
-//    private <T> T attemptLock(
-//            final Provider<T> resultProvider,
-//            final List<MongoMatchLock> matchLockList) throws MongoConcurrentUtils.ContentionException {
-//        try {
-//            getDatastore().insert(matchLockList);
-//            return resultProvider.get();
-//        } catch (MongoException ex) {
-//
-//            if (ex.getCode() == 11000) {
-//
-//                // The only expected exception here is the duplicate key exception, which happens if the lock is is
-//                // currently acquired by another thread.  In the case of any exception, the finally block attached to
-//                // this block will ensure that only the locks we have acquired will be released.
-//
-//                throw new MongoConcurrentUtils.ContentionException(ex);
-//
-//            } else {
-//                throw new InternalException(ex);
-//            }
-//
-//        } finally {
-//            unlock(matchLockList);
-//        }
-//    }
-//
-//    private void unlock(final List<MongoMatchLock> mongoMatchLockList) {
-//        mongoMatchLockList.forEach(lock -> {
-//            try {
-//
-//                final Query<MongoMatchLock> qbe = getDatastore()
-//                    .createQuery(MongoMatchLock.class)
-//                    .field("_id").equal(lock.getPlayerMatchId())
-//                    .field("lockUuid").equal(lock.getUuid());
-//
-//                final WriteResult writeResult = getDatastore().delete(qbe);
-//
-//                if (writeResult.getN() > 1) {
-//                    logger.error("Unexpected delete count for lock {}.  Expected 1.  Got {}", lock, writeResult.getN());
-//                }
-//
-//            } catch (Exception ex) {
-//                // Just in case we try to unlock an object we didn't create we must ensure that we at least attempt to
-//                // unlock the other locks.
-//                logger.warn("Failed to unlock match {} ", lock.getPlayerMatchId(), ex);
-//            }
-//        });
-//    }
-
     public Matchmaker.SuccessfulMatchTuple attemptToPairCandidates(
             final MongoMatch playerMatch,
             final List<MongoMatch> candidatesList,
@@ -193,6 +92,32 @@ public class MongoMatchUtils {
 
             if (Objects.equals(playerMatch.getObjectId(), candidateMatch.getObjectId())) {
                 continue;
+            }
+
+            final MongoMatch refreshed = getDatastore().get(playerMatch);
+
+            if (refreshed.getPlayer() != null && refreshed.getGameId() != null) {
+
+                final MongoMatch other = getDatastore().createQuery(MongoMatch.class)
+                      .field("player").equal(refreshed.getOpponent())
+                      .field("opponent").equal(refreshed.getPlayer())
+                      .field("gameId").equal(refreshed.getGameId())
+                      .get();
+
+                if (other != null) {
+                    return new Matchmaker.SuccessfulMatchTuple() {
+                        @Override
+                        public Match getPlayerMatch() {
+                            return getDozerMapper().map(refreshed, Match.class);
+                        }
+
+                        @Override
+                        public Match getOpponentMatch() {
+                            return getDozerMapper().map(other, Match.class);
+                        }
+                    };
+                }
+
             }
 
             try {
@@ -348,6 +273,60 @@ public class MongoMatchUtils {
     @Inject
     public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
         this.mongoDBUtils = mongoDBUtils;
+    }
+
+    private class MatchLockContext {
+
+        private final MongoMatch match;
+
+        private final Timestamp timeout;
+
+        private final MongoMatchLock lock = new MongoMatchLock();
+
+        public MatchLockContext(final MongoMatch match, final Timestamp timeout) {
+            this.match = match;
+            this.timeout = timeout;
+        }
+
+        public void attempt() throws MongoConcurrentUtils.ContentionException {
+            final Query<MongoMatch> query = getDatastore().createQuery(MongoMatch.class);
+
+            query.field("_id").equal(match.getObjectId())
+                    .or(
+                            query.criteria("lock").doesNotExist(),
+                            query.criteria("lock.timestamp").lessThan(timeout)
+                    );
+
+            final UpdateOperations<MongoMatch> updates = getDatastore()
+                    .createUpdateOperations(MongoMatch.class)
+                    .set("lock", lock);
+
+            final MongoMatch result = getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
+                    .returnNew(true)
+                    .upsert(false));
+
+            if (result == null) {
+                throw new MongoConcurrentUtils.ContentionException();
+            }
+        }
+
+        public void release() {
+
+            final Query<MongoMatch> query = getDatastore().createQuery(MongoMatch.class);
+
+            query.field("_id").equal(match.getObjectId())
+                    .field("lock.uuid").equal(lock.getUuid());
+
+            final UpdateOperations<MongoMatch> updates = getDatastore()
+                    .createUpdateOperations(MongoMatch.class)
+                    .unset("lock");
+
+            getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
+                    .returnNew(true)
+                    .upsert(false));
+
+        }
+
     }
 
 }

@@ -42,6 +42,7 @@ public class MongoFIFOMatchmaker implements Matchmaker {
         query.order(Sort.ascending("lastUpdatedTimestamp"))
              .field("player").notEqual(mongoMatch.getPlayer())
              .field("scheme").equal(match.getScheme())
+             .field("gameId").doesNotExist()
              .field("opponent").doesNotExist()
              .field("lock").doesNotExist();
 

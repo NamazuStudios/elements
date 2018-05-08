@@ -27,6 +27,7 @@ import java.util.Objects;
         })
 @Entity(value = "match", noClassnameStored = true)
 @Indexes({
+    @Index(fields = @Field(value = "gameId")),
     @Index(fields = @Field(value = "lock.uuid")),
     @Index(fields = @Field(value = "expiry"), options = @IndexOptions(expireAfterSeconds = MongoMatch.MATCH_EXPIRATION_SECONDS))
 })
