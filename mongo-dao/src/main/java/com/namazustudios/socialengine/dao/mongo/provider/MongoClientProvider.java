@@ -66,7 +66,7 @@ public class MongoClientProvider implements Provider<MongoClient> {
 
         final MongoClientOptions mongoClientOptions = MongoClientOptions.builder()
             .minConnectionsPerHost(getMinConnections())
-            .maxConnectionLifeTime(getMaxConnections())
+            .connectionsPerHost(getMaxConnections())
             .build();
 
         return new MongoClient(serverAddressList, mongoClientOptions);
