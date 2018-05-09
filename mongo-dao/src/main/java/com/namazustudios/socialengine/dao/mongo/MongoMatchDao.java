@@ -31,6 +31,8 @@ import java.sql.Timestamp;
 import java.util.function.Function;
 
 import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
  * Created by patricktwohig on 7/25/17.
@@ -137,6 +139,9 @@ public class MongoMatchDao implements MatchDao {
         final MongoMatch mongoMatch = getDozerMapper().map(match, MongoMatch.class);
 
         final Timestamp now = new Timestamp(currentTimeMillis());
+        final Timestamp expiry = new Timestamp(now.getTime() + MILLISECONDS.convert(5, MINUTES));
+
+        mongoMatch.setExpiry(expiry);
         mongoMatch.setLastUpdatedTimestamp(now);
 
         mongoMatch.setPlayer(mongoProfile);

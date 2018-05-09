@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
 import com.mongodb.ServerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +28,14 @@ public class MongoClientProvider implements Provider<MongoClient> {
 
     public static final String MONGO_DB_URLS = "com.namazustudios.socialengine.mongo.db.url";
 
-    @Inject
-    @Named(MONGO_DB_URLS)
+    public static final String MONGO_MIN_CONNECTIONS = "com.namazustudios.socialengine.mongo.min.connections";
+
+    public static final String MONGO_MAX_CONNECTIONS = "com.namazustudios.socialengine.mongo.max.connections";
+
+    private int minConnections;
+
+    private int maxConnections;
+
     private String mongoDbUrls;
 
     @Override
@@ -57,8 +64,41 @@ public class MongoClientProvider implements Provider<MongoClient> {
 
         }).collect(Collectors.toList());
 
-        return new MongoClient(serverAddressList);
+        final MongoClientOptions mongoClientOptions = MongoClientOptions.builder()
+            .minConnectionsPerHost(getMinConnections())
+            .maxConnectionLifeTime(getMaxConnections())
+            .build();
+
+        return new MongoClient(serverAddressList, mongoClientOptions);
 
     }
+
+    public int getMinConnections() {
+        return minConnections;
+    }
+
+    @Inject
+    public void setMinConnections(@Named(MONGO_MIN_CONNECTIONS) int minConnections) {
+        this.minConnections = minConnections;
+    }
+
+    public int getMaxConnections() {
+        return maxConnections;
+    }
+
+    @Inject
+    public void setMaxConnections(@Named(MONGO_MAX_CONNECTIONS) int maxConnections) {
+        this.maxConnections = maxConnections;
+    }
+
+    public String getMongoDbUrls() {
+        return mongoDbUrls;
+    }
+
+    @Inject
+    public void setMongoDbUrls(@Named(MONGO_DB_URLS) String mongoDbUrls) {
+        this.mongoDbUrls = mongoDbUrls;
+    }
+
 
 }
