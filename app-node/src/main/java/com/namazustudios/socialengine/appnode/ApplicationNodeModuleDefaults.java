@@ -8,12 +8,14 @@ import com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool;
 
 import java.util.Properties;
 
+import static java.lang.Runtime.*;
+
 public class ApplicationNodeModuleDefaults implements ModuleDefaults {
 
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.setProperty(JeroMQNode.NUMBER_OF_DISPATCHERS, Integer.toString(Runtime.getRuntime().availableProcessors()));
+        properties.setProperty(JeroMQNode.NUMBER_OF_DISPATCHERS, Integer.toString(getRuntime().availableProcessors() * 10));
         properties.setProperty(DynamicConnectionPool.TIMEOUT, "60");
         properties.setProperty(DynamicConnectionPool.MIN_CONNECTIONS, "10");
         properties.setProperty(DynamicConnectionPool.MAX_CONNECTIONS, "10000");

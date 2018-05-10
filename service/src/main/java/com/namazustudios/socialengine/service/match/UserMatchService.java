@@ -8,8 +8,10 @@ import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
 import com.namazustudios.socialengine.model.match.Match;
+import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.Context;
@@ -146,16 +148,41 @@ public class UserMatchService implements MatchService {
     }
 
     @Override
-    public Topic.Subscription waitForComplete(
+    public Topic.Subscription attemptRematchAndPoll(
             final String matchId,
             final Consumer<Match> matchConsumer, final Consumer<Exception> exceptionConsumer) {
 
         final Profile profile = getCurrentProfileSupplier().get();
         final Match match = getMatchDao().getMatchForPlayer(profile.getId(), matchId);
 
-        return getTopicService().getTopicForTypeNamed(Match.class, Match.ROOT_TOPIC)
+        final Topic.Subscription subscription =  getTopicService()
+            .getTopicForTypeNamed(Match.class, Match.ROOT_TOPIC)
             .getSubtopicNamed(match.getId())
             .subscribeNext(m -> matchConsumer.accept(redactOpponentUser(m)), exceptionConsumer);
+
+        try {
+            attempt(match);
+        } catch (NoSuitableMatchException ex) {
+            logger.debug("No match found in polling process.  Skipping.", ex);
+        }
+
+        return subscription;
+
+    }
+
+    private Match attempt(final Match match) throws NoSuitableMatchException {
+
+        final Profile profile = getCurrentProfileSupplier().get();
+        final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration;
+        matchmakingApplicationConfiguration = getMatchmakingApplicationConfigurationDao()
+            .getApplicationConfiguration(profile.getApplication().getId(), match.getScheme());
+
+        final Matchmaker matchmaker = getMatchDao().getMatchmaker(matchmakingApplicationConfiguration.getAlgorithm());
+
+        final Matchmaker.SuccessfulMatchTuple successfulMatchTuple = matchmaker
+            .attemptToFindOpponent(match, (p, o) -> finalize(p, o, matchmakingApplicationConfiguration));
+
+        return handleSuccessfulMatch(successfulMatchTuple);
 
     }
 

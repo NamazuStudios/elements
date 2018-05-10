@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
+import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
@@ -7,6 +8,7 @@ import java.sql.Timestamp;
 import java.util.UUID;
 
 import static java.lang.System.currentTimeMillis;
+import static java.util.UUID.randomUUID;
 
 /**
  * A document type which locks a {@link MongoMatch} instance.  The {@link ObjectId} used with instance is acquired from
@@ -17,35 +19,20 @@ import static java.lang.System.currentTimeMillis;
  *
  * Created by patricktwohig on 7/27/17.
  */
-@Entity(value = "match_lock", noClassnameStored = true)
+@Embedded
 public class MongoMatchLock {
 
     public static final int PENDING_MATCH_TIMEOUT_SECONDS = 5;
 
-    @Id
-    private ObjectId playerMatchId;
-
+    @Indexed
     @Property
-    @Indexed(options = @IndexOptions(expireAfterSeconds = PENDING_MATCH_TIMEOUT_SECONDS))
     private Timestamp timestamp = new Timestamp(currentTimeMillis());
 
+    @Indexed
     @Property
-    private String lockUuid;
+    private String uuid = randomUUID().toString();
 
     public MongoMatchLock() {}
-
-    public MongoMatchLock(final ObjectId playerMatchId) {
-        this.playerMatchId = playerMatchId;
-        this.lockUuid = UUID.randomUUID().toString();
-    }
-
-    public ObjectId getPlayerMatchId() {
-        return playerMatchId;
-    }
-
-    public void setPlayerMatchId(ObjectId playerMatchId) {
-        this.playerMatchId = playerMatchId;
-    }
 
     public Timestamp getTimestamp() {
         return timestamp;
@@ -55,12 +42,12 @@ public class MongoMatchLock {
         this.timestamp = timestamp;
     }
 
-    public String getLockUuid() {
-        return lockUuid;
+    public String getUuid() {
+        return uuid;
     }
 
-    public void setLockUuid(String lockUuid) {
-        this.lockUuid = lockUuid;
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
 }

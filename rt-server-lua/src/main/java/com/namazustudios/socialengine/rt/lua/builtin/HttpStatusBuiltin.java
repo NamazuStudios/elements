@@ -35,7 +35,7 @@ public class HttpStatusBuiltin implements Builtin {
 
             final String name = luaState.checkString(1);
             final Module module = luaState.checkJavaObject(2, Module.class);
-            logger.info("Loading module {} - {}", name, module.getChunkName());
+            logger.debug("Loading module {} - {}", name, module.getChunkName());
 
             luaState.setTop(0);
             luaState.newTable();

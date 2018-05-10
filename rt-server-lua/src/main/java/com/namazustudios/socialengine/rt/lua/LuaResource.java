@@ -128,7 +128,7 @@ public class LuaResource implements Resource {
             // actual logger reads the name of the source file.
             scriptLog = LoggerFactory.getLogger(modulePath.toNormalizedPathString());
             luaState.load(inputStream, moduleName, "bt");
-            scriptLog.info("Loaded script {}", moduleName);
+            scriptLog.debug("Loaded script {}", moduleName);
 
             for (final Object object : params) {
                 luaState.pushJavaObject(object);

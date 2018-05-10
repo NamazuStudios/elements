@@ -7,6 +7,7 @@ import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
 import java.sql.Timestamp;
+import java.util.Objects;
 
 /**
  * Created by patricktwohig on 7/21/17.
@@ -26,6 +27,8 @@ import java.sql.Timestamp;
         })
 @Entity(value = "match", noClassnameStored = true)
 @Indexes({
+    @Index(fields = @Field(value = "gameId")),
+    @Index(fields = @Field(value = "lock.uuid")),
     @Index(fields = @Field(value = "expiry"), options = @IndexOptions(expireAfterSeconds = MongoMatch.MATCH_EXPIRATION_SECONDS))
 })
 public class MongoMatch {
@@ -62,6 +65,10 @@ public class MongoMatch {
 
     @Property
     private Timestamp expiry;
+
+    @Indexed
+    @Embedded
+    private MongoMatchLock lock;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -119,4 +126,32 @@ public class MongoMatch {
         this.expiry = expiry;
     }
 
+    public MongoMatchLock getLock() {
+        return lock;
+    }
+
+    public void setLock(MongoMatchLock lock) {
+        this.lock = lock;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MongoMatch)) return false;
+        MongoMatch that = (MongoMatch) o;
+        return Objects.equals(getObjectId(), that.getObjectId()) &&
+                Objects.equals(getPlayer(), that.getPlayer()) &&
+                Objects.equals(getScheme(), that.getScheme()) &&
+                Objects.equals(getOpponent(), that.getOpponent()) &&
+                Objects.equals(getLastUpdatedTimestamp(), that.getLastUpdatedTimestamp()) &&
+                Objects.equals(getGameId(), that.getGameId()) &&
+                Objects.equals(getExpiry(), that.getExpiry()) &&
+                Objects.equals(getLock(), that.getLock());
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(getObjectId(), getPlayer(), getScheme(), getOpponent(), getLastUpdatedTimestamp(), getGameId(), getExpiry(), getLock());
+    }
 }

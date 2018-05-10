@@ -72,6 +72,6 @@ public interface MatchService {
      *
      * @return a {@link Runnable} which may be used to cancel the pending request
      */
-    Subscription waitForComplete(String matchId, Consumer<Match> matchConsumer, Consumer<Exception> exceptionConsumer);
+    Subscription attemptRematchAndPoll(String matchId, Consumer<Match> matchConsumer, Consumer<Exception> exceptionConsumer);
 
 }
