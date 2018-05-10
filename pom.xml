@@ -86,7 +86,7 @@
         <gwt.plugin.version>2.8.0</gwt.plugin.version>
         <javax.validation.version>1.0.0.GA</javax.validation.version>
         <lucene.version>7.2.0</lucene.version>
-        <mongo.java.driver.version>3.7.0</mongo.java.driver.version>
+        <mongo.java.driver.version>3.4.0</mongo.java.driver.version>
         <testng.version>6.13.1</testng.version>
         <test.groups>unit</test.groups>
         <surefire.version>2.18.1</surefire.version>
