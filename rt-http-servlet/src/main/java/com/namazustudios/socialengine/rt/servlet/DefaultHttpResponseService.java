@@ -62,7 +62,7 @@ public class DefaultHttpResponseService implements HttpResponseService {
         final PayloadWriter payloadWriter = getWritersByContentType().get(responseContent.getType());
 
         if (payloadWriter == null) {
-            logger.info("No writer specified for content {}", responseContent);
+            logger.error("No writer specified for content {}", responseContent);
             destination.sendError(SC_INTERNAL_SERVER_ERROR);
         } else {
             doWrite(toWrite, destination, responseContent, payloadWriter);
