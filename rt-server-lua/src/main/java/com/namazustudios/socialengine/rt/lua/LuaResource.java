@@ -276,7 +276,7 @@ public class LuaResource implements Resource {
                 getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
                 throw new IllegalStateException("task ID mismatch");
             } else if (status == YIELD) {
-                getScriptLog().info("Resuming task {} from network yielded.  Resuming later.", taskId);
+                getScriptLog().debug("Resuming task {} from network yielded.  Resuming later.", taskId);
             }
 
         } catch (NoSuchTaskException ex) {
@@ -329,7 +329,7 @@ public class LuaResource implements Resource {
                 getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
                 throw new IllegalStateException("task ID mismatch");
             } else if (status == YIELD) {
-                getScriptLog().info("Resuming task {} with error yielded.  Resuming later.", taskId);
+                getScriptLog().debug("Resuming task {} with error yielded.  Resuming later.", taskId);
             }
 
         } catch (NoSuchTaskException ex) {
@@ -378,7 +378,7 @@ public class LuaResource implements Resource {
                 getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
                 throw new IllegalStateException("task ID mismatch");
             } else if (status == YIELD) {
-                getScriptLog().info("Scheduler resumed task {} yielded.  Resuming later.", taskId);
+                getScriptLog().debug("Scheduler resumed task {} yielded.  Resuming later.", taskId);
             }
 
         } catch (NoSuchTaskException ex) {

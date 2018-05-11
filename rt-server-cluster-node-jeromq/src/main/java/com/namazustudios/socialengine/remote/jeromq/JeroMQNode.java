@@ -361,7 +361,7 @@ public class JeroMQNode implements Node {
                 .map(index -> index + 1)
                 .mapToObj(part -> (Consumer<InvocationResult>) invocationResult -> {
                     if (remaining.getAndDecrement() <= 0) {
-                        logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
+                        logger.debug("Ignoring invocation result {} because of previous errors.", invocationResult);
                     } else {
                         outboundConnectionPool.processV(outbound -> sendResult(outbound.socket(), invocationResult, part, identity, asyncInvocationErrorConsumer));
                     }
