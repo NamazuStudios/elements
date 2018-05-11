@@ -27,8 +27,6 @@ public class JeroMQNodeModule extends PrivateModule {
 
     private Runnable bindTimeoutAction = () -> {};
 
-    private Runnable bindNumberOfDispatchersAction = () -> {};
-
     /**
      * Specifies the node unique id based {@link JeroMQNode#ID}.
      *
@@ -103,20 +101,6 @@ public class JeroMQNodeModule extends PrivateModule {
         return this;
     }
 
-    /**
-     * Specifies the number of dispatcher threads used to handle incoming connections.  The number of threads is fixed
-     * for the underlying {@link JeroMQNode} instance.
-     *
-     * @param numberOfDispatchers the number of dispatchers to run.
-     * @return this instance
-     */
-    public JeroMQNodeModule withNumberOfDispatchers(final int numberOfDispatchers) {
-        bindNumberOfDispatchersAction = () -> bind(Integer.class)
-                .annotatedWith(named(NUMBER_OF_DISPATCHERS))
-                .toInstance(numberOfDispatchers);
-        return this;
-    }
-
     @Override
     protected void configure() {
 
@@ -131,7 +115,6 @@ public class JeroMQNodeModule extends PrivateModule {
         bindTimeoutAction.run();
         bindMinConnectionsAction.run();
         bindMaxConnectionsAction.run();
-        bindNumberOfDispatchersAction.run();
 
         expose(Node.class);
 

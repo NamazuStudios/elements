@@ -26,7 +26,7 @@ public class SimpleResourceContext implements ResourceContext {
 
     @Override
     public ResourceId createAttributes(final String module, final Path path, final Attributes attributes, final Object... args) {
-        logger.info("Loading module {} -> {}", module, path);
+        logger.debug("Loading module {} -> {}", module, path);
         final Resource resource = getResourceLoader().load(module, attributes, args);
         getResourceService().addResource(path, resource);
         return resource.getId();

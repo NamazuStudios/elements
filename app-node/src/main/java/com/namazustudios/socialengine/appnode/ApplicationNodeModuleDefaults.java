@@ -15,7 +15,6 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.setProperty(JeroMQNode.NUMBER_OF_DISPATCHERS, Integer.toString(getRuntime().availableProcessors() * 10));
         properties.setProperty(DynamicConnectionPool.TIMEOUT, "60");
         properties.setProperty(DynamicConnectionPool.MIN_CONNECTIONS, "10");
         properties.setProperty(DynamicConnectionPool.MAX_CONNECTIONS, "10000");
