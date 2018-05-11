@@ -96,7 +96,7 @@ public interface Connection extends AutoCloseable {
                     logger.error("{} Caught exception destroying Socket.", toString(), ex);
                 }
 
-                logger.info("Successfully closed socket {} ", socket);
+                logger.debug("Successfully closed socket {} ", socket);
 
             }
         };

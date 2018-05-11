@@ -60,21 +60,21 @@ public class SimpleServicesModule extends PrivateModule {
 
         bind(ScheduledExecutorService.class)
             .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE))
-            .toProvider(() -> scheduledExecutorService(schedulerPoolSizeProvider, SCHEDULED_EXECUTOR_SERVICE));
+            .toProvider(() -> scheduledExecutorService(schedulerPoolSizeProvider));
 
         bind(ExecutorService.class)
             .annotatedWith(named(DISPATCHER_EXECUTOR_SERVICE))
-            .toProvider(new CachedThreadPoolProvider(SimpleScheduler.class));
+            .toProvider(new CachedThreadPoolProvider(SimpleScheduler.class, "dispatch"));
 
         expose(Scheduler.class);
         expose(ResourceService.class);
 
     }
 
-    private ScheduledExecutorService scheduledExecutorService(final Provider<Integer> schedulerPoolSizeProvider,
-                                                              final String name) {
+    private ScheduledExecutorService scheduledExecutorService(final Provider<Integer> schedulerPoolSizeProvider) {
         final AtomicInteger threadCount = new AtomicInteger();
-        final Logger logger = LoggerFactory.getLogger(SCHEDULED_EXECUTOR_SERVICE);
+        final Logger logger = LoggerFactory.getLogger(SimpleScheduler.class);
+        final String name = format("%s.%s", SimpleScheduler.class.getSimpleName(), "timer");
         return newScheduledThreadPool(schedulerPoolSizeProvider.get(), r -> newThread(r, name, threadCount, logger));
     }
 
@@ -82,8 +82,8 @@ public class SimpleServicesModule extends PrivateModule {
                              final AtomicInteger threadCount, final Logger logger) {
         final Thread thread = new Thread(runnable);
         thread.setDaemon(true);
-        thread.setUncaughtExceptionHandler((t, e) -> logger.error("Scheduler Exception in {}", t, e));
-        thread.setName(format("%s - Thread %d", name, threadCount.incrementAndGet()));
+        thread.setName(format("%s - #%d", name, threadCount.incrementAndGet()));
+        thread.setUncaughtExceptionHandler((t , e) -> logger.error("Fatal Error: {}", t, e));
         return thread;
     }
 

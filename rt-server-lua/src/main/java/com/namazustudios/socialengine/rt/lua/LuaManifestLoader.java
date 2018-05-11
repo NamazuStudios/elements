@@ -119,10 +119,10 @@ public class LuaManifestLoader implements ManifestLoader {
                 setupFunctionOverrides();
 
                 luaState.load(inputStream, MAIN_MANIFEST, "bt");
-                scriptLogger.info("Loaded Script: {}", MAIN_MANIFEST);
+                scriptLogger.debug("Loaded Script: {}", MAIN_MANIFEST);
 
                 luaState.call(0, 0);
-                scriptLogger.info("Executed Script: {}", MAIN_MANIFEST);
+                scriptLogger.debug("Executed Script: {}", MAIN_MANIFEST);
 
             } catch (IOException ex) {
                 logger.error("Caught IO exception reading manifest {}.", MAIN_MANIFEST, ex);

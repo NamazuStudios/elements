@@ -304,7 +304,6 @@ public class JeroMQEndToEndIntegrationTest {
             bind(TestServiceInterface.class).to(IntegrationTestService.class);
             bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class);
 
-            bind(String.class).annotatedWith(named(NUMBER_OF_DISPATCHERS)).toInstance("100");
             bind(String.class).annotatedWith(named(BIND_ADDRESS)).toInstance("inproc://integration-test");
 
             bind(String.class).annotatedWith(named(ID)).toInstance("integration-test");

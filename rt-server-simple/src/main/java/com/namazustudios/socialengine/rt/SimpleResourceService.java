@@ -280,7 +280,7 @@ public class SimpleResourceService implements ResourceService {
                 } else if (getResourceIdOptimisticLockService().isLock(existingResourceId)) {
                     throw new LockedException("path locked");
                 } else if (!storage.getResources().containsKey(existingResourceId)) {
-                    logger.info("Conistency error.  No resource for id {}", existingResourceId);
+                    logger.error("Conistency error.  No resource for id {}", existingResourceId);
                     throw new ResourceNotFoundException("No resource at path " + path);
                 }
 

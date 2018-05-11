@@ -292,63 +292,6 @@ public class DynamicConnectionPool implements ConnectionPool {
                     '}';
         }
 
-        private class WorkerConnection implements Connection, AutoCloseable {
-
-            private final ZContext zContext;
-
-            private final ZMQ.Socket socket;
-
-            private final AtomicBoolean open = new AtomicBoolean(true);
-
-            public WorkerConnection(final ZContext zContext) {
-                highWaterMark.incrementAndGet();
-                this.zContext = zContext;
-                socket = socketSupplier.apply(zContext);
-            }
-
-            @Override
-            public ZContext context() {
-                if (!open.get()) throw new IllegalStateException("Connection closed");
-                return getzContext();
-            }
-
-            @Override
-            public ZMQ.Socket socket() {
-                if (!open.get()) throw new IllegalStateException("Connection closed");
-                return socket;
-            }
-
-            @Override
-            public void close() {
-
-                if (!open.compareAndSet(true, false)) throw new IllegalStateException("Connection closed.");
-
-                try {
-                    socket.close();
-                } catch (final Exception ex) {
-                    logger.error("{} Caught exception closing Socket.", toString(), ex);
-                }
-
-                try {
-                    zContext.destroySocket(socket);
-                } catch (final Exception ex) {
-                    logger.error("{} Caught exception destroying Socket.", toString(), ex);
-                }
-
-                logger.info("Successfully closed socket {} ", socket);
-
-            }
-
-            @Override
-            public String toString() {
-                return "WorkerConnection{" +
-                        "socket=" + socket +
-                        ", open=" + open.get() +
-                        '}';
-            }
-
-        }
-
     }
 
     private static class TerminalConnection  implements Connection {

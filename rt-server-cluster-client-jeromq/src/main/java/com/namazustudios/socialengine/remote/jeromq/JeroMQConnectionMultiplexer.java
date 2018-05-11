@@ -53,6 +53,7 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
         thread.setDaemon(true);
         thread.setName(JeroMQConnectionMultiplexer.class.getSimpleName() + " thread");
+        thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
 
         if (multiplexerThread.compareAndSet(null, thread)) {
             thread.start();
@@ -194,8 +195,6 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
                 }
 
-            } catch (Exception ex) {
-                logger.error("Caught exception.  Exiting.", ex);
             }
 
         }

@@ -32,6 +32,7 @@ public class SimpleHandlerContext implements HandlerContext {
         final Thread thread = new Thread(r);
         thread.setDaemon(true);
         thread.setName(SimpleHandlerContext.class.getSimpleName() + "-reaper");
+        thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
         return thread;
     });
 

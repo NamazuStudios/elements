@@ -37,6 +37,7 @@ public class DefaultHttpSessionService implements HttpSessionService {
         final Thread thread = new Thread(r);
         thread.setDaemon(true);
         thread.setName(DefaultHttpSessionService.class.getName() + " worker thread.");
+        thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
         return thread;
     });
 

@@ -135,17 +135,6 @@ public class TestJeroMQLuaNodeModule extends PrivateModule {
     }
 
     /**
-     * {@see {@link JeroMQNodeModule#withNumberOfDispatchers(int)}}
-     *
-     * @param numberOfDispatchers the number of dispatcher threads for incoming requests
-     * @return this instance
-     */
-    public TestJeroMQLuaNodeModule withNumberOfDispatchers(int numberOfDispatchers) {
-        jeroMQNodeModule.withNumberOfDispatchers(numberOfDispatchers);
-        return this;
-    }
-
-    /**
      * {@see {@link SimpleHandlerContextModule#withTimeout(long, TimeUnit)}}
      *
      * @param duration the duration

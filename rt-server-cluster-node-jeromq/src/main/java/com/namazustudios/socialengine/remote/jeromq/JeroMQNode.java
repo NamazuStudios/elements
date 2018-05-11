@@ -19,6 +19,8 @@ import javax.inject.Provider;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -31,6 +33,8 @@ import static com.namazustudios.socialengine.rt.remote.MessageType.INVOCATION_ER
 import static com.namazustudios.socialengine.rt.util.FinallyAction.with;
 import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 import static org.zeromq.ZMQ.*;
@@ -51,8 +55,6 @@ public class JeroMQNode implements Node {
 
     public static final String BIND_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.bindAddress";
 
-    public static final String NUMBER_OF_DISPATCHERS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.numberOfDispatchers";
-
     private final AtomicReference<Context> context = new AtomicReference<>();
 
     private String id;
@@ -64,8 +66,6 @@ public class JeroMQNode implements Node {
     private ZContext zContext;
 
     private String  bindAddress;
-
-    private int numberOfDispachers;
 
     private InvocationDispatcher invocationDispatcher;
 
@@ -150,15 +150,6 @@ public class JeroMQNode implements Node {
         this.bindAddress = bindAddress;
     }
 
-    public int getNumberOfDispachers() {
-        return numberOfDispachers;
-    }
-
-    @Inject
-    public void setNumberOfDispachers(@Named(NUMBER_OF_DISPATCHERS) int numberOfDispachers) {
-        this.numberOfDispachers = numberOfDispachers;
-    }
-
     public InvocationDispatcher getInvocationDispatcher() {
         return invocationDispatcher;
     }
@@ -217,17 +208,26 @@ public class JeroMQNode implements Node {
 
         private final AtomicBoolean running = new AtomicBoolean();
 
-        private final ConnectionPool inboundConnectionPool = getConnectionPoolProvider().get();
-
         private final ConnectionPool outboundConnectionPool = getConnectionPoolProvider().get();
 
         private final CountDownLatch proxyStartupLatch = new CountDownLatch(1);
+
+        final AtomicInteger dispatcherCount = new AtomicInteger();
+
+        private final ExecutorService dispatchExecutorService = Executors.newCachedThreadPool(r -> {
+            final Thread thread = new Thread(r);
+            thread.setDaemon(true);
+            thread.setName(format("%s.in #%d", getName(), dispatcherCount.incrementAndGet()));
+            thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
+            return thread;
+        });
 
         private final Thread proxyThread;
         {
             proxyThread = new Thread(() -> bindFrontendSocketAndPerformWork());
             proxyThread.setDaemon(true);
             proxyThread.setName(JeroMQNode.this.getClass().getSimpleName() + " dispatcher thread.");
+            proxyThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
         }
 
         public void start() {
@@ -247,41 +247,12 @@ public class JeroMQNode implements Node {
                 return socket;
             }, getName() + ".out");
 
-            inboundConnectionPool.start(zc -> {
-                final Socket socket = zc.createSocket(PULL);
-                socket.connect(getInboundAddr());
-                return socket;
-            }, getName() + ".in");
-
-            final int toDispatch = getNumberOfDispachers();
-
-            for (int i = 0; i < toDispatch; ++i) {
-                inboundConnectionPool.processV(connection -> {
-                    try (final Poller poller = connection.context().createPoller(1)) {
-
-                        final int index = poller.register(connection.socket(), POLLIN | POLLERR);
-
-                        while (running.get() && !interrupted()) {
-                            if (poller.poll(5000) < 0) {
-                                logger.info("Poller signaled interruption.  Terminating inbound connection.");
-                                break;
-                            } else if (poller.pollin(index)) {
-                                dispatchMethodInvocation(connection.socket());
-                            }
-                        }
-
-                    } finally {
-                        logger.info("Terminating inbound connection.");
-                    }
-                });
-            }
-
         }
 
         public void stop() {
 
-            inboundConnectionPool.stop();
             outboundConnectionPool.stop();
+            dispatchExecutorService.shutdown();
 
             running.set(false);
             proxyThread.interrupt();
@@ -290,7 +261,14 @@ public class JeroMQNode implements Node {
                 proxyThread.join();
             } catch (InterruptedException e) {
                 logger.error("Interrupted while shutting down Node.", e);
-                throw new InternalException(e);
+            }
+
+            try {
+                if (!dispatchExecutorService.awaitTermination(10, MINUTES)) {
+                    logger.error("Terminating dispatchers timed out.");
+                }
+            } catch (InterruptedException e) {
+                logger.error("Interrupted while shutting down Node.", e);
             }
 
         }
@@ -299,14 +277,12 @@ public class JeroMQNode implements Node {
 
             try (final ZContext context = ZContext.shadow(getzContext());
                  final Socket frontend = context.createSocket(ROUTER);
-                 final Socket inbound = context.createSocket(PUSH);
                  final Socket outbound = context.createSocket(PULL);
                  final Poller poller = context.createPoller(4)) {
 
                 frontend.setRouterMandatory(true);
                 frontend.bind(getBindAddress());
 
-                inbound.bind(getInboundAddr());
                 outbound.bind(getOutboundAddr());
 
                 final int frontendIndex = poller.register(frontend, POLLIN | POLLERR);
@@ -316,35 +292,36 @@ public class JeroMQNode implements Node {
                 logger.info("Started up.");
 
                 while (running.get() && !interrupted()) {
+                    try {
+                        if (poller.poll() < 0) {
+                            logger.info("Poller signaled interruption.  Terminating frontend socket.");
+                            break;
+                        }
 
-                    if (poller.poll(5000) < 0) {
-                        logger.error("Poller signaled interruption.  Terminating frontend socket.");
-                        break;
+                        if (poller.pollin(frontendIndex)) {
+                            final ZMsg msg = ZMsg.recvMsg(frontend);
+                            dispatchExecutorService.submit(() -> dispatchMethodInvocation(msg));
+                        } else if (poller.pollerr(frontendIndex)) {
+                            logger.error("Error in frontend socket.");
+                        }
+
+                        if (poller.pollin(outboundIndex)) {
+                            final ZMsg msg = ZMsg.recvMsg(outbound);
+                            msg.send(frontend);
+                        } else if (poller.pollerr(outboundIndex)) {
+                            logger.error("Error in outbound socket.");
+                        }
+                    } catch (Exception ex) {
+                        logger.error("Exception in main IO Thread.", ex);
                     }
-
-                    if (poller.pollin(frontendIndex)) {
-                        final ZMsg msg = ZMsg.recvMsg(frontend);
-                        msg.send(inbound);
-                    } else if (poller.pollerr(frontendIndex)) {
-                        logger.error("Error in frontend socket.");
-                    }
-
-                    if (poller.pollin(outboundIndex)) {
-                        final ZMsg msg = ZMsg.recvMsg(outbound);
-                        msg.send(frontend);
-                    } else if (poller.pollerr(outboundIndex)) {
-                        logger.error("Error in outbound socket.");
-                    }
-
                 }
 
             }
 
         }
 
-        private void dispatchMethodInvocation(final Socket inbound) {
+        private void dispatchMethodInvocation(final ZMsg msg) {
 
-            final ZMsg msg = ZMsg.recvMsg(inbound);
             final ZMsg identity = getIdentity().popIdentity(msg);
 
             final AtomicReference<Invocation> invocationAtomicReference = new AtomicReference<>();
@@ -384,7 +361,7 @@ public class JeroMQNode implements Node {
                 .map(index -> index + 1)
                 .mapToObj(part -> (Consumer<InvocationResult>) invocationResult -> {
                     if (remaining.getAndDecrement() <= 0) {
-                        logger.info("Ignoring invocation result {} because of previous errors.", invocationResult);
+                        logger.debug("Ignoring invocation result {} because of previous errors.", invocationResult);
                     } else {
                         outboundConnectionPool.processV(outbound -> sendResult(outbound.socket(), invocationResult, part, identity, asyncInvocationErrorConsumer));
                     }

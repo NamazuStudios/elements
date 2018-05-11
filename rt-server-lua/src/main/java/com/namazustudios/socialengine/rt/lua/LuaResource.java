@@ -245,8 +245,8 @@ public class LuaResource implements Resource {
     public void resumeFromNetwork(final TaskId taskId, final Object networkResult) {
 
         final PendingTask pendingTask = taskIdPendingTaskMap.getOrDefault(taskId, new PendingTask(taskId,
-            o -> scriptLog.info("Discarding {} for task {}", o, taskId),
-            e -> scriptLog.info("Discarding exception for task {}", taskId, e)));
+            o -> scriptLog.debug("Discarding {} for task {}", o, taskId),
+            e -> scriptLog.debug("Discarding exception for task {}", taskId, e)));
 
         final LuaState luaState = getLuaState();
         FinallyAction finalOperation = () -> luaState.setTop(0);
@@ -276,7 +276,7 @@ public class LuaResource implements Resource {
                 getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
                 throw new IllegalStateException("task ID mismatch");
             } else if (status == YIELD) {
-                getScriptLog().info("Resuming task {} from network yielded.  Resuming later.", taskId);
+                getScriptLog().debug("Resuming task {} from network yielded.  Resuming later.", taskId);
             }
 
         } catch (NoSuchTaskException ex) {
@@ -295,8 +295,8 @@ public class LuaResource implements Resource {
     public void resumeWithError(TaskId taskId, Throwable throwable) {
 
         final PendingTask pendingTask = taskIdPendingTaskMap.getOrDefault(taskId, new PendingTask(taskId,
-            o -> scriptLog.info("Discarding {} for task {}", o, taskId),
-            e -> scriptLog.info("Discarding exception for task {}", taskId, e)));
+            o -> scriptLog.debug("Discarding {} for task {}", o, taskId),
+            e -> scriptLog.debug("Discarding exception for task {}", taskId, e)));
 
         final LuaState luaState = getLuaState();
         FinallyAction finalOperation = () -> luaState.setTop(0);
@@ -329,7 +329,7 @@ public class LuaResource implements Resource {
                 getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
                 throw new IllegalStateException("task ID mismatch");
             } else if (status == YIELD) {
-                getScriptLog().info("Resuming task {} with error yielded.  Resuming later.", taskId);
+                getScriptLog().debug("Resuming task {} with error yielded.  Resuming later.", taskId);
             }
 
         } catch (NoSuchTaskException ex) {
@@ -378,7 +378,7 @@ public class LuaResource implements Resource {
                 getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
                 throw new IllegalStateException("task ID mismatch");
             } else if (status == YIELD) {
-                getScriptLog().info("Scheduler resumed task {} yielded.  Resuming later.", taskId);
+                getScriptLog().debug("Scheduler resumed task {} yielded.  Resuming later.", taskId);
             }
 
         } catch (NoSuchTaskException ex) {
@@ -469,7 +469,7 @@ public class LuaResource implements Resource {
 
         public void fail(final Throwable th) {
             try {
-                logger.info("Task failed with exception.", taskId, th);
+                logger.error("Task failed with exception.", taskId, th);
                 throwableConsumer.accept(th);
             } catch (Exception ex) {
                 logger.error("Caught exception failing task {} ", taskId, ex);

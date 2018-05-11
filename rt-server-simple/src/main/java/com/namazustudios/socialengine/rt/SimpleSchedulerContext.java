@@ -29,7 +29,7 @@ public class SimpleSchedulerContext implements SchedulerContext {
         try {
             resource.resumeFromNetwork(taskId, result);
         } catch (NoSuchTaskException ex) {
-            logger.info("Ignoring dead task: {}", ex.getTaskId());
+            logger.debug("Ignoring dead task: {}", ex.getTaskId());
         }
     }
 
@@ -43,7 +43,7 @@ public class SimpleSchedulerContext implements SchedulerContext {
         try {
             resource.resumeWithError(taskId, throwable);
         } catch (NoSuchTaskException ex) {
-            logger.info("Ignoring dead task: {}", ex.getTaskId());
+            logger.debug("Ignoring dead task: {}", ex.getTaskId());
         }
     }
 

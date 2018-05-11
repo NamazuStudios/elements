@@ -19,6 +19,7 @@ public class ShutdownHooks {
     public ShutdownHooks(final Class<?> aClass) {
         actions = new AtomicReference<>(() -> logger.info("Running cleanup hooks up for {}", aClass.getName()));
         final Thread thread = new Thread(() -> actions.get().perform());
+        thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
         getRuntime().addShutdownHook(thread);
     }
 

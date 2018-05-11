@@ -59,6 +59,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
         thread.setDaemon(true);
         thread.setName(JeroMQConnectionDemultiplexer.class.getSimpleName() + " thread");
+        thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
 
         if (routerThread.compareAndSet(null, thread)) {
             logger.info("Starting up.");
@@ -226,7 +227,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                 }
 
             }  catch (Exception ex) {
-                logger.error("Caught exception closing router.", ex);
+                logger.error("Exiting with error.", ex);
             }
 
         }
