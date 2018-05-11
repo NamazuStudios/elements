@@ -1,10 +1,13 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.mongodb.MongoCommandException;
+import com.mongodb.MongoException;
 import com.namazustudios.socialengine.dao.ScoreDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoLeaderboard;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoScore;
 import com.namazustudios.socialengine.dao.mongo.model.MongoScoreId;
+import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -38,7 +41,9 @@ public class MongoScoreDao implements ScoreDao {
         final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard);
 
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
-        query.field("_id").equal(mongoScoreId);
+
+        query.field("_id").equal(mongoScoreId)
+             .field("pointValue").lessThan(score.getPointValue());
 
         final UpdateOperations<MongoScore> updateOperations = getDatastore().createUpdateOperations(MongoScore.class);
         updateOperations.set("_id", mongoScoreId);
@@ -46,12 +51,25 @@ public class MongoScoreDao implements ScoreDao {
         updateOperations.set("leaderboard", mongoLeaderboard);
         updateOperations.set("pointValue", score.getPointValue());
 
-        final MongoScore mongoScore = getDatastore()
-            .findAndModify(query, updateOperations, new FindAndModifyOptions()
-            .returnNew(true)
-            .upsert(true));
+        try {
+            final MongoScore mongoScore = getDatastore()
+                .findAndModify(query, updateOperations, new FindAndModifyOptions()
+                .returnNew(true)
+                .upsert(true));
+            return getBeanMapper().map(mongoScore, Score.class);
+        } catch (MongoCommandException ex) {
 
-        return getBeanMapper().map(mongoScore, Score.class);
+            // We only get a duplicate exception if the score is less than the provided score.  In which case we simply
+            // return the existing score.  All other outcomes will either update or create the score.
+
+            if (ex.getErrorCode() == 11000) {
+                final MongoScore mongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
+                return getBeanMapper().map(mongoScore, Score.class);
+            } else {
+                throw new InternalException(ex);
+            }
+
+        }
 
     }
 
