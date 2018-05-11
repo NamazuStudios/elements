@@ -12,10 +12,18 @@ import static java.util.concurrent.Executors.newCachedThreadPool;
 
 public class CachedThreadPoolProvider implements Provider<ExecutorService> {
 
+    private final String name;
+
     private final Class<?> containing;
 
     public CachedThreadPoolProvider(final Class<?> containing) {
         this.containing = containing;
+        name = containing.getSimpleName();
+    }
+
+    public CachedThreadPoolProvider(final Class<?> containing, final String qualifier) {
+        this.containing = containing;
+        this.name = format("%s.%s", containing.getSimpleName(), qualifier);
     }
 
     @Override
@@ -27,8 +35,8 @@ public class CachedThreadPoolProvider implements Provider<ExecutorService> {
         return newCachedThreadPool(r -> {
             final Thread thread = new Thread(r);
             thread.setDaemon(true);
-            thread.setUncaughtExceptionHandler((t , e) -> logger.error("Context exception in {}", t, e));
-            thread.setName(format("%s - Thread %d", containing.getSimpleName(), threadCount.incrementAndGet()));
+            thread.setUncaughtExceptionHandler((t , e) -> logger.error("Fatal Error: {}", t, e));
+            thread.setName(format("%s - #%d", name, threadCount.incrementAndGet()));
             return thread;
         });
 

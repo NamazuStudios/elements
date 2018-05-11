@@ -218,7 +218,7 @@ public class JeroMQNode implements Node {
             final Thread thread = new Thread(r);
             thread.setDaemon(true);
             thread.setName(format("%s.in #%d", getName(), dispatcherCount.incrementAndGet()));
-            thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Caught exception dispatching invocation.", e)));
+            thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
             return thread;
         });
 
@@ -227,6 +227,7 @@ public class JeroMQNode implements Node {
             proxyThread = new Thread(() -> bindFrontendSocketAndPerformWork());
             proxyThread.setDaemon(true);
             proxyThread.setName(JeroMQNode.this.getClass().getSimpleName() + " dispatcher thread.");
+            proxyThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
         }
 
         public void start() {
@@ -291,26 +292,28 @@ public class JeroMQNode implements Node {
                 logger.info("Started up.");
 
                 while (running.get() && !interrupted()) {
+                    try {
+                        if (poller.poll() < 0) {
+                            logger.info("Poller signaled interruption.  Terminating frontend socket.");
+                            break;
+                        }
 
-                    if (poller.poll() < 0) {
-                        logger.info("Poller signaled interruption.  Terminating frontend socket.");
-                        break;
+                        if (poller.pollin(frontendIndex)) {
+                            final ZMsg msg = ZMsg.recvMsg(frontend);
+                            dispatchExecutorService.submit(() -> dispatchMethodInvocation(msg));
+                        } else if (poller.pollerr(frontendIndex)) {
+                            logger.error("Error in frontend socket.");
+                        }
+
+                        if (poller.pollin(outboundIndex)) {
+                            final ZMsg msg = ZMsg.recvMsg(outbound);
+                            msg.send(frontend);
+                        } else if (poller.pollerr(outboundIndex)) {
+                            logger.error("Error in outbound socket.");
+                        }
+                    } catch (Exception ex) {
+                        logger.error("Exception in main IO Thread.", ex);
                     }
-
-                    if (poller.pollin(frontendIndex)) {
-                        final ZMsg msg = ZMsg.recvMsg(frontend);
-                        dispatchExecutorService.submit(() -> dispatchMethodInvocation(msg));
-                    } else if (poller.pollerr(frontendIndex)) {
-                        logger.error("Error in frontend socket.");
-                    }
-
-                    if (poller.pollin(outboundIndex)) {
-                        final ZMsg msg = ZMsg.recvMsg(outbound);
-                        msg.send(frontend);
-                    } else if (poller.pollerr(outboundIndex)) {
-                        logger.error("Error in outbound socket.");
-                    }
-
                 }
 
             }
