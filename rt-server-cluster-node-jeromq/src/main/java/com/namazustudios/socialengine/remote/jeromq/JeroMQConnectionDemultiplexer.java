@@ -58,7 +58,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         final Thread thread = new Thread(new Demultiplexer());
 
         thread.setDaemon(true);
-        thread.setName(JeroMQConnectionDemultiplexer.class.getSimpleName() + " thread");
+        thread.setName(JeroMQConnectionDemultiplexer.class.getSimpleName());
         thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
 
         if (routerThread.compareAndSet(null, thread)) {
@@ -175,7 +175,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                  final Connection frontend = from(getzContext(), c -> c.createSocket(ROUTER));
                  final Connection control = from(getzContext(), c -> c.createSocket(PULL));
                  final RoutingTable backends = new RoutingTable(getzContext(), poller, this::connect);
-                 final MonitorThread monitorThread = new MonitorThread(logger, context, frontend.socket())) {
+                 final MonitorThread monitorThread = new MonitorThread(getClass().getSimpleName(), logger, context, frontend.socket())) {
 
                 monitorThread.start();
                 frontend.socket().setRouterMandatory(true);

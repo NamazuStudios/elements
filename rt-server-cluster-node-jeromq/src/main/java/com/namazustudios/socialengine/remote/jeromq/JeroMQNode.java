@@ -226,7 +226,7 @@ public class JeroMQNode implements Node {
         {
             proxyThread = new Thread(() -> bindFrontendSocketAndPerformWork());
             proxyThread.setDaemon(true);
-            proxyThread.setName(JeroMQNode.this.getClass().getSimpleName() + " dispatcher thread.");
+            proxyThread.setName(JeroMQNode.this.getClass().getSimpleName() + " dispatch");
             proxyThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
         }
 

@@ -51,6 +51,7 @@ public class ApplicationNodeMain {
         try (final MultiNodeContainer container = injector.getInstance(MultiNodeContainer.class)) {
 
             logger.info("Starting container.");
+
             container.start();
             logger.info("Container started.");
 
