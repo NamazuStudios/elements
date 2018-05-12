@@ -293,7 +293,7 @@ public class JeroMQNode implements Node {
 
                 while (running.get() && !interrupted()) {
                     try {
-                        if (poller.poll() < 0) {
+                        if (poller.poll(10000) < 0) {
                             logger.info("Poller signaled interruption.  Terminating frontend socket.");
                             break;
                         }
