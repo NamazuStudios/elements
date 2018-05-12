@@ -28,8 +28,6 @@ import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.Constants.HTTP_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.Constants.MDC_HTTP_REQUEST;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class DispatcherServlet extends HttpServlet {
 
