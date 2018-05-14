@@ -52,7 +52,7 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
         final Thread thread = new Thread(new Multiplexer());
 
         thread.setDaemon(true);
-        thread.setName(JeroMQConnectionMultiplexer.class.getSimpleName() + " thread");
+        thread.setName(JeroMQConnectionMultiplexer.class.getSimpleName());
         thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
 
         if (multiplexerThread.compareAndSet(null, thread)) {
@@ -158,7 +158,7 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
                  final Connection backend = from(getzContext(), c -> c.createSocket(DEALER));
                  final Connection control = from(getzContext(), c -> c.createSocket(PULL));
                  final RoutingTable frontends = new RoutingTable(getzContext(), poller, this::bind);
-                 final MonitorThread monitorThread = new MonitorThread(logger, getzContext(), backend.socket())) {
+                 final MonitorThread monitorThread = new MonitorThread(getClass().getSimpleName(), logger, getzContext(), backend.socket())) {
 
                 monitorThread.start();
                 backend.socket().connect(getConnectAddress());

@@ -13,9 +13,9 @@ public class MonitorThread extends Thread implements AutoCloseable {
     private final ZContext zContext;
     private final ZMQ.Socket monitored;
 
-    public MonitorThread(final Logger logger, final ZContext zContext, final ZMQ.Socket monitored) {
+    public MonitorThread(final String name, final Logger logger, final ZContext zContext, final ZMQ.Socket monitored) {
+        setName(name);
         setDaemon(true);
-        setName("ZMQ Monitoring Thread: " + logger.getName());
         this.logger = logger;
         this.zContext = ZContext.shadow(zContext);
         this.monitored = monitored;

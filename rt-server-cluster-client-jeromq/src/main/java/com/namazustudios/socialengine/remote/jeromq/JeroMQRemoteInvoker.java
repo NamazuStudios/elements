@@ -66,7 +66,8 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         getConnectionPool().processV((Connection connection) -> {
 
-            MDC.setContextMap(mdcContext);
+            if (mdcContext != null) MDC.setContextMap(mdcContext);
+
             try (final ZMQ.Poller poller = connection.context().createPoller(1)) {
 
                 send(connection.socket(), invocation, asyncInvocationResultConsumerList.size());

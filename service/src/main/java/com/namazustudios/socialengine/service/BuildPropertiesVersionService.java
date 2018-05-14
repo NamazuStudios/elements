@@ -11,13 +11,13 @@ import java.util.Properties;
 
 public class BuildPropertiesVersionService implements VersionService {
 
+    private static final Logger logger = LoggerFactory.getLogger(BuildPropertiesVersionService.class);
+
     public static final String VERSION;
 
     public static final String REVISION;
 
     public static final String TIMESTAMP;
-
-    private static final Logger logger = LoggerFactory.getLogger(BuildPropertiesVersionService.class);
 
     private static final String UNKNOWN_PROPERTY = "UNKNOWN";
 
@@ -43,7 +43,7 @@ public class BuildPropertiesVersionService implements VersionService {
         REVISION = properties.getProperty("revision", UNKNOWN_PROPERTY);
         TIMESTAMP =  properties.getProperty("timestamp", UNKNOWN_PROPERTY);
 
-        logger.info("Version {}.  Revision {}.  Timestamp {}.", VERSION, REVISION, TIMESTAMP);
+        logger.info("Namazu Elements (tm) Version {}.  Revision {}.  Timestamp {}.", VERSION, REVISION, TIMESTAMP);
 
     }
 

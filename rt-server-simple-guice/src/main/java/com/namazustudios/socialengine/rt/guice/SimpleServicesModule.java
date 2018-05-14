@@ -82,7 +82,7 @@ public class SimpleServicesModule extends PrivateModule {
                              final AtomicInteger threadCount, final Logger logger) {
         final Thread thread = new Thread(runnable);
         thread.setDaemon(true);
-        thread.setName(format("%s - #%d", name, threadCount.incrementAndGet()));
+        thread.setName(format("%s #%d", name, threadCount.incrementAndGet()));
         thread.setUncaughtExceptionHandler((t , e) -> logger.error("Fatal Error: {}", t, e));
         return thread;
     }
