@@ -21,10 +21,6 @@ public class BuiltinManager {
 
     private final Supplier<LuaState> luaStateSupplier;
 
-    public BuiltinManager(final Supplier<LuaState> luaStateSupplier) {
-        this(luaStateSupplier, () -> logger);
-    }
-
     public BuiltinManager(final Supplier<LuaState> luaStateSupplier, final Supplier<Logger> loggerSupplier) {
         this.luaStateSupplier = luaStateSupplier;
         logAssist = new LogAssist(loggerSupplier, luaStateSupplier);

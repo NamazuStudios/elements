@@ -3,6 +3,9 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.function.Consumer;
 
 /**
@@ -71,6 +74,24 @@ public interface Resource extends AutoCloseable {
      *
      */
     void resumeFromScheduler(final TaskId taskId, final double elapsedTime);
+
+    /**
+     * Dumps the entire contents of this {@link Resource} to the supplied {@link OutputStream} where it can be
+     * reconstituted later using the {@link #deserialize(InputStream)} method.
+     *
+     * @param os the {@link OutputStream} used to receive the serialized {@link Resource}
+     * @throws IOException if something failed during serialization
+     */
+    void serialize(final OutputStream os) throws IOException;
+
+    /**
+     * Restores the entire state of this {@link Resource} from the supplied {@link InputStream}.  This assumes the
+     * {@link InputStream} was produced by a call to {@link #serialize(OutputStream)}.
+     *
+     * @param is the {@link InputStream} from which to read the serialized resource
+     * @throws IOException if something failed during deserialization
+     */
+    void deserialize(final InputStream is) throws IOException;
 
     /**
      * Closes and destroys this Resource.  A resource, once destroyed, cannot be used again.

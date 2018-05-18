@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.rt.lua.builtin.ResourceDetailBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReasonBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstructionBuiltin;
+import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -54,6 +56,8 @@ public class LuaResource implements Resource {
 
     private final LogAssist logAssist;
 
+    private final Persistence persistence;
+
     private final BuiltinManager builtinManager;
 
     private Logger scriptLog = logger;
@@ -84,6 +88,7 @@ public class LuaResource implements Resource {
 
             this.luaState = luaState;
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
+            this.persistence = new Persistence(this::getLuaState, this::getScriptLog);
             this.builtinManager = new BuiltinManager(this::getLuaState, this::getScriptLog);
 
             luaState.openLibs();
@@ -168,6 +173,16 @@ public class LuaResource implements Resource {
         luaState.pushJavaFunction(scriptAssert);
         luaState.setGlobal(Constants.ASSERT_FUNCTION);
 
+    }
+
+    @Override
+    public void serialize(OutputStream os) throws IOException {
+
+    }
+
+    @Override
+    public void deserialize(InputStream is) throws IOException {
+        // TODO Implement this
     }
 
     /**
@@ -432,6 +447,15 @@ public class LuaResource implements Resource {
      */
     public LuaState getLuaState() {
         return luaState;
+    }
+
+    /**
+     * Gets the {@link Persistence} instance used by this {@link LuaResource}.
+     *
+     * @return the {@link Persistence} instance
+     */
+    public Persistence getPersistence() {
+        return persistence;
     }
 
     /**
