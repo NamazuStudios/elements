@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.rt.lua;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
 import com.namazustudios.socialengine.rt.lua.builtin.*;
+import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.PersistenceAwareIocResolver;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -41,7 +43,8 @@ public class LuaResourceLoader implements ResourceLoader {
 
         try {
 
-            final IocResolver iocResolver = getIocResolverProvider().get();
+            final IocResolver iocResolver;
+            iocResolver = new PersistenceAwareIocResolver(getIocResolverProvider().get(), luaResource.getPersistence());
 
             luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(ATTRIBUTES_MODULE, attributes));
             luaResource.getBuiltinManager().installBuiltin(getClasspathBuiltinProvider().get());

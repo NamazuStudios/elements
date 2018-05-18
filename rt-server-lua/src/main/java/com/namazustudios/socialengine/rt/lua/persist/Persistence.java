@@ -316,17 +316,18 @@ public class Persistence {
     /**
      * Adds the object, its value, and inverse value to the permanent object table tracked in the registry.  The values
      * specified here are then just in time for serialization they are assembled into a table representing permanent
-     * objects.
+     * objects.  The object specified in this method will not be serialized, rather the object at the value index
+     * will take its place in the stream during serizliation.  In the reverse direction, the object will replace the
+     * stream during deserialization.
      *
-     * Note that the object a
+     * Note that the object specified should not be a Java object because of how Lua internally tracks Java objects.  To
+     * specify special serialization, use {@link #addCustomUnpersistence(String, JavaFunction)}.
      *
-     * @param objectIndex
-     * @param valueIndex
-     * @param inverseValueIndex
-     * @param <T>
+     * @param objectIndex the stack index of the permanent object
+     * @param valueIndex the value index which will be written into the stream as a placeholder for the permanent object    
      */
     @SuppressWarnings("Duplicates")
-    public <T> void addPermanentObject(final int objectIndex, final int valueIndex, final int inverseValueIndex) {
+    public void addPermanentObject(final int objectIndex, final int valueIndex) {
 
         final LuaState luaState = luaStateSupplier.get();
 
@@ -334,13 +335,10 @@ public class Persistence {
             throw new IllegalArgumentException("Permanent object at " + objectIndex + " must not be a Java type.");
         } else if (luaState.isJavaFunction(valueIndex) || luaState.isJavaObjectRaw(valueIndex)) {
             throw new IllegalArgumentException("Permanent object value at " + valueIndex + " must not be a Java type.");
-        } else if (luaState.isJavaFunction(inverseValueIndex) || luaState.isJavaObjectRaw(inverseValueIndex)) {
-            throw new IllegalArgumentException("Permanent object inverse value at " + inverseValueIndex + " must not be a Java type.");
         }
 
         final int absObjectIndex = luaState.absIndex(objectIndex);
         final int absValueIndex = luaState.absIndex(valueIndex);
-        final int absInverseValueIndex = luaState.absIndex(inverseValueIndex);
 
         luaState.pushJavaFunction(l -> {
             l.getField(REGISTRYINDEX, PERMANENT_OBJECT_TABLE);
@@ -358,7 +356,7 @@ public class Persistence {
             l.setTable(1);
             return 0;
         });
-        luaState.pushValue(absInverseValueIndex);
+        luaState.pushValue(absValueIndex);
         luaState.pushValue(absObjectIndex);
         luaState.call(2, 0);
 
