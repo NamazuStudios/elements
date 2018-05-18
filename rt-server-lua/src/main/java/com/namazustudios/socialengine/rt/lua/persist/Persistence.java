@@ -338,14 +338,18 @@ public class Persistence {
             throw new IllegalArgumentException("Permanent object inverse value at " + inverseValueIndex + " must not be a Java type.");
         }
 
+        final int absObjectIndex = luaState.absIndex(objectIndex);
+        final int absValueIndex = luaState.absIndex(valueIndex);
+        final int absInverseValueIndex = luaState.absIndex(inverseValueIndex);
+
         luaState.pushJavaFunction(l -> {
             l.getField(REGISTRYINDEX, PERMANENT_OBJECT_TABLE);
             l.insert(1);
             l.setTable(1);
             return 0;
         });
-        luaState.pushValue(objectIndex);
-        luaState.pushValue(valueIndex);
+        luaState.pushValue(absObjectIndex);
+        luaState.pushValue(absValueIndex);
         luaState.call(2, 0);
 
         luaState.pushJavaFunction(l -> {
@@ -354,8 +358,8 @@ public class Persistence {
             l.setTable(1);
             return 0;
         });
-        luaState.pushValue(inverseValueIndex);
-        luaState.pushValue(objectIndex);
+        luaState.pushValue(absInverseValueIndex);
+        luaState.pushValue(absObjectIndex);
         luaState.call(2, 0);
 
     }
