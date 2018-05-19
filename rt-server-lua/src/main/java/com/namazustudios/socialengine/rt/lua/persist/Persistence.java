@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.persist;
 
+import com.google.common.collect.MapMaker;
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Resource;
@@ -13,6 +14,7 @@ import java.util.function.Supplier;
 import static com.namazustudios.socialengine.jnlua.LuaState.JNLUA_OBJECT;
 import static com.namazustudios.socialengine.jnlua.LuaState.REGISTRYINDEX;
 import static com.namazustudios.socialengine.jnlua.LuaState.RIDX_GLOBALS;
+import static java.lang.String.format;
 
 /**
  * Provides persistence support for {@link com.namazustudios.socialengine.rt.lua.LuaResource}
@@ -47,7 +49,7 @@ public class Persistence {
 
     private final Map<String, JavaFunction> customUnpersistence = new HashMap<>();
 
-    private final Map<Object, CustomPersistenceEntry> customPersistence = new WeakHashMap<>();
+    private final Map<Object, CustomPersistenceEntry> customPersistence = new MapMaker().weakKeys().makeMap();
 
     public Persistence(final Supplier<LuaState> luaStateSupplier, final Supplier<Logger> loggerSupplier) {
 
@@ -314,6 +316,21 @@ public class Persistence {
     }
 
     /**
+     * Adds a permanent object using {@link #addPermanentObject(int, Class, String)} by specifying the object
+     * placeholder as the result of using {@link #mangle(Class, String)}
+     *
+     * @param objectIndex the index on the lua stack
+     * @param scope the enclosing scope
+     * @param name the name
+     */
+    public void addPermanentObject(final int objectIndex, final Class<?> scope, final String name) {
+        final LuaState luaState = luaStateSupplier.get();
+        final int absObjectIndex = luaState.absIndex(objectIndex);
+        luaState.pushString(mangle(scope, name));
+        addPermanentObject(absObjectIndex, -1);
+    }
+
+    /**
      * Adds the object, its value, and inverse value to the permanent object table tracked in the registry.  The values
      * specified here are then just in time for serialization they are assembled into a table representing permanent
      * objects.  The object specified in this method will not be serialized, rather the object at the value index
@@ -324,21 +341,21 @@ public class Persistence {
      * specify special serialization, use {@link #addCustomUnpersistence(String, JavaFunction)}.
      *
      * @param objectIndex the stack index of the permanent object
-     * @param valueIndex the value index which will be written into the stream as a placeholder for the permanent object    
+     * @param placeholderIndex the value index which will be written into the stream as a placeholder for the permanent object
      */
     @SuppressWarnings("Duplicates")
-    public void addPermanentObject(final int objectIndex, final int valueIndex) {
+    public void addPermanentObject(final int objectIndex, final int placeholderIndex) {
 
         final LuaState luaState = luaStateSupplier.get();
 
         if (luaState.isJavaFunction(objectIndex) || luaState.isJavaObjectRaw(objectIndex)) {
             throw new IllegalArgumentException("Permanent object at " + objectIndex + " must not be a Java type.");
-        } else if (luaState.isJavaFunction(valueIndex) || luaState.isJavaObjectRaw(valueIndex)) {
-            throw new IllegalArgumentException("Permanent object value at " + valueIndex + " must not be a Java type.");
+        } else if (luaState.isJavaFunction(placeholderIndex) || luaState.isJavaObjectRaw(placeholderIndex)) {
+            throw new IllegalArgumentException("Permanent object placeholder at " + placeholderIndex + " must not be a Java type.");
         }
 
         final int absObjectIndex = luaState.absIndex(objectIndex);
-        final int absValueIndex = luaState.absIndex(valueIndex);
+        final int absPlaceholderIndex = luaState.absIndex(placeholderIndex);
 
         luaState.pushJavaFunction(l -> {
             l.getField(REGISTRYINDEX, PERMANENT_OBJECT_TABLE);
@@ -347,7 +364,7 @@ public class Persistence {
             return 0;
         });
         luaState.pushValue(absObjectIndex);
-        luaState.pushValue(absValueIndex);
+        luaState.pushValue(absPlaceholderIndex);
         luaState.call(2, 0);
 
         luaState.pushJavaFunction(l -> {
@@ -356,7 +373,7 @@ public class Persistence {
             l.setTable(1);
             return 0;
         });
-        luaState.pushValue(absValueIndex);
+        luaState.pushValue(absPlaceholderIndex);
         luaState.pushValue(absObjectIndex);
         luaState.call(2, 0);
 
@@ -586,6 +603,18 @@ public class Persistence {
          */
         CUSTOM
 
+    }
+
+    /**
+     * Mangles the provided name for the enclsoing class.  This is a convenience method used to ensure that the provided
+     * name is unique by incorporating the {@link Class}'s canonical name in the placeholder.
+     *
+     * @param scope the scope
+     * @param name the name
+     * @return the mangled result
+     */
+    public static String mangle(final Class<?> scope, final String name) {
+        return format("%s.%s", scope.getCanonicalName(), name);
     }
 
 }

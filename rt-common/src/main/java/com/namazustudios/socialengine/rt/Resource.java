@@ -94,6 +94,20 @@ public interface Resource extends AutoCloseable {
     void deserialize(final InputStream is) throws IOException;
 
     /**
+     * Sets the verbose mode.  This will enable enhanced logging for debug purposes.
+     *
+     * @param verbose true if verbose, false otherwise
+     */
+    default void setVerbose(boolean verbose) {}
+
+    /**
+     * Returns true if the resource is set to enable verbose mode.
+     *
+     * @return true if verbose mode is enabled.
+     */
+    default boolean isVerbose() {return false; }
+
+    /**
      * Closes and destroys this Resource.  A resource, once destroyed, cannot be used again.
      */
     void close();

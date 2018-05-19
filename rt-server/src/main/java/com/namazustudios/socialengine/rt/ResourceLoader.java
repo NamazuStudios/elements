@@ -1,7 +1,12 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
+import com.namazustudios.socialengine.rt.exception.ResourcePersistenceException;
 import org.w3c.dom.Attr;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import static com.namazustudios.socialengine.rt.Attributes.emptyAttributes;
 
@@ -10,6 +15,33 @@ import static com.namazustudios.socialengine.rt.Attributes.emptyAttributes;
  * with an AssetLoader to load the raw bytes from storage and then into memory.
  */
 public interface ResourceLoader extends AutoCloseable {
+
+    /**
+     * Loads the {@link Resource} from the {@link InputStream} in non-verbose mode.
+     *
+     *
+     * @param is
+     * @return
+     * @throws ResourcePersistenceException
+     */
+    default Resource load(final InputStream is) throws ResourcePersistenceException {
+        return load(is, false);
+    }
+
+    /**
+     * Loads a {@link Resource} from the supplied {@link InputStream}.  The contents of the {@link InputStream} should
+     * be generated form a call to {@link Resource#serialize(OutputStream)}.
+     *
+     * {@see {@link Resource#setVerbose(boolean)}}
+     *
+     * @param is the {@link InputStream} from which to load the {@link Resource}
+     * @param verbose indicates if the resource shoudl be loaded verbosely.
+     * @return the loaded {@link Resource}
+     *
+     * @throws {@link ResourcePersistenceException} if the resource was corrupted of failed to load for some reason
+     *
+     */
+    Resource load(final InputStream is, boolean verbose) throws ResourcePersistenceException;
 
     /**
      * Performs the same operation as {@link #load(String, Attributes, Object...)} using {@link Attributes#EMPTY}

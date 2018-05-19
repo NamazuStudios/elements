@@ -26,10 +26,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.jnlua.LuaState.REGISTRYINDEX;
+import static com.namazustudios.socialengine.jnlua.LuaState.RIDX_GLOBALS;
 import static com.namazustudios.socialengine.jnlua.LuaState.YIELD;
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
+import static com.namazustudios.socialengine.rt.lua.Constants.ASSERT_FUNCTION;
+import static com.namazustudios.socialengine.rt.lua.Constants.PRINT_FUNCTION;
 import static com.namazustudios.socialengine.rt.lua.Constants.REQUIRE;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReason.*;
+import static com.namazustudios.socialengine.rt.lua.persist.Persistence.mangle;
 
 /**
  * The abstract {@link Resource} type backed by a Lua script.  This uses the JNLua implentation
@@ -45,6 +49,12 @@ public class LuaResource implements Resource {
     public static final String MODULE = "namazu.module";
 
     public static final String RESOURCE_BUILTIN = "namazu.resource.this";
+
+    public static final String CUSTOM_PERSISTENCE_TYPE = LuaState.class.getName();
+
+    public static final String PRINT_FUNCTION_METADATA = mangle(LuaState.class, PRINT_FUNCTION);
+
+    public static final String ASSERT_FUNCTION_METADATA = mangle(LuaState.class, ASSERT_FUNCTION);
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
 
@@ -89,9 +99,9 @@ public class LuaResource implements Resource {
             this.luaState = luaState;
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
             this.persistence = new Persistence(this::getLuaState, this::getScriptLog);
-            this.builtinManager = new BuiltinManager(this::getLuaState, this::getScriptLog);
+            this.builtinManager = new BuiltinManager(this::getLuaState, this::getScriptLog, persistence);
 
-            luaState.openLibs();
+            openLibs();
             setupFunctionOverrides();
             getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
             getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, context.getSchedulerContext()));
@@ -104,6 +114,69 @@ public class LuaResource implements Resource {
             luaState.close();
             throw th;
         }
+    }
+
+    private void openLibs() {
+
+        luaState.openLibs();
+        luaState.rawGet(REGISTRYINDEX, RIDX_GLOBALS);
+
+        luaState.pushNil();
+        while (luaState.next(-2)) {
+
+            final String name;
+
+            // Copies the key name on the stack and then extracts it.
+            luaState.pushValue(-2);
+            name = luaState.toString(-1);
+            luaState.pop(1);
+
+            // Adds it as a permanent object and then pops it off the stack.
+            persistence.addPermanentObject(-1, LuaState.class, name);
+            luaState.pop(1);
+
+        }
+
+        luaState.pop(1);
+
+    }
+
+    private void setupFunctionOverrides() {
+
+        // We hijack the standard lua functions to better log output.  We also have to make them persistence aware.
+
+        luaState.pushJavaFunction(printToScriptLog);
+        luaState.setGlobal(PRINT_FUNCTION);
+
+        luaState.pushJavaFunction(scriptAssert);
+        luaState.setGlobal(ASSERT_FUNCTION);
+
+        persistence.addCustomUnpersistence(CUSTOM_PERSISTENCE_TYPE, l -> {
+
+            final String name = l.toString(1);
+
+            if (PRINT_FUNCTION_METADATA.equals(name)) {
+                l.pushJavaFunction(printToScriptLog);
+            } else if (ASSERT_FUNCTION_METADATA.equals(name)) {
+                l.pushJavaFunction(scriptAssert);
+            } else {
+                throw new ResourcePersistenceException("Unknown persisted object metadata: " + name);
+            }
+
+            return 1;
+
+        });
+
+        persistence.addCustomPersistence(scriptAssert, CUSTOM_PERSISTENCE_TYPE, l -> {
+            l.pushString(ASSERT_FUNCTION_METADATA);
+            return 1;
+        });
+
+        persistence.addCustomPersistence(printToScriptLog, CUSTOM_PERSISTENCE_TYPE, l -> {
+            l.pushString(PRINT_FUNCTION_METADATA);
+            return 1;
+        });
+
     }
 
     @Override
@@ -161,28 +234,30 @@ public class LuaResource implements Resource {
 
     }
 
+    @Override
+    public void setVerbose(boolean verbose) {
+        luaState.pushBoolean(verbose);
+        luaState.setPersistenceSetting("path", -1);
+    }
 
-
-    private void setupFunctionOverrides() {
-
-        // We hijack the standard lua functions to better log output
-
-        luaState.pushJavaFunction(printToScriptLog);
-        luaState.setGlobal(Constants.PRINT_FUNCTION);
-
-        luaState.pushJavaFunction(scriptAssert);
-        luaState.setGlobal(Constants.ASSERT_FUNCTION);
-
+    @Override
+    public boolean isVerbose() {
+        try {
+            luaState.getPersistenceSetting("debug");
+            return luaState.toBoolean(-1);
+        } finally {
+            luaState.pop(1);
+        }
     }
 
     @Override
     public void serialize(OutputStream os) throws IOException {
-
+        getPersistence().serialize(os);
     }
 
     @Override
     public void deserialize(InputStream is) throws IOException {
-        // TODO Implement this
+        getPersistence().deserialize(is);
     }
 
     /**

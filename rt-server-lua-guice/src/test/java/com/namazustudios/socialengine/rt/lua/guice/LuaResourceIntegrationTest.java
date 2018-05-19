@@ -46,7 +46,7 @@ public class LuaResourceIntegrationTest {
         final Path path = new Path(randomUUID().toString());
         final ResourceId resourceId = getContext().getResourceContext().create(moduleName, path);
         final Object result = getContext().getResourceContext().invoke(resourceId, methodName);
-        logger.info("Successfuly got test result {}", result);
+        logger.info("Successfully got test result {}", result);
         getContext().getResourceContext().destroy(resourceId);
     }
 

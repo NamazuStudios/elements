@@ -2,13 +2,17 @@ package com.namazustudios.socialengine.rt.lua;
 
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
+import com.namazustudios.socialengine.rt.exception.ResourcePersistenceException;
 import com.namazustudios.socialengine.rt.lua.builtin.*;
 import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 import com.namazustudios.socialengine.rt.lua.persist.PersistenceAwareIocResolver;
+import org.w3c.dom.Attr;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Set;
 
 import static com.namazustudios.socialengine.rt.IocResolver.IOC_RESOLVER_MODULE_NAME;
@@ -33,6 +37,40 @@ public class LuaResourceLoader implements ResourceLoader {
     private Provider<JNABuiltin> jnaBuiltinProvider;
 
     private Provider<Set<Builtin>> additionalBuiltins;
+
+    @Override
+    public Resource load(final InputStream is, final boolean verbose) throws ResourcePersistenceException {
+
+        final LuaResource luaResource = getLuaResourceProvider().get();
+        luaResource.setVerbose(verbose);
+
+        try {
+
+            final IocResolver iocResolver;
+            iocResolver = new PersistenceAwareIocResolver(getIocResolverProvider().get(), luaResource.getPersistence());
+
+            luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(ATTRIBUTES_MODULE, Attributes.emptyAttributes()));
+            luaResource.getBuiltinManager().installBuiltin(getClasspathBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(getAssetLoaderBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(getHttpStatusBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
+            luaResource.getBuiltinManager().installBuiltin(getJnaBuiltinProvider().get());
+
+            final Set<Builtin> builtinSet = getAdditionalBuiltins().get();
+            builtinSet.forEach(luaResource.getBuiltinManager()::installBuiltin);
+
+            luaResource.deserialize(is);
+
+            return luaResource;
+        } catch (IOException ex) {
+            throw new ResourcePersistenceException(ex);
+        } catch (Exception ex) {
+            luaResource.close();
+            throw ex;
+        }
+
+    }
 
     @Override
     public Resource load(final String moduleName,
@@ -60,9 +98,9 @@ public class LuaResourceLoader implements ResourceLoader {
             luaResource.loadModule(getAssetLoader(), moduleName, args);
 
             return luaResource;
-        } catch (Throwable th) {
+        } catch (Exception ex) {
             luaResource.close();
-            throw th;
+            throw ex;
         }
 
     }
