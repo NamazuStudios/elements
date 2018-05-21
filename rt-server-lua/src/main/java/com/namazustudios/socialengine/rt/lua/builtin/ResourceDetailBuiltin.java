@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
+import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -205,6 +206,14 @@ public class ResourceDetailBuiltin implements Builtin {
 
             return 1;
         };
+    }
+
+    @Override
+    public void makePersistenceAware(final Persistence persistence) {
+        persistence.addPermanentJavaObject(create, IndexDetailBuiltin.class, CREATE);
+        persistence.addPermanentJavaObject(invoke, IndexDetailBuiltin.class, INVOKE);
+        persistence.addPermanentJavaObject(invokePath, IndexDetailBuiltin.class, INVOKE_PATH);
+        persistence.addPermanentJavaObject(destroy, IndexDetailBuiltin.class, DESTROY);
     }
 
     public Context getContext() {

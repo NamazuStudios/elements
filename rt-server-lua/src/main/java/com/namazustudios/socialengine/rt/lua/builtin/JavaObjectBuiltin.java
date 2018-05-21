@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
 import com.namazustudios.socialengine.jnlua.JavaFunction;
+import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +45,11 @@ public class JavaObjectBuiltin<T> implements Builtin {
             luaState.pushJavaObject(getObject());
             return 1;
         };
+    }
+
+    @Override
+    public void makePersistenceAware(final Persistence persistence) {
+        persistence.addPermanentJavaObject(object, JavaObjectBuiltin.class, moduleName);
     }
 
     public T getObject() {

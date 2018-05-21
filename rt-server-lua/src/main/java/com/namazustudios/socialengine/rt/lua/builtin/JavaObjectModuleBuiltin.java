@@ -5,15 +5,18 @@ import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.JavaReflector;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 
 import javax.inject.Provider;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
+import static com.namazustudios.socialengine.rt.lua.persist.Persistence.mangle;
 import static java.util.Arrays.stream;
 import static java.util.Collections.unmodifiableList;
 
@@ -29,6 +32,8 @@ public class JavaObjectModuleBuiltin implements Builtin {
     private final Function<String, String> caseConverter;
 
     private Map<String, List<Method>> methodCache = new HashMap<>();
+
+    private Consumer<JavaReflector> persistenceJavaReflectorConsumer = r -> {};
 
     public <T> JavaObjectModuleBuiltin(final String moduleName,
                                        final Provider<T> tProvider) {
@@ -63,20 +68,46 @@ public class JavaObjectModuleBuiltin implements Builtin {
     @Override
     public JavaFunction getLoader() {
         return luaState -> {
-
-            final Object object = provider.get();
-
-            final JavaReflector javaReflector = metamethod -> {
-                switch (metamethod) {
-                    case INDEX: return index(object);
-                    default:    return null;
-                }
-            };
-
+            final JavaReflector javaReflector = makeJavaRelfector();
             luaState.pushJavaObject(javaReflector);
             return 1;
-
         };
+    }
+
+    @Override
+    public void makePersistenceAware(final Persistence persistence) {
+
+        final String type = mangle(JavaObjectModuleBuiltin.class, moduleName);
+
+        persistence.addCustomUnpersistence(type, l -> {
+            l.pushJavaObject(makeJavaRelfector());
+            return 1;
+        });
+
+        persistenceJavaReflectorConsumer = r -> {
+            persistence.addCustomPersistence(r, type, l -> {
+                l.pushNil();
+                return 1;
+            });
+        };
+
+    }
+
+    private JavaReflector makeJavaRelfector() {
+
+        final Object object = provider.get();
+
+        final JavaReflector javaReflector = metamethod -> {
+            switch (metamethod) {
+                case INDEX: return index(object);
+                default:    return null;
+            }
+        };
+
+        persistenceJavaReflectorConsumer.accept(javaReflector);
+
+        return javaReflector;
+
     }
 
     private JavaFunction index(final Object object) {

@@ -25,8 +25,6 @@ public class BuiltinManager {
 
     private final Supplier<LuaState> luaStateSupplier;
 
-    private final Map<Builtin, String> builtinToIdentifiers = new WeakHashMap<>();
-
     private Consumer<Builtin> handlePersistence;
 
     public BuiltinManager(final Supplier<LuaState> luaStateSupplier, final Supplier<Logger> loggerSupplier) {

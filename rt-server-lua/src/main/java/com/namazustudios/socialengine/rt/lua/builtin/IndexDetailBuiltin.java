@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
+import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -188,6 +189,14 @@ public class IndexDetailBuiltin implements Builtin {
 
             return 1;
         };
+    }
+
+    @Override
+    public void makePersistenceAware(final Persistence persistence) {
+        persistence.addPermanentJavaObject(list, IndexDetailBuiltin.class, LIST);
+        persistence.addPermanentJavaObject(link, IndexDetailBuiltin.class, LINK);
+        persistence.addPermanentJavaObject(linkPath, IndexDetailBuiltin.class, LINK_PATH);
+        persistence.addPermanentJavaObject(unlink, IndexDetailBuiltin.class, UNLINK);
     }
 
     public Context getContext() {

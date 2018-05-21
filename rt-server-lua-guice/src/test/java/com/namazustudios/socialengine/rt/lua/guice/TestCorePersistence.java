@@ -47,6 +47,7 @@ public class TestCorePersistence {
 
         return luaResources
             .stream()
+            .filter(s -> !"main.lua".equals(s))
             .map(s -> s.replace('/', '.').substring(0, s.length() - ".lua".length()))
             .map(s -> new Object[]{s})
             .toArray(Object[][]::new);
@@ -92,6 +93,7 @@ public class TestCorePersistence {
                 @Override
                 protected void configureFeatures() {
                     enableAllFeatures();
+                    bindBuiltin(TestJavaModule.class).toModuleNamed("test.java.module");
                 }
             });
 

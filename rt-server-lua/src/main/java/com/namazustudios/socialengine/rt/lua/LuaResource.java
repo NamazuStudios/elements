@@ -50,12 +50,6 @@ public class LuaResource implements Resource {
 
     public static final String RESOURCE_BUILTIN = "namazu.resource.this";
 
-    public static final String CUSTOM_PERSISTENCE_TYPE = LuaState.class.getName();
-
-    public static final String PRINT_FUNCTION_METADATA = mangle(LuaState.class, PRINT_FUNCTION);
-
-    public static final String ASSERT_FUNCTION_METADATA = mangle(LuaState.class, ASSERT_FUNCTION);
-
     private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
 
     private final Map<TaskId, PendingTask> taskIdPendingTaskMap = new HashMap<>();
@@ -143,39 +137,17 @@ public class LuaResource implements Resource {
 
     private void setupFunctionOverrides() {
 
-        // We hijack the standard lua functions to better log output.  We also have to make them persistence aware.
-
-        luaState.pushJavaFunction(printToScriptLog);
-        luaState.setGlobal(PRINT_FUNCTION);
+        // We hijack the standard lua functions to better log output.  We also have to make them persistence aware so
+        // they are properly serialized and deserialized.
 
         luaState.pushJavaFunction(scriptAssert);
         luaState.setGlobal(ASSERT_FUNCTION);
 
-        persistence.addCustomUnpersistence(CUSTOM_PERSISTENCE_TYPE, l -> {
+        luaState.pushJavaFunction(printToScriptLog);
+        luaState.setGlobal(PRINT_FUNCTION);
 
-            final String name = l.toString(1);
-
-            if (PRINT_FUNCTION_METADATA.equals(name)) {
-                l.pushJavaFunction(printToScriptLog);
-            } else if (ASSERT_FUNCTION_METADATA.equals(name)) {
-                l.pushJavaFunction(scriptAssert);
-            } else {
-                throw new ResourcePersistenceException("Unknown persisted object metadata: " + name);
-            }
-
-            return 1;
-
-        });
-
-        persistence.addCustomPersistence(scriptAssert, CUSTOM_PERSISTENCE_TYPE, l -> {
-            l.pushString(ASSERT_FUNCTION_METADATA);
-            return 1;
-        });
-
-        persistence.addCustomPersistence(printToScriptLog, CUSTOM_PERSISTENCE_TYPE, l -> {
-            l.pushString(PRINT_FUNCTION_METADATA);
-            return 1;
-        });
+        persistence.addPermanentJavaObject(scriptAssert, LuaResource.class, ASSERT_FUNCTION);
+        persistence.addPermanentJavaObject(printToScriptLog, LuaResource.class, PRINT_FUNCTION);
 
     }
 

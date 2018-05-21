@@ -2,13 +2,16 @@ package com.namazustudios.socialengine.rt.lua.persist;
 
 import com.google.common.collect.MapMaker;
 import com.namazustudios.socialengine.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.exception.ResourcePersistenceException;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
+import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import org.slf4j.Logger;
 
 import java.io.*;
+import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -22,7 +25,9 @@ import static java.lang.String.format;
  */
 public class Persistence {
 
-    private static final int NULL_OBJ = -1;
+    private static final int NULL_OBJ_IDX = -1;
+
+    private static final int PLACEHOLDER_UNPERSIST_IDX = -2;
 
     private static final byte[] SIGNATURE = new byte[]{ (byte)248, 'L', 'E', 'L', 'M', '\r', '\n' };
 
@@ -36,13 +41,15 @@ public class Persistence {
 
     private static final String CUSTOM_PERSIST_TYPE = "_ct";
 
-    private static final String PERSIST_JOBJECT = "PERSIST";
+    private static final String PERMANENT_OBJECT_TABLE = mangle(Persistence.class, "PERMANENT_OBJECT_TABLE");
 
-    private static final String UNPERSIST_JOBJECT = "UNPERSISTT";
+    private static final String INVERSE_PERMANENT_OBJECT_TABLE = mangle(Persistence.class, "INVERSE_PERMANENT_OBJECT_TABLE");
 
-    private static final String PERMANENT_OBJECT_TABLE = "PERMANENT_OBJECT_TABLE";
-
-    private static final String INVERSE_PERMANENT_OBJECT_TABLE = "INVERSE_PERMANENT_OBJECT_TABLE";
+    private static final JavaFunction PLACEHODLER_UNPERSIST = l -> {
+        // A placeholder JavaFunction which will be used in place of the actual unpersist function during
+        // deserialization.  This will be swapped with the special index for UNPERSIST_CONTEXT
+        throw new IllegalStateException("Cannot unpersist during persistence.");
+    };
 
     private final Supplier<Logger> loggerSupplier;
 
@@ -86,8 +93,12 @@ public class Persistence {
             final LuaState luaState = luaStateSupplier.get();
             luaState.pushJavaFunction(l -> doSerialize(l, os));
             luaState.call(0, 0);
-        } catch (UncheckedIOException ex) {
-            throw ex.getCause();
+        } catch (LuaRuntimeException ex) {
+            if (ex.getCause() instanceof UncheckedIOException) {
+                throw ((UncheckedIOException) ex.getCause()).getCause();
+            } else {
+                throw ex;
+            }
         }
     }
 
@@ -101,8 +112,10 @@ public class Persistence {
 
             final SerialObjectTable serialObjectTable = new SerialObjectTable();
 
-            // Setup persistence
-            pushPermanentsAndApplySpcialPersistence(luaState, serialObjectTable, l -> { throw new UnsupportedOperationException(); });
+            // Setup persistence with the
+            applySpecialPersistence(luaState, serialObjectTable);
+
+            pushPermanents(luaState);
 
             luaState.newTable();
 
@@ -178,8 +191,12 @@ public class Persistence {
             final LuaState luaState = luaStateSupplier.get();
             luaState.pushJavaFunction(l -> doDeserialize(l, is));
             luaState.call(0, 0);
-        } catch (UncheckedIOException ex) {
-            throw ex.getCause();
+        } catch (LuaRuntimeException ex) {
+            if (ex.getCause() instanceof UncheckedIOException) {
+                throw ((UncheckedIOException) ex.getCause()).getCause();
+            } else {
+                throw ex;
+            }
         }
     }
 
@@ -220,7 +237,6 @@ public class Persistence {
 
             // Sets up the deserialized object table.
             final DeserialObjectTable deserialObjectTable = new DeserialObjectTable(jObjectBis);
-            pushPermanentsAndApplySpcialPersistence(luaState, l -> {throw new UnsupportedOperationException();}, deserialObjectTable);
 
             // Pushes the inverse version of the permanent object table.
             pushInversePermanents(luaState);
@@ -277,20 +293,17 @@ public class Persistence {
 
     }
 
-    private void pushPermanentsAndApplySpcialPersistence(final LuaState luaState,
-                                                         final JavaFunction persist,
-                                                         final JavaFunction unpersist) {
+    private void applySpecialPersistence(final LuaState luaState, final JavaFunction persist) {
 
         final int mtIndex;
-        final int permsIndex;
-
-        pushPermanents(luaState);
-        permsIndex = luaState.absIndex(-1);
 
         luaState.getField(REGISTRYINDEX, JNLUA_OBJECT);
         mtIndex = luaState.absIndex(-1);
 
         luaState.getPersistenceSetting("spkey");
+
+        // We must assemble the actual perssistence function as a closure in Lua which will insert placeholders for
+        // the actual contexts during persistence.
 
         luaState.load(
             // language=Lua
@@ -306,16 +319,8 @@ public class Persistence {
             "\n" +
             "end\n", "__jvm_persist");
 
-        // We push each function here and immediately add it to the permanent object table.  This ensures that the
-        // actual persistence functions can be swapped out through the permanent object table on subsequent loads.
-
         luaState.pushJavaFunction(persist);
-        luaState.pushValue(-1);
-        luaState.setField(permsIndex, mangle(Persistence.class, PERSIST_JOBJECT));
-
-        luaState.pushJavaFunction(unpersist);
-        luaState.pushValue(-1);
-        luaState.setField(permsIndex, mangle(Persistence.class, UNPERSIST_JOBJECT));
+        luaState.pushJavaFunction(PLACEHODLER_UNPERSIST);
 
         // With both functions added to the scope, we execute the fucnction which will pop both the functtions off the
         // stack as well as the compiled chunk.  The compiled chunk returns the actual spio function which encapsulates
@@ -447,7 +452,49 @@ public class Persistence {
             throw new IllegalArgumentException("Invalid persistence function: " + unpersist);
         }
 
-        customUnpersistence.putIfAbsent(type, unpersist);
+        if (customUnpersistence.putIfAbsent(type, unpersist) != null) {
+            loggerSupplier.get().warn("Custom persistence already registered for type: " + type);
+        }
+
+    }
+
+    /**
+     * A shortcut to use {@link #addCustomPersistence(Object, String, JavaFunction)} and
+     * {@link #addCustomUnpersistence(String, JavaFunction)} for a specific java object.  This is useful for objects
+     * provided in {@link Builtin} instances.  This uses {@link #mangle(Class, String)} to generate the name of the
+     * object and the enclosing scope.
+     *
+     * {@see {@link #mangle(Class, String)}}
+     *
+     * @param object the object itself
+     * @param scope the {@link Class} enclosing the object
+     * @param name the name of the object
+     */
+    public void addPermanentJavaObject(final Object object, final Class<?> scope, final String name) {
+
+        final String persistenceType = mangle(scope, name);
+        final WeakReference<Object> objectWeakReference = new WeakReference<>(object);
+
+        addCustomUnpersistence(persistenceType, l -> {
+            final Object target = objectWeakReference.get();
+
+            // This check is here strictly for sanity and should warn.  This would likely happen if Lua itself
+            // is prematurely releasing global refs in JNI.  However, we shoudl log an error if it does somehow happen
+            // as to warrant further investigation into the issue.
+
+            if (target == null) loggerSupplier.get().error("Object {} was garbage collected.", persistenceType);
+
+            // Simply return the permanent
+            l.pushJavaObject(target);
+
+            return 1;
+
+        });
+
+        addCustomPersistence(object, persistenceType, l -> {
+            l.pushString(persistenceType);
+            return 1;
+        });
 
     }
 
@@ -458,11 +505,19 @@ public class Persistence {
         private Map<Object, Integer> objectIndexMap = new IdentityHashMap<>();
 
         private int serialize(final Object object) {
-            return object == null ? NULL_OBJ : objectIndexMap.computeIfAbsent(object, o -> {
-                final int identifier = objects.size();
-                objects.add(o);
-                return identifier;
-            });
+
+            if (object == this) {
+                throw new IllegalStateException("Cannot persist the Java object table.");
+            }
+
+            return object == null ? NULL_OBJ_IDX :
+                   object == PLACEHODLER_UNPERSIST ? PLACEHOLDER_UNPERSIST_IDX :
+                   objectIndexMap.computeIfAbsent(object, o -> {
+                       final int identifier = objects.size();
+                       objects.add(o);
+                       return identifier;
+                   });
+
         }
 
         @Override
@@ -507,9 +562,17 @@ public class Persistence {
         }
 
         public void persist(final OutputStream os) throws IOException {
+
+            final Logger logger = loggerSupplier.get();
+
+            objects.stream()
+               .filter(o -> !(o instanceof Serializable))
+               .forEach(o -> logger.error("{} is not and instance of {}", o, Serializable.class.getName()));
+
             try (final ObjectOutputStream oos = new ObjectOutputStream(os)) {
                 oos.writeObject(objects);
             }
+
         }
 
     }
@@ -548,7 +611,7 @@ public class Persistence {
 
                 final int oid = luaState.toInteger(2);
 
-                if (NULL_OBJ == oid) {
+                if (NULL_OBJ_IDX == oid) {
                     luaState.pushNil();
                 } else {
 

@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
+import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -350,6 +351,13 @@ public class CoroutineBuiltin implements Builtin {
             return 1;
 
         };
+    }
+
+    @Override
+    public void makePersistenceAware(final Persistence persistence) {
+        persistence.addPermanentJavaObject(start, CoroutineBuiltin.class, START);
+        persistence.addPermanentJavaObject(resume, CoroutineBuiltin.class, RESUME);
+        persistence.addPermanentJavaObject(currentTaskId, CoroutineBuiltin.class, CURRENT_TASK_ID);
     }
 
     public SchedulerContext getSchedulerContext() {

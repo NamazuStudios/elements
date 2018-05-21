@@ -120,8 +120,11 @@ public interface Builtin {
      * for any objects that need special care during serialization.  This includes instances of {@link JavaFunction},
      * or {@link Object} types that can't be serialized.
      *
-     * The default implementation of this method does nothing assuming the builtin, which is acceptable for those that
-     * deal with pure Lua types.
+     * This may not be called for all usages of {@link BuiltinManager} as persistence is not required for all usages
+     * currently.  Therefore, do not rely or expect this to be called in all circumstances.  It will, however, be called
+     * at installation time before any other operation is performed.
+     *
+     * The default implementation of this method does nothing as not all builtins will require this feature.
      *
      * @param persistence the {@link Persistence} instance.
      */
