@@ -132,7 +132,7 @@ public class LuaResource implements Resource {
             luaState.pop(1);
 
             // Adds it as a permanent object and then pops it off the stack.
-            persistence.addPermanentObject(-1, LuaState.class, name);
+            persistence.addPermanentObject(-1, LuaResource.class, name);
             luaState.pop(1);
 
         }

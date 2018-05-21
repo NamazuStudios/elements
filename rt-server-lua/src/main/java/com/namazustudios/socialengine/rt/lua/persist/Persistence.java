@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.exception.ResourcePersistenceException;
+import com.namazustudios.socialengine.rt.lua.LuaResource;
 import org.slf4j.Logger;
 
 import java.io.*;
@@ -35,13 +36,13 @@ public class Persistence {
 
     private static final String CUSTOM_PERSIST_TYPE = "_ct";
 
-    private static final String PERSIST_JOBJECT = "__namazu_persist_jobject";
+    private static final String PERSIST_JOBJECT = "PERSIST";
 
-    private static final String UNPERSIST_JOBJECT = "__namazu_unpersist_jobject";
+    private static final String UNPERSIST_JOBJECT = "UNPERSISTT";
 
-    private static final String PERMANENT_OBJECT_TABLE = "com.namazustudios.socialengine.rt.lua.persist.Persistence.PERMANENT_OBJECT_TABLE";
+    private static final String PERMANENT_OBJECT_TABLE = "PERMANENT_OBJECT_TABLE";
 
-    private static final String INVERSE_PERMANENT_OBJECT_TABLE = "com.namazustudios.socialengine.rt.lua.persist.Persistence.INVERSE_PERMANENT_OBJECT_TABLE";
+    private static final String INVERSE_PERMANENT_OBJECT_TABLE = "INVERSE_PERMANENT_OBJECT_TABLE";
 
     private final Supplier<Logger> loggerSupplier;
 
@@ -101,12 +102,16 @@ public class Persistence {
             final SerialObjectTable serialObjectTable = new SerialObjectTable();
 
             // Setup persistence
-            applySpecialPersistence(luaState, serialObjectTable, l -> { throw new UnsupportedOperationException(); });
+            pushPermanentsAndApplySpcialPersistence(luaState, serialObjectTable, l -> { throw new UnsupportedOperationException(); });
 
-            pushPermanents(luaState);
+            luaState.newTable();
 
-            // Push the global table and persist it.  Gathering all Java objects in the stream
             luaState.rawGet(REGISTRYINDEX, RIDX_GLOBALS);
+            luaState.setField(-2, "_globals");
+
+            luaState.getField(REGISTRYINDEX, LuaResource.MODULE);
+            luaState.setField(-2, "_module");
+
             luaState.persist(lObjectBos, 1, 2);
 
             // Persist the Java object table.
@@ -215,7 +220,7 @@ public class Persistence {
 
             // Sets up the deserialized object table.
             final DeserialObjectTable deserialObjectTable = new DeserialObjectTable(jObjectBis);
-            applySpecialPersistence(luaState, l -> {throw new UnsupportedOperationException();}, deserialObjectTable);
+            pushPermanentsAndApplySpcialPersistence(luaState, l -> {throw new UnsupportedOperationException();}, deserialObjectTable);
 
             // Pushes the inverse version of the permanent object table.
             pushInversePermanents(luaState);
@@ -272,47 +277,66 @@ public class Persistence {
 
     }
 
-    private void applySpecialPersistence(final LuaState luaState,
-                                         final JavaFunction persist,
-                                         final JavaFunction unpersist) {
+    private void pushPermanentsAndApplySpcialPersistence(final LuaState luaState,
+                                                         final JavaFunction persist,
+                                                         final JavaFunction unpersist) {
+
+        final int mtIndex;
+        final int permsIndex;
+
+        pushPermanents(luaState);
+        permsIndex = luaState.absIndex(-1);
 
         luaState.getField(REGISTRYINDEX, JNLUA_OBJECT);
-
-        luaState.pushJavaFunction(persist);
-        luaState.setField(-2, PERSIST_JOBJECT);
-
-        luaState.pushJavaFunction(unpersist);
-        luaState.setField(-2, UNPERSIST_JOBJECT);
+        mtIndex = luaState.absIndex(-1);
 
         luaState.getPersistenceSetting("spkey");
+
         luaState.load(
-                // language=Lua
-                "local jobject = ...\n" +
-                       "local jobject_mt = getmetatable(jobject)\n" +
-                       "local metadata = jobject_mt:__namazu_persist_jobject(jobject)\n" +
-                       "return function()\n" +
-                       "    return jobject_mt:__namazu_unpersist_jobject(metadata)\n" +
-                       "end", "__namazu_special_persistence");
-        luaState.setTable(-3);
+            // language=Lua
+            "local persist, unpersist = ...\n" +
+            "\n" +
+            "return function (jobject)\n" +
+            "\n" +
+            "    local metadata = persist(jobject)\n" +
+            "\n" +
+            "    return function() \n" +
+            "        return unpersist(metadata)\n" +
+            "    end\n" +
+            "\n" +
+            "end\n", "__jvm_persist");
+
+        // We push each function here and immediately add it to the permanent object table.  This ensures that the
+        // actual persistence functions can be swapped out through the permanent object table on subsequent loads.
+
+        luaState.pushJavaFunction(persist);
+        luaState.pushValue(-1);
+        luaState.setField(permsIndex, mangle(Persistence.class, PERSIST_JOBJECT));
+
+        luaState.pushJavaFunction(unpersist);
+        luaState.pushValue(-1);
+        luaState.setField(permsIndex, mangle(Persistence.class, UNPERSIST_JOBJECT));
+
+        // With both functions added to the scope, we execute the fucnction which will pop both the functtions off the
+        // stack as well as the compiled chunk.  The compiled chunk returns the actual spio function which encapsulates
+        // the persist/unpersist methods.  Which will be replaced throught he permanent object table.
+
+        luaState.call(2, 1);
+
+        // Sets it to the result of the above function.
+        luaState.setTable(mtIndex);
+
+        // Pops off the jobject metatable
         luaState.pop(1);
 
     }
 
     private void clearSpecialPersistence(final LuaState luaState) {
-
         luaState.getField(REGISTRYINDEX, JNLUA_OBJECT);
-
-        luaState.pushNil();
-        luaState.setField(-2, PERSIST_JOBJECT);
-
-        luaState.pushNil();
-        luaState.setField(-2, UNPERSIST_JOBJECT);
-
+        luaState.getPersistenceSetting("spkey");
         luaState.pushNil();
         luaState.setTable(-3);
-
         luaState.pop(1);
-
     }
 
     /**
@@ -328,6 +352,7 @@ public class Persistence {
         final int absObjectIndex = luaState.absIndex(objectIndex);
         luaState.pushString(mangle(scope, name));
         addPermanentObject(absObjectIndex, -1);
+        luaState.pop(1);
     }
 
     /**

@@ -36,7 +36,7 @@ public class TestCorePersistence {
     private ResourceLoader resourceLoader;
 
     @DataProvider
-    public static Object[][] allLuaResources() throws MalformedURLException {
+    public static Object[][] allLuaResources() {
 
         // This ensures that we can persist all Lua source code provided in this package, including test code.
 
@@ -46,7 +46,7 @@ public class TestCorePersistence {
         final Set<String> luaResources = new TreeSet<>(reflections.getResources(Pattern.compile(".*\\.lua")));
 
         return luaResources
-            .stream().limit(1)
+            .stream()
             .map(s -> s.replace('/', '.').substring(0, s.length() - ".lua".length()))
             .map(s -> new Object[]{s})
             .toArray(Object[][]::new);
@@ -67,10 +67,10 @@ public class TestCorePersistence {
             bytes = bos.toByteArray();
         }
 
-        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-             final Resource resource = getResourceLoader().load(bis, true)) {
-            logger.info("Successfully loaded {}", resource);
-        }
+//        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+//             final Resource resource = getResourceLoader().load(bis, true)) {
+//            logger.info("Successfully loaded {}", resource);
+//        }
 
     }
 
