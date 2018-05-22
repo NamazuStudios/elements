@@ -120,13 +120,18 @@ public class LuaResource implements Resource {
 
             final String name;
 
-            // Copies the key name on the stack and then extracts it.
-            luaState.pushValue(-2);
-            name = luaState.toString(-1);
-            luaState.pop(1);
+            if (!luaState.rawEqual(-1, -3)) {
 
-            // Adds it as a permanent object and then pops it off the stack.
-            persistence.addPermanentObject(-1, LuaResource.class, name);
+                // Copies the key name on the stack and then extracts it.
+                luaState.pushValue(-2);
+                name = luaState.toString(-1);
+                luaState.pop(1);
+
+                // Adds it as a permanent object and then pops it off the stack.
+                persistence.addPermanentObject(-1, LuaResource.class, name);
+
+            }
+
             luaState.pop(1);
 
         }

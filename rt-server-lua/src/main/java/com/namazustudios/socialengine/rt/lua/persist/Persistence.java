@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.exception.ResourcePersistenceException;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.lang.ref.WeakReference;
@@ -27,8 +28,6 @@ public class Persistence {
 
     private static final int NULL_OBJ_IDX = -1;
 
-    private static final int PLACEHOLDER_UNPERSIST_IDX = -2;
-
     private static final byte[] SIGNATURE = new byte[]{ (byte)248, 'L', 'E', 'L', 'M', '\r', '\n' };
 
     private static final int VERSION_MAJOR = 1;
@@ -37,9 +36,15 @@ public class Persistence {
 
     private static final String PERSIST_TYPE = "_t";
 
-    private static final String PERSIST_METADATA = "_m";
+    private static final String PERSIST_METADATA = "_md";
 
     private static final String CUSTOM_PERSIST_TYPE = "_ct";
+
+    private static final String GLOBALS = "_g";
+
+    private static final String MODULE = "_m";
+
+    private static final String UNPERSIST = mangle(Persistence.class, "u");
 
     private static final String PERMANENT_OBJECT_TABLE = mangle(Persistence.class, "PERMANENT_OBJECT_TABLE");
 
@@ -112,18 +117,21 @@ public class Persistence {
 
             final SerialObjectTable serialObjectTable = new SerialObjectTable();
 
-            // Setup persistence with the
+            // Setup persistence with the lua state and the table.
             applySpecialPersistence(luaState, serialObjectTable);
+
+            // Pushes the permanent objects that have been registered with the persistence instance.  Since the above
+            // method does register a permanent for the unpersist function, this must happen after applying persistence
 
             pushPermanents(luaState);
 
             luaState.newTable();
 
             luaState.rawGet(REGISTRYINDEX, RIDX_GLOBALS);
-            luaState.setField(-2, "_globals");
+            luaState.setField(-2, GLOBALS);
 
             luaState.getField(REGISTRYINDEX, LuaResource.MODULE);
-            luaState.setField(-2, "_module");
+            luaState.setField(-2, MODULE);
 
             luaState.persist(lObjectBos, 1, 2);
 
@@ -181,6 +189,25 @@ public class Persistence {
         luaState.copyTable(-1, -2);
         luaState.pop(1);
 
+        // Debugging Printout
+
+        if (loggerSupplier.get().isTraceEnabled()) {
+
+            luaState.pushNil();
+
+            while (luaState.next(-2)) {
+                luaState.pushValue(-2);
+                luaState.pushValue(-2);
+                loggerSupplier.get().info("Persistence permanents[{}]={}",
+                    luaState.isString(-2) ? luaState.toString(-2) :
+                    luaState.isNumber(-2) ? luaState.toNumber(-2) :
+                    luaState.typeName(-2),
+                    luaState.toString(-1));
+                luaState.pop(3);
+            }
+
+        }
+
     }
 
     /**
@@ -216,7 +243,7 @@ public class Persistence {
             final int majorVersion = dis.readInt();
             final int minorVersion = dis.readInt();
 
-            if (majorVersion > VERSION_MAJOR || minorVersion > VERSION_MINOR) {
+            if (majorVersion != VERSION_MAJOR || minorVersion != VERSION_MINOR) {
                 throw new ResourcePersistenceException("Unable to read versions.");
             }
 
@@ -238,13 +265,20 @@ public class Persistence {
             // Sets up the deserialized object table.
             final DeserialObjectTable deserialObjectTable = new DeserialObjectTable(jObjectBis);
 
-            // Pushes the inverse version of the permanent object table.
+            // Pushes the inverse version of the permanent object table.  It is safe at this point to push the
+            // derialization object table and set it to a key in this table.  This way it is strongly referenced in this
+            // call.
+
             pushInversePermanents(luaState);
+            luaState.pushJavaFunction(deserialObjectTable);
+            luaState.setField(-2, UNPERSIST);
+
             luaState.unpersist(lObjectBis, 1);
 
+            // TODO Merge with module and global table
             // Push the current glboal state on the stack and copy the result into the table.
-            luaState.rawGet(REGISTRYINDEX, RIDX_GLOBALS);
-            luaState.copyTable(-2, -1);
+            // luaState.rawGet(REGISTRYINDEX, RIDX_GLOBALS);
+            // luaState.copyTable(-2, -1);
 
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -296,6 +330,7 @@ public class Persistence {
     private void applySpecialPersistence(final LuaState luaState, final JavaFunction persist) {
 
         final int mtIndex;
+        final int permsIndex;
 
         luaState.getField(REGISTRYINDEX, JNLUA_OBJECT);
         mtIndex = luaState.absIndex(-1);
@@ -320,7 +355,11 @@ public class Persistence {
             "end\n", "__jvm_persist");
 
         luaState.pushJavaFunction(persist);
+
         luaState.pushJavaFunction(PLACEHODLER_UNPERSIST);
+        luaState.pushString(UNPERSIST);
+        doAddPermanentObject(luaState, -2, -1);
+        luaState.pop(1);
 
         // With both functions added to the scope, we execute the fucnction which will pop both the functtions off the
         // stack as well as the compiled chunk.  The compiled chunk returns the actual spio function which encapsulates
@@ -373,7 +412,6 @@ public class Persistence {
      * @param objectIndex the stack index of the permanent object
      * @param placeholderIndex the value index which will be written into the stream as a placeholder for the permanent object
      */
-    @SuppressWarnings("Duplicates")
     public void addPermanentObject(final int objectIndex, final int placeholderIndex) {
 
         final LuaState luaState = luaStateSupplier.get();
@@ -383,6 +421,13 @@ public class Persistence {
         } else if (luaState.isJavaFunction(placeholderIndex) || luaState.isJavaObjectRaw(placeholderIndex)) {
             throw new IllegalArgumentException("Permanent object placeholder at " + placeholderIndex + " must not be a Java type.");
         }
+
+        doAddPermanentObject(luaState, objectIndex, placeholderIndex);
+
+    }
+
+    @SuppressWarnings("Duplicates")
+    private void doAddPermanentObject(final LuaState luaState, final int objectIndex, final int placeholderIndex) {
 
         final int absObjectIndex = luaState.absIndex(objectIndex);
         final int absPlaceholderIndex = luaState.absIndex(placeholderIndex);
@@ -492,7 +537,7 @@ public class Persistence {
         });
 
         addCustomPersistence(object, persistenceType, l -> {
-            l.pushString(persistenceType);
+            l.pushNil();
             return 1;
         });
 
@@ -511,7 +556,6 @@ public class Persistence {
             }
 
             return object == null ? NULL_OBJ_IDX :
-                   object == PLACEHODLER_UNPERSIST ? PLACEHOLDER_UNPERSIST_IDX :
                    objectIndexMap.computeIfAbsent(object, o -> {
                        final int identifier = objects.size();
                        objects.add(o);
@@ -554,6 +598,25 @@ public class Persistence {
                 luaState.pushValue(1);
                 luaState.call(1, 1);
                 luaState.setField(2, PERSIST_METADATA);
+
+            }
+
+            if (loggerSupplier.get().isTraceEnabled()) {
+
+                luaState.pushNil();
+
+                while (luaState.next(-2)) {
+                    luaState.pushValue(-2);
+                    luaState.pushValue(-2);
+                    loggerSupplier.get().trace("Saving prsistence metadata for {}: {}[{}]={}",
+                        object == null ? null : object.getClass().getSimpleName(),
+                        object,
+                        luaState.toString(-2),
+                        luaState.isString(-1) ? luaState.toString(-1) :
+                        luaState.isNumber(-1) ? luaState.toNumber(-1) :
+                        luaState.typeName(-1));
+                    luaState.pop(3);
+                }
 
             }
 

@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
-import com.namazustudios.socialengine.rt.lua.LuaResourceLoader;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.reflections.util.ClasspathHelper;
@@ -19,7 +18,6 @@ import org.testng.annotations.Test;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -68,10 +66,10 @@ public class TestCorePersistence {
             bytes = bos.toByteArray();
         }
 
-//        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-//             final Resource resource = getResourceLoader().load(bis, true)) {
-//            logger.info("Successfully loaded {}", resource);
-//        }
+        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+             final Resource resource = getResourceLoader().load(bis, true)) {
+            logger.info("Successfully loaded {}", resource);
+        }
 
     }
 
