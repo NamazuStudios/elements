@@ -43,10 +43,10 @@ public class PersistenceAwareIocResolver implements IocResolver {
 
             if (name == null) {
                 final Object injectee = inject(type);
-                l.pushJavaObject(injectee);
+                l.pushJavaObjectRaw(injectee);
             } else {
                 final Object injectee = inject(type, name);
-                l.pushJavaObject(injectee);
+                l.pushJavaObjectRaw(injectee);
             }
 
             return 1;
@@ -67,10 +67,10 @@ public class PersistenceAwareIocResolver implements IocResolver {
 
             if (name == null) {
                 final Provider<?> provider = provider(type);
-                l.pushJavaObject(provider);
+                l.pushJavaObjectRaw(provider);
             } else {
                 final Provider<?> provider = provider(type, name);
-                l.pushJavaObject(provider);
+                l.pushJavaObjectRaw(provider);
             }
 
             return 1;

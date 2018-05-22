@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.rt.exception.ResourcePersistenceException;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.lang.ref.WeakReference;
@@ -274,11 +273,13 @@ public class Persistence {
             luaState.setField(-2, UNPERSIST);
 
             luaState.unpersist(lObjectBis, 1);
+            luaState.getField(-1, GLOBALS);
+            luaState.rawGet(REGISTRYINDEX, RIDX_GLOBALS);
+            luaState.copyTable(-2, -1);
+            luaState.pop(2);
 
-            // TODO Merge with module and global table
-            // Push the current glboal state on the stack and copy the result into the table.
-            // luaState.rawGet(REGISTRYINDEX, RIDX_GLOBALS);
-            // luaState.copyTable(-2, -1);
+            luaState.getField(-1, MODULE);
+            luaState.setField(REGISTRYINDEX, LuaResource.MODULE);
 
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -361,7 +362,7 @@ public class Persistence {
         doAddPermanentObject(luaState, -2, -1);
         luaState.pop(1);
 
-        // With both functions added to the scope, we execute the fucnction which will pop both the functtions off the
+        // With both functions added to the scope, we execute the function which will pop both the functtions off the
         // stack as well as the compiled chunk.  The compiled chunk returns the actual spio function which encapsulates
         // the persist/unpersist methods.  Which will be replaced throught he permanent object table.
 
@@ -686,7 +687,7 @@ public class Persistence {
                         throw new ResourcePersistenceException("Object with id does not exist: " + oid, ex);
                     }
 
-                    luaState.pushJavaObject(object);
+                    luaState.pushJavaObjectRaw(object);
 
                 }
 

@@ -176,7 +176,6 @@ public class LuaResource implements Resource {
         final LuaState luaState = getLuaState();
         final Path modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
 
-
         try (final InputStream inputStream = assetLoader.open(modulePath)) {
 
             // We substitute the logger for the name of the file we actually are trying to open.  This way the

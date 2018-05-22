@@ -69,7 +69,7 @@ public class JavaObjectModuleBuiltin implements Builtin {
     public JavaFunction getLoader() {
         return luaState -> {
             final JavaReflector javaReflector = makeJavaRelfector();
-            luaState.pushJavaObject(javaReflector);
+            luaState.pushJavaObjectRaw(javaReflector);
             return 1;
         };
     }

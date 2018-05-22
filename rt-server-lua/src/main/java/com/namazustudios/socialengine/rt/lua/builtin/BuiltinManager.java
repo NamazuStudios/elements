@@ -19,8 +19,6 @@ public class BuiltinManager {
 
     private static final Logger logger = LoggerFactory.getLogger(BuiltinManager.class);
 
-    private static final String CUSTOM_PERSISTENCE_TYPE = Builtin.class.getName();
-
     private final LogAssist logAssist;
 
     private final Supplier<LuaState> luaStateSupplier;
@@ -53,6 +51,8 @@ public class BuiltinManager {
         handlePersistence.accept(builtin);
 
         try {
+
+            logger.debug("Installing builtin {}", builtin);
 
             luaState.getGlobal(Constants.PACKAGE_TABLE);
             luaState.getField(-1, Constants.PACKAGE_SEARCHERS_TABLE);
