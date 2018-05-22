@@ -527,11 +527,11 @@ public class Persistence {
             // is prematurely releasing global refs in JNI.  However, we shoudl log an error if it does somehow happen
             // as to warrant further investigation into the issue.
 
-            if (target == null) loggerSupplier.get().error("Object {} was garbage collected.", persistenceType);
+            if (target == null) {
+                loggerSupplier.get().error("Object {} was garbage collected.", persistenceType);
+            }
 
-            // Simply return the permanent
-            l.pushJavaObject(target);
-
+            l.pushJavaObjectRaw(target);
             return 1;
 
         });
