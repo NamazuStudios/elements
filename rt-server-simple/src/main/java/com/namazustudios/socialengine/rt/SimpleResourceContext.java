@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 
@@ -28,7 +27,7 @@ public class SimpleResourceContext implements ResourceContext {
     public ResourceId createAttributes(final String module, final Path path, final Attributes attributes, final Object... args) {
         logger.debug("Loading module {} -> {}", module, path);
         final Resource resource = getResourceLoader().load(module, attributes, args);
-        getResourceService().addResource(path, resource);
+        getResourceService().addAndReleaseResource(path, resource);
         return resource.getId();
     }
 

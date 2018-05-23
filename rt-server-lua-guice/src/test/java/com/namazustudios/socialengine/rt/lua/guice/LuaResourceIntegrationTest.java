@@ -72,7 +72,6 @@ public class LuaResourceIntegrationTest {
             {"test.index", "test_link_path"},
             {"test.index", "test_unlink"},
             {"test.index", "test_unlink_and_destroy"},
-            {"test.box2d", "test_hello_world"},
             {"test.javamodule", "test_hello_world"},
             {"test.javamodule", "test_return_hello_world"},
             {"test.javamodule", "test_overload_1"},

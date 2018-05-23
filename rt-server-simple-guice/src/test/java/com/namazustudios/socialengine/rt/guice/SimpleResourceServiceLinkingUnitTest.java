@@ -51,7 +51,7 @@ public class SimpleResourceServiceLinkingUnitTest {
         final Resource resource = Mockito.mock(Resource.class);
         Mockito.when(resource.getId()).thenReturn(resourceId);
 
-        getResourceService().addResource(path, resource);
+        getResourceService().addAndReleaseResource(path, resource);
         getResourceService().link(resourceId, alias);
 
         intermediates.add(new Object[]{resourceId, path, alias, resource});

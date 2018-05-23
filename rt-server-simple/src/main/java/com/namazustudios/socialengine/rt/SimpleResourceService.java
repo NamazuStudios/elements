@@ -45,9 +45,9 @@ public class SimpleResourceService implements ResourceService {
     private OptimisticLockService<ResourceId> resourceIdOptimisticLockService;
 
     @Override
-    public Resource getResourceWithId(final ResourceId resourceId) {
+    public Resource getAndAcquireResourceWithId(final ResourceId resourceId) {
 
-        final Resource resource = storageAtomicReference.get().getResources().get(resourceId);
+        final Resource resource = getStorage().getResources().get(resourceId);
 
         if (resource == null) {
             throw new ResourceNotFoundException("Resource not found: " + resourceId);
@@ -58,7 +58,7 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
-    public Resource getResourceAtPath(final Path path) {
+    public Resource getAndAcquireResourceAtPath(final Path path) {
 
         if (path.isWildcard()) {
             throw new IllegalArgumentException("Cannot fetch single resource with wildcard path " + path);
@@ -66,7 +66,7 @@ public class SimpleResourceService implements ResourceService {
 
         return doOptimistic(() -> {
 
-            final Storage storage = storageAtomicReference.get();
+            final Storage storage = getStorage();
             final ResourceId resourceId = storage.getPathResourceIdMap().get(path);
 
             if (resourceId == null) {
@@ -88,7 +88,7 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
-    public void addResource(final Path path, final Resource resource) {
+    public void addAndReleaseResource(final Path path, final Resource resource) {
 
         if (path.isWildcard()) {
             throw new IllegalArgumentException("Cannot add resources with wildcard path.");
@@ -101,7 +101,7 @@ public class SimpleResourceService implements ResourceService {
 
         doOptimisticV(() -> {
 
-            final Storage storage = storageAtomicReference.get();
+            final Storage storage = getStorage();
 
             try {
 
@@ -150,9 +150,15 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
+    public Resource addAndAcquireResource(final Path path, final Resource resource) {
+        addAndReleaseResource(path, resource);
+        return resource;
+    }
+
+    @Override
     public Spliterator<Listing> list(final Path searchPath) {
 
-        final Storage storage = storageAtomicReference.get();
+        final Storage storage = getStorage();
         final Map<Path, ResourceId> tailMap = storage.getPathResourceIdMap().tailMap(searchPath);
 
         return new Spliterators.AbstractSpliterator<Listing> (tailMap.size(), CONCURRENT | IMMUTABLE | NONNULL) {
@@ -183,6 +189,7 @@ public class SimpleResourceService implements ResourceService {
                         public ResourceId getResourceId() {
                             return resourceId;
                         }
+
                     });
                     return true;
                 } else {
@@ -207,7 +214,7 @@ public class SimpleResourceService implements ResourceService {
 
         doOptimisticV(() -> {
 
-            final Storage storage = storageAtomicReference.get();
+            final Storage storage = getStorage();
 
             FinallyAction finallyAction = () -> {};
 
@@ -261,7 +268,7 @@ public class SimpleResourceService implements ResourceService {
 
             FinallyAction finallyAction = () -> {};
 
-            final Storage storage = storageAtomicReference.get();
+            final Storage storage = getStorage();
 
             try {
 
@@ -350,7 +357,7 @@ public class SimpleResourceService implements ResourceService {
 
         return doOptimistic(() -> {
 
-            final Storage storage = storageAtomicReference.get();
+            final Storage storage = getStorage();
 
             FinallyAction finallyAction = () -> {};
 
@@ -416,6 +423,27 @@ public class SimpleResourceService implements ResourceService {
         // guarantees that the resources are removed atomically.
         final Storage storage = storageAtomicReference.getAndSet(new Storage());
         return storage.getResources().values().parallelStream();
+    }
+
+    @Override
+    public void close() {
+
+        final Storage storage = storageAtomicReference.getAndSet(null);
+
+        storage.getResources().values().parallelStream().forEach(r -> {
+            try {
+                r.close();
+            } catch (Exception ex) {
+                logger.error("Error closing resource {}", r.getId(), ex);
+            }
+        });
+
+    }
+
+    private Storage getStorage() {
+        final Storage storage = storageAtomicReference.get();
+        if (storage == null) throw new IllegalStateException("closed");
+        return storage;
     }
 
     public ResourceLockService getResourceLockService() {

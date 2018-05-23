@@ -23,6 +23,7 @@
         <module>web-ui</module>
         <module>service</module>
         <module>service-redis</module>
+        <module>service-guice</module>
         <module>mongo-dao</module>
         <module>dao</module>
         <module>setup</module>
@@ -37,6 +38,8 @@
         <module>rt-server</module>
         <module>rt-server-simple</module>
         <module>rt-server-simple-guice</module>
+        <module>rt-server-xodus</module>
+        <module>rt-server-xodus-guice</module>
         <module>rt-server-cluster</module>
         <module>rt-server-cluster-jeromq</module>
         <module>rt-server-cluster-node</module>
@@ -67,7 +70,6 @@
         <module>rt-server-lua-testkit</module>
         <module>socialengine-jnlua/jnlua</module>
         <module>common-lua</module>
-    <module>service-guice</module>
   </modules>
 
     <properties>
@@ -108,6 +110,7 @@
         <javolution.version>6.0.0</javolution.version>
         <firebase.admin.vrsion>5.9.0</firebase.admin.vrsion>
         <netty.version>4.1.22.Final</netty.version>
+        <xodus.version>1.2.3</xodus.version>
     </properties>
 
     <dependencies>

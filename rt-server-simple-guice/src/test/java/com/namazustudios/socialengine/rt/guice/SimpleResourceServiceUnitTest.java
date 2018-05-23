@@ -51,7 +51,7 @@ public class SimpleResourceServiceUnitTest {
         final Resource resource = Mockito.mock(Resource.class);
         Mockito.when(resource.getId()).thenReturn(resourceId);
 
-        getResourceService().addResource(path, resource);
+        getResourceService().addAndReleaseResource(path, resource);
         intermediates.add(new Object[]{resourceId, path, resource});
 
     }
@@ -116,22 +116,22 @@ public class SimpleResourceServiceUnitTest {
 
     @Test(dependsOnMethods = "testAdd", dataProvider = "intermediateDataProvider")
     public void testGetResource(final ResourceId resourceId, final Path path, final Resource resource) {
-        assertEquals(getResourceService().getResourceWithId(resourceId), resource);
+        assertEquals(getResourceService().getAndAcquireResourceWithId(resourceId), resource);
     }
 
     @Test(dependsOnMethods = "testAdd", dataProvider = "intermediateDataProvider")
     public void testGetResourceAtPath(final ResourceId resourceId, final Path path, final Resource resource) {
-        assertEquals(getResourceService().getResourceAtPath(path), resource);
+        assertEquals(getResourceService().getAndAcquireResourceAtPath(path), resource);
     }
 
     @Test(dataProvider = "initialDataProvider", expectedExceptions = ResourceNotFoundException.class)
     public void testGetResourceFail(final ResourceId resourceId, final Path path) {
-        getResourceService().getResourceWithId(resourceId);
+        getResourceService().getAndAcquireResourceWithId(resourceId);
     }
 
     @Test(dataProvider = "initialDataProvider", expectedExceptions = ResourceNotFoundException.class)
     public void testGetResourceAtPathFail(final ResourceId resourceId, final Path path) {
-        getResourceService().getResourceAtPath(path);
+        getResourceService().getAndAcquireResourceAtPath(path);
     }
 
     @Test(dependsOnMethods = {"testAdd", "testGetResource", "testGetResourceAtPath"}, dataProvider = "intermediateDataProvider")
@@ -155,7 +155,7 @@ public class SimpleResourceServiceUnitTest {
 
     @Test(dependsOnMethods = {"testLink", "testLinkPath"}, dataProvider = "linkedIntermediateProvider")
     public void testGetByAlias(final ResourceId resourceId, final Path path, final Resource resource) {
-        assertEquals(getResourceService().getResourceAtPath(path), resource);
+        assertEquals(getResourceService().getAndAcquireResourceAtPath(path), resource);
     }
 
     @Test(dependsOnMethods = {"testGetByAlias"}, dataProvider = "linkedIntermediateProvider", expectedExceptions = ResourceNotFoundException.class)
@@ -167,8 +167,8 @@ public class SimpleResourceServiceUnitTest {
         assertEquals(resourceId, unlink.getResourceId(), "Unlink mismatch");
         assertFalse(unlink.isRemoved(), "Resource should not have been removed.");
 
-        assertEquals(getResourceService().getResourceWithId(resourceId), resource);
-        getResourceService().getResourceAtPath(path);
+        assertEquals(getResourceService().getAndAcquireResourceWithId(resourceId), resource);
+        getResourceService().getAndAcquireResourceAtPath(path);
     }
 
     @Test(dependsOnMethods = {"testUnlink"}, dataProvider = "intermediateDataProvider")
@@ -177,14 +177,14 @@ public class SimpleResourceServiceUnitTest {
         getResourceService().removeResource(resourceId);
 
         try {
-            getResourceService().getResourceWithId(resourceId);
+            getResourceService().getAndAcquireResourceWithId(resourceId);
             fail("Resource still exists");
         } catch (ResourceNotFoundException ex) {
             // Pass Test
         }
 
         try {
-            getResourceService().getResourceAtPath(path);
+            getResourceService().getAndAcquireResourceAtPath(path);
             fail("Resource still exists");
         } catch (ResourceNotFoundException ex) {
             // Pass Test
@@ -211,7 +211,7 @@ public class SimpleResourceServiceUnitTest {
         Mockito.when(resource.getId()).thenReturn(resourceId);
 
         final Path path = new Path(randomUUID().toString());
-        getResourceService().addResource(path, resource);
+        getResourceService().addAndReleaseResource(path, resource);
 
         final Path a = new Path(path, Path.fromComponents("a"));
         final Path b = new Path(path, Path.fromComponents("b"));

@@ -12,8 +12,7 @@ import java.util.function.Function;
 
 /**
  * The simple handler server is responsible for dispatching requests and events to all {@link Resource} instances
- * contained therein.  It accomplishes its task in parallel by dispatching all requests, events, and then
- * finally updating each {@link Resource} in order.
+ * contained therein.
  *
  * Internally, it leverages an instance an {@link ExecutorService} and a {@link CompletionService} to
  * perform all updates in parallel.
@@ -68,7 +67,7 @@ public class SimpleScheduler implements Scheduler {
                                               final Consumer<Throwable> failure) {
         return () -> {
             try {
-                final Resource resource = getResourceService().getResourceWithId(resourceId);
+                final Resource resource = getResourceService().getAndAcquireResourceWithId(resourceId);
                 return performProtected(resource, operation);
             } catch (Throwable th) {
                 failure.accept(th);
@@ -82,7 +81,7 @@ public class SimpleScheduler implements Scheduler {
                                               final Consumer<Throwable> failure) {
         return () -> {
             try {
-                final Resource resource = getResourceService().getResourceAtPath(path);
+                final Resource resource = getResourceService().getAndAcquireResourceAtPath(path);
                 return performProtected(resource, operation);
             } catch (Throwable th) {
                 failure.accept(th);
@@ -93,23 +92,15 @@ public class SimpleScheduler implements Scheduler {
 
     private <T> T performProtected(final Resource resource,
                                    final Function<Resource, T> operation) {
-
-        final Lock lock = getResourceLockService().getLock(resource.getId());
-
-        try {
-            logger.trace("Locking resource {}", resource.getId());
-            lock.lock();
+        try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resource.getId())){
             logger.trace("Applying operation for resource {}", resource.getId());
             return operation.apply(resource);
         } catch (Throwable th) {
             logger.error("Caught exception in protected operation {}", operation, th);
             throw th;
         } finally {
-            logger.trace("Unlocking resource {}", resource.getId());
-            lock.unlock();
             logger.trace("Unlocked resource {}", resource.getId());
         }
-
     }
 
     public ExecutorService getDispatcherExecutorService() {

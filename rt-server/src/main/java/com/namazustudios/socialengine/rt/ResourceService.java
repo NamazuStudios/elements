@@ -14,43 +14,49 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- * This is the service responsible for maintaining a set of {@link Resource} instances.  This
- * contains code to handle a the path hierarchy for the resources housed in the service.
+ * This is the service responsible for maintaining a set of {@link Resource} instances.  This contains code to handle a
+ * the path hierarchy for the resources housed in the service.
  *
  * Resources can be added, moved, or deleted as needed by external services.
  *
- * Note that implementations of this interface should be considered thread
- * safe.  Each call must return or throw exceptions leaving the object in a consistent
- * state.  This may be accomplished using locking.  All operations are to be considered
- * atomic unless otherwise specified.
+ * Note that implementations of this interface should be considered thread safe.  Each call must return or throw
+ * exceptions leaving the object in a consistent state.  This may be accomplished using locking.  All operations are to
+ * be considered atomic unless otherwise specified.  Keep in mind that that while this instance may provided thread
+ * safety, the specification for {@link Resource} is not.  Therefore, locking is necessary when performing operations
+ * on individual {@link Resource} instances themselves.  This means that the internals of this service may lock the
+ * individual {@link Resource} instances to perform work as well.  {@see {@link ResourceLockService}}.
  *
  * Created by patricktwohig on 7/24/15.
  */
-public interface ResourceService {
+public interface ResourceService extends AutoCloseable {
 
     /**
-     * Gets a {@link Resource} based on the resource ID.
+     * Gets a {@link Resource} based on the resource ID.  The returned {@link Resource} is said to be acquired which
+     * means it will not be serialized until no process has currently acquired the {@link Resource} and the
+     * {@link Resource#isPersistentState()} method returns true.
      *
-     * @param resourceId
+     * @param resourceId the {@link ResourceId}
      * @return the Resource, never null
      * @throws {@link ResourceNotFoundException} if no resource exists with that particular ID
      */
-    Resource getResourceWithId(ResourceId resourceId);
+    Resource getAndAcquireResourceWithId(ResourceId resourceId);
 
     /**
-     * Gets a resource at the given path.
+     * Gets a resource at the given path.  The returned {@link Resource} is said to be acquired which means it will not
+     * be serialized until no process has currently acquired the {@link Resource} and the
+     * {@link Resource#isPersistentState()} method returns true.
      *
-     * @param path the path
-     * @return the resource
+     * @param path the path the {@link Path}
+     * @return the resource the {@link Resource}
      *
      * @throws {@link ResourceNotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    Resource getResourceAtPath(Path path);
+    Resource getAndAcquireResourceAtPath(Path path);
 
     /**
      * Adds a {@link Resource} to this resource service.  This is used for the initial insert into the
-     * {@link ResourceService}.  If linking to an additiona {@link Path} is necessary, then the methods
+     * {@link ResourceService}.  If linking to an additional {@link Path} is necessary, then the methods
      * {@link #linkPath(Path, Path)} or {@link #link(ResourceId, Path)} must be used to perform additional
      * aliasing operations.
      *
@@ -58,13 +64,54 @@ public interface ResourceService {
      * initially, which can be thought of as the primary path, and then subsequent aliases or links be maintained, even
      * if those particular {@link Path}s may collide.
      *
+     * Once a {@link Resource} is passed ot this method, this {@link ResourceService} will take ownership of it.  This
+     * means the the {@link Resource} may be closed after this call.  Therefore, subsequent operations may require the
+     * {@link Resource} be fetched from serialization later for subsequent operations.
+     *
+     * {@see {@link #release(Resource)}}
+     *
      * @param path the initial path for the {@link Resource}
      * @param resource the resource to insert
      *
      * @throws {@link DuplicateException} if a resource is already present
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
-    void addResource(Path path, Resource resource);
+    void addAndReleaseResource(Path path, Resource resource);
+
+    /**
+     * Adds an acquires this {@link Resource}.  This is used for the initial insert into the {@link ResourceService}. If
+     * linking to an additional {@link Path} is necessary, then the methods {@link #linkPath(Path, Path)} or
+     * {@link #link(ResourceId, Path)} must be used to perform additional aliasing operations.
+     *
+     * It is strongly recommended that newly inserted {@link Resource} instances be given a globally unique path
+     * initially, which can be thought of as the primary path, and then subsequent aliases or links be maintained, even
+     * if those particular {@link Path}s may collide.
+     *
+     * Unlike {@link #addAndAcquireResource(Path, Resource)}, this will not immediately release the {@link Resource}
+     * therefore forcing it to stay in memory until a subsequent call to {@link #release(Resource)} is made.  This is
+     * useful for {@link Resource} instances that are short-lived and may never need to be serialized (such as those
+     * {@link Resource}s used by the {@link HandlerContext}).
+     *
+     * @param path
+     * @param resource
+     * @return the managed version of the supplied {@link Resource}
+     */
+    Resource addAndAcquireResource(Path path, Resource resource);
+
+    /**
+     * Releases ownership of the {@link Resource} to this {@link ResourceService}.  Once released, any further operation
+     * on the {@link Resource} is considered undefined behavior because this call may invoke {@link Resource#close()}.
+     *
+     * This does not guarantee that the {@link Resource} will be serialized.  It does however, make it a candidate
+     * for serialization as soon as possible.
+     *
+     * The default implementation of this does nothing as in-memory implementations do not need to implement this.  If
+     * the {@link Resource} is not managed by this {@link ResourceService} then the behavior of this call is undefined.
+     *
+     * @param resource the {@link Resource} to add, must be first acquired by a call to this service.
+     *
+     */
+    default void release(final Resource resource) {}
 
     /**
      * Provided the {@link Path}, this will list all {@link ResourceId}s matching the {@link Path}.  The supplied
@@ -121,7 +168,7 @@ public interface ResourceService {
      * @param destination the destination {@link Path}
      */
     default void linkPath(Path source, Path destination) {
-        final Resource resource = getResourceAtPath(source);
+        final Resource resource = getAndAcquireResourceAtPath(source);
         link(resource.getId(), destination);
     }
 
@@ -168,7 +215,9 @@ public interface ResourceService {
      *
      * @param resoureIdString the path as a string
      * @return the removed {@link Resource}
+     *
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     *
      */
     default Resource removeResource(final  String resoureIdString) {
         return removeResource(new ResourceId(resoureIdString));
@@ -199,14 +248,25 @@ public interface ResourceService {
     }
 
     /**
-     * Removes all resources from the resource service.  The stream returned must have already removed all resources and
-     * the supplied {@link Stream} is simply a view of {@link Resource} instances that have been removed.
+     * Removes all resources from.  The returned {@link Stream<Resource>} returns any {@link Resource}s that are still
+     * occupying memory and must be closed.  The returned stream may be empty if all have been persisted.  This
+     * operation may lock the whole {@link ResourceService} to accomplish its task.
      */
     Stream<Resource> removeAllResources();
 
     /**
-     * Removes all resources from the service and closes them.  ANy exceptions
-     * encountered are logged and all resources are attempted to be closed.
+     * Releases all memory associated with this {@link ResourceService}.  The actual action that happens here is
+     * dependent on the specific implementation.  For in-memory implementations, this will simply close all resources
+     * and exit.  For persistence-backed implementations this should flush all resources to disk before closing all.
+     *
+     * Once closed this instance may no longer be used.
+     */
+    @Override
+    void close();
+
+    /**
+     * Removes all resources from the service and closes them.  Any exceptions encountered are logged and all resources
+     * are attempted to be closed.
      */
     default void removeAndCloseAllResources() {
         final Logger logger = LoggerFactory.getLogger(getClass());

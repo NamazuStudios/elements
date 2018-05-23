@@ -76,6 +76,14 @@ public interface Resource extends AutoCloseable {
     void resumeFromScheduler(final TaskId taskId, final double elapsedTime);
 
     /**
+     * Checks if this {@link Resource} is in a persistent state.  If true, then the subsequent calls to
+     * {@link #serialize(OutputStream)} should not produce an exception.
+     *
+     * @return true if the {@link Resource} can be serialized.
+     */
+    default boolean isPersistentState() { return false; }
+
+    /**
      * Dumps the entire contents of this {@link Resource} to the supplied {@link OutputStream} where it can be
      * reconstituted later using the {@link #deserialize(InputStream)} method.
      *

@@ -236,6 +236,11 @@ public class LuaResource implements Resource {
         getPersistence().deserialize(is);
     }
 
+    @Override
+    public boolean isPersistentState() {
+        return taskIdPendingTaskMap.isEmpty();
+    }
+
     /**
      * Invokes {@link LuaState#close()} and removes any resources from memory.  After this is called, this
      * {@link LuaResource} may not be reused.
