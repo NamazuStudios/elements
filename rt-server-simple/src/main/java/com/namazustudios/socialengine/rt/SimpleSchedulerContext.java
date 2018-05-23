@@ -14,9 +14,22 @@ public class SimpleSchedulerContext implements SchedulerContext {
     private Scheduler scheduler;
 
     @Override
-    public void resumeTaskAfterDelay(ResourceId resourceId, long time, TimeUnit timeUnit, TaskId taskId) {
+    public void resumeTaskAfterDelay(final ResourceId resourceId,
+                                     final long time, final TimeUnit timeUnit,
+                                     final TaskId taskId) {
         getScheduler().resumeTaskAfterDelay(resourceId, time, timeUnit, taskId,
+                                            () -> logger.trace("Resumed task {}:{}", resourceId, taskId),
                                             th -> logger.error("Caught exception resuming.", th));
+    }
+
+    public void resumeTaskAfterDelay(final ResourceId resourceId,
+                                     long time, final TimeUnit timeUnit,
+                                     final TaskId taskId,
+                                     final Runnable resumed) {
+        getScheduler().resumeTaskAfterDelay(
+            resourceId, time, timeUnit, taskId,
+            () -> logger.trace("Resumed task {}:{}", resourceId, taskId),
+            th -> logger.error("Caught exception resuming.", th));
     }
 
     @Override

@@ -24,6 +24,16 @@ import java.util.function.Consumer;
 public interface HandlerContext {
 
     /**
+     * Starts this {@link HandlerContext}.
+     */
+    default void start() {}
+
+    /**
+     * Stops this {@link HandlerContext}.
+     */
+    default void stop() {}
+
+    /**
      * Synchronously invokes {@link #invokeSingleUseHandlerAsync(Consumer, Consumer, Attributes, String, String, Object...)}
      * blocking until the call returns.
      *

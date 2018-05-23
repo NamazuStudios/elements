@@ -14,6 +14,16 @@ import java.util.concurrent.TimeUnit;
 public interface SchedulerContext {
 
     /**
+     * Starts this {@link SchedulerContext}.
+     */
+    default void start() {}
+
+    /**
+     * Stops this {@link SchedulerContext}.
+     */
+    default void stop() {}
+
+    /**
      * Resumes the task associated with the supplied {@link TaskId}.  This allows for the specification of a delay
      * after a specified period of time.
      *
@@ -22,7 +32,6 @@ public interface SchedulerContext {
      * @param timeUnit the {@link TimeUnit} instance designating the time units of measure
      * @param taskId the {@link TaskId} of the task
      *
-     * @return {@link Future<Void>} which can be used to monitor the status of the request
      */
     @RemotelyInvokable
     void resumeTaskAfterDelay(@Serialize ResourceId resourceId,
@@ -36,7 +45,7 @@ public interface SchedulerContext {
      * @param resourceId the {@link ResourceId} which owns the task
      * @param taskId the unique {@link TaskId} associated with the network
      * @param result the result of the network operation, passed to the task
-     * @return returns {@link Future<Void>} which can be used to determine when the dispatch has been completed.
+     *
      */
     @RemotelyInvokable
     void resumeFromNetwork(@Serialize ResourceId resourceId, @Serialize TaskId taskId, @Serialize Object result);
@@ -48,7 +57,7 @@ public interface SchedulerContext {
      * @param resourceId the {@link ResourceId} which owns the task
      * @param taskId the unique {@link TaskId} associated with the network
      * @param throwable the error in the blocked operation
-     * @return returns {@link Future<Void>} which can be used to determine when the dispatch has been completed.
+     *
      */
     @RemotelyInvokable
     void resumeWithError(@Serialize ResourceId resourceId, @Serialize TaskId taskId, @Serialize Throwable throwable);

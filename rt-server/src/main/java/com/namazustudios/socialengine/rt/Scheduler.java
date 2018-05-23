@@ -109,7 +109,8 @@ public interface Scheduler {
      */
     default Future<Void> performAfterDelayV(final ResourceId resourceId,
                                             final long time, final TimeUnit timeUnit,
-                                            final Consumer<Resource> operation, final Consumer<Throwable> failure) {
+                                            final Consumer<Resource> operation,
+                                            final Consumer<Throwable> failure) {
         return performAfterDelay(resourceId, time, timeUnit, resource -> {
             operation.accept(resource);
             return null;
@@ -140,7 +141,7 @@ public interface Scheduler {
                 r.resumeFromScheduler(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
             } catch (NoSuchTaskException ex) {
                 final Logger logger = LoggerFactory.getLogger(getClass());
-                logger.info("Ignoring dead task: {}", ex.getTaskId());
+                logger.debug("Ignoring dead task: {}", ex.getTaskId());
             }
 
         }, failure);
@@ -154,13 +155,16 @@ public interface Scheduler {
      * @param resourceId the {@link ResourceId}
      * @param time the time delay
      * @param timeUnit the {@link TimeUnit} instance designating the time units of measure
+*      @param resumed a {@link Runnable} that will execute when the task has been resumed successfully
      * @param taskId the {@link TaskId} of the task
      *
      * @return {@link Future<Void>} which can be used to monitor the status of the request
      */
     default Future<Void> resumeTaskAfterDelay(final ResourceId resourceId,
                                               final long time, final TimeUnit timeUnit,
-                                              final TaskId taskId, final Consumer<Throwable> failure) {
+                                              final TaskId taskId,
+                                              final Runnable resumed,
+                                              final Consumer<Throwable> failure) {
 
         final Stopwatch stopwatch = Stopwatch.createStarted();
 
@@ -173,8 +177,10 @@ public interface Scheduler {
                 r.resumeFromScheduler(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
             } catch (NoSuchTaskException ex) {
                 final Logger logger = LoggerFactory.getLogger(getClass());
-                logger.info("Ignoring dead task: {}", ex.getTaskId());
+                logger.debug("Ignoring dead task: {}", ex.getTaskId());
             }
+
+            resumed.run();
 
         }, failure);
 

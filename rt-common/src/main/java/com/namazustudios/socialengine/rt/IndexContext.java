@@ -14,6 +14,16 @@ import java.util.stream.Stream;
 public interface IndexContext {
 
     /**
+     * Starts this {@link IndexContext}.
+     */
+    default void start() {}
+
+    /**
+     * Stops this {@link IndexContext}.
+     */
+    default void stop() {}
+
+    /**
      * Performs the operations of {@link #listAsync(Path, Consumer, Consumer)} synchronously.
      *
      * @param path the {@link Path} to match

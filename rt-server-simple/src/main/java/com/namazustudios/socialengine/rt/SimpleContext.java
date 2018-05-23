@@ -23,14 +23,28 @@ public class SimpleContext implements Context {
     private AssetLoader assetLoader;
 
     @Override
-    public void start() {}
+    public void start() {
+        getSchedulerContext().start();
+        getResourceContext().start();
+        getHandlerContext().start();
+        getIndexContext().start();
+    }
 
     @Override
     public void shutdown() {
+
+        // Stops all contexts first
+        getSchedulerContext().stop();
+        getResourceContext().stop();
+        getHandlerContext().stop();
+        getIndexContext().stop();
+
+        // Then stops all services
         getScheduler().shutdown();
-        getResourceService().removeAndCloseAllResources();
+        getResourceService().close();
         getResourceLoader().close();
         getAssetLoader().close();
+
     }
 
     @Override
@@ -108,4 +122,5 @@ public class SimpleContext implements Context {
     public void setHandlerContext(HandlerContext handlerContext) {
         this.handlerContext = handlerContext;
     }
+
 }
