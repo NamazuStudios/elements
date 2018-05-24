@@ -1,9 +1,7 @@
 package com.namazustudios.socialengine.rt.xodus;
 
-import com.namazustudios.socialengine.rt.MethodDispatcher;
 import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.ResourceId;
-import com.namazustudios.socialengine.rt.TaskId;
+import com.namazustudios.socialengine.rt.SimpleDelegateResource;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import jetbrains.exodus.ArrayByteIterable;
 import jetbrains.exodus.ByteIterable;
@@ -14,10 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
-class XodusResource implements Resource {
+class XodusResource extends SimpleDelegateResource {
 
     private static final Logger logger = LoggerFactory.getLogger(XodusResource.class);
 
@@ -25,84 +21,16 @@ class XodusResource implements Resource {
 
     private final XodusCacheStorage xodusCacheStorage;
 
-    private final Resource delegate;
-
     private final XodusCacheKey xodusCacheKey;
 
     XodusResource(final Resource delegate, final XodusCacheStorage xodusCacheStorage) {
-        this.delegate = delegate;
+        super(delegate);
         this.xodusCacheStorage = xodusCacheStorage;
         this.xodusCacheKey = new XodusCacheKey(delegate.getId());
     }
 
-    @Override
-    public ResourceId getId() {
-        return delegate.getId();
-    }
-
     public XodusCacheKey getXodusCacheKey() {
         return xodusCacheKey;
-    }
-
-    public Resource getDelegate() {
-        return delegate;
-    }
-
-    @Override
-    public MethodDispatcher getMethodDispatcher(String name) {
-        return delegate.getMethodDispatcher(name);
-    }
-
-    @Override
-    public void resumeFromNetwork(TaskId taskId, Object result) {
-        delegate.resumeFromNetwork(taskId, result);
-    }
-
-    @Override
-    public void resumeWithError(TaskId taskId, Throwable throwable) {
-        delegate.resumeWithError(taskId, throwable);
-    }
-
-    @Override
-    public void resumeFromScheduler(TaskId taskId, double elapsedTime) {
-        delegate.resumeFromScheduler(taskId, elapsedTime);
-    }
-
-    @Override
-    public boolean isPersistentState() {
-        return delegate.isPersistentState();
-    }
-
-    @Override
-    public void serialize(OutputStream os) throws IOException {
-        delegate.serialize(os);
-    }
-
-    @Override
-    public void deserialize(InputStream is) throws IOException {
-        delegate.deserialize(is);
-    }
-
-    @Override
-    public void setVerbose(boolean verbose) {
-        delegate.setVerbose(verbose);
-    }
-
-    @Override
-    public boolean isVerbose() {
-        return delegate.isVerbose();
-    }
-
-    @Override
-    public String toString() {
-        return "XodusResource{" +
-                "delegate=" + delegate +
-                '}';
-    }
-
-    @Override
-    public void close() {
-        throw new UnsupportedOperationException("Cannot close managed XodusResource");
     }
 
     public XodusResource acquire() {
@@ -114,7 +42,7 @@ class XodusResource implements Resource {
 
         acquires--;
 
-        if (acquires <= 0 && delegate.isPersistentState()) {
+        if (acquires <= 0 && getDelegate().isPersistentState()) {
             if (acquires < 0) logger.error("Unbalanced release/acquire for resource {}", getId());
             persist(txn, resources);
         } else {
@@ -128,7 +56,7 @@ class XodusResource implements Resource {
         final ByteArrayOutputStream bos;
 
         try (final ByteArrayOutputStream b = bos = new ByteArrayOutputStream()) {
-            delegate.serialize(b);
+            getDelegate().serialize(b);
         } catch (IOException e) {
             throw new InternalException("IOException Opening Byte Stream", e);
         }
@@ -150,6 +78,15 @@ class XodusResource implements Resource {
             logger.error("Resource ID conflict () ({} <-> {})", getId(), this, existing);
         }
 
+    }
+
+    @Override
+    public String toString() {
+        return "XodusResource{" +
+                "acquires=" + acquires +
+                ", xodusCacheStorage=" + xodusCacheStorage +
+                ", xodusCacheKey=" + xodusCacheKey +
+                "} " + super.toString();
     }
 
 }
