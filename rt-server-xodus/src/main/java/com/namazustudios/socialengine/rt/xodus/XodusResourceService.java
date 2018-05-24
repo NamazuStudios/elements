@@ -14,7 +14,6 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.util.Spliterator.CONCURRENT;
@@ -34,17 +33,22 @@ public class XodusResourceService implements ResourceService {
     private static final Logger logger = LoggerFactory.getLogger(XodusResourceService.class);
 
     /**
-     * The name of the {@link Store} for {@link Resource} entries.
+     * The name of the {@link Store} for storing the persistent data associated with {@link Resource} entries.  Since
+     * {@link Resource} instances may not be capable of storage this store may not be a complete collection of all
+     * {@link Resource} instances in the system.
      */
     public static final String STORE_RESOURCES = "resources";
 
     /**
-     * The name of the {@link Store} for {@link Path} entries.
+     * The name of the {@link Store} for {@link Path} entries.  This links {@link Path} to {@link ResourceId} instances
+     * and represents a comprehensive list of all {@link Path}s tracked by this {@link ResourceService}.
      */
     public static final String STORE_PATHS = "paths";
 
     /**
-     * The name of the {@link Store} for reverse {@link Path} entries.
+     * The name of the {@link Store} for reverse {@link Path} entries. This links {@link ResourceId} instances to many
+     * {@link Path} instances and represents a comprehensive list of all {@link ResourceId}s tracked by this
+     * {@link ResourceService}.
      */
     public static final String STORE_PATHS_REVERSE = "paths_reverse";
 
@@ -77,20 +81,18 @@ public class XodusResourceService implements ResourceService {
 
     private XodusResource doGetAndAcquireResource(final Transaction txn, final ByteIterable key) {
 
-        final Store resources = openResources(txn);
+        final Store reverse = openReversePaths(txn);
         final XodusCacheStorage xodusCacheStorage = getStorage();
 
-        final ByteIterable value = resources.get(txn, key);
+        final ByteIterable value = reverse.get(txn, key);
 
+        // Check that there is at least one path pointing to the resource id.  If there is, then we can  deal with
+        // either fetching the resource from memory of from the persistent storage of resources on disk.
         if (value == null) {
             return null;
         }
 
         final XodusCacheKey xodusCacheKey = new XodusCacheKey(key);
-
-        // Acquiring a monitor shouldn't be necessary here but this is just to prevent memory corruption in case
-        // somebody is improperly using service.  The lock below is not necessary becuase the instance will be
-        // acquired fresh and the transactional semantics of the service should prevent
 
         try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(xodusCacheKey.getResourceId())) {
             return xodusCacheStorage.getResourceIdResourceMap().computeIfAbsent(xodusCacheKey, k -> {
@@ -149,16 +151,16 @@ public class XodusResourceService implements ResourceService {
             throw new IllegalArgumentException("Cannot add resources with wildcard path.");
         }
 
-
-
         getEnvironment().executeInTransaction(txn -> {
 
+            final Store paths = openPaths(txn);
+            final Store resources = openResources(txn);
             final ByteIterable pathKey = stringToEntry(path.toNormalizedPathString());
             final ByteIterable resourceIdKey = stringToEntry(resource.getId().asString());
             final XodusResource xodusResource = new XodusResource(resource, getStorage());
 
-            doLink(txn, resourceIdKey, pathKey);
-            doReleaseResource(txn, xodusResource);
+            doLink(txn, paths, resourceIdKey, pathKey);
+            doReleaseResource(txn, resources, xodusResource);
 
         });
 
@@ -174,9 +176,10 @@ public class XodusResourceService implements ResourceService {
         }
 
         final XodusResource xodusResource =  getEnvironment().computeInTransaction(txn -> {
+            final Store paths = openPaths(txn);
             final ByteIterable pathKey = stringToEntry(path.toNormalizedPathString());
             final ByteIterable resourceIdKey = stringToEntry(resource.getId().asString());
-            doLink(txn, resourceIdKey, pathKey);
+            doLink(txn, paths, resourceIdKey, pathKey);
             return new XodusResource(resource, getStorage());
         });
 
@@ -188,28 +191,30 @@ public class XodusResourceService implements ResourceService {
 
     @Override
     public void release(final Resource resource) {
+
         checkOpen();
+
         final XodusResource xodusResource = checkXodusResource(resource);
-        getEnvironment().executeInTransaction(t -> doReleaseResource(t, xodusResource));
+
+        getEnvironment().executeInTransaction(txn -> {
+
+            final Store resources = openResources(txn);
+            final ByteIterable key = xodusResource.getXodusCacheKey().getKey();
+
+            if (resources.get(txn, key) == null) {
+                throw new ResourceNotFoundException("Resource not part of this ResourceService " + xodusResource.getId());
+            }
+
+            doReleaseResource(txn, resources, xodusResource);
+
+        });
+
     }
 
-    private void doReleaseResource(final Transaction txn, final XodusResource xodusResource) {
-
-        final Store resources = getEnvironment().openStore(STORE_RESOURCES, WITHOUT_DUPLICATES, txn);
-
-        final ByteIterable key = xodusResource.getXodusCacheKey().getKey();
-
-        if (resources.get(txn, key) == null) {
-            throw new ResourceNotFoundException("Resource not part of this ResourceService " + xodusResource.getId());
-        }
-
-        // This locking of the Resource should not be necessary.  However this is a failsafe to prevent unexpected
-        // modifications.
-
+    private void doReleaseResource(final Transaction txn, final Store resources, final XodusResource xodusResource) {
         try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(xodusResource.getId())) {
             xodusResource.release(txn, resources);
         }
-
     }
 
     @Override
@@ -294,26 +299,27 @@ public class XodusResourceService implements ResourceService {
         final ByteIterable resourceIdKey = stringToEntry(sourceResourceId.asString());
         final ByteIterable destinationKey = stringToEntry(destination.toNormalizedPathString());
 
-        getEnvironment().executeInTransaction(txn -> doLink(txn, resourceIdKey, destinationKey));
+        getEnvironment().executeInTransaction(txn -> {
+
+            final Store paths = openPaths(txn);
+            final ByteIterable existing = paths.get(txn, destinationKey);
+
+            if (existing != null) {
+                final String existingResourceId = entryToString(resourceIdKey);
+                throw new DuplicateException("Resource with id " + existingResourceId + " already exists at path " + destination);
+            }
+
+            doLink(txn, paths, resourceIdKey, destinationKey);
+
+        });
 
     }
 
-    private void doLink(final Transaction txn, final ByteIterable resourceIdKey, final ByteIterable destinationKey) {
-
-        final Store paths = openPaths(txn);
+    private void doLink(final Transaction txn, final Store paths,
+                        final ByteIterable resourceIdKey, final ByteIterable destinationKey) {
         final Store reverse = openReversePaths(txn);
-
-        final ByteIterable existing = paths.get(txn, destinationKey);
-
-        if (existing != null) {
-            final String destination = entryToString(destinationKey);
-            final String existingResourceId = entryToString(resourceIdKey);
-            throw new DuplicateException("Resource with id " + existingResourceId + " already exists at path " + destination);
-        }
-
-        paths.put(txn, resourceIdKey, destinationKey);
-        reverse.put(txn, destinationKey, resourceIdKey);
-
+        paths.put(txn, destinationKey, resourceIdKey);
+        reverse.put(txn, resourceIdKey, destinationKey);
     }
 
     @Override
@@ -381,43 +387,7 @@ public class XodusResourceService implements ResourceService {
 
         final ByteIterable resourceIdKey = stringToEntry(resourceId.asString());
 
-        getEnvironment().executeInTransaction(txn -> {
-
-            final Store resources = openResources(txn);
-            final Store paths = openResources(txn);
-            final Store reverse = openReversePaths(txn);
-
-            if (!resources.delete(txn, resourceIdKey)) {
-                throw new ResourceNotFoundException("No resource with id " + resourceId);
-            }
-
-            try (final Cursor cursor = reverse.openCursor(txn)) {
-
-                ByteIterable pathKey = cursor.getSearchKey(resourceIdKey);
-
-                while (pathKey != null) {
-
-                    if (!paths.delete(txn, pathKey)) {
-                        final String path = entryToString(pathKey);
-                        logger.error("Consistency error.  Path mapping broken {} -> {}", path, resourceId);
-                    }
-
-                    if (!cursor.deleteCurrent()) {
-                        final String path = entryToString(pathKey);
-                        logger.error("Consistency error.  Reverse mapping broken {} -> {}", path, resourceId);
-                    }
-
-                    if(cursor.getNextDup()) {
-                        pathKey = cursor.getValue();
-                    } else {
-                        break;
-                    }
-
-                }
-
-            }
-
-        });
+        getEnvironment().executeInTransaction(txn -> doRemoveResource(txn, resourceIdKey));
 
         try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
             final XodusCacheKey cacheKey = new XodusCacheKey(resourceId);
@@ -426,6 +396,53 @@ public class XodusResourceService implements ResourceService {
             resource.close();
             return resource;
         }
+
+    }
+
+    private void doRemoveResource(final Transaction txn, final ByteIterable resourceIdKey) {
+        final Store paths = openPaths(txn);
+        final Store reverse = openReversePaths(txn);
+        final Store resources = openResources(txn);
+        doRemoveResource(txn, resourceIdKey, paths, reverse, resources);
+    }
+
+    private void doRemoveResource(final Transaction txn,
+                                  final ByteIterable resourceIdKey,
+                                  final Store paths, final Store reverse, final Store resources) {
+
+        try (final Cursor cursor = reverse.openCursor(txn)) {
+
+            ByteIterable pathKey = cursor.getSearchKey(resourceIdKey);
+            if (pathKey == null) {
+                final String resourceId = entryToString(resourceIdKey);
+                throw new ResourceNotFoundException("No resource with id " + resourceId);
+            }
+
+            while (pathKey != null) {
+
+                if (!paths.delete(txn, pathKey)) {
+                    final String path = entryToString(pathKey);
+                    final String resourceId = entryToString(resourceIdKey);
+                    logger.error("Consistency error.  Path mapping broken {} -> {}", path, resourceId);
+                }
+
+                if (!cursor.deleteCurrent()) {
+                    final String path = entryToString(pathKey);
+                    final String resourceId = entryToString(resourceIdKey);
+                    logger.error("Consistency error.  Reverse mapping broken {} -> {}", path, resourceId);
+                }
+
+                if(cursor.getNextDup()) {
+                    pathKey = cursor.getValue();
+                } else {
+                    break;
+                }
+
+            }
+
+        }
+
+        resources.delete(txn, resourceIdKey);
 
     }
 
@@ -460,22 +477,52 @@ public class XodusResourceService implements ResourceService {
     public void close() {
 
         final List<Stream<XodusResource>> streams = new ArrayList<>();
+        final AtomicReference<Boolean> cancel = new AtomicReference<>();
 
         xodusCacheStorageAtomicReference.getAndAccumulate(null, (e, u) -> {
-            if (e != null) streams.add(e.getResourceIdResourceMap().values().stream());
+
+            if (e == null) {
+                cancel.set(true);
+            } else {
+                streams.add(e.getResourceIdResourceMap().values().stream());
+            }
+
             return u;
+
         });
+
+        if (cancel.get()) {
+            // Somebody else attempted to close this service.
+            return;
+        }
 
         getEnvironment().executeInExclusiveTransaction(txn -> {
 
-            final Store store = openResources(txn);
+            // This is very critical that closing tries to force everything
+
+            final Store paths = openPaths(txn);
+            final Store reverse = openReversePaths(txn);
+            final Store resources = openResources(txn);
 
             streams.stream().flatMap(identity()).distinct().forEach(xr -> {
+
                 try {
-                    xr.persist(txn, store);
+                    xr.persist(txn, resources);
                 } catch (Exception ex) {
-                    logger.error("Caught exception persisting resource {}.", xr.getId(), ex);
+                    try {
+                        logger.error("Caught exception persisting resource {}  Destroying..", xr.getId(), ex);
+                        doRemoveResource(txn, xr.getXodusCacheKey().getKey(), paths, reverse, resources);
+                    } catch (Exception _ex) {
+                        logger.error("Caught exception destroying resource {}.", xr.getId(), _ex);
+                    }
                 }
+
+                try {
+                    xr.close();
+                } catch (Exception ex) {
+                    logger.error("Caught exception closing Resource {}", xr.getId(), ex);
+                }
+
             });
 
         });

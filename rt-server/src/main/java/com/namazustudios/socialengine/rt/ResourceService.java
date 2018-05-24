@@ -103,7 +103,8 @@ public interface ResourceService extends AutoCloseable {
      * on the {@link Resource} is considered undefined behavior because this call may invoke {@link Resource#close()}.
      *
      * This does not guarantee that the {@link Resource} will be serialized.  It does however, make it a candidate
-     * for serialization as soon as possible.
+     * for serialization as soon as possible.  Usually when all other processes operating against the {@link Resource}
+     * release their implementation.
      *
      * The default implementation of this does nothing as in-memory implementations do not need to implement this.  If
      * the {@link Resource} is not managed by this {@link ResourceService} then the behavior of this call is undefined.

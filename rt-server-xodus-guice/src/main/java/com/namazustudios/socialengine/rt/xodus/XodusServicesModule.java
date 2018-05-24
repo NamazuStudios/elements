@@ -35,12 +35,6 @@ public class XodusServicesModule extends PrivateModule {
         bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
         bind(ResourceService.class).to(XodusResourceService.class).asEagerSingleton();
 
-        bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>() {})
-                .toProvider(() -> new ProxyLockService<>(Deque.class));
-
-        bind(new TypeLiteral<OptimisticLockService<ResourceId>>() {})
-                .to(SimpleResourceIdOptimisticLockService.class);
-
         bind(ScheduledExecutorService.class)
                 .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE))
                 .toProvider(ScheduledExecutorServiceProvider.class);

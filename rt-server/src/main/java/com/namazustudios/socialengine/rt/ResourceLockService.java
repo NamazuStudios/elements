@@ -6,8 +6,9 @@ import com.namazustudios.socialengine.rt.exception.DuplicateException;
 import java.util.concurrent.locks.Lock;
 
 /**
- * Manages {@link Lock} instances for {@link Resource} instances.  This is necessary because a single {@link Resource}
- * may be exist in more than one instance as they can be persisted to disk.
+ * Manages {@link Lock} instances for {@link Resource} instances.  Generally before manipulating a {@link Resource},
+ * either direcly or through its {@link ResourceService} methods, it is necessary to acquire a {@link Lock} against
+ * the {@link Resource}.  Note that this exists because a {@link Lock} may exist
  *
  * Created by patricktwohig on 4/11/17.
  */

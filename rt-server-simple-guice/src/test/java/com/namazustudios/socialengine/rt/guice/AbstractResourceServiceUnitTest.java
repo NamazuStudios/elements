@@ -18,6 +18,7 @@ import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.AssertJUnit.fail;
@@ -47,7 +48,7 @@ public abstract class AbstractResourceServiceUnitTest {
     public void testAdd(final ResourceId resourceId, final Path path) {
 
         final Resource resource = Mockito.mock(Resource.class);
-        Mockito.when(resource.getId()).thenReturn(resourceId);
+        when(resource.getId()).thenReturn(resourceId);
 
         getResourceService().addAndReleaseResource(path, resource);
         intermediates.add(new Object[]{resourceId, path, resource});
@@ -205,7 +206,7 @@ public abstract class AbstractResourceServiceUnitTest {
     public void testDeleteWithPaths() {
         final ResourceId resourceId = new ResourceId();
         final Resource resource = Mockito.mock(Resource.class);
-        Mockito.when(resource.getId()).thenReturn(resourceId);
+        when(resource.getId()).thenReturn(resourceId);
 
         final Path path = new Path(randomUUID().toString());
         getResourceService().addAndReleaseResource(path, resource);
