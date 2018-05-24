@@ -14,11 +14,13 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.util.Spliterator.CONCURRENT;
 import static java.util.Spliterator.IMMUTABLE;
 import static java.util.Spliterator.NONNULL;
+import static java.util.function.Function.identity;
 import static jetbrains.exodus.bindings.StringBinding.entryToString;
 import static jetbrains.exodus.bindings.StringBinding.stringToEntry;
 import static jetbrains.exodus.env.StoreConfig.WITHOUT_DUPLICATES;
@@ -464,6 +466,19 @@ public class XodusResourceService implements ResourceService {
             return u;
         });
 
+        getEnvironment().executeInExclusiveTransaction(txn -> {
+
+            final Store store = openResources(txn);
+
+            streams.stream().flatMap(identity()).distinct().forEach(xr -> {
+                try {
+                    xr.persist(txn, store);
+                } catch (Exception ex) {
+                    logger.error("Caught exception persisting resource {}.", xr.getId(), ex);
+                }
+            });
+
+        });
 
     }
 

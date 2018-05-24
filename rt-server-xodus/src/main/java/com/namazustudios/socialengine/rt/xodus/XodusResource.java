@@ -110,7 +110,7 @@ class XodusResource implements Resource {
         return this;
     }
 
-    public void release(final Transaction txn, Store resources) {
+    public void release(final Transaction txn, final Store resources) {
 
         acquires--;
 
@@ -123,7 +123,7 @@ class XodusResource implements Resource {
 
     }
 
-    private void persist(final Transaction txn, final Store resources) {
+    public void persist(final Transaction txn, final Store resources) {
 
         final ByteArrayOutputStream bos;
 
@@ -139,7 +139,7 @@ class XodusResource implements Resource {
 
     }
 
-    private void cache() {
+    public void cache() {
 
         // The resource cannot be persisted at this time as part of lazy persistence.  The resource must be
         // stored in memory until it is ready for persistence.

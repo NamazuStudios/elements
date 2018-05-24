@@ -80,13 +80,25 @@ public class SimpleScheduler implements Scheduler {
                                               final Function<Resource, T> operation,
                                               final Consumer<Throwable> failure) {
         return () -> {
+
+            final Resource resource;
+
             try {
-                final Resource resource = getResourceService().getAndAcquireResourceAtPath(path);
-                return performProtected(resource, operation);
-            } catch (Throwable th) {
-                failure.accept(th);
-                throw th;
+                resource = getResourceService().getAndAcquireResourceAtPath(path);
+            } catch (Exception ex) {
+                failure.accept(ex);
+                throw ex;
             }
+
+            try {
+                return performProtected(resource, operation);
+            } catch (Exception ex) {
+                failure.accept(ex);
+                throw ex;
+            } finally {
+                getResourceService().release(resource);
+            }
+
         };
     }
 
