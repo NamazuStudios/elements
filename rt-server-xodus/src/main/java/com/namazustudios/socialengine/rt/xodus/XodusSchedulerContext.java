@@ -12,7 +12,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.Math.max;
 import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static jetbrains.exodus.env.StoreConfig.WITH_DUPLICATES_WITH_PREFIXING;
 
 public class XodusSchedulerContext implements SchedulerContext {
@@ -52,7 +54,10 @@ public class XodusSchedulerContext implements SchedulerContext {
     }
 
     private void schedule(final long now, final XodusScheduledTask xodusScheduledTask) {
-        //TODO Restore scheduled tasks.
+        final long delay = max(0, xodusScheduledTask.getWhen() - now);
+        final ResourceId resourceId = xodusScheduledTask.getResourceId();
+        final TaskId taskId = xodusScheduledTask.getTaskId();
+        getSimpleSchedulerContext().resumeTaskAfterDelay(resourceId, delay, MILLISECONDS, taskId);
     }
 
     @Override

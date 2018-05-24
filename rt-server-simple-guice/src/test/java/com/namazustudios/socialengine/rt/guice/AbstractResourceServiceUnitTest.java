@@ -1,0 +1,227 @@
+package com.namazustudios.socialengine.rt.guice;
+
+import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.ResourceService;
+import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import org.mockito.Mockito;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
+
+import static java.util.Arrays.asList;
+import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.AssertJUnit.fail;
+
+public abstract class AbstractResourceServiceUnitTest {
+
+    private final List<Object[]> intermediates = new ArrayList<>();
+
+    private final List<Object[]> linkedIntermediates = new ArrayList<>();
+
+    @DataProvider
+    public static Object[][] initialDataProvider() {
+
+        final List<Object[]> testData = new ArrayList<>();
+
+        for (int i = 0; i < 100; ++i) {
+            final ResourceId resourceId = new ResourceId();
+            final Path path = new Path(asList("test", randomUUID().toString()));
+            testData.add(new Object[]{resourceId, path});
+        }
+
+        return testData.toArray(new Object[][]{});
+
+    }
+
+    @Test(dataProvider = "initialDataProvider")
+    public void testAdd(final ResourceId resourceId, final Path path) {
+
+        final Resource resource = Mockito.mock(Resource.class);
+        Mockito.when(resource.getId()).thenReturn(resourceId);
+
+        getResourceService().addAndReleaseResource(path, resource);
+        intermediates.add(new Object[]{resourceId, path, resource});
+
+    }
+
+    @DataProvider(parallel = true)
+    public Object[][] intermediateDataProvider() {
+        return intermediates.toArray(new Object[][]{});
+    }
+
+    @Test(dependsOnMethods = "testAdd")
+    public void testList() {
+
+        final Path path = new Path(asList("test", "*"));
+
+        final Set<ResourceId> expectedResourceIdList = intermediates.stream()
+            .map(a -> (ResourceId) a[0])
+            .collect(toSet());
+
+        final Set<Path> expectedPathList = intermediates.stream()
+                .map(a -> (Path) a[1])
+                .collect(toSet());
+
+        final Set<ResourceId> resourceIdList = getResourceService().listStream(path)
+            .map(l -> l.getResourceId())
+            .collect(toSet());
+
+        final Set<Path> pathList = getResourceService().listStream(path)
+                .map(l -> l.getPath())
+                .collect(toSet());
+
+        assertEquals(resourceIdList, expectedResourceIdList);
+        assertEquals(pathList, expectedPathList);
+
+    }
+
+    @Test(dependsOnMethods = "testAdd")
+    public void testListParallel() {
+
+        final Path path = new Path(asList("test", "*"));
+
+        final Set<ResourceId> expectedResourceIdList = intermediates.stream()
+                .map(a -> (ResourceId) a[0])
+                .collect(toSet());
+
+        final Set<Path> expectedPathList = intermediates.stream()
+                .map(a -> (Path) a[1])
+                .collect(toSet());
+
+        final Set<ResourceId> resourceIdList = getResourceService().listParallelStream(path)
+                .map(l -> l.getResourceId())
+                .collect(toSet());
+
+        final Set<Path> pathList = getResourceService().listParallelStream(path)
+                .map(l -> l.getPath())
+                .collect(toSet());
+
+        assertEquals(resourceIdList, expectedResourceIdList);
+        assertEquals(pathList, expectedPathList);
+
+    }
+
+    @Test(dependsOnMethods = "testAdd", dataProvider = "intermediateDataProvider")
+    public void testGetResource(final ResourceId resourceId, final Path path, final Resource resource) {
+        assertEquals(getResourceService().getAndAcquireResourceWithId(resourceId), resource);
+    }
+
+    @Test(dependsOnMethods = "testAdd", dataProvider = "intermediateDataProvider")
+    public void testGetResourceAtPath(final ResourceId resourceId, final Path path, final Resource resource) {
+        assertEquals(getResourceService().getAndAcquireResourceAtPath(path), resource);
+    }
+
+    @Test(dataProvider = "initialDataProvider", expectedExceptions = ResourceNotFoundException.class)
+    public void testGetResourceFail(final ResourceId resourceId, final Path path) {
+        getResourceService().getAndAcquireResourceWithId(resourceId);
+    }
+
+    @Test(dataProvider = "initialDataProvider", expectedExceptions = ResourceNotFoundException.class)
+    public void testGetResourceAtPathFail(final ResourceId resourceId, final Path path) {
+        getResourceService().getAndAcquireResourceAtPath(path);
+    }
+
+    @Test(dependsOnMethods = {"testAdd", "testGetResource", "testGetResourceAtPath"}, dataProvider = "intermediateDataProvider")
+    public void testLink(final ResourceId resourceId, final Path path, final Resource resource) {
+        final Path alias = new Path(asList("test_alias", randomUUID().toString()));
+        getResourceService().link(resourceId, alias);
+        linkedIntermediates.add(new Object[]{resourceId, alias, resource});
+    }
+
+    @Test(dependsOnMethods = {"testAdd", "testGetResource", "testGetResourceAtPath"}, dataProvider = "intermediateDataProvider")
+    public void testLinkPath(final ResourceId resourceId, final Path path, final Resource resource) {
+        final Path alias = new Path(asList("test_alias", randomUUID().toString()));
+        getResourceService().linkPath(path, alias);
+        linkedIntermediates.add(new Object[]{resourceId, alias, resource});
+    }
+
+    @DataProvider(parallel = true)
+    public Object[][] linkedIntermediateProvider() {
+        return linkedIntermediates.toArray(new Object[][]{});
+    }
+
+    @Test(dependsOnMethods = {"testLink", "testLinkPath"}, dataProvider = "linkedIntermediateProvider")
+    public void testGetByAlias(final ResourceId resourceId, final Path path, final Resource resource) {
+        assertEquals(getResourceService().getAndAcquireResourceAtPath(path), resource);
+    }
+
+    @Test(dependsOnMethods = {"testGetByAlias"}, dataProvider = "linkedIntermediateProvider", expectedExceptions = ResourceNotFoundException.class)
+    public void testUnlink(final ResourceId resourceId, final Path path, final Resource resource) {
+
+        final ResourceService.Unlink unlink;
+        unlink = getResourceService().unlinkPath(path, removed -> fail("Did not expect resource removal."));
+
+        assertEquals(resourceId, unlink.getResourceId(), "Unlink mismatch");
+        assertFalse(unlink.isRemoved(), "Resource should not have been removed.");
+
+        assertEquals(getResourceService().getAndAcquireResourceWithId(resourceId), resource);
+        getResourceService().getAndAcquireResourceAtPath(path);
+    }
+
+    @Test(dependsOnMethods = {"testUnlink"}, dataProvider = "intermediateDataProvider")
+    public void testRemove(final ResourceId resourceId, final Path path, final Resource resource) {
+
+        getResourceService().removeResource(resourceId);
+
+        try {
+            getResourceService().getAndAcquireResourceWithId(resourceId);
+            fail("Resource still exists");
+        } catch (ResourceNotFoundException ex) {
+            // Pass Test
+        }
+
+        try {
+            getResourceService().getAndAcquireResourceAtPath(path);
+            fail("Resource still exists");
+        } catch (ResourceNotFoundException ex) {
+            // Pass Test
+        }
+
+    }
+
+    @Test(dependsOnMethods = {"testRemove"}, dataProvider = "intermediateDataProvider", expectedExceptions = ResourceNotFoundException.class)
+    public void testDoubleRemove(final ResourceId resourceId, final Path path, final Resource resource) {
+        getResourceService().removeResource(resourceId);
+    }
+
+    @Test(dependsOnMethods = "testDoubleRemove")
+    public void testAllPathsUnlinked() {
+        final Stream<ResourceService.Listing> listingStream = getResourceService().listStream(new Path("*"));
+        final List<ResourceService.Listing> listingList = listingStream.collect(toList());
+        assertEquals(listingList.size(), 0);
+    }
+
+    @Test
+    public void testDeleteWithPaths() {
+        final ResourceId resourceId = new ResourceId();
+        final Resource resource = Mockito.mock(Resource.class);
+        Mockito.when(resource.getId()).thenReturn(resourceId);
+
+        final Path path = new Path(randomUUID().toString());
+        getResourceService().addAndReleaseResource(path, resource);
+
+        final Path a = new Path(path, Path.fromComponents("a"));
+        final Path b = new Path(path, Path.fromComponents("b"));
+        getResourceService().link(resourceId, a);
+        getResourceService().link(resourceId, b);
+
+        getResourceService().destroy(resourceId);
+
+        final Stream<ResourceService.Listing> listingStream = getResourceService().listStream(new Path("*"));
+        final List<ResourceService.Listing> listingList = listingStream.collect(toList());
+        assertEquals(listingList.size(), 0);
+
+    }
+
+    public abstract ResourceService getResourceService();
+}
