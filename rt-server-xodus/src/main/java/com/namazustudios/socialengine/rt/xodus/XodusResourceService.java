@@ -157,7 +157,7 @@ public class XodusResourceService implements ResourceService {
             final Store resources = openResources(txn);
             final ByteIterable pathKey = stringToEntry(path.toNormalizedPathString());
             final ByteIterable resourceIdKey = stringToEntry(resource.getId().asString());
-            final XodusResource xodusResource = new XodusResource(resource, getStorage());
+            final XodusResource xodusResource = new XodusResource(resource, getStorage()).acquire();
 
             doLink(txn, paths, resourceIdKey, pathKey);
             doReleaseResource(txn, resources, xodusResource);
@@ -198,13 +198,14 @@ public class XodusResourceService implements ResourceService {
 
         getEnvironment().executeInTransaction(txn -> {
 
-            final Store resources = openResources(txn);
+            final Store reverse = openReversePaths(txn);
             final ByteIterable key = xodusResource.getXodusCacheKey().getKey();
 
-            if (resources.get(txn, key) == null) {
+            if (reverse.get(txn, key) == null) {
                 throw new ResourceNotFoundException("Resource not part of this ResourceService " + xodusResource.getId());
             }
 
+            final Store resources = openResources(txn);
             doReleaseResource(txn, resources, xodusResource);
 
         });
@@ -251,6 +252,9 @@ public class XodusResourceService implements ResourceService {
             }
 
             private void nextBatch() {
+
+                if (next == null) return;
+
                 getEnvironment().executeInReadonlyTransaction(txn -> {
 
                     final Store store = openPaths(txn);
@@ -261,6 +265,9 @@ public class XodusResourceService implements ResourceService {
                         ByteIterable value = cursor.getSearchKeyRange(key);
 
                         for (int i = 0; i < LIST_BATCH_SIZE && value != null; ++i) {
+
+                            key = cursor.getKey();
+                            value = cursor.getValue();
 
                             final XodusListing xodusListing = new XodusListing(key, value);
 
@@ -274,12 +281,12 @@ public class XodusResourceService implements ResourceService {
                                 break;
                             }
 
-                            key = cursor.getKey();
-                            value = cursor.getValue();
-
                         }
 
+                        next = cursor.getNext() ? new Path(entryToString(cursor.getKey())) : null;
+
                     }
+
                 });
             }
 
@@ -320,6 +327,7 @@ public class XodusResourceService implements ResourceService {
         final Store reverse = openReversePaths(txn);
         paths.put(txn, destinationKey, resourceIdKey);
         reverse.put(txn, resourceIdKey, destinationKey);
+        logger.info("Linking {} -> {}", entryToString(resourceIdKey), entryToString(destinationKey));
     }
 
     @Override
@@ -333,6 +341,7 @@ public class XodusResourceService implements ResourceService {
 
             final Store paths = openPaths(txn);
             final Store reverse = openReversePaths(txn);
+            final Store resources = openResources(txn);
 
             final ByteIterable resourceIdValue = paths.get(txn, pathKey);
 
@@ -350,8 +359,16 @@ public class XodusResourceService implements ResourceService {
                 }
             }
 
+            final boolean removed;
             final ResourceId resourceId = new ResourceId(entryToString(resourceIdValue));
-            final boolean removed = reverse.get(txn, resourceIdValue) != null;
+
+            try (final Cursor cursor = reverse.openCursor(txn)) {
+                removed = cursor.getNextDup();
+            }
+
+            if (removed) {
+                resources.delete(txn, resourceIdValue);
+            }
 
             return new Unlink() {
                 @Override
