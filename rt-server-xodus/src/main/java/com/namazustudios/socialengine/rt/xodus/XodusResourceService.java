@@ -363,7 +363,8 @@ public class XodusResourceService implements ResourceService {
             final ResourceId resourceId = new ResourceId(entryToString(resourceIdValue));
 
             try (final Cursor cursor = reverse.openCursor(txn)) {
-                removed = cursor.getNextDup();
+                cursor.getSearchKey(pathKey);
+                removed = !cursor.getNextDup();
             }
 
             if (removed) {
