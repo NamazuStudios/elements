@@ -29,16 +29,16 @@ class XodusResource extends SimpleDelegateResource {
         this.xodusCacheKey = new XodusCacheKey(delegate.getId());
     }
 
-    public XodusCacheKey getXodusCacheKey() {
+    XodusCacheKey getXodusCacheKey() {
         return xodusCacheKey;
     }
 
-    public XodusResource acquire() {
+    XodusResource acquire() {
         acquires++;
         return this;
     }
 
-    public void release(final Transaction txn, final Store resources) {
+    void release(final Transaction txn, final Store resources) {
 
         acquires--;
 
@@ -51,23 +51,29 @@ class XodusResource extends SimpleDelegateResource {
 
     }
 
-    public void persist(final Transaction txn, final Store resources) {
+    void persist(final Transaction txn, final Store resources) {
 
         final ByteArrayOutputStream bos;
 
         try (final ByteArrayOutputStream b = bos = new ByteArrayOutputStream()) {
             getDelegate().serialize(b);
         } catch (IOException e) {
-            throw new InternalException("IOException Opening Byte Stream", e);
+            throw new InternalException("IOException Serializing Resource.", e);
         }
 
         final ByteIterable value = new ArrayByteIterable(bos.toByteArray());
         resources.put(txn, getXodusCacheKey().getKey(), value);
         xodusCacheStorage.getResourceIdResourceMap().remove(getXodusCacheKey());
 
+        try {
+            getDelegate().close();
+        } catch (Exception ex) {
+            logger.error("Caught exception closing internal resource.", ex);
+        }
+
     }
 
-    public void cache() {
+    void cache() {
 
         // The resource cannot be persisted at this time as part of lazy persistence.  The resource must be
         // stored in memory until it is ready for persistence.

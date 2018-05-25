@@ -84,14 +84,15 @@ public class XodusResourceService implements ResourceService {
         final Store reverse = openReversePaths(txn);
         final XodusCacheStorage xodusCacheStorage = getStorage();
 
-        final ByteIterable value = reverse.get(txn, key);
-
-        // Check that there is at least one path pointing to the resource id.  If there is, then we can  deal with
+        // Check that there is at least one path pointing to the resource id.  If there is, then we can deal with
         // either fetching the resource from memory of from the persistent storage of resources on disk.
-        if (value == null) {
+
+        if (reverse.get(txn, key) == null) {
             return null;
         }
 
+        final Store resources = openResources(txn);
+        final ByteIterable value = resources.get(txn, key);
         final XodusCacheKey xodusCacheKey = new XodusCacheKey(key);
 
         try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(xodusCacheKey.getResourceId())) {
@@ -570,6 +571,7 @@ public class XodusResourceService implements ResourceService {
         return resourceLoader;
     }
 
+    @Inject
     public void setResourceLoader(ResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
     }
