@@ -327,7 +327,6 @@ public class XodusResourceService implements ResourceService {
         final Store reverse = openReversePaths(txn);
         paths.put(txn, destinationKey, resourceIdKey);
         reverse.put(txn, resourceIdKey, destinationKey);
-        logger.info("Linking {} -> {}", entryToString(resourceIdKey), entryToString(destinationKey));
     }
 
     @Override
@@ -363,8 +362,7 @@ public class XodusResourceService implements ResourceService {
             final ResourceId resourceId = new ResourceId(entryToString(resourceIdValue));
 
             try (final Cursor cursor = reverse.openCursor(txn)) {
-                cursor.getSearchKey(pathKey);
-                removed = !cursor.getNextDup();
+                removed = cursor.getSearchKey(resourceIdValue) == null;
             }
 
             if (removed) {
@@ -388,9 +386,9 @@ public class XodusResourceService implements ResourceService {
         if (unlink.isRemoved()) {
             try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(unlink.getResourceId())) {
                 final XodusCacheStorage xodusCacheStorage = getStorage();
-                final XodusResource xodusResource;
-                xodusResource = xodusCacheStorage.getResourceIdResourceMap().remove(unlink.getResourceId());
-                if (xodusResource != null) reovedResourceConsumer.accept(xodusResource.getDelegate());
+                final XodusCacheKey cacheKey = new XodusCacheKey(unlink.getResourceId());
+                final XodusResource xodusResource = xodusCacheStorage.getResourceIdResourceMap().remove(cacheKey);
+                reovedResourceConsumer.accept(xodusResource == null ? DeadResource.getInstance() : xodusResource.getDelegate());
             }
         }
 
