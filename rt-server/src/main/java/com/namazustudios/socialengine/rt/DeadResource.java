@@ -4,6 +4,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+/**
+ * A singleton {@link Resource} implementation that just throws {@link IllegalStateException} for any method that's
+ * invoked (except {@link #close()} as per the {@link AutoCloseable} specification).  It is used as a placeholder in
+ * scenarios where a {@link Resource} may be returned or handed to a consumer specifically where it is meant to be
+ * closed.  It could also be used as a failsafe detect errors when a managed {@link Resource} has been closed.
+ */
 public class DeadResource implements Resource {
 
     private static DeadResource instance = new DeadResource();

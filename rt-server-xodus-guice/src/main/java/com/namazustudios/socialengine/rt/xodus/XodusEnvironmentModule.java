@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.xodus;
 import com.google.common.io.Files;
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.xodus.provider.EnvironmentProvider;
-import com.sun.tools.doclint.Env;
 import jetbrains.exodus.env.Environment;
 
 import java.io.File;

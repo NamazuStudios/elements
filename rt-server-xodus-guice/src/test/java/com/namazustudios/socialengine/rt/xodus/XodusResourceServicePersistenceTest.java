@@ -12,7 +12,6 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -95,7 +94,8 @@ public class XodusResourceServicePersistenceTest {
 
         final Resource removed = getResourceService().removeResource(originalId);
         assertEquals(removed, DeadResource.getInstance());
-        removed.close(); // Check that the returned resource behaves properly (never throws)
+        removed.close(); // Check that the returned resource behaves properly (never throws) which DeadResource should
+                         // not do for the closed type.
 
     }
 

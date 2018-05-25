@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.xodus.provider;
 
-import com.sun.tools.doclint.Env;
 import jetbrains.exodus.env.Environment;
 import jetbrains.exodus.env.Environments;
 import org.slf4j.Logger;
