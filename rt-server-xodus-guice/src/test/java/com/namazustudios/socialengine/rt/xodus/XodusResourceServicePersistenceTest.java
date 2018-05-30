@@ -159,9 +159,9 @@ public class XodusResourceServicePersistenceTest {
 
             });
 
+            install(new XodusEnvironmentModule().withTempEnvironments());
             bind(ResourceService.class).to(XodusResourceService.class);
             bind(ResourceLockService.class).to(SimpleResourceLockService.class);
-            bind(Environment.class).toProvider(() -> Environments.newInstance(Files.createTempDir()));
             bind(ResourceLoader.class).toInstance(mockResourceLoader);
 
         }
