@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -563,7 +564,7 @@ public class XodusResourceService implements ResourceService {
     }
 
     @Inject
-    public void setEnvironment(Environment environment) {
+    public void setEnvironment(@Named(XodusResourceContext.RESOURCE_ENVIRONMENT) Environment environment) {
         this.environment = environment;
     }
 

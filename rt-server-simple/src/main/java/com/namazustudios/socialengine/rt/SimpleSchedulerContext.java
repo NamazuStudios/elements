@@ -14,6 +14,11 @@ public class SimpleSchedulerContext implements SchedulerContext {
     private Scheduler scheduler;
 
     @Override
+    public void stop() {
+        getScheduler().shutdown();
+    }
+
+    @Override
     public void resumeTaskAfterDelay(final ResourceId resourceId,
                                      final long time, final TimeUnit timeUnit,
                                      final TaskId taskId) {

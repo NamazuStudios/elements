@@ -9,18 +9,18 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
-public class EnvironmentProvider implements Provider<Environment> {
+public class ResourceEnvironmentProvider implements Provider<Environment> {
 
-    private static final Logger logger = LoggerFactory.getLogger(EnvironmentProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(ResourceEnvironmentProvider.class);
 
-    public static final String ENVIRONMENT_PATH = "com.namazustudios.socialengine.rt.xodus.environment.path";
+    public static final String RESOURCE_ENVIRONMENT_PATH = "com.namazustudios.socialengine.rt.xodus.environment.path";
 
     private Provider<String> environmentPathProvider;
 
     @Override
     public Environment get() {
         final String path = getEnvironmentPathProvider().get();
-        logger.info("Opening Xodus environment at {}", path);
+        logger.info("Opening Xodus environment for Resources at {}", path);
         return Environments.newInstance(path);
     }
 
@@ -29,7 +29,7 @@ public class EnvironmentProvider implements Provider<Environment> {
     }
 
     @Inject
-    public void setEnvironmentPathProvider(@Named(ENVIRONMENT_PATH) Provider<String> environmentPathProvider) {
+    public void setEnvironmentPathProvider(@Named(RESOURCE_ENVIRONMENT_PATH) Provider<String> environmentPathProvider) {
         this.environmentPathProvider = environmentPathProvider;
     }
 

@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.appnode;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.appnode.guice.MultiNodeContainerModule;
-import com.namazustudios.socialengine.appnode.guice.SharedContextModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
@@ -34,16 +33,15 @@ public class ApplicationNodeMain {
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
         final Injector injector = Guice.createInjector(
-                new ConfigurationModule(defaultConfigurationSupplier),
-                new MongoCoreModule(),
-                new MongoDaoModule(),
-                new ValidationModule(),
-                new MongoSearchModule(),
-                new RTFilesystemGitLoaderModule(),
-                new SharedContextModule(),
-                new MultiNodeContainerModule(),
-                new FirebaseAppFactoryModule(),
-                new GuiceStandardNotificationFactoryModule()
+            new ConfigurationModule(defaultConfigurationSupplier),
+            new MongoCoreModule(),
+            new MongoDaoModule(),
+            new ValidationModule(),
+            new MongoSearchModule(),
+            new RTFilesystemGitLoaderModule(),
+            new MultiNodeContainerModule(),
+            new FirebaseAppFactoryModule(),
+            new GuiceStandardNotificationFactoryModule()
         );
 
         final Object lock = new Object();

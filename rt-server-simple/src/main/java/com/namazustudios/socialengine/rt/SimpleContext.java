@@ -24,24 +24,22 @@ public class SimpleContext implements Context {
 
     @Override
     public void start() {
-        getSchedulerContext().start();
         getResourceContext().start();
-        getHandlerContext().start();
+        getSchedulerContext().start();
         getIndexContext().start();
+        getHandlerContext().start();
     }
 
     @Override
     public void shutdown() {
 
         // Stops all contexts first
-        getSchedulerContext().stop();
-        getResourceContext().stop();
         getHandlerContext().stop();
         getIndexContext().stop();
+        getSchedulerContext().stop();
+        getResourceContext().stop();
 
         // Then stops all services
-        getScheduler().shutdown();
-        getResourceService().close();
         getResourceLoader().close();
         getAssetLoader().close();
 

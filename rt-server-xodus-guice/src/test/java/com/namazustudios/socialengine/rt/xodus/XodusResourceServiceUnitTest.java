@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.guice.AbstractResourceServiceUnitTest;
-import org.mockito.Mockito;
 import org.testng.annotations.Guice;
 
 import javax.inject.Inject;
@@ -32,7 +31,7 @@ public class XodusResourceServiceUnitTest extends AbstractResourceServiceUnitTes
         protected void configure() {
 
             install(new XodusServicesModule().withSchedulerThreads(1));
-            install(new XodusEnvironmentModule().withTempEnvironment());
+            install(new XodusEnvironmentModule().withTempEnvironments());
 
             final AssetLoader mockAssetLoader = mock(AssetLoader.class);
             bind(AssetLoader.class).toInstance(mockAssetLoader);

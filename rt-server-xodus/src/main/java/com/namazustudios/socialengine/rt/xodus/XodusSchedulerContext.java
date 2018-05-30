@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.max;
@@ -19,7 +20,9 @@ import static jetbrains.exodus.env.StoreConfig.WITH_DUPLICATES_WITH_PREFIXING;
 
 public class XodusSchedulerContext implements SchedulerContext {
 
-    public static final String STORE_TIMED = "scheduled";
+    public static final String STORE_TIMER = "scheduled";
+
+    public static final String SCHEDULER_ENVIRONMENT = "com.namazustudios.socialengine.rt.xodus.scheduler";
 
     private static final Logger logger = LoggerFactory.getLogger(XodusSchedulerContext.class);
 
@@ -51,6 +54,14 @@ public class XodusSchedulerContext implements SchedulerContext {
 
         });
 
+        getSimpleSchedulerContext().start();
+
+    }
+
+    @Override
+    public void stop() {
+        getSimpleSchedulerContext().stop();
+        getEnvironment().close();
     }
 
     private void schedule(final long now, final XodusScheduledTask xodusScheduledTask) {
@@ -97,7 +108,7 @@ public class XodusSchedulerContext implements SchedulerContext {
     }
 
     private Store openStore(final Transaction txn) {
-        return getEnvironment().openStore(STORE_TIMED, WITH_DUPLICATES_WITH_PREFIXING, txn);
+        return getEnvironment().openStore(STORE_TIMER, WITH_DUPLICATES_WITH_PREFIXING, txn);
     }
 
     public Environment getEnvironment() {
@@ -105,7 +116,7 @@ public class XodusSchedulerContext implements SchedulerContext {
     }
 
     @Inject
-    public void setEnvironment(Environment environment) {
+    public void setEnvironment(@Named(SCHEDULER_ENVIRONMENT) Environment environment) {
         this.environment = environment;
     }
 

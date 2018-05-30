@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.google.common.collect.Streams;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,6 +11,9 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
+
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
  * The simple handler server is responsible for dispatching requests and events to all {@link Resource} instances
@@ -36,7 +41,31 @@ public class SimpleScheduler implements Scheduler {
     private ScheduledExecutorService scheduledExecutorService;
 
     @Override
-    public void shutdown() {}
+    public void shutdown() {
+        try {
+
+            logger.info("Shutting down dispatcher threads.");
+            dispatcherExecutorService.shutdown();
+
+            logger.info("Shutting down scheduler threads.");
+            scheduledExecutorService.shutdownNow();
+
+            if (scheduledExecutorService.awaitTermination(5, MINUTES)) {
+                logger.info("Shut down scheduler threads.");
+            } else {
+                logger.error("Timed out shutting down scheduler threads.");
+            }
+
+            if (dispatcherExecutorService.awaitTermination(5, TimeUnit.MINUTES)) {
+                logger.info("Shut down dispatcher threads.");
+            } else {
+                logger.error("Timed out shutting down dispatcher threads.");
+            }
+
+        } catch (InterruptedException ex) {
+            throw new InternalException(ex);
+        }
+    }
 
     @Override
     public <T> Future<T> perform(final ResourceId resourceId,
