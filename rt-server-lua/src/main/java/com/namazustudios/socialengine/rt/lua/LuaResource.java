@@ -12,6 +12,7 @@ import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReasonBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstructionBuiltin;
 import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.SerialHeader;
 import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.jnlua.LuaState.REGISTRYINDEX;
@@ -54,7 +56,9 @@ public class LuaResource implements Resource {
 
     private final Map<TaskId, PendingTask> taskIdPendingTaskMap = new HashMap<>();
 
-    private final ResourceId resourceId = new ResourceId();
+    private ResourceId resourceId = new ResourceId();
+
+    private Attributes attributes = Attributes.emptyAttributes();
 
     private final LuaState luaState;
 
@@ -92,7 +96,7 @@ public class LuaResource implements Resource {
 
             this.luaState = luaState;
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
-            this.persistence = new Persistence(this::getLuaState, this::getScriptLog);
+            this.persistence = new Persistence(this, this::getScriptLog);
             this.builtinManager = new BuiltinManager(this::getLuaState, this::getScriptLog, persistence);
 
             openLibs();
@@ -159,6 +163,15 @@ public class LuaResource implements Resource {
     @Override
     public ResourceId getId() {
         return resourceId;
+    }
+
+    @Override
+    public Attributes getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(Attributes attributes) {
+        this.attributes = attributes;
     }
 
     /**
@@ -233,7 +246,10 @@ public class LuaResource implements Resource {
 
     @Override
     public void deserialize(InputStream is) throws IOException {
-        getPersistence().deserialize(is);
+        getPersistence().deserialize(is, sh -> {
+            resourceId = sh.getResourceId();
+            attributes = sh.getAttributes();
+        });
     }
 
     @Override

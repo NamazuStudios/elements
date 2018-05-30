@@ -29,6 +29,11 @@ public class SimpleDelegateResource implements Resource {
     }
 
     @Override
+    public Attributes getAttributes() {
+        return getDelegate().getAttributes();
+    }
+
+    @Override
     public MethodDispatcher getMethodDispatcher(String name) {
         return delegate.getMethodDispatcher(name);
     }

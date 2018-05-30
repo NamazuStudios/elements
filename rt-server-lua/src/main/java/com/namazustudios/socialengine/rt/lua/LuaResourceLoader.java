@@ -49,7 +49,7 @@ public class LuaResourceLoader implements ResourceLoader {
             final IocResolver iocResolver;
             iocResolver = new PersistenceAwareIocResolver(getIocResolverProvider().get(), luaResource.getPersistence());
 
-            luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(ATTRIBUTES_MODULE, Attributes.emptyAttributes()));
+            luaResource.getBuiltinManager().installBuiltin(new AttributesBuiltin(luaResource::getAttributes));
             luaResource.getBuiltinManager().installBuiltin(getClasspathBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getAssetLoaderBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());
@@ -78,13 +78,14 @@ public class LuaResourceLoader implements ResourceLoader {
                          final Object ... args) throws ModuleNotFoundException {
 
         final LuaResource luaResource = getLuaResourceProvider().get();
+        luaResource.setAttributes(attributes);
 
         try {
 
             final IocResolver iocResolver;
             iocResolver = new PersistenceAwareIocResolver(getIocResolverProvider().get(), luaResource.getPersistence());
 
-            luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(ATTRIBUTES_MODULE, attributes));
+            luaResource.getBuiltinManager().installBuiltin(new AttributesBuiltin(luaResource::getAttributes));
             luaResource.getBuiltinManager().installBuiltin(getClasspathBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getAssetLoaderBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());

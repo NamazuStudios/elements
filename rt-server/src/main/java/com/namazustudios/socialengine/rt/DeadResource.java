@@ -26,6 +26,11 @@ public class DeadResource implements Resource {
     }
 
     @Override
+    public Attributes getAttributes() {
+        throw new IllegalStateException("resource is closed");
+    }
+
+    @Override
     public MethodDispatcher getMethodDispatcher(String name) {
         throw new IllegalStateException("resource is closed");
     }

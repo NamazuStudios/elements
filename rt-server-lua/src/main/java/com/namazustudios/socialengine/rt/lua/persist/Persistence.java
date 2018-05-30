@@ -4,7 +4,9 @@ import com.google.common.collect.MapMaker;
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.jnlua.LuaState;
+import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.ResourceId;
 import com.namazustudios.socialengine.rt.exception.ResourcePersistenceException;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
@@ -13,6 +15,8 @@ import org.slf4j.Logger;
 import java.io.*;
 import java.lang.ref.WeakReference;
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static com.namazustudios.socialengine.jnlua.LuaState.JNLUA_OBJECT;
@@ -26,6 +30,10 @@ import static java.lang.String.format;
 public class Persistence {
 
     private static final int NULL_OBJ_IDX = -1;
+
+    private static final int RESOURCE_ID_IDX = -2;
+
+    private static final int ATTRIBUTES_IDX = -3;
 
     private static final byte[] SIGNATURE = new byte[]{ (byte)248, 'L', 'E', 'L', 'M', '\r', '\n' };
 
@@ -55,6 +63,8 @@ public class Persistence {
         throw new IllegalStateException("Cannot unpersist during persistence.");
     };
 
+    private final LuaResource luaResource;
+
     private final Supplier<Logger> loggerSupplier;
 
     private final Supplier<LuaState> luaStateSupplier;
@@ -63,10 +73,12 @@ public class Persistence {
 
     private final Map<Object, CustomPersistenceEntry> customPersistence = new MapMaker().weakKeys().makeMap();
 
-    public Persistence(final Supplier<LuaState> luaStateSupplier, final Supplier<Logger> loggerSupplier) {
+    public Persistence(final LuaResource luaResource,
+                       final Supplier<Logger> loggerSupplier) {
 
+        this.luaResource = luaResource;
         this.loggerSupplier = loggerSupplier;
-        this.luaStateSupplier = luaStateSupplier;
+        this.luaStateSupplier = luaResource::getLuaState;
 
         final LuaState luaState = luaStateSupplier.get();
 
@@ -114,7 +126,9 @@ public class Persistence {
         try (final ByteArrayOutputStream jObjectBos = new ByteArrayOutputStream();
              final ByteArrayOutputStream lObjectBos = new ByteArrayOutputStream()) {
 
-            final SerialObjectTable serialObjectTable = new SerialObjectTable();
+            final ResourceId resourceId = luaResource.getId();
+            final Attributes attributes = luaResource.getAttributes();
+            final SerialObjectTable serialObjectTable = new SerialObjectTable(resourceId, attributes);
 
             // Setup persistence with the lua state and the table.
             applySpecialPersistence(luaState, serialObjectTable);
@@ -212,10 +226,10 @@ public class Persistence {
     /**
      * Implementation for {@link Resource#deserialize(InputStream)}
      */
-    public void deserialize(final InputStream is) throws IOException {
+    public void deserialize(final InputStream is, final Consumer<SerialHeader> serialHeaderConsumer) throws IOException {
         try {
             final LuaState luaState = luaStateSupplier.get();
-            luaState.pushJavaFunction(l -> doDeserialize(l, is));
+            luaState.pushJavaFunction(l -> doDeserialize(l, is, serialHeaderConsumer));
             luaState.call(0, 0);
         } catch (LuaRuntimeException ex) {
             if (ex.getCause() instanceof UncheckedIOException) {
@@ -226,7 +240,9 @@ public class Persistence {
         }
     }
 
-    private int doDeserialize(final LuaState luaState, final InputStream is) {
+    private int doDeserialize(final LuaState luaState,
+                              final InputStream is,
+                              final Consumer<SerialHeader> serialHeaderConsumer) {
 
         final byte[] jObjectBytes;
         final byte[] lObjectBytes;
@@ -263,6 +279,7 @@ public class Persistence {
 
             // Sets up the deserialized object table.
             final DeserialObjectTable deserialObjectTable = new DeserialObjectTable(jObjectBis);
+            serialHeaderConsumer.accept(deserialObjectTable.getSerialHeader());
 
             // Pushes the inverse version of the permanent object table.  It is safe at this point to push the
             // derialization object table and set it to a key in this table.  This way it is strongly referenced in this
@@ -546,9 +563,16 @@ public class Persistence {
 
     private class SerialObjectTable implements JavaFunction {
 
-        private List<Object> objects = new ArrayList<>();
+        private SerialHeader serialHeader = new SerialHeader();
 
         private Map<Object, Integer> objectIndexMap = new IdentityHashMap<>();
+
+        public SerialObjectTable(final ResourceId resourceId, final Attributes attributes) {
+            this.serialHeader = new SerialHeader();
+            serialHeader.setResourceId(resourceId);
+            serialHeader.setAttributes(attributes);
+            serialHeader.setObjectTable(new ArrayList<>());
+        }
 
         private int serialize(final Object object) {
 
@@ -557,9 +581,11 @@ public class Persistence {
             }
 
             return object == null ? NULL_OBJ_IDX :
+                   object == serialHeader.getResourceId() ? RESOURCE_ID_IDX :
+                   object == serialHeader.getAttributes() ? ATTRIBUTES_IDX :
                    objectIndexMap.computeIfAbsent(object, o -> {
-                       final int identifier = objects.size();
-                       objects.add(o);
+                       final int identifier = serialHeader.getObjectTable().size();
+                       serialHeader.getObjectTable().add(o);
                        return identifier;
                    });
 
@@ -629,12 +655,12 @@ public class Persistence {
 
             final Logger logger = loggerSupplier.get();
 
-            objects.stream()
+            serialHeader.getObjectTable().stream()
                .filter(o -> !(o instanceof Serializable))
                .forEach(o -> logger.error("{} is not and instance of {}", o, Serializable.class.getName()));
 
             try (final ObjectOutputStream oos = new ObjectOutputStream(os)) {
-                oos.writeObject(objects);
+                oos.writeObject(serialHeader);
             }
 
         }
@@ -643,15 +669,11 @@ public class Persistence {
 
     private class DeserialObjectTable implements JavaFunction {
 
-        private final List<Object> objects;
+        final SerialHeader serialHeader;
 
         public DeserialObjectTable(final InputStream is) throws IOException {
-            this(new ObjectInputStream(is));
-        }
-
-        public DeserialObjectTable(final ObjectInputStream ois) throws IOException {
-            try {
-                objects = (List<Object>) ois.readObject();
+            try (final ObjectInputStream ois = new ObjectInputStream(is)) {
+                serialHeader = (SerialHeader) ois.readObject();
             } catch (ClassNotFoundException e) {
                 throw new IOException(e);
             }
@@ -677,12 +699,16 @@ public class Persistence {
 
                 if (NULL_OBJ_IDX == oid) {
                     luaState.pushNil();
+                } else if (RESOURCE_ID_IDX == oid) {
+                    luaState.pushJavaObjectRaw(serialHeader.getResourceId());
+                } else if (ATTRIBUTES_IDX == oid) {
+                    luaState.pushJavaObjectRaw(serialHeader.getAttributes());
                 } else {
 
                     final Object object;
 
                     try {
-                        object = objects.get(oid);
+                        object = serialHeader.getObjectTable().get(oid);
                     } catch (IndexOutOfBoundsException ex) {
                         throw new ResourcePersistenceException("Object with id does not exist: " + oid, ex);
                     }
@@ -714,6 +740,10 @@ public class Persistence {
 
             return 1;
 
+        }
+
+        public SerialHeader getSerialHeader() {
+            return serialHeader;
         }
 
     }

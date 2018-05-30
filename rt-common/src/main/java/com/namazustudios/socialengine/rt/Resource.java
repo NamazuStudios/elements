@@ -32,6 +32,13 @@ public interface Resource extends AutoCloseable {
     ResourceId getId();
 
     /**
+     * Gets the {@link Attributes} associated with this {@link Resource}
+     *
+     * @return this instance's {@link Attributes}
+     */
+    Attributes getAttributes();
+
+    /**
      * Returns an instance of {@link MethodDispatcher}, which is used to invoke methods against this {@link Resource}.
      * The reurned {@link MethodDispatcher} will defer actually invoking the method until the final call in the
      * chain {@link ResultAcceptor#dispatch(Consumer, Consumer)}.
