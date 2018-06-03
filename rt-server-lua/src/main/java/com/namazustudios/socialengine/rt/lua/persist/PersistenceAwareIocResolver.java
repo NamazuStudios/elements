@@ -96,14 +96,14 @@ public class PersistenceAwareIocResolver implements IocResolver {
     @Override
     public <T> Provider<T> provider(final Class<T> tClass) {
         final Provider<T> provider = getDelegate().provider(tClass);
-        getPersistence().addCustomPersistence(provider, INJECT_TYPE, l -> persist(l, tClass));
+        getPersistence().addCustomPersistence(provider, PROVIDER_TYPE, l -> persist(l, tClass));
         return provider;
     }
 
     @Override
     public <T> Provider<T> provider(final Class<T> tClass, final String named) {
         final Provider<T> provider = getDelegate().provider(tClass);
-        getPersistence().addCustomPersistence(provider, INJECT_TYPE, l -> persist(l, tClass, named));
+        getPersistence().addCustomPersistence(provider, PROVIDER_TYPE, l -> persist(l, tClass, named));
         return provider;
     }
 
@@ -140,7 +140,6 @@ public class PersistenceAwareIocResolver implements IocResolver {
         return 1;
 
     }
-
 
     public IocResolver getDelegate() {
         return delegate;

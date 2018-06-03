@@ -120,6 +120,47 @@ public class TestCorePersistence {
 
     }
 
+    @Test
+    public void testIocProviderIsRestoredAfterUnpersist() throws IOException {
+
+        final byte[] bytes;
+
+        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             final Resource resource = getResourceLoader().load("test.ioc_resolve")) {
+
+            final AtomicReference<Object> result = new AtomicReference<>();
+            final AtomicReference<Throwable> exception = new AtomicReference<>();
+
+            resource.getMethodDispatcher("test_resolve_provider")
+                    .params()
+                    .dispatch(o -> result.set(o), ex -> exception.set(ex));
+
+            assertNull(exception.get());
+            assertEquals(result.get(), "Hello World!");
+
+            resource.setVerbose(true);
+            resource.serialize(bos);
+            bytes = bos.toByteArray();
+
+        }
+
+        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+             final Resource resource = getResourceLoader().load(bis, true)) {
+
+            final AtomicReference<Object> result = new AtomicReference<>();
+            final AtomicReference<Throwable> exception = new AtomicReference<>();
+
+            resource.getMethodDispatcher("test_resolve_provider")
+                    .params()
+                    .dispatch(o -> result.set(o), ex -> exception.set(ex));
+
+            assertNull(exception.get());
+            assertEquals(result.get(), "Hello World!");
+
+        }
+
+    }
+
     public ResourceLoader getResourceLoader() {
         return resourceLoader;
     }
