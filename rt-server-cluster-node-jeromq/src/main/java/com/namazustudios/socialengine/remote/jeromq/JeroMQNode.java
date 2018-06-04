@@ -338,7 +338,6 @@ public class JeroMQNode implements Node {
                 } else {
                     outboundConnectionPool.processV(outbound -> sendError(outbound.socket(), invocationError, 0, identity));
                 }
-
             };
 
             final Consumer<InvocationError> asyncInvocationErrorConsumer = invocationError -> {

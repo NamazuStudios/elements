@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +25,11 @@ public class SimpleAttributes implements Attributes, Serializable {
     @Override
     public Object getAttribute(String name) {
         return getAttributes().get(name);
+    }
+
+    @Override
+    public Map<String, Object> asMap() {
+        return Collections.unmodifiableMap(getAttributes());
     }
 
     public Map<String, Object> getAttributes() {

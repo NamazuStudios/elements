@@ -28,6 +28,8 @@ public class SimpleHandlerContext implements HandlerContext {
 
     private ResourceContext resourceContext;
 
+    private SingleUseHandlerService singleUseHandlerService;
+
     private static final ScheduledExecutorService reapers = Executors.newSingleThreadScheduledExecutor(r -> {
         final Thread thread = new Thread(r);
         thread.setDaemon(true);
@@ -41,27 +43,15 @@ public class SimpleHandlerContext implements HandlerContext {
             final Consumer<Object> success, final Consumer<Throwable> failure,
             final Attributes attributes, final String module,
             final String method, final Object... args) {
-
-        final AtomicBoolean finished = new AtomicBoolean();
-        final Path path = fromComponents("tmp", "handler", randomUUID().toString());
-        final ResourceId resourceId = getResourceContext().createAttributes(module, path, attributes);
-        final ScheduledFuture<?> timeoutScheduledFuture = scheduleTimeout(finished, resourceId, failure);
-
         try {
-            getResourceContext().invokeAsync(
-                succeedAndDestroy(finished, timeoutScheduledFuture, resourceId, success, failure),
-                failure(finished, timeoutScheduledFuture, resourceId, failure, module, method, args),
-                resourceId, method, args);
-        } catch (RuntimeException ex) {
-            destroyAndLog(resourceId);
-            failure.accept(ex);
-            throw ex;
+            getSingleUseHandlerService().perform(attributes, module, r -> r
+                .getMethodDispatcher(method)
+                .params(args)
+                .dispatch(success, failure));
         } catch (Exception ex) {
-            destroyAndLog(resourceId);
             failure.accept(ex);
             throw new InternalException(ex);
         }
-
     }
 
     @Override
@@ -102,27 +92,6 @@ public class SimpleHandlerContext implements HandlerContext {
                 logger.error("Resource {} timed out.", resourceId, ex);
             }
         }, getTimeout(), MILLISECONDS);
-    }
-
-    private Consumer<Object> succeedAndDestroy(
-            final AtomicBoolean finished,
-            final ScheduledFuture<?> timeoutScheduledFuture,
-            final ResourceId resourceId,
-            final Consumer<Object> success,
-            final Consumer<Throwable> failure) {
-        return o -> {
-            if (finished.compareAndSet(false, true)) {
-                try {
-                    success.accept(o);
-                } catch (Exception ex) {
-                    logger.error("Exception in handler context.", ex);
-                    failure.accept(ex);
-                } finally {
-                    timeoutScheduledFuture.cancel(false);
-                    destroyAndLog(resourceId);
-                }
-            }
-        };
     }
 
     private Consumer<Object> succeedAndUnlink(
@@ -203,6 +172,14 @@ public class SimpleHandlerContext implements HandlerContext {
         this.resourceContext = resourceContext;
     }
 
+    public SingleUseHandlerService getSingleUseHandlerService() {
+        return singleUseHandlerService;
+    }
+
+    @Inject
+    public void setSingleUseHandlerService(SingleUseHandlerService singleUseHandlerService) {
+        this.singleUseHandlerService = singleUseHandlerService;
+    }
 
     public long getTimeout() {
         return timeout;

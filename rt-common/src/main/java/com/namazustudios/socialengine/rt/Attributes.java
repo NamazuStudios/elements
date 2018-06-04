@@ -1,12 +1,15 @@
 package com.namazustudios.socialengine.rt;
 
+import com.google.common.base.Objects;
 import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
 import org.omg.CORBA.DynAnyPackage.Invalid;
 
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -68,6 +71,17 @@ public interface Attributes {
     }
 
     /**
+     * Returns a view of this {@link Attributes} object as a {@link Map<String, Object>}.
+     *
+     * @return this {@link Attributes} as a {@link Map<String, Object>}
+     */
+    default Map<String, Object> asMap() {
+        return getAttributeNames()
+            .stream()
+            .collect(Collectors.toMap(n -> n, n -> n));
+    }
+
+    /**
      * The empty {@link Attributes} implementation.  This returns an empty list of attribute names, and will return null
      * for any requested attribute.
      */
@@ -82,9 +96,33 @@ public interface Attributes {
         return EMPTY;
     }
 
+    /**
+     * Given a set of {@link Attributes}, this will determined is hash code.
+     *
+     * @param attributes the {@link Attributes}
+     * @return the hash code
+     */
+    static int hashCode(final Attributes attributes) {
+        return attributes.asMap().hashCode();
+
+    }
+
+    /**
+     * Tests if two {@link Attributes} are equal to each other.
+     *
+     * @param a the first {@link Attributes}
+     * @param b the second {@link Attributes}
+     *
+     * @return true if equals, false otherwise.
+     */
+    static boolean equals(final Attributes a, final Attributes b) {
+        return a.asMap().equals(b.asMap());
+    }
+
 }
 
 class EmptyAttributes implements Attributes, Serializable {
+
     @Override
     public Set<String> getAttributeNames() {
         return emptySet();
@@ -93,6 +131,16 @@ class EmptyAttributes implements Attributes, Serializable {
     @Override
     public Object getAttribute(String name) {
         return null;
+    }
+
+    @Override
+    public int hashCode() {
+        return Attributes.hashCode(this);
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        return (obj instanceof Attributes) && Attributes.equals(this, (Attributes) obj);
     }
 }
 
