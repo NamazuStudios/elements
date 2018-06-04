@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
-import com.google.common.cache.*;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +14,7 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static java.util.UUID.randomUUID;
 
@@ -67,9 +70,9 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
     }
 
     @Override
-    public void perform(final Attributes attributes, final String module, final Consumer<Resource> resourceConsumer) {
-        try (final Operation operation = new Operation(attributes, module)) {
-            operation.perform(resourceConsumer);
+    public <T> T perform(final Attributes attributes, final String module, final Function<Resource, T> operation) {
+        try (final Operation o = new Operation(attributes, module)) {
+            return o.perform(operation);
         }
     }
 
@@ -119,8 +122,6 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
 
         private final Queue<Resource> queue;
 
-        private Runnable close;
-
         public Operation(final Attributes attributes, final String module) {
             key = new Key(attributes, module);
             queue = getQueue();
@@ -151,9 +152,9 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
 
         }
 
-        public void perform(final Consumer<Resource> operation) {
+        public <T> T perform(final Function<Resource, T> operation) {
             try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
-                operation.accept(resource);
+                return operation.apply(resource);
             }
         }
 
@@ -189,7 +190,7 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
             if (!(o instanceof Key)) return false;
             Key key = (Key) o;
             return Objects.equals(module, key.module) &&
-                    Objects.equals(attributes, key.attributes);
+                   Objects.equals(attributes, key.attributes);
         }
 
         @Override

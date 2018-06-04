@@ -96,7 +96,7 @@ public class CoroutineBuiltin implements Builtin {
 
             luaState.checkType(1, LuaType.THREAD);
 
-            final TaskId taskId = new TaskId();
+            final TaskId taskId = new TaskId(getLuaResource().getId());
 
             luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
             luaState.pushValue(1);
@@ -124,7 +124,7 @@ public class CoroutineBuiltin implements Builtin {
 
             final TaskId taskId = new TaskId(luaState.checkString(1));
             luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
-            luaState.getField(-1, taskId.toString());
+            luaState.getField(-1, taskId.asString());
 
             if (!luaState.isThread(-1)) {
                 logger.warn("no such task " + taskId + " instead got " + luaState.typeName(-1));
@@ -177,7 +177,7 @@ public class CoroutineBuiltin implements Builtin {
                 // Now that all instructions are processed, we return the status and the task id.
 
                 luaState.setTop(0);
-                luaState.pushString(taskId.toString());
+                luaState.pushString(taskId.asString());
                 luaState.pushInteger(status);
 
                 return 2;
@@ -194,7 +194,7 @@ public class CoroutineBuiltin implements Builtin {
                 luaState.pushInteger(status);
                 luaState.insert(1);
 
-                luaState.pushString(taskId.toString());
+                luaState.pushString(taskId.asString());
                 luaState.insert(1);
 
                 final Object result = luaState.getTop() == 2 ? null : luaState.checkJavaObject(3, Object.class);
@@ -216,7 +216,7 @@ public class CoroutineBuiltin implements Builtin {
     private void cleanup(final TaskId taskId, final LuaState luaState) {
         luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
         luaState.pushNil();
-        luaState.setField(-2, taskId.toString());
+        luaState.setField(-2, taskId.asString());
         luaState.pop(1);
     }
 

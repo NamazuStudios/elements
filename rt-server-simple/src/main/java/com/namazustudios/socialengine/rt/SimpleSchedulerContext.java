@@ -22,8 +22,8 @@ public class SimpleSchedulerContext implements SchedulerContext {
     public void resumeTaskAfterDelay(final ResourceId resourceId,
                                      final long time, final TimeUnit timeUnit,
                                      final TaskId taskId) {
-        getScheduler().resumeTaskAfterDelay(resourceId, time, timeUnit, taskId,
-                                            () -> logger.trace("Resumed task {}:{}", resourceId, taskId),
+        getScheduler().resumeTaskAfterDelay(taskId, time, timeUnit,
+                () -> logger.trace("Resumed task {}:{}", resourceId, taskId),
                                             th -> logger.error("Caught exception resuming.", th));
     }
 
@@ -32,8 +32,8 @@ public class SimpleSchedulerContext implements SchedulerContext {
                                      final TaskId taskId,
                                      final Runnable resumed) {
         getScheduler().resumeTaskAfterDelay(
-            resourceId, time, timeUnit, taskId,
-            () -> logger.trace("Resumed task {}:{}", resourceId, taskId),
+                taskId, time, timeUnit,
+                () -> logger.trace("Resumed task {}:{}", resourceId, taskId),
             th -> logger.error("Caught exception resuming.", th));
     }
 

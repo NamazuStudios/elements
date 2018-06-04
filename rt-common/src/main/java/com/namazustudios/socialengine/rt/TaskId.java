@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import java.io.Serializable;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * Represents a globally-unique id of a task, associated with a {@link Resource}.  This is currently backed by an
@@ -9,13 +10,18 @@ import java.util.UUID;
  */
 public class TaskId implements Serializable {
 
+    public static final Pattern ID_SEPARATOR = Pattern.compile("/");
+
     private final UUID uuid;
+
+    private ResourceId resourceId;
 
     /**
      * Creates a new unique {@link TaskId}.
      */
-    public TaskId() {
+    public TaskId(final ResourceId resourceId) {
         uuid = UUID.randomUUID();
+        this.resourceId = resourceId;
     }
 
     /**
@@ -24,7 +30,25 @@ public class TaskId implements Serializable {
      * @param stringRepresentation the string representation
      */
     public TaskId(final String stringRepresentation) {
-        uuid = UUID.fromString(stringRepresentation);
+
+        final String[] components = ID_SEPARATOR.split(stringRepresentation);
+
+        if (components.length != 2) {
+            throw new IllegalArgumentException("Task id format invalid: " + stringRepresentation);
+        }
+
+        uuid = UUID.fromString(components[1]);
+        resourceId = new ResourceId(components[0]);
+
+    }
+
+    /**
+     * Returns the {@link ResourceId} attached to this {@link TaskId}
+     *
+     * @return the {@link ResourceId} attached to this {@link TaskId}
+     */
+    public ResourceId getResourceId() {
+        return resourceId;
     }
 
     /**

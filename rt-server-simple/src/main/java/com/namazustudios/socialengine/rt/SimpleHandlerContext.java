@@ -7,14 +7,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.rt.Constants.HANDLER_TIMEOUT_MSEC;
-import static com.namazustudios.socialengine.rt.Path.fromComponents;
-import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.joining;
 
@@ -24,27 +23,24 @@ public class SimpleHandlerContext implements HandlerContext {
 
     private long timeout;
 
-    private IndexContext indexContext;
+    private Scheduler scheduler;
 
-    private ResourceContext resourceContext;
+    private ResourceService resourceService;
+
+    private RetainedHandlerService retainedHandlerService;
 
     private SingleUseHandlerService singleUseHandlerService;
-
-    private static final ScheduledExecutorService reapers = Executors.newSingleThreadScheduledExecutor(r -> {
-        final Thread thread = new Thread(r);
-        thread.setDaemon(true);
-        thread.setName(SimpleHandlerContext.class.getSimpleName() + ".reaper");
-        thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
-        return thread;
-    });
 
     @Override
     public void invokeSingleUseHandlerAsync(
             final Consumer<Object> success, final Consumer<Throwable> failure,
             final Attributes attributes, final String module,
             final String method, final Object... args) {
+
+        final TaskId taskId;
+
         try {
-            getSingleUseHandlerService().perform(attributes, module, r -> r
+            taskId = getSingleUseHandlerService().perform(attributes, module, r -> r
                 .getMethodDispatcher(method)
                 .params(args)
                 .dispatch(success, failure));
@@ -52,6 +48,9 @@ public class SimpleHandlerContext implements HandlerContext {
             failure.accept(ex);
             throw new InternalException(ex);
         }
+
+        scheduleTimeout(taskId, failure);
+
     }
 
     @Override
@@ -60,116 +59,57 @@ public class SimpleHandlerContext implements HandlerContext {
             final Attributes attributes, final String module,
             final String method, final Object... args) {
 
-        final AtomicBoolean finished = new AtomicBoolean();
-        final Path path = fromComponents("tmp", "handler", randomUUID().toString());
-        final ResourceId resourceId = getResourceContext().createAttributes(module, path, attributes);
-        final ScheduledFuture<?> timeoutScheduledFuture = scheduleTimeout(finished, resourceId, failure);
+        final TaskId taskId;
 
         try {
-            getResourceContext().invokeAsync(
-                succeedAndUnlink(finished, timeoutScheduledFuture, path, success, failure),
-                failure(finished, timeoutScheduledFuture, resourceId, failure, module, method, args),
-                resourceId, method, args);
-        } catch (RuntimeException ex) {
-            unlinkAndLog(path);
-            failure.accept(ex);
-            throw ex;
+            taskId = getRetainedHandlerService().perform(success, failure, attributes, module, method, args);
         } catch (Exception ex) {
-            destroyAndLog(resourceId);
             failure.accept(ex);
             throw new InternalException(ex);
         }
 
+        scheduleTimeout(taskId, failure);
+
     }
 
-    private ScheduledFuture<?> scheduleTimeout(final AtomicBoolean finished,
-                                               final ResourceId resourceId,
-                                               final Consumer<Throwable> errorConsumer) {
-        return reapers.schedule(() -> {
-            if (finished.compareAndSet(false, true)) {
-                final HandlerTimeoutException ex = new HandlerTimeoutException();
-                errorConsumer.accept(ex);
-                logger.error("Resource {} timed out.", resourceId, ex);
-            }
-        }, getTimeout(), MILLISECONDS);
+    private void scheduleTimeout(final TaskId taskId, final Consumer<Throwable> failure) {
+        try {
+            getScheduler().performAfterDelayV(taskId.getResourceId(), getTimeout(), MILLISECONDS, r -> {
+                r.resumeWithError(taskId, new TimeoutException("Handler timed out."));
+                logger.debug("Timing out task {}", taskId);
+            }, failure);
+        } catch (Exception ex) {
+            failure.accept(ex);
+            logger.error("Error timing out task {}", taskId);
+            throw new InternalException(ex);
+        }
     }
 
-    private Consumer<Object> succeedAndUnlink(
-            final AtomicBoolean finished,
-            final ScheduledFuture<?> timeoutScheduledFuture,
-            final Path path,
-            final Consumer<Object> success,
-            final Consumer<Throwable> failure) {
-        return o -> {
-            if (finished.compareAndSet(false, true)) {
-                try {
-                    success.accept(o);
-                } catch (Exception ex) {
-                    logger.error("Exception in handler context.", ex);
-                    failure.accept(ex);
-                } finally {
-                    timeoutScheduledFuture.cancel(false);
-                    unlinkAndLog(path);
-                }
-            }
-        };
-    }
-
-    private <T extends Throwable> Consumer<T> failure(
-            final AtomicBoolean finished,
-            final ScheduledFuture<?> timeoutScheduledFuture,
-            final ResourceId resourceId,
-            final Consumer<Throwable> consumer,
-            final String module,
-            final String method,
-            final Object[] args) {
-        return th -> {
-            if (finished.compareAndSet(false, true)) {
-                try {
-                    logger.error("Unsuccessful Result for {}.{}({})", module, method,
-                        Stream.of(args)
-                        .map(a -> a == null ? null : a.toString())
-                        .collect(joining(",")), th);
-                    consumer.accept(th);
-                } catch (Exception ex) {
-                    logger.error("Exception in handler context.", ex);
-                } finally {
-                    timeoutScheduledFuture.cancel(false);
-                    destroyAndLog(resourceId);
-                }
-            }
-        };
-    }
-
-    private void unlinkAndLog(final Path path) {
-        getIndexContext().unlinkAsync(path,
-            v -> logger.debug("Destroyed {}.", path),
-            th -> logger.error("Failed to destroy {}", path));
-    }
-
-    private void destroyAndLog(final ResourceId resourceId) {
-        getResourceContext().destroyAsync(
-            v -> logger.debug("Destroyed {}.", resourceId),
-            th -> logger.error("Failed to destroy {}", resourceId),
-            resourceId);
-    }
-
-    public IndexContext getIndexContext() {
-        return indexContext;
+    public Scheduler getScheduler() {
+        return scheduler;
     }
 
     @Inject
-    public void setIndexContext(IndexContext indexContext) {
-        this.indexContext = indexContext;
+    public void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
     }
 
-    public ResourceContext getResourceContext() {
-        return resourceContext;
+    public ResourceService getResourceService() {
+        return resourceService;
     }
 
     @Inject
-    public void setResourceContext(ResourceContext resourceContext) {
-        this.resourceContext = resourceContext;
+    public void setResourceService(ResourceService resourceService) {
+        this.resourceService = resourceService;
+    }
+
+    public RetainedHandlerService getRetainedHandlerService() {
+        return retainedHandlerService;
+    }
+
+    @Inject
+    public void setRetainedHandlerService(RetainedHandlerService retainedHandlerService) {
+        this.retainedHandlerService = retainedHandlerService;
     }
 
     public SingleUseHandlerService getSingleUseHandlerService() {

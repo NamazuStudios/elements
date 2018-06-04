@@ -121,18 +121,16 @@ public interface Scheduler {
      * Resumes the task associated with the supplied {@link TaskId}.  This allows for the specification of a delay
      * after a specified period of time.
      *
-     * @param resourceId the {@link ResourceId}
      * @param taskId the {@link TaskId} of the task
      *
      * @return {@link Future<Void>} which can be used to monitor the status of the request
      */
-    default Future<Void> resumeTask(final ResourceId resourceId,
-                                    final TaskId taskId,
+    default Future<Void> resumeTask(final TaskId taskId,
                                     final Consumer<Throwable> failure) {
 
         final Stopwatch stopwatch = Stopwatch.createStarted();
 
-        return performV(resourceId, r -> {
+        return performV(taskId.getResourceId(), r -> {
 
             final double mills = stopwatch.elapsed(MILLISECONDS);
             final double secondsPerMills = MILLISECONDS.convert(1, SECONDS);
@@ -152,23 +150,21 @@ public interface Scheduler {
      * Resumes the task associated with the supplied {@link TaskId}.  This allows for the specification of a delay
      * after a specified period of time.
      *
-     * @param resourceId the {@link ResourceId}
+     * @param taskId the {@link TaskId} of the task
+     *
      * @param time the time delay
      * @param timeUnit the {@link TimeUnit} instance designating the time units of measure
 *      @param resumed a {@link Runnable} that will execute when the task has been resumed successfully
-     * @param taskId the {@link TaskId} of the task
-     *
      * @return {@link Future<Void>} which can be used to monitor the status of the request
      */
-    default Future<Void> resumeTaskAfterDelay(final ResourceId resourceId,
+    default Future<Void> resumeTaskAfterDelay(final TaskId taskId,
                                               final long time, final TimeUnit timeUnit,
-                                              final TaskId taskId,
                                               final Runnable resumed,
                                               final Consumer<Throwable> failure) {
 
         final Stopwatch stopwatch = Stopwatch.createStarted();
 
-        return performAfterDelayV(resourceId, time, timeUnit, r -> {
+        return performAfterDelayV(taskId.getResourceId(), time, timeUnit, r -> {
 
             final double mills = stopwatch.elapsed(MILLISECONDS);
             final double secondsPerMills = MILLISECONDS.convert(1, SECONDS);

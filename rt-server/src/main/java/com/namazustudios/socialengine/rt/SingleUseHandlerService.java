@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Used to implement handler types.  Handlers are {@link Resource} instances that are meant to handle one-time requests
@@ -24,8 +24,8 @@ public interface SingleUseHandlerService {
      * ensuring that only one thread at a time is accessing the provided {@link Resource}.
      *  @param attributes the module attributes
      * @param module the module name
-     * @param resourceConsumer a {@link Consumer<Resource>} to perform the operation.
+     * @param operation a {@link Function<Resource, T>} to perform the operation.
      */
-    void perform(Attributes attributes, String module, Consumer<Resource> resourceConsumer);
+    <T> T perform(Attributes attributes, String module, Function<Resource, T> operation);
 
 }

@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.AbstractModule;
-import com.namazustudios.socialengine.rt.Constants;
 import com.namazustudios.socialengine.rt.HandlerContext;
 import com.namazustudios.socialengine.rt.SimpleHandlerContext;
 
@@ -22,7 +21,7 @@ public class SimpleHandlerContextModule extends AbstractModule {
      */
     public SimpleHandlerContextModule withTimeout(final long duration, final TimeUnit sourceUnits) {
         bindTimeout = () -> bind(Long.class)
-            .annotatedWith(named(Constants.HANDLER_TIMEOUT_MSEC))
+            .annotatedWith(named(HandlerContext.HANDLER_TIMEOUT_MSEC))
             .toInstance(MILLISECONDS.convert(duration, sourceUnits));
         return this;
     }
