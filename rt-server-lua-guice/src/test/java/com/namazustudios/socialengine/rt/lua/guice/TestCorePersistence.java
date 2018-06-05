@@ -58,7 +58,7 @@ public class TestCorePersistence {
 
     }
 
-    @Test(dataProvider = "allLuaResources")
+    @Test(dataProvider = "allLuaResources", invocationCount = 10)
     public void testPersistUnpersist(final String moduleName) throws IOException {
 
         logger.info("Testing Persistence for {}", moduleName);
@@ -73,7 +73,7 @@ public class TestCorePersistence {
         }
 
         try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-             final Resource resource = getResourceLoader().load(bis, true)) {
+             final Resource resource = getResourceLoader().load(bis)) {
             logger.info("Successfully loaded {}", resource);
         }
 
