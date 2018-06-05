@@ -65,10 +65,16 @@ public class XodusSchedulerContext implements SchedulerContext {
     }
 
     private void schedule(final long now, final XodusScheduledTask xodusScheduledTask) {
+
         final long delay = max(0, xodusScheduledTask.getWhen() - now);
         final ResourceId resourceId = xodusScheduledTask.getResourceId();
         final TaskId taskId = xodusScheduledTask.getTaskId();
-        getSimpleSchedulerContext().resumeTaskAfterDelay(resourceId, delay, MILLISECONDS, taskId);
+
+        getSimpleSchedulerContext().resumeTaskAfterDelay(resourceId, delay, MILLISECONDS, taskId, () -> getEnvironment().executeInTransaction(txn -> {
+            final Store store = openStore(txn);
+            store.delete(txn, xodusScheduledTask.getValue());
+        }));
+
     }
 
     @Override
