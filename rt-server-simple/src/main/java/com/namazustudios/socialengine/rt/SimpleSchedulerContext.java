@@ -22,9 +22,10 @@ public class SimpleSchedulerContext implements SchedulerContext {
     public void resumeTaskAfterDelay(final ResourceId resourceId,
                                      final long time, final TimeUnit timeUnit,
                                      final TaskId taskId) {
-        getScheduler().resumeTaskAfterDelay(taskId, time, timeUnit,
-                () -> logger.trace("Resumed task {}:{}", resourceId, taskId),
-                                            th -> logger.error("Caught exception resuming.", th));
+        getScheduler().resumeTaskAfterDelay(
+            taskId, time, timeUnit,
+            () -> logger.trace("Resumed task {}:{}", resourceId, taskId),
+            th -> logger.error("Caught exception resuming.", th));
     }
 
     public void resumeTaskAfterDelay(final ResourceId resourceId,
@@ -32,9 +33,9 @@ public class SimpleSchedulerContext implements SchedulerContext {
                                      final TaskId taskId,
                                      final Runnable resumed) {
         getScheduler().resumeTaskAfterDelay(
-                taskId, time, timeUnit,
-                () -> logger.trace("Resumed task {}:{}", resourceId, taskId),
-            th -> logger.error("Caught exception resuming.", th));
+            taskId, time, timeUnit,
+            () -> { logger.trace("Resumed task {}:{}", resourceId, taskId); resumed.run(); },
+            th -> { logger.error("Caught exception resuming.", th); resumed.run(); } );
     }
 
     @Override
