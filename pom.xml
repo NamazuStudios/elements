@@ -51,6 +51,7 @@
         <module>rt-mina</module>
         <module>rt-server-lua</module>
         <module>rt-server-lua-guice</module>
+        <module>rt-server-lua-stress-tests</module>
         <module>rt-client</module>
         <module>rt-dao</module>
         <module>rt-http-servlet</module>
