@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.Identity;
 import com.namazustudios.socialengine.rt.remote.*;
-import com.namazustudios.socialengine.rt.util.FinallyAction;
+import com.namazustudios.socialengine.rt.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -30,10 +30,8 @@ import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.MessageType.INVOCATION_ERROR;
-import static com.namazustudios.socialengine.rt.util.FinallyAction.with;
 import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
-import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
@@ -55,7 +53,7 @@ public class JeroMQNode implements Node {
 
     public static final String BIND_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.bindAddress";
 
-    private final AtomicReference<Context> context = new AtomicReference<>();
+    private final AtomicReference<NodeContext> nodeContext = new AtomicReference<>();
 
     private String id;
 
@@ -74,6 +72,8 @@ public class JeroMQNode implements Node {
     private PayloadWriter payloadWriter;
 
     private Provider<ConnectionPool> connectionPoolProvider;
+
+    private Context hostedContext;
 
     private Logger logger = staticLogger;
 
@@ -98,10 +98,11 @@ public class JeroMQNode implements Node {
     @Override
     public void start() {
 
-        final Context c = new Context();
+        final NodeContext c = new NodeContext();
 
-        if (context.compareAndSet(null, c)) {
+        if (nodeContext.compareAndSet(null, c)) {
             logger.info("Starting up.");
+            getHostedContext().start();
             c.start();
         } else {
             throw new IllegalStateException("Already started.");
@@ -112,11 +113,12 @@ public class JeroMQNode implements Node {
     @Override
     public void stop() {
 
-        final Context c = context.get();
+        final NodeContext c = nodeContext.get();
 
-        if (context.compareAndSet(c, null)) {
+        if (nodeContext.compareAndSet(c, null)) {
             logger.info("Shutting down.");
             c.stop();
+            getHostedContext().shutdown();
         } else {
             throw new IllegalStateException("Already stopped.");
         }
@@ -198,13 +200,22 @@ public class JeroMQNode implements Node {
         logger = LoggerFactory.getLogger(loggerName());
     }
 
+    public Context getHostedContext() {
+        return hostedContext;
+    }
+
+    @Inject
+    public void setHostedContext(Context hostedContext) {
+        this.hostedContext = hostedContext;
+    }
+
     private String loggerName() {
         return Stream.of(JeroMQNode.class.getName(), getName(), getId())
                      .filter(s -> s != null)
                      .collect(Collectors.joining("."));
     }
 
-    private class Context {
+    private class NodeContext {
 
         private final AtomicBoolean running = new AtomicBoolean();
 

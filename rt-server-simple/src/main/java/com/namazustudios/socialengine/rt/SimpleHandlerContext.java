@@ -32,6 +32,16 @@ public class SimpleHandlerContext implements HandlerContext {
     private SingleUseHandlerService singleUseHandlerService;
 
     @Override
+    public void start() {
+        getSingleUseHandlerService().start();
+    }
+
+    @Override
+    public void stop() {
+        getSingleUseHandlerService().stop();
+    }
+
+    @Override
     public void invokeSingleUseHandlerAsync(
             final Consumer<Object> success, final Consumer<Throwable> failure,
             final Attributes attributes, final String module,

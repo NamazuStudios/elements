@@ -4,13 +4,17 @@ import java.io.Serializable;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import static java.lang.String.format;
+
 /**
  * Represents a globally-unique id of a task, associated with a {@link Resource}.  This is currently backed by an
  * instance of {@Link UUID}, but the string representation should be considered opaque by users of this type.
  */
 public class TaskId implements Serializable {
 
-    public static final Pattern ID_SEPARATOR = Pattern.compile("/");
+    public static final String ID_SEPARATOR = ":";
+
+    public static final Pattern ID_SEPARATOR_PATTERN = Pattern.compile(ID_SEPARATOR);
 
     private final UUID uuid;
 
@@ -31,7 +35,7 @@ public class TaskId implements Serializable {
      */
     public TaskId(final String stringRepresentation) {
 
-        final String[] components = ID_SEPARATOR.split(stringRepresentation);
+        final String[] components = ID_SEPARATOR_PATTERN.split(stringRepresentation);
 
         if (components.length != 2) {
             throw new IllegalArgumentException("Task id format invalid: " + stringRepresentation);
@@ -57,12 +61,12 @@ public class TaskId implements Serializable {
      * @return the string representation
      */
     public String asString() {
-        return uuid.toString();
+        return format("%s%s%s", resourceId.asString(), ID_SEPARATOR, uuid.toString());
     }
 
     @Override
     public String toString() {
-        return uuid.toString();
+        return format("%s%s%s", resourceId.asString(), ID_SEPARATOR, uuid.toString());
     }
 
     @Override

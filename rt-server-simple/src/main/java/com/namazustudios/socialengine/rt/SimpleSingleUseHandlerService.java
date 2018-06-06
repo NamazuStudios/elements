@@ -10,8 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -25,24 +27,17 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleSingleUseHandlerService.class);
 
-    public static final String CACHE_SIZE = "com.namazustudios.socialengine.rt.handler.cache.cacheSize";
-
     private ResourceLoader resourceLoader;
 
     private ResourceService resourceService;
 
     private ResourceLockService resourceLockService;
 
-    private LoadingCache<Key, Queue<Resource>> moduleCache;
-
-    private int cacheSize;
+    private Map<Key, Queue<Resource>> moduleCache;
 
     @Override
     public void start() {
-        moduleCache = CacheBuilder.<Key, Queue<Resource>>newBuilder()
-            .maximumSize(getCacheSize())
-            .removalListener((RemovalListener<Key, Queue<Resource>>) n -> n.getValue().forEach(this::releaseAndDestroy))
-            .build(CacheLoader.from(m -> new ConcurrentLinkedQueue<>()));
+        moduleCache = new ConcurrentHashMap<>();
     }
 
     private void releaseAndDestroy(final Resource resource) {
@@ -65,7 +60,8 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
 
     @Override
     public void stop() {
-        moduleCache.invalidateAll();
+        moduleCache.forEach((k, q) -> q.forEach(this::releaseAndDestroy));
+        moduleCache.clear();
         moduleCache = null;
     }
 
@@ -103,15 +99,6 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
         this.resourceLockService = resourceLockService;
     }
 
-    public int getCacheSize() {
-        return cacheSize;
-    }
-
-    @Inject
-    public void setCacheSize(@Named(CACHE_SIZE) int cacheSize) {
-        this.cacheSize = cacheSize;
-    }
-
     private class Operation implements AutoCloseable {
 
         private final Key key;
@@ -130,15 +117,7 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
         }
 
         private Queue<Resource> getQueue() {
-            try {
-                return moduleCache.get(key);
-            } catch (ExecutionException e) {
-                if (e.getCause() instanceof RuntimeException) {
-                    throw (RuntimeException) e.getCause();
-                } else {
-                    throw new InternalException(e.getCause());
-                }
-            }
+            return moduleCache.computeIfAbsent(key,  k -> new ConcurrentLinkedQueue<>());
         }
 
         private Resource getOrLoad() {

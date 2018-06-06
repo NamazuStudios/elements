@@ -1,27 +1,19 @@
 package com.namazustudios.socialengine.rt.guice;
 
-import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
-import com.google.inject.name.Names;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.provider.CachedThreadPoolProvider;
 import com.namazustudios.socialengine.rt.provider.ScheduledExecutorServiceProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.inject.Provider;
 import java.util.Deque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
 import static com.namazustudios.socialengine.rt.SimpleScheduler.DISPATCHER_EXECUTOR_SERVICE;
 import static com.namazustudios.socialengine.rt.SimpleScheduler.SCHEDULED_EXECUTOR_SERVICE;
-import static java.lang.String.format;
-import static java.util.concurrent.Executors.newScheduledThreadPool;
 
 /**
  * Creates the simple internal
@@ -31,9 +23,15 @@ import static java.util.concurrent.Executors.newScheduledThreadPool;
  */
 public class SimpleServicesModule extends PrivateModule {
 
-
     private Runnable bindSchedulerThreads = () -> {};
 
+    /**
+     * Specifies the number of scheduler threads.  This number typically can be set low as the actual scheduler threads
+     * defer their work to a cached thread pool.  Typically this is set to 1+ the currently availble CPUs
+     *
+     * @param threads the number of threads
+     * @return  this instance
+     */
     public SimpleServicesModule withSchedulerThreads(int threads) {
         bindSchedulerThreads = () -> bind(Integer.class)
                 .annotatedWith(named(SCHEDULER_THREADS))
@@ -49,6 +47,8 @@ public class SimpleServicesModule extends PrivateModule {
         bind(Scheduler.class).to(SimpleScheduler.class).asEagerSingleton();
         bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
         bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();
+        bind(RetainedHandlerService.class).to(SimpleRetainedHandlerService.class).asEagerSingleton();
+        bind(SingleUseHandlerService.class).to(SimpleSingleUseHandlerService.class).asEagerSingleton();
 
         bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>() {})
             .toProvider(() -> new ProxyLockService<>(Deque.class));
@@ -66,6 +66,8 @@ public class SimpleServicesModule extends PrivateModule {
 
         expose(Scheduler.class);
         expose(ResourceService.class);
+        expose(RetainedHandlerService.class);
+        expose(SingleUseHandlerService.class);
 
     }
 
