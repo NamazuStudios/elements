@@ -17,5 +17,6 @@ ENTRYPOINT ["dockerize",\
  			"-wait", "tcp://redis:6379",\
  			"-wait", "tcp://mongo:27017",\
 			"java", \
+			"-Dlogback.configurationFile=logback-debug.xml", \
 			"-Dcom.namazustudios.socialengine.configuration.properties=/opt/socialengine/socialengine.properties", \
 			"-jar", "/opt/socialengine/app-node.jar" ]

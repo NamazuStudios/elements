@@ -11,7 +11,6 @@ import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -21,7 +20,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -30,7 +28,6 @@ import static com.namazustudios.socialengine.rt.Constants.HANDLER_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 
 @Guice(modules = TestCorePersistence.Module.class)
 public class TestCorePersistence {
