@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine;
 
+import com.google.common.base.Stopwatch;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.inject.name.Names.named;
@@ -110,12 +112,23 @@ public class SerialStressTest {
         @Override
         public void run() {
             try {
+                int count = 0;
+                final Stopwatch stopwatch = Stopwatch.createStarted();
+
                 while (true) try {
+
                     recurseAndTest(0);
+                    count++;
+
+                    if (stopwatch.elapsed(TimeUnit.SECONDS) >= 10) {
+                        logger.info("Processed {} executions.", count);
+                        stopwatch.reset().start();
+                    }
+
                 } catch (Exception ex) {
                     logger.error("Caught exception.", ex);
                 } finally {
-                    sleep(250);
+                    sleep(30);
                 }
             } catch (InterruptedException ex) {
                 logger.info("Interrupted.  Exiting.");
@@ -136,12 +149,12 @@ public class SerialStressTest {
                 resource.setVerbose(true);
                 resource.serialize(bos);
                 bytes = bos.toByteArray();
-                logger.info("Successfully saved {} ", resource);
+                logger.trace("Successfully saved {} ", resource);
             }
 
             try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
                  final Resource resource = getResourceLoader().load(bis, isDebug())) {
-                logger.info("Successfully loaded {} ", resource);
+                logger.trace("Successfully loaded {} ", resource);
             }
 
         }
