@@ -4,6 +4,11 @@ local namazu_coroutine = require "namazu.coroutine"
 
 local stresstest = {}
 
+function stresstest.yield_indefinitely()
+    local yr = coroutine.yield("IMMEDIATE")
+    return yr
+end
+
 function stresstest.levenshtein(str1, str2)
 
     local len1 = string.len(str1)

@@ -153,7 +153,7 @@ public class XodusResourceService implements ResourceService {
             throw new IllegalArgumentException("Cannot add resources with wildcard path.");
         }
 
-        getEnvironment().executeInTransaction(txn -> {
+        getEnvironment().computeInTransaction(txn -> {
 
             final Store paths = openPaths(txn);
             final Store resources = openResources(txn);
@@ -164,7 +164,9 @@ public class XodusResourceService implements ResourceService {
             doLink(txn, paths, resourceIdKey, pathKey);
             doReleaseResource(txn, resources, xodusResource);
 
-        });
+            return  xodusResource;
+
+        }).closeDelegateIfNecessary();
 
     }
 
@@ -211,6 +213,8 @@ public class XodusResourceService implements ResourceService {
             doReleaseResource(txn, resources, xodusResource);
 
         });
+
+        xodusResource.closeDelegateIfNecessary();
 
     }
 
