@@ -145,4 +145,16 @@ public class Match implements Serializable {
         this.gameId = gameId;
     }
 
+    @Override
+    public String toString() {
+        return "Match{" +
+                "id='" + id + '\'' +
+                ", scheme='" + scheme + '\'' +
+                ", player=" + player +
+                ", opponent=" + opponent +
+                ", lastUpdatedTimestamp=" + lastUpdatedTimestamp +
+                ", gameId='" + gameId + '\'' +
+                '}';
+    }
+
 }
