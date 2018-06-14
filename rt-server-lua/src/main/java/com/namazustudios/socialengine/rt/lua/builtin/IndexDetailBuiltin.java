@@ -54,8 +54,9 @@ public class IndexDetailBuiltin implements Builtin {
                 getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, listings);
             };
 
-            final Consumer<Throwable> failure = throwable ->
-                getContext().getSchedulerContext().resumeWithError(thisResourceId, taskId, throwable);
+            final Consumer<Throwable> failure = throwable -> getContext()
+                .getSchedulerContext()
+                .resumeWithError(thisResourceId, taskId, throwable);
 
             getContext().getIndexContext().listAsync(path, success, failure);
 
