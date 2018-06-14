@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.appnode;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.appnode.guice.MultiNodeContainerModule;
@@ -11,6 +12,8 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.rt.MultiNodeContainer;
+import com.namazustudios.socialengine.service.BuildPropertiesVersionService;
+import com.namazustudios.socialengine.service.VersionService;
 import com.namazustudios.socialengine.service.firebase.guice.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNotificationFactoryModule;
 import org.apache.bval.guice.ValidationModule;
@@ -33,15 +36,21 @@ public class ApplicationNodeMain {
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
         final Injector injector = Guice.createInjector(
-            new ConfigurationModule(defaultConfigurationSupplier),
-            new MongoCoreModule(),
-            new MongoDaoModule(),
-            new ValidationModule(),
-            new MongoSearchModule(),
-            new RTFilesystemGitLoaderModule(),
-            new MultiNodeContainerModule(),
-            new FirebaseAppFactoryModule(),
-            new GuiceStandardNotificationFactoryModule()
+                new ConfigurationModule(defaultConfigurationSupplier),
+                new MongoCoreModule(),
+                new MongoDaoModule(),
+                new ValidationModule(),
+                new MongoSearchModule(),
+                new RTFilesystemGitLoaderModule(),
+                new MultiNodeContainerModule(),
+                new FirebaseAppFactoryModule(),
+                new GuiceStandardNotificationFactoryModule(),
+                new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
+                    }
+                }
         );
 
         final Object lock = new Object();

@@ -18,6 +18,8 @@ import org.testng.annotations.Test;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,8 +28,10 @@ import java.util.regex.Pattern;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.Constants.HANDLER_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
+import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.fail;
 
 @Guice(modules = TestCorePersistence.Module.class)
 public class TestCorePersistence {
@@ -158,6 +162,39 @@ public class TestCorePersistence {
 
     }
 
+    @Test(threadPoolSize = 100, invocationCount = 100)
+    public void testUpvaluesArePersisted() throws Exception {
+
+        byte[] bytes;
+        final DummyObject original = new DummyObject();
+
+        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             final Resource resource = getResourceLoader().load("test.persist_upvalue")) {
+
+            resource.getMethodDispatcher("set_upval")
+                    .params(original)
+                    .dispatch(o -> assertNull(o), ex -> fail("No error expected."));
+
+            resource.serialize(bos);
+            bytes = bos.toByteArray();
+
+        }
+
+        for (int i = 0; i < 100; ++i) try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                                           final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+                                           final Resource resource = getResourceLoader().load(bis)) {
+
+            resource.getMethodDispatcher("assert_upval")
+                    .params()
+                    .dispatch(o -> assertEquals(original, o), ex -> fail("No error expected."));
+
+            resource.serialize(bos);
+            bytes = bos.toByteArray();
+
+        }
+
+    }
+
     public ResourceLoader getResourceLoader() {
         return resourceLoader;
     }
@@ -187,6 +224,26 @@ public class TestCorePersistence {
             bind(Integer.class).annotatedWith(named(SCHEDULER_THREADS)).toInstance(1);
             bind(Long.class).annotatedWith(named(HANDLER_TIMEOUT_MSEC)).toInstance(90l);
 
+        }
+
+    }
+
+    private static final class DummyObject implements Serializable {
+
+        private String uuid = randomUUID().toString();
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof DummyObject)) return false;
+            DummyObject that = (DummyObject) o;
+            return Objects.equals(uuid, that.uuid);
+        }
+
+        @Override
+        public int hashCode() {
+
+            return Objects.hash(uuid);
         }
 
     }

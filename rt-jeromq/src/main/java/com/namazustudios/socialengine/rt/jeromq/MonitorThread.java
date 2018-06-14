@@ -50,11 +50,12 @@ public class MonitorThread extends Thread implements AutoCloseable {
                     case CONNECTED:
                     case BIND_FAILED:
                     case DISCONNECTED:
+                    case HANDSHAKE_PROTOCOL:
                         logger.info("Socket Event: {}", zEvent);
                         break;
                     default:
                         final String zEventString = format("Event %s from Address %s", zEvent.type, zEvent.address);
-                        zEventCountMap.compute(zEventString, (e, i) -> i == null ? 0 : i + 1);
+                        zEventCountMap.compute(zEventString, (e, i) -> i == null ? 1 : i + 1);
                 }
 
                 if (stopwatch.elapsed(MILLISECONDS) >= EVENT_LOG_TIME_MSEC) {
