@@ -47,7 +47,7 @@ public class BuildPropertiesVersionService implements VersionService {
 
     }
 
-    public Version getVersion() {
+     public Version getVersion() {
         final Version version = new Version();
         version.setVersion(VERSION);
         version.setRevision(REVISION);

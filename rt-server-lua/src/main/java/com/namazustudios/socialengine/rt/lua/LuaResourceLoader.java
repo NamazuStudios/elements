@@ -6,6 +6,8 @@ import com.namazustudios.socialengine.rt.exception.ResourcePersistenceException;
 import com.namazustudios.socialengine.rt.lua.builtin.*;
 import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 import com.namazustudios.socialengine.rt.lua.persist.PersistenceAwareIocResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Attr;
 
 import javax.inject.Inject;
@@ -19,6 +21,8 @@ import static com.namazustudios.socialengine.rt.IocResolver.IOC_RESOLVER_MODULE_
 import static com.namazustudios.socialengine.rt.lua.Constants.ATTRIBUTES_MODULE;
 
 public class LuaResourceLoader implements ResourceLoader {
+
+    private static final Logger logger = LoggerFactory.getLogger(LuaResourceLoader.class);
 
     private AssetLoader assetLoader;
 
@@ -67,6 +71,7 @@ public class LuaResourceLoader implements ResourceLoader {
             throw new ResourcePersistenceException(ex);
         } catch (Exception ex) {
             luaResource.close();
+            logger.error("Caught exception loading resource.", ex);
             throw ex;
         }
 
@@ -101,6 +106,7 @@ public class LuaResourceLoader implements ResourceLoader {
             return luaResource;
         } catch (Exception ex) {
             luaResource.close();
+            logger.error("Caught exception loading resource.", ex);
             throw ex;
         }
 

@@ -88,7 +88,7 @@ public interface Constants {
     /**
      * Used to specify the port that the http tunnel will run against.
      */
-    String HTTP_TUNNEL_PORT = "com.namazustudios.socialengine.git.http.tunnel.port";
+    String HTTP_TUNNEL_PORT = "com.namazustudios.socialengine.http.tunnel.port";
 
     /**
      * Used to specify the session timeout, in seconds

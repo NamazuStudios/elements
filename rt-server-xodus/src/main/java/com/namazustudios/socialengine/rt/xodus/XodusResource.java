@@ -44,6 +44,7 @@ class XodusResource extends SimpleDelegateResource {
 
         if (acquires <= 0 && getDelegate().isPersistentState()) {
             if (acquires < 0) logger.error("Unbalanced release/acquire for resource {}", getId());
+            acquires = 0;
             persist(txn, resources);
         } else {
             cache();
@@ -65,12 +66,16 @@ class XodusResource extends SimpleDelegateResource {
         resources.put(txn, getXodusCacheKey().getKey(), value);
         xodusCacheStorage.getResourceIdResourceMap().remove(getXodusCacheKey());
 
-        try {
-            getDelegate().close();
-        } catch (Exception ex) {
-            logger.error("Caught exception closing internal resource.", ex);
-        }
+    }
 
+    void closeDelegateIfNecessary() {
+        if (acquires <= 0) {
+            try {
+                getDelegate().close();
+            } catch (Exception ex) {
+                logger.error("Caught exception closing internal resource.", ex);
+            }
+        }
     }
 
     void cache() {

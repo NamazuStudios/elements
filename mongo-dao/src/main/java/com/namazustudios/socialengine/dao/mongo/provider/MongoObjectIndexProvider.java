@@ -28,43 +28,8 @@ public class MongoObjectIndexProvider implements Provider<ObjectIndex> {
 
     @Override
     public ObjectIndex get() {
-
-        final IOContext.Provider<IndexWriter> indexWriterProvider  = () -> {
-            final Analyzer analyzer = getAnalyzerProvider().get();
-            final Directory directory = getDirectoryProvider().get();
-            final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer).setOpenMode(CREATE_OR_APPEND);
-            final IndexWriter indexWriter = new IndexWriter(directory, indexWriterConfig);
-            return new DefaultIOContext<>(indexWriter);
-        };
-
-        final IOContext.Provider<IndexSearcher> indexSearcherProvider = () -> {
-
-            final Directory directory = getDirectoryProvider().get();
-            final IndexReader indexReader = DirectoryReader.open(directory);
-            final IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-
-            return new AbstractIOContext<IndexSearcher>(indexSearcher) {
-                @Override
-                protected void doClose() throws IOException {
-                    indexReader.close();
-                }
-            };
-
-        };
-
-        // Before anything else, Lucene requires an index be created with the
-        // redaer can be opened.
-
-        try (final IOContext<IndexWriter> indexWriterIOContext = indexWriterProvider.get()) {
-            indexWriterIOContext.instance().commit();
-        } catch (IOException ex) {
-            throw new RuntimeException("could not create search index", ex);
-        }
-
-
         // TODO Fix performacne bottlenecks with search index
-        return new NullObjectIndex(indexWriterProvider.cached(), indexSearcherProvider);
-
+        return new NullObjectIndex(null, null);
     }
 
     public Provider<Analyzer> getAnalyzerProvider() {
