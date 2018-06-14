@@ -67,10 +67,9 @@ public class XodusSchedulerContext implements SchedulerContext {
     private void schedule(final long now, final XodusScheduledTask xodusScheduledTask) {
 
         final long delay = max(0, xodusScheduledTask.getWhen() - now);
-        final ResourceId resourceId = xodusScheduledTask.getResourceId();
         final TaskId taskId = xodusScheduledTask.getTaskId();
 
-        getSimpleSchedulerContext().resumeTaskAfterDelay(resourceId, delay, MILLISECONDS, taskId, () -> getEnvironment().executeInTransaction(txn -> {
+        getSimpleSchedulerContext().resumeTaskAfterDelay(delay, MILLISECONDS, taskId, () -> getEnvironment().executeInTransaction(txn -> {
             final Store store = openStore(txn);
             store.delete(txn, xodusScheduledTask.getValue());
         }));
@@ -78,21 +77,20 @@ public class XodusSchedulerContext implements SchedulerContext {
     }
 
     @Override
-    public void resumeTaskAfterDelay(final ResourceId resourceId,
-                                     final long time,
+    public void resumeTaskAfterDelay(final long time,
                                      final TimeUnit timeUnit,
                                      final TaskId taskId) {
 
         // In case the process shuts down before tasks are executed, we must store the task info so it can be
         // re-run when the process wakes back up.
-        final XodusScheduledTask xodusScheduledTask = new XodusScheduledTask(resourceId, taskId, time, timeUnit);
+        final XodusScheduledTask xodusScheduledTask = new XodusScheduledTask(taskId, time, timeUnit);
 
         getEnvironment().executeInTransaction(txn -> {
             final Store store = openStore(txn);
             store.put(txn, xodusScheduledTask.getKey(), xodusScheduledTask.getValue());
         });
 
-        getSimpleSchedulerContext().resumeTaskAfterDelay(resourceId, time, timeUnit, taskId, () -> getEnvironment().executeInTransaction(txn -> {
+        getSimpleSchedulerContext().resumeTaskAfterDelay(time, timeUnit, taskId, () -> getEnvironment().executeInTransaction(txn -> {
             final Store store = openStore(txn);
             store.delete(txn, xodusScheduledTask.getValue());
         }));
@@ -100,17 +98,15 @@ public class XodusSchedulerContext implements SchedulerContext {
     }
 
     @Override
-    public void resumeFromNetwork(final ResourceId resourceId,
-                                  final TaskId taskId,
+    public void resumeFromNetwork(final TaskId taskId,
                                   final Object result) {
-        getSimpleSchedulerContext().resumeFromNetwork(resourceId, taskId, result);
+        getSimpleSchedulerContext().resumeFromNetwork(taskId, result);
     }
 
     @Override
-    public void resumeWithError(final ResourceId resourceId,
-                                final TaskId taskId,
+    public void resumeWithError(final TaskId taskId,
                                 final Throwable throwable) {
-        getSimpleSchedulerContext().resumeWithError(resourceId, taskId, throwable);
+        getSimpleSchedulerContext().resumeWithError(taskId, throwable);
     }
 
     private Store openStore(final Transaction txn) {

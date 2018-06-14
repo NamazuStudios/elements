@@ -22,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.Constants.HANDLER_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
+import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static java.lang.String.format;
 import static java.lang.Thread.sleep;
 

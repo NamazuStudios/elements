@@ -45,9 +45,18 @@ public class XodusServicesModule extends PrivateModule {
             .annotatedWith(named(DISPATCHER_EXECUTOR_SERVICE))
             .toProvider(new CachedThreadPoolProvider(SimpleScheduler.class, "dispatch"));
 
+        bind(SingleUseHandlerService.class)
+            .to(SimpleSingleUseHandlerService.class)
+            .asEagerSingleton();
+
+        bind(RetainedHandlerService.class)
+            .to(SimpleRetainedHandlerService.class)
+            .asEagerSingleton();
+
         expose(Scheduler.class);
         expose(ResourceService.class);
-//        expose(ResourceLockService.class);
+        expose(SingleUseHandlerService.class);
+        expose(RetainedHandlerService.class);
 
     }
 

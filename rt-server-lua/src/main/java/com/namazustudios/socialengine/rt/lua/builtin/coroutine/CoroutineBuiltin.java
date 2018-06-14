@@ -247,12 +247,12 @@ public class CoroutineBuiltin implements Builtin {
     }
 
     private void scheduleImmediate(final TaskId taskId, final LogAssist logAssist) {
-        getSchedulerContext().resumeTaskAfterDelay(getLuaResource().getId(), 0, MILLISECONDS, taskId);
+        getSchedulerContext().resumeTaskAfterDelay(0, MILLISECONDS, taskId);
     }
 
     private void scheduleUntil(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = delayUntilMilliseconds(luaState);
-        getSchedulerContext().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
+        getSchedulerContext().resumeTaskAfterDelay(delay, MILLISECONDS, taskId);
     }
 
     private long delayUntilMilliseconds(final LuaState luaState) {
@@ -263,7 +263,7 @@ public class CoroutineBuiltin implements Builtin {
 
     private void scheduleFor(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = timeValueInMilliseconds(luaState);
-        getSchedulerContext().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
+        getSchedulerContext().resumeTaskAfterDelay(delay, MILLISECONDS, taskId);
     }
 
     private long timeValueInMilliseconds(final LuaState luaState) {
@@ -285,7 +285,7 @@ public class CoroutineBuiltin implements Builtin {
 
     private void scheduleUntilNextCron(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = delayUntilNextCronMilliseconds(luaState);
-        getSchedulerContext().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
+        getSchedulerContext().resumeTaskAfterDelay(delay, MILLISECONDS, taskId);
     }
 
     private long delayUntilNextCronMilliseconds(final LuaState luaState) {

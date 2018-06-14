@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.*;
 import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.ContextNodeLifecycle;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import org.zeromq.ZContext;
 
@@ -48,6 +49,8 @@ public class TestJeroMQLuaNodeModule extends PrivateModule {
         });
 
         bind(Context.class).to(SimpleContext.class).asEagerSingleton();
+        bind(NodeLifecycle.class).to(ContextNodeLifecycle.class).asEagerSingleton();
+
         install(simpleServicesModule);
         install(new SimpleResourceContextModule());
         install(new SimpleIndexContextModule());

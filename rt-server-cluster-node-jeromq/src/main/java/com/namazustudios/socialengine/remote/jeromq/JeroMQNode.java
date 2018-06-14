@@ -1,13 +1,13 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.Node;
+import com.namazustudios.socialengine.rt.NodeLifecycle;
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.Identity;
 import com.namazustudios.socialengine.rt.remote.*;
-import com.namazustudios.socialengine.rt.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -73,7 +73,7 @@ public class JeroMQNode implements Node {
 
     private Provider<ConnectionPool> connectionPoolProvider;
 
-    private Context hostedContext;
+    private NodeLifecycle nodeLifecycle;
 
     private Logger logger = staticLogger;
 
@@ -102,7 +102,7 @@ public class JeroMQNode implements Node {
 
         if (nodeContext.compareAndSet(null, c)) {
             logger.info("Starting up.");
-            getHostedContext().start();
+            getNodeLifecycle().start();
             c.start();
         } else {
             throw new IllegalStateException("Already started.");
@@ -118,7 +118,7 @@ public class JeroMQNode implements Node {
         if (nodeContext.compareAndSet(c, null)) {
             logger.info("Shutting down.");
             c.stop();
-            getHostedContext().shutdown();
+            getNodeLifecycle().shutdown();
         } else {
             throw new IllegalStateException("Already stopped.");
         }
@@ -200,13 +200,13 @@ public class JeroMQNode implements Node {
         logger = LoggerFactory.getLogger(loggerName());
     }
 
-    public Context getHostedContext() {
-        return hostedContext;
+    public NodeLifecycle getNodeLifecycle() {
+        return nodeLifecycle;
     }
 
     @Inject
-    public void setHostedContext(Context hostedContext) {
-        this.hostedContext = hostedContext;
+    public void setNodeLifecycle(NodeLifecycle nodeLifecycle) {
+        this.nodeLifecycle = nodeLifecycle;
     }
 
     private String loggerName() {
