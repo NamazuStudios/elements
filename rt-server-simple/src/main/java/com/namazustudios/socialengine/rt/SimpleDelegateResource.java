@@ -54,11 +54,6 @@ public class SimpleDelegateResource implements Resource {
     }
 
     @Override
-    public boolean isPersistentState() {
-        return delegate.isPersistentState();
-    }
-
-    @Override
     public void serialize(OutputStream os) throws IOException {
         delegate.serialize(os);
     }

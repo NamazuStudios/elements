@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.DuplicateException;
 
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 
 /**
@@ -15,26 +16,13 @@ import java.util.concurrent.locks.Lock;
 public interface ResourceLockService {
 
     /**
-     * Gets the {@link Lock} for the provided {@link ResourceId}
-     *
-     * @param resourceId the resource ID
-     *
-     * @return a {@link Lock} used to serialize access to the provided resource
-     */
-    Lock getLock(ResourceId resourceId);
-
-    /**
      * Returns a {@link Monitor} for the provided {@link ResourceId}.
      *
      * @param resourceId the resource ID
      *
      * @return the {@link Monitor}
      */
-    default Monitor getMonitor(final ResourceId resourceId) {
-        final Lock lock = getLock(resourceId);
-        lock.lock();
-        return () -> lock.unlock();
-    }
+    Monitor getMonitor(final ResourceId resourceId);
 
     /**
      * Deletes the lock with the given {@link ResourceId}.
@@ -47,10 +35,18 @@ public interface ResourceLockService {
     interface Monitor extends AutoCloseable {
 
         /**
-         * Releases the underlyin {@link Lock}
+         * Releases the underlying {@link Lock}
          */
         @Override
         void close();
+
+        /**
+         * Gets a {@link Condition} with an arbitrary name associated with the supplied {@link Monitor}.
+         *
+         * @param name the name of the {@link Condition}
+         * @return the {@link Condition}
+         */
+        default Condition getCondition(final String name) {return null;}
 
     }
 

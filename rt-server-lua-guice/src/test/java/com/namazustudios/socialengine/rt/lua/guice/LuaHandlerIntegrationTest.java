@@ -17,6 +17,7 @@ public class LuaHandlerIntegrationTest {
     private final Node node = getEmbeddedTestService().getNode();
 
     private final Context context = getEmbeddedTestService().getContext();
+
     @AfterClass
     public void teardown() {
         getEmbeddedTestService().close();

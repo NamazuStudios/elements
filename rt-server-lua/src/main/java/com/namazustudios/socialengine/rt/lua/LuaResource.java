@@ -12,7 +12,6 @@ import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReasonBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstructionBuiltin;
 import com.namazustudios.socialengine.rt.lua.persist.Persistence;
-import com.namazustudios.socialengine.rt.lua.persist.SerialHeader;
 import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,18 +23,13 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import static com.namazustudios.socialengine.jnlua.LuaState.REGISTRYINDEX;
-import static com.namazustudios.socialengine.jnlua.LuaState.RIDX_GLOBALS;
+import static com.namazustudios.socialengine.jnlua.LuaState.*;
 import static com.namazustudios.socialengine.jnlua.LuaState.YIELD;
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
-import static com.namazustudios.socialengine.rt.lua.Constants.ASSERT_FUNCTION;
-import static com.namazustudios.socialengine.rt.lua.Constants.PRINT_FUNCTION;
-import static com.namazustudios.socialengine.rt.lua.Constants.REQUIRE;
+import static com.namazustudios.socialengine.rt.lua.Constants.*;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReason.*;
-import static com.namazustudios.socialengine.rt.lua.persist.Persistence.mangle;
 
 /**
  * The abstract {@link Resource} type backed by a Lua script.  This uses the JNLua implentation
@@ -68,6 +62,8 @@ public class LuaResource implements Resource {
 
     private final BuiltinManager builtinManager;
 
+    private final ResourceAcquisition resourceAcquisition;
+
     private Logger scriptLog = logger;
 
     /**
@@ -91,13 +87,14 @@ public class LuaResource implements Resource {
      * @param luaState the luaState
      */
     @Inject
-    public LuaResource(final LuaState luaState, final Context context) {
+    public LuaResource(final LuaState luaState, final Context context, final ResourceAcquisition resourceAcquisition) {
         try {
 
             this.luaState = luaState;
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
             this.persistence = new Persistence(this, this::getScriptLog);
             this.builtinManager = new BuiltinManager(this::getLuaState, this::getScriptLog, persistence);
+            this.resourceAcquisition = resourceAcquisition;
 
             openLibs();
             setupFunctionOverrides();
@@ -252,11 +249,6 @@ public class LuaResource implements Resource {
         });
     }
 
-    @Override
-    public boolean isPersistentState() {
-        return taskIdPendingTaskMap.isEmpty();
-    }
-
     /**
      * Invokes {@link LuaState#close()} and removes any resources from memory.  After this is called, this
      * {@link LuaResource} may not be reused.
@@ -311,6 +303,7 @@ public class LuaResource implements Resource {
                 final PendingTask pendingTask = new PendingTask(taskId, consumer, throwableConsumer);
 
                 if (status == YIELD) {
+                    resourceAcquisition.acquire(getId());
                     taskIdPendingTaskMap.put(taskId, pendingTask);
                 } else {
                     pendingTask.finish(result);
@@ -357,13 +350,15 @@ public class LuaResource implements Resource {
 
             final String taskIdString = luaState.checkString(1);                        // task id
             final int status = luaState.checkInteger(2);                                // thread status
-            final Object result = luaState.checkJavaObject(3, Object.class);            // the return value
+            luaState.checkJavaObject(3, Object.class);                                  // the return value
 
             if (!taskId.asString().equals(taskIdString)) {
                 getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
                 throw new IllegalStateException("task ID mismatch");
             } else if (status == YIELD) {
                 getScriptLog().debug("Resuming task {} from network yielded.  Resuming later.", taskId);
+            } else {
+                resourceAcquisition.release(getId());
             }
 
         } catch (NoSuchTaskException ex) {
@@ -389,8 +384,8 @@ public class LuaResource implements Resource {
         FinallyAction finalOperation = () -> luaState.setTop(0);
 
         final ResponseCode responseCode = throwable instanceof BaseException ?
-                ((BaseException)throwable).getResponseCode() :
-                ResponseCode.INTERNAL_ERROR_FATAL;
+            ((BaseException)throwable).getResponseCode() :
+            ResponseCode.INTERNAL_ERROR_FATAL;
 
         try {
 
@@ -417,6 +412,8 @@ public class LuaResource implements Resource {
                 throw new IllegalStateException("task ID mismatch");
             } else if (status == YIELD) {
                 getScriptLog().debug("Resuming task {} with error yielded.  Resuming later.", taskId);
+            } else {
+                resourceAcquisition.release(getId());
             }
 
         } catch (NoSuchTaskException ex) {
@@ -466,6 +463,8 @@ public class LuaResource implements Resource {
                 throw new IllegalStateException("task ID mismatch");
             } else if (status == YIELD) {
                 getScriptLog().debug("Scheduler resumed task {} yielded.  Resuming later.", taskId);
+            } else {
+                resourceAcquisition.release(getId());
             }
 
         } catch (NoSuchTaskException ex) {
@@ -487,8 +486,13 @@ public class LuaResource implements Resource {
      * @param result the result {@link Object}
      */
     public void finishPendingTask(final TaskId taskId, final Object result) {
+
         final PendingTask pendingTask = taskIdPendingTaskMap.remove(taskId);
-        if (pendingTask != null) pendingTask.finish(result);
+
+        if (pendingTask != null) {
+            pendingTask.finish(result);
+        }
+
     }
 
     /**
@@ -499,8 +503,13 @@ public class LuaResource implements Resource {
      * @param error the {@link Throwable} which caused the failure
      */
     public void failPendingTask(final TaskId taskId, final Throwable error) {
+
         final PendingTask pendingTask = taskIdPendingTaskMap.remove(taskId);
-        if (pendingTask != null) pendingTask.fail(error);
+
+        if (pendingTask != null) {
+            pendingTask.fail(error);
+        }
+
     }
 
     /**
@@ -547,9 +556,10 @@ public class LuaResource implements Resource {
 
         private final Consumer<Throwable> throwableConsumer;
 
-        public PendingTask(final TaskId taskId,
-                           final Consumer<Object> resultConsumer,
-                           final Consumer<Throwable> throwableConsumer) {
+        public PendingTask(
+                final TaskId taskId,
+                final Consumer<Object> resultConsumer,
+                final Consumer<Throwable> throwableConsumer) {
             this.taskId = taskId;
             this.resultConsumer = resultConsumer;
             this.throwableConsumer = throwableConsumer;

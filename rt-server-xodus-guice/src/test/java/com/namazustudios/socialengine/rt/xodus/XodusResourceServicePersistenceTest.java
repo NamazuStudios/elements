@@ -54,7 +54,6 @@ public class XodusResourceServicePersistenceTest {
         final Resource resource = mock(Resource.class);
 
         when(resource.getId()).thenReturn(resourceId);
-        when(resource.isPersistentState()).thenReturn(true);
         doAnswer(answer -> {
             final OutputStream os = answer.getArgument(0);
             os.write(bytes);
@@ -66,7 +65,6 @@ public class XodusResourceServicePersistenceTest {
 
         verify(resource, times(1)).close();
         verify(resource, times(1)).serialize(any());
-        verify(resource, times(1)).isPersistentState();
 
     }
 
@@ -90,7 +88,6 @@ public class XodusResourceServicePersistenceTest {
         getResourceService().release(acquired);
         verify(acquired.getDelegate(), times(1)).close();
         verify(acquired.getDelegate(), times(1)).serialize(any());
-        verify(acquired.getDelegate(), times(1)).isPersistentState();
 
         final Resource removed = getResourceService().removeResource(originalId);
         assertEquals(removed, DeadResource.getInstance());
@@ -154,7 +151,6 @@ public class XodusResourceServicePersistenceTest {
 
                 final Resource resource = mock(Resource.class);
                 when(resource.getId()).thenReturn(originalId);
-                when(resource.isPersistentState()).thenReturn(true);
                 return resource;
 
             });

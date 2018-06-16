@@ -9,12 +9,17 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import static org.testng.AssertJUnit.assertEquals;
@@ -41,10 +46,18 @@ public abstract class AbstractResourceServiceLinkingUnitTest {
     }
 
     @Test(dataProvider = "initialDataProvider")
-    public void testAdd(final ResourceId resourceId, final Path path, final Path alias) {
+    public void testAdd(final ResourceId resourceId, final Path path, final Path alias) throws IOException {
 
         final Resource resource = Mockito.mock(Resource.class);
         Mockito.when(resource.getId()).thenReturn(resourceId);
+
+        doAnswer(a -> {
+            final OutputStream os = a.getArgument(0);
+            final String resourceIdString = resourceId.asString();
+            final byte[] resourceIdBytes = resourceIdString.getBytes(UTF_8);
+            os.write(resourceIdBytes);
+            return null;
+        }).when(resource).serialize(any());
 
         getResourceService().addAndReleaseResource(path, resource);
         getResourceService().link(resourceId, alias);
@@ -63,11 +76,7 @@ public abstract class AbstractResourceServiceLinkingUnitTest {
         final AtomicBoolean removed = new AtomicBoolean();
 
         final ResourceService.Unlink first = getResourceService().unlinkPath(path, r -> fail("Unexpected removal."));
-        final ResourceService.Unlink second = getResourceService().unlinkPath(alias, r -> {
-            assertEquals(r, resource);
-            assertEquals(r.getId(), resourceId);
-            removed.set(true);
-        });
+        final ResourceService.Unlink second = getResourceService().unlinkPath(alias, r -> removed.set(true));
 
         assertTrue(removed.get(), "Resource was not removed.");
 

@@ -9,9 +9,11 @@ import org.mockito.Mockito;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
@@ -47,8 +49,7 @@ public abstract class AbstractResourceServiceUnitTest {
     @Test(dataProvider = "initialDataProvider")
     public void testAdd(final ResourceId resourceId, final Path path) {
 
-        final Resource resource = Mockito.mock(Resource.class);
-        when(resource.getId()).thenReturn(resourceId);
+        final Resource resource = getMockResource(resourceId);
 
         getResourceService().addAndReleaseResource(path, resource);
         intermediates.add(new Object[]{resourceId, path, resource});
@@ -277,4 +278,11 @@ public abstract class AbstractResourceServiceUnitTest {
     }
 
     public abstract ResourceService getResourceService();
+
+    public Resource getMockResource(final ResourceId resourceId) {
+        final Resource resource = Mockito.mock(Resource.class);
+        when(resource.getId()).thenReturn(resourceId);
+        return resource;
+    }
+
 }
