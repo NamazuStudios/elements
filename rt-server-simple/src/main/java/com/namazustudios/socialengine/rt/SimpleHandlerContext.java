@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.HandlerTimeoutException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.exception.NoSuchTaskException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,8 +86,12 @@ public class SimpleHandlerContext implements HandlerContext {
     private void scheduleTimeout(final TaskId taskId, final Consumer<Throwable> failure) {
         try {
             getScheduler().performAfterDelayV(taskId.getResourceId(), getTimeout(), MILLISECONDS, r -> {
-                r.resumeWithError(taskId, new TimeoutException("Handler timed out."));
-                logger.debug("Timing out task {}", taskId);
+                try {
+                    r.resumeWithError(taskId, new TimeoutException("Handler timed out."));
+                    logger.debug("Timing out task {}", taskId);
+                } catch (NoSuchTaskException ex) {
+                    logger.trace("Ignoring dead task.", ex);
+                }
             }, failure);
         } catch (Exception ex) {
             failure.accept(ex);
