@@ -5,7 +5,7 @@ import org.testng.annotations.Guice;
 
 import javax.inject.Inject;
 
-@Guice(modules = SimpleResourceServiceUnitTest.Module.class)
+@Guice(modules = SimpleResourceServiceReleasingUnitTest.Module.class)
 public class SimpleResourceServiceLinkingUnitTest extends AbstractResourceServiceLinkingUnitTest {
 
     private ResourceService resourceService;

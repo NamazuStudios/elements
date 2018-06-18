@@ -487,19 +487,19 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
         }
 
         final ByteIterable resourceIdKey = stringToEntry(sourceResourceId.asString());
-        final ByteIterable pathKey = stringToEntry(destination.toNormalizedPathString());
+        final ByteIterable destinationPathKey = stringToEntry(destination.toNormalizedPathString());
 
         getEnvironment().executeInTransaction(txn -> {
 
             final Store paths = openPaths(txn);
-            final ByteIterable existing = paths.get(txn, pathKey);
+            final ByteIterable existing = paths.get(txn, destinationPathKey);
 
                 if (existing != null) {
                     final String existingResourceId = entryToString(resourceIdKey);
                     throw new DuplicateException("Resource with id " + existingResourceId + " already exists at path " + destination);
                 }
 
-            doLink(txn, paths, resourceIdKey, pathKey);
+            doLink(txn, paths, resourceIdKey, destinationPathKey);
 
         });
 
@@ -608,12 +608,11 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
 
         final ByteIterable resourceIdKey = stringToEntry(resourceId.asString());
 
-        getEnvironment().executeInTransaction(txn -> doRemoveResource(txn, resourceIdKey));
-
         try (final Monitor m = getResourceLockService().getMonitor(resourceId)) {
             final XodusCacheKey cacheKey = new XodusCacheKey(resourceId);
             final XodusResource xodusResource = getStorage().getResourceIdResourceMap().remove(cacheKey);
             final Resource resource = xodusResource == null ? DeadResource.getInstance() : xodusResource.getDelegate();
+            getEnvironment().executeInTransaction(txn -> doRemoveResource(txn, resourceIdKey));
             return resource;
         }
 
@@ -633,6 +632,7 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
         try (final Cursor cursor = reverse.openCursor(txn)) {
 
             ByteIterable pathKey = cursor.getSearchKey(resourceIdKey);
+
             if (pathKey == null) {
                 final String resourceId = entryToString(resourceIdKey);
                 throw new ResourceNotFoundException("No resource with id " + resourceId);

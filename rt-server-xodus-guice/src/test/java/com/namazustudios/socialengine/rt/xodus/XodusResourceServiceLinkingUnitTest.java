@@ -6,7 +6,7 @@ import org.testng.annotations.Guice;
 
 import javax.inject.Inject;
 
-@Guice(modules = XodusResourceServiceUnitTest.Module.class)
+@Guice(modules = XodusResourceServiceReleasingUnitTest.Module.class)
 public class XodusResourceServiceLinkingUnitTest extends AbstractResourceServiceLinkingUnitTest {
 
     private ResourceService resourceService;

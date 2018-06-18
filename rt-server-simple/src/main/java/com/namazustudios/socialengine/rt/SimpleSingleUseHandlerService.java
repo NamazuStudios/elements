@@ -2,16 +2,13 @@ package com.namazustudios.socialengine.rt;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Attr;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.BiFunction;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static java.util.UUID.randomUUID;
 
 /**
@@ -48,10 +45,11 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
     public TaskId perform(final Consumer<Object> success, final Consumer<Throwable> failure,
                         final String module, final Attributes attributes,
                         final String method, final Object... args) {
-
         final Path path = Path.fromComponents("tmp", "handler", "su", randomUUID().toString());
         final Resource resource = acquire(path, module, attributes);
         final ResourceId resourceId = resource.getId();
+
+        final AtomicBoolean processed = new AtomicBoolean();
 
         try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
 

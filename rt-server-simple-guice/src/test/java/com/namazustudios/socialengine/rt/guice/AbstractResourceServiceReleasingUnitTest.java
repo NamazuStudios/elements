@@ -25,7 +25,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.AssertJUnit.fail;
 
-public abstract class AbstractResourceServiceUnitTest {
+public abstract class AbstractResourceServiceReleasingUnitTest {
 
     private final List<Object[]> intermediates = new ArrayList<>();
 

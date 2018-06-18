@@ -1,22 +1,23 @@
 package com.namazustudios.socialengine.rt.xodus;
 
-import com.google.common.io.ByteStreams;
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.guice.AbstractResourceServiceUnitTest;
+import com.namazustudios.socialengine.rt.guice.AbstractResourceServiceAcquiringUnitTest;
 import org.mockito.Mockito;
 import org.testng.annotations.Guice;
 
 import javax.inject.Inject;
-
 import java.io.*;
-import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.testng.Assert.fail;
 
-@Guice(modules = XodusResourceServiceUnitTest.Module.class)
-public class XodusResourceServiceUnitTest extends AbstractResourceServiceUnitTest {
+@Guice(modules = XodusResourceServiceReleasingUnitTest.Module.class)
+public class XodusResourceServcieAcquiringUnitTest extends AbstractResourceServiceAcquiringUnitTest {
 
     private ResourceService resourceService;
 
@@ -48,12 +49,8 @@ public class XodusResourceServiceUnitTest extends AbstractResourceServiceUnitTes
             final ResourceLoader resourceLoader = mock(ResourceLoader.class);
 
             doAnswer(a -> {
-                final InputStream is = a.getArgument(0);
-                final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                for (int b = is.read(); b >= 0; b = is.read()) bos.write((byte)b);
-                final String resourceIdString = new String(bos.toByteArray(), UTF_8);
-                final ResourceId resourceId = new ResourceId(resourceIdString);
-                return doGetMockResource(resourceId);
+                fail("No attempt to load resource should be made for this test.");
+                return null;
             }).when(resourceLoader).load(any());
 
             bind(ResourceLoader.class).toInstance(resourceLoader);
@@ -68,9 +65,7 @@ public class XodusResourceServiceUnitTest extends AbstractResourceServiceUnitTes
 
         try {
             doAnswer(a -> {
-                final OutputStream os = a.getArgument(0);
-                final byte[] bytes = resourceId.asString().getBytes(UTF_8);
-                os.write(bytes);
+                fail("No attempt to persist resource shoudl be mae for this test.");
                 return null;
             }).when(resource).serialize(any(OutputStream.class));
         } catch (IOException e) {

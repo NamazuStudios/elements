@@ -8,8 +8,8 @@ import com.namazustudios.socialengine.rt.ResourceService;
 import org.mockito.Mockito;
 import org.testng.annotations.Guice;
 
-@Guice(modules = SimpleResourceServiceUnitTest.Module.class)
-public class SimpleResourceServiceUnitTest extends AbstractResourceServiceUnitTest {
+@Guice(modules = SimpleResourceServiceReleasingUnitTest.Module.class)
+public class SimpleResourceServiceReleasingUnitTest extends AbstractResourceServiceReleasingUnitTest {
 
     protected ResourceService resourceService;
 
