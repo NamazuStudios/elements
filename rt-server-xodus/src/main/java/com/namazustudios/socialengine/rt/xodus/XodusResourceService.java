@@ -614,7 +614,6 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
             final XodusCacheKey cacheKey = new XodusCacheKey(resourceId);
             final XodusResource xodusResource = getStorage().getResourceIdResourceMap().remove(cacheKey);
             final Resource resource = xodusResource == null ? DeadResource.getInstance() : xodusResource.getDelegate();
-            resource.close();
             return resource;
         }
 

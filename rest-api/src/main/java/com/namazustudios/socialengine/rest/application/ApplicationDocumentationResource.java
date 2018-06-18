@@ -248,7 +248,7 @@ public class ApplicationDocumentationResource {
         final Operation existing = operationProducer.call();
 
         if (existing != null) {
-            throw new InvalidDataException("Operation already defined " + httpOperation.getVerb() + " " + httpOperation.getPath().getRaw().toAbsolutePathString());
+            throw new InvalidDataException("HandlerOperation already defined " + httpOperation.getVerb() + " " + httpOperation.getPath().getRaw().toAbsolutePathString());
         }
 
         final List<Parameter> parameters = resolveParameters(httpOperation);

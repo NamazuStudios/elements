@@ -17,14 +17,14 @@ public interface RetainedHandlerService {
      *
      * @param success the {@link Consumer} to receive the successful response
      * @param failure the {@link Consumer} to receieve the failed response
-     * @param attributes the attributes to use when creating the {@link Resource}
      * @param module the module to use when creating the {@link Resource}
+     * @param attributes the attributes to use when creating the {@link Resource}
      * @param method the method to invoke
      * @param args
      * @return the result of the operation
      */
     TaskId perform(Consumer<Object> success, Consumer<Throwable> failure,
-                   Attributes attributes, String module,
+                   String module, Attributes attributes,
                    String method, Object... args);
 
 }

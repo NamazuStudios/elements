@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -19,13 +20,11 @@ public interface SingleUseHandlerService {
     void stop();
 
     /**
-     * Performs an operation against the supplied module.  This allows an operation to be performed against a
-     * {@link Resource}.  Additionally, this takes care to handle all interation with the {@link ResourceLockService}
-     * ensuring that only one thread at a time is accessing the provided {@link Resource}.
-     *  @param attributes the module attributes
-     * @param module the module name
-     * @param operation a {@link Function<Resource, T>} to perform the operation.
+     * Performs an operation against this {@link SingleUseHandlerService}, reporting either success or failure to the
+     * code.
      */
-    <T> T perform(Attributes attributes, String module, Function<Resource, T> operation);
+    TaskId perform(Consumer<Object> success, Consumer<Throwable> failure,
+                 String module, Attributes attributes,
+                 String method, Object... args);
 
 }

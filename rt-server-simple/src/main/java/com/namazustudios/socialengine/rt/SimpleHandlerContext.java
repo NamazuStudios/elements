@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.exception.HandlerTimeoutException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.NoSuchTaskException;
 import org.slf4j.Logger;
@@ -8,16 +7,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Objects;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.joining;
 
+@SuppressWarnings("Duplicates")
 public class SimpleHandlerContext implements HandlerContext {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleHandlerContext.class);
@@ -49,18 +46,35 @@ public class SimpleHandlerContext implements HandlerContext {
             final String method, final Object... args) {
 
         final TaskId taskId;
+        final AtomicReference<Future<Void>> futureAtomicReference = new AtomicReference<>();
+
+        final Consumer<Throwable> _failure = t -> {
+            try {
+                final Future<Void> f = futureAtomicReference.get();
+                if (f != null && !f.isDone()) futureAtomicReference.get().cancel(false);
+            } catch (Exception ex) {
+                logger.error("Caught exception in handler.", ex);
+            }
+        };
+
+        final Consumer<Object> _success = o -> {
+            try {
+                final Future<Void> f = futureAtomicReference.get();
+                if (f != null && !f.isDone()) futureAtomicReference.get().cancel(false);
+            } catch (Throwable th) {
+                _failure.accept(th);
+            }
+        };
 
         try {
-            taskId = getSingleUseHandlerService().perform(attributes, module, r -> r
-                .getMethodDispatcher(method)
-                .params(args)
-                .dispatch(success, failure));
+            taskId = getSingleUseHandlerService().perform(_success.andThen(success), _failure.andThen(failure),
+                                                          module, attributes, method, args);
         } catch (Exception ex) {
             failure.accept(ex);
             throw new InternalException(ex);
         }
 
-        scheduleTimeout(taskId, failure);
+        futureAtomicReference.set(scheduleTimeout(taskId, failure));
 
     }
 
@@ -71,21 +85,41 @@ public class SimpleHandlerContext implements HandlerContext {
             final String method, final Object... args) {
 
         final TaskId taskId;
+        final AtomicReference<Future<Void>> futureAtomicReference = new AtomicReference<>();
+
+        final Consumer<Throwable> _failure = t -> {
+            try {
+                final Future<Void> f = futureAtomicReference.get();
+                if (f != null && !f.isDone()) futureAtomicReference.get().cancel(false);
+            } catch (Exception ex) {
+                logger.error("Caught exception in handler.", ex);
+            }
+        };
+
+        final Consumer<Object> _success = o -> {
+            try {
+                final Future<Void> f = futureAtomicReference.get();
+                if (f != null && !f.isDone()) futureAtomicReference.get().cancel(false);
+            } catch (Throwable th) {
+                _failure.accept(th);
+            }
+        };
 
         try {
-            taskId = getRetainedHandlerService().perform(success, failure, attributes, module, method, args);
+            taskId = getRetainedHandlerService().perform(_success.andThen(success), _failure.andThen(failure),
+                                                         module, attributes, method, args);
         } catch (Exception ex) {
             failure.accept(ex);
             throw new InternalException(ex);
         }
 
-        scheduleTimeout(taskId, failure);
+        futureAtomicReference.set(scheduleTimeout(taskId, failure));
 
     }
 
-    private void scheduleTimeout(final TaskId taskId, final Consumer<Throwable> failure) {
+    private Future<Void> scheduleTimeout(final TaskId taskId, final Consumer<Throwable> failure) {
         try {
-            getScheduler().performAfterDelayV(taskId.getResourceId(), getTimeout(), MILLISECONDS, r -> {
+            return getScheduler().performAfterDelayV(taskId.getResourceId(), getTimeout(), MILLISECONDS, r -> {
                 try {
                     r.resumeWithError(taskId, new TimeoutException("Handler timed out."));
                     logger.debug("Timing out task {}", taskId);

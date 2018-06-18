@@ -4,8 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import static java.util.UUID.randomUUID;
@@ -18,51 +16,50 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
 
     private ResourceService resourceService;
 
+    private ResourceLockService resourceLockService;
+
     @Override
     public TaskId perform(
             final Consumer<Object> success, final Consumer<Throwable> failure,
-            final Attributes attributes, final String module, final String method, final Object... args) {
+            final String module, final Attributes attributes,
+            final String method, final Object... args) {
 
-        final AtomicReference<Path> pathAtomicReference = new AtomicReference<>();
+        final Path path = Path.fromComponents("tmp", "handler", "su", randomUUID().toString());
+        final Resource resource = acquire(path, module, attributes);
+        final ResourceId resourceId = resource.getId();
 
-        final Runnable unlink = () -> {
+        try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
 
-            if (pathAtomicReference.get() == null) return;
+            final Consumer<Throwable> _failure = t -> {
+                try {
+                    getResourceService().unlinkPath(path);
+                } catch (Exception ex) {
+                    logger.error("Caught exception destroying resource {}", resourceId, ex);
+                }
+            };
 
-            try {
-                getResourceService().unlinkPath(pathAtomicReference.get());
-            } catch (Exception ex) {
-                failure.accept(ex);
-                logger.error("Caught exception unlinking path {}", pathAtomicReference.get(), ex);
-            }
+            final Consumer<Object> _success = o -> {
+                try {
+                    getResourceService().unlinkPath(path);
+                } catch (Throwable th) {
+                    _failure.accept(th);
+                }
+            };
 
-        };
+            return resource
+                .getMethodDispatcher(method)
+                .params(args)
+                .dispatch(_success.andThen(success), _failure.andThen(failure));
 
-        final Consumer<Object> _success = o -> {
-            try {
-                success.accept(o);
-            } finally {
-                unlink.run();
-            }
-        };
-
-        final Consumer<Throwable> _failure = th -> {
-            try {
-                failure.accept(th);
-            } finally {
-                unlink.run();
-            }
-        };
-
-        try (final Operation o = new Operation(attributes, module)) {
-            return o.perform((r, p)->  {
-                pathAtomicReference.set(p);
-                return r.getMethodDispatcher(method)
-                        .params(args)
-                        .dispatch(_success, _failure);
-            });
+        } finally {
+            getResourceService().release(resource);
         }
 
+    }
+
+    private Resource acquire(final Path path, final String module, final Attributes attributes) {
+        final Resource resource = getResourceLoader().load(module, attributes);
+        return getResourceService().addAndAcquireResource(path, resource);
     }
 
     public ResourceLoader getResourceLoader() {
@@ -83,30 +80,13 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
         this.resourceService = resourceService;
     }
 
-    private class Operation implements AutoCloseable {
+    public ResourceLockService getResourceLockService() {
+        return resourceLockService;
+    }
 
-        private final Path path;
-
-        private final Resource resource;
-
-        public Operation(final Attributes attributes, final String module) {
-
-            path = Path.fromComponents("tmp", "handler", randomUUID().toString());
-
-            final Resource r = getResourceLoader().load(module, attributes);
-            resource = getResourceService().addAndAcquireResource(path, r);
-
-        }
-
-        public <T> T perform(final BiFunction<Resource, Path, T> resourceTFunction) {
-            return resourceTFunction.apply(resource, path);
-        }
-
-        @Override
-        public void close() {
-            getResourceService().release(resource);
-        }
-
+    @Inject
+    public void setResourceLockService(ResourceLockService resourceLockService) {
+        this.resourceLockService = resourceLockService;
     }
 
 }

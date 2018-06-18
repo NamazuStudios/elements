@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import org.w3c.dom.Attr;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -38,6 +40,16 @@ public class SimpleAttributes implements Attributes, Serializable {
 
     public void setAttributes(Map<String, Object> attributes) {
         this.attributes = attributes;
+    }
+
+    @Override
+    public int hashCode() {
+        return Attributes.hashCode(this);
+    }
+
+    @Override
+    public boolean equals(final Object that) {
+        return Attributes.equals(this, that);
     }
 
     /**
