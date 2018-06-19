@@ -11,14 +11,9 @@ import java.util.function.Consumer;
 
 import static java.util.UUID.randomUUID;
 
-/**
- * Keeps {@link Resource} instances cached in memory such that they may be recycled for one-time method invocations.
- */
 public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleSingleUseHandlerService.class);
-
-    private long timeout;
 
     private Scheduler scheduler;
 
@@ -49,13 +44,21 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
         final Resource resource = acquire(path, module, attributes);
         final ResourceId resourceId = resource.getId();
 
-        final AtomicBoolean processed = new AtomicBoolean();
-
         try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
+
+            final AtomicBoolean processed = new AtomicBoolean();
+
+            final Runnable destroy = () -> {
+                if (processed.compareAndSet(false, true)) try {
+                    getScheduler().scheduleDestruction(resourceId);
+                } catch (Exception ex) {
+                    logger.error("Error scheudling destruction for resource {}", resourceId, ex);
+                }
+            };
 
             final Consumer<Throwable> _failure = t -> {
                 try {
-                    getResourceService().destroy(resourceId);
+                    destroy.run();
                 } catch (Exception ex) {
                     logger.error("Caught exception destroying resource {}", resourceId, ex);
                 }
@@ -63,7 +66,7 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
 
             final Consumer<Object> _success = o -> {
                 try {
-                    getResourceService().destroy(resourceId);
+                    destroy.run();
                 } catch (Throwable th) {
                     _failure.accept(th);
                 }

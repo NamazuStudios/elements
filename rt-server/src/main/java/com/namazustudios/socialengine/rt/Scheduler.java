@@ -21,7 +21,31 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * Created by patricktwohig on 8/22/15.
  */
 public interface Scheduler {
-    
+
+    /**
+     * Provided the {@link Path}, this will schedule an unlink operation at some point in the near future.  This allows
+     * any pending operations to relase their locks gracefully unlink an potentially destroy any {@link Resource}s
+     * associated with the supplied {@Link Path}.  If the {@link Resource} is removed this will ensure that the
+     * {@link Resource#close()} method is called appropriately.
+     *
+     * @param path the {@link Path} to unlink
+     * @return a {@link Future<Void>} used to signal detruction.
+     */
+    Future<Void> scheduleUnlink(Path path);
+
+    /**
+     * Provided the {@link ResourceId}, this will schedule destruction at some point in the near future.  This allows
+     * any pending operations to release their locks gracefully and destroy the {@link Resource} associated with the
+     * supplied. {@link ResourceId}.
+     *
+     * This ensures that the underlying {@link Resource} is removed from the {@link ResourceService} and its
+     * {@link Resource#close()} method invoked.
+     *
+     * @param resourceId the {@link ResourceId}
+     * @return a {@link Future<Void>} used to signal detruction.
+     */
+    Future<Void> scheduleDestruction(ResourceId resourceId);
+
     /**
      * Performs an action against the resource with the provided {@link ResourceId}.
      *

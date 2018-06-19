@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import static java.util.UUID.randomUUID;
@@ -11,6 +12,8 @@ import static java.util.UUID.randomUUID;
 public class SimpleRetainedHandlerService implements RetainedHandlerService {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleRetainedHandlerService.class);
+
+    private Scheduler scheduler;
 
     private ResourceLoader resourceLoader;
 
@@ -30,9 +33,19 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
 
         try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
 
+            final AtomicBoolean processed = new AtomicBoolean();
+
+            final Runnable unlink = () -> {
+                if (processed.compareAndSet(false, true)) try {
+                    getScheduler().scheduleUnlink(path);
+                } catch (Exception ex) {
+                    logger.error("Caught exception unklining Resource {}", resourceId, ex);
+                }
+            };
+
             final Consumer<Throwable> _failure = t -> {
                 try {
-                    getResourceService().unlinkPath(path);
+                    unlink.run();
                 } catch (Exception ex) {
                     logger.error("Caught exception destroying resource {}", resourceId, ex);
                 }
@@ -40,7 +53,7 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
 
             final Consumer<Object> _success = o -> {
                 try {
-                    getResourceService().unlinkPath(path);
+                    unlink.run();
                 } catch (Throwable th) {
                     _failure.accept(th);
                 }
@@ -60,6 +73,15 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
     private Resource acquire(final Path path, final String module, final Attributes attributes) {
         final Resource resource = getResourceLoader().load(module, attributes);
         return getResourceService().addAndAcquireResource(path, resource);
+    }
+
+    public Scheduler getScheduler() {
+        return scheduler;
+    }
+
+    @Inject
+    public void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
     }
 
     public ResourceLoader getResourceLoader() {

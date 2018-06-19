@@ -41,30 +41,31 @@ public class SimpleScheduler implements Scheduler {
     private ScheduledExecutorService scheduledExecutorService;
 
     @Override
-    public void shutdown() {
-        try {
+    public Future<Void> scheduleUnlink(final Path path) {
+        return getDispatcherExecutorService().submit(() -> {
+            getResourceService().unlinkPath(path, resource -> {
 
-            logger.info("Shutting down dispatcher threads.");
-            dispatcherExecutorService.shutdown();
+                final ResourceId resourceId = resource.getId();
 
-            logger.info("Shutting down scheduler threads.");
-            scheduledExecutorService.shutdownNow();
+                try {
+                    resource.close();
+                } catch (Exception ex) {
+                    logger.error("Caught exception destroying Resource {}", resourceId, ex);
+                }
 
-            if (scheduledExecutorService.awaitTermination(5, MINUTES)) {
-                logger.info("Shut down scheduler threads.");
-            } else {
-                logger.error("Timed out shutting down scheduler threads.");
+            });
+        }, null);
+    }
+
+    @Override
+    public Future<Void> scheduleDestruction(final ResourceId resourceId) {
+        return getDispatcherExecutorService().submit(() -> {
+            try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
+                getResourceService().destroy(resourceId);
+            } catch (Exception ex) {
+                logger.error("Caught exception destroying Resource {}", resourceId, ex);
             }
-
-            if (dispatcherExecutorService.awaitTermination(5, TimeUnit.MINUTES)) {
-                logger.info("Shut down dispatcher threads.");
-            } else {
-                logger.error("Timed out shutting down dispatcher threads.");
-            }
-
-        } catch (InterruptedException ex) {
-            throw new InternalException(ex);
-        }
+        }, null);
     }
 
     @Override
@@ -141,6 +142,33 @@ public class SimpleScheduler implements Scheduler {
             throw th;
         } finally {
             logger.trace("Unlocked resource {}", resource.getId());
+        }
+    }
+
+    @Override
+    public void shutdown() {
+        try {
+
+            logger.info("Shutting down dispatcher threads.");
+            dispatcherExecutorService.shutdown();
+
+            logger.info("Shutting down scheduler threads.");
+            scheduledExecutorService.shutdownNow();
+
+            if (scheduledExecutorService.awaitTermination(5, MINUTES)) {
+                logger.info("Shut down scheduler threads.");
+            } else {
+                logger.error("Timed out shutting down scheduler threads.");
+            }
+
+            if (dispatcherExecutorService.awaitTermination(5, TimeUnit.MINUTES)) {
+                logger.info("Shut down dispatcher threads.");
+            } else {
+                logger.error("Timed out shutting down dispatcher threads.");
+            }
+
+        } catch (InterruptedException ex) {
+            throw new InternalException(ex);
         }
     }
 
