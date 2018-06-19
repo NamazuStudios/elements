@@ -8,8 +8,11 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
+import static java.util.Arrays.stream;
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.joining;
 
 public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
 
@@ -58,7 +61,14 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
 
             final Consumer<Throwable> _failure = t -> {
                 try {
+
                     destroy.run();
+
+                    final String _args = stream(args)
+                        .map(a -> a == null ? "null" : a.toString())
+                        .collect(Collectors.joining(","));
+                    logger.error("Caught exception processing single-use handler {}.{}({}).", module, method, _args, t);
+
                 } catch (Exception ex) {
                     logger.error("Caught exception destroying resource {}", resourceId, ex);
                 }

@@ -6,7 +6,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
+import static java.util.Arrays.stream;
 import static java.util.UUID.randomUUID;
 
 public class SimpleRetainedHandlerService implements RetainedHandlerService {
@@ -46,6 +48,12 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
             final Consumer<Throwable> _failure = t -> {
                 try {
                     unlink.run();
+
+                    final String _args = stream(args)
+                            .map(a -> a == null ? "null" : a.toString())
+                            .collect(Collectors.joining(","));
+                    logger.error("Caught exception processing retained handler {}.{}({}).", module, method, _args, t);
+
                 } catch (Exception ex) {
                     logger.error("Caught exception destroying resource {}", resourceId, ex);
                 }
