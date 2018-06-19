@@ -11,11 +11,9 @@ import javax.inject.Inject;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public class UserFCMRegistrationService implements FCMRegistrationService {
+import static java.lang.String.format;
 
-// TODO Remove this once we are satisfied with the end-to-end-testing
-//    @Inject
-//    private NotificationService notificationService;
+public class UserFCMRegistrationService implements FCMRegistrationService {
 
     private FCMRegistrationDao fcmRegistrationDao;
 
@@ -28,20 +26,12 @@ public class UserFCMRegistrationService implements FCMRegistrationService {
 
         if (fcmRegistration.getProfile() == null) {
             fcmRegistration.setProfile(profile);
-        } else if (!Objects.equals(fcmRegistration.getProfile(), profile.getId())) {
-            throw new ForbiddenException("Profile mismatch when registering Firebase Token.");
+        } else if (!Objects.equals(fcmRegistration.getProfile().getId(), profile.getId())) {
+            final String msg = format("'%s'!='%s'", fcmRegistration.getProfile().getId(), profile.getId());
+            throw new ForbiddenException("Profile mismatch when creating Firebase Token " + msg);
         }
 
         final FCMRegistration registration = getFcmRegistrationDao().createRegistration(fcmRegistration);
-
-// TODO Remove this once we are satisfied with the end-to-end-testing
-//        notificationService.getBuilder()
-//            .recipient(registration.getProfile())
-//            .title("Hello World!")
-//            .message("Hello World!")
-//            .build()
-//            .send();
-
         return registration;
 
     }
@@ -54,7 +44,8 @@ public class UserFCMRegistrationService implements FCMRegistrationService {
         if (fcmRegistration.getProfile() == null) {
             fcmRegistration.setProfile(profile);
         } else if (!Objects.equals(fcmRegistration.getProfile().getId(), profile.getId())) {
-            throw new ForbiddenException("Profile mismatch when registering Firebase Token.");
+            final String msg = format("'%s'!='%s'", fcmRegistration.getProfile().getId(), profile.getId());
+            throw new ForbiddenException("Profile mismatch when updating Firebase Token " + msg);
         }
 
         return getFcmRegistrationDao().updateRegistration(fcmRegistration);
