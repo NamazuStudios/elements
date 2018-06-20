@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.google.common.collect.Streams;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +50,8 @@ public class SimpleScheduler implements Scheduler {
 
                 try {
                     resource.close();
+                } catch (ResourceNotFoundException ex) {
+                    logger.debug("No Resource found at path {}.  Disregarding.", ex);
                 } catch (Exception ex) {
                     logger.error("Caught exception destroying Resource {}", resourceId, ex);
                 }

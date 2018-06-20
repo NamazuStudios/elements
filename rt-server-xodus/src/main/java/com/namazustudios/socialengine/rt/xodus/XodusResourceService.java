@@ -536,53 +536,7 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
         checkOpen();
 
         final ByteIterable pathKey = stringToEntry(path.toNormalizedPathString());
-
-        final Unlink unlink = getEnvironment().computeInTransaction(txn -> {
-
-            final Store paths = openPaths(txn);
-            final Store reverse = openReversePaths(txn);
-            final Store resources = openResources(txn);
-
-            final ByteIterable resourceIdValue = paths.get(txn, pathKey);
-
-            if (resourceIdValue == null) {
-                throw new ResourceNotFoundException("No resource at path " + path);
-            } else if (!paths.delete(txn, pathKey)) {
-                final String resourceId = entryToString(resourceIdValue);
-                logger.error("Consistency error.  Unable to unlink path {} -> {}", path, resourceId);
-            }
-
-            try (final Cursor cursor = reverse.openCursor(txn)) {
-                if (!cursor.getSearchBoth(resourceIdValue, pathKey) || !cursor.deleteCurrent()) {
-                    final String resourceId = entryToString(resourceIdValue);
-                    logger.error("Consistency error.  Reverse mapping broken {} -> {}", path, resourceId);
-                }
-            }
-
-            final boolean removed;
-            final ResourceId resourceId = new ResourceId(entryToString(resourceIdValue));
-
-            try (final Cursor cursor = reverse.openCursor(txn)) {
-                removed = cursor.getSearchKey(resourceIdValue) == null;
-            }
-
-            if (removed) {
-                resources.delete(txn, resourceIdValue);
-            }
-
-            return new Unlink() {
-                @Override
-                public ResourceId getResourceId() {
-                    return resourceId;
-                }
-
-                @Override
-                public boolean isRemoved() {
-                    return removed;
-                }
-            };
-
-        });
+        final Unlink unlink = getEnvironment().computeInTransaction(txn -> doUnlink(txn, pathKey));
 
         if (unlink.isRemoved()) {
             try (final Monitor m = getResourceLockService().getMonitor(unlink.getResourceId())) {
@@ -594,6 +548,56 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
         }
 
         return unlink;
+
+    }
+
+    private Unlink doUnlink(final Transaction txn, final ByteIterable pathKey) {
+
+        final Store paths = openPaths(txn);
+        final Store reverse = openReversePaths(txn);
+        final Store resources = openResources(txn);
+
+        final ByteIterable resourceIdValue = paths.get(txn, pathKey);
+
+        if (resourceIdValue == null) {
+            final Path path = Path.fromPathString(entryToString(pathKey));
+            throw new ResourceNotFoundException("No resource at path " + path);
+        } else if (!paths.delete(txn, pathKey)) {
+            final String resourceId = entryToString(resourceIdValue);
+            final Path path = Path.fromPathString(entryToString(pathKey));
+            logger.error("Consistency error.  Unable to unlink path {} -> {}", path, resourceId);
+        }
+
+        try (final Cursor cursor = reverse.openCursor(txn)) {
+            if (!cursor.getSearchBoth(resourceIdValue, pathKey) || !cursor.deleteCurrent()) {
+                final String resourceId = entryToString(resourceIdValue);
+                final Path path = Path.fromPathString(entryToString(pathKey));
+                logger.error("Consistency error.  Reverse mapping broken {} -> {}", path, resourceId);
+            }
+        }
+
+        final boolean removed;
+        final ResourceId resourceId = new ResourceId(entryToString(resourceIdValue));
+
+        try (final Cursor cursor = reverse.openCursor(txn)) {
+            removed = cursor.getSearchKey(resourceIdValue) == null;
+        }
+
+        if (removed) {
+            resources.delete(txn, resourceIdValue);
+        }
+
+        return new Unlink() {
+            @Override
+            public ResourceId getResourceId() {
+                return resourceId;
+            }
+
+            @Override
+            public boolean isRemoved() {
+                return removed;
+            }
+        };
 
     }
 
