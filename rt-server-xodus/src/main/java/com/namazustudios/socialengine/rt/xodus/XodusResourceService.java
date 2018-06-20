@@ -307,11 +307,6 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
     }
 
     @Override
-    public void release(final Resource resource) {
-
-    }
-
-    @Override
     public boolean tryRelease(Resource resource) {
 
         checkOpen();
