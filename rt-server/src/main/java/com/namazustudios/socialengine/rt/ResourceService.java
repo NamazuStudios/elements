@@ -99,6 +99,18 @@ public interface ResourceService extends AutoCloseable {
     Resource addAndAcquireResource(Path path, Resource resource);
 
     /**
+     * Attempts to release ownership of the specified {@link Resource}, throwing an instance of
+     * {@link ResourceNotFoundException} if the operation failed.
+     *
+     * @param resource the {@link Resource} to release
+     */
+    default void release(final Resource resource) {
+        if (!tryRelease(resource)) {
+            throw new ResourceNotFoundException("Resource not part of this ResourceService " + resource.getId());
+        }
+    }
+
+    /**
      * Releases ownership of the {@link Resource} to this {@link ResourceService}.  Once released, any further operation
      * on the {@link Resource} is considered undefined behavior because this call may invoke {@link Resource#close()}.
      *
@@ -110,9 +122,11 @@ public interface ResourceService extends AutoCloseable {
      * the {@link Resource} is not managed by this {@link ResourceService} then the behavior of this call is undefined.
      *
      * @param resource the {@link Resource} to add, must be first acquired by a call to this service.
-     *
+     * @return true if released, false if the {@link Resource} does not exist in this {@link ResourceService}
      */
-    default void release(final Resource resource) {}
+    default boolean tryRelease(final Resource resource) {
+        return true;
+    }
 
     /**
      * Provided the {@link Path}, this will list all {@link ResourceId}s matching the {@link Path}.  The supplied

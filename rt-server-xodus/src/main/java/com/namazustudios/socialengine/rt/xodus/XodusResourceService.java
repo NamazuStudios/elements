@@ -17,6 +17,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -265,7 +266,7 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
             doLink(txn, paths, resourceIdKey, pathKey);
             return doReleaseResource(txn, xodusResource);
 
-        }).run();
+        }).getAsBoolean();
 
     }
 
@@ -308,22 +309,20 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
     @Override
     public void release(final Resource resource) {
 
+    }
+
+    @Override
+    public boolean tryRelease(Resource resource) {
+
         checkOpen();
 
         final XodusResource xodusResource = checkXodusResource(resource);
 
-        getEnvironment().computeInTransaction(txn -> {
-
+        return getEnvironment().computeInTransaction(txn -> {
             final Store reverse = openReversePaths(txn);
             final ByteIterable key = xodusResource.getXodusCacheKey().getKey();
-
-            if (reverse.get(txn, key) == null) {
-                throw new ResourceNotFoundException("Resource not part of this ResourceService " + xodusResource.getId());
-            }
-
-            return doReleaseResource(txn, xodusResource);
-
-        }).run();
+            return reverse.get(txn, key) == null ? (BooleanSupplier) () -> false : doReleaseResource(txn, xodusResource);
+        }).getAsBoolean();
 
     }
 
@@ -352,8 +351,8 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
 
     }
 
-    private Runnable doReleaseResource(final Transaction txn,
-                                       final XodusResource xodusResource) {
+    private BooleanSupplier doReleaseResource(final Transaction txn,
+                                              final XodusResource xodusResource) {
 
         final ByteIterable resourceIdKey = stringToEntry(xodusResource.getId().asString());
         final int acquires = doRelease(txn, resourceIdKey);
@@ -378,7 +377,6 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
                         // corruption if at all possible.  However, this means the service is in an undefined state so
                         // that still indicates a potential error.
                         logger.error("Cached resource mismatch.");
-                        return;
                     }
 
                     try {
@@ -390,12 +388,15 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
 
                 }
 
+                return true;
+
             };
 
         } else {
             return () -> {
                 // If possible, we may want to do some signaling through a condition variable?
                 logger.trace("Nothing to be done releasing Resource.");
+                return true;
             };
         }
 
