@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -66,22 +67,21 @@ public class TaskId implements Serializable {
 
     @Override
     public String toString() {
-        return format("%s%s%s", resourceId.asString(), ID_SEPARATOR, uuid.toString());
+        return asString();
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TaskId)) return false;
-
-        TaskId taskId = (TaskId) o;
-
-        return uuid != null ? uuid.equals(taskId.uuid) : taskId.uuid == null;
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof TaskId)) return false;
+        TaskId taskId = (TaskId) object;
+        return Objects.equals(uuid, taskId.uuid) &&
+               Objects.equals(getResourceId(), taskId.getResourceId());
     }
 
     @Override
     public int hashCode() {
-        return uuid != null ? uuid.hashCode() : 0;
+        return Objects.hash(uuid, getResourceId());
     }
 
 }

@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.rt.ResourceId;
 import com.namazustudios.socialengine.rt.exception.ResourcePersistenceException;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
+import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import org.slf4j.Logger;
 
 import java.io.*;
@@ -50,6 +51,8 @@ public class Persistence {
     private static final String GLOBALS = "_g";
 
     private static final String MODULE = "_m";
+
+    private static final String COROUTINES = "_c";
 
     private static final String UNPERSIST = mangle(Persistence.class, "u");
 
@@ -145,6 +148,9 @@ public class Persistence {
 
             luaState.getField(REGISTRYINDEX, LuaResource.MODULE);
             luaState.setField(-2, MODULE);
+
+            luaState.getField(REGISTRYINDEX, CoroutineBuiltin.COROUTINES_TABLE);
+            luaState.setField(-2, COROUTINES);
 
             luaState.persist(lObjectBos, 1, 2);
 
@@ -297,6 +303,9 @@ public class Persistence {
 
             luaState.getField(-1, MODULE);
             luaState.setField(REGISTRYINDEX, LuaResource.MODULE);
+
+            luaState.getField(-1, COROUTINES);
+            luaState.setField(REGISTRYINDEX, CoroutineBuiltin.COROUTINES_TABLE);
 
         } catch (IOException e) {
             throw new UncheckedIOException(e);

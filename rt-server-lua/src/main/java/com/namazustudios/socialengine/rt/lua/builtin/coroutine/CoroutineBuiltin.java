@@ -36,7 +36,7 @@ public class CoroutineBuiltin implements Builtin {
 
     public static final String MODULE_NAME = "namazu.coroutine";
 
-    public static final String COROUTINES_TABLE = "namazu.threads";
+    public static final String COROUTINES_TABLE = "com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin.coroutines";
 
     public static final String START = "start";
 
