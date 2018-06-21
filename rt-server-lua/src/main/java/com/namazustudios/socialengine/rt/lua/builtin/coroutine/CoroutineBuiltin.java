@@ -127,8 +127,15 @@ public class CoroutineBuiltin implements Builtin {
             luaState.getField(-1, taskId.asString());
 
             if (!luaState.isThread(-1)) {
-                logger.debug("no such task " + taskId + " instead got " + luaState.typeName(-1));
+                logger.info("no such task " + taskId + " instead got " + luaState.typeName(-1));
+
+                if (logger.isDebugEnabled()) {
+                    int size = luaState.tableSize(-2);
+                    logger.debug("Number of running coroutines: {}", size);
+                }
+
                 return 0;
+
             }
 
             luaState.replace(1);  // Pops the thread
