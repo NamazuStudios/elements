@@ -7,13 +7,17 @@ import com.namazustudios.socialengine.rt.exception.DuplicateException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import jetbrains.exodus.ByteIterable;
-import jetbrains.exodus.env.*;
+import jetbrains.exodus.env.Cursor;
+import jetbrains.exodus.env.Environment;
+import jetbrains.exodus.env.Store;
+import jetbrains.exodus.env.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
@@ -23,9 +27,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.lang.Integer.max;
-import static java.util.Spliterator.CONCURRENT;
-import static java.util.Spliterator.IMMUTABLE;
-import static java.util.Spliterator.NONNULL;
+import static java.util.Spliterator.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.function.Function.identity;
@@ -34,9 +36,7 @@ import static jetbrains.exodus.bindings.IntegerBinding.entryToInt;
 import static jetbrains.exodus.bindings.IntegerBinding.intToEntry;
 import static jetbrains.exodus.bindings.StringBinding.entryToString;
 import static jetbrains.exodus.bindings.StringBinding.stringToEntry;
-import static jetbrains.exodus.env.StoreConfig.WITHOUT_DUPLICATES;
-import static jetbrains.exodus.env.StoreConfig.WITHOUT_DUPLICATES_WITH_PREFIXING;
-import static jetbrains.exodus.env.StoreConfig.WITH_DUPLICATES;
+import static jetbrains.exodus.env.StoreConfig.*;
 
 public class XodusResourceService implements ResourceService, ResourceAcquisition {
 
