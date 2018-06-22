@@ -346,8 +346,7 @@ public class LuaResource implements Resource {
                 final PendingTask pendingTask = new PendingTask(taskId, consumer, throwableConsumer);
 
                 if (status == YIELD) {
-                    resourceAcquisition.acquire(getId());
-                    taskIdPendingTaskMap.put(taskId, pendingTask);
+                    addPendingTask(pendingTask);
                 } else {
                     pendingTask.finish(result);
                 }
@@ -400,8 +399,6 @@ public class LuaResource implements Resource {
                 throw new IllegalStateException("task ID mismatch");
             } else if (status == YIELD) {
                 getScriptLog().debug("Resuming task {} from network yielded.  Resuming later.", taskId);
-            } else {
-                resourceAcquisition.release(getId());
             }
 
         } catch (NoSuchTaskException ex) {
@@ -455,8 +452,6 @@ public class LuaResource implements Resource {
                 throw new IllegalStateException("task ID mismatch");
             } else if (status == YIELD) {
                 getScriptLog().debug("Resuming task {} with error yielded.  Resuming later.", taskId);
-            } else {
-                resourceAcquisition.release(getId());
             }
 
         } catch (NoSuchTaskException ex) {
@@ -506,8 +501,6 @@ public class LuaResource implements Resource {
                 throw new IllegalStateException("task ID mismatch");
             } else if (status == YIELD) {
                 getScriptLog().debug("Scheduler resumed task {} yielded.  Resuming later.", taskId);
-            } else {
-                resourceAcquisition.release(getId());
             }
 
         } catch (NoSuchTaskException ex) {
@@ -519,6 +512,12 @@ public class LuaResource implements Resource {
             finalOperation.perform();
         }
 
+    }
+
+    private void addPendingTask(final PendingTask pendingTask) {
+        if (taskIdPendingTaskMap.put(pendingTask.taskId, pendingTask) == null) {
+            resourceAcquisition.acquire(getId());
+        }
     }
 
     /**
@@ -534,6 +533,7 @@ public class LuaResource implements Resource {
 
         if (pendingTask != null) {
             pendingTask.finish(result);
+            resourceAcquisition.release(getId());
         }
 
     }
@@ -551,6 +551,7 @@ public class LuaResource implements Resource {
 
         if (pendingTask != null) {
             pendingTask.fail(error);
+            resourceAcquisition.release(getId());
         }
 
     }
