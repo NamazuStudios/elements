@@ -21,14 +21,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.jnlua.LuaState.*;
 import static com.namazustudios.socialengine.jnlua.LuaState.YIELD;
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
 import static com.namazustudios.socialengine.rt.lua.Constants.*;
+import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin.COROUTINES_TABLE;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReason.*;
 
 /**
@@ -247,6 +251,37 @@ public class LuaResource implements Resource {
             resourceId = sh.getResourceId();
             attributes = sh.getAttributes();
         });
+    }
+
+    @Override
+    public Set<TaskId> getTasks() {
+
+        luaState.pushJavaFunction(l -> {
+
+            int index = 0;
+            luaState.newTable();
+
+            luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
+
+            luaState.pushNil();
+            while (luaState.next(2)) {
+                luaState.pushValue(-2);
+                luaState.rawSet(1, ++index);
+                luaState.pop(1);
+            }
+
+            luaState.setTop(1);
+            return 1;
+
+        });
+
+        luaState.call(0, 1);
+
+        final List<String> taskIds = luaState.toJavaObject(-1, List.class);
+        luaState.pop(1);
+
+        return taskIds.stream().map(TaskId::new).collect(Collectors.toSet());
+
     }
 
     /**

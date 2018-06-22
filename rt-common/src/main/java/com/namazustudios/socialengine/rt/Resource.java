@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -113,6 +114,13 @@ public interface Resource extends AutoCloseable {
      * @return true if verbose mode is enabled.
      */
     default boolean isVerbose() {return false; }
+
+    /**
+     * Gets a {@link Set} of active tasks.
+     *
+     * @return the running tasks as a {@link Set}
+     */
+    Set<TaskId> getTasks();
 
     /**
      * Closes and destroys this Resource.  A resource, once destroyed, cannot be used again.

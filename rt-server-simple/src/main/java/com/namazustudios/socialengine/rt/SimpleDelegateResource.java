@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Set;
 
 /**
  * An implementation of {@link Resource} which delegates all of its responsibility to another instance for actual
@@ -61,6 +62,11 @@ public class SimpleDelegateResource implements Resource {
     @Override
     public void deserialize(InputStream is) throws IOException {
         delegate.deserialize(is);
+    }
+
+    @Override
+    public Set<TaskId> getTasks() {
+        return delegate.getTasks();
     }
 
     @Override

@@ -29,9 +29,7 @@ import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
 import static java.util.UUID.randomUUID;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.fail;
+import static org.testng.Assert.*;
 
 @Guice(modules = TestCorePersistence.Module.class)
 public class TestCorePersistence {
@@ -166,6 +164,7 @@ public class TestCorePersistence {
     public void testUpvaluesArePersisted() throws Exception {
 
         byte[] bytes;
+        final Set<TaskId> tasks;
         final DummyObject original = new DummyObject();
 
         try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -175,6 +174,7 @@ public class TestCorePersistence {
                     .params(original)
                     .dispatch(o -> assertNull(o), ex -> fail("No error expected."));
 
+            tasks = resource.getTasks();
             resource.serialize(bos);
             bytes = bos.toByteArray();
 
@@ -191,6 +191,41 @@ public class TestCorePersistence {
             resource.serialize(bos);
             bytes = bos.toByteArray();
 
+        }
+
+    }
+
+    @Test
+    public void testCoroutinesAreRestored() throws IOException {
+
+        final byte[] bytes;
+        final Set<TaskId> taskIdSet;
+
+        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             final Resource resource = getResourceLoader().load("test.simple_yield")) {
+
+            final AtomicReference<String> taskIdAtomicReference = new AtomicReference<>();
+
+            resource.getMethodDispatcher("do_simple_yield")
+                    .params()
+                    .dispatch(o -> taskIdAtomicReference.set(o.toString()), ex -> fail("Should not happen."));
+
+            assertNotNull(taskIdAtomicReference.get(), "Expected Task ID.");
+            final TaskId taskId = new TaskId(taskIdAtomicReference.get());
+
+            taskIdSet = resource.getTasks();
+            assertEquals(taskIdSet.size(), 1);
+            assertTrue(taskIdSet.contains(taskId), "TaskID is not in TaskID Set.");
+
+            resource.setVerbose(true);
+            resource.serialize(bos);
+            bytes = bos.toByteArray();
+
+        }
+
+        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+             final Resource resource = getResourceLoader().load(bis, true)) {
+            assertEquals(resource.getTasks(), taskIdSet);
         }
 
     }
@@ -242,7 +277,6 @@ public class TestCorePersistence {
 
         @Override
         public int hashCode() {
-
             return Objects.hash(uuid);
         }
 

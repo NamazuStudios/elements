@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Set;
 
 /**
  * A singleton {@link Resource} implementation that just throws {@link IllegalStateException} for any method that's
@@ -57,6 +58,11 @@ public class DeadResource implements Resource {
 
     @Override
     public void deserialize(InputStream is) throws IOException {
+        throw new IllegalStateException("resource is closed");
+    }
+
+    @Override
+    public Set<TaskId> getTasks() {
         throw new IllegalStateException("resource is closed");
     }
 
