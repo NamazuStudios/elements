@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.lua;
 
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.LuaType;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.*;
 import com.namazustudios.socialengine.rt.lua.builtin.BuiltinManager;
@@ -265,9 +266,16 @@ public class LuaResource implements Resource {
 
             luaState.pushNil();
             while (luaState.next(2)) {
+
                 luaState.pushValue(-2);
                 luaState.rawSet(1, ++index);
+
+                if (logger.isErrorEnabled() && !LuaType.THREAD.equals(luaState.type(-1))) {
+                    logger.error("Expected THREAD got: ", luaState.type(-1));
+                }
+
                 luaState.pop(1);
+
             }
 
             luaState.setTop(1);

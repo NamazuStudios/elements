@@ -199,6 +199,8 @@ public class TestCorePersistence {
     public void testCoroutinesAreRestored() throws IOException {
 
         final byte[] bytes;
+
+        final TaskId taskId;
         final Set<TaskId> taskIdSet;
 
         try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -211,7 +213,7 @@ public class TestCorePersistence {
                     .dispatch(o -> taskIdAtomicReference.set(o.toString()), ex -> fail("Should not happen."));
 
             assertNotNull(taskIdAtomicReference.get(), "Expected Task ID.");
-            final TaskId taskId = new TaskId(taskIdAtomicReference.get());
+            taskId = new TaskId(taskIdAtomicReference.get());
 
             taskIdSet = resource.getTasks();
             assertEquals(taskIdSet.size(), 1);
@@ -226,6 +228,9 @@ public class TestCorePersistence {
         try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
              final Resource resource = getResourceLoader().load(bis, true)) {
             assertEquals(resource.getTasks(), taskIdSet);
+            final Set<TaskId> restoredIdSet = resource.getTasks();
+            assertEquals(restoredIdSet, taskIdSet);
+            resource.resumeFromScheduler(taskId, 0);
         }
 
     }

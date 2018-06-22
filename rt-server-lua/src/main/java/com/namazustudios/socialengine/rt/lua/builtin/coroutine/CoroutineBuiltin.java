@@ -331,10 +331,19 @@ public class CoroutineBuiltin implements Builtin {
             final Module module = luaState.checkJavaObject(2, Module.class);
             logger.debug("Loading module {} - {}", name, module.getChunkName());
 
-            // This sets up the table which tracks and manages active tasks.
+            luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
 
-            luaState.newTable();
-            luaState.setField(REGISTRYINDEX, COROUTINES_TABLE);
+            if (!luaState.isTable(-1)) {
+                // We make the table if no such table exists in the lua resource already.  This ensures that the table
+                // has been created if it does not exist already.
+                luaState.newTable();
+                luaState.setField(REGISTRYINDEX, COROUTINES_TABLE);
+            } else {
+                // Persitence may have already set this table up so we want to make sure that the persistence table is
+                // only created if it has not been already made.  There's probably a better way to handle this but for
+                // now we just doa  quick check to make sure that it's not been made yet.
+                luaState.pop(1);
+            }
 
             // The actual function table
             luaState.newTable();
