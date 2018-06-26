@@ -138,7 +138,9 @@ public class XodusResourceServiceOpenCloseTest {
 
     private ResourceService open(final String base) {
         final Injector injector = Guice.createInjector(new Module(base));
-        return injector.getInstance(ResourceService.class);
+        final ResourceService rs = injector.getInstance(ResourceService.class);
+        rs.start();
+        return rs;
     }
 
     public static final class Module extends AbstractModule {
