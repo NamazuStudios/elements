@@ -701,24 +701,11 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
     public void close() {
 
         final List<Stream<XodusResource>> streams = new ArrayList<>();
-        final AtomicReference<Boolean> cancel = new AtomicReference<>();
 
         xodusCacheStorageAtomicReference.getAndAccumulate(null, (e, u) -> {
-
-            if (e == null) {
-                cancel.set(true);
-            } else {
-                streams.add(e.getResourceIdResourceMap().values().stream());
-            }
-
+            streams.add(e.getResourceIdResourceMap().values().stream());
             return u;
-
         });
-
-        if (cancel.get()) {
-            // Somebody else attempted to close this service.
-            return;
-        }
 
         getEnvironment().computeInExclusiveTransaction(txn -> {
 
@@ -731,6 +718,7 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
             return streams.stream().flatMap(identity()).distinct().map(xr -> {
 
                 try {
+                    logger.debug("Persting {}", xr.getId());
                     xr.persist(txn, resources);
                 } catch (Exception ex) {
                     try {
