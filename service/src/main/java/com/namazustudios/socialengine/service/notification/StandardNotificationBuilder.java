@@ -76,7 +76,7 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
 
     @Override
     public String getSound() {
-        return null;
+        return sound;
     }
 
     @Override
