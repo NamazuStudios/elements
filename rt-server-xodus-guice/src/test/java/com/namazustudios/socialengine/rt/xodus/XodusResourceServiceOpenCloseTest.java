@@ -6,6 +6,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider;
+import jetbrains.exodus.env.Environment;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -13,15 +15,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.xodus.XodusResourceContext.RESOURCE_ENVIRONMENT;
+import static com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider.RESOURCE_ENVIRONMENT_PATH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.UUID.randomUUID;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public class XodusResourceServiceOpenCloseTest {
 
@@ -84,6 +86,7 @@ public class XodusResourceServiceOpenCloseTest {
             final Resource loaded = rs.getAndAcquireResourceWithId(original.getId());
             assertNotNull(loaded);
             assertEquals(loaded.getId(), original.getId());
+            verify(loaded, times(1)).deserialize(any());
         }
 
     }
@@ -131,15 +134,10 @@ public class XodusResourceServiceOpenCloseTest {
 
     public static final class Module extends AbstractModule {
 
-        private final File scheduler;
-
-        private final File resources;
+        private final String base;
 
         public Module(final String base) {
-            this.scheduler = new File(base, "scheduler");
-            this.resources = new File(base, "resources");
-            assertTrue(scheduler.exists() || scheduler.mkdirs(), "Unable to make scheduler database at " + base);
-            assertTrue(resources.exists() || resources.mkdirs(), "Unable to make resources database at " + base);
+            this.base = base;
         }
 
         @Override
@@ -159,13 +157,18 @@ public class XodusResourceServiceOpenCloseTest {
 
             });
 
-            install(new XodusEnvironmentModule()
-                .withResourceEnvironmentPath(resources.getAbsolutePath())
-                .withSchedulerEnvironmentPath(scheduler.getAbsolutePath()));
-
             bind(ResourceService.class).to(XodusResourceService.class);
             bind(ResourceLockService.class).to(SimpleResourceLockService.class);
             bind(ResourceLoader.class).toInstance(mockResourceLoader);
+
+            bind(Environment.class)
+                .annotatedWith(named(RESOURCE_ENVIRONMENT))
+                .toProvider(ResourceEnvironmentProvider.class)
+                .asEagerSingleton();
+
+            bind(String.class)
+                .annotatedWith(named(RESOURCE_ENVIRONMENT_PATH))
+                .toInstance(base);
 
         }
 
