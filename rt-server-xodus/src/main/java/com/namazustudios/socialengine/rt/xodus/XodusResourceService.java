@@ -741,6 +741,8 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
             }
         });
 
+        getEnvironment().close();
+
     }
 
     @Override

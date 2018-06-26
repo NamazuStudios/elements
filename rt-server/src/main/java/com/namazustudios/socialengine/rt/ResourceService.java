@@ -32,8 +32,7 @@ public interface ResourceService extends AutoCloseable {
 
     /**
      * Gets a {@link Resource} based on the resource ID.  The returned {@link Resource} is said to be acquired which
-     * means it will not be serialized until no process has currently acquired the {@link Resource} and the
-     * {@link Resource#isPersistentState()} method returns true.
+     * means it will not be serialized until no process has currently acquired the {@link Resource}.
      *
      * @param resourceId the {@link ResourceId}
      * @return the Resource, never null
@@ -43,8 +42,7 @@ public interface ResourceService extends AutoCloseable {
 
     /**
      * Gets a resource at the given path.  The returned {@link Resource} is said to be acquired which means it will not
-     * be serialized until no process has currently acquired the {@link Resource} and the
-     * {@link Resource#isPersistentState()} method returns true.
+     * be serialized until no process has currently acquired the {@link Resource}.
      *
      * @param path the path the {@link Path}
      * @return the resource the {@link Resource}
