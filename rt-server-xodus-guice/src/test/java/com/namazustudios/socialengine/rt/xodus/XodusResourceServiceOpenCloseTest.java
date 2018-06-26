@@ -16,7 +16,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.xodus.XodusResourceContext.RESOURCE_ENVIRONMENT;
+import static com.namazustudios.socialengine.rt.xodus.XodusResourceService.RESOURCE_ENVIRONMENT;
 import static com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider.RESOURCE_ENVIRONMENT_PATH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.UUID.randomUUID;
@@ -42,6 +42,8 @@ public class XodusResourceServiceOpenCloseTest {
 
         try (final ResourceService rs = open(base.getAbsolutePath())) {
             rs.addAndReleaseResource(path, original);
+            verify(original, times(1)).close();
+            verify(original, times(1)).serialize(any());
         }
 
         try (final ResourceService rs = open(base.getAbsolutePath())) {
@@ -61,6 +63,8 @@ public class XodusResourceServiceOpenCloseTest {
 
         try (final ResourceService rs = open(base.getAbsolutePath())) {
             rs.addAndReleaseResource(path, original);
+            verify(original, times(1)).close();
+            verify(original, times(1)).serialize(any());
         }
 
         try (final ResourceService rs = open(base.getAbsolutePath())) {
@@ -82,11 +86,13 @@ public class XodusResourceServiceOpenCloseTest {
             rs.addAndAcquireResource(path, original);
         }
 
+        verify(original, times(1)).close();
+        verify(original, times(1)).serialize(any());
+
         try (final ResourceService rs = open(base.getAbsolutePath())) {
             final Resource loaded = rs.getAndAcquireResourceWithId(original.getId());
             assertNotNull(loaded);
             assertEquals(loaded.getId(), original.getId());
-            verify(loaded, times(1)).deserialize(any());
         }
 
     }
@@ -101,6 +107,9 @@ public class XodusResourceServiceOpenCloseTest {
         try (final ResourceService rs = open(base.getAbsolutePath())) {
             rs.addAndAcquireResource(path, original);
         }
+
+        verify(original, times(1)).close();
+        verify(original, times(1)).serialize(any());
 
         try (final ResourceService rs = open(base.getAbsolutePath())) {
             final Resource loaded = rs.getAndAcquireResourceAtPath(path);

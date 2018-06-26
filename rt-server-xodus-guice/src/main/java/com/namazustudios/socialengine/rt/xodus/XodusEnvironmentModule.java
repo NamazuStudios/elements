@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProv
 import jetbrains.exodus.env.Environment;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.xodus.XodusResourceContext.RESOURCE_ENVIRONMENT;
+import static com.namazustudios.socialengine.rt.xodus.XodusResourceService.RESOURCE_ENVIRONMENT;
 import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerContext.SCHEDULER_ENVIRONMENT;
 import static com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider.RESOURCE_ENVIRONMENT_PATH;
 import static com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProvider.SCHEDULER_ENVIRONMENT_PATH;

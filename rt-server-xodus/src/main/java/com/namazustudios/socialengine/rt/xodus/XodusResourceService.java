@@ -40,7 +40,9 @@ import static jetbrains.exodus.env.StoreConfig.*;
 
 public class XodusResourceService implements ResourceService, ResourceAcquisition {
 
-    private static final int LIST_BATCH_SIZE = 100;
+    public static final int LIST_BATCH_SIZE = 100;
+
+    public static final String RESOURCE_ENVIRONMENT = "com.namazustudios.socialengine.rt.xodus.resource.environment";
 
     private static final Logger logger = LoggerFactory.getLogger(XodusResourceService.class);
 
@@ -94,6 +96,32 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
     private final AtomicReference<XodusCacheStorage> xodusCacheStorageAtomicReference = new AtomicReference<>(new XodusCacheStorage());
 
     @Override
+    public void start() {
+        getEnvironment().executeInExclusiveTransaction(txn -> {
+
+            final Store acquires = openAcquires(txn);
+
+            try (final Cursor cursor = acquires.openCursor(txn)) {
+
+                int failures = 0;
+                int existing = 0;
+
+                while (cursor.getNext()) {
+                    ++existing;
+                    if (!cursor.deleteCurrent()) ++failures;
+                }
+
+                if (existing > 0) {
+                    logger.warn("Opened storage with a count of {} acquired Resources {} of which failed to clear.  " +
+                                "Possible storage corruption due to unclean shutdown.", existing, failures);
+                }
+
+            }
+
+        });
+    }
+
+    @Override
     public Resource getAndAcquireResourceWithId(final ResourceId resourceId) {
         checkOpen();
         return getEnvironment().computeInTransaction(txn -> doGetAndAcquireResource(txn, resourceId)).get();
@@ -135,10 +163,19 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
         // the same resource may be high.
 
         if (acquires == 1) {
+
             // Only read the bytes if we absolutely need to.
             final ByteIterable value = resources.get(txn, resourceIdKey);
-            if (value == null) throw new InternalException("Inconsistent state.  Newly acquired resource has no value.");
+
+            if (value == null) {
+                // This should never happen if the state of the database is consistent.  If this does happen we should
+                // at least vacuum the entries to prevent further inconsistencies.
+                doRemoveResource(txn, resourceIdKey);
+                throw new InternalException("Inconsistent state.  Newly acquired resource has no value.");
+            }
+
             return () -> loadAndCache(xodusCacheKey, value);
+
         } else {
             return () -> readFromCache(xodusCacheKey);
         }
@@ -714,11 +751,12 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
             final Store paths = openPaths(txn);
             final Store reverse = openReversePaths(txn);
             final Store resources = openResources(txn);
+            final Store acquires = openAcquires(txn);
 
-            return streams.stream().flatMap(identity()).distinct().map(xr -> {
+            final List<XodusResource> toClose = streams.stream().flatMap(identity()).distinct().map(xr -> {
 
                 try {
-                    logger.debug("Persting {}", xr.getId());
+                    logger.debug("Persisting {}", xr.getId());
                     xr.persist(txn, resources);
                 } catch (Exception ex) {
                     try {
@@ -732,6 +770,14 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
                 return xr;
 
             }).collect(toList());
+
+            try (final Cursor cursor = acquires.openCursor(txn)) {
+                int failed = 0;
+                while (cursor.getNext()) if (!cursor.deleteCurrent()) ++failed;
+                if (failed > 0) logger.error("Failed to delete {} acquires.");
+            }
+
+            return toClose;
 
         }).forEach(xr -> {
             try {
@@ -795,7 +841,7 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
     }
 
     @Inject
-    public void setEnvironment(@Named(XodusResourceContext.RESOURCE_ENVIRONMENT) Environment environment) {
+    public void setEnvironment(@Named(XodusResourceService.RESOURCE_ENVIRONMENT) Environment environment) {
         this.environment = environment;
     }
 

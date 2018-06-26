@@ -31,6 +31,12 @@ import java.util.stream.StreamSupport;
 public interface ResourceService extends AutoCloseable {
 
     /**
+     * Called on start-up to ensure that the {@link ResourceService} has created and started any internal processes
+     * that it may need to perform its work.
+     */
+    default void start() {};
+
+    /**
      * Gets a {@link Resource} based on the resource ID.  The returned {@link Resource} is said to be acquired which
      * means it will not be serialized until no process has currently acquired the {@link Resource}.
      *

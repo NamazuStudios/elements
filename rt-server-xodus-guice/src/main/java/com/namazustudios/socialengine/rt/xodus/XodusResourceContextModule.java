@@ -20,7 +20,7 @@ public class XodusResourceContextModule extends PrivateModule {
         // Xodus Resource Context binds to the simple resource scheduler.
 
         bind(SimpleResourceContext.class).asEagerSingleton();
-        bind(ResourceContext.class).to(XodusResourceContext.class).asEagerSingleton();
+        bind(ResourceContext.class).to(SimpleResourceContext.class).asEagerSingleton();
 
         bind(ExecutorService.class)
             .annotatedWith(Names.named(EXECUTOR_SERVICE))

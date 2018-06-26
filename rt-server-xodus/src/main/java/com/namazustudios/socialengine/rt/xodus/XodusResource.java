@@ -35,7 +35,10 @@ class XodusResource extends SimpleDelegateResource {
         }
 
         final ByteIterable value = new ArrayByteIterable(bos.toByteArray());
-        resources.put(txn, getXodusCacheKey().getKey(), value);
+
+        if (!resources.put(txn, getXodusCacheKey().getKey(), value)) {
+            throw new InternalException("Unable to persist resource with id: " + getDelegate().getId());
+        }
 
     }
 

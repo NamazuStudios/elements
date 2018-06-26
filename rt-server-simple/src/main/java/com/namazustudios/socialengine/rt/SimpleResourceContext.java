@@ -24,6 +24,11 @@ public class SimpleResourceContext implements ResourceContext {
     private ExecutorService executorService;
 
     @Override
+    public void start() {
+        getResourceService().start();
+    }
+
+    @Override
     public void stop() {
         getResourceService().close();
     }
