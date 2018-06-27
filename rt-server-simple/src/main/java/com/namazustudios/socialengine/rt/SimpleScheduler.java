@@ -90,9 +90,39 @@ public class SimpleScheduler implements Scheduler {
                                            final long time, final TimeUnit timeUnit,
                                            final Function<Resource, T> operation,
                                            final Consumer<Throwable> failure) {
-        final FutureTask<T> scheduled = new FutureTask<T>(protectedCallable(resourceId, operation, failure));
-        getScheduledExecutorService().schedule(() -> getDispatcherExecutorService().submit(scheduled), time, timeUnit);
-        return scheduled;
+
+        final FutureTask<T> task = new FutureTask<T>(protectedCallable(resourceId, operation, failure));
+
+        final Future<?> scheduled = getScheduledExecutorService()
+            .schedule(() -> getDispatcherExecutorService().submit(task), time, timeUnit);
+
+        return new Future<T>() {
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
+                return task.cancel(mayInterruptIfRunning) && scheduled.cancel(mayInterruptIfRunning);
+            }
+
+            @Override
+            public boolean isCancelled() {
+                return task.isCancelled();
+            }
+
+            @Override
+            public boolean isDone() {
+                return task.isDone();
+            }
+
+            @Override
+            public T get() throws InterruptedException, ExecutionException {
+                return task.get();
+            }
+
+            @Override
+            public T get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+                return task.get(timeout, unit);
+            }
+        };
+
     }
 
     private <T> Callable<T> protectedCallable(final ResourceId resourceId,

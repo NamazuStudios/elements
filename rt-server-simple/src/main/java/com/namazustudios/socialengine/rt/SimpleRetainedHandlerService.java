@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 import static java.util.UUID.randomUUID;
 
@@ -35,42 +36,48 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
 
         try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
 
-            final AtomicBoolean processed = new AtomicBoolean();
+            final AtomicBoolean sent = new AtomicBoolean();
+            final AtomicBoolean unlinked = new AtomicBoolean();
 
             final Runnable unlink = () -> {
-                if (processed.compareAndSet(false, true)) try {
+                if (unlinked.compareAndSet(false, true)) try {
                     getScheduler().scheduleUnlink(path);
                 } catch (Exception ex) {
-                    logger.error("Caught exception unklining Resource {}", resourceId, ex);
+                    logger.error("Caught exception un-linking Resource {}", resourceId, ex);
                 }
             };
 
             final Consumer<Throwable> _failure = t -> {
                 try {
-                    unlink.run();
 
                     final String _args = stream(args)
-                            .map(a -> a == null ? "null" : a.toString())
-                            .collect(Collectors.joining(","));
+                        .map(a -> a == null ? "null" : a.toString())
+                        .collect(Collectors.joining(","));
+
                     logger.error("Caught exception processing retained handler {}.{}({}).", module, method, _args, t);
+                    if (sent.compareAndSet(false, true)) failure.accept(t);
 
                 } catch (Exception ex) {
                     logger.error("Caught exception destroying resource {}", resourceId, ex);
+                } finally {
+                    unlink.run();
                 }
             };
 
             final Consumer<Object> _success = o -> {
                 try {
-                    unlink.run();
+                    if (sent.compareAndSet(false, true)) success.accept(o);
                 } catch (Throwable th) {
                     _failure.accept(th);
+                } finally {
+                    unlink.run();
                 }
             };
 
             return resource
                 .getMethodDispatcher(method)
                 .params(args)
-                .dispatch(_success.andThen(success), _failure.andThen(failure));
+                .dispatch(_success, _failure);
 
         } finally {
             getResourceService().tryRelease(resource);

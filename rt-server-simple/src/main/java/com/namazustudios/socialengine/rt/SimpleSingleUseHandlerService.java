@@ -49,10 +49,11 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
 
         try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
 
-            final AtomicBoolean processed = new AtomicBoolean();
+            final AtomicBoolean sent = new AtomicBoolean();
+            final AtomicBoolean destroyed = new AtomicBoolean();
 
             final Runnable destroy = () -> {
-                if (processed.compareAndSet(false, true)) try {
+                if (destroyed.compareAndSet(false, true)) try {
                     getScheduler().scheduleDestruction(resourceId);
                 } catch (Exception ex) {
                     logger.error("Error scheudling destruction for resource {}", resourceId, ex);
@@ -62,30 +63,34 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
             final Consumer<Throwable> _failure = t -> {
                 try {
 
-                    destroy.run();
-
                     final String _args = stream(args)
                         .map(a -> a == null ? "null" : a.toString())
                         .collect(Collectors.joining(","));
+
                     logger.error("Caught exception processing single-use handler {}.{}({}).", module, method, _args, t);
+                    if (sent.compareAndSet(false, true)) failure.accept(t);
 
                 } catch (Exception ex) {
                     logger.error("Caught exception destroying resource {}", resourceId, ex);
+                } finally {
+                    destroy.run();
                 }
             };
 
             final Consumer<Object> _success = o -> {
                 try {
-                    destroy.run();
+                    if (sent.compareAndSet(false, true)) success.accept(o);
                 } catch (Throwable th) {
                     _failure.accept(th);
+                } finally {
+                    destroy.run();
                 }
             };
 
             return resource
                 .getMethodDispatcher(method)
                 .params(args)
-                .dispatch(_success.andThen(success), _failure.andThen(failure));
+                .dispatch(_success, _failure);
 
         } finally {
             getResourceService().tryRelease(resource);
