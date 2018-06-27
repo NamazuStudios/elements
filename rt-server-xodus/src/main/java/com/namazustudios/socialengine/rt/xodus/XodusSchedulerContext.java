@@ -40,6 +40,8 @@ public class XodusSchedulerContext implements SchedulerContext {
         getEnvironment().executeInTransaction(txn -> {
 
             int count = 0;
+            int failed = 0;
+            int skipped = 0;
             final Store store = openStore(txn);
 
             try (final Cursor cursor = store.openCursor(txn)) {
@@ -54,16 +56,20 @@ public class XodusSchedulerContext implements SchedulerContext {
                             schedule(now, xodusScheduledTask);
                             ++count;
                         } else {
-                            logger.info("Skipping task {} because resource does not exist.", xodusScheduledTask.getTaskId());
+                            ++skipped;
+                            logger.debug("Skipping task {} because resource does not exist.", xodusScheduledTask.getTaskId());
                         }
                     } catch (Exception ex) {
                         logger.error("Got exception resuming task on disk.", ex);
+                    } finally {
+                        if (!cursor.deleteCurrent()) ++failed;
                     }
 
                 }
             }
 
-            logger.info("Restored {} scheduled tasks.", count);
+            logger.info("Restored {} scheduled tasks. Skipped {} tasks for nonexistent resources. {} Failed to Delete",
+                        count, skipped, failed);
 
         });
 
