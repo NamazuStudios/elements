@@ -590,6 +590,8 @@ public class XodusResourceService implements ResourceService {
                 final XodusCacheKey cacheKey = new XodusCacheKey(unlink.getResourceId());
                 final XodusResource xodusResource = xodusCacheStorage.getResourceIdResourceMap().remove(cacheKey);
                 reovedResourceConsumer.accept(xodusResource == null ? DeadResource.getInstance() : xodusResource.getDelegate());
+            } finally {
+                getResourceLockService().delete(unlink.getResourceId());
             }
         }
 
@@ -660,6 +662,8 @@ public class XodusResourceService implements ResourceService {
             final Resource resource = xodusResource == null ? DeadResource.getInstance() : xodusResource.getDelegate();
             getEnvironment().executeInTransaction(txn -> doRemoveResource(txn, resourceIdKey));
             return resource;
+        } finally {
+            getResourceLockService().delete(resourceId);
         }
 
     }
