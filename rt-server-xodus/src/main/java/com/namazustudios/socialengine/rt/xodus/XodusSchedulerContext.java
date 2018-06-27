@@ -28,6 +28,8 @@ public class XodusSchedulerContext implements SchedulerContext {
 
     private Environment environment;
 
+    private ResourceService resourceService;
+
     private SimpleSchedulerContext simpleSchedulerContext;
 
     @Override
@@ -42,11 +44,22 @@ public class XodusSchedulerContext implements SchedulerContext {
 
             try (final Cursor cursor = store.openCursor(txn)) {
                 while (cursor.getNext()) {
+
                     final ByteIterable key = cursor.getKey();
                     final ByteIterable value = cursor.getValue();
                     final XodusScheduledTask xodusScheduledTask = new XodusScheduledTask(key, value);
-                    schedule(now, xodusScheduledTask);
-                    ++count;
+
+                    try {
+                        if (getResourceService().exists(xodusScheduledTask.getTaskId().getResourceId())) {
+                            schedule(now, xodusScheduledTask);
+                            ++count;
+                        } else {
+                            logger.info("Skipping task {} because resource does not exist.", xodusScheduledTask.getTaskId());
+                        }
+                    } catch (Exception ex) {
+                        logger.error("Got exception resuming task on disk.", ex);
+                    }
+
                 }
             }
 
@@ -122,6 +135,15 @@ public class XodusSchedulerContext implements SchedulerContext {
         this.environment = environment;
     }
 
+    public ResourceService getResourceService() {
+        return resourceService;
+    }
+
+    @Inject
+    public void setResourceService(ResourceService resourceService) {
+        this.resourceService = resourceService;
+    }
+
     public SimpleSchedulerContext getSimpleSchedulerContext() {
         return simpleSchedulerContext;
     }
@@ -130,5 +152,7 @@ public class XodusSchedulerContext implements SchedulerContext {
     public void setSimpleSchedulerContext(SimpleSchedulerContext simpleSchedulerContext) {
         this.simpleSchedulerContext = simpleSchedulerContext;
     }
+
+
 
 }

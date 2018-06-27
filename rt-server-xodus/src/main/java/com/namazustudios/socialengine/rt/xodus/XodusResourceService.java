@@ -122,6 +122,15 @@ public class XodusResourceService implements ResourceService {
     }
 
     @Override
+    public boolean exists(final ResourceId resourceId) {
+        final ByteIterable resourceIdKey = stringToEntry(resourceId.asString());
+        return getEnvironment().computeInReadonlyTransaction(txn -> {
+            final Store reverse = openReversePaths(txn);
+            return reverse.get(txn, resourceIdKey) != null;
+        });
+    }
+
+    @Override
     public Resource getAndAcquireResourceWithId(final ResourceId resourceId) {
         checkOpen();
         return getEnvironment().computeInTransaction(txn -> doGetAndAcquireResource(txn, resourceId)).get();

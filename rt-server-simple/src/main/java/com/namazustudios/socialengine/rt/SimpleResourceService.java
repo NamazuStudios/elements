@@ -45,6 +45,11 @@ public class SimpleResourceService implements ResourceService {
     private OptimisticLockService<ResourceId> resourceIdOptimisticLockService;
 
     @Override
+    public boolean exists(final ResourceId resourceId) {
+        return getStorage().getResources().containsKey(resourceId);
+    }
+
+    @Override
     public Resource getAndAcquireResourceWithId(final ResourceId resourceId) {
 
         final Resource resource = getStorage().getResources().get(resourceId);

@@ -37,6 +37,16 @@ public interface ResourceService extends AutoCloseable {
     default void start() {};
 
     /**
+     * Without affecting acquisition or releases, this performs a simple check to see if the {@link Resource} with the
+     * supplied {@link ResourceId} exists in this {@link ResourceService}.
+     *
+     * @param resourceId the {@link ResourceId}
+     *
+     * @return true if exists, false otherwise.
+     */
+    boolean exists(ResourceId resourceId);
+
+    /**
      * Gets a {@link Resource} based on the resource ID.  The returned {@link Resource} is said to be acquired which
      * means it will not be serialized until no process has currently acquired the {@link Resource}.
      *
