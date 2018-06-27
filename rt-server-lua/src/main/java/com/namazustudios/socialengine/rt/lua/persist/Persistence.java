@@ -164,7 +164,7 @@ public class Persistence {
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         } finally {
-            // If we don't clear special persistence we will not release the objects stored in the serial object
+            // If we don't clear special persistence we will not scheduleRelease the objects stored in the serial object
             // table because it will be referenced from the internals of the Lua VM.  This ensures every reference
             // is released appropriately.
             clearSpecialPersistence(luaState);

@@ -7,7 +7,7 @@ import java.util.Set;
 
 /**
  * An implementation of {@link Resource} which delegates all of its responsibility to another instance for actual
- * processing.  This assists in the implementation of the acquire and release semantics of the {@link ResourceService}
+ * processing.  This assists in the implementation of the acquire and scheduleRelease semantics of the {@link ResourceService}
  * specified in the {@link ResourceService#release(Resource)},
  * {@link ResourceService#getAndAcquireResourceAtPath(Path)}, and related methods by providing a wrapper around the
  * actual implementation {@link Resource}.

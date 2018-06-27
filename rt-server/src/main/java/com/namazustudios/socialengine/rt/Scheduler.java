@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.exception.NoSuchTaskException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -23,6 +24,27 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 public interface Scheduler {
 
     /**
+     * Submits an arbitrary {@link Runnable} to run within the {@link Scheduler}.
+     *
+     * @param runnable the {@link Runnable} to run
+     * @return a {@link Future<Void>} to control the execution state of the task
+     */
+    default Future<Void> submitV(Runnable runnable) {
+        return submit(() -> {
+            runnable.run();
+            return null;
+        });
+    }
+
+    /**
+     * Submits an arbitrary {@link Callable<T>} to run within the {@link Scheduler}.
+     *
+     * @param tCallable the {@link Callable<T>} to run
+     * @return a {@link Future<T>} to control the execution state of the task
+     */
+    <T> Future<T> submit(Callable<T> tCallable);
+
+    /**
      * Provided the {@link Path}, this will schedule an unlink operation at some point in the near future.  This allows
      * any pending operations to relase their locks gracefully unlink an potentially destroy any {@link Resource}s
      * associated with the supplied {@Link Path}.  If the {@link Resource} is removed this will ensure that the
@@ -35,7 +57,7 @@ public interface Scheduler {
 
     /**
      * Provided the {@link ResourceId}, this will schedule destruction at some point in the near future.  This allows
-     * any pending operations to release their locks gracefully and destroy the {@link Resource} associated with the
+     * any pending operations to scheduleRelease their locks gracefully and destroy the {@link Resource} associated with the
      * supplied. {@link ResourceId}.
      *
      * This ensures that the underlying {@link Resource} is removed from the {@link ResourceService} and its

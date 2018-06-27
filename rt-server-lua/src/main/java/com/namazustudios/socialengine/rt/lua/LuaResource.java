@@ -533,7 +533,7 @@ public class LuaResource implements Resource {
 
         if (pendingTask != null) {
             pendingTask.finish(result);
-            resourceAcquisition.release(getId());
+            resourceAcquisition.scheduleRelease(getId());
         }
 
     }
@@ -551,7 +551,7 @@ public class LuaResource implements Resource {
 
         if (pendingTask != null) {
             pendingTask.fail(error);
-            resourceAcquisition.release(getId());
+            resourceAcquisition.scheduleRelease(getId());
         }
 
     }

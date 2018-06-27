@@ -9,6 +9,6 @@ public class NullResourceAcquisition implements ResourceAcquisition {
     public void acquire(ResourceId resourceId) {}
 
     @Override
-    public void release(ResourceId resourceId) {}
+    public void scheduleRelease(ResourceId resourceId) {}
 
 }

@@ -38,7 +38,7 @@ import static jetbrains.exodus.bindings.StringBinding.entryToString;
 import static jetbrains.exodus.bindings.StringBinding.stringToEntry;
 import static jetbrains.exodus.env.StoreConfig.*;
 
-public class XodusResourceService implements ResourceService, ResourceAcquisition {
+public class XodusResourceService implements ResourceService {
 
     public static final int LIST_BATCH_SIZE = 100;
 
@@ -791,7 +791,6 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
 
     }
 
-    @Override
     public void acquire(final ResourceId resourceId) {
         getEnvironment().executeInTransaction(txn -> {
 
@@ -802,8 +801,7 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
             // This is only called to increment the acquire count, so it may not need to actually manipulate the
             // cache.  Trying to increment the count otherwise is an error.
             if (value == null) {
-                logger.warn("Attempting to acquire resource which has no acquires.");
-                return;
+                throw new IllegalStateException("Attempting to acquire resource which has no acquires.");
             }
 
             final int acquires = entryToInt(value);
@@ -812,7 +810,6 @@ public class XodusResourceService implements ResourceService, ResourceAcquisitio
         });
     }
 
-    @Override
     public void release(final ResourceId resourceId) {
         final XodusCacheKey xodusCacheKey = new XodusCacheKey(resourceId);
         final XodusResource xodusResource = getStorage().getResourceIdResourceMap().get(xodusCacheKey);

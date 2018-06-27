@@ -42,6 +42,11 @@ public class SimpleScheduler implements Scheduler {
     private ScheduledExecutorService scheduledExecutorService;
 
     @Override
+    public <T> Future<T> submit(Callable<T> tCallable) {
+        return getDispatcherExecutorService().submit(tCallable);
+    }
+
+    @Override
     public Future<Void> scheduleUnlink(final Path path) {
         return getDispatcherExecutorService().submit(() -> {
             getResourceService().unlinkPath(path, resource -> {
