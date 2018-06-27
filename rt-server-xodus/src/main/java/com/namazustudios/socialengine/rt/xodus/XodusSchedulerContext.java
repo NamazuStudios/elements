@@ -68,7 +68,7 @@ public class XodusSchedulerContext implements SchedulerContext {
                 }
             }
 
-            logger.info("Restored {} scheduled tasks. Skipped {} tasks for nonexistent resources. {} Failed to Delete",
+            logger.info("Restored {} scheduled tasks. Skipped {} tasks for nonexistent resources. {} Failed to Delete.",
                         count, skipped, failed);
 
         });
