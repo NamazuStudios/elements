@@ -24,6 +24,7 @@ public class LuaModule extends PrivateModule {
 
     @Override
     protected final void configure() {
+        LuaState.logVersionInfo();
         builtinMultibinder = Multibinder.newSetBinder(binder(), Builtin.class);
         configureFeatures();
     }

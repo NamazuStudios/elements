@@ -2,17 +2,27 @@ package com.namazustudios.socialengine.rt.lua;
 
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
+import com.namazustudios.socialengine.rt.exception.ResourcePersistenceException;
 import com.namazustudios.socialengine.rt.lua.builtin.*;
+import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.PersistenceAwareIocResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Attr;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Set;
 
 import static com.namazustudios.socialengine.rt.IocResolver.IOC_RESOLVER_MODULE_NAME;
 import static com.namazustudios.socialengine.rt.lua.Constants.ATTRIBUTES_MODULE;
 
 public class LuaResourceLoader implements ResourceLoader {
+
+    private static final Logger logger = LoggerFactory.getLogger(LuaResourceLoader.class);
 
     private AssetLoader assetLoader;
 
@@ -33,17 +43,54 @@ public class LuaResourceLoader implements ResourceLoader {
     private Provider<Set<Builtin>> additionalBuiltins;
 
     @Override
+    public Resource load(final InputStream is, final boolean verbose) throws ResourcePersistenceException {
+
+        final LuaResource luaResource = getLuaResourceProvider().get();
+        luaResource.setVerbose(verbose);
+
+        try {
+
+            final IocResolver iocResolver;
+            iocResolver = new PersistenceAwareIocResolver(getIocResolverProvider().get(), luaResource.getPersistence());
+
+            luaResource.getBuiltinManager().installBuiltin(new AttributesBuiltin(luaResource::getAttributes));
+            luaResource.getBuiltinManager().installBuiltin(getClasspathBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(getAssetLoaderBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(getHttpStatusBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
+            luaResource.getBuiltinManager().installBuiltin(getJnaBuiltinProvider().get());
+
+            final Set<Builtin> builtinSet = getAdditionalBuiltins().get();
+            builtinSet.forEach(luaResource.getBuiltinManager()::installBuiltin);
+
+            luaResource.deserialize(is);
+
+            return luaResource;
+        } catch (IOException ex) {
+            throw new ResourcePersistenceException(ex);
+        } catch (Exception ex) {
+            luaResource.close();
+            logger.error("Caught exception loading resource.", ex);
+            throw ex;
+        }
+
+    }
+
+    @Override
     public Resource load(final String moduleName,
                          final Attributes attributes,
                          final Object ... args) throws ModuleNotFoundException {
 
         final LuaResource luaResource = getLuaResourceProvider().get();
+        luaResource.setAttributes(attributes);
 
         try {
 
-            final IocResolver iocResolver = getIocResolverProvider().get();
+            final IocResolver iocResolver;
+            iocResolver = new PersistenceAwareIocResolver(getIocResolverProvider().get(), luaResource.getPersistence());
 
-            luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(ATTRIBUTES_MODULE, attributes));
+            luaResource.getBuiltinManager().installBuiltin(new AttributesBuiltin(luaResource::getAttributes));
             luaResource.getBuiltinManager().installBuiltin(getClasspathBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getAssetLoaderBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());
@@ -57,9 +104,10 @@ public class LuaResourceLoader implements ResourceLoader {
             luaResource.loadModule(getAssetLoader(), moduleName, args);
 
             return luaResource;
-        } catch (Throwable th) {
+        } catch (Exception ex) {
             luaResource.close();
-            throw th;
+            logger.error("Caught exception loading resource.", ex);
+            throw ex;
         }
 
     }

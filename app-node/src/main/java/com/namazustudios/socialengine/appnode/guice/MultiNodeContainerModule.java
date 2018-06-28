@@ -4,11 +4,11 @@ import com.google.inject.*;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer;
 import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
 import com.namazustudios.socialengine.rt.MultiNodeContainer;
 import com.namazustudios.socialengine.rt.Node;
-import com.namazustudios.socialengine.rt.guice.SimpleServicesModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +19,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.appnode.Constants.STORAGE_BASE_DIRECTORY;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toCollection;
 
@@ -28,8 +30,6 @@ public class MultiNodeContainerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-
-        install(new SimpleServicesModule());
 
         bind(ZContext.class).asEagerSingleton();
         bind(MultiNodeContainer.class).asEagerSingleton();
@@ -50,6 +50,7 @@ public class MultiNodeContainerModule extends AbstractModule {
         final Provider<Injector> injectorProvider = getProvider(Injector.class);
         final Provider<GitLoader> gitLoaderProvider = getProvider(GitLoader.class);
         final Provider<ConnectionDemultiplexer> connectionDemultiplexerProvider = getProvider(ConnectionDemultiplexer.class);
+        final Provider<File> resourcesStorageBaseDirectoryProvider = getProvider(Key.get(File.class, named(STORAGE_BASE_DIRECTORY)));
 
         return () -> {
 
@@ -78,8 +79,10 @@ public class MultiNodeContainerModule extends AbstractModule {
                         .withNodeId(application.getId())
                         .withNodeName(application.getName());
 
-                    final ApplicationModule applicationModule = new ApplicationModule(codeDirectory);
+                    final File storageDiretory = getStorageDirectoryForApplication(resourcesStorageBaseDirectoryProvider, application);
+                    final ApplicationModule applicationModule = new ApplicationModule(codeDirectory, storageDiretory);
                     final Injector nodeInjector = injector.createChildInjector(applicationModule, nodeModule);
+
                     return nodeInjector.getInstance(Node.class);
 
                 }).filter(node -> node != null).collect(toCollection(LinkedHashSet::new));
@@ -88,6 +91,11 @@ public class MultiNodeContainerModule extends AbstractModule {
 
         };
 
+    }
+
+    private File getStorageDirectoryForApplication(final Provider<File> resourcesStorageBaseDirectoryProvider,
+                                                   final Application application) {
+        return new File(resourcesStorageBaseDirectoryProvider.get(), application.getId());
     }
 
 }

@@ -2,6 +2,9 @@ package com.namazustudios.socialengine.rt;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.lang.Runtime.getRuntime;
 
 @Singleton
 public class SimpleContext implements Context {
@@ -22,15 +25,33 @@ public class SimpleContext implements Context {
 
     private AssetLoader assetLoader;
 
+    private Thread hook = new Thread(this::shutdown);
+
     @Override
-    public void start() {}
+    public void start() {
+        getRuntime().addShutdownHook(hook);
+        getResourceContext().start();
+        getSchedulerContext().start();
+        getIndexContext().start();
+        getHandlerContext().start();
+    }
 
     @Override
     public void shutdown() {
-        getScheduler().shutdown();
-        getResourceService().removeAndCloseAllResources();
+
+        // Remove the shutdown hook.
+        if (Thread.currentThread() != hook) getRuntime().removeShutdownHook(hook);
+
+        // Stops all contexts first
+        getHandlerContext().stop();
+        getIndexContext().stop();
+        getSchedulerContext().stop();
+        getResourceContext().stop();
+
+        // Then stops all services
         getResourceLoader().close();
         getAssetLoader().close();
+
     }
 
     @Override
@@ -108,4 +129,5 @@ public class SimpleContext implements Context {
     public void setHandlerContext(HandlerContext handlerContext) {
         this.handlerContext = handlerContext;
     }
+
 }

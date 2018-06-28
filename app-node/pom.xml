@@ -132,6 +132,16 @@
             <artifactId>jeromq</artifactId>
             <version>${jeromq.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-server-xodus</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-server-xodus-guice</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

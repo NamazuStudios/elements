@@ -1,30 +1,31 @@
 package com.namazustudios.socialengine.rt.guice;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import org.mockito.Mockito;
-import org.testng.annotations.*;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
-import static java.util.Arrays.fill;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.AssertJUnit.fail;
 
-@Guice(modules = SimpleResourceServiceUnitTest.Module.class)
-public class SimpleResourceServiceUnitTest {
-
-    private ResourceService resourceService;
+public abstract class AbstractResourceServiceReleasingUnitTest {
 
     private final List<Object[]> intermediates = new ArrayList<>();
 
@@ -48,10 +49,9 @@ public class SimpleResourceServiceUnitTest {
     @Test(dataProvider = "initialDataProvider")
     public void testAdd(final ResourceId resourceId, final Path path) {
 
-        final Resource resource = Mockito.mock(Resource.class);
-        Mockito.when(resource.getId()).thenReturn(resourceId);
+        final Resource resource = getMockResource(resourceId);
 
-        getResourceService().addResource(path, resource);
+        getResourceService().addAndReleaseResource(path, resource);
         intermediates.add(new Object[]{resourceId, path, resource});
 
     }
@@ -113,39 +113,70 @@ public class SimpleResourceServiceUnitTest {
 
     }
 
-
     @Test(dependsOnMethods = "testAdd", dataProvider = "intermediateDataProvider")
-    public void testGetResource(final ResourceId resourceId, final Path path, final Resource resource) {
-        assertEquals(getResourceService().getResourceWithId(resourceId), resource);
+    public void testGetResource(final ResourceId resourceId, final Path path, final Resource original) {
+
+        final Resource acquired = getResourceService().getAndAcquireResourceAtPath(path);
+
+        try {
+            assertEquals(acquired.getId(), original.getId());
+        } finally {
+            getResourceService().release(acquired);
+        }
+
     }
 
     @Test(dependsOnMethods = "testAdd", dataProvider = "intermediateDataProvider")
-    public void testGetResourceAtPath(final ResourceId resourceId, final Path path, final Resource resource) {
-        assertEquals(getResourceService().getResourceAtPath(path), resource);
+    public void testGetResourceAtPath(final ResourceId resourceId, final Path path, final Resource original) {
+
+        final Resource acquired = getResourceService().getAndAcquireResourceAtPath(path);
+
+        try {
+            assertEquals(acquired.getId(), original.getId());
+        } finally {
+            getResourceService().release(acquired);
+        }
+
     }
 
     @Test(dataProvider = "initialDataProvider", expectedExceptions = ResourceNotFoundException.class)
     public void testGetResourceFail(final ResourceId resourceId, final Path path) {
-        getResourceService().getResourceWithId(resourceId);
+
+        final Resource acquired = getResourceService().getAndAcquireResourceWithId(resourceId);
+
+        try {
+            fail("Expected exception.");
+        } finally {
+            getResourceService().release(acquired);
+        }
+
     }
 
     @Test(dataProvider = "initialDataProvider", expectedExceptions = ResourceNotFoundException.class)
     public void testGetResourceAtPathFail(final ResourceId resourceId, final Path path) {
-        getResourceService().getResourceAtPath(path);
+
+        final Resource acquired = getResourceService().getAndAcquireResourceAtPath(path);
+
+        try {
+            fail("Expected exception.");
+        } finally {
+            getResourceService().release(acquired);
+        }
+
     }
 
     @Test(dependsOnMethods = {"testAdd", "testGetResource", "testGetResourceAtPath"}, dataProvider = "intermediateDataProvider")
-    public void testLink(final ResourceId resourceId, final Path path, final Resource resource) {
+    public void testLink(final ResourceId resourceId, final Path path, final Resource original) {
         final Path alias = new Path(asList("test_alias", randomUUID().toString()));
         getResourceService().link(resourceId, alias);
-        linkedIntermediates.add(new Object[]{resourceId, alias, resource});
+        linkedIntermediates.add(new Object[]{resourceId, alias, original});
     }
 
     @Test(dependsOnMethods = {"testAdd", "testGetResource", "testGetResourceAtPath"}, dataProvider = "intermediateDataProvider")
-    public void testLinkPath(final ResourceId resourceId, final Path path, final Resource resource) {
+    public void testLinkPath(final ResourceId resourceId, final Path path, final Resource original) {
         final Path alias = new Path(asList("test_alias", randomUUID().toString()));
         getResourceService().linkPath(path, alias);
-        linkedIntermediates.add(new Object[]{resourceId, alias, resource});
+        linkedIntermediates.add(new Object[]{resourceId, alias, original});
     }
 
     @DataProvider(parallel = true)
@@ -154,12 +185,20 @@ public class SimpleResourceServiceUnitTest {
     }
 
     @Test(dependsOnMethods = {"testLink", "testLinkPath"}, dataProvider = "linkedIntermediateProvider")
-    public void testGetByAlias(final ResourceId resourceId, final Path path, final Resource resource) {
-        assertEquals(getResourceService().getResourceAtPath(path), resource);
+    public void testGetByAlias(final ResourceId resourceId, final Path path, final Resource original) {
+
+        final Resource resource = getResourceService().getAndAcquireResourceAtPath(path);
+
+        try {
+            assertEquals(resource.getId(), original.getId());
+        } finally {
+            getResourceService().release(resource);
+        }
+
     }
 
     @Test(dependsOnMethods = {"testGetByAlias"}, dataProvider = "linkedIntermediateProvider", expectedExceptions = ResourceNotFoundException.class)
-    public void testUnlink(final ResourceId resourceId, final Path path, final Resource resource) {
+    public void testUnlink(final ResourceId resourceId, final Path path, final Resource original) {
 
         final ResourceService.Unlink unlink;
         unlink = getResourceService().unlinkPath(path, removed -> fail("Did not expect resource removal."));
@@ -167,24 +206,35 @@ public class SimpleResourceServiceUnitTest {
         assertEquals(resourceId, unlink.getResourceId(), "Unlink mismatch");
         assertFalse(unlink.isRemoved(), "Resource should not have been removed.");
 
-        assertEquals(getResourceService().getResourceWithId(resourceId), resource);
-        getResourceService().getResourceAtPath(path);
+        final Resource first = getResourceService().getAndAcquireResourceWithId(resourceId);
+
+        try {
+            assertEquals(first.getId(), original.getId());
+        } finally {
+            getResourceService().release(first);
+        }
+
+        final Resource second = getResourceService().getAndAcquireResourceAtPath(path);
+        getResourceService().release(second);
+
     }
 
     @Test(dependsOnMethods = {"testUnlink"}, dataProvider = "intermediateDataProvider")
-    public void testRemove(final ResourceId resourceId, final Path path, final Resource resource) {
+    public void testRemove(final ResourceId resourceId, final Path path, final Resource original) {
 
         getResourceService().removeResource(resourceId);
 
         try {
-            getResourceService().getResourceWithId(resourceId);
+            final Resource resource = getResourceService().getAndAcquireResourceWithId(resourceId);
+            getResourceService().release(resource);
             fail("Resource still exists");
         } catch (ResourceNotFoundException ex) {
             // Pass Test
         }
 
         try {
-            getResourceService().getResourceAtPath(path);
+            final Resource resource = getResourceService().getAndAcquireResourceAtPath(path);
+            getResourceService().release(resource);
             fail("Resource still exists");
         } catch (ResourceNotFoundException ex) {
             // Pass Test
@@ -193,7 +243,7 @@ public class SimpleResourceServiceUnitTest {
     }
 
     @Test(dependsOnMethods = {"testRemove"}, dataProvider = "intermediateDataProvider", expectedExceptions = ResourceNotFoundException.class)
-    public void testDoubleRemove(final ResourceId resourceId, final Path path, final Resource resource) {
+    public void testDoubleRemove(final ResourceId resourceId, final Path path, final Resource original) {
         getResourceService().removeResource(resourceId);
     }
 
@@ -208,10 +258,11 @@ public class SimpleResourceServiceUnitTest {
     public void testDeleteWithPaths() {
         final ResourceId resourceId = new ResourceId();
         final Resource resource = Mockito.mock(Resource.class);
-        Mockito.when(resource.getId()).thenReturn(resourceId);
+
+        when(resource.getId()).thenReturn(resourceId);
 
         final Path path = new Path(randomUUID().toString());
-        getResourceService().addResource(path, resource);
+        getResourceService().addAndReleaseResource(path, resource);
 
         final Path a = new Path(path, Path.fromComponents("a"));
         final Path b = new Path(path, Path.fromComponents("b"));
@@ -226,29 +277,12 @@ public class SimpleResourceServiceUnitTest {
 
     }
 
-    public ResourceService getResourceService() {
-        return resourceService;
+    public abstract ResourceService getResourceService();
+
+    public Resource getMockResource(final ResourceId resourceId) {
+        final Resource resource = Mockito.mock(Resource.class);
+        when(resource.getId()).thenReturn(resourceId);
+        return resource;
     }
 
-    @Inject
-    public void setResourceService(ResourceService resourceService) {
-        this.resourceService = resourceService;
-    }
-
-    public static class Module extends AbstractModule {
-
-        @Override
-        protected void configure() {
-
-            install(new SimpleServicesModule().withSchedulerThreads(1));
-
-            final AssetLoader mockAssetLoader = Mockito.mock(AssetLoader.class);
-            bind(AssetLoader.class).toInstance(mockAssetLoader);
-
-            final ResourceLoader resourceLoader = Mockito.mock(ResourceLoader.class);
-            bind(ResourceLoader.class).toInstance(resourceLoader);
-
-        }
-
-    }
 }

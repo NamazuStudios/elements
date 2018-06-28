@@ -1,19 +1,25 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
-import org.omg.CORBA.DynAnyPackage.Invalid;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 
 /**
  * Contains attributes which may be attached to a {@link Request}, {@link Resource} or similar object.  Typically these
  * are used to inject contextual information (such as currently authenticated user).
+ *
+ * The test for {@link Object#equals(Object)} and {@link Object#hashCode()} should be implemented using the provided
+ * static methods in this interface, or an equivalent algorithm.  Many {@link Attributes} implementations exist and the
+ * most reliable means must be determined by the contents as they are accessible through this interface and not in an
+ * implementation specific way.  Failure to do so may result in poor cache performance as {@link Attributes} may be a
+ * component of a cache key in some parts of the application.
  */
 public interface Attributes {
 
@@ -68,6 +74,17 @@ public interface Attributes {
     }
 
     /**
+     * Returns a view of this {@link Attributes} object as a {@link Map<String, Object>}.
+     *
+     * @return this {@link Attributes} as a {@link Map<String, Object>}
+     */
+    default Map<String, Object> asMap() {
+        return getAttributeNames()
+            .stream()
+            .collect(Collectors.toMap(n -> n, n -> n));
+    }
+
+    /**
      * The empty {@link Attributes} implementation.  This returns an empty list of attribute names, and will return null
      * for any requested attribute.
      */
@@ -82,17 +99,78 @@ public interface Attributes {
         return EMPTY;
     }
 
+    /**
+     * Given a set of {@link Attributes}, this will determined is hash code.  This must be consistent with the rules of
+     * {@link Object#hashCode()} and {@link Attributes#equals(Attributes, Attributes)}
+     *
+     * @param attributes the {@link Attributes}
+     * @return the hash code
+     */
+    static int hashCode(final Attributes attributes) {
+        return attributes.asMap().hashCode();
+    }
+
+    /**
+     * Test if the supplied {@link Attributes} is equal to the other {@link Object} by first testing if it an instance
+     * of {@link Attributes} as well as if {@link #equals(Attributes, Attributes)} returns true.
+     *
+     * @param a the attributes object
+     * @param b another obect
+     * @return true if equal, false otherwise.
+     */
+    static boolean equals(final Attributes a, final Object b) {
+        return (b instanceof Attributes) && Attributes.equals(a, b);
+    }
+
+    /**
+     * Tests if two {@link Attributes} are equal to each other.  This is used by subclasses toprovide a universal test
+     * for equality against another instance of {@link Attributes}.
+     *
+     * Generally equality is defined as follows:
+     *
+     * <p><ul>
+     * <li>The names of all attributes are the same (order notwithstanding)</li>
+     * <li>The name set of all attributes are equal in size.</li>
+     * <li>Each individual attribute is equal (as determined by {@link Object#equals(Object)}</li>
+     * </ul><p>
+     *
+     *
+     * @param a the first {@link Attributes}
+     * @param b the second {@link Attributes}
+     *
+     * @return true if equals, false otherwise.
+     */
+    static boolean equals(final Attributes a, final Attributes b) {
+        return a.asMap().equals(b.asMap());
+    }
+
 }
 
 class EmptyAttributes implements Attributes, Serializable {
+
     @Override
     public Set<String> getAttributeNames() {
         return emptySet();
     }
 
     @Override
+    public Map<String, Object> asMap() {
+        return emptyMap();
+    }
+
+    @Override
     public Object getAttribute(String name) {
         return null;
     }
-}
 
+    @Override
+    public int hashCode() {
+        return Attributes.hashCode(this);
+    }
+
+    @Override
+    public boolean equals(final Object that) {
+        return Attributes.equals(this, that);
+    }
+
+}

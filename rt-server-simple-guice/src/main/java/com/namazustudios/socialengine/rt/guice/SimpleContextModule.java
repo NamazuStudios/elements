@@ -54,6 +54,8 @@ public class SimpleContextModule extends PrivateModule {
         install(new SimpleSchedulerContextModule());
         install(new SimpleHandlerContextModule());
 
+        expose(ResourceAcquisition.class);
+
     }
 
 }

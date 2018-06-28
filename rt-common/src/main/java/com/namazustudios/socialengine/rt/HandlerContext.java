@@ -3,8 +3,6 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.exception.HandlerTimeoutException;
 import com.namazustudios.socialengine.rt.util.SyncWait;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -22,6 +20,21 @@ import java.util.function.Consumer;
  */
 @Proxyable
 public interface HandlerContext {
+
+    /**
+     * The timeout for the {@link HandlerContext} in milliseconds.
+     */
+    String HANDLER_TIMEOUT_MSEC = "com.namazustudios.socialengine.rt.handler.timeout.msec";
+
+    /**
+     * Starts this {@link HandlerContext}.
+     */
+    default void start() {}
+
+    /**
+     * Stops this {@link HandlerContext}.
+     */
+    default void stop() {}
 
     /**
      * Synchronously invokes {@link #invokeSingleUseHandlerAsync(Consumer, Consumer, Attributes, String, String, Object...)}

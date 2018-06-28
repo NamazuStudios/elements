@@ -18,6 +18,16 @@ import static com.namazustudios.socialengine.rt.Attributes.emptyAttributes;
 public interface ResourceContext {
 
     /**
+     * Starts this {@link ResourceContext}.
+     */
+    default void start() {}
+
+    /**
+     * Stops this {@link ResourceContext}.
+     */
+    default void stop() {}
+
+    /**
      * Creates a {@link Resource} at the provided {@link Path}.
      *
      * @param module the module to instantiate

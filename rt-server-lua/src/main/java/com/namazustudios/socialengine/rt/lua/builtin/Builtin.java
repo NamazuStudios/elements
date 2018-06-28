@@ -6,6 +6,8 @@ import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
+import com.namazustudios.socialengine.rt.lua.LuaResource;
+import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,6 +103,32 @@ public interface Builtin {
         };
 
     }
+
+    /**
+     * Gets the permanent name of the object so that it can be handled appropriately by the {@link Persistence} class
+     * when serializing the underlying {@link LuaResource}.  The default implementation returns the name of this
+     * object's {@link Class}.  However, for some implementations, this may not be sufficient.
+     *
+     * @return the permanent name, must be unique for this {@link Builtin}.
+     */
+    default String getPermanentName() {
+        return getClass().getName();
+    }
+
+    /**
+     * This makes this {@link Builtin} persistence aware.  This ensures that if the builtin applies custom persistence
+     * for any objects that need special care during serialization.  This includes instances of {@link JavaFunction},
+     * or {@link Object} types that can't be serialized.
+     *
+     * This may not be called for all usages of {@link BuiltinManager} as persistence is not required for all usages
+     * currently.  Therefore, do not rely or expect this to be called in all circumstances.  It will, however, be called
+     * at installation time before any other operation is performed.
+     *
+     * The default implementation of this method does nothing as not all builtins will require this feature.
+     *
+     * @param persistence the {@link Persistence} instance.
+     */
+    default void makePersistenceAware(Persistence persistence) {}
 
     /**
      * An internal interface to represent a module.  Returns what is needed by the loader {@link JavaFunction} to

@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
+import org.w3c.dom.Attr;
+
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -26,12 +29,27 @@ public class SimpleAttributes implements Attributes, Serializable {
         return getAttributes().get(name);
     }
 
+    @Override
+    public Map<String, Object> asMap() {
+        return Collections.unmodifiableMap(getAttributes());
+    }
+
     public Map<String, Object> getAttributes() {
         return attributes;
     }
 
     public void setAttributes(Map<String, Object> attributes) {
         this.attributes = attributes;
+    }
+
+    @Override
+    public int hashCode() {
+        return Attributes.hashCode(this);
+    }
+
+    @Override
+    public boolean equals(final Object that) {
+        return Attributes.equals(this, that);
     }
 
     /**

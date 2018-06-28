@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
+import com.google.common.collect.Streams;
+import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,11 +12,13 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
+
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
  * The simple handler server is responsible for dispatching requests and events to all {@link Resource} instances
- * contained therein.  It accomplishes its task in parallel by dispatching all requests, events, and then
- * finally updating each {@link Resource} in order.
+ * contained therein.
  *
  * Internally, it leverages an instance an {@link ExecutorService} and a {@link CompletionService} to
  * perform all updates in parallel.
@@ -37,7 +42,39 @@ public class SimpleScheduler implements Scheduler {
     private ScheduledExecutorService scheduledExecutorService;
 
     @Override
-    public void shutdown() {}
+    public <T> Future<T> submit(Callable<T> tCallable) {
+        return getDispatcherExecutorService().submit(tCallable);
+    }
+
+    @Override
+    public Future<Void> scheduleUnlink(final Path path) {
+        return getDispatcherExecutorService().submit(() -> {
+            getResourceService().unlinkPath(path, resource -> {
+
+                final ResourceId resourceId = resource.getId();
+
+                try {
+                    resource.close();
+                } catch (ResourceNotFoundException ex) {
+                    logger.debug("No Resource found at path {}.  Disregarding.", ex);
+                } catch (Exception ex) {
+                    logger.error("Caught exception destroying Resource {}", resourceId, ex);
+                }
+
+            });
+        }, null);
+    }
+
+    @Override
+    public Future<Void> scheduleDestruction(final ResourceId resourceId) {
+        return getDispatcherExecutorService().submit(() -> {
+            try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
+                getResourceService().destroy(resourceId);
+            } catch (Exception ex) {
+                logger.error("Caught exception destroying Resource {}", resourceId, ex);
+            }
+        }, null);
+    }
 
     @Override
     public <T> Future<T> perform(final ResourceId resourceId,
@@ -58,9 +95,39 @@ public class SimpleScheduler implements Scheduler {
                                            final long time, final TimeUnit timeUnit,
                                            final Function<Resource, T> operation,
                                            final Consumer<Throwable> failure) {
-        final FutureTask<T> scheduled = new FutureTask<T>(protectedCallable(resourceId, operation, failure));
-        getScheduledExecutorService().schedule(() -> getDispatcherExecutorService().submit(scheduled), time, timeUnit);
-        return scheduled;
+
+        final FutureTask<T> task = new FutureTask<T>(protectedCallable(resourceId, operation, failure));
+
+        final Future<?> scheduled = getScheduledExecutorService()
+            .schedule(() -> getDispatcherExecutorService().submit(task), time, timeUnit);
+
+        return new Future<T>() {
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
+                return task.cancel(mayInterruptIfRunning) && scheduled.cancel(mayInterruptIfRunning);
+            }
+
+            @Override
+            public boolean isCancelled() {
+                return task.isCancelled();
+            }
+
+            @Override
+            public boolean isDone() {
+                return task.isDone();
+            }
+
+            @Override
+            public T get() throws InterruptedException, ExecutionException {
+                return task.get();
+            }
+
+            @Override
+            public T get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+                return task.get(timeout, unit);
+            }
+        };
+
     }
 
     private <T> Callable<T> protectedCallable(final ResourceId resourceId,
@@ -68,7 +135,7 @@ public class SimpleScheduler implements Scheduler {
                                               final Consumer<Throwable> failure) {
         return () -> {
             try {
-                final Resource resource = getResourceService().getResourceWithId(resourceId);
+                final Resource resource = getResourceService().getAndAcquireResourceWithId(resourceId);
                 return performProtected(resource, operation);
             } catch (Throwable th) {
                 failure.accept(th);
@@ -81,35 +148,66 @@ public class SimpleScheduler implements Scheduler {
                                               final Function<Resource, T> operation,
                                               final Consumer<Throwable> failure) {
         return () -> {
+
+            final Resource resource;
+
             try {
-                final Resource resource = getResourceService().getResourceAtPath(path);
-                return performProtected(resource, operation);
-            } catch (Throwable th) {
-                failure.accept(th);
-                throw th;
+                resource = getResourceService().getAndAcquireResourceAtPath(path);
+            } catch (Exception ex) {
+                failure.accept(ex);
+                throw ex;
             }
+
+            try {
+                return performProtected(resource, operation);
+            } catch (Exception ex) {
+                failure.accept(ex);
+                throw ex;
+            } finally {
+                getResourceService().release(resource);
+            }
+
         };
     }
 
     private <T> T performProtected(final Resource resource,
                                    final Function<Resource, T> operation) {
-
-        final Lock lock = getResourceLockService().getLock(resource.getId());
-
-        try {
-            logger.trace("Locking resource {}", resource.getId());
-            lock.lock();
+        try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resource.getId())){
             logger.trace("Applying operation for resource {}", resource.getId());
             return operation.apply(resource);
         } catch (Throwable th) {
             logger.error("Caught exception in protected operation {}", operation, th);
             throw th;
         } finally {
-            logger.trace("Unlocking resource {}", resource.getId());
-            lock.unlock();
             logger.trace("Unlocked resource {}", resource.getId());
         }
+    }
 
+    @Override
+    public void shutdown() {
+        try {
+
+            logger.info("Shutting down dispatcher threads.");
+            dispatcherExecutorService.shutdown();
+
+            logger.info("Shutting down scheduler threads.");
+            scheduledExecutorService.shutdownNow();
+
+            if (scheduledExecutorService.awaitTermination(5, MINUTES)) {
+                logger.info("Shut down scheduler threads.");
+            } else {
+                logger.error("Timed out shutting down scheduler threads.");
+            }
+
+            if (dispatcherExecutorService.awaitTermination(5, TimeUnit.MINUTES)) {
+                logger.info("Shut down dispatcher threads.");
+            } else {
+                logger.error("Timed out shutting down dispatcher threads.");
+            }
+
+        } catch (InterruptedException ex) {
+            throw new InternalException(ex);
+        }
     }
 
     public ExecutorService getDispatcherExecutorService() {

@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.util.UUID;
 
 /**

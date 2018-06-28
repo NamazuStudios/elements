@@ -23,19 +23,24 @@ end
 function test_index.test_list()
 
     local original = {}
-
+    local prefix = util.uuid();
     -- Builds the listing
 
     for i = 1,2
     do
-        local rid, path, code = make_resource("test_list");
+        local rid, path, code = make_resource(prefix);
         print("added " .. rid .. " at path " .. path)
-        assert(code == responsecode.OK, "Expected OK response code got " .. code)
+        assert(code == responsecode.OK, "Expected OK response code got " .. tostring(code))
         original[path] = rid
     end
 
     local listing = index.list("test_list/*")
     print(type(listing) == "table", "Expected table for listing but got " .. type(listing))
+
+    for path, resource_id in pairs(listing)
+    do
+        print("resource "  .. tostring(path)  .. " -> " .. tostring(resource_id))
+    end
 
     for path, resource_id in pairs(listing)
     do

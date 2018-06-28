@@ -9,3 +9,4 @@ buildNumber.properties
 .idea
 *.iml
 test-repositories
+storage.xodus

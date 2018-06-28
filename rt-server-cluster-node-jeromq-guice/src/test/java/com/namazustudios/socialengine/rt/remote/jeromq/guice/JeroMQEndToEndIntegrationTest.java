@@ -6,6 +6,7 @@ import com.google.inject.Injector;
 import com.namazustudios.socialengine.remote.TestServiceInterface;
 import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.rt.Node;
+import com.namazustudios.socialengine.rt.NodeLifecycle;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
@@ -308,6 +309,18 @@ public class JeroMQEndToEndIntegrationTest {
 
             bind(String.class).annotatedWith(named(ID)).toInstance("integration-test");
             bind(String.class).annotatedWith(named(NAME)).toInstance("integration-test");
+
+            bind(NodeLifecycle.class).toInstance(new NodeLifecycle() {
+                @Override
+                public void start() {
+                    logger.info("Starting test node lifecycle.");
+                }
+
+                @Override
+                public void shutdown() {
+                    logger.info("Shutting down test node lifecycle.");
+                }
+            });
 
         }
 

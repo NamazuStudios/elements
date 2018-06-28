@@ -14,15 +14,33 @@ public class SimpleSchedulerContext implements SchedulerContext {
     private Scheduler scheduler;
 
     @Override
-    public void resumeTaskAfterDelay(ResourceId resourceId, long time, TimeUnit timeUnit, TaskId taskId) {
-        getScheduler().resumeTaskAfterDelay(resourceId, time, timeUnit, taskId,
-                                            th -> logger.error("Caught exception resuming.", th));
+    public void stop() {
+        getScheduler().shutdown();
     }
 
     @Override
-    public void resumeFromNetwork(ResourceId resourceId, TaskId taskId, Object result) {
-        getScheduler().performV(resourceId, resource -> resumeFromNetwork(resource, taskId, result),
-                                            th -> logger.error("Caught exception resuming.", th));
+    public void resumeTaskAfterDelay(final long time, final TimeUnit timeUnit,
+                                     final TaskId taskId) {
+        getScheduler().resumeTaskAfterDelay(
+            taskId, time, timeUnit,
+            () -> logger.trace("Resumed task {}:{}", taskId),
+            th -> logger.error("Caught exception resuming.", th));
+    }
+
+    public void resumeTaskAfterDelay(long time, final TimeUnit timeUnit,
+                                     final TaskId taskId,
+                                     final Runnable resumed) {
+        getScheduler().resumeTaskAfterDelay(
+            taskId, time, timeUnit,
+            () -> { logger.trace("Resumed task {}", taskId); resumed.run(); },
+            th -> { logger.error("Caught exception resuming.", th); resumed.run(); } );
+    }
+
+    @Override
+    public void resumeFromNetwork(final TaskId taskId, final Object result) {
+        getScheduler().performV(taskId.getResourceId(),
+            resource -> resumeFromNetwork(resource, taskId, result),
+            th -> logger.error("Caught exception resuming.", th));
     }
 
     private void resumeFromNetwork(final Resource resource, final TaskId taskId, final Object result) {
@@ -34,9 +52,10 @@ public class SimpleSchedulerContext implements SchedulerContext {
     }
 
     @Override
-    public void resumeWithError(final ResourceId resourceId, final TaskId taskId, final Throwable throwable) {
-        getScheduler().performV(resourceId, resource -> resumeWithError(resource, taskId, throwable),
-                                            th -> logger.error("Caught exception resuming.", th));
+    public void resumeWithError(final TaskId taskId, final Throwable throwable) {
+        getScheduler().performV(taskId.getResourceId(),
+            resource -> resumeWithError(resource, taskId, throwable),
+            th -> logger.error("Caught exception resuming.", th));
     }
 
     private void resumeWithError(final Resource resource, final TaskId taskId, final Throwable throwable) {

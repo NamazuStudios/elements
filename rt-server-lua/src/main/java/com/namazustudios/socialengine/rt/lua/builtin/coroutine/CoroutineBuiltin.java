@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
+import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ public class CoroutineBuiltin implements Builtin {
 
     public static final String MODULE_NAME = "namazu.coroutine";
 
-    public static final String COROUTINES_TABLE = "namazu.threads";
+    public static final String COROUTINES_TABLE = "com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin.coroutines";
 
     public static final String START = "start";
 
@@ -95,7 +96,7 @@ public class CoroutineBuiltin implements Builtin {
 
             luaState.checkType(1, LuaType.THREAD);
 
-            final TaskId taskId = new TaskId();
+            final TaskId taskId = new TaskId(getLuaResource().getId());
 
             luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
             luaState.pushValue(1);
@@ -123,10 +124,10 @@ public class CoroutineBuiltin implements Builtin {
 
             final TaskId taskId = new TaskId(luaState.checkString(1));
             luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
-            luaState.getField(-1, taskId.toString());
+            luaState.getField(-1, taskId.asString());
 
             if (!luaState.isThread(-1)) {
-                logger.warn("no such task " + taskId + " instead got " + luaState.typeName(-1));
+                logger.debug("no such task " + taskId + " instead got " + luaState.typeName(-1));
                 return 0;
             }
 
@@ -176,7 +177,7 @@ public class CoroutineBuiltin implements Builtin {
                 // Now that all instructions are processed, we return the status and the task id.
 
                 luaState.setTop(0);
-                luaState.pushString(taskId.toString());
+                luaState.pushString(taskId.asString());
                 luaState.pushInteger(status);
 
                 return 2;
@@ -193,7 +194,7 @@ public class CoroutineBuiltin implements Builtin {
                 luaState.pushInteger(status);
                 luaState.insert(1);
 
-                luaState.pushString(taskId.toString());
+                luaState.pushString(taskId.asString());
                 luaState.insert(1);
 
                 final Object result = luaState.getTop() == 2 ? null : luaState.checkJavaObject(3, Object.class);
@@ -215,7 +216,7 @@ public class CoroutineBuiltin implements Builtin {
     private void cleanup(final TaskId taskId, final LuaState luaState) {
         luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
         luaState.pushNil();
-        luaState.setField(-2, taskId.toString());
+        luaState.setField(-2, taskId.asString());
         luaState.pop(1);
     }
 
@@ -246,12 +247,12 @@ public class CoroutineBuiltin implements Builtin {
     }
 
     private void scheduleImmediate(final TaskId taskId, final LogAssist logAssist) {
-        getSchedulerContext().resumeTaskAfterDelay(getLuaResource().getId(), 0, MILLISECONDS, taskId);
+        getSchedulerContext().resumeTaskAfterDelay(0, MILLISECONDS, taskId);
     }
 
     private void scheduleUntil(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = delayUntilMilliseconds(luaState);
-        getSchedulerContext().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
+        getSchedulerContext().resumeTaskAfterDelay(delay, MILLISECONDS, taskId);
     }
 
     private long delayUntilMilliseconds(final LuaState luaState) {
@@ -262,7 +263,7 @@ public class CoroutineBuiltin implements Builtin {
 
     private void scheduleFor(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = timeValueInMilliseconds(luaState);
-        getSchedulerContext().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
+        getSchedulerContext().resumeTaskAfterDelay(delay, MILLISECONDS, taskId);
     }
 
     private long timeValueInMilliseconds(final LuaState luaState) {
@@ -284,7 +285,7 @@ public class CoroutineBuiltin implements Builtin {
 
     private void scheduleUntilNextCron(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = delayUntilNextCronMilliseconds(luaState);
-        getSchedulerContext().resumeTaskAfterDelay(getLuaResource().getId(), delay, MILLISECONDS, taskId);
+        getSchedulerContext().resumeTaskAfterDelay(delay, MILLISECONDS, taskId);
     }
 
     private long delayUntilNextCronMilliseconds(final LuaState luaState) {
@@ -330,10 +331,19 @@ public class CoroutineBuiltin implements Builtin {
             final Module module = luaState.checkJavaObject(2, Module.class);
             logger.debug("Loading module {} - {}", name, module.getChunkName());
 
-            // This sets up the table which tracks and manages active tasks.
+            luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
 
-            luaState.newTable();
-            luaState.setField(REGISTRYINDEX, COROUTINES_TABLE);
+            if (!luaState.isTable(-1)) {
+                // We make the table if no such table exists in the lua resource already.  This ensures that the table
+                // has been created if it does not exist already.
+                luaState.newTable();
+                luaState.setField(REGISTRYINDEX, COROUTINES_TABLE);
+            } else {
+                // Persitence may have already set this table up so we want to make sure that the persistence table is
+                // only created if it has not been already made.  There's probably a better way to handle this but for
+                // now we just doa  quick check to make sure that it's not been made yet.
+                luaState.pop(1);
+            }
 
             // The actual function table
             luaState.newTable();
@@ -350,6 +360,13 @@ public class CoroutineBuiltin implements Builtin {
             return 1;
 
         };
+    }
+
+    @Override
+    public void makePersistenceAware(final Persistence persistence) {
+        persistence.addPermanentJavaObject(start, CoroutineBuiltin.class, START);
+        persistence.addPermanentJavaObject(resume, CoroutineBuiltin.class, RESUME);
+        persistence.addPermanentJavaObject(currentTaskId, CoroutineBuiltin.class, CURRENT_TASK_ID);
     }
 
     public SchedulerContext getSchedulerContext() {

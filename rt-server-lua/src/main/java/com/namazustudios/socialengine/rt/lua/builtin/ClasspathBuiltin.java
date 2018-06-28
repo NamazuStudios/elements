@@ -35,7 +35,7 @@ public class ClasspathBuiltin implements Builtin {
         this(LuaResource.class.getClassLoader());
     }
 
-    public ClasspathBuiltin(ClassLoader classLoader) {
+    public ClasspathBuiltin(final ClassLoader classLoader) {
         this.classLoader = classLoader;
     }
 

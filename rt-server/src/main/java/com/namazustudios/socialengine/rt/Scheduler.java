@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.exception.NoSuchTaskException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -21,7 +22,52 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * Created by patricktwohig on 8/22/15.
  */
 public interface Scheduler {
-    
+
+    /**
+     * Submits an arbitrary {@link Runnable} to run within the {@link Scheduler}.
+     *
+     * @param runnable the {@link Runnable} to run
+     * @return a {@link Future<Void>} to control the execution state of the task
+     */
+    default Future<Void> submitV(Runnable runnable) {
+        return submit(() -> {
+            runnable.run();
+            return null;
+        });
+    }
+
+    /**
+     * Submits an arbitrary {@link Callable<T>} to run within the {@link Scheduler}.
+     *
+     * @param tCallable the {@link Callable<T>} to run
+     * @return a {@link Future<T>} to control the execution state of the task
+     */
+    <T> Future<T> submit(Callable<T> tCallable);
+
+    /**
+     * Provided the {@link Path}, this will schedule an unlink operation at some point in the near future.  This allows
+     * any pending operations to relase their locks gracefully unlink an potentially destroy any {@link Resource}s
+     * associated with the supplied {@Link Path}.  If the {@link Resource} is removed this will ensure that the
+     * {@link Resource#close()} method is called appropriately.
+     *
+     * @param path the {@link Path} to unlink
+     * @return a {@link Future<Void>} used to signal detruction.
+     */
+    Future<Void> scheduleUnlink(Path path);
+
+    /**
+     * Provided the {@link ResourceId}, this will schedule destruction at some point in the near future.  This allows
+     * any pending operations to scheduleRelease their locks gracefully and destroy the {@link Resource} associated with the
+     * supplied. {@link ResourceId}.
+     *
+     * This ensures that the underlying {@link Resource} is removed from the {@link ResourceService} and its
+     * {@link Resource#close()} method invoked.
+     *
+     * @param resourceId the {@link ResourceId}
+     * @return a {@link Future<Void>} used to signal detruction.
+     */
+    Future<Void> scheduleDestruction(ResourceId resourceId);
+
     /**
      * Performs an action against the resource with the provided {@link ResourceId}.
      *
@@ -109,7 +155,8 @@ public interface Scheduler {
      */
     default Future<Void> performAfterDelayV(final ResourceId resourceId,
                                             final long time, final TimeUnit timeUnit,
-                                            final Consumer<Resource> operation, final Consumer<Throwable> failure) {
+                                            final Consumer<Resource> operation,
+                                            final Consumer<Throwable> failure) {
         return performAfterDelay(resourceId, time, timeUnit, resource -> {
             operation.accept(resource);
             return null;
@@ -120,18 +167,16 @@ public interface Scheduler {
      * Resumes the task associated with the supplied {@link TaskId}.  This allows for the specification of a delay
      * after a specified period of time.
      *
-     * @param resourceId the {@link ResourceId}
      * @param taskId the {@link TaskId} of the task
      *
      * @return {@link Future<Void>} which can be used to monitor the status of the request
      */
-    default Future<Void> resumeTask(final ResourceId resourceId,
-                                    final TaskId taskId,
+    default Future<Void> resumeTask(final TaskId taskId,
                                     final Consumer<Throwable> failure) {
 
         final Stopwatch stopwatch = Stopwatch.createStarted();
 
-        return performV(resourceId, r -> {
+        return performV(taskId.getResourceId(), r -> {
 
             final double mills = stopwatch.elapsed(MILLISECONDS);
             final double secondsPerMills = MILLISECONDS.convert(1, SECONDS);
@@ -140,7 +185,7 @@ public interface Scheduler {
                 r.resumeFromScheduler(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
             } catch (NoSuchTaskException ex) {
                 final Logger logger = LoggerFactory.getLogger(getClass());
-                logger.info("Ignoring dead task: {}", ex.getTaskId());
+                logger.debug("Ignoring dead task: {}", ex.getTaskId());
             }
 
         }, failure);
@@ -151,20 +196,21 @@ public interface Scheduler {
      * Resumes the task associated with the supplied {@link TaskId}.  This allows for the specification of a delay
      * after a specified period of time.
      *
-     * @param resourceId the {@link ResourceId}
-     * @param time the time delay
-     * @param timeUnit the {@link TimeUnit} instance designating the time units of measure
      * @param taskId the {@link TaskId} of the task
      *
+     * @param time the time delay
+     * @param timeUnit the {@link TimeUnit} instance designating the time units of measure
+*      @param resumed a {@link Runnable} that will execute when the task has been resumed successfully
      * @return {@link Future<Void>} which can be used to monitor the status of the request
      */
-    default Future<Void> resumeTaskAfterDelay(final ResourceId resourceId,
+    default Future<Void> resumeTaskAfterDelay(final TaskId taskId,
                                               final long time, final TimeUnit timeUnit,
-                                              final TaskId taskId, final Consumer<Throwable> failure) {
+                                              final Runnable resumed,
+                                              final Consumer<Throwable> failure) {
 
         final Stopwatch stopwatch = Stopwatch.createStarted();
 
-        return performAfterDelayV(resourceId, time, timeUnit, r -> {
+        return performAfterDelayV(taskId.getResourceId(), time, timeUnit, r -> {
 
             final double mills = stopwatch.elapsed(MILLISECONDS);
             final double secondsPerMills = MILLISECONDS.convert(1, SECONDS);
@@ -173,8 +219,10 @@ public interface Scheduler {
                 r.resumeFromScheduler(taskId, mills == 0 ? 0 : (secondsPerMills / mills));
             } catch (NoSuchTaskException ex) {
                 final Logger logger = LoggerFactory.getLogger(getClass());
-                logger.info("Ignoring dead task: {}", ex.getTaskId());
+                logger.debug("Ignoring dead task: {}", ex.getTaskId());
             }
+
+            resumed.run();
 
         }, failure);
 

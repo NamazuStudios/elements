@@ -1,7 +1,11 @@
 package com.namazustudios.socialengine.rt;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
+
+import static java.lang.String.format;
 
 /**
  * Represents a globally-unique id of a task, associated with a {@link Resource}.  This is currently backed by an
@@ -9,13 +13,20 @@ import java.util.UUID;
  */
 public class TaskId implements Serializable {
 
+    public static final String ID_SEPARATOR = ":";
+
+    public static final Pattern ID_SEPARATOR_PATTERN = Pattern.compile(ID_SEPARATOR);
+
     private final UUID uuid;
+
+    private ResourceId resourceId;
 
     /**
      * Creates a new unique {@link TaskId}.
      */
-    public TaskId() {
+    public TaskId(final ResourceId resourceId) {
         uuid = UUID.randomUUID();
+        this.resourceId = resourceId;
     }
 
     /**
@@ -24,7 +35,25 @@ public class TaskId implements Serializable {
      * @param stringRepresentation the string representation
      */
     public TaskId(final String stringRepresentation) {
-        uuid = UUID.fromString(stringRepresentation);
+
+        final String[] components = ID_SEPARATOR_PATTERN.split(stringRepresentation);
+
+        if (components.length != 2) {
+            throw new IllegalArgumentException("Task id format invalid: " + stringRepresentation);
+        }
+
+        uuid = UUID.fromString(components[1]);
+        resourceId = new ResourceId(components[0]);
+
+    }
+
+    /**
+     * Returns the {@link ResourceId} attached to this {@link TaskId}
+     *
+     * @return the {@link ResourceId} attached to this {@link TaskId}
+     */
+    public ResourceId getResourceId() {
+        return resourceId;
     }
 
     /**
@@ -33,27 +62,26 @@ public class TaskId implements Serializable {
      * @return the string representation
      */
     public String asString() {
-        return uuid.toString();
+        return format("%s%s%s", resourceId.asString(), ID_SEPARATOR, uuid.toString());
     }
 
     @Override
     public String toString() {
-        return uuid.toString();
+        return asString();
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TaskId)) return false;
-
-        TaskId taskId = (TaskId) o;
-
-        return uuid != null ? uuid.equals(taskId.uuid) : taskId.uuid == null;
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof TaskId)) return false;
+        TaskId taskId = (TaskId) object;
+        return Objects.equals(uuid, taskId.uuid) &&
+               Objects.equals(getResourceId(), taskId.getResourceId());
     }
 
     @Override
     public int hashCode() {
-        return uuid != null ? uuid.hashCode() : 0;
+        return Objects.hash(uuid, getResourceId());
     }
 
 }

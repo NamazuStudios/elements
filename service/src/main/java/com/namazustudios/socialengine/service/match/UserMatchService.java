@@ -139,6 +139,8 @@ public class UserMatchService implements MatchService {
             .getHandlerContext()
             .invokeRetainedHandler(attributes, module, method, player, opponent);
 
+        logger.debug("Player {} Opponent {}", player, opponent);
+
         if (!(result instanceof String)) {
             throw new InternalError("Returned value not string from match processor.");
         }

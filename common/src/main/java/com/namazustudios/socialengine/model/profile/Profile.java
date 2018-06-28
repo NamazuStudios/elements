@@ -102,6 +102,17 @@ public class Profile implements Serializable {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "Profile{" +
+                "id='" + id + '\'' +
+                ", user=" + user +
+                ", application=" + application +
+                ", imageUrl='" + imageUrl + '\'' +
+                ", displayName='" + displayName + '\'' +
+                '}';
+    }
+
     /**
      * Used as the key for the profile attribute where appropriate.  This is equivalent
      * to the FQN of the {@link Profile} class.

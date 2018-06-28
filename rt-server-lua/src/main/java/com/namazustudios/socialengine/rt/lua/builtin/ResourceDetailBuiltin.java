@@ -1,21 +1,17 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
 import com.namazustudios.socialengine.jnlua.JavaFunction;
-import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
-import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
+import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.rt.Attributes.emptyAttributes;
-import static com.namazustudios.socialengine.rt.lua.Constants.REQUIRE;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinUtils.currentTaskId;
 
 /**
@@ -56,15 +52,14 @@ public class ResourceDetailBuiltin implements Builtin {
             final Object[] params = luaState.checkJavaObject(4, Object[].class);
 
             final TaskId taskId = currentTaskId(luaState);
-            final ResourceId thisResourceId = getLuaResource().getId();
 
             final Attributes attributes = attributesMap == null ? emptyAttributes() : new SimpleAttributes.Builder()
                 .setAttributes(attributesMap.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue())))
                 .build();
 
             getContext().getResourceContext().createAttributesAsync(
-                rid -> getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, rid.asString()),
-                throwable -> getContext().getSchedulerContext().resumeWithError(thisResourceId, taskId, throwable),
+                rid -> getContext().getSchedulerContext().resumeFromNetwork(taskId, rid.asString()),
+                throwable -> getContext().getSchedulerContext().resumeWithError(taskId, throwable),
                 module, path, attributes, params);
 
             return 0;
@@ -87,11 +82,10 @@ public class ResourceDetailBuiltin implements Builtin {
             final Object[] params = luaState.checkJavaObject(3, Object[].class);
 
             final TaskId taskId = currentTaskId(luaState);
-            final ResourceId thisResourceId = getLuaResource().getId();
 
             getContext().getResourceContext().invokeAsync(
-                object -> getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, object),
-                throwable -> getContext().getSchedulerContext().resumeWithError(thisResourceId, taskId, throwable),
+                object -> getContext().getSchedulerContext().resumeFromNetwork(taskId, object),
+                throwable -> getContext().getSchedulerContext().resumeWithError(taskId, throwable),
                 resourceId, methodName, params);
 
             return 0;
@@ -114,11 +108,10 @@ public class ResourceDetailBuiltin implements Builtin {
             final Object[] params = luaState.checkJavaObject(3, Object[].class);
 
             final TaskId taskId = currentTaskId(luaState);
-            final ResourceId thisResourceId = getLuaResource().getId();
 
             getContext().getResourceContext().invokePathAsync(
-                    object -> getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, object),
-                    throwable -> getContext().getSchedulerContext().resumeWithError(thisResourceId, taskId, throwable),
+                    object -> getContext().getSchedulerContext().resumeFromNetwork(taskId, object),
+                    throwable -> getContext().getSchedulerContext().resumeWithError(taskId, throwable),
                     path, methodName, params);
 
             return 0;
@@ -139,23 +132,22 @@ public class ResourceDetailBuiltin implements Builtin {
             final ResourceId resourceId = new ResourceId(luaState.checkString(1));
 
             final TaskId taskId = currentTaskId(luaState);
-            final ResourceId thisResourceId = getLuaResource().getId();
 
             getContext().getResourceContext().destroyAsync(
                 object -> {
-                    if (thisResourceId.equals(resourceId)) {
+                    if (taskId.getResourceId().equals(resourceId)) {
                         logger.info("Destroyed {}", resourceId);
                     } else {
-                        getContext().getSchedulerContext().resumeFromNetwork(thisResourceId, taskId, null);
+                        getContext().getSchedulerContext().resumeFromNetwork(taskId, null);
                     }
                 },
                 throwable -> {
 
-                    if (thisResourceId.equals(resourceId)) {
+                    if (taskId.getResourceId().equals(resourceId)) {
                         logger.error("Could not self-destruct resource {}", resourceId);
                     }
 
-                    getContext().getSchedulerContext().resumeWithError(thisResourceId, taskId, throwable);
+                    getContext().getSchedulerContext().resumeWithError(taskId, throwable);
 
                 },
                 resourceId
@@ -205,6 +197,14 @@ public class ResourceDetailBuiltin implements Builtin {
 
             return 1;
         };
+    }
+
+    @Override
+    public void makePersistenceAware(final Persistence persistence) {
+        persistence.addPermanentJavaObject(create, IndexDetailBuiltin.class, CREATE);
+        persistence.addPermanentJavaObject(invoke, IndexDetailBuiltin.class, INVOKE);
+        persistence.addPermanentJavaObject(invokePath, IndexDetailBuiltin.class, INVOKE_PATH);
+        persistence.addPermanentJavaObject(destroy, IndexDetailBuiltin.class, DESTROY);
     }
 
     public Context getContext() {

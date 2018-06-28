@@ -3,11 +3,13 @@ package com.namazustudios.socialengine.rt.lua.builtin;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.lua.Constants;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
-import com.namazustudios.socialengine.rt.lua.LuaResource;
+import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Provider;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -21,13 +23,20 @@ public class BuiltinManager {
 
     private final Supplier<LuaState> luaStateSupplier;
 
-    public BuiltinManager(final Supplier<LuaState> luaStateSupplier) {
-        this(luaStateSupplier, () -> logger);
-    }
+    private Consumer<Builtin> handlePersistence;
 
     public BuiltinManager(final Supplier<LuaState> luaStateSupplier, final Supplier<Logger> loggerSupplier) {
         this.luaStateSupplier = luaStateSupplier;
         logAssist = new LogAssist(loggerSupplier, luaStateSupplier);
+        handlePersistence = b -> {};
+    }
+
+    public BuiltinManager(final Supplier<LuaState> luaStateSupplier,
+                          final Supplier<Logger> loggerSupplier,
+                          final Persistence persistence) {
+        this.luaStateSupplier = luaStateSupplier;
+        logAssist = new LogAssist(loggerSupplier, luaStateSupplier);
+        handlePersistence = b -> b.makePersistenceAware(persistence);
     }
 
     /**
@@ -39,8 +48,11 @@ public class BuiltinManager {
     public void installBuiltin(final Builtin builtin) {
 
         final LuaState luaState = luaStateSupplier.get();
+        handlePersistence.accept(builtin);
 
         try {
+
+            logger.debug("Installing builtin {}", builtin);
 
             luaState.getGlobal(Constants.PACKAGE_TABLE);
             luaState.getField(-1, Constants.PACKAGE_SEARCHERS_TABLE);
@@ -57,7 +69,5 @@ public class BuiltinManager {
         }
 
     }
-
-
 
 }

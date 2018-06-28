@@ -8,6 +8,7 @@ import com.google.common.collect.Iterators;
 
 import java.io.File;
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -47,6 +48,11 @@ public class Path implements Comparable<Path>, Serializable {
      * A {@link Pattern} to match valid path components.
      */
     public static final Pattern VALID_PATH_COMPONENT = Pattern.compile("[\\p{Print}]+");
+
+    /**
+     * The default encoding for converting a {@link Path} into an array of bytes.
+     */
+    public static final Charset ENCODING = Charset.forName("UTF-8");
 
     private final List<String> components;
 
@@ -173,6 +179,16 @@ public class Path implements Comparable<Path>, Serializable {
     }
 
     /**
+     * Returns this {@link Path} as a non-wildcard path.  If the path is not a wildcard, this will simply return this
+     * object.
+     *
+     * @return this path, stripping the wildcard.
+     */
+    public Path stripWildcard() {
+        return isWildcard() ? new Path(components.subList(0, maxCompareIndex)) : this;
+    }
+
+    /**
      * Checks if this path matches the other path.  Note taht this considers wildcards
      * whereas the {@link #hashCode()} and {@link #equals(Object)} methods determine
      * absolute equality.
@@ -281,6 +297,10 @@ public class Path implements Comparable<Path>, Serializable {
 
         return value;
 
+    }
+
+    public byte[] toByteArray() {
+        return toNormalizedPathString().getBytes(ENCODING);
     }
 
     @Override

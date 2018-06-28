@@ -46,7 +46,7 @@ public class LuaResourceIntegrationTest {
         final Path path = new Path(randomUUID().toString());
         final ResourceId resourceId = getContext().getResourceContext().create(moduleName, path);
         final Object result = getContext().getResourceContext().invoke(resourceId, methodName);
-        logger.info("Successfuly got test result {}", result);
+        logger.info("Successfully got test result {}", result);
         getContext().getResourceContext().destroy(resourceId);
     }
 
@@ -72,7 +72,6 @@ public class LuaResourceIntegrationTest {
             {"test.index", "test_link_path"},
             {"test.index", "test_unlink"},
             {"test.index", "test_unlink_and_destroy"},
-            {"test.box2d", "test_hello_world"},
             {"test.javamodule", "test_hello_world"},
             {"test.javamodule", "test_return_hello_world"},
             {"test.javamodule", "test_overload_1"},

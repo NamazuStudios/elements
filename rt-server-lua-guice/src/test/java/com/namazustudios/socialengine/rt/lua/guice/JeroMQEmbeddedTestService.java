@@ -29,9 +29,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
     private List<Module> clientModules = new ArrayList<>();
 
-    public JeroMQEmbeddedTestService() {
-
-    }
+    public JeroMQEmbeddedTestService() {}
 
     public JeroMQEmbeddedTestService withNodeModule(final Module module) {
         nodeModules.add(module);

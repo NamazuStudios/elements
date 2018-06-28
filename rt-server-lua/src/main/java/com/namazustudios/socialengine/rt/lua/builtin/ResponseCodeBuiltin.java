@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.rt.ResponseCode;
 import com.namazustudios.socialengine.rt.exception.BaseException;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
+import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,6 +78,11 @@ public class ResponseCodeBuiltin implements Builtin {
             return 1;
 
         };
+    }
+
+    @Override
+    public void makePersistenceAware(final Persistence persistence) {
+        persistence.addPermanentJavaObject(extract, ResponseCodeBuiltin.class, EXTRACT);
     }
 
 }
