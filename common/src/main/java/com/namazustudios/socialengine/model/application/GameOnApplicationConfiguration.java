@@ -8,7 +8,7 @@ import java.util.Objects;
 @ApiModel
 public class GameOnApplicationConfiguration extends ApplicationConfiguration {
 
-    @ApiModelProperty("The Amazon Assigned Game ID")
+    @ApiModelProperty("The Amazon Assigned Game ID.  This mirrors the unique identifier of the configuration.")
     private String gameId;
 
     @ApiModelProperty("The public API key for the application.  This is safe to share with end-users and otherwise " +

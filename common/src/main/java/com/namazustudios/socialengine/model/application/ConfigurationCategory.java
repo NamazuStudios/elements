@@ -47,6 +47,11 @@ public enum ConfigurationCategory implements Serializable {
     /**
      * Represents the Firebase application configuration type.
      */
-    FIREBASE
+    FIREBASE,
+
+    /**
+     * Represents the Amazon Game-On Application Configuration Type.
+     */
+    AMAZON_GAME_ON,
 
 }
