@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo.provider;
 
 import com.mongodb.MongoClient;
 import com.namazustudios.socialengine.dao.mongo.model.*;
+import com.namazustudios.socialengine.dao.mongo.model.application.*;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 

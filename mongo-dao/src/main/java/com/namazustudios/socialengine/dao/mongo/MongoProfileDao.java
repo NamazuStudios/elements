@@ -1,9 +1,10 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.namazustudios.socialengine.dao.mongo.application.MongoApplicationDao;
 import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.ProfileDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.elements.fts.ObjectIndex;
@@ -19,17 +20,14 @@ import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 
-import java.util.List;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.google.common.base.Strings.repeat;
 
 /**
  *

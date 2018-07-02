@@ -1,7 +1,9 @@
-package com.namazustudios.socialengine.dao.mongo;
+package com.namazustudios.socialengine.dao.mongo.application;
 
 import com.namazustudios.elements.fts.ObjectIndex;
-import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
+import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplicationConfiguration;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
@@ -18,6 +20,10 @@ import javax.inject.Inject;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+/**
+ * This encapsulates the basic operations for handling the types derived from {@link MongoApplicationConfiguration}
+ * reducing the boilerplate code needed to
+ */
 public class MongoApplicationConfigurationOperations {
 
     private ObjectIndex objectIndex;

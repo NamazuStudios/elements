@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.WriteResult;
 import com.namazustudios.socialengine.dao.FCMRegistrationDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
+import com.namazustudios.socialengine.dao.mongo.application.MongoApplicationDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFCMRegistration;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.exception.*;
@@ -18,8 +18,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
 import javax.inject.Inject;
-import java.util.List;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 public class MongoFCMRegistrationDao implements FCMRegistrationDao {
