@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.dao.mongo.provider.MongoAdvancedDatastoreP
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoMatchmakerFunctionProvider;
 import com.namazustudios.elements.fts.ObjectIndex;
+import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -47,6 +48,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(FacebookApplicationConfigurationDao.class).to(MongoFacebookApplicationConfigurationDao.class);
         bind(MatchmakingApplicationConfigurationDao.class).to(MongoMatchmakingApplicationConfigurationDao.class);
         bind(FirebaseApplicationConfigurationDao.class).to(MongoFirebaseApplicationConfigurationDao.class);
+        bind(GameOnApplicationConfigurationDao.class).to(MongoGameOnApplicationConfigurationDao.class);
         bind(MatchDao.class).to(MongoMatchDao.class);
         bind(SessionDao.class).to(MongoSessionDao.class);
         bind(FCMRegistrationDao.class).to(MongoFCMRegistrationDao.class);
@@ -87,6 +89,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(FacebookApplicationConfigurationDao.class);
         expose(MatchmakingApplicationConfigurationDao.class);
         expose(FirebaseApplicationConfigurationDao.class);
+        expose(GameOnApplicationConfigurationDao.class);
         expose(MatchDao.class);
         expose(FCMRegistrationDao.class);
         expose(SessionDao.class);

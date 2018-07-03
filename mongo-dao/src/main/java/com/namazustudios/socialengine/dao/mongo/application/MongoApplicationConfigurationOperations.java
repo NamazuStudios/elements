@@ -42,7 +42,7 @@ public class MongoApplicationConfigurationOperations {
     ApplicationConfigurationT createOrUpdateInactiveApplicationConfiguration(
             final Class<ApplicationConfigurationT> applicationConfigurationClass,
             final Class<MongoApplicationConfigurationT> mongoApplicationConfigurationClass,
-            final Consumer<ApplicationConfigurationT> additionalValidation,
+            final Consumer<ApplicationConfigurationT> prevalidation,
             final Consumer<UpdateOperations<MongoApplicationConfigurationT>> processUpdateOperations,
             final String applicationNameOrId,
             final ApplicationConfigurationT applicationConfiguration) {
@@ -50,13 +50,14 @@ public class MongoApplicationConfigurationOperations {
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        additionalValidation.accept(applicationConfiguration);
+        prevalidation.accept(applicationConfiguration);
         getValidationHelper().validateModel(applicationConfiguration, ValidationGroups.Create.class);
 
         final Query<MongoApplicationConfigurationT> query;
         query = getDatastore().createQuery(mongoApplicationConfigurationClass);
 
         final String uniqueIdentifier = applicationConfiguration.getUniqueIdentifier();
+        if (uniqueIdentifier == null) throw new IllegalArgumentException("uniqueIdentifier must be specified.");
 
         query.and(
             query.criteria("active").equal(false),
@@ -129,7 +130,7 @@ public class MongoApplicationConfigurationOperations {
     ApplicationConfigurationT updateApplicationConfiguration(
             final Class<ApplicationConfigurationT> applicationConfigurationClass,
             final Class<MongoApplicationConfigurationT> mongoApplicationConfigurationClass,
-            final Consumer<ApplicationConfigurationT> additionalValidation,
+            final Consumer<ApplicationConfigurationT> prevalidation,
             final Consumer<UpdateOperations<MongoApplicationConfigurationT>> processUpdateOperations,
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId,
@@ -139,7 +140,7 @@ public class MongoApplicationConfigurationOperations {
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
         // Validate
-        additionalValidation.accept(applicationConfiguration);
+        prevalidation.accept(applicationConfiguration);
         getValidationHelper().validateModel(applicationConfiguration, ValidationGroups.Update.class);
 
         final Query<MongoApplicationConfigurationT> query;
@@ -160,7 +161,10 @@ public class MongoApplicationConfigurationOperations {
         final UpdateOperations<MongoApplicationConfigurationT> updateOperations;
         updateOperations = getDatastore().createUpdateOperations(mongoApplicationConfigurationClass);
 
-        updateOperations.set("uniqueIdentifier", applicationConfigurationNameOrId);
+        final String uniqueIdentifier = applicationConfiguration.getUniqueIdentifier();
+        if (uniqueIdentifier == null) throw new IllegalArgumentException("uniqueIdentifier must be specified.");
+
+        updateOperations.set("uniqueIdentifier", uniqueIdentifier);
         updateOperations.set("category", applicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
         processUpdateOperations.accept(updateOperations);

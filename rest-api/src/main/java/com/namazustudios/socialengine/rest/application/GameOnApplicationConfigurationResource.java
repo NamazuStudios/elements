@@ -19,7 +19,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
 @Api(value = "Firebase Application Configuration",
      description = "Operations for the management of ApplictionConfigurations for Firebase Applications.",
      authorizations = {@Authorization(SESSION_SECRET)})
-@Path("application/{applicationNameOrId}/configuration/firebase")
+@Path("application/{applicationNameOrId}/configuration/game_on")
 public class GameOnApplicationConfigurationResource {
 
     private ValidationHelper validationHelper;
@@ -68,7 +68,7 @@ public class GameOnApplicationConfigurationResource {
         getValidationHelper().validateModel(gameOnApplicationConfiguration);
 
         if (Objects.equals(gameOnApplicationConfiguration.getParent().getId(), applicationNameOrId) ||
-                Objects.equals(gameOnApplicationConfiguration.getParent().getName(), applicationNameOrId)) {
+            Objects.equals(gameOnApplicationConfiguration.getParent().getName(), applicationNameOrId)) {
             return getGameOnApplicationConfigurationService().createApplicationConfiguration(applicationNameOrId, gameOnApplicationConfiguration);
         } else {
             throw new InvalidDataException("application name or id mismatch");

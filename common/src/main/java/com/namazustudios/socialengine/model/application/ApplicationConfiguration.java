@@ -17,8 +17,6 @@ import java.io.Serializable;
 @ApiModel
 public class ApplicationConfiguration implements Serializable {
 
-    @Null(groups = ValidationGroups.Create.class)
-    @NotNull(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The database assigned ID for the application configuration.")
     private String id;
 
@@ -26,7 +24,6 @@ public class ApplicationConfiguration implements Serializable {
     @ApiModelProperty("The category for the application configuration.")
     private ConfigurationCategory category;
 
-    @NotNull
     @ApiModelProperty("The application-configuration specific uinique ID.  (Varies by ConfigurationCategory)")
     private String uniqueIdentifier;
 

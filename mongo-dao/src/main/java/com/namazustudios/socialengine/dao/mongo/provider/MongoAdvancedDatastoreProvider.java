@@ -34,6 +34,7 @@ public class MongoAdvancedDatastoreProvider implements Provider<AdvancedDatastor
             MongoFacebookApplicationConfiguration.class,
             MongoGooglePlayApplicationConfiguration.class,
             MongoIosApplicationConfiguration.class,
+            MongoGameOnApplicationConfiguration.class,
             MongoProfile.class,
             MongoPSNApplicationConfiguration.class,
             MongoShortLink.class,
