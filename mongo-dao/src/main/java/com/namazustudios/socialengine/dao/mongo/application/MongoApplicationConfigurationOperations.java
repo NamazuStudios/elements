@@ -18,7 +18,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * This encapsulates the basic operations for handling the types derived from {@link MongoApplicationConfiguration}
@@ -38,26 +37,26 @@ public class MongoApplicationConfigurationOperations {
 
     private MongoDBUtils mongoDBUtils;
 
-    public <ApplicationConfigurationT extends ApplicationConfiguration, UniqueIdentifierT>
+    public <ApplicationConfigurationT extends ApplicationConfiguration,
+            MongoApplicationConfigurationT extends MongoApplicationConfiguration>
     ApplicationConfigurationT createOrUpdateInactiveApplicationConfiguration(
             final Class<ApplicationConfigurationT> applicationConfigurationClass,
-            final String applicationNameOrId,
+            final Class<MongoApplicationConfigurationT> mongoApplicationConfigurationClass,
             final Consumer<ApplicationConfigurationT> additionalValidation,
-            final Supplier<UniqueIdentifierT> extractUniqueIdentifier,
-            final Consumer<UpdateOperations<ApplicationConfigurationT>> processUpdateOperations,
+            final Consumer<UpdateOperations<MongoApplicationConfigurationT>> processUpdateOperations,
+            final String applicationNameOrId,
             final ApplicationConfigurationT applicationConfiguration) {
 
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        // Validate
         additionalValidation.accept(applicationConfiguration);
         getValidationHelper().validateModel(applicationConfiguration, ValidationGroups.Create.class);
 
-        final Query<ApplicationConfigurationT> query;
-        query = getDatastore().createQuery(applicationConfigurationClass);
+        final Query<MongoApplicationConfigurationT> query;
+        query = getDatastore().createQuery(mongoApplicationConfigurationClass);
 
-        final UniqueIdentifierT uniqueIdentifier = extractUniqueIdentifier.get();
+        final String uniqueIdentifier = applicationConfiguration.getUniqueIdentifier();
 
         query.and(
             query.criteria("active").equal(false),
@@ -66,8 +65,8 @@ public class MongoApplicationConfigurationOperations {
             query.criteria("uniqueIdentifier").equal(uniqueIdentifier)
         );
 
-        final UpdateOperations<ApplicationConfigurationT> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(applicationConfigurationClass);
+        final UpdateOperations<MongoApplicationConfigurationT> updateOperations;
+        updateOperations = getDatastore().createUpdateOperations(mongoApplicationConfigurationClass);
 
         updateOperations.set("uniqueIdentifier", uniqueIdentifier);
         updateOperations.set("active", true);
@@ -76,29 +75,36 @@ public class MongoApplicationConfigurationOperations {
         processUpdateOperations.accept(updateOperations);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                .returnNew(true)
-                .upsert(true);
+            .returnNew(true)
+            .upsert(true);
 
-        final ApplicationConfigurationT mongoFacebookApplicationConfiguration;
-        mongoFacebookApplicationConfiguration = getMongoDBUtils()
+        final MongoApplicationConfigurationT mongoApplicationConfiguration;
+        mongoApplicationConfiguration = getMongoDBUtils()
             .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
-        getObjectIndex().index(mongoFacebookApplicationConfiguration);
-        return getBeanMapper().map(mongoFacebookApplicationConfiguration, applicationConfigurationClass);
+        getObjectIndex().index(mongoApplicationConfiguration);
+        return getBeanMapper().map(mongoApplicationConfiguration, applicationConfigurationClass);
 
     }
 
-    public <ApplicationConfigurationT extends ApplicationConfiguration>
+    public <ApplicationConfigurationT extends ApplicationConfiguration,
+            MongoApplicationConfigurationT extends MongoApplicationConfiguration>
     ApplicationConfigurationT getApplicationConfiguration(
             final Class<ApplicationConfigurationT> applicationConfigurationClass,
+            final Class<MongoApplicationConfigurationT> mongoApplicationConfigurationClass,
             final ConfigurationCategory category,
+            final String applicationNameOrId,
             final String applicationConfigurationNameOrId) {
 
-        final Query<ApplicationConfigurationT> query;
-        query = getDatastore().createQuery(applicationConfigurationClass);
+        final MongoApplication mongoApplication;
+        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+
+        final Query<MongoApplicationConfigurationT> query;
+        query = getDatastore().createQuery(mongoApplicationConfigurationClass);
 
         query.and(
             query.criteria("active").equal(true),
+            query.criteria("parent").equal(mongoApplication),
             query.criteria( "category").equal(category)
         );
 
@@ -108,42 +114,7 @@ public class MongoApplicationConfigurationOperations {
             query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
         }
 
-        final ApplicationConfigurationT applicationConfiguration = query.get();
-
-        if (applicationConfiguration == null) {
-            throw new NotFoundException("application configuration " + applicationConfigurationNameOrId + " not found.");
-        }
-
-        return getBeanMapper().map(applicationConfiguration, applicationConfigurationClass);
-
-    }
-
-    public <ApplicationConfigurationT extends ApplicationConfiguration>
-    ApplicationConfigurationT getApplicationConfiguration(
-            final Class<ApplicationConfigurationT> applicationConfigurationClass,
-            final ConfigurationCategory category,
-            final String applicationNameOrId,
-            final String applicationConfigurationNameOrId) {
-
-        final MongoApplication mongoApplication;
-        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
-
-        final Query<ApplicationConfigurationT> query;
-        query = getDatastore().createQuery(applicationConfigurationClass);
-
-        query.and(
-                query.criteria("active").equal(true),
-                query.criteria("parent").equal(mongoApplication),
-                query.criteria( "category").equal(category)
-        );
-
-        try {
-            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
-        } catch (IllegalArgumentException ex) {
-            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
-        }
-
-        final ApplicationConfigurationT mongoApplicationConfiguration = query.get();
+        final MongoApplicationConfigurationT mongoApplicationConfiguration = query.get();
 
         if (mongoApplicationConfiguration == null) {
             throw new NotFoundException("application configuration " + applicationConfigurationNameOrId + " not found for " + applicationNameOrId);
@@ -153,14 +124,15 @@ public class MongoApplicationConfigurationOperations {
 
     }
 
-    public <ApplicationConfigurationT extends ApplicationConfiguration, UniqueIdentifierT>
+    public <ApplicationConfigurationT extends ApplicationConfiguration,
+            MongoApplicationConfigurationT extends MongoApplicationConfiguration>
     ApplicationConfigurationT updateApplicationConfiguration(
             final Class<ApplicationConfigurationT> applicationConfigurationClass,
+            final Class<MongoApplicationConfigurationT> mongoApplicationConfigurationClass,
             final Consumer<ApplicationConfigurationT> additionalValidation,
-            final Supplier<UniqueIdentifierT> extractUniqueIdentifier,
+            final Consumer<UpdateOperations<MongoApplicationConfigurationT>> processUpdateOperations,
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId,
-            final Consumer<UpdateOperations<ApplicationConfigurationT>> processUpdateOperations,
             final ApplicationConfigurationT applicationConfiguration) {
 
         final MongoApplication mongoApplication;
@@ -170,8 +142,8 @@ public class MongoApplicationConfigurationOperations {
         additionalValidation.accept(applicationConfiguration);
         getValidationHelper().validateModel(applicationConfiguration, ValidationGroups.Update.class);
 
-        final Query<ApplicationConfigurationT> query;
-        query = getDatastore().createQuery(applicationConfigurationClass);
+        final Query<MongoApplicationConfigurationT> query;
+        query = getDatastore().createQuery(mongoApplicationConfigurationClass);
 
         query.and(
             query.criteria("active").equal(true),
@@ -185,12 +157,10 @@ public class MongoApplicationConfigurationOperations {
             query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
         }
 
-        final UpdateOperations<ApplicationConfigurationT> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(applicationConfigurationClass);
+        final UpdateOperations<MongoApplicationConfigurationT> updateOperations;
+        updateOperations = getDatastore().createUpdateOperations(mongoApplicationConfigurationClass);
 
-        final UniqueIdentifierT uniqueIdentifier = extractUniqueIdentifier.get();
-
-        updateOperations.set("uniqueIdentifier", uniqueIdentifier);
+        updateOperations.set("uniqueIdentifier", applicationConfigurationNameOrId);
         updateOperations.set("category", applicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
         processUpdateOperations.accept(updateOperations);
@@ -199,9 +169,8 @@ public class MongoApplicationConfigurationOperations {
                 .returnNew(true)
                 .upsert(false);
 
-        final ApplicationConfigurationT mongoApplicationConfiguration;
-        mongoApplicationConfiguration = getMongoDBUtils()
-            .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+        final MongoApplicationConfigurationT mongoApplicationConfiguration;
+        mongoApplicationConfiguration = getMongoDBUtils().perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
 
         if (mongoApplicationConfiguration == null) {
             throw new NotFoundException("application configuration " + applicationConfigurationNameOrId + " not found for " + applicationNameOrId);
@@ -212,9 +181,9 @@ public class MongoApplicationConfigurationOperations {
 
     }
 
-    public <ApplicationConfigurationT extends ApplicationConfiguration, UniqueIdentifierT>
+    public <MongoApplicationConfigurationT extends MongoApplicationConfiguration>
     void softDeleteApplicationConfiguration(
-            final Class<ApplicationConfigurationT> applicationConfigurationClass,
+            final Class<MongoApplicationConfigurationT> mongoApplicationConfigurationClass,
             final ConfigurationCategory category,
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId) {
@@ -222,8 +191,8 @@ public class MongoApplicationConfigurationOperations {
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        final Query<ApplicationConfigurationT> query;
-        query = getDatastore().createQuery(applicationConfigurationClass);
+        final Query<MongoApplicationConfigurationT> query;
+        query = getDatastore().createQuery(mongoApplicationConfigurationClass);
 
         query.and(
             query.criteria("active").equal(true),
@@ -237,16 +206,16 @@ public class MongoApplicationConfigurationOperations {
             query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
         }
 
-        final UpdateOperations<ApplicationConfigurationT> updateOperations;
+        final UpdateOperations<MongoApplicationConfigurationT> updateOperations;
 
-        updateOperations = getDatastore().createUpdateOperations(applicationConfigurationClass);
+        updateOperations = getDatastore().createUpdateOperations(mongoApplicationConfigurationClass);
         updateOperations.set("active", false);
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
                 .returnNew(true)
                 .upsert(false);
 
-        final ApplicationConfigurationT mongoApplicationConfiguration;
+        final MongoApplicationConfigurationT mongoApplicationConfiguration;
 
         mongoApplicationConfiguration = getMongoDBUtils()
             .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));

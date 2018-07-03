@@ -3,22 +3,27 @@ package com.namazustudios.socialengine.model.application;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @ApiModel
 public class GameOnApplicationConfiguration extends ApplicationConfiguration {
 
+    @NotNull
     @ApiModelProperty("The Amazon Assigned Game ID.  This mirrors the unique identifier of the configuration.")
     private String gameId;
 
+    @NotNull
     @ApiModelProperty("The public API key for the application.  This is safe to share with end-users and otherwise " +
                       "untrusted clients.")
     private String publicApiKey;
 
+    @NotNull
     @ApiModelProperty("The admin API key for the application.  This is secret and should only be shared with trusted " +
                       "administrator users.")
     private String adminApiKey;
 
+    @NotNull
     @ApiModelProperty("The public key for signing requests.")
     private String publicKey;
 

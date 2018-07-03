@@ -65,6 +65,10 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                 .fields("projectId", "uniqueIdentifier");
 
+            mapping(GameOnApplicationConfiguration.class, MongoFirebaseApplicationConfiguration.class)
+                .fields("id", "objectId", customConverter(ObjectIdConverter.class))
+                .fields("gameId", "uniqueIdentifier");
+
             mapping(Profile.class, MongoProfile.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                 .fields("application.id", "application.objectId", customConverter(ObjectIdConverter.class));
