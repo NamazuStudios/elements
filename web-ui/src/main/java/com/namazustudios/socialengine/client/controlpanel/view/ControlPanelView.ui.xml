@@ -10,7 +10,7 @@
                 <b:Container>
 
                     <b:NavbarHeader>
-                        <b:NavbarBrand ui:field="brand" targetHistoryToken="{nameTokens.getMain}">Namazu Social Engine</b:NavbarBrand>
+                        <b:NavbarBrand ui:field="brand" targetHistoryToken="{nameTokens.getMain}">Namazu Elements</b:NavbarBrand>
                         <b:NavbarCollapseButton dataTarget="#navbar-collapse"/>
                     </b:NavbarHeader>
 
@@ -22,22 +22,6 @@
                                 <b:DropDownMenu>
                                     <b:AnchorListItem targetHistoryToken="{nameTokens.getUserEdit}">Create New User</b:AnchorListItem>
                                     <b:AnchorListItem targetHistoryToken="{nameTokens.getUserEditTable}">View/Edit Existing Users</b:AnchorListItem>
-                                </b:DropDownMenu>
-                            </b:ListDropDown>
-
-                            <b:ListDropDown>
-                                <b:AnchorButton dataToggle="DROPDOWN">Social</b:AnchorButton>
-                                <b:DropDownMenu>
-                                    <b:AnchorListItem>View/Edit Existing Campaigns</b:AnchorListItem>
-                                    <b:AnchorListItem>View/Edit Entrants</b:AnchorListItem>
-                                </b:DropDownMenu>
-                            </b:ListDropDown>
-
-                            <b:ListDropDown>
-                                <b:AnchorButton dataToggle="DROPDOWN">Short Links</b:AnchorButton>
-                                <b:DropDownMenu>
-                                    <b:AnchorListItem targetHistoryToken="{nameTokens.getShortLinkCreate}">Create New Short Link</b:AnchorListItem>
-                                    <b:AnchorListItem targetHistoryToken="{nameTokens.getShortLinkEditTable}">View Short Links</b:AnchorListItem>
                                 </b:DropDownMenu>
                             </b:ListDropDown>
 
