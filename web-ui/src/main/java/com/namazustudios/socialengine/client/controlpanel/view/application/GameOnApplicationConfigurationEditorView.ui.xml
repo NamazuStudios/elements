@@ -40,7 +40,7 @@
                     </b:FormGroup>
 
                     <b:FormGroup ui:field="adminApiKeyFormGroup">
-                        <b:FormLabel for="adminApiKey">Public API Key</b:FormLabel>
+                        <b:FormLabel for="adminApiKey">Admin API Key</b:FormLabel>
                         <b:TextBox placeholder="Admin API Key" ui:field="adminApiKeyTextBox"/>
                         <b:Label ui:field="adminApiKeyWarningLabel" visible="false" text="Admin API Key Invalid" type="DANGER"/>
                     </b:FormGroup>

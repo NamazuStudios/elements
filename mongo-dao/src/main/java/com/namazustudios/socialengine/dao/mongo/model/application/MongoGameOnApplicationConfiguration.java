@@ -9,9 +9,6 @@ import org.mongodb.morphia.annotations.Property;
 public class MongoGameOnApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property
-    private String gameId;
-
-    @Property
     private String publicApiKey;
 
     @Property
@@ -19,14 +16,6 @@ public class MongoGameOnApplicationConfiguration extends MongoApplicationConfigu
 
     @Property
     private String publicKey;
-
-    public String getGameId() {
-        return gameId;
-    }
-
-    public void setGameId(String gameId) {
-        this.gameId = gameId;
-    }
 
     public String getPublicApiKey() {
         return publicApiKey;

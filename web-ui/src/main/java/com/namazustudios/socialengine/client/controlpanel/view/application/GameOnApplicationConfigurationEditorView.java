@@ -34,7 +34,7 @@ public class GameOnApplicationConfigurationEditorView extends ViewImpl implement
 
     interface Driver extends SimpleBeanEditorDriver<GameOnApplicationConfiguration, GameOnApplicationConfigurationEditorView> {}
 
-    interface FirebaseApplicationConfigurationEditorViewUiBinder extends UiBinder<Panel, GameOnApplicationConfigurationEditorView> {}
+    interface GameOnApplicationConfigurationEditorViewUiBinder extends UiBinder<Panel, GameOnApplicationConfigurationEditorView> {}
 
     @UiField
     ErrorModal errorModal;
@@ -76,7 +76,7 @@ public class GameOnApplicationConfigurationEditorView extends ViewImpl implement
     TextBox gameIdTextBox;
 
     @UiField
-    @Editor.Path("publicKey")
+    @Editor.Path("publicApiKey")
     TextBox publicApiKeyTextBox;
 
     @UiField
@@ -110,8 +110,8 @@ public class GameOnApplicationConfigurationEditorView extends ViewImpl implement
     };
 
     @Inject
-    public GameOnApplicationConfigurationEditorView(final GameOnApplicationConfigurationEditorView.FirebaseApplicationConfigurationEditorViewUiBinder firebaseApplicationConfigurationEditorViewUiBinder) {
-        initWidget(firebaseApplicationConfigurationEditorViewUiBinder.createAndBindUi(this));
+    public GameOnApplicationConfigurationEditorView(final GameOnApplicationConfigurationEditorViewUiBinder gameOnApplicationConfigurationEditorViewUiBinder) {
+        initWidget(gameOnApplicationConfigurationEditorViewUiBinder.createAndBindUi(this));
     }
 
     public void lockOut() {
@@ -210,7 +210,7 @@ public class GameOnApplicationConfigurationEditorView extends ViewImpl implement
                 @Override
                 public void onSuccess(Method method, GameOnApplicationConfiguration response) {
                     unlock();
-                    Notify.notify("Successfully created Firebase Configuration: " + gameOnApplicationConfiguration.getUniqueIdentifier());
+                    Notify.notify("Successfully created Game On Configuration: " + gameOnApplicationConfiguration.getUniqueIdentifier());
                     editApplicationConfiguration(applicationNameOrId, response);
                 }
 
