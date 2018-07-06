@@ -40,6 +40,8 @@ public class LuaResourceLoader implements ResourceLoader {
 
     private Provider<JNABuiltin> jnaBuiltinProvider;
 
+    private Provider<HttpClientBuiltin> httpClientBuiltinProvider;
+
     private Provider<Set<Builtin>> additionalBuiltins;
 
     @Override
@@ -187,6 +189,15 @@ public class LuaResourceLoader implements ResourceLoader {
     @Inject
     public void setJnaBuiltinProvider(Provider<JNABuiltin> jnaBuiltinProvider) {
         this.jnaBuiltinProvider = jnaBuiltinProvider;
+    }
+
+    public Provider<HttpClientBuiltin> getHttpClientBuiltinProvider() {
+        return httpClientBuiltinProvider;
+    }
+
+    @Inject
+    public void setHttpClientBuiltinProvider(Provider<HttpClientBuiltin> httpClientBuiltinProvider) {
+        this.httpClientBuiltinProvider = httpClientBuiltinProvider;
     }
 
     public Provider<Set<Builtin>> getAdditionalBuiltins() {

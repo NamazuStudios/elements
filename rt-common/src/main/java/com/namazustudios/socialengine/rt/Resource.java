@@ -52,6 +52,14 @@ public interface Resource extends AutoCloseable {
     MethodDispatcher getMethodDispatcher(String name);
 
     /**
+     * Resumes the supplied task with the {@link TaskId} and the list of results.
+     *
+     * @param taskId the {@link TaskId} of the associated task
+     * @param results zero or more results supplied to the resumed task
+     */
+    void resume(final TaskId taskId, final Object ... results);
+
+    /**
      * Resumes a suspended task, accepting the task id.  The task will be resumed as soon as possible.  This is used
      * when the network resumes the call.  This is assumed that the resume was successful.  The response to the,
      * invocation whatever it may be, was successful.
@@ -60,7 +68,9 @@ public interface Resource extends AutoCloseable {
      * @param result the resulting object from the call
      *
      */
-    void resumeFromNetwork(final TaskId taskId, final Object result);
+    default void resumeFromNetwork(final TaskId taskId, final Object result) {
+        resume(taskId, ResumeReason.NETWORK, result);
+    }
 
     /**
      * Resumes a suspended task, accepting the task id.  The task will be resumed as soon as possible.  This is used
@@ -70,7 +80,9 @@ public interface Resource extends AutoCloseable {
      * @param taskId
      * @param throwable
      */
-    void resumeWithError(final TaskId taskId, final Throwable throwable);
+    default void resumeWithError(final TaskId taskId, final Throwable throwable) {
+        resume(taskId, ResumeReason.ERROR, throwable);
+    }
 
     /**
      * Resumes a suspended task, accepting the task id.  The task will be resumed as soon as possible.  This method
@@ -81,7 +93,9 @@ public interface Resource extends AutoCloseable {
      * @param elapsedTime the amount of time elapsed since the task was last activated
      *
      */
-    void resumeFromScheduler(final TaskId taskId, final double elapsedTime);
+    default void resumeFromScheduler(final TaskId taskId, final double elapsedTime) {
+        resume(taskId, ResumeReason.SCHEDULER, elapsedTime);
+    }
     
     /**
      * Dumps the entire contents of this {@link Resource} to the supplied {@link OutputStream} where it can be

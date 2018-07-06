@@ -2,23 +2,21 @@ package com.namazustudios.socialengine.rt.lua.builtin;
 
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.LuaState;
+import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.TaskId;
-import com.namazustudios.socialengine.rt.lua.LuaResource;
 import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.InvocationCallback;
-import javax.ws.rs.client.WebTarget;
-import java.util.concurrent.Future;
+import javax.ws.rs.client.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinUtils.currentTaskId;
+import static javax.ws.rs.HttpMethod.POST;
+import static javax.ws.rs.HttpMethod.PUT;
 
 public class HttpClientBuiltin implements Builtin {
 
@@ -26,15 +24,15 @@ public class HttpClientBuiltin implements Builtin {
 
     public static final String MODULE_NAME = "namazu.http.client";
 
+    public static final String SEND = "send";
+
     private Client client;
 
-    private final LuaResource luaResource;
-
-    public HttpClientBuiltin(LuaResource luaResource) {
-        this.luaResource = luaResource;
-    }
+    private Context context;
 
     private final JavaFunction send = l -> {
+
+        final TaskId taskId = currentTaskId(l);
 
         final String base = getRequiredStringField(l, "base");
         final WebTarget target = getClient().target(base);
@@ -50,31 +48,41 @@ public class HttpClientBuiltin implements Builtin {
         getOptionalStringFields(l, "accept_language", builder::acceptLanguage);
 
         final String method = getRequiredStringField(l, "method");
-        final Invocation invocation = builder.build(method);
+        final Entity<Object> entity = getEntity(l);
 
-        final TaskId taskId = currentTaskId(l);
+        if ((PUT.equals(method) || POST.equals(method)) && (entity != null)) {
+            builder.async().method(method, entity, new InvocationCallback<Object>() {
 
-        final Future<Object> future = invocation.submit(new InvocationCallback<Object>() {
+                @Override
+                public void completed(final Object response) {
+                    // TODO Provide Response to the method.
+                    logger.info("Got Response {}", response);
+                }
 
-            @Override
-            public void completed(final Object object) {
-                logger.info("Got object {}", object);
+                @Override
+                public void failed(Throwable throwable) {
+                    context.getSchedulerContext().resumeWithError(taskId, throwable);
+                }
 
-            }
+            });
+        } else {
+            builder.async().method(method, new InvocationCallback<Object>() {
 
-            @Override
-            public void failed(final Throwable throwable) {
-                luaResource.resumeWithError(taskId, throwable);
-            }
+                @Override
+                public void completed(final Object response) {
+                    // TODO Provide Response to the method.
+                    logger.info("Got Response {}", response);
+                }
 
-        });
+                @Override
+                public void failed(Throwable throwable) {
+                    context.getSchedulerContext().resumeWithError(taskId, throwable);
+                }
 
-        l.pushJavaFunction(_l -> {
-            future.cancel(false);
-            return 0;
-        });
+            });
+        }
 
-        return 1;
+        return 0;
 
     };
 
@@ -113,6 +121,44 @@ public class HttpClientBuiltin implements Builtin {
                 throw new IllegalArgumentException("unsupportred type for key " + key);
             }
 
+        } finally {
+            l.pop(1);
+        }
+    }
+
+    private Entity<Object> getEntity(final LuaState l) {
+
+        final int top = l.getTop();
+
+        try {
+
+            l.getField(1, "entity");
+            if (l.isNil(-1)) return null;
+
+            final Object entity;
+            final String mediaType;
+
+            l.getField(2, "media_type");
+            mediaType = l.toString(-1);
+            l.pop(1);
+
+            l.getField(2, "value");
+            entity = l.toJavaObject(-1, Object.class);
+            l.pop(1);
+
+            if (mediaType == null) throw new IllegalArgumentException("Content type must be specified with entity.");
+            return Entity.entity(entity, mediaType);
+
+        } finally {
+            l.setTable(top);
+        }
+    }
+
+    private void getOptionalObjectField(final LuaState l, final String key, final Consumer<Object> consumer) {
+        try {
+            final String s;
+            l.getField(1, key);
+            if (!l.isNil( -1)) consumer.accept(l.toJavaObject(-1, Object.class));
         } finally {
             l.pop(1);
         }
@@ -171,12 +217,17 @@ public class HttpClientBuiltin implements Builtin {
 
     @Override
     public JavaFunction getLoader() {
-        return null;
+        return l -> {
+            l.newTable();
+            l.pushJavaFunction(send);
+            l.setField(-2, SEND);
+            return 1;
+        };
     }
 
     @Override
     public void makePersistenceAware(final Persistence persistence) {
-
+        persistence.addPermanentJavaObject(send, HttpClientBuiltin.class, SEND);
     }
 
     public Client getClient() {
@@ -186,6 +237,15 @@ public class HttpClientBuiltin implements Builtin {
     @Inject
     public void setClient(Client client) {
         this.client = client;
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    @Inject
+    public void setContext(Context context) {
+        this.context = context;
     }
 
 }
