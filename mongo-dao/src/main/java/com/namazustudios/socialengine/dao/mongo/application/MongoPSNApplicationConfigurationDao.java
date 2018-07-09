@@ -1,9 +1,10 @@
-package com.namazustudios.socialengine.dao.mongo;
+package com.namazustudios.socialengine.dao.mongo.application;
 
+import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.PSNApplicationConfigurationDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
-import com.namazustudios.socialengine.dao.mongo.model.MongoPSNApplicationConfiguration;
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoPSNApplicationConfiguration;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.elements.fts.ObjectIndex;

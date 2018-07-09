@@ -1,8 +1,9 @@
-package com.namazustudios.socialengine.dao.mongo;
+package com.namazustudios.socialengine.dao.mongo.application;
 
 import com.namazustudios.socialengine.dao.ApplicationConfigurationDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoApplicationConfiguration;
-import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
+import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplicationConfiguration;
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
 import com.namazustudios.socialengine.exception.BadQueryException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;

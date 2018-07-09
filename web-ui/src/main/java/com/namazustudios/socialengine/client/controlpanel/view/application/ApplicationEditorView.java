@@ -421,24 +421,18 @@ public class ApplicationEditorView extends ViewImpl implements ApplicationEditor
 
     }
 
-    @UiHandler("createIos")
-    public void onClickCreateIosConfiguration(ClickEvent ev) {
-        Notify.notify("Not implemented - iOS");
-    }
+    @UiHandler("createGameOn")
+    public void onClickCreateGameOnConfiguration(ClickEvent ev) {
 
-    @UiHandler("createAndroidGooglePlay")
-    public void onClickCreateAndroidGooglePLay(ClickEvent ev) {
-        Notify.notify("Not implemented - Google Play");
-    }
+        final Application application = driver.flush();
 
-    @UiHandler("createPS4")
-    public void onClickCreatePS4(ClickEvent ev) {
-        Notify.notify("Not implemented - PS4");
-    }
+        final PlaceRequest placeRequest = new PlaceRequest.Builder()
+                .nameToken(NameTokens.APPLICATION_CONFIG_GAME_ON_EDIT)
+                .with(GameOnApplicationConfigurationEditorPresenter.Param.application_id.name(), application.getId())
+                .build();
 
-    @UiHandler("createVita")
-    public void onClickCreateVita(ClickEvent ev) {
-        Notify.notify("Not implemented - Vita");
+        placeManager.revealPlace(placeRequest);
+
     }
 
 }

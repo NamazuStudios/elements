@@ -1,8 +1,9 @@
-package com.namazustudios.socialengine.dao.mongo;
+package com.namazustudios.socialengine.dao.mongo.application;
 
 import com.namazustudios.socialengine.dao.FirebaseApplicationConfigurationDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoApplication;
-import com.namazustudios.socialengine.dao.mongo.model.MongoFirebaseApplicationConfiguration;
+import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoFirebaseApplicationConfiguration;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.elements.fts.ObjectIndex;
@@ -21,7 +22,6 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.namazustudios.socialengine.model.application.ConfigurationCategory.FIREBASE;
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.FIREBASE;
 
 public class MongoFirebaseApplicationConfigurationDao implements FirebaseApplicationConfigurationDao {

@@ -118,6 +118,10 @@ public class ServicesModule extends AbstractModule {
                 .toProvider(MockSessionServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
+        bind(GameOnApplicationConfigurationService.class)
+                .toProvider(GameOnApplicationConfigurationServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
         bind(Attributes.class).toProvider(AttributesProvider.class);
 
         bind(SessionService.class).to(AnonSessionService.class);

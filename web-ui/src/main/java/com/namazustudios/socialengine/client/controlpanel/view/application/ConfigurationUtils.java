@@ -11,9 +11,7 @@ import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
 import javax.inject.Inject;
 
-import static com.namazustudios.socialengine.client.controlpanel.NameTokens.APPLICATION_CONFIG_FACEBOOK_EDIT;
-import static com.namazustudios.socialengine.client.controlpanel.NameTokens.APPLICATION_CONFIG_FIREBASE_EDIT;
-import static com.namazustudios.socialengine.client.controlpanel.NameTokens.APPLICATION_CONFIG_MATCHMAKING_EDIT;
+import static com.namazustudios.socialengine.client.controlpanel.NameTokens.*;
 
 /**
  * Created by patricktwohig on 6/21/17.
@@ -33,6 +31,8 @@ public class ConfigurationUtils {
     private MatchmakingApplicationConfigurationClient matchmakingApplicationConfigurationClient;
 
     private FirebaseApplicationConfigurationClient firebaseApplicationConfigurationClient;
+
+    private GameOnApplicationConfigurationClient gameOnApplicationConfigurationClient;
 
     public void editConfiguration(final Application application,
                                   final ApplicationConfiguration applicationConfiguration) {
@@ -55,8 +55,14 @@ public class ConfigurationUtils {
             case FIREBASE:
                 placeRequestBuilder
                     .nameToken(APPLICATION_CONFIG_FIREBASE_EDIT)
-                    .with(FacebookApplicationConfigurationEditorPresenter.Param.application_id.name(), application.getId())
-                    .with(FacebookApplicationConfigurationEditorPresenter.Param.configuration_id.name(), applicationConfiguration.getId());
+                    .with(FirebaseApplicationConfigurationEditorPresenter.Param.application_id.name(), application.getId())
+                    .with(FirebaseApplicationConfigurationEditorPresenter.Param.configuration_id.name(), applicationConfiguration.getId());
+                break;
+            case AMAZON_GAME_ON:
+                placeRequestBuilder
+                    .nameToken(APPLICATION_CONFIG_GAME_ON_EDIT)
+                    .with(GameOnApplicationConfigurationEditorPresenter.Param.application_id.name(), application.getId())
+                    .with(GameOnApplicationConfigurationEditorPresenter.Param.configuration_id.name(), applicationConfiguration.getId());
                 break;
             default:
                 throw new IllegalStateException("Not supported: " + applicationConfiguration.getCategory());
@@ -89,6 +95,9 @@ public class ConfigurationUtils {
 
             case FIREBASE:
                 return getFirebaseApplicationConfigurationClient()::deleteApplicationConfiguration;
+
+            case AMAZON_GAME_ON:
+                return getGameOnApplicationConfigurationClient()::deleteApplicationConfiguration;
 
             default:
                 return (applicationNameOrId, applicationConfigurationNameOrId, voidMethodCallback) -> {
@@ -160,6 +169,15 @@ public class ConfigurationUtils {
     @Inject
     public void setFirebaseApplicationConfigurationClient(FirebaseApplicationConfigurationClient firebaseApplicationConfigurationClient) {
         this.firebaseApplicationConfigurationClient = firebaseApplicationConfigurationClient;
+    }
+
+    public GameOnApplicationConfigurationClient getGameOnApplicationConfigurationClient() {
+        return gameOnApplicationConfigurationClient;
+    }
+
+    @Inject
+    public void setGameOnApplicationConfigurationClient(GameOnApplicationConfigurationClient gameOnApplicationConfigurationClient) {
+        this.gameOnApplicationConfigurationClient = gameOnApplicationConfigurationClient;
     }
 
     interface DeleteOperation {

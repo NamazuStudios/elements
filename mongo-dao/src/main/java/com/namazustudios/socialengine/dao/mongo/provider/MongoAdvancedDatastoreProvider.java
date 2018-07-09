@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo.provider;
 
 import com.mongodb.MongoClient;
 import com.namazustudios.socialengine.dao.mongo.model.*;
+import com.namazustudios.socialengine.dao.mongo.model.application.*;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 
@@ -33,6 +34,7 @@ public class MongoAdvancedDatastoreProvider implements Provider<AdvancedDatastor
             MongoFacebookApplicationConfiguration.class,
             MongoGooglePlayApplicationConfiguration.class,
             MongoIosApplicationConfiguration.class,
+            MongoGameOnApplicationConfiguration.class,
             MongoProfile.class,
             MongoPSNApplicationConfiguration.class,
             MongoShortLink.class,

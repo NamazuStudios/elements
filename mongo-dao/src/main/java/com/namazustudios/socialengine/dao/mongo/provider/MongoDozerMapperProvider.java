@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.dao.mongo.converter.MongoFriendIdConverter
 import com.namazustudios.socialengine.dao.mongo.converter.MongoScoreIdConverter;
 import com.namazustudios.socialengine.dao.mongo.converter.ObjectIdConverter;
 import com.namazustudios.socialengine.dao.mongo.model.*;
+import com.namazustudios.socialengine.dao.mongo.model.application.*;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.*;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
@@ -63,6 +64,10 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(FirebaseApplicationConfiguration.class, MongoFirebaseApplicationConfiguration.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                 .fields("projectId", "uniqueIdentifier");
+
+            mapping(GameOnApplicationConfiguration.class, MongoGameOnApplicationConfiguration.class)
+                .fields("id", "objectId", customConverter(ObjectIdConverter.class))
+                .fields("gameId", "uniqueIdentifier");
 
             mapping(Profile.class, MongoProfile.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))

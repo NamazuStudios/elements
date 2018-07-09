@@ -13,6 +13,8 @@ import com.namazustudios.socialengine.client.controlpanel.view.user.UserEditorPr
 import com.namazustudios.socialengine.client.controlpanel.view.user.UserEditorTablePresenter;
 import com.namazustudios.socialengine.client.controlpanel.view.user.UserEditorTableView;
 import com.namazustudios.socialengine.client.controlpanel.view.user.UserEditorView;
+import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
+import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 
 /**
  * Created by patricktwohig on 4/28/15.
@@ -87,6 +89,13 @@ public class ControlPanelPresenters extends AbstractPresenterModule {
                 FirebaseApplicationConfigurationEditorPresenter.MyView.class,
                 FirebaseApplicationConfigurationEditorView.class,
                 FirebaseApplicationConfigurationEditorPresenter.MyProxy.class);
+
+        bindPresenter(
+                GameOnApplicationConfigurationEditorPresenter.class,
+                GameOnApplicationConfigurationEditorPresenter.MyView.class,
+                GameOnApplicationConfigurationEditorView.class,
+                GameOnApplicationConfigurationEditorPresenter.MyProxy.class
+        );
 
     }
 

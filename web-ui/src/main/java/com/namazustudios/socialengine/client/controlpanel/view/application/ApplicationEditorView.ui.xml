@@ -78,10 +78,12 @@
                     <b:AnchorListItem ui:field="createFacebook" icon="FACEBOOK">Facebook</b:AnchorListItem>
                     <b:AnchorListItem ui:field="createMatchmaking" icon="BOLT">Matchmaking</b:AnchorListItem>
                     <b:AnchorListItem ui:field="createFirebase" icon="FIRE">Firebase</b:AnchorListItem>
-                    <b:AnchorListItem ui:field="createIos" icon="MOBILE_PHONE">iOS AppStore</b:AnchorListItem>
-                    <b:AnchorListItem ui:field="createAndroidGooglePlay" icon="MOBILE_PHONE">Android Google Play</b:AnchorListItem>
-                    <b:AnchorListItem ui:field="createPS4" icon="GAMEPAD">Playstation Network (PS4)</b:AnchorListItem>
-                    <b:AnchorListItem ui:field="createVita" icon="GAMEPAD">Playstation Network (Vita)</b:AnchorListItem>
+                    <b:AnchorListItem ui:field="createGameOn" icon="AMAZON">Amazon Game On</b:AnchorListItem>
+                    <!-- TODO Hide these options as they are of little value right now -->
+                    <!--<b:AnchorListItem ui:field="createIos" icon="MOBILE_PHONE">iOS AppStore</b:AnchorListItem>-->
+                    <!--<b:AnchorListItem ui:field="createAndroidGooglePlay" icon="MOBILE_PHONE">Android Google Play</b:AnchorListItem>-->
+                    <!--<b:AnchorListItem ui:field="createPS4" icon="GAMEPAD">Playstation Network (PS4)</b:AnchorListItem>-->
+                    <!--<b:AnchorListItem ui:field="createVita" icon="GAMEPAD">Playstation Network (Vita)</b:AnchorListItem>-->
                 </b:DropDownMenu>
             </b:DropDown>
         </b:Row>
