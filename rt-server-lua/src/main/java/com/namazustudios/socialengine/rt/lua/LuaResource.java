@@ -411,6 +411,27 @@ public class LuaResource implements Resource {
 
     }
 
+    @Override
+    public void resumeFromNetwork(final TaskId taskId, final Object result) {
+        resume(taskId, ResumeReason.NETWORK.toString(), result);
+    }
+
+    @Override
+    public void resumeWithError(final TaskId taskId, final Throwable throwable) {
+
+        final ResponseCode responseCode = throwable instanceof BaseException ?
+                ((BaseException)throwable).getResponseCode() :
+                ResponseCode.INTERNAL_ERROR_FATAL;
+
+        resume(taskId, ResumeReason.ERROR.toString(), responseCode.getCode());
+
+    }
+
+    @Override
+    public void resumeFromScheduler(final TaskId taskId, final double elapsedTime) {
+        resume(taskId, ResumeReason.SCHEDULER.toString(), elapsedTime);
+    }
+
     private void addPendingTask(final PendingTask pendingTask) {
         if (taskIdPendingTaskMap.put(pendingTask.taskId, pendingTask) == null) {
             resourceAcquisition.acquire(getId());

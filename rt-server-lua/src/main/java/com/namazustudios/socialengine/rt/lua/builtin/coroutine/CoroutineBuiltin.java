@@ -131,8 +131,8 @@ public class CoroutineBuiltin implements Builtin {
                 return 0;
             }
 
-            luaState.replace(1);  // Pops the thread
-            luaState.pop(1);      // Replaces the first index
+            luaState.replace(1);  // Places the thread at the first index in the stack, replacing the TaskId
+            luaState.pop(1);      // Pops the coroutine registry table as it is no longer needed
 
             return resume(taskId, luaState, logAssist);
 
