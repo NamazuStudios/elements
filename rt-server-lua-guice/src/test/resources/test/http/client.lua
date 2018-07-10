@@ -14,13 +14,13 @@ local namazu_http_client = require "namazu.http.client"
 
 function client.post(base)
 
-    log.info("Sending request {}", base)
-
-    local status, headers, response = namazu_http_client.send{
-        method = "GET",
-        base = base,
-        path = "simple"
-    }
+--    log.info("Sending request {}", base)
+--
+--    local status, headers, response = namazu_http_client.send{
+--        method = "GET",
+--        base = base,
+--        path = "simple"
+--    }
 
     -- TODO Check status headers response
 
