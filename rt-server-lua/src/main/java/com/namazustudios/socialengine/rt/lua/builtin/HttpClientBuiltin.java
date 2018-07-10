@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.ws.rs.client.*;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -21,6 +24,7 @@ import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinUtils.current
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstruction.INDEFINITELY;
 import static javax.ws.rs.HttpMethod.POST;
 import static javax.ws.rs.HttpMethod.PUT;
+import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
 public class HttpClientBuiltin implements Builtin {
 
@@ -53,54 +57,41 @@ public class HttpClientBuiltin implements Builtin {
         getOptionalStringFields(l, "accept_language", builder::acceptLanguage);
 
         final String method = getRequiredStringField(l, "method");
-        final Entity<Object> entity = getEntity(l);
+        final Entity<Object> requestEntity = getEntity(l);
 
-        final Consumer<Response> handleResponse = response -> {
-            logger.trace("Got Response {}", response);
-            // TODO Pass to Lua
-        };
+        final CompletionStage<Response> responseCompletionStage =
+            (PUT.equals(method) || POST.equals(method)) && (requestEntity != null) ?
+                builder.rx().method(method, requestEntity, new GenericType<Response>(){}) :
+                builder.rx().method(method, new GenericType<Response>(){});
 
-        if ((PUT.equals(method) || POST.equals(method)) && (entity != null)) {
-            builder.async().method(method, entity, new InvocationCallback<Object>() {
+        responseCompletionStage
+            .exceptionally(th -> null)
+            .handleAsync((response, throwable) -> {
 
-                @Override
-                public void completed(final Object response) {
-                    // TODO Provide Response to the method.
-                    logger.info("Got Response {}", response);
-                }
+                logger.trace("Got response {}", response, throwable);
 
-                @Override
-                public void failed(Throwable throwable) {
-                    if (throwable instanceof ResponseProcessingException) {
-                        final Response response = ((ResponseProcessingException) throwable).getResponse();
-                        handleResponse.accept(response);
+                try {
+                    if (response == null) {
+                        getContext().getSchedulerContext().resumeWithError(taskId, throwable);
                     } else {
-//                        context.getSchedulerContext().resumeWithError(taskId, throwable);
+
+                        final int status = response.getStatus();
+                        final MultivaluedMap headers = response.getHeaders();
+                        final Object responseEntity = SUCCESSFUL.equals(response.getStatusInfo().getFamily()) ?
+                            response.readEntity(Object.class) :
+                            null;
+
+                        logger.trace("Status: {}.  Headers: {}.  Entity: {}", status, headers, responseEntity);
+                        getContext().getSchedulerContext().resume(taskId, status, headers, responseEntity);
+
                     }
+                }catch (Exception ex) {
+                    getContext().getSchedulerContext().resumeWithError(taskId, throwable);
                 }
+
+                return null;
 
             });
-        } else {
-            builder.async().method(method, new InvocationCallback<Object>() {
-
-                @Override
-                public void completed(final Object response) {
-                    // TODO Provide Response to the method.
-                    logger.info("Got Response {}", response);
-                }
-
-                @Override
-                public void failed(Throwable throwable) {
-                    if (throwable instanceof ResponseProcessingException) {
-                        final Response response = ((ResponseProcessingException) throwable).getResponse();
-                        handleResponse.accept(response);
-                    } else {
-//                        context.getSchedulerContext().resumeWithError(taskId, throwable);
-                    }
-                }
-
-            });
-        }
 
         l.pushJavaObject(INDEFINITELY.toString());
         return l.yield(1);

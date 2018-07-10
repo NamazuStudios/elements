@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
+import com.namazustudios.socialengine.rt.lua.guice.rest.SimpleModelEndpoint;
 import com.namazustudios.socialengine.rt.lua.guice.rest._t;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -37,13 +38,13 @@ public class JettyEmbeddedRESTService {
 
         server.setHandler(context);
         server.start();
-        sleep(10000);
 
     }
 
     public void stop() throws Exception {
         server.stop();
         server.join();
+        SimpleModelEndpoint.clear();
     }
 
     public String getUri() {

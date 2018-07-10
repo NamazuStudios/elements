@@ -13,7 +13,11 @@ import static java.util.UUID.randomUUID;
 @Produces(MediaType.APPLICATION_JSON)
 public class SimpleModelEndpoint {
 
-    private final ConcurrentMap<String, SimpleModel> models = new ConcurrentSkipListMap<>();
+    private static final ConcurrentMap<String, SimpleModel> models = new ConcurrentSkipListMap<>();
+
+    public static void clear() {
+        models.clear();
+    }
 
     @GET
     public List<SimpleModel> getModels() {
@@ -39,6 +43,8 @@ public class SimpleModelEndpoint {
     @PUT
     @Path("{id}")
     public SimpleModel update(@PathParam("id") final String id, final SimpleModel replacement) {
+
+        replacement.setId(id);
 
         SimpleModel existing;
 
