@@ -38,44 +38,61 @@ public class LuaModule extends PrivateModule {
     }
 
     /**
-     * Optionally exposes a binding to {@link LuaState}.  THi
-     */
-    protected final void exposeLuaState() {
-        expose(LuaState.class);
-    }
-
-    /**
      * Enables all features, this is the default behavior.
      */
-    protected final void enableAllFeatures() {
+    public LuaModule enableAllFeatures() {
         enableBasicConverters();
         enableManifestLoaderFeature();
         enableLuaResourceLoaderFeature();
+        enableJerseyHttpClient();
+        return this;
     }
 
     /**
      * Enables a {@link Converter} which provides automatic conversion of internal features.
+     *
+     * @return this instance
+     *
      */
-    protected final void enableBasicConverters() {
+    public LuaModule enableBasicConverters() {
         install(new LuaConverterModule());
+        return this;
     }
 
     /**
      * Enables configures this {@link LuaModule} to bind and provide the {@link LuaManifestLoader}.  If not called, then
      * this will not provide the feature and it will be necessary to provide one externally.
+     *
+     * @return this instance
+     *
      */
-    protected final void enableManifestLoaderFeature() {
+    public LuaModule enableManifestLoaderFeature() {
         bind(ManifestLoader.class).to(LuaManifestLoader.class);
         expose(ManifestLoader.class);
+        return this;
     }
 
     /**
      * Enables configures this {@link LuaModule} to bind and provide the {@link LuaResourceLoader}.  If not called, then
      * this will not provide the feature and it will be necessary to provide one externally.
+     *
+     * @return this instance
+     *
      */
-    protected final void enableLuaResourceLoaderFeature() {
+    public LuaModule enableLuaResourceLoaderFeature() {
         bind(ResourceLoader.class).to(LuaResourceLoader.class);
         expose(ResourceLoader.class);
+        return this;
+    }
+
+    /**
+     * Enables the use of Jersey as the underlying HTTP client shared by the application.
+     *
+     * @return this instance
+     */
+    public LuaModule enableJerseyHttpClient() {
+        install(new JerseyClientModule());
+        return this;
     }
 
     /**
@@ -83,9 +100,15 @@ public class LuaModule extends PrivateModule {
      *
      * @param cls the type
      */
-    protected ModuleBinding bindBuiltin(final Class<?> cls) {
+    public ModuleBinding bindBuiltin(final Class<?> cls) {
+
         final Provider<?> provider = getProvider(cls);
-        return moduleName -> builtinMultibinder.addBinding().toProvider(() -> new JavaObjectModuleBuiltin(moduleName, provider));
+
+        return moduleName -> {
+            builtinMultibinder.addBinding().toProvider(() -> new JavaObjectModuleBuiltin(moduleName, provider));
+            return this;
+        };
+
     }
 
     /**
@@ -99,7 +122,7 @@ public class LuaModule extends PrivateModule {
          *
          * @param moduleName the module name.
          */
-        void toModuleNamed(final String moduleName);
+        LuaModule toModuleNamed(final String moduleName);
 
     }
 

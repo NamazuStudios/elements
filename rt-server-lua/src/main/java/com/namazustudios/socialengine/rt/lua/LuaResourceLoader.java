@@ -60,6 +60,7 @@ public class LuaResourceLoader implements ResourceLoader {
             luaResource.getBuiltinManager().installBuiltin(getAssetLoaderBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getHttpStatusBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(getHttpClientBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
             luaResource.getBuiltinManager().installBuiltin(getJnaBuiltinProvider().get());
 
@@ -97,6 +98,7 @@ public class LuaResourceLoader implements ResourceLoader {
             luaResource.getBuiltinManager().installBuiltin(getAssetLoaderBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getHttpStatusBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(getHttpClientBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
             luaResource.getBuiltinManager().installBuiltin(getJnaBuiltinProvider().get());
 

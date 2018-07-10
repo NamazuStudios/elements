@@ -96,6 +96,11 @@ public class XodusSchedulerContext implements SchedulerContext {
     }
 
     @Override
+    public void resume(TaskId taskId, Object... results) {
+        getSimpleSchedulerContext().resume(taskId, results);
+    }
+
+    @Override
     public void resumeTaskAfterDelay(final long time,
                                      final TimeUnit timeUnit,
                                      final TaskId taskId) {

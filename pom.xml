@@ -112,6 +112,7 @@
         <firebase.admin.version>6.2.0</firebase.admin.version>
         <netty.version>4.1.22.Final</netty.version>
         <xodus.version>1.2.3</xodus.version>
+        <jetty.version>9.4.7.v20170914</jetty.version>
     </properties>
 
     <dependencies>

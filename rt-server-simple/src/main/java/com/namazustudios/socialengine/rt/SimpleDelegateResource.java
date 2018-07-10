@@ -40,6 +40,11 @@ public class SimpleDelegateResource implements Resource {
     }
 
     @Override
+    public void resume(TaskId taskId, Object... results) {
+        delegate.resume(taskId, results);
+    }
+
+    @Override
     public void resumeFromNetwork(TaskId taskId, Object result) {
         delegate.resumeFromNetwork(taskId, result);
     }

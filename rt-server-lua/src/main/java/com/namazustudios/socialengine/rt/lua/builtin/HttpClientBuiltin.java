@@ -10,11 +10,15 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.ws.rs.client.*;
+import javax.ws.rs.core.Response;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinUtils.currentTaskId;
+import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstruction.INDEFINITELY;
 import static javax.ws.rs.HttpMethod.POST;
 import static javax.ws.rs.HttpMethod.PUT;
 
@@ -33,13 +37,14 @@ public class HttpClientBuiltin implements Builtin {
     private final JavaFunction send = l -> {
 
         final TaskId taskId = currentTaskId(l);
+        if (taskId == null) throw new IllegalStateException("No currently running task.");
 
         final String base = getRequiredStringField(l, "base");
-        final WebTarget target = getClient().target(base);
 
-        getRequiredStringField(l, "path", target::path);
-        getOptionalMultiField(l, "params", target::queryParam);
-        getOptionalMultiField(l, "matrix", target::matrixParam);
+        WebTarget target = getClient().target(base);
+        target = getRequiredStringField(l, "path", target::path);
+        target = getOptionalMultiField(l, "params", target, target::queryParam);
+        target = getOptionalMultiField(l, "matrix", target, target::matrixParam);
 
         final Invocation.Builder builder = target.request();
         getOptionalMultiField(l, "headers", builder::header);
@@ -49,6 +54,11 @@ public class HttpClientBuiltin implements Builtin {
 
         final String method = getRequiredStringField(l, "method");
         final Entity<Object> entity = getEntity(l);
+
+        final Consumer<Response> handleResponse = response -> {
+            logger.trace("Got Response {}", response);
+            // TODO Pass to Lua
+        };
 
         if ((PUT.equals(method) || POST.equals(method)) && (entity != null)) {
             builder.async().method(method, entity, new InvocationCallback<Object>() {
@@ -61,7 +71,12 @@ public class HttpClientBuiltin implements Builtin {
 
                 @Override
                 public void failed(Throwable throwable) {
-                    context.getSchedulerContext().resumeWithError(taskId, throwable);
+                    if (throwable instanceof ResponseProcessingException) {
+                        final Response response = ((ResponseProcessingException) throwable).getResponse();
+                        handleResponse.accept(response);
+                    } else {
+//                        context.getSchedulerContext().resumeWithError(taskId, throwable);
+                    }
                 }
 
             });
@@ -76,19 +91,24 @@ public class HttpClientBuiltin implements Builtin {
 
                 @Override
                 public void failed(Throwable throwable) {
-                    context.getSchedulerContext().resumeWithError(taskId, throwable);
+                    if (throwable instanceof ResponseProcessingException) {
+                        final Response response = ((ResponseProcessingException) throwable).getResponse();
+                        handleResponse.accept(response);
+                    } else {
+//                        context.getSchedulerContext().resumeWithError(taskId, throwable);
+                    }
                 }
 
             });
         }
 
-        return 0;
+        l.pushJavaObject(INDEFINITELY.toString());
+        return l.yield(1);
 
     };
 
     private String getRequiredStringField(final LuaState l, final String key) {
         try {
-            final String s;
             l.getField(1, key);
             if (l.isNil( -1)) throw new IllegalArgumentException(key + " must be specified ");
             return l.toString(-1);
@@ -97,12 +117,11 @@ public class HttpClientBuiltin implements Builtin {
         }
     }
 
-    private void getRequiredStringField(final LuaState l, final String key, final Consumer<String> consumer) {
+    private <T> T getRequiredStringField(final LuaState l, final String key, final Function<String, T> consumer) {
         try {
-            final String s;
             l.getField(1, key);
             if (l.isNil( -1)) throw new IllegalArgumentException(key + " must be specified ");
-            consumer.accept(l.toString(-1));
+            return consumer.apply(l.toString(-1));
         } finally {
             l.pop(1);
         }
@@ -150,18 +169,9 @@ public class HttpClientBuiltin implements Builtin {
             return Entity.entity(entity, mediaType);
 
         } finally {
-            l.setTable(top);
+            l.setTop(top);
         }
-    }
 
-    private void getOptionalObjectField(final LuaState l, final String key, final Consumer<Object> consumer) {
-        try {
-            final String s;
-            l.getField(1, key);
-            if (!l.isNil( -1)) consumer.accept(l.toJavaObject(-1, Object.class));
-        } finally {
-            l.pop(1);
-        }
     }
 
     private void getOptionalMultiField(final LuaState l, final String key, final BiConsumer<String, String> consumer) {
@@ -169,6 +179,7 @@ public class HttpClientBuiltin implements Builtin {
         final int top = l .getTop();
 
         try {
+
             l.getField(1, key);
 
             if (l.isNil(-1)) return;
@@ -177,15 +188,15 @@ public class HttpClientBuiltin implements Builtin {
             l.pushNil();
             while (l.next(-1)) {
 
-                // Copy key/value to avoid wrecking hte string conversion
                 l.pushValue(-2);
                 l.pushValue(-2);
 
                 if (l.isString(-1) || l.isNumber(-1)) {
                     consumer.accept(l.toString(-2), l.toString(-1));
                 } else if (l.isTable(-1)) {
-                    final String k = l.toString(-1);
-                    Stream.of(l.toJavaObject(-1, String[].class)).forEach(v -> consumer.accept(k, v));
+                    final String k = l.toString(-2);
+                    Stream.of(l.toJavaObject(-1, String[].class))
+                          .forEach(v -> consumer.accept(k, v));
                 } else {
                     throw new IllegalArgumentException(key + " has invalid value at " + l.toString(-1));
                 }
@@ -193,6 +204,45 @@ public class HttpClientBuiltin implements Builtin {
                 l.pop(3);
 
             }
+
+        } finally {
+            l.setTop(top);
+        }
+
+    }
+
+    private <T> T getOptionalMultiField(final LuaState l, final String key,
+                                        final T initial, final BiFunction<String, String[], T> consumer) {
+
+        T out = initial;
+        final int top = l .getTop();
+
+        try {
+
+            l.getField(1, key);
+
+            if (l.isNil(-1)) return out;
+            if (!l.isTable( -1)) throw new IllegalArgumentException(key + " must be a table");
+
+            l.pushNil();
+            while (l.next(-1)) {
+
+                l.pushValue(-2);
+                l.pushValue(-2);
+
+                if (l.isString(-1) || l.isNumber(-1)) {
+                    out = consumer.apply(l.toString(-2), new String[]{l.toString(-1)});
+                } else if (l.isTable(-1)) {
+                    out = consumer.apply(l.toString(-2), l.toJavaObject(-1, String[].class));
+                } else {
+                    throw new IllegalArgumentException(key + " has invalid value at " + l.toString(-1));
+                }
+
+                l.pop(3);
+
+            }
+
+            return out;
 
         } finally {
             l.setTop(top);
