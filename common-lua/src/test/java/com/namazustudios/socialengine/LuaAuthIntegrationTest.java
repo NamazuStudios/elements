@@ -28,7 +28,7 @@ public class LuaAuthIntegrationTest  {
             .setAttribute(Profile.PROFILE_ATTRIBUTE, profile)
             .build();
 
-        performLuaTest("namazu.socialengine.test.auth", "test_profile", attributes);
+        performLuaTest("namazu.elements.test.auth", "test_profile", attributes);
 
     }
 
@@ -37,10 +37,10 @@ public class LuaAuthIntegrationTest  {
 
         final Profile profile = mockProfile();
         final Attributes attributes = new SimpleAttributes.Builder()
-                .setAttribute(Profile.PROFILE_ATTRIBUTE, profile)
-                .build();
+            .setAttribute(Profile.PROFILE_ATTRIBUTE, profile)
+            .build();
 
-        performLuaTest("namazu.socialengine.test.auth", "test_profile_remote", attributes);
+        performLuaTest("namazu.elements.test.auth", "test_profile_remote", attributes);
 
     }
 
@@ -48,7 +48,7 @@ public class LuaAuthIntegrationTest  {
     @Test
     public void testProfileUnknown() throws Exception {
         final Attributes attributes = Attributes.emptyAttributes();
-        performLuaTest("namazu.socialengine.test.auth", "test_profile_unknown", attributes);
+        performLuaTest("namazu.elements.test.auth", "test_profile_unknown", attributes);
     }
 
     @Test
@@ -56,10 +56,10 @@ public class LuaAuthIntegrationTest  {
 
         final User user = mockUser();
         final Attributes attributes = new SimpleAttributes.Builder()
-                .setAttribute(User.USER_ATTRIBUTE, user)
-                .build();
+            .setAttribute(User.USER_ATTRIBUTE, user)
+            .build();
 
-        performLuaTest("namazu.socialengine.test.auth", "test_authenticated_user", attributes);
+        performLuaTest("namazu.elements.test.auth", "test_authenticated_user", attributes);
 
     }
 
@@ -71,14 +71,14 @@ public class LuaAuthIntegrationTest  {
                 .setAttribute(User.USER_ATTRIBUTE, user)
                 .build();
 
-        performLuaTest("namazu.socialengine.test.auth", "test_authenticated_user_remote", attributes);
+        performLuaTest("namazu.elements.test.auth", "test_authenticated_user_remote", attributes);
 
     }
 
     @Test
     public void testUnauthenticatedUser() throws Exception {
         final Attributes attributes = Attributes.emptyAttributes();
-        performLuaTest("namazu.socialengine.test.auth", "test_unauthenticated_user", attributes);
+        performLuaTest("namazu.elements.test.auth", "test_unauthenticated_user", attributes);
     }
 
     public Context getContext() {

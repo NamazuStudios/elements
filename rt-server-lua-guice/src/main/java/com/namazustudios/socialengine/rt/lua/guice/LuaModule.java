@@ -6,8 +6,6 @@ import com.namazustudios.socialengine.jnlua.Converter;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.ResourceLoader;
-import com.namazustudios.socialengine.rt.IocResolver;
-import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
 import com.namazustudios.socialengine.rt.lua.LuaResourceLoader;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
@@ -30,21 +28,20 @@ public class LuaModule extends PrivateModule {
     }
 
     /**
-     * Configures the features used by this {@Link LuaModule}.  By default this invokes {@link #enableAllFeatures()}.
+     * Configures the features used by this {@Link LuaModule}.  By default this invokes {@link #enableStandardFeatures()}.
      * Subclasses may override this method to cherry-pick features they wish to add.
      */
     protected void configureFeatures() {
-        enableAllFeatures();
+        enableStandardFeatures();
     }
 
     /**
-     * Enables all features, this is the default behavior.
+     * Enables standard features.
      */
-    public LuaModule enableAllFeatures() {
+    public LuaModule enableStandardFeatures() {
         enableBasicConverters();
         enableManifestLoaderFeature();
         enableLuaResourceLoaderFeature();
-        enableJerseyHttpClient();
         return this;
     }
 
@@ -82,16 +79,6 @@ public class LuaModule extends PrivateModule {
     public LuaModule enableLuaResourceLoaderFeature() {
         bind(ResourceLoader.class).to(LuaResourceLoader.class);
         expose(ResourceLoader.class);
-        return this;
-    }
-
-    /**
-     * Enables the use of Jersey as the underlying HTTP client shared by the application.
-     *
-     * @return this instance
-     */
-    public LuaModule enableJerseyHttpClient() {
-        install(new JerseyClientModule());
         return this;
     }
 

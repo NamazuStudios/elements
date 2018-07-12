@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
+import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.Path;
@@ -11,6 +12,9 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+
 import static java.util.UUID.randomUUID;
 
 public class HttpClientIntegrationTest {
@@ -19,7 +23,9 @@ public class HttpClientIntegrationTest {
 
     private final JettyEmbeddedRESTService jettyEmbeddedRESTService = new JettyEmbeddedRESTService();
 
-    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService().start();
+    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
+        .withDefaultHttpClient()
+        .start();
 
     private final Node node = getEmbeddedTestService().getNode();
 

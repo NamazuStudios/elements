@@ -81,7 +81,7 @@ public class LuaNotificationIntegrationTest {
         when(getMockNotificationBuilder().title(any())).thenReturn(getMockNotificationBuilder());
         when(getMockNotificationBuilder().build()).thenReturn(mockNotification);
 
-        performLuaTest("namazu.socialengine.test.notification","test_send_with_builder", attributes);
+        performLuaTest("namazu.elements.test.notification","test_send_with_builder", attributes);
 
         verify(mockNotification, times(1)).send();
         verify(getMockNotificationBuilder(), times(1)).title(eq("Hello World!"));

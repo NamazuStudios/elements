@@ -18,7 +18,9 @@ public class IntegrationTestModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(Context.class).toProvider(embeddedTestService::getContext);
-        bind(JeroMQEmbeddedTestService.class).toInstance(embeddedTestService.start());
+        bind(JeroMQEmbeddedTestService.class).toInstance(embeddedTestService
+            .withDefaultHttpClient()
+            .start());
     }
 
     public JeroMQEmbeddedTestService getEmbeddedTestService() {

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -8,6 +9,8 @@ import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 import org.zeromq.ZContext;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +42,15 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
     public JeroMQEmbeddedTestService withClientModule(final Module module) {
         clientModules.add(module);
         return this;
+    }
+
+    public JeroMQEmbeddedTestService withDefaultHttpClient() {
+        return withNodeModule(new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(Client.class).toProvider(ClientBuilder::newClient).asEagerSingleton();
+            }
+        });
     }
 
     public JeroMQEmbeddedTestService start() {

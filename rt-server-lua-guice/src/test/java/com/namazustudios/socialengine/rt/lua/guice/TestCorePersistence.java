@@ -252,7 +252,7 @@ public class TestCorePersistence {
             install(new LuaModule() {
                 @Override
                 protected void configureFeatures() {
-                    enableAllFeatures();
+                    enableStandardFeatures();
                     bindBuiltin(TestJavaModule.class).toModuleNamed("test.java.module");
                 }
             });
