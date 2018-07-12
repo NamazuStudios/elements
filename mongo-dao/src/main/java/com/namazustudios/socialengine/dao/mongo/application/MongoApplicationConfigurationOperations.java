@@ -4,10 +4,12 @@ import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplicationConfiguration;
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoFirebaseApplicationConfiguration;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.ConfigurationCategory;
+import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
@@ -17,7 +19,11 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import static com.namazustudios.socialengine.model.application.ConfigurationCategory.FIREBASE;
 
 /**
  * This encapsulates the basic operations for handling the types derived from {@link MongoApplicationConfiguration}
@@ -122,6 +128,29 @@ public class MongoApplicationConfigurationOperations {
         }
 
         return getBeanMapper().map(mongoApplicationConfiguration, applicationConfigurationClass);
+
+    }
+
+    public <ApplicationConfigurationT extends ApplicationConfiguration,
+            MongoApplicationConfigurationT extends MongoApplicationConfiguration>
+    List<ApplicationConfigurationT> getApplicationConfigurationsForApplication(
+            final Class<ApplicationConfigurationT> applicationConfigurationClass,
+            final Class<MongoApplicationConfigurationT> mongoApplicationConfigurationClass,
+            final ConfigurationCategory category,
+            final String applicationNameOrId) {
+
+        final MongoApplication parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final Query<MongoApplicationConfigurationT> query = getDatastore().createQuery(mongoApplicationConfigurationClass);
+
+        query.and(
+            query.criteria("parent").equal(parent),
+            query.criteria("category").equal(category)
+        );
+
+        return query
+            .asList().stream()
+            .map(fac -> getBeanMapper().map(fac, applicationConfigurationClass))
+            .collect(Collectors.toList());
 
     }
 

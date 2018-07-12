@@ -7,6 +7,9 @@ import com.namazustudios.socialengine.model.application.GameOnApplicationConfigu
 import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
+import java.util.List;
+
+import static com.namazustudios.socialengine.model.application.ConfigurationCategory.AMAZON_GAME_ON;
 
 public class MongoGameOnApplicationConfigurationDao implements GameOnApplicationConfigurationDao {
 
@@ -19,9 +22,18 @@ public class MongoGameOnApplicationConfigurationDao implements GameOnApplication
         return getMongoApplicationConfigurationOperations().getApplicationConfiguration(
                 GameOnApplicationConfiguration.class,
                 MongoGameOnApplicationConfiguration.class,
-                ConfigurationCategory.AMAZON_GAME_ON,
+                AMAZON_GAME_ON,
                 applicationNameOrId,
                 applicationConfigurationNameOrId);
+    }
+
+    @Override
+    public List<GameOnApplicationConfiguration> getConfigurationsForApplication(String applicationNameOrId) {
+        return getMongoApplicationConfigurationOperations().getApplicationConfigurationsForApplication(
+            GameOnApplicationConfiguration.class,
+            MongoGameOnApplicationConfiguration.class,
+            AMAZON_GAME_ON,
+            applicationNameOrId);
     }
 
     @Override
@@ -58,7 +70,7 @@ public class MongoGameOnApplicationConfigurationDao implements GameOnApplication
             final String applicationConfigurationNameOrId) {
         getMongoApplicationConfigurationOperations().softDeleteApplicationConfiguration(
             MongoGameOnApplicationConfiguration.class,
-            ConfigurationCategory.AMAZON_GAME_ON,
+            AMAZON_GAME_ON,
             applicationNameOrId,
             applicationConfigurationNameOrId);
     }
@@ -73,7 +85,7 @@ public class MongoGameOnApplicationConfigurationDao implements GameOnApplication
     }
 
     protected void validate(final GameOnApplicationConfiguration gameOnApplicationConfiguration) {
-        gameOnApplicationConfiguration.setCategory(ConfigurationCategory.AMAZON_GAME_ON);
+        gameOnApplicationConfiguration.setCategory(AMAZON_GAME_ON);
         gameOnApplicationConfiguration.setUniqueIdentifier(gameOnApplicationConfiguration.getGameId());
     }
 

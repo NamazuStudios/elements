@@ -81,8 +81,7 @@ public class MongoFirebaseApplicationConfigurationDao implements FirebaseApplica
     }
 
     @Override
-    public FirebaseApplicationConfiguration getApplicationConfiguration(
-            final String applicationConfigurationNameOrId) {
+    public FirebaseApplicationConfiguration getApplicationConfiguration(final String applicationConfigurationNameOrId) {
 
         final Query<MongoFirebaseApplicationConfiguration> query;
         query = getDatastore().createQuery(MongoFirebaseApplicationConfiguration.class);
