@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.lua.guice.JeroMQEmbeddedTestService;
+import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 
 import javax.ws.rs.client.Client;
 
@@ -32,6 +33,7 @@ public class UnitTestModule extends AbstractModule {
         bind(Context.class).toProvider(embeddedTestService::getContext);
 
         bind(JeroMQEmbeddedTestService.class).toInstance(embeddedTestService
+            .withNodeModule(new LuaModule())
             .withNodeModule(new AbstractModule() {
                 @Override
                 protected void configure() {

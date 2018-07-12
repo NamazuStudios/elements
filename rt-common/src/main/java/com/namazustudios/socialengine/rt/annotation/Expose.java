@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.annotation;
+package com.namazustudios.socialengine.rt.annotation;
 
 
 import java.lang.annotation.ElementType;
@@ -16,8 +16,8 @@ public @interface Expose {
     /**
      * The name of the lua module which will map to the object.
      *
-     * @return the lua module name
+     * @return the module name
      */
-    String luaModuleName();
+    String module();
 
 }

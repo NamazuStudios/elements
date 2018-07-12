@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
-import com.namazustudios.socialengine.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.GooglePlayApplicationConfiguration;
@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.model.application.GooglePlayApplicationCon
 /**
  * Created by patricktwohig on 5/25/17.
  */
-@Expose(luaModuleName = "namazu.socialengine.dao.googleplay")
+@Expose(module = "namazu.socialengine.dao.googleplay")
 public interface GooglePlayApplicationConfigurationDao {
 
     /**

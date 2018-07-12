@@ -12,6 +12,7 @@ import com.namazustudios.socialengine.rt.http.HttpRequest;
 import com.namazustudios.socialengine.rt.http.RequestScopedHttpSessionDispatcher;
 import com.namazustudios.socialengine.rt.jackson.guice.MultiContentTypeJacksonPayloadReaderModule;
 import com.namazustudios.socialengine.rt.jackson.guice.MultiContentTypeJacksonPayloadWriterModule;
+import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.servlet.*;
 
 import java.io.File;
@@ -27,7 +28,7 @@ public class DispatcherModule extends PrivateModule {
     @Override
     protected void configure() {
 
-        install(new ExtendedLuaModule());
+        install(new LuaModule());
         install(new GuiceIoCResolverModule());
         install(new RTFileAssetLoaderModule(assetRootDirectory));
 

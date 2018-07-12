@@ -6,12 +6,18 @@ import com.namazustudios.socialengine.jnlua.Converter;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.ResourceLoader;
+import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
 import com.namazustudios.socialengine.rt.lua.LuaResourceLoader;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectModuleBuiltin;
+import org.reflections.Reflections;
 
 import javax.inject.Provider;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static java.util.function.Function.identity;
 
 /**
  * Created by patricktwohig on 8/17/17.
@@ -42,6 +48,7 @@ public class LuaModule extends PrivateModule {
         enableBasicConverters();
         enableManifestLoaderFeature();
         enableLuaResourceLoaderFeature();
+        enableBuiltinJavaExtensions();
         return this;
     }
 
@@ -80,6 +87,34 @@ public class LuaModule extends PrivateModule {
         bind(ResourceLoader.class).to(LuaResourceLoader.class);
         expose(ResourceLoader.class);
         return this;
+    }
+
+    /**
+     * Enables the system-provided extensions using the {@link Expose} annotation.
+     *
+     * @return this instance
+     */
+    public LuaModule enableBuiltinJavaExtensions() {
+        return enableJavaExtensions("com.namazustudios");
+    }
+
+    /**
+     * Scans for the {@link Expose} annotation to enable any extensions exposed to Lua.
+     *
+     * @return this instance
+     */
+    public LuaModule enableJavaExtensions(final String packageName) {
+
+        final Reflections reflections = new Reflections(packageName, getClass().getClassLoader());
+        final Set<Class<?>> classSet = reflections.getTypesAnnotatedWith(Expose.class);
+
+        classSet.stream()
+                .filter(cls -> cls.getAnnotation(Expose.class) != null)
+                .collect(Collectors.toMap(cls -> cls.getAnnotation(Expose.class), identity()))
+                .forEach((expose, type) -> bindBuiltin(type).toModuleNamed(expose.module()));
+
+        return this;
+
     }
 
     /**

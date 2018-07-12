@@ -20,6 +20,7 @@ public class IntegrationTestModule extends AbstractModule {
         bind(Context.class).toProvider(embeddedTestService::getContext);
         bind(JeroMQEmbeddedTestService.class).toInstance(embeddedTestService
             .withDefaultHttpClient()
+            .withNodeModule(new LuaModule())
             .start());
     }
 

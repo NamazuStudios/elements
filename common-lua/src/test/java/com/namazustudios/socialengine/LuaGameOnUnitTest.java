@@ -39,7 +39,7 @@ public class LuaGameOnUnitTest {
     @DataProvider
     public static Object[][] resourcesToTest() {
         return new Object[][] {
-            {"namazu.elements.test.auth", "test_facebook_security_manifest"},
+            {"namazu.elements.test.gameon", "test_start_session"},
         };
     }
 

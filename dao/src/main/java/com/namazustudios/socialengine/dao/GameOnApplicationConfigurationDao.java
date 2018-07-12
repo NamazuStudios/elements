@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
-import com.namazustudios.socialengine.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.exception.gameon.GameOnApplicationConfigurationNotFoundException;
 import com.namazustudios.socialengine.exception.gameon.GameOnConfigurationException;
 import com.namazustudios.socialengine.model.application.Application;
@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Accesss and manages instances of {@link GameOnApplicationConfiguration} in the database.
  */
-@Expose(luaModuleName = "namazu.socialengine.dao.application.configuration.gameon")
+@Expose(module = "namazu.socialengine.dao.application.configuration.gameon")
 public interface GameOnApplicationConfigurationDao {
 
     /**

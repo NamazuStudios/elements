@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.appnode.guice;
 
 import com.google.inject.AbstractModule;
-import com.namazustudios.socialengine.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.dao.rt.guice.RTFileAssetLoaderModule;
 import com.namazustudios.socialengine.rt.ContextInvocationDispatcher;
 import com.namazustudios.socialengine.rt.NodeLifecycle;
@@ -48,7 +48,7 @@ public class ApplicationModule extends AbstractModule {
                 classSet.stream()
                     .filter(cls -> cls.getAnnotation(Expose.class) != null)
                     .collect(Collectors.toMap(cls -> cls.getAnnotation(Expose.class), identity()))
-                    .forEach((expose, type) -> bindBuiltin(type).toModuleNamed(expose.luaModuleName()));
+                    .forEach((expose, type) -> bindBuiltin(type).toModuleNamed(expose.module()));
 
             }
         });

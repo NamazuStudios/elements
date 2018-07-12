@@ -6,7 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local http = require "namazu.http"
+local http_client = require "namazu.http.client"
 local ioc = require "namazu.ioc.resolver"
 local configuration_dao = require "namazu.socialengine.dao.application.configuration.gameon"
 local application_provider = ioc:provider("com.namazustudios.socialengine.model.application.Application")
@@ -63,7 +63,7 @@ function session:authenticate(profile, device_os_type, app_build_type)
         }
     }
 
-    local status, headers, response = http.send(request)
+    local status, headers, response = http_client.send(request)
 
     if (status == 200)
     then

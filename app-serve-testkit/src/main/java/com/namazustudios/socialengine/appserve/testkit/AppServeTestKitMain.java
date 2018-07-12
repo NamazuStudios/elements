@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.appserve.testkit;
 
-import com.namazustudios.socialengine.appserve.guice.ExtendedLuaModule;
 import com.namazustudios.socialengine.appserve.guice.ServicesModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
@@ -60,7 +59,7 @@ public class AppServeTestKitMain {
                            .addModule(new ValidationModule())
                            .addModule(new MongoSearchModule())
                            .addModule(new ConfigurationModule(defaultConfigurationSupplier))
-                           .addModule(new ExtendedLuaModule())
+                           .addModule(new LuaModule())
                            .addModule(new GuiceIoCResolverModule());
 
             } else {
