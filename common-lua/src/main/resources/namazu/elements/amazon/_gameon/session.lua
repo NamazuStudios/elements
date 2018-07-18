@@ -10,7 +10,7 @@ local http_client = require "namazu.http.client"
 local ioc = require "namazu.ioc.resolver"
 local configuration_dao = require "namazu.socialengine.dao.application.configuration.gameon"
 local application_provider = ioc:provider("com.namazustudios.socialengine.model.application.Application")
-local gameon_constants = require "naamzu.elements.amazon._gameon.constants"
+local gameon_constants = require "namazu.elements.amazon._gameon.constants"
 
 local session = {}
 
@@ -18,7 +18,7 @@ local session = {}
 function session:new(session)
     session = session or {}
     session.__index = session
-    setmeatable(session, self)
+    setmetatable(session, self)
     return session
 end
 

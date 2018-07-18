@@ -177,17 +177,19 @@ public class HttpClientBuiltin implements Builtin {
             if (!l.isTable( -1)) throw new IllegalArgumentException(key + " must be a table");
 
             l.pushNil();
-            while (l.next(-1)) {
+            while (l.next(-2)) {
 
                 l.pushValue(-2);
                 l.pushValue(-2);
 
                 if (l.isString(-1) || l.isNumber(-1)) {
-                    consumer.accept(l.toString(-2), l.toString(-1));
+                    final String h = l.toString(-2);
+                    final String v = l.toString(-1);
+                    consumer.accept(h, v);
                 } else if (l.isTable(-1)) {
-                    final String k = l.toString(-2);
+                    final String h = l.toString(-2);
                     Stream.of(l.toJavaObject(-1, String[].class))
-                          .forEach(v -> consumer.accept(k, v));
+                          .forEach(v -> consumer.accept(h, v));
                 } else {
                     throw new IllegalArgumentException(key + " has invalid value at " + l.toString(-1));
                 }

@@ -10,6 +10,7 @@ public class GuiceIoCResolverModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(GuiceIoCResolver.class);
         bind(IocResolver.class).to(GuiceIoCResolver.class);
     }
 

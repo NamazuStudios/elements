@@ -5,9 +5,11 @@ import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.*;
 import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
+import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.ContextNodeLifecycle;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import com.sun.org.apache.xpath.internal.operations.Mod;
+import javafx.application.Application;
 import org.zeromq.ZContext;
 
 import java.util.ArrayList;
@@ -39,15 +41,20 @@ public class TestJeroMQNodeModule extends PrivateModule {
     protected void configure() {
 
         expose(Node.class);
+        binder().requireExplicitBindings();
 
         contextBindAction.run();
         handlerTimeoutBindAction.run();
 
-        bind(InvocationDispatcher.class).to(ContextInvocationDispatcher.class).asEagerSingleton();
+        bind(IoCInvocationDispatcher.class).asEagerSingleton();
+        bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class);
         bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(getClass().getClassLoader()));
 
-        bind(Context.class).to(SimpleContext.class).asEagerSingleton();
-        bind(NodeLifecycle.class).to(ContextNodeLifecycle.class).asEagerSingleton();
+        bind(SimpleContext.class).asEagerSingleton();
+        bind(Context.class).to(SimpleContext.class);
+
+        bind(ContextNodeLifecycle.class).asEagerSingleton();
+        bind(NodeLifecycle.class).to(ContextNodeLifecycle.class);
 
         install(simpleServicesModule);
         install(new SimpleResourceContextModule());

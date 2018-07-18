@@ -6,6 +6,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Node;
+import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 import org.zeromq.ZContext;
 
