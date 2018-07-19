@@ -18,7 +18,10 @@ public class TestYielding {
 
     private static final Logger logger = LoggerFactory.getLogger(TestYielding.class);
 
-    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService().start();
+    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
+        .withNodeModule(new LuaModule())
+        .withDefaultHttpClient()
+        .start();
 
     private final Context context = embeddedTestService.getContext();
 

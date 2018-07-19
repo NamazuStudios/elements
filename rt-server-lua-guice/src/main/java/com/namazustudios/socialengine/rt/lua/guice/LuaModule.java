@@ -120,7 +120,7 @@ public class LuaModule extends PrivateModule {
         classSet.stream()
                 .filter(cls -> cls.getAnnotation(Expose.class) != null)
                 .collect(Collectors.toMap(cls -> cls.getAnnotation(Expose.class), identity()))
-                .forEach((expose, type) -> bindBuiltin(type).toModuleNamed(expose.module()));
+                .forEach((expose, type) -> bindModuleBuiltin(type).toModuleNamed(expose.module()));
 
         return this;
 
@@ -140,11 +140,13 @@ public class LuaModule extends PrivateModule {
     }
 
     /**
-     * Binds a {@link Builtin} to to the type specified by the supplied {@link Class}.
+     * Binds a {@link Builtin} to to the type specified by the supplied {@link Class}.  Note that this does not provide
+     * the actual binding to the builtin, this merely makes a request for a {@link Provider<T>} which will be used to
+     * actually inject the object at a later time.
      *
-     * @param cls the type
+     * @param cls the type to bind to a {@link Builtin} as a Java module.
      */
-    public <T> ModuleBinding bindBuiltin(final Class<T> cls) {
+    public <T> ModuleBinding bindModuleBuiltin(final Class<T> cls) {
 
         final Provider<?> provider = getProvider(cls);
 

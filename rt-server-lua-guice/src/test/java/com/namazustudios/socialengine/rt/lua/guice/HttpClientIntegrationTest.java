@@ -24,8 +24,9 @@ public class HttpClientIntegrationTest {
     private final JettyEmbeddedRESTService jettyEmbeddedRESTService = new JettyEmbeddedRESTService();
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-        .withDefaultHttpClient()
-        .start();
+            .withDefaultHttpClient()
+            .withNodeModule(new LuaModule())
+            .start();
 
     private final Node node = getEmbeddedTestService().getNode();
 

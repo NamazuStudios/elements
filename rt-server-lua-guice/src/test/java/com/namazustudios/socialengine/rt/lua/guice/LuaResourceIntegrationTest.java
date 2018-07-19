@@ -30,7 +30,10 @@ public class LuaResourceIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceIntegrationTest.class);
 
-    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService().start();
+    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
+        .withNodeModule(new LuaModule())
+        .withDefaultHttpClient()
+        .start();
 
     private final Node node = getEmbeddedTestService().getNode();
 
@@ -42,7 +45,7 @@ public class LuaResourceIntegrationTest {
     }
 
     @Test(dataProvider = "resourcesToTest")
-    public void performTest(final String moduleName, final String methodName) throws InterruptedException {
+    public void performTest(final String moduleName, final String methodName) {
         final Path path = new Path(randomUUID().toString());
         final ResourceId resourceId = getContext().getResourceContext().create(moduleName, path);
         final Object result = getContext().getResourceContext().invoke(resourceId, methodName);
@@ -83,7 +86,7 @@ public class LuaResourceIntegrationTest {
     @Test(dataProvider = "resourcesToTestWithReturnValues")
     public void performTestWithReturnValue(final String moduleName,
                                            final String methodName,
-                                           final Consumer<Object> resultConsumer) throws InterruptedException, Exception {
+                                           final Consumer<Object> resultConsumer) throws Exception {
         final Path path = new Path(randomUUID().toString());
         final ResourceId resourceId = getContext().getResourceContext().create(moduleName, path);
         final Object result = getContext().getResourceContext().invoke(resourceId, methodName);

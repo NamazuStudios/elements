@@ -41,6 +41,8 @@ public class TestJeroMQNodeModule extends PrivateModule {
     protected void configure() {
 
         expose(Node.class);
+        expose(Context.class);
+
         binder().requireExplicitBindings();
 
         contextBindAction.run();

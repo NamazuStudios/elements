@@ -1,8 +1,10 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
+import com.namazustudios.socialengine.rt.annotation.Expose;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Expose(module = "test.java.module")
 public class TestJavaModule {
 
     private static final Logger logger = LoggerFactory.getLogger(TestJavaModule.class);

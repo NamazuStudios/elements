@@ -2,9 +2,7 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.namazustudios.socialengine.rt.AssetLoader;
-import com.namazustudios.socialengine.rt.ClasspathAssetLoader;
-import com.namazustudios.socialengine.rt.ManifestLoader;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
@@ -12,7 +10,9 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
+import javax.ws.rs.client.Client;
 
+import static org.mockito.Mockito.mock;
 import static org.testng.Assert.assertNotNull;
 
 /**
@@ -54,6 +54,11 @@ public class LuaManifestLoaderTest {
 
         @Override
         protected void configure() {
+
+            bind(Context.class).toInstance(mock(Context.class));
+            bind(Client.class).toInstance(mock(Client.class));
+            bind(ResourceAcquisition.class).toInstance(mock(ResourceAcquisition.class));
+
             install(new LuaModule() {
                 @Override
                 protected void configureFeatures() {
@@ -61,6 +66,7 @@ public class LuaManifestLoaderTest {
                     enableManifestLoaderFeature();
                 }
             });
+
         }
 
         @Provides

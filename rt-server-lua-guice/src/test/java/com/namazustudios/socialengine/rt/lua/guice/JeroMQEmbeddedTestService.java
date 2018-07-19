@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
+import com.google.inject.*;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
@@ -16,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static jdk.nashorn.internal.objects.NativeFunction.bind;
 import static org.zeromq.ZContext.shadow;
 
 /**
@@ -29,7 +27,9 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
     private Context context;
 
-    private List<Module> nodeModules = new ArrayList<>();
+    private List<Module> nodeModules = new ArrayList<>(); {
+        nodeModules.add(binder -> binder.bind(TestJavaModule.class));
+    }
 
     private List<Module> clientModules = new ArrayList<>();
 
@@ -46,12 +46,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
     }
 
     public JeroMQEmbeddedTestService withDefaultHttpClient() {
-        return withNodeModule(new AbstractModule() {
-            @Override
-            protected void configure() {
-                bind(Client.class).toProvider(ClientBuilder::newClient).asEagerSingleton();
-            }
-        });
+        return withNodeModule(binder -> binder.bind(Client.class).toProvider(ClientBuilder::newClient).asEagerSingleton());
     }
 
     public JeroMQEmbeddedTestService start() {

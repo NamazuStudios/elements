@@ -48,7 +48,7 @@ public class ApplicationModule extends AbstractModule {
                 classSet.stream()
                     .filter(cls -> cls.getAnnotation(Expose.class) != null)
                     .collect(Collectors.toMap(cls -> cls.getAnnotation(Expose.class), identity()))
-                    .forEach((expose, type) -> bindBuiltin(type).toModuleNamed(expose.module()));
+                    .forEach((expose, type) -> bindModuleBuiltin(type).toModuleNamed(expose.module()));
 
             }
         });

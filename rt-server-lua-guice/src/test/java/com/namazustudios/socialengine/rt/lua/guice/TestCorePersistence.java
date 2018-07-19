@@ -15,6 +15,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
+import javax.ws.rs.client.Client;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,6 +30,7 @@ import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
 import static java.util.UUID.randomUUID;
+import static org.mockito.Mockito.mock;
 import static org.testng.Assert.*;
 
 @Guice(modules = TestCorePersistence.Module.class)
@@ -249,16 +251,10 @@ public class TestCorePersistence {
         @Override
         protected void configure() {
 
-            install(new LuaModule() {
-                @Override
-                protected void configureFeatures() {
-                    enableStandardFeatures();
-                    bindBuiltin(TestJavaModule.class).toModuleNamed("test.java.module");
-                }
-            });
-
+            install(new LuaModule());
             install(new SimpleContextModule());
 
+            bind(Client.class).toInstance(mock(Client.class));
             bind(IocResolver.class).to(GuiceIoCResolver.class).asEagerSingleton();
             bind(AssetLoader.class).to(ClasspathAssetLoader.class).asEagerSingleton();
             bind(Integer.class).annotatedWith(named(SCHEDULER_THREADS)).toInstance(1);
