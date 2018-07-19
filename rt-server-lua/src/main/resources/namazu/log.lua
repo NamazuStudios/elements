@@ -6,7 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local resource = require "namazu.resource.this"
+local detail = require "namazu.log.detail"
 
 local log = {}
 
@@ -63,38 +63,38 @@ function log.warn(fmt, ...) end
 -- @param ... remaining arguments
 function log.error(fmt, ...) end
 
-if resource:getScriptLog():isTraceEnabled()
+if detail.logger():isTraceEnabled()
 then
     function log.trace(fmt, ...)
-        resource:getScriptLog():trace(fmt, ...)
+        detail.logger():trace(fmt, ...)
     end
 end
 
-if resource:getScriptLog():isDebugEnabled()
+if detail.logger():isDebugEnabled()
 then
     function log.debug(fmt, ...)
-        resource:getScriptLog():debug(fmt, ...)
+        detail.logger():debug(fmt, ...)
     end
 end
 
-if resource:getScriptLog():isInfoEnabled()
+if detail.logger():isInfoEnabled()
 then
     function log.info(fmt, ...)
-        resource:getScriptLog():info(fmt, ...)
+        detail.logger():info(fmt, ...)
     end
 end
 
-if resource:getScriptLog():isWarnEnabled()
+if detail.logger():isWarnEnabled()
 then
     function log.warn(fmt, ...)
-        resource:getScriptLog():warn(fmt, ...)
+        detail.logger():warn(fmt, ...)
     end
 end
 
-if resource:getScriptLog():isErrorEnabled()
+if detail.logger():isErrorEnabled()
 then
     function log.error(fmt, ...)
-        resource:getScriptLog():error(fmt, ...)
+        detail.logger():error(fmt, ...)
     end
 end
 

@@ -9,6 +9,7 @@
 local util = require "namazu.util"
 local resource = require "namazu.resource"
 local responsecode = require "namazu.response.code"
+local this_resource = require "namazu.resource.this"
 
 local test_resource = {}
 
@@ -155,6 +156,10 @@ function test_resource.test_destroy()
     assert(result == nil, "Expected nil result.  Got" .. tostring(result))
     assert(code == responsecode.RESOURCE_NOT_FOUND, "Expected Error Code " .. tostring(responsecode.RESOURCE_NOT_FOUND) .. " Got: " .. tostring(code));
 
+end
+
+function test_resource.test_this()
+    assert(this_resource ~= nil, "Expected non-nil value for this resource.")
 end
 
 return test_resource

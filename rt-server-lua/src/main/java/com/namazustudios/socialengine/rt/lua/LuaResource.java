@@ -5,10 +5,7 @@ import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.jnlua.LuaType;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.*;
-import com.namazustudios.socialengine.rt.lua.builtin.BuiltinManager;
-import com.namazustudios.socialengine.rt.lua.builtin.IndexDetailBuiltin;
-import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
-import com.namazustudios.socialengine.rt.lua.builtin.ResourceDetailBuiltin;
+import com.namazustudios.socialengine.rt.lua.builtin.*;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReasonBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstructionBuiltin;
@@ -109,6 +106,7 @@ public class LuaResource implements Resource {
             getBuiltinManager().installBuiltin(new IndexDetailBuiltin(this, context));
             getBuiltinManager().installBuiltin(new YieldInstructionBuiltin());
             getBuiltinManager().installBuiltin(new ResumeReasonBuiltin());
+            getBuiltinManager().installBuiltin(new LoggerDetailBuiltin(this::getScriptLog));
 
         } catch (Throwable th) {
             luaState.close();

@@ -17,6 +17,9 @@ import com.namazustudios.socialengine.rt.ResourceAcquisition;
 import org.apache.bval.guice.ValidationModule;
 import org.eclipse.jetty.server.Server;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+
 public class AppServeMain {
 
     public static void main(final String[] args) throws Exception {
@@ -25,6 +28,7 @@ public class AppServeMain {
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
         final Injector injector = Guice.createInjector(
+            new ConfigurationModule(defaultConfigurationSupplier),
             new MongoCoreModule(),
             new ServerModule(),
             new ServicesModule(),
@@ -33,11 +37,11 @@ public class AppServeMain {
             new MongoSearchModule(),
             new JeroMQMultiplexerModule(),
             new RTFilesystemGitLoaderModule(),
-            new ConfigurationModule(defaultConfigurationSupplier),
             new AbstractModule() {
                 @Override
                 protected void configure() {
                     bind(ResourceAcquisition.class).to(NullResourceAcquisition.class);
+                    bind(Client.class).toProvider(ClientBuilder::newClient).asEagerSingleton();
                 }
             }
         );

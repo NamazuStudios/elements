@@ -107,7 +107,6 @@ public class JeroMQNodeModule extends PrivateModule {
 
         install(new FSTPayloadReaderWriterModule());
 
-        bind(Identity.class);
         bind(Node.class).to(JeroMQNode.class).asEagerSingleton();
         bind(ConnectionPool.class).to(DynamicConnectionPool.class);
 

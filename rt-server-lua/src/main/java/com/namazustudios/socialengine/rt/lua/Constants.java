@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt.lua;
 
-import com.namazustudios.socialengine.rt.ResponseCode;
-
 /**
  * A set of constants used by the {@link LuaResource} and related classes.
  *
@@ -47,17 +45,8 @@ public interface Constants {
     String MANIFEST_TYPE_METAFIELD = "__namazu_manifest_type";
 
     /**
-     * The lua coroutine library.
-     */
-    String COROUTINE = "coroutine";
-
-    /**
-     * The lua coroutine method "resume"
-     */
-    String YIELD = "yield";
-
-    /**
      * The lua name of the attributes module
      */
     String ATTRIBUTES_MODULE = "namazu.resource.attributes";
+
 }
