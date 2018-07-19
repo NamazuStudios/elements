@@ -1,27 +1,21 @@
 package com.namazustudios.socialengine;
 
 import com.google.inject.Inject;
-import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.rt.*;
-import jdk.internal.org.objectweb.asm.tree.FieldInsnNode;
+import com.namazustudios.socialengine.rt.Context;
+import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.ResourceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import javax.ws.rs.client.Client;
-
 import static java.util.UUID.randomUUID;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
 
-@Guice(modules = IntegrationTestModule.class)
-public class LuaResourceIntegrationTest {
+@Guice(modules = UnitTestModule.class)
+public class LuaResourceUnitTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(LuaResourceIntegrationTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(LuaResourceUnitTest.class);
 
     private Context context;
 

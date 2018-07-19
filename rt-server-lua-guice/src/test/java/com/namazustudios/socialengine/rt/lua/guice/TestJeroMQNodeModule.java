@@ -12,6 +12,7 @@ import com.sun.org.apache.xpath.internal.operations.Mod;
 import javafx.application.Application;
 import org.zeromq.ZContext;
 
+import javax.ws.rs.client.Client;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -42,8 +43,6 @@ public class TestJeroMQNodeModule extends PrivateModule {
 
         expose(Node.class);
         expose(Context.class);
-
-        binder().requireExplicitBindings();
 
         contextBindAction.run();
         handlerTimeoutBindAction.run();

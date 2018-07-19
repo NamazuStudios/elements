@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.lua.guice.JeroMQEmbeddedTestService;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
+import com.namazustudios.socialengine.service.NotificationBuilder;
 import org.mockito.Mockito;
 
 import javax.ws.rs.client.Client;
@@ -30,6 +31,7 @@ public class UnitTestModule extends AbstractModule {
 
         final MockModule mockModule = new MockModule();
         mockModule.mock(Client.class);
+        mockModule.mock(NotificationBuilder.class);
         mockModule.bind(spyApplication, Application.class);
 
         bind(JeroMQEmbeddedTestService.class).toInstance(embeddedTestService

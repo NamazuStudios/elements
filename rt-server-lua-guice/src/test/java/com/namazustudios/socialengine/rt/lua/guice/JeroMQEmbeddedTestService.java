@@ -27,9 +27,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
     private Context context;
 
-    private List<Module> nodeModules = new ArrayList<>(); {
-        nodeModules.add(binder -> binder.bind(TestJavaModule.class));
-    }
+    private List<Module> nodeModules = new ArrayList<>();
 
     private List<Module> clientModules = new ArrayList<>();
 
@@ -54,16 +52,16 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
         final ZContext zContext = new ZContext();
 
         final Injector nodeInjector = Guice.createInjector(new TestJeroMQNodeModule()
-                .withNodeModules(nodeModules)
-                .withZContext(shadow(zContext))
-                .withBindAddress(INTERNAL_NODE_ADDRESS)
-                .withNodeId("integration-test-node")
-                .withNodeName("integration-test-node")
-                .withMinimumConnections(5)
-                .withMaximumConnections(250)
-                .withTimeout(60)
-                .withHandlerTimeout(3, MINUTES)
-                .withSchedulerThreads(1));
+            .withNodeModules(nodeModules)
+            .withZContext(shadow(zContext))
+            .withBindAddress(INTERNAL_NODE_ADDRESS)
+            .withNodeId("integration-test-node")
+            .withNodeName("integration-test-node")
+            .withMinimumConnections(5)
+            .withMaximumConnections(250)
+            .withTimeout(60)
+            .withHandlerTimeout(3, MINUTES)
+            .withSchedulerThreads(1));
 
         final List<Module> clientModules = new ArrayList<>(this.clientModules);
 

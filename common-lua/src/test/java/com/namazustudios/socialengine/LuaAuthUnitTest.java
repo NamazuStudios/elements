@@ -13,10 +13,10 @@ import javax.inject.Inject;
 
 import static java.util.UUID.randomUUID;
 
-@Guice(modules = IntegrationTestModule.class)
-public class LuaAuthIntegrationTest  {
+@Guice(modules = UnitTestModule.class)
+public class LuaAuthUnitTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(LuaAuthIntegrationTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(LuaAuthUnitTest.class);
 
     private Context context;
 

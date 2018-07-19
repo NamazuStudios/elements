@@ -1,25 +1,22 @@
 package com.namazustudios.socialengine;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 import com.namazustudios.socialengine.service.Notification;
 import com.namazustudios.socialengine.service.NotificationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import static com.google.inject.Guice.createInjector;
+import javax.inject.Inject;
+
 import static java.util.UUID.randomUUID;
 import static org.mockito.Mockito.*;
 
+@Guice(modules = UnitTestModule.class)
 public class LuaNotificationIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaNotificationIntegrationTest.class);
@@ -27,31 +24,6 @@ public class LuaNotificationIntegrationTest {
     private Context context;
 
     private NotificationBuilder mockNotificationBuilder;
-
-    @BeforeClass
-    public void initializeGuice() {
-
-        final NotificationBuilder mockNotificationBuilder = mock(NotificationBuilder.class);
-        final IntegrationTestModule integrationTestModule = new IntegrationTestModule();
-
-        integrationTestModule.getEmbeddedTestService()
-            .withNodeModule(new AbstractModule() {
-                @Override
-                protected void configure() {
-                    bind(NotificationBuilder.class).toInstance(mockNotificationBuilder);
-                }
-            });
-
-        final Injector injector = Guice.createInjector(integrationTestModule, new AbstractModule() {
-            @Override
-            protected void configure() {
-                bind(NotificationBuilder.class).toInstance(mockNotificationBuilder);
-            }
-        });
-
-        injector.injectMembers(this);
-
-    }
 
     @BeforeMethod
     public void resetMocks() {

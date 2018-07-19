@@ -14,9 +14,11 @@ import com.namazustudios.socialengine.rt.lua.builtin.AssetLoaderBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
 import com.namazustudios.socialengine.rt.lua.builtin.HttpClientBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectModuleBuiltin;
+import javafx.application.Application;
 import org.reflections.Reflections;
 
 import javax.inject.Provider;
+import javax.ws.rs.client.Client;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -34,12 +36,13 @@ public class LuaModule extends PrivateModule {
 
     @Override
     protected final void configure() {
+
         LuaState.logVersionInfo();
-        bind(LuaResource.class);
-        bind(AssetLoaderBuiltin.class);
-        bind(HttpClientBuiltin.class);
+        requireBinding(Client.class);
+
         builtinMultibinder = Multibinder.newSetBinder(binder(), Builtin.class);
         configureFeatures();
+
     }
 
     /**
