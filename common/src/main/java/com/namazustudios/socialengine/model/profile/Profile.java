@@ -18,6 +18,12 @@ import java.io.Serializable;
 @ApiModel
 public class Profile implements Serializable {
 
+    /**
+     * Used as the key for the profile attribute where appropriate.  This is equivalent
+     * to the FQN of the {@link Profile} class.
+     */
+    public static final String PROFILE_ATTRIBUTE = Profile.class.getName();
+
     @ApiModelProperty("The unique ID of the profile itself.")
     private String id;
 
@@ -112,11 +118,5 @@ public class Profile implements Serializable {
                 ", displayName='" + displayName + '\'' +
                 '}';
     }
-
-    /**
-     * Used as the key for the profile attribute where appropriate.  This is equivalent
-     * to the FQN of the {@link Profile} class.
-     */
-    public static final String PROFILE_ATTRIBUTE = Profile.class.getName();
 
 }

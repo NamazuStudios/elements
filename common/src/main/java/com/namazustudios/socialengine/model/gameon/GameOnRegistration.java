@@ -8,8 +8,8 @@ import java.io.Serializable;
 import java.util.Objects;
 
 @ApiModel(description = "Associates an Amazon GameOn registration with a particular profile.  There may exist only " +
-                        "one Registration ")
-public class Registration implements Serializable {
+                        "one GameOnRegistration per Profile at a time.")
+public class GameOnRegistration implements Serializable {
 
     @ApiModelProperty("The unique ID of this registration.")
     private String id;
@@ -47,11 +47,11 @@ public class Registration implements Serializable {
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
-        if (!(object instanceof Registration)) return false;
-        Registration that = (Registration) object;
+        if (!(object instanceof GameOnRegistration)) return false;
+        GameOnRegistration that = (GameOnRegistration) object;
         return Objects.equals(getId(), that.getId()) &&
-                Objects.equals(getProfile(), that.getProfile()) &&
-                Objects.equals(getPlayerToken(), that.getPlayerToken());
+               Objects.equals(getProfile(), that.getProfile()) &&
+               Objects.equals(getPlayerToken(), that.getPlayerToken());
     }
 
     @Override

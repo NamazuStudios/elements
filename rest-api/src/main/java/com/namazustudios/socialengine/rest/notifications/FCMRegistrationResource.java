@@ -14,7 +14,7 @@ import javax.ws.rs.core.MediaType;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
-@Api(value = "Firebase Cloud Nofificatios",
+@Api(value = "Firebase Cloud Notifications",
      description = "Handles the creation and deletion of the Firebase Cloud Notification registration tokens.  This " +
                    "allows clients to create, read, update, and delete registration info for each of their devices in " +
                    "the system.",
