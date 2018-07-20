@@ -19,6 +19,13 @@ public interface GameOnRegistrationService {
     GameOnRegistration getGameOnRegistration(String gameOnRegistrationId);
 
     /**
+     * Gets the current {@link GameOnRegistration}, if available.
+     *
+     * @return the current {@link GameOnRegistration}
+     */
+    GameOnRegistration getCurrentGameOnRegistration();
+
+    /**
      * Lists all {@link GameOnRegistration} instances.
      *
      * @param offset the offset in the dataset

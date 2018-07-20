@@ -74,6 +74,14 @@ public class GameOnRegistrationResource {
 
     }
 
+    @GET
+    @Path("current")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Gets a Specific Profile",
+            notes = "Gets a specific profile by profile ID.")
+    public GameOnRegistration getCurrentGameOnRegistration() {
+        return getGameOnRegistrationService().getCurrentGameOnRegistration();
+    }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
