@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.model.application.GameOnApplicationConfigu
 import com.namazustudios.socialengine.model.gameon.GameOnRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.GameOnRegistrationService;
+import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnRegistrationInvoker;
 
 import javax.inject.Inject;
 import javax.inject.Provider;

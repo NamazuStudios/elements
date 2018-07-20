@@ -20,6 +20,9 @@ public class GameOnRegistration implements Serializable {
     @ApiModelProperty("The Amazon-issued Player Token")
     private String playerToken;
 
+    @ApiModelProperty("The Amazon-issued external player ID")
+    private String externalPlayerId;
+
     public String getId() {
         return id;
     }
@@ -44,19 +47,38 @@ public class GameOnRegistration implements Serializable {
         this.playerToken = playerToken;
     }
 
+    public String getExternalPlayerId() {
+        return externalPlayerId;
+    }
+
+    public void setExternalPlayerId(String externalPlayerId) {
+        this.externalPlayerId = externalPlayerId;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
         if (!(object instanceof GameOnRegistration)) return false;
         GameOnRegistration that = (GameOnRegistration) object;
         return Objects.equals(getId(), that.getId()) &&
-               Objects.equals(getProfile(), that.getProfile()) &&
-               Objects.equals(getPlayerToken(), that.getPlayerToken());
+                Objects.equals(getProfile(), that.getProfile()) &&
+                Objects.equals(getPlayerToken(), that.getPlayerToken()) &&
+                Objects.equals(getExternalPlayerId(), that.getExternalPlayerId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getProfile(), getPlayerToken());
+        return Objects.hash(getId(), getProfile(), getPlayerToken(), getExternalPlayerId());
+    }
+
+    @Override
+    public String toString() {
+        return "GameOnRegistration{" +
+                "id='" + id + '\'' +
+                ", profile=" + profile +
+                ", playerToken='" + playerToken + '\'' +
+                ", externalPlayerId='" + externalPlayerId + '\'' +
+                '}';
     }
 
 }
