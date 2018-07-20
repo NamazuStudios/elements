@@ -1,8 +1,9 @@
-package com.namazustudios.socialengine.exception;
+package com.namazustudios.socialengine.exception.notification.firebase;
+
+import com.namazustudios.socialengine.exception.NotFoundException;
 
 public class FirebaseApplicationConfigurationNotFoundException extends NotFoundException {
-    public FirebaseApplicationConfigurationNotFoundException() {
-    }
+    public FirebaseApplicationConfigurationNotFoundException() {}
 
     public FirebaseApplicationConfigurationNotFoundException(String message) {
         super(message);

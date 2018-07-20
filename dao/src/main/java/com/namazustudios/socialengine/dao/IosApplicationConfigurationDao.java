@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
-import com.namazustudios.socialengine.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.IosApplicationConfiguration;
@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.model.application.IosApplicationConfigurat
 /**
  * Created by patricktwohig on 5/25/17.
  */
-@Expose(luaModuleName = "namazu.socialengine.dao.ios")
+@Expose(module = "namazu.socialengine.dao.ios")
 public interface IosApplicationConfigurationDao {
 
     /**

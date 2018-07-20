@@ -39,7 +39,7 @@ public class SerialStressTest {
                 install(new LuaModule() {
                     @Override
                     protected void configureFeatures() {
-                        enableAllFeatures();
+                        enableStandardFeatures();
                     }
                 });
 

@@ -14,6 +14,7 @@
 -- and the value is the type of value (eg, string, number).  In the cases of complex types,
 -- the type a table indicating the type and referenced module object must be used.
 
+local namazu_log = require "namazu.log"
 local pagination = require "namazu.pagination"
 
 -- A simple example model which contains primitives

@@ -1,9 +1,7 @@
 package com.namazustudios.socialengine.dao;
 
-import com.namazustudios.socialengine.exception.FirebaseApplicationConfigurationNotFoundException;
-import com.namazustudios.socialengine.exception.InternalException;
-import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.exception.NotificationConfigurationException;
+import com.namazustudios.socialengine.exception.notification.firebase.FirebaseApplicationConfigurationNotFoundException;
+import com.namazustudios.socialengine.exception.notification.NotificationConfigurationException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;

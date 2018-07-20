@@ -1,4 +1,6 @@
-package com.namazustudios.socialengine.exception;
+package com.namazustudios.socialengine.exception.notification;
+
+import com.namazustudios.socialengine.exception.InternalException;
 
 /**
  * Thrown when there is a misconfiguration or missing configuration setting pertaining to notifications.

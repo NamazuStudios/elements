@@ -80,7 +80,7 @@ public class MultiNodeContainerModule extends AbstractModule {
                         .withNodeName(application.getName());
 
                     final File storageDiretory = getStorageDirectoryForApplication(resourcesStorageBaseDirectoryProvider, application);
-                    final ApplicationModule applicationModule = new ApplicationModule(codeDirectory, storageDiretory);
+                    final ApplicationModule applicationModule = new ApplicationModule(application, codeDirectory, storageDiretory);
                     final Injector nodeInjector = injector.createChildInjector(applicationModule, nodeModule);
 
                     return nodeInjector.getInstance(Node.class);

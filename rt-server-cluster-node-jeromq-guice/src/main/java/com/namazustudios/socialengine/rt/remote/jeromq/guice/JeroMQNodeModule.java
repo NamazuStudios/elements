@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool;
+import com.namazustudios.socialengine.rt.jeromq.Identity;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.*;

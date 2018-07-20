@@ -104,8 +104,8 @@ local function make_resource()
     }
 
     local path = "/test/auth/" .. util.uuid()
-    local rid, code = resource.create("namazu.socialengine.test.auth", path, attributes)
-    print("Created resource " .. rid .. " (" .. code .. ") at path " .. path)
+    local rid, code = resource.create("namazu.elements.test.auth", path, attributes)
+    print("Created resource " .. tostring(rid) .. " (" .. code .. ") at path " .. path)
     return rid, code
 
 end

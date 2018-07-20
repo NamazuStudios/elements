@@ -1,14 +1,13 @@
-package com.namazustudios.socialengine.rt.lua.builtin.coroutine;
-
-import com.namazustudios.socialengine.rt.Scheduler;
+package com.namazustudios.socialengine.rt;
 
 /**
- * Handed to server-managed coroutines to indicate why the coroutine was resumed.
+ * Provides a reason as to why a task was resumed, typically by the {@link SchedulerContext}, but
+ * not always.
  */
 public enum ResumeReason {
 
     /**
-     * The coroutine was resumed by the {@link Scheduler}
+     * The coroutine was resumed by the {@link SchedulerContext}
      */
     SCHEDULER,
 

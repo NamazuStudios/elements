@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine;
 
 import com.google.inject.Inject;
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.Context;
+import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.ResourceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.DataProvider;
@@ -10,15 +12,15 @@ import org.testng.annotations.Test;
 
 import static java.util.UUID.randomUUID;
 
-@Guice(modules = IntegrationTestModule.class)
-public class LuaResourceIntegrationTest {
+@Guice(modules = UnitTestModule.class)
+public class LuaResourceUnitTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(LuaResourceIntegrationTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(LuaResourceUnitTest.class);
 
     private Context context;
 
     @Test(dataProvider = "resourcesToTest")
-    public void performLuaTest(final String moduleName, final String methodName) throws InterruptedException {
+    public void performLuaTest(final String moduleName, final String methodName) {
         final Path path = new Path("socialengine-test-" + randomUUID().toString());
         final ResourceId resourceId = getContext().getResourceContext().create(moduleName, path);
         final Object result = getContext().getResourceContext().invoke(resourceId, methodName);
@@ -29,7 +31,7 @@ public class LuaResourceIntegrationTest {
     @DataProvider
     public static Object[][] resourcesToTest() {
         return new Object[][] {
-            {"namazu.socialengine.test.auth", "test_facebook_security_manifest"},
+            {"namazu.elements.test.auth", "test_facebook_security_manifest"},
         };
     }
 

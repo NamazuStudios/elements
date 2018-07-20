@@ -37,17 +37,7 @@ public class DeadResource implements Resource {
     }
 
     @Override
-    public void resumeFromNetwork(TaskId taskId, Object result) {
-        throw new IllegalStateException("resource is closed");
-    }
-
-    @Override
-    public void resumeWithError(TaskId taskId, Throwable throwable) {
-        throw new IllegalStateException("resource is closed");
-    }
-
-    @Override
-    public void resumeFromScheduler(TaskId taskId, double elapsedTime) {
+    public void resume(TaskId taskId, Object... results) {
         throw new IllegalStateException("resource is closed");
     }
 

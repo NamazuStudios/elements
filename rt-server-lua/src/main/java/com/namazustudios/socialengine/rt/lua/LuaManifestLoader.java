@@ -7,10 +7,7 @@ import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.exception.BadManifestException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.lua.builtin.AssetLoaderBuiltin;
-import com.namazustudios.socialengine.rt.lua.builtin.BuiltinManager;
-import com.namazustudios.socialengine.rt.lua.builtin.ClasspathBuiltin;
-import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
+import com.namazustudios.socialengine.rt.lua.builtin.*;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
@@ -114,6 +111,7 @@ public class LuaManifestLoader implements ManifestLoader {
                 builtinManager.installBuiltin(getClasspathBuiltinProvider().get());
                 builtinManager.installBuiltin(getAssetLoaderBuiltinProvider().get());
                 builtinManager.installBuiltin(new JavaObjectBuiltin<>(ATTRIBUTES_MODULE, emptyAttributes()));
+                builtinManager.installBuiltin(new LoggerDetailBuiltin(() -> logger));
 
                 createManifestTables();
                 setupFunctionOverrides();

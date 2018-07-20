@@ -30,6 +30,7 @@ public class SimpleHandlerContextModule extends AbstractModule {
     @Override
     protected void configure() {
         bindTimeout.run();
+        bind(SimpleHandlerContext.class).asEagerSingleton();
         bind(HandlerContext.class).to(SimpleHandlerContext.class);
     }
 

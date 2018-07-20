@@ -3,7 +3,9 @@ package com.namazustudios.socialengine.appnode;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.namazustudios.socialengine.appnode.guice.JaxRSClientModule;
 import com.namazustudios.socialengine.appnode.guice.MultiNodeContainerModule;
+import com.namazustudios.socialengine.appnode.guice.VersionModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
@@ -36,21 +38,17 @@ public class ApplicationNodeMain {
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
         final Injector injector = Guice.createInjector(
-                new ConfigurationModule(defaultConfigurationSupplier),
-                new MongoCoreModule(),
-                new MongoDaoModule(),
-                new ValidationModule(),
-                new MongoSearchModule(),
-                new RTFilesystemGitLoaderModule(),
-                new MultiNodeContainerModule(),
-                new FirebaseAppFactoryModule(),
-                new GuiceStandardNotificationFactoryModule(),
-                new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
-                    }
-                }
+            new ConfigurationModule(defaultConfigurationSupplier),
+            new MongoCoreModule(),
+            new MongoDaoModule(),
+            new ValidationModule(),
+            new MongoSearchModule(),
+            new RTFilesystemGitLoaderModule(),
+            new MultiNodeContainerModule(),
+            new FirebaseAppFactoryModule(),
+            new GuiceStandardNotificationFactoryModule(),
+            new JaxRSClientModule(),
+            new VersionModule()
         );
 
         final Object lock = new Object();

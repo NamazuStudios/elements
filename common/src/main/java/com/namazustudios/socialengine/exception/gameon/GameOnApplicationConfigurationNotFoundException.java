@@ -1,4 +1,6 @@
-package com.namazustudios.socialengine.exception;
+package com.namazustudios.socialengine.exception.gameon;
+
+import com.namazustudios.socialengine.exception.NotFoundException;
 
 public class GameOnApplicationConfigurationNotFoundException extends NotFoundException {
 

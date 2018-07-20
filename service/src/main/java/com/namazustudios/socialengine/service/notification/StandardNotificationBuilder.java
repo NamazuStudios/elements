@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.service.notification;
 
-import com.namazustudios.socialengine.exception.NotificationConfigurationException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.Notification;

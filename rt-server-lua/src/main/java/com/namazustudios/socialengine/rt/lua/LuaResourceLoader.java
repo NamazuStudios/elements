@@ -40,6 +40,8 @@ public class LuaResourceLoader implements ResourceLoader {
 
     private Provider<JNABuiltin> jnaBuiltinProvider;
 
+    private Provider<HttpClientBuiltin> httpClientBuiltinProvider;
+
     private Provider<Set<Builtin>> additionalBuiltins;
 
     @Override
@@ -58,6 +60,7 @@ public class LuaResourceLoader implements ResourceLoader {
             luaResource.getBuiltinManager().installBuiltin(getAssetLoaderBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getHttpStatusBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(getHttpClientBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
             luaResource.getBuiltinManager().installBuiltin(getJnaBuiltinProvider().get());
 
@@ -95,6 +98,7 @@ public class LuaResourceLoader implements ResourceLoader {
             luaResource.getBuiltinManager().installBuiltin(getAssetLoaderBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(getHttpStatusBuiltinProvider().get());
+            luaResource.getBuiltinManager().installBuiltin(getHttpClientBuiltinProvider().get());
             luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
             luaResource.getBuiltinManager().installBuiltin(getJnaBuiltinProvider().get());
 
@@ -187,6 +191,15 @@ public class LuaResourceLoader implements ResourceLoader {
     @Inject
     public void setJnaBuiltinProvider(Provider<JNABuiltin> jnaBuiltinProvider) {
         this.jnaBuiltinProvider = jnaBuiltinProvider;
+    }
+
+    public Provider<HttpClientBuiltin> getHttpClientBuiltinProvider() {
+        return httpClientBuiltinProvider;
+    }
+
+    @Inject
+    public void setHttpClientBuiltinProvider(Provider<HttpClientBuiltin> httpClientBuiltinProvider) {
+        this.httpClientBuiltinProvider = httpClientBuiltinProvider;
     }
 
     public Provider<Set<Builtin>> getAdditionalBuiltins() {

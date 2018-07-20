@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
-import com.namazustudios.socialengine.annotation.Expose;
-import com.namazustudios.socialengine.dao.Matchmaker.SuccessfulMatchTuple;
+import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.Pagination;
@@ -9,12 +8,10 @@ import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
 
-import java.util.function.Supplier;
-
 /**
  * Created by patricktwohig on 7/20/17.
  */
-@Expose(luaModuleName = "namazu.socialengine.dao.match")
+@Expose(module = "namazu.socialengine.dao.match")
 public interface MatchDao {
 
     /**

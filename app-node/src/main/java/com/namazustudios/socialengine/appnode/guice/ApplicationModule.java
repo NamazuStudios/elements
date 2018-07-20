@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.appnode.guice;
 
 import com.google.inject.AbstractModule;
-import com.namazustudios.socialengine.annotation.Expose;
+import com.namazustudios.socialengine.dao.ApplicationDao;
+import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.dao.rt.guice.RTFileAssetLoaderModule;
 import com.namazustudios.socialengine.rt.ContextInvocationDispatcher;
 import com.namazustudios.socialengine.rt.NodeLifecycle;
@@ -13,6 +15,7 @@ import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import org.reflections.Reflections;
 
+import javax.inject.Provider;
 import java.io.File;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,11 +28,15 @@ public class ApplicationModule extends AbstractModule {
 
     private static final String SCHEDULER_PATH = "scheduler";
 
+    private final Application application;
+
     private final File codeDirectory;
 
     private final File storageDirectory;
 
-    public ApplicationModule(final File codeDirectory, final File storageDirectory) {
+    public ApplicationModule(final Application application,
+                             final File codeDirectory, final File storageDirectory) {
+        this.application = application;
         this.codeDirectory = codeDirectory;
         this.storageDirectory = storageDirectory;
     }
@@ -37,23 +44,9 @@ public class ApplicationModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        install(new LuaModule() {
-            @Override
-            protected void configureFeatures() {
-                super.configureFeatures();
-
-                final Reflections reflections = new Reflections("com.namazustudios", getClass().getClassLoader());
-                final Set<Class<?>> classSet = reflections.getTypesAnnotatedWith(Expose.class);
-
-                classSet.stream()
-                    .filter(cls -> cls.getAnnotation(Expose.class) != null)
-                    .collect(Collectors.toMap(cls -> cls.getAnnotation(Expose.class), identity()))
-                    .forEach((expose, type) -> bindBuiltin(type).toModuleNamed(expose.luaModuleName()));
-
-            }
-        });
-
+        install(new LuaModule());
         install(new XodusContextModule());
+
         bind(NodeLifecycle.class).to(ContextNodeLifecycle.class).asEagerSingleton();
 
         final File resources = new File(storageDirectory, RESOURCES_PATH);
@@ -67,6 +60,10 @@ public class ApplicationModule extends AbstractModule {
         install(new RTFileAssetLoaderModule(codeDirectory));
 
         bind(InvocationDispatcher.class).to(ContextInvocationDispatcher.class);
+
+        final String applicationId = application.getId();
+        final Provider<ApplicationDao> applicationDaoProvider = getProvider(ApplicationDao.class);
+        bind(Application.class).toProvider(() -> applicationDaoProvider.get().getActiveApplication(applicationId));
 
     }
 

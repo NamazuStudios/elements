@@ -5,26 +5,9 @@
 -- Time: 1:59 PM
 --
 
-local attributes = require "namazu.resource.attributes"
-local ioc = require "namazu.ioc.resolver"
+-- Moved to namazu.elements.auth
 
-local Application = java.require "com.namazustudios.socialengine.model.application.Application"
-local application_builder_provider = ioc:provider("com.namazustudios.socialengine.service.NotificationBuilder")
-
-local notification = {}
-
---- Creates a NotificationBuilder
--- This creates an instance of NotificationBuilder which can be used to create and send Notifications.  If available,
--- this will query the current Attributes to see if an instance of Application is availble, and it will pre-configure
--- the instance with the application.
---
--- Note that the returned NotificationBuilder will allow for reconfiguring any desired attribute.
---
--- @return a new instance of NotificationBuilder
-function notification.builder()
-    local builder = application_builder_provider:get()
-    local application = attributes:getAttribute(Application.APPLICATION_ATTRIUTE)
-    return builder:application(application)
-end
-
+local log = require "namazu.log"
+local notification = require "namazu.elements.notification"
+log.warn("namazu.socialengine.notification is deprecated.  Use namazu.elements.notification instead.")
 return notification

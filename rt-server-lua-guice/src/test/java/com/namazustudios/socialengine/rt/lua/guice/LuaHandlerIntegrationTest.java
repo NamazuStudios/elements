@@ -12,7 +12,10 @@ public class LuaHandlerIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaHandlerIntegrationTest.class);
 
-    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService().start();
+    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
+        .withDefaultHttpClient()
+        .withNodeModule(new LuaModule())
+        .start();
 
     private final Node node = getEmbeddedTestService().getNode();
 

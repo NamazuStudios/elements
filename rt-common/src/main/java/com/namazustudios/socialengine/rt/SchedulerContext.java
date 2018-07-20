@@ -36,6 +36,15 @@ public interface SchedulerContext {
                               @Serialize TaskId taskId);
 
     /**
+     * Resumes the supplied task with the {@link TaskId} supplying multiple results to the destination.
+     *
+     * @param taskId the {@link TaskId} of the supplied task
+     * @param results zero or more results from resuming the task
+     */
+    @RemotelyInvokable
+    void resume(@Serialize TaskId taskId, @Serialize Object ... results);
+
+    /**
      * Resumes a task that was waiting on a network call.
      *  @param taskId the unique {@link TaskId} associated with the network
      * @param result the result of the network operation, passed to the task

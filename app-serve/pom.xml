@@ -16,10 +16,6 @@
     <version>1.0-SNAPSHOT</version>
     <name>app-serve</name>
 
-    <properties>
-        <jetty.version>9.4.7.v20170914</jetty.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
@@ -150,6 +146,26 @@
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>rt-server-cluster-client-jeromq-guice</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+            <version>${jaxrs.api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>${jersey.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
+            <version>${jersey.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+            <version>${jersey.version}</version>
         </dependency>
     </dependencies>
 

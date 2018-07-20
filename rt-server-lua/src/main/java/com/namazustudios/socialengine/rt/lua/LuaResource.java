@@ -5,10 +5,7 @@ import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.jnlua.LuaType;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.*;
-import com.namazustudios.socialengine.rt.lua.builtin.BuiltinManager;
-import com.namazustudios.socialengine.rt.lua.builtin.IndexDetailBuiltin;
-import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectBuiltin;
-import com.namazustudios.socialengine.rt.lua.builtin.ResourceDetailBuiltin;
+import com.namazustudios.socialengine.rt.lua.builtin.*;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReasonBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstructionBuiltin;
@@ -34,7 +31,7 @@ import static com.namazustudios.socialengine.jnlua.LuaState.YIELD;
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
 import static com.namazustudios.socialengine.rt.lua.Constants.*;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin.COROUTINES_TABLE;
-import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReason.*;
+import static com.namazustudios.socialengine.rt.ResumeReason.*;
 
 /**
  * The abstract {@link Resource} type backed by a Lua script.  This uses the JNLua implentation
@@ -109,6 +106,7 @@ public class LuaResource implements Resource {
             getBuiltinManager().installBuiltin(new IndexDetailBuiltin(this, context));
             getBuiltinManager().installBuiltin(new YieldInstructionBuiltin());
             getBuiltinManager().installBuiltin(new ResumeReasonBuiltin());
+            getBuiltinManager().installBuiltin(new LoggerDetailBuiltin(this::getScriptLog));
 
         } catch (Throwable th) {
             luaState.close();
@@ -364,11 +362,10 @@ public class LuaResource implements Resource {
     }
 
     @Override
-    public void resumeFromNetwork(final TaskId taskId, final Object networkResult) {
-
+    public void resume(final TaskId taskId, final Object ... results) {
         final PendingTask pendingTask = taskIdPendingTaskMap.getOrDefault(taskId, new PendingTask(taskId,
-            o -> scriptLog.debug("Discarding {} for task {}", o, taskId),
-            e -> scriptLog.debug("Discarding exception for task {}", taskId, e)));
+                o -> scriptLog.debug("Discarding {} for task {}", o, taskId),
+                e -> scriptLog.debug("Discarding exception for task {}", taskId, e)));
 
         final LuaState luaState = getLuaState();
         FinallyAction finalOperation = () -> luaState.setTop(0);
@@ -382,9 +379,8 @@ public class LuaResource implements Resource {
             luaState.remove(1);
 
             luaState.pushString(taskId.asString());
-            luaState.pushString(NETWORK.toString());
-            luaState.pushJavaObject(networkResult);
-            luaState.call(3, 3);
+            for (final Object result : results) luaState.pushJavaObject(result);
+            luaState.call(results.length + 1, 3);
 
             if (luaState.isNil(1)) {
                 throw new NoSuchTaskException(taskId);
@@ -414,104 +410,24 @@ public class LuaResource implements Resource {
     }
 
     @Override
-    public void resumeWithError(TaskId taskId, Throwable throwable) {
+    public void resumeFromNetwork(final TaskId taskId, final Object result) {
+        resume(taskId, ResumeReason.NETWORK.toString(), result);
+    }
 
-        final PendingTask pendingTask = taskIdPendingTaskMap.getOrDefault(taskId, new PendingTask(taskId,
-            o -> scriptLog.debug("Discarding {} for task {}", o, taskId),
-            e -> scriptLog.debug("Discarding exception for task {}", taskId, e)));
-
-        final LuaState luaState = getLuaState();
-        FinallyAction finalOperation = () -> luaState.setTop(0);
+    @Override
+    public void resumeWithError(final TaskId taskId, final Throwable throwable) {
 
         final ResponseCode responseCode = throwable instanceof BaseException ?
-            ((BaseException)throwable).getResponseCode() :
-            ResponseCode.INTERNAL_ERROR_FATAL;
+                ((BaseException)throwable).getResponseCode() :
+                ResponseCode.INTERNAL_ERROR_FATAL;
 
-        try {
-
-            luaState.getGlobal(REQUIRE);
-            luaState.pushString(CoroutineBuiltin.MODULE_NAME);
-            luaState.call(1, 1);
-            luaState.getField(-1, CoroutineBuiltin.RESUME);
-            luaState.remove(1);
-
-            luaState.pushString(taskId.asString());
-            luaState.pushString(ERROR.toString());
-            luaState.pushInteger(responseCode.getCode());
-            luaState.call(3, 3);
-
-            if (luaState.isNil(1)) {
-                throw new NoSuchTaskException(taskId);
-            }
-
-            final String taskIdString = luaState.checkString(1);                        // task id
-            final int status = luaState.checkInteger(2);                                // thread status
-
-            if (!taskId.asString().equals(taskIdString)) {
-                getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
-                throw new IllegalStateException("task ID mismatch");
-            } else if (status == YIELD) {
-                getScriptLog().debug("Resuming task {} with error yielded.  Resuming later.", taskId);
-            }
-
-        } catch (NoSuchTaskException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            getScriptLog().error("Caught exception resuming task {}.", taskId, ex);
-            pendingTask.fail(ex);
-        } finally {
-            finalOperation.perform();
-        }
+        resume(taskId, ResumeReason.ERROR.toString(), responseCode.getCode());
 
     }
 
     @Override
     public void resumeFromScheduler(final TaskId taskId, final double elapsedTime) {
-
-        final PendingTask pendingTask = taskIdPendingTaskMap.getOrDefault(taskId, new PendingTask(taskId,
-            o -> scriptLog.info("Discarding {} for task {}", o, taskId),
-            e -> scriptLog.info("Discarding exception for task {}", taskId, e)));
-
-        final LuaState luaState = getLuaState();
-        FinallyAction finalOperation = () -> luaState.setTop(0);
-
-        try {
-
-            luaState.getGlobal(REQUIRE);
-            luaState.pushString(CoroutineBuiltin.MODULE_NAME);
-            luaState.call(1, 1);
-            luaState.getField(-1, CoroutineBuiltin.RESUME);
-            luaState.remove(1);
-
-            luaState.pushString(taskId.asString());
-            luaState.pushString(SCHEDULER.toString());
-            luaState.pushNumber(elapsedTime);
-            luaState.pushString(TimeUnit.SECONDS.toString());
-            luaState.call(4, 3);
-
-            if (luaState.isNil(1)) {
-                throw new NoSuchTaskException(taskId);
-            }
-
-            final String taskIdString = luaState.checkString(1);                        // task id
-            final int status = luaState.checkInteger(2);                                // thread status
-
-            if (!taskId.asString().equals(taskIdString)) {
-                getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
-                throw new IllegalStateException("task ID mismatch");
-            } else if (status == YIELD) {
-                getScriptLog().debug("Scheduler resumed task {} yielded.  Resuming later.", taskId);
-            }
-
-        } catch (NoSuchTaskException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            getScriptLog().error("Caught exception resuming task {}.", taskId, ex);
-            pendingTask.throwableConsumer.accept(ex);
-        } finally {
-            finalOperation.perform();
-        }
-
+        resume(taskId, ResumeReason.SCHEDULER.toString(), elapsedTime);
     }
 
     private void addPendingTask(final PendingTask pendingTask) {
