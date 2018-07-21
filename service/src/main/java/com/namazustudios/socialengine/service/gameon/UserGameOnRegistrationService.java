@@ -2,7 +2,8 @@ package com.namazustudios.socialengine.service.gameon;
 
 import com.namazustudios.socialengine.dao.GameOnApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.GameOnRegistrationDao;
-import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.dao.ProfileDao;
+import com.namazustudios.socialengine.exception.ProfileNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
@@ -21,6 +22,8 @@ public class UserGameOnRegistrationService implements GameOnRegistrationService 
     private User user;
 
     private Supplier<Profile> currentProfileSupplier;
+
+    private ProfileDao profileDao;
 
     private GameOnRegistrationDao gameOnRegistrationDao;
 
@@ -52,13 +55,22 @@ public class UserGameOnRegistrationService implements GameOnRegistrationService 
     @Override
     public GameOnRegistration createRegistration(final GameOnRegistration gameOnRegistration) {
 
-        final Profile profile = getCurrentProfileSupplier().get();
+        final Profile profile;
 
         if (gameOnRegistration.getProfile() == null) {
-            gameOnRegistration.setProfile(profile);
-        } else if (!Objects.equals(gameOnRegistration.getProfile().getId(), profile.getId())) {
-            throw new ForbiddenException("Profile mismatch when making registration.");
+            profile = getCurrentProfileSupplier().get();
+        } else {
+
+            profile = getProfileDao().getActiveProfile(gameOnRegistration.getProfile().getId());
+
+            if (!Objects.equals(getUser(), profile.getUser())) {
+                final String msg = "Profile with id not found: " + gameOnRegistration.getProfile().getId();
+                throw new ProfileNotFoundException(msg);
+            }
+
         }
+
+        gameOnRegistration.setProfile(profile);
 
         final GameOnRegistration registered = registerWithGameOn(profile, gameOnRegistration);
         return getGameOnRegistrationDao().createRegistration(registered);
@@ -101,6 +113,15 @@ public class UserGameOnRegistrationService implements GameOnRegistrationService 
     @Inject
     public void setCurrentProfileSupplier(Supplier<Profile> currentProfileSupplier) {
         this.currentProfileSupplier = currentProfileSupplier;
+    }
+
+    public ProfileDao getProfileDao() {
+        return profileDao;
+    }
+
+    @Inject
+    public void setProfileDao(ProfileDao profileDao) {
+        this.profileDao = profileDao;
     }
 
     public GameOnRegistrationDao getGameOnRegistrationDao() {
