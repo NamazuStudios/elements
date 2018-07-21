@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.dao.mongo.gameon;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.mongodb.WriteResult;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.GameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.MongoProfileDao;
@@ -47,6 +48,8 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
     private ValidationHelper validationHelper;
 
     private AdvancedDatastore advancedDatastore;
+
+    private ObjectIndex objectIndex;
 
     private StandardQueryParser standardQueryParser;
 
@@ -149,6 +152,8 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
             throw new DuplicateException(ex);
         }
 
+        getObjectIndex().index(mongoGameOnRegistration);
+
         return getMapper().map(mongoGameOnRegistration, GameOnRegistration.class);
 
     }
@@ -170,6 +175,8 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
 
         if (writeResult.getN() == 0) {
             throw new GameOnRegistrationNotFoundException("Registration not found " + gameOnRegistrationId);
+        } else {
+            getObjectIndex().delete(MongoGameOnRegistration.class, registrationId);
         }
 
     }
@@ -226,6 +233,15 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
     @Inject
     public void setAdvancedDatastore(AdvancedDatastore advancedDatastore) {
         this.advancedDatastore = advancedDatastore;
+    }
+
+    public ObjectIndex getObjectIndex() {
+        return objectIndex;
+    }
+
+    @Inject
+    public void setObjectIndex(ObjectIndex objectIndex) {
+        this.objectIndex = objectIndex;
     }
 
     public StandardQueryParser getStandardQueryParser() {
