@@ -23,14 +23,14 @@ public interface GameOnRegistrationInvoker {
          * @param gameOnRegistration
          * @return
          */
-        Builder withRegistration(final GameOnRegistration gameOnRegistration);
+        Builder withRegistration(GameOnRegistration gameOnRegistration);
 
         /**
          * Specifies the {@link GameOnApplicationConfiguration} to complete with the GameOn Service.
          * @param gameOnApplicationConfiguration
          * @return
          */
-        Builder withConfiguration(final GameOnApplicationConfiguration gameOnApplicationConfiguration);
+        Builder withConfiguration(GameOnApplicationConfiguration gameOnApplicationConfiguration);
 
         /**
          * Builds the {@link GameOnRegistrationInvoker}

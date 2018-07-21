@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.gameon.GameOnRegistration;
 import com.namazustudios.socialengine.service.GameOnRegistrationService;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -93,7 +94,7 @@ public class GameOnRegistrationResource {
                     "GameOnRegistration instances for their User.")
     public GameOnRegistration createRegistration(final GameOnRegistration gameOnRegistration) {
 
-        getValidationHelper().validateModel(gameOnRegistration);
+        getValidationHelper().validateModel(gameOnRegistration, ValidationGroups.Create.class);
 
         if (gameOnRegistration.getId() != null) {
             throw new InvalidDataException("Registration token must not specify ID.");

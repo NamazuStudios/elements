@@ -1,9 +1,14 @@
 package com.namazustudios.socialengine.model.gameon;
 
+import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.ValidationGroups.Create;
+import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -11,15 +16,21 @@ import java.util.Objects;
                         "one GameOnRegistration per Profile at a time.")
 public class GameOnRegistration implements Serializable {
 
+    @Null(groups = {Create.class, Insert.class})
     @ApiModelProperty("The unique ID of this registration.")
     private String id;
 
+    @NotNull(groups = Insert.class)
     @ApiModelProperty("The profile assocaited with this GameOn registration.")
     private Profile profile;
 
+    @Null(groups = Create.class, message = "Must not specify player token when creating.")
+    @NotNull(groups = Insert.class, message = "Must be defined for insert operations.")
     @ApiModelProperty("The Amazon-issued Player Token")
     private String playerToken;
 
+    @Null(groups = Create.class, message = "Must not specify external player id when creating.")
+    @NotNull(groups = Insert.class, message = "Must be defined for insert operations.")
     @ApiModelProperty("The Amazon-issued external player ID")
     private String externalPlayerId;
 

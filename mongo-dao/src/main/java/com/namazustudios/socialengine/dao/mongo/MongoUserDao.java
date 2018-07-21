@@ -64,32 +64,23 @@ public class MongoUserDao implements UserDao {
         return getDozerMapper().map(mongoUser, User.class);
     }
 
+    public MongoUser getActiveMongoUser(final User user) {
+        return getActiveMongoUser(user.getId());
+    }
+
     public MongoUser getActiveMongoUser(final String userId) {
-
-        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(userId);
-
-        query.and(
-            query.criteria("_id").equal(objectId),
-            query.criteria("active").equal(true)
-        );
-
-        final MongoUser mongoUser = query.get();
-
-        if (mongoUser == null) {
-            throw new NotFoundException("User with id " + userId + " not found.");
-        }
-
-        return mongoUser;
-
+        return getActiveMongoUser(objectId);
     }
 
     public MongoUser getActiveMongoUser(final ObjectId mongoUserId) {
 
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
 
-        query.and(query.criteria("_id").equal(mongoUserId));
-        query.and(query.criteria("active").equal(true));
+        query.and(
+            query.criteria("_id").equal(mongoUserId),
+            query.criteria("active").equal(true)
+        );
 
         final MongoUser mongoUser = query.get();
 

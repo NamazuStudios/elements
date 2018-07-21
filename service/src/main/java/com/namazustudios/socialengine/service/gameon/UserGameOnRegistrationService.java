@@ -18,6 +18,8 @@ import java.util.function.Supplier;
 
 public class UserGameOnRegistrationService implements GameOnRegistrationService {
 
+    private User user;
+
     private Supplier<Profile> currentProfileSupplier;
 
     private GameOnRegistrationDao gameOnRegistrationDao;
@@ -34,20 +36,17 @@ public class UserGameOnRegistrationService implements GameOnRegistrationService 
 
     @Override
     public GameOnRegistration getGameOnRegistration(final String gameOnRegistrationId) {
-        final Profile profile = getCurrentProfileSupplier().get();
-        return getGameOnRegistrationDao().getRegistrationForProfile(profile, gameOnRegistrationId);
+        return getGameOnRegistrationDao().getRegistrationForUser(getUser(), gameOnRegistrationId);
     }
 
     @Override
     public Pagination<GameOnRegistration> getGameOnRegistrations(final int offset, final int count) {
-        final User user = getCurrentProfileSupplier().get().getUser();
-        return getGameOnRegistrationDao().getRegistrationsForUser(user, offset, count);
+        return getGameOnRegistrationDao().getRegistrationsForUser(getUser(), offset, count);
     }
 
     @Override
     public Pagination<GameOnRegistration> getGameOnRegistrations(final int offset, final int count, final String search) {
-        final User user = getCurrentProfileSupplier().get().getUser();
-        return getGameOnRegistrationDao().getRegistrationsForUser(user, offset, count, search);
+        return getGameOnRegistrationDao().getRegistrationsForUser(getUser(), offset, count, search);
     }
 
     @Override
@@ -83,8 +82,16 @@ public class UserGameOnRegistrationService implements GameOnRegistrationService 
 
     @Override
     public void deleteRegistration(final String gameOnRegistrationId) {
-        final Profile profile = getCurrentProfileSupplier().get();
-        getGameOnRegistrationDao().deleteRegistration(profile, gameOnRegistrationId);
+        getGameOnRegistrationDao().deleteRegistrationForUser(getUser(), gameOnRegistrationId);
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public Supplier<Profile> getCurrentProfileSupplier() {

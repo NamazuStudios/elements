@@ -8,13 +8,20 @@ package com.namazustudios.socialengine.model;
 public interface ValidationGroups {
 
     /**
-     * Used in context of creating the object.
+     * Used in context of creating the object, such as when used in a POST request.
      */
     interface Create {}
 
     /**
-     * Used in context of updating the object.
+     * Used in the context of updating an object, such as when used ina  PUT request.
      */
     interface Update {}
+
+    /**
+     * Used in the context of inserting the object in the database for the first time.  Similar to, but differs from a
+     * {@link Create} in that the database layer may impose additional restrictions before actually performing the
+     * insert.
+     */
+    interface Insert {}
 
 }
