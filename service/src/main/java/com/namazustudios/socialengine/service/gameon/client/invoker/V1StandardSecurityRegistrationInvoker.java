@@ -1,23 +1,31 @@
 package com.namazustudios.socialengine.service.gameon.client.invoker;
 
-import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import com.namazustudios.socialengine.model.gameon.GameOnRegistration;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.service.gameon.client.model.RegisterPlayerResponse;
 
+import javax.net.ssl.*;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 
-import static com.namazustudios.socialengine.service.gameon.client.Constants.BASE_API;
-import static com.namazustudios.socialengine.service.gameon.client.Constants.VERSION_V1;
-import static com.namazustudios.socialengine.service.gameon.client.Constants.X_API_KEY;
+import static com.namazustudios.socialengine.rt.ResponseCode.OK;
+import static com.namazustudios.socialengine.service.gameon.client.Constants.*;
 import static javax.ws.rs.client.Entity.entity;
+import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
 /**
  * Implements Version 1 standard security registration.
  */
 public class V1StandardSecurityRegistrationInvoker implements GameOnRegistrationInvoker {
+
+    private static final String PLAYERS_PATH = "players";
+
+    private static final String REGISTER_PATH = "register";
 
     private Client client;
 
@@ -37,14 +45,18 @@ public class V1StandardSecurityRegistrationInvoker implements GameOnRegistration
     @Override
     public GameOnRegistration invoke() {
 
-        final RegisterPlayerResponse registerPlayerResponse = client
+        final Response response = client
               .target(BASE_API)
-              .path(VERSION_V1)
+              .path(VERSION_V1).path(PLAYERS_PATH).path(REGISTER_PATH)
               .request()
               .header(X_API_KEY, gameOnApplicationConfiguration.getPublicApiKey())
-              .post(entity(new Object(), MediaType.APPLICATION_JSON_TYPE))
-              .readEntity(RegisterPlayerResponse.class);
+              .post(entity(null, MediaType.APPLICATION_JSON_TYPE));
 
+        if (OK.getCode() == response.getStatus()){
+            throw new InternalException("Failed to make API call with Amazon GameOn:  " + response.getStatus());
+        }
+
+        final RegisterPlayerResponse registerPlayerResponse = response.readEntity(RegisterPlayerResponse.class);
         gameOnRegistration.setPlayerToken(registerPlayerResponse.getPlayerToken());
         gameOnRegistration.setExternalPlayerId(registerPlayerResponse.getExternalPlayerId());
 

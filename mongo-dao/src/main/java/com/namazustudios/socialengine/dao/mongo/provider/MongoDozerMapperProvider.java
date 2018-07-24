@@ -100,7 +100,7 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("id", "objectId", customConverter(MongoFriendIdConverter.class));
 
             mapping(GameOnRegistration.class, MongoGameOnRegistration.class)
-                .fields("id", "objectId", customConverter(MongoScoreIdConverter.class));
+                .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             }
         };

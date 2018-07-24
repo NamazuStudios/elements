@@ -94,7 +94,9 @@ public class GuiceMain extends GuiceServletContextListener {
             new RTFilesystemGitLoaderModule(),
             new RTDaoModule(),
             new RTGitApplicationModule(),
-            new ValidationModule()
+            new ValidationModule(),
+            new GameOnInvokerModule(),
+            new HttpClientModule()
         );
 
     }

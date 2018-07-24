@@ -25,7 +25,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
         "Handles the creation and deletion of the GameOn Registrations tokens.  This allows clients to create, read, " +
         "and delete registration.  Only one GameOnRegistration may exist per Profile.",
     authorizations = {@Authorization(SESSION_SECRET)})
-@Path("gameon/registration")
+@Path("game_on/registration")
 public class GameOnRegistrationResource {
 
     private ValidationHelper validationHelper;

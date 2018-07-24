@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.validation.Validator;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.model.application.ConfigurationCategory.AMAZON_GAME_ON;
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.FIREBASE;
 
 public class GameOnApplicationConfigurationEditorView extends ViewImpl implements
@@ -274,7 +275,7 @@ public class GameOnApplicationConfigurationEditorView extends ViewImpl implement
 
         boolean failed = false;
 
-        firebaseApplicationConfiguration.setCategory(FIREBASE);
+        firebaseApplicationConfiguration.setCategory(AMAZON_GAME_ON);
 
         if (!validator.validateProperty(firebaseApplicationConfiguration, "gameId").isEmpty()) {
             failed = true;

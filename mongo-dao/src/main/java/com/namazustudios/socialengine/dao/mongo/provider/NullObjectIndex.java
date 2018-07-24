@@ -17,6 +17,9 @@ public class NullObjectIndex extends DefaultObjectIndex {
     public <T> void delete(T model) {}
 
     @Override
+    public <T> void delete(Class<T> type, Object identifier) {}
+
+    @Override
     public <T> DocumentEntry<T> index(T model) {
         return new BasicDocumentEntry<T>(new Document());
     }

@@ -14,6 +14,7 @@ import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnRegistra
 import com.namazustudios.socialengine.exception.BadQueryException;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InternalException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.gameon.GameOnRegistrationNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
@@ -98,7 +99,7 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
         final Query<MongoGameOnRegistration> query = getAdvancedDatastore().createQuery(MongoGameOnRegistration.class);
         query.field("user").equal(mongoUser);
-        return getMongoDBUtils().paginationFromQuery(query, count, offset, GameOnRegistration.class);
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, GameOnRegistration.class);
     }
 
     @Override
@@ -129,7 +130,7 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
     @Override
     public GameOnRegistration createRegistration(final GameOnRegistration gameOnRegistration) {
 
-        getValidationHelper().validateModel(gameOnRegistration, Create.class, Insert.class);
+        getValidationHelper().validateModel(gameOnRegistration, Insert.class);
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(gameOnRegistration.getProfile());
 
@@ -144,7 +145,7 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
             getAdvancedDatastore().insert(mongoGameOnRegistration);
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
-                throw new DuplicateException(ex);
+                throw new DuplicateException("Registration already exists for profile: " + mongoProfile.getObjectId());
             } else {
                 throw new InternalException(ex);
             }

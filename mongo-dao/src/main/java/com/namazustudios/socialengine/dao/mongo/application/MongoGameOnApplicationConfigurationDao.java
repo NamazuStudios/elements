@@ -91,9 +91,16 @@ public class MongoGameOnApplicationConfigurationDao implements GameOnApplication
 
     protected void update(final UpdateOperations<MongoGameOnApplicationConfiguration> operations,
                           final GameOnApplicationConfiguration gameOnApplicationConfiguration) {
+
         operations.set("publicApiKey", gameOnApplicationConfiguration.getPublicApiKey());
         operations.set("adminApiKey", gameOnApplicationConfiguration.getAdminApiKey());
-        operations.set("publicKey", gameOnApplicationConfiguration.getPublicKey());
+
+        if (gameOnApplicationConfiguration.getPublicKey() == null) {
+            operations.unset("publicKey");
+        } else {
+            operations.set("publicKey", gameOnApplicationConfiguration.getPublicKey());
+        }
+
     }
 
 }
