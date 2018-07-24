@@ -143,14 +143,8 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
 
         try {
             getAdvancedDatastore().insert(mongoGameOnRegistration);
-        } catch (MongoCommandException ex) {
-            if (ex.getErrorCode() == 11000) {
-                throw new DuplicateException("Registration already exists for profile: " + mongoProfile.getObjectId());
-            } else {
-                throw new InternalException(ex);
-            }
         } catch (DuplicateKeyException ex) {
-            throw new DuplicateException(ex);
+            throw new DuplicateException("Registration already exists for profile: " + mongoProfile.getObjectId(), ex);
         }
 
         getObjectIndex().index(mongoGameOnRegistration);
