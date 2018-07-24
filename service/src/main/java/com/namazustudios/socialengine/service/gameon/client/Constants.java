@@ -18,7 +18,6 @@ public interface Constants {
     /**
      * The base API for Amazon GameOn
      */
-//    String BASE_API = "https://api.amazongameon.com";
-    String BASE_API = "https://localhost:8280";
+    String BASE_API = "https://api.amazongameon.com";
 
 }
