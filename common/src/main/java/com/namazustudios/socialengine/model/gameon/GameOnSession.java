@@ -20,6 +20,10 @@ public class GameOnSession {
     @Null(groups = {Insert.class, Create.class})
     private String id;
 
+    @Null(groups = {Create.class, Insert.class})
+    @ApiModelProperty("The Device Operating System type.")
+    private DeviceOSType deviceOSType;
+
     @Null(groups = Create.class)
     @NotNull(groups = Insert.class)
     @ApiModelProperty("The Amazon GameOn assigned session ID.")
@@ -39,12 +43,24 @@ public class GameOnSession {
     @ApiModelProperty("The profile that owns this particualr session.")
     private Profile profile;
 
+    @Null(groups = {Create.class, Insert.class})
+    @ApiModelProperty("The appliaction build type.")
+    private AppBuildType appBuildType;
+
     public String getId() {
         return id;
     }
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public DeviceOSType getDeviceOSType() {
+        return deviceOSType;
+    }
+
+    public void setDeviceOSType(DeviceOSType deviceOSType) {
+        this.deviceOSType = deviceOSType;
     }
 
     public String getSessionId() {
@@ -79,29 +95,44 @@ public class GameOnSession {
         this.profile = profile;
     }
 
+    public AppBuildType getAppBuildType() {
+        return appBuildType;
+    }
+
+    public void setAppBuildType(AppBuildType appBuildType) {
+        this.appBuildType = appBuildType;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
         if (!(object instanceof GameOnSession)) return false;
         GameOnSession that = (GameOnSession) object;
         return getSessionExpirationDate() == that.getSessionExpirationDate() &&
+                Objects.equals(getId(), that.getId()) &&
+                getDeviceOSType() == that.getDeviceOSType() &&
                 Objects.equals(getSessionId(), that.getSessionId()) &&
                 Objects.equals(getSessionApiKey(), that.getSessionApiKey()) &&
-                Objects.equals(getProfile(), that.getProfile());
+                Objects.equals(getProfile(), that.getProfile()) &&
+                getAppBuildType() == that.getAppBuildType();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getSessionId(), getSessionApiKey(), getSessionExpirationDate(), getProfile());
+
+        return Objects.hash(getId(), getDeviceOSType(), getSessionId(), getSessionApiKey(), getSessionExpirationDate(), getProfile(), getAppBuildType());
     }
 
     @Override
     public String toString() {
         return "GameOnSession{" +
-                "sessionId='" + sessionId + '\'' +
+                "id='" + id + '\'' +
+                ", deviceOSType=" + deviceOSType +
+                ", sessionId='" + sessionId + '\'' +
                 ", sessionApiKey='" + sessionApiKey + '\'' +
                 ", sessionExpirationDate=" + sessionExpirationDate +
                 ", profile=" + profile +
+                ", appBuildType=" + appBuildType +
                 '}';
     }
 

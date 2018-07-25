@@ -61,7 +61,7 @@ public class GameOnRegistrationResource {
     @GET
     @Path("{gameOnRegistrationId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets a Specific Profile",
+    @ApiOperation(value = "Gets a Specific Registration",
             notes = "Gets a specific profile by profile ID.")
     public GameOnRegistration getGameOnRegistration(@PathParam("gameOnRegistrationId") String gameOnRegistrationId) {
 
@@ -78,8 +78,8 @@ public class GameOnRegistrationResource {
     @GET
     @Path("current")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets a Specific Profile",
-            notes = "Gets a specific profile by profile ID.")
+    @ApiOperation(value = "Gets a the currently-registered GameOn Registration",
+                  notes = "Gets a specific profile by profile ID.")
     public GameOnRegistration getCurrentGameOnRegistration() {
         return getGameOnRegistrationService().getCurrentGameOnRegistration();
     }

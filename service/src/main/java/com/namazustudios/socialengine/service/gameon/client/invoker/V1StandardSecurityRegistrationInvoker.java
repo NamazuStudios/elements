@@ -1,22 +1,17 @@
 package com.namazustudios.socialengine.service.gameon.client.invoker;
 
+import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import com.namazustudios.socialengine.model.gameon.GameOnRegistration;
-import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.service.gameon.client.model.RegisterPlayerResponse;
 
-import javax.net.ssl.*;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
 
 import static com.namazustudios.socialengine.rt.ResponseCode.OK;
 import static com.namazustudios.socialengine.service.gameon.client.Constants.*;
 import static javax.ws.rs.client.Entity.entity;
-import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
 /**
  * Implements Version 1 standard security registration.
@@ -27,11 +22,11 @@ public class V1StandardSecurityRegistrationInvoker implements GameOnRegistration
 
     private static final String REGISTER_PATH = "register";
 
-    private Client client;
+    private final Client client;
 
-    private GameOnRegistration gameOnRegistration;
+    private final GameOnRegistration gameOnRegistration;
 
-    private GameOnApplicationConfiguration gameOnApplicationConfiguration;
+    private final GameOnApplicationConfiguration gameOnApplicationConfiguration;
 
     public V1StandardSecurityRegistrationInvoker(
             final Client client,

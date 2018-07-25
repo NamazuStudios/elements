@@ -72,14 +72,14 @@ public class UserGameOnRegistrationService implements GameOnRegistrationService 
 
         gameOnRegistration.setProfile(profile);
 
-        final GameOnRegistration registered = registerWithGameOn(profile, gameOnRegistration);
+        final GameOnRegistration registered = registerWithGameOn(gameOnRegistration);
         return getGameOnRegistrationDao().createRegistration(registered);
 
     }
 
-    private GameOnRegistration registerWithGameOn(
-            final Profile profile,
-            final GameOnRegistration gameOnRegistration) {
+    private GameOnRegistration registerWithGameOn(final GameOnRegistration gameOnRegistration) {
+
+        final Profile profile = gameOnRegistration.getProfile();
 
         final GameOnApplicationConfiguration gameOnApplicationConfiguration = getGameOnApplicationConfigurationDao()
             .getDefaultConfigurationForApplication(profile.getApplication().getId());

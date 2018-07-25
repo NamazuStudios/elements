@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.gameon.DeviceOSType;
 import com.namazustudios.socialengine.model.gameon.GameOnSession;
 import com.namazustudios.socialengine.service.GameOnSessionService;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -21,7 +22,8 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
 @Api(value = "GameOn Session",
-    description = "Handles the creation and deleteion of Amazon GameOn Sessions.",
+    description = "Handles the creation and deleteion of Amazon GameOn Sessions.  Only one session may exist per " +
+                  "Profile and Device OS Type.",
     authorizations = {@Authorization(SESSION_SECRET)})
 @Path("game_on/session")
 public class GameOnSessionResource {
@@ -59,7 +61,7 @@ public class GameOnSessionResource {
     @GET
     @Path("{gameOnSessionId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets a Specific Profile",
+    @ApiOperation(value = "Gets a Specific GameOn Session",
             notes = "Gets a specific profile by profile ID.")
     public GameOnSession getGameOnSession(@PathParam("gameOnSessionId") String gameOnSessionId) {
 
@@ -76,10 +78,13 @@ public class GameOnSessionResource {
     @GET
     @Path("current")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets a Specific Profile",
-            notes = "Gets a specific profile by profile ID.")
-    public GameOnSession getCurrentGameOnSession() {
-        return getGameOnSessionService().getCurrentGameOnSession();
+    @ApiOperation(value = "Gets the current GameOn Session",
+            notes = "Gets a specific GameOn Session filtered by the supplied OS type.  This infers the current " +
+                    "profile and guarantees that only one session is returned.  This avoisd the client needing to " +
+                    "perform needless sifting through the results client side.")
+    public GameOnSession getCurrentGameOnSession(@QueryParam("os") final DeviceOSType deviceOSType) {
+        if (deviceOSType == null) throw new BadRequestException("os is a required parameter.");
+        return getGameOnSessionService().getCurrentGameOnSession(deviceOSType);
     }
 
     @POST
