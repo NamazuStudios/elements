@@ -20,7 +20,7 @@ public class GameOnSession {
     @Null(groups = {Insert.class, Create.class})
     private String id;
 
-    @Null(groups = {Create.class, Insert.class})
+    @NotNull(groups = {Create.class, Insert.class})
     @ApiModelProperty("The Device Operating System type.")
     private DeviceOSType deviceOSType;
 
@@ -43,7 +43,7 @@ public class GameOnSession {
     @ApiModelProperty("The profile that owns this particualr session.")
     private Profile profile;
 
-    @Null(groups = {Create.class, Insert.class})
+    @NotNull(groups = {Create.class, Insert.class})
     @ApiModelProperty("The appliaction build type.")
     private AppBuildType appBuildType;
 

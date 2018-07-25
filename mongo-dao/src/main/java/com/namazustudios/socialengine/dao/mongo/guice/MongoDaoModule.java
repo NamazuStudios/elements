@@ -51,6 +51,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(FirebaseApplicationConfigurationDao.class).to(MongoFirebaseApplicationConfigurationDao.class);
         bind(GameOnApplicationConfigurationDao.class).to(MongoGameOnApplicationConfigurationDao.class);
         bind(GameOnRegistrationDao.class).to(MongoGameOnRegistrationDao.class);
+        bind(GameOnSessionDao.class).to(MongoGameOnSessionDao.class);
         bind(MatchDao.class).to(MongoMatchDao.class);
         bind(SessionDao.class).to(MongoSessionDao.class);
         bind(FCMRegistrationDao.class).to(MongoFCMRegistrationDao.class);
@@ -101,6 +102,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(FriendDao.class);
         expose(FacebookFriendDao.class);
         expose(GameOnRegistrationDao.class);
+        expose(GameOnSessionDao.class);
 
     }
 
