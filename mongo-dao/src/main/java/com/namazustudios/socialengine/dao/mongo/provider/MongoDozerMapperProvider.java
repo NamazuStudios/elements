@@ -6,9 +6,12 @@ import com.namazustudios.socialengine.dao.mongo.converter.ObjectIdConverter;
 import com.namazustudios.socialengine.dao.mongo.model.*;
 import com.namazustudios.socialengine.dao.mongo.model.application.*;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnRegistration;
+import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSession;
+import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSessionId;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.*;
 import com.namazustudios.socialengine.model.gameon.GameOnRegistration;
+import com.namazustudios.socialengine.model.gameon.GameOnSession;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
 import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.friend.Friend;
@@ -102,6 +105,9 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(GameOnRegistration.class, MongoGameOnRegistration.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
+            mapping(GameOnSession.class, MongoGameOnSession.class)
+                .fields("id", "objectId", customConverter(MongoGameOnSessionId.Converter.class))
+                .fields("deviceOSType", "objectId.deviceOSType");
             }
         };
 

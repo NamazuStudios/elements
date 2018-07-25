@@ -1,8 +1,6 @@
 package com.namazustudios.socialengine.rest.support;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.namazustudios.socialengine.exception.BaseException;
 import com.namazustudios.socialengine.exception.ErrorCode;
@@ -13,12 +11,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.ConstraintViolation;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -31,19 +29,19 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultExceptionMapper.class);
 
     private static final Map<ErrorCode, Response.Status> HTTP_STATUS_MAP = Maps.immutableEnumMap(
-            new ImmutableMap.Builder<ErrorCode, Response.Status>()
-                    .put(ErrorCode.DUPLICATE, Response.Status.CONFLICT)
-                    .put(ErrorCode.UNAUTHORIZED, Response.Status.UNAUTHORIZED)
-                    .put(ErrorCode.FORBIDDEN, Response.Status.FORBIDDEN)
-                    .put(ErrorCode.INVALID_DATA, Response.Status.BAD_REQUEST)
-                    .put(ErrorCode.INVALID_PARAMETER, Response.Status.BAD_REQUEST)
-                    .put(ErrorCode.NOT_FOUND, Response.Status.NOT_FOUND)
-                    .put(ErrorCode.OVERLOAD, Response.Status.SERVICE_UNAVAILABLE)
-                    .put(ErrorCode.UNKNOWN, Response.Status.INTERNAL_SERVER_ERROR)
-                    .put(ErrorCode.NOT_IMPLEMENTED, Response.Status.NOT_IMPLEMENTED)
-                .build());
+        new ImmutableMap.Builder<ErrorCode, Response.Status>()
+            .put(ErrorCode.DUPLICATE, Response.Status.CONFLICT)
+            .put(ErrorCode.UNAUTHORIZED, Response.Status.UNAUTHORIZED)
+            .put(ErrorCode.FORBIDDEN, Response.Status.FORBIDDEN)
+            .put(ErrorCode.INVALID_DATA, Response.Status.BAD_REQUEST)
+            .put(ErrorCode.INVALID_PARAMETER, Response.Status.BAD_REQUEST)
+            .put(ErrorCode.NOT_FOUND, Response.Status.NOT_FOUND)
+            .put(ErrorCode.OVERLOAD, Response.Status.SERVICE_UNAVAILABLE)
+            .put(ErrorCode.UNKNOWN, Response.Status.INTERNAL_SERVER_ERROR)
+            .put(ErrorCode.NOT_IMPLEMENTED, Response.Status.NOT_IMPLEMENTED)
+        .build());
 
-    public static final Response.Status getStatusForCode(Object code) {
+    public static final Response.Status getStatusForCode(final Object code) {
         final Response.Status status = HTTP_STATUS_MAP.get(code);
         return status == null ? Response.Status.INTERNAL_SERVER_ERROR : status;
     }
@@ -81,10 +79,21 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
             errorResponse.setMessage(ex.getMessage());
             errorResponse.setCode(ex.getCode().toString());
 
-            return Response
-                        .status(getStatusForCode(ex.getCode()))
-                        .entity(errorResponse)
-                    .build();
+            return Response.status(getStatusForCode(ex.getCode()))
+                           .entity(errorResponse)
+                           .build();
+
+        } catch (WebApplicationException wex) {
+
+            final Response response = wex.getResponse();
+
+            final ErrorResponse errorResponse = new ErrorResponse();
+            errorResponse.setMessage(wex.getMessage());
+            errorResponse.setCode(ErrorCode.UNKNOWN.toString());
+
+            return Response.fromResponse(response)
+                           .entity(errorResponse)
+                           .build();
 
         } catch (Exception ex) {
 
@@ -95,10 +104,9 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
             errorResponse.setMessage(ex.getMessage());
             errorResponse.setCode(ErrorCode.UNKNOWN.toString());
 
-            return Response
-                        .status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .entity(errorResponse)
-                    .build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                           .entity(errorResponse)
+                           .build();
 
         }
 

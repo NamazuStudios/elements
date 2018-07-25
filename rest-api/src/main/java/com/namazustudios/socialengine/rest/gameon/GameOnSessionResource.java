@@ -83,7 +83,7 @@ public class GameOnSessionResource {
                     "profile and guarantees that only one session is returned.  This avoisd the client needing to " +
                     "perform needless sifting through the results client side.")
     public GameOnSession getCurrentGameOnSession(@QueryParam("os") final DeviceOSType deviceOSType) {
-        if (deviceOSType == null) throw new BadRequestException("os is a required parameter.");
+        if (deviceOSType == null) throw new InvalidParameterException("os is a required parameter.");
         return getGameOnSessionService().getCurrentGameOnSession(deviceOSType);
     }
 

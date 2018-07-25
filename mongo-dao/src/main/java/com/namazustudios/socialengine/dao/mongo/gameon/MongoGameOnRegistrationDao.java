@@ -99,6 +99,7 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
     }
 
     @Override
+    @SuppressWarnings("Duplicates")
     public Pagination<GameOnRegistration> getRegistrationsForUser(final User user,
                                                                   final int offset, final int count,
                                                                   final String queryString) {
