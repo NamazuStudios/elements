@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.gameon.DeviceOSType;
 import com.namazustudios.socialengine.model.gameon.GameOnSession;
 import com.namazustudios.socialengine.service.GameOnSessionService;
@@ -97,7 +97,7 @@ public class GameOnSessionResource {
                     "GameOnSession instances for their User.")
     public GameOnSession createSession(final GameOnSession gameOnSession) {
 
-        getValidationHelper().validateModel(gameOnSession, ValidationGroups.Create.class);
+        getValidationHelper().validateModel(gameOnSession, Create.class);
 
         if (gameOnSession.getId() != null) {
             throw new InvalidDataException("Session token must not specify ID.");

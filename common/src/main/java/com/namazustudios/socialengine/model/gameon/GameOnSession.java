@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.model.gameon;
 
-import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -15,7 +14,6 @@ import java.util.Objects;
                         "overlap with the Amazon GameOn API with additional Elements add-ons.")
 public class GameOnSession {
 
-    @NotNull
     @ApiModelProperty("The Elements assigned session ID.")
     @Null(groups = {Insert.class, Create.class})
     private String id;
@@ -37,7 +35,7 @@ public class GameOnSession {
     @Null(groups = Create.class)
     @NotNull(groups = Insert.class)
     @ApiModelProperty("The time at which the session expires.")
-    private long sessionExpirationDate;
+    private Long sessionExpirationDate;
 
     @NotNull(groups = Insert.class)
     @ApiModelProperty("The profile that owns this particualr session.")
@@ -79,11 +77,11 @@ public class GameOnSession {
         this.sessionApiKey = sessionApiKey;
     }
 
-    public long getSessionExpirationDate() {
+    public Long getSessionExpirationDate() {
         return sessionExpirationDate;
     }
 
-    public void setSessionExpirationDate(long sessionExpirationDate) {
+    public void setSessionExpirationDate(Long sessionExpirationDate) {
         this.sessionExpirationDate = sessionExpirationDate;
     }
 
