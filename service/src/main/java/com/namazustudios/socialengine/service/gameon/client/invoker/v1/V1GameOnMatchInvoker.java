@@ -10,12 +10,14 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
+import java.util.function.Supplier;
+
 import static com.namazustudios.socialengine.rt.ResponseCode.OK;
-import static com.namazustudios.socialengine.service.gameon.client.Constants.BASE_API;
-import static com.namazustudios.socialengine.service.gameon.client.Constants.SESSION_ID;
-import static com.namazustudios.socialengine.service.gameon.client.Constants.X_API_KEY;
+import static com.namazustudios.socialengine.service.gameon.client.Constants.*;
+import static java.util.Collections.emptyList;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 
 public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
 
@@ -42,7 +44,7 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
 
         WebTarget target = client
             .target(BASE_API)
-            .path(MATCHES_PATH).path(matchId);
+            .path(VERSION_V1).path(MATCHES_PATH).path(matchId);
 
         if (playerAttributes != null)   target = target.queryParam(PLAYER_ATTRIBUTES, playerAttributes);
 
@@ -52,7 +54,7 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
             .header(X_API_KEY, gameOnSession.getSessionApiKey())
             .get();
 
-        return get(response, GameOnMatchDetail.class);
+        return get(response, GameOnMatchDetail.class, () -> null);
 
     }
 
@@ -64,7 +66,7 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
 
         WebTarget target = client
             .target(BASE_API)
-            .path(MATCHES_PATH);
+            .path(VERSION_V1).path(MATCHES_PATH);
 
         if (period != null)             target = target.queryParam(PERIOD, period);
         if (filterBy != null)           target = target.queryParam(FILTER_BY, filterBy);
@@ -76,14 +78,22 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
             .header(X_API_KEY, gameOnSession.getSessionApiKey())
             .get();
 
-        return get(response, GameOnMatchesAggregate.class);
+        return get(response, GameOnMatchesAggregate.class, () -> {
+            final GameOnMatchesAggregate empty = new GameOnMatchesAggregate();
+            empty.setMatches(emptyList());
+            empty.setPlayerMatches(emptyList());
+            return empty;
+        });
 
     }
 
     private <ResponseEntityT> ResponseEntityT get(final Response response,
-                                                  final Class<ResponseEntityT> responseEntityTClass) {
+                                                  final Class<ResponseEntityT> responseEntityTClass,
+                                                  final Supplier<ResponseEntityT> emptyResponseSupplier) {
         if (OK.getCode() == response.getStatus()) {
             return response.readEntity(responseEntityTClass);
+        } else if (NO_CONTENT.getStatusCode() == response.getStatus()) {
+            return emptyResponseSupplier.get();
         } else if (NOT_FOUND.getStatusCode() == response.getStatus()) {
             throw new GameOnTournamentNotFoundException("Match not found.");
         } else if (FORBIDDEN.getStatusCode() == response.getStatus()) {

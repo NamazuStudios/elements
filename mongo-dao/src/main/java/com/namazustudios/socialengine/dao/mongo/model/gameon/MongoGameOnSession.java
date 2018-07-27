@@ -47,10 +47,13 @@ public class MongoGameOnSession {
     @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
     private long sessionExpirationDate;
 
+    @Property
     private String sessionId;
 
+    @Property
     private String sessionApiKey;
 
+    @Property
     private AppBuildType appBuildType;
 
     public MongoGameOnSessionId getObjectId() {

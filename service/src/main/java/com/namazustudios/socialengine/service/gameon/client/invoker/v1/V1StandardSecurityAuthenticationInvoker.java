@@ -13,12 +13,12 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
 
-import static com.namazustudios.socialengine.rt.ResponseCode.OK;
 import static com.namazustudios.socialengine.service.gameon.client.Constants.BASE_API;
 import static com.namazustudios.socialengine.service.gameon.client.Constants.VERSION_V1;
 import static com.namazustudios.socialengine.service.gameon.client.Constants.X_API_KEY;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.Response.Status.OK;
 
 public class V1StandardSecurityAuthenticationInvoker implements GameOnAuthenticationInvoker {
 
@@ -63,7 +63,7 @@ public class V1StandardSecurityAuthenticationInvoker implements GameOnAuthentica
             .header(X_API_KEY, gameOnApplicationConfiguration.getPublicApiKey())
             .post(entity(authPlayerRequest, APPLICATION_JSON_TYPE));
 
-        if (OK.getCode() != response.getStatus()) {
+        if (OK.getStatusCode() != response.getStatus()) {
             // Anything but okay is either a misconfiguration, error on Amazon's end, Network failure etc.
             logger.error("GameOn returned error status {}", response.getStatus());
             throw new InternalException("Failed to make API call with Amazon GameOn:  " + response.getStatus());

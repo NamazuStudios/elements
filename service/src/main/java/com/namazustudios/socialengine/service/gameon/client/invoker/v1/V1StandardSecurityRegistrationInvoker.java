@@ -12,9 +12,9 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import static com.namazustudios.socialengine.rt.ResponseCode.OK;
 import static com.namazustudios.socialengine.service.gameon.client.Constants.*;
 import static javax.ws.rs.client.Entity.entity;
+import static javax.ws.rs.core.Response.Status.OK;
 
 /**
  * Implements Version 1 standard security registration.
@@ -52,7 +52,7 @@ public class V1StandardSecurityRegistrationInvoker implements GameOnRegistration
               .header(X_API_KEY, gameOnApplicationConfiguration.getPublicApiKey())
               .post(entity(null, MediaType.APPLICATION_JSON_TYPE));
 
-        if (OK.getCode() != response.getStatus()) {
+        if (OK.getStatusCode() != response.getStatus()) {
             // Anything but okay is either a misconfiguration, error on Amazon's end, Network failure etc.
             logger.error("GameOn returned error status {}", response.getStatus());
             throw new InternalException("Failed to make API call with Amazon GameOn:  " + response.getStatus());

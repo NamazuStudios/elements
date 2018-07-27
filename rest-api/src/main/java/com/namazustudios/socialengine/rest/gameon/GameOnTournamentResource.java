@@ -43,7 +43,6 @@ public class GameOnTournamentResource {
             @QueryParam("period")
             final TournamentPeriod period,
 
-            @DefaultValue("")
             @QueryParam("playerAttributes")
             @ApiParam("Custom player attributes.")
             final String playerAttributes
@@ -76,7 +75,6 @@ public class GameOnTournamentResource {
             @QueryParam("filterBy")
             final TournamentFilter filterBy,
 
-            @DefaultValue("")
             @QueryParam("playerAttributes")
             @ApiParam("Custom player attributes.")
             final String playerAttributes

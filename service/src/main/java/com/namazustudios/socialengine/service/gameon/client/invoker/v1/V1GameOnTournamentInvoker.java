@@ -11,13 +11,11 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.function.Supplier;
 
-import static com.namazustudios.socialengine.rt.ResponseCode.OK;
-import static com.namazustudios.socialengine.service.gameon.client.Constants.BASE_API;
-import static com.namazustudios.socialengine.service.gameon.client.Constants.SESSION_ID;
-import static com.namazustudios.socialengine.service.gameon.client.Constants.X_API_KEY;
-import static javax.ws.rs.core.Response.Status.FORBIDDEN;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static com.namazustudios.socialengine.service.gameon.client.Constants.*;
+import static java.util.Collections.emptyList;
+import static javax.ws.rs.core.Response.Status.*;
 
 public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
 
@@ -53,7 +51,7 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
             .header(X_API_KEY, gameOnSession.getSessionApiKey())
             .get();
 
-        return get(response, GameOnTournamentDetail.class);
+        return get(response, GameOnTournamentDetail.class, () -> null);
 
     }
 
@@ -65,7 +63,7 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
 
         WebTarget target = client
             .target(BASE_API)
-            .path(TOURNAMENTS_PATH);
+            .path(VERSION_V1).path(TOURNAMENTS_PATH);
 
         if (period != null)             target = target.queryParam(PERIOD, period);
         if (filterBy != null)           target = target.queryParam(FILTER_BY, filterBy);
@@ -77,14 +75,21 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
             .header(X_API_KEY, gameOnSession.getSessionApiKey())
             .get();
 
-        return get(response, GameOnTournamentListResponse.class).getTournaments();
+        return get(response, GameOnTournamentListResponse.class, () -> {
+            final GameOnTournamentListResponse empty = new GameOnTournamentListResponse();
+            empty.setTournaments(emptyList());
+            return empty;
+        }).getTournaments();
 
     }
 
     private <ResponseEntityT> ResponseEntityT get(final Response response,
-                                                  final Class<ResponseEntityT> responseEntityTClass) {
-        if (OK.getCode() == response.getStatus()) {
+                                                  final Class<ResponseEntityT> responseEntityTClass,
+                                                  final Supplier<ResponseEntityT> emptyResponseSupplier) {
+        if (OK.getStatusCode() == response.getStatus()) {
             return response.readEntity(responseEntityTClass);
+        }  else if (NO_CONTENT.getStatusCode() == response.getStatus()) {
+            return emptyResponseSupplier.get();
         } else if (NOT_FOUND.getStatusCode() == response.getStatus()) {
             throw new GameOnTournamentNotFoundException("Tournament not found.");
         } else if (FORBIDDEN.getStatusCode() == response.getStatus()) {
