@@ -40,13 +40,18 @@ public class GameOnTournamentResource {
             @QueryParam("filterBy")
             final TournamentFilter filterBy,
 
+            @QueryParam("period")
+            final TournamentPeriod period,
+
             @DefaultValue("")
             @QueryParam("playerAttributes")
             @ApiParam("Custom player attributes.")
             final String playerAttributes
 
     ) {
-        return getGameOnTournamentService().getEligibleTournaments(deviceOSType, appBuildType, filterBy, playerAttributes);
+        return getGameOnTournamentService().getEligibleTournaments(
+            deviceOSType, appBuildType,             // Session related parameters
+            filterBy, period, playerAttributes);    // Filter/query related parameters
     }
 
     @GET
@@ -77,7 +82,9 @@ public class GameOnTournamentResource {
             final String playerAttributes
 
     ) {
-        return getGameOnTournamentService().getEligibleTournamentDetail(tournamentId, deviceOSType, appBuildType, filterBy, playerAttributes);
+        return getGameOnTournamentService().getEligibleTournamentDetail(
+            deviceOSType, appBuildType,       // Session related parameters
+            playerAttributes, tournamentId);  // Filer/query related parameters
     }
 
     public GameOnTournamentService getGameOnTournamentService() {

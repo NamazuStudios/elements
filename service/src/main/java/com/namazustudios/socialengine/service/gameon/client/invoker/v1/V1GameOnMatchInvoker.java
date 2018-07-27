@@ -11,6 +11,8 @@ import java.util.List;
 
 public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
 
+    private static final String MATCH_PATH = "matches";
+
     private final Client client;
 
     private final GameOnSession gameOnSession;
@@ -21,13 +23,13 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
     }
 
     @Override
-    public List<GameOnMatchDetail> getDetail(String tournamentId) {
+    public List<GameOnMatchDetail> getDetail(final String tournamentId) {
         // TODO
         return null;
     }
 
     @Override
-    public List<GameOnMatchSummary> getSummaries(TournamentFilter filterBy, String playerAttributes) {
+    public List<GameOnMatchSummary> getSummaries(final TournamentFilter filterBy, final String playerAttributes) {
         // TODO
         return null;
     }

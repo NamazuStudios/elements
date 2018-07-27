@@ -6,9 +6,14 @@ package com.namazustudios.socialengine.service.gameon.client;
 public interface Constants {
 
     /**
-     * The X-Api-Key header
+     * The X-Api-Key header.
      */
     String X_API_KEY = "X-Api-Key";
+
+    /**
+     * The Session-Id header.
+     */
+    String SESSION_ID = "Session-Id";
 
     /**
      * The version v1 base path.

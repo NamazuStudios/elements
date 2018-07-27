@@ -21,10 +21,10 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
 
     @Override
     public List<GameOnTournamentSummary> getEligibleTournaments(
-            final DeviceOSType deviceOSType,
-            final AppBuildType appBuildType,
-            final TournamentFilter filterBy,
-            final String playerAttributes) {
+            final DeviceOSType deviceOSType, final AppBuildType appBuildType,
+            final TournamentFilter filterBy, final TournamentPeriod period, final String playerAttributes) {
+
+        // TODO Filter by matches
 
         final GameOnSession gameOnSession;
         gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
@@ -33,18 +33,28 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
             .get()
             .withSession(gameOnSession)
             .build()
-            .getSummaries(filterBy, playerAttributes);
+            .getSummaries(filterBy, period, playerAttributes);
+
+
 
         return null;
     }
 
     @Override
     public GameOnTournamentDetail getEligibleTournamentDetail(
-            final String tournamentId,
-            final DeviceOSType deviceOSType,
-            final AppBuildType appBuildType,
-            final TournamentFilter filterBy,
-            final String playerAttributes) {
+            final DeviceOSType deviceOSType, final AppBuildType appBuildType,
+            final String playerAttributes, final String tournamentId) {
+
+        // TODO Filter by matches
+
+        final GameOnSession gameOnSession;
+        gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
+
+        final GameOnTournamentDetail gameOnTournamentDetail = getGameOnTournamentInvokerBuilderProvider()
+            .get()
+            .withSession(gameOnSession)
+            .build()
+            .getDetail(playerAttributes, tournamentId);
 
         return null;
     }
