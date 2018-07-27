@@ -6,9 +6,12 @@ import java.util.List;
 
 public interface GameOnMatchInvoker {
 
-    List<GameOnMatchDetail> getDetail(String tournamentId);
+    GameOnMatchDetail getDetail(String matchId, String playerAttributes);
 
-    List<GameOnMatchSummary> getSummaries(TournamentFilter filterBy, String playerAttributes);
+    GameOnMatchesAggregate getSummaries(MatchFilter filterBy,
+                                        MatchType matchType,
+                                        TournamentPeriod period,
+                                        String playerAttributes);
 
     interface Builder extends PlayerRequestBuilder<GameOnMatchInvoker> {}
 

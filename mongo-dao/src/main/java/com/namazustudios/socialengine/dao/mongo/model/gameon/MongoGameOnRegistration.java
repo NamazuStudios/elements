@@ -42,6 +42,7 @@ public class MongoGameOnRegistration {
     private String playerToken;
 
     @Property
+    @Indexed
     private String externalPlayerId;
 
     public ObjectId getObjectId() {
