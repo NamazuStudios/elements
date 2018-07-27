@@ -17,7 +17,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
      description = "Provides access to the eligible tournaments.  An eligible tourname is one for which the player " +
                    "qualifies and has not already entered.",
      authorizations = {@Authorization(SESSION_SECRET)})
-@Path("game_on/tournament/eligible")
+@Path("game_on/tournament/developer/eligible")
 public class GameOnTournamentResource {
 
     private GameOnTournamentService gameOnTournamentService;

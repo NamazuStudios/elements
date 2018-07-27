@@ -5,7 +5,8 @@ import com.namazustudios.socialengine.service.gameon.client.invoker.v1.V1GameOnM
 
 import javax.ws.rs.client.Client;
 
-public class DefaultGameOnMatchInvokerBuilder extends AbstractPlayerRequestBuilder<GameOnMatchInvoker> {
+public class DefaultGameOnMatchInvokerBuilder extends AbstractPlayerRequestBuilder<GameOnMatchInvoker>
+                                              implements GameOnMatchInvoker.Builder {
 
     @Override
     protected GameOnMatchInvoker doBuild(final Client client, final GameOnSession gameOnSession) {
