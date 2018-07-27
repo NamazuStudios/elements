@@ -53,6 +53,20 @@ public enum DeviceOSType {
     /**
      * HTML5/JavaScript Games
      */
-    html
+    html;
+
+    /**
+     * The default type, as a hardcoded string.  (Designated this way to be used with enum constants).
+     */
+    public static final String DEFAULT_TYPE_STRING = "html";
+
+    /**
+     * The default type when not specified.  Currently defaults to {@link #html} per Amazon's recommendation.
+     *
+     * @return the default OS type.
+     */
+    public static DeviceOSType getDefault() {
+        return html;
+    }
 
 }

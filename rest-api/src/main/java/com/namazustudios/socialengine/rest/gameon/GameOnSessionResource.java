@@ -82,8 +82,10 @@ public class GameOnSessionResource {
             notes = "Gets a specific GameOn Session filtered by the supplied OS type.  This infers the current " +
                     "profile and guarantees that only one session is returned.  This avoisd the client needing to " +
                     "perform needless sifting through the results client side.")
-    public GameOnSession getCurrentGameOnSession(@QueryParam("os") final DeviceOSType deviceOSType) {
-        if (deviceOSType == null) throw new InvalidParameterException("os is a required parameter.");
+    public GameOnSession getCurrentGameOnSession(
+            @QueryParam("os")
+            @DefaultValue(DeviceOSType.DEFAULT_TYPE_STRING)
+            final DeviceOSType deviceOSType) {
         return getGameOnSessionService().getCurrentGameOnSession(deviceOSType);
     }
 
