@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.dao.GameOnApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.GameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.exception.ProfileNotFoundException;
+import com.namazustudios.socialengine.exception.gameon.GameOnRegistrationNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
@@ -74,6 +75,23 @@ public class UserGameOnRegistrationService implements GameOnRegistrationService 
 
         final GameOnRegistration registered = registerWithGameOn(gameOnRegistration);
         return getGameOnRegistrationDao().createRegistration(registered);
+
+    }
+
+    @Override
+    public GameOnRegistration createOrGetCurrentRegistration() {
+
+        final Profile profile = getCurrentProfileSupplier().get();
+
+        try {
+            return getGameOnRegistrationDao().getRegistrationForProfile(profile);
+        } catch (GameOnRegistrationNotFoundException ex) {
+            final GameOnRegistration gameOnRegistration = new GameOnRegistration();
+            gameOnRegistration.setProfile(profile);
+
+            final GameOnRegistration registered = registerWithGameOn(gameOnRegistration);
+            return getGameOnRegistrationDao().createRegistration(registered);
+        }
 
     }
 

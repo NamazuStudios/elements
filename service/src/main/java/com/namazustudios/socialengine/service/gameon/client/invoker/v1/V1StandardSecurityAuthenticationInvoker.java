@@ -1,9 +1,10 @@
-package com.namazustudios.socialengine.service.gameon.client.invoker;
+package com.namazustudios.socialengine.service.gameon.client.invoker.v1;
 
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import com.namazustudios.socialengine.model.gameon.GameOnRegistration;
 import com.namazustudios.socialengine.model.gameon.GameOnSession;
+import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnAuthenticationInvoker;
 import com.namazustudios.socialengine.service.gameon.client.model.AuthPlayerRequest;
 import com.namazustudios.socialengine.service.gameon.client.model.AuthPlayerResponse;
 

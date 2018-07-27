@@ -1,11 +1,11 @@
 package com.namazustudios.socialengine.rest.gameon;
 
 
-import com.namazustudios.socialengine.model.gameon.DeviceOSType;
-import com.namazustudios.socialengine.model.gameon.GameOnTournamentDetail;
-import com.namazustudios.socialengine.model.gameon.GameOnTournamentSummary;
+import com.namazustudios.socialengine.model.gameon.*;
+import com.namazustudios.socialengine.service.GameOnTournamentService;
 import io.swagger.annotations.*;
 
+import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
@@ -20,6 +20,8 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
 @Path("game_on/tournament/eligible")
 public class GameOnTournamentResource {
 
+    private GameOnTournamentService gameOnTournamentService;
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets all available tournaments",
@@ -31,8 +33,12 @@ public class GameOnTournamentResource {
             @DefaultValue(DeviceOSType.DEFAULT_TYPE_STRING)
             final DeviceOSType deviceOSType,
 
+            @QueryParam("build")
+            @DefaultValue(AppBuildType.DEFAULT_TYPE_STRING)
+            final AppBuildType appBuildType,
+
             @QueryParam("filterBy")
-            final Filter filterBy,
+            final TournamentFilter filterBy,
 
             @DefaultValue("")
             @QueryParam("playerAttributes")
@@ -40,8 +46,7 @@ public class GameOnTournamentResource {
             final String playerAttributes
 
     ) {
-        // TODO Return All Tournaments
-        return null;
+        return getGameOnTournamentService().getEligibleTournaments(deviceOSType, appBuildType, filterBy, playerAttributes);
     }
 
     @GET
@@ -59,8 +64,12 @@ public class GameOnTournamentResource {
             @DefaultValue(DeviceOSType.DEFAULT_TYPE_STRING)
             final DeviceOSType deviceOSType,
 
+            @QueryParam("build")
+            @DefaultValue(AppBuildType.DEFAULT_TYPE_STRING)
+            final AppBuildType appBuildType,
+
             @QueryParam("filterBy")
-            final Filter filterBy,
+            final TournamentFilter filterBy,
 
             @DefaultValue("")
             @QueryParam("playerAttributes")
@@ -68,15 +77,16 @@ public class GameOnTournamentResource {
             final String playerAttributes
 
     ) {
-        // TODO Return All Tournaments
-        return null;
+        return getGameOnTournamentService().getEligibleTournamentDetail(tournamentId, deviceOSType, appBuildType, filterBy, playerAttributes);
     }
 
-    @ApiModel("Tournament filter enumeration.")
-    public enum Filter {
-        live,
-        upcoming
+    public GameOnTournamentService getGameOnTournamentService() {
+        return gameOnTournamentService;
     }
 
+    @Inject
+    public void setGameOnTournamentService(GameOnTournamentService gameOnTournamentService) {
+        this.gameOnTournamentService = gameOnTournamentService;
+    }
 
 }

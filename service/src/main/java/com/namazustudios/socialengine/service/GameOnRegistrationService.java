@@ -53,6 +53,14 @@ public interface GameOnRegistrationService {
     GameOnRegistration createRegistration(GameOnRegistration gameOnRegistration);
 
     /**
+     * Creates, or gets the current, {@link GameOnRegistration} instance.  With the exception of misconfiguration or
+     * network error, this should reutrn an instance of {@link GameOnRegistration}.
+     *
+     * @return the {@link GameOnRegistration} instance
+     */
+    GameOnRegistration createOrGetCurrentRegistration();
+
+    /**
      * Deletes the {@link GameOnRegistration} with the supplied id.
      *
      * @param gameOnRegistrationId

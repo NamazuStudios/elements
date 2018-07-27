@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.gameon.AppBuildType;
 import com.namazustudios.socialengine.model.gameon.DeviceOSType;
 import com.namazustudios.socialengine.model.gameon.GameOnSession;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -52,6 +53,17 @@ public interface GameOnSessionService {
      * @return the {@link GameOnSession} as recorded by the service
      */
     GameOnSession createSession(GameOnSession gameOnSession);
+
+    /**
+     * Fetches, from the database a {@link GameOnSession} and returns it.  Except for misconfiguration or network
+     * errors, this call should always succeed and return an instance of {@link GameOnSession} which can be used to make
+     * subsequent network calls.
+     *
+     * @param deviceOSType the {@link DeviceOSType} used to create or lookup the {@link GameOnSession}
+     * @param appBuildType
+     * @return the {@link GameOnSession}, never null
+     */
+    GameOnSession createOrGetCurrentSession(DeviceOSType deviceOSType, AppBuildType appBuildType);
 
     /**
      * Deltes the {@link GameOnSession} with the supplied id as determined by {@link GameOnSession#getId()}

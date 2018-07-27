@@ -1,17 +1,19 @@
 package com.namazustudios.socialengine.service.gameon;
 
 import com.namazustudios.socialengine.dao.GameOnApplicationConfigurationDao;
-import com.namazustudios.socialengine.dao.GameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.GameOnSessionDao;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.exception.ProfileNotFoundException;
+import com.namazustudios.socialengine.exception.gameon.GameOnSessionNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
+import com.namazustudios.socialengine.model.gameon.AppBuildType;
 import com.namazustudios.socialengine.model.gameon.DeviceOSType;
 import com.namazustudios.socialengine.model.gameon.GameOnRegistration;
 import com.namazustudios.socialengine.model.gameon.GameOnSession;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.service.GameOnRegistrationService;
 import com.namazustudios.socialengine.service.GameOnSessionService;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnAuthenticationInvoker;
 
@@ -30,7 +32,7 @@ public class UserGameOnSessionService implements GameOnSessionService {
 
     private GameOnSessionDao gameOnSessionDao;
 
-    private GameOnRegistrationDao gameOnRegistrationDao;
+    private GameOnRegistrationService gameOnRegistrationService;
 
     private GameOnApplicationConfigurationDao gameOnApplicationConfigurationDao;
 
@@ -77,17 +79,40 @@ public class UserGameOnSessionService implements GameOnSessionService {
 
         gameOnSession.setProfile(profile);
 
-        final GameOnSession authenticated = authenticateSession(gameOnSession);
+        final GameOnRegistration gameOnRegistration = getGameOnRegistrationService().createOrGetCurrentRegistration();
+        final GameOnSession authenticated = authenticateSession(gameOnRegistration, gameOnSession);
+
         return getGameOnSessionDao().createSession(authenticated);
 
     }
 
-    private GameOnSession authenticateSession(final GameOnSession gameOnSession) {
+    @Override
+    public GameOnSession createOrGetCurrentSession(final DeviceOSType deviceOSType, final AppBuildType appBuildType) {
+
+        final Profile current = getCurrentProfileSupplier().get();
+
+        try {
+            return getGameOnSessionDao().getSessionForProfile(current, deviceOSType);
+        } catch (GameOnSessionNotFoundException ex) {
+
+            final GameOnSession gameOnSession = new GameOnSession();
+            final GameOnRegistration gameOnRegistration = getGameOnRegistrationService().createOrGetCurrentRegistration();
+
+            gameOnSession.setProfile(current);
+            gameOnSession.setDeviceOSType(deviceOSType);
+            gameOnSession.setAppBuildType(appBuildType);
+
+            final GameOnSession authenticated = authenticateSession(gameOnRegistration, gameOnSession);
+            return getGameOnSessionDao().createSession(authenticated);
+
+        }
+
+    }
+
+    private GameOnSession authenticateSession(final GameOnRegistration gameOnRegistration,
+                                              final GameOnSession gameOnSession) {
 
         final Profile profile = gameOnSession.getProfile();
-
-        final GameOnRegistration gameOnRegistration = getGameOnRegistrationDao()
-            .getRegistrationForProfile(profile);
 
         final GameOnApplicationConfiguration gameOnApplicationConfiguration = getGameOnApplicationConfigurationDao()
             .getDefaultConfigurationForApplication(profile.getApplication().getId());
@@ -124,6 +149,15 @@ public class UserGameOnSessionService implements GameOnSessionService {
         this.currentProfileSupplier = currentProfileSupplier;
     }
 
+    public GameOnRegistrationService getGameOnRegistrationService() {
+        return gameOnRegistrationService;
+    }
+
+    @Inject
+    public void setGameOnRegistrationService(GameOnRegistrationService gameOnRegistrationService) {
+        this.gameOnRegistrationService = gameOnRegistrationService;
+    }
+
     public ProfileDao getProfileDao() {
         return profileDao;
     }
@@ -140,15 +174,6 @@ public class UserGameOnSessionService implements GameOnSessionService {
     @Inject
     public void setGameOnSessionDao(GameOnSessionDao gameOnSessionDao) {
         this.gameOnSessionDao = gameOnSessionDao;
-    }
-
-    public GameOnRegistrationDao getGameOnRegistrationDao() {
-        return gameOnRegistrationDao;
-    }
-
-    @Inject
-    public void setGameOnRegistrationDao(GameOnRegistrationDao gameOnRegistrationDao) {
-        this.gameOnRegistrationDao = gameOnRegistrationDao;
     }
 
     public GameOnApplicationConfigurationDao getGameOnApplicationConfigurationDao() {

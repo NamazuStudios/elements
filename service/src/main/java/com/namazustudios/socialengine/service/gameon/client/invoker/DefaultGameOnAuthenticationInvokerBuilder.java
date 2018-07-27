@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.model.application.GameOnApplicationConfigu
 import com.namazustudios.socialengine.model.gameon.GameOnRegistration;
 import com.namazustudios.socialengine.model.gameon.GameOnSession;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnAuthenticationInvoker.Builder;
+import com.namazustudios.socialengine.service.gameon.client.invoker.v1.V1StandardSecurityAuthenticationInvoker;
 
 import javax.inject.Inject;
 import javax.ws.rs.client.Client;
