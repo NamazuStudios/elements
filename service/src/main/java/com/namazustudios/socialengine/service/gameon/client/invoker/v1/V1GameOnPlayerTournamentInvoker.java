@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
 import com.namazustudios.socialengine.model.gameon.*;
-import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnTournamentInvoker;
+import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnPlayerTournamentInvoker;
 import com.namazustudios.socialengine.service.gameon.client.model.GameOnTournamentListResponse;
 
 import javax.ws.rs.client.Client;
@@ -14,12 +14,14 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import static com.namazustudios.socialengine.service.gameon.client.Constants.*;
+import static com.namazustudios.socialengine.service.gameon.client.Constants.SESSION_ID;
+import static com.namazustudios.socialengine.service.gameon.client.Constants.X_API_KEY;
 import static java.util.Collections.emptyList;
 import static javax.ws.rs.core.Response.Status.*;
 
-public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
+public class V1GameOnPlayerTournamentInvoker implements GameOnPlayerTournamentInvoker {
 
-    public static final String TOURNAMENTS_PATH = "tournaments";
+    public static final String PLAYER_TOURNAMENTS_PATH = "player-tournaments";
 
     public static final String PERIOD = "period";
 
@@ -31,7 +33,7 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
 
     private final GameOnSession gameOnSession;
 
-    public V1GameOnTournamentInvoker(final Client client, final GameOnSession gameOnSession) {
+    public V1GameOnPlayerTournamentInvoker(final Client client, final GameOnSession gameOnSession) {
         this.client = client;
         this.gameOnSession = gameOnSession;
     }
@@ -40,16 +42,16 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
     public GameOnTournamentDetail getDetail(String playerAttributes, final String tournamentId) {
 
         WebTarget target = client
-            .target(BASE_API)
-            .path(VERSION_V1).path(TOURNAMENTS_PATH).path(tournamentId);
+                .target(BASE_API)
+                .path(VERSION_V1).path(PLAYER_TOURNAMENTS_PATH).path(tournamentId);
 
         if (playerAttributes != null)   target = target.queryParam(PLAYER_ATTRIBUTES, playerAttributes);
 
         final Response response = target
-            .request()
-            .header(SESSION_ID, gameOnSession.getSessionId())
-            .header(X_API_KEY, gameOnSession.getSessionApiKey())
-            .get();
+                .request()
+                .header(SESSION_ID, gameOnSession.getSessionId())
+                .header(X_API_KEY, gameOnSession.getSessionApiKey())
+                .get();
 
         return get(response, GameOnTournamentDetail.class, () -> null);
 
@@ -63,7 +65,7 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
 
         WebTarget target = client
             .target(BASE_API)
-            .path(VERSION_V1).path(TOURNAMENTS_PATH);
+            .path(VERSION_V1).path(PLAYER_TOURNAMENTS_PATH);
 
         if (period != null)             target = target.queryParam(PERIOD, period);
         if (filterBy != null)           target = target.queryParam(FILTER_BY, filterBy);
@@ -91,7 +93,7 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
         }  else if (NO_CONTENT.getStatusCode() == response.getStatus()) {
             return emptyResponseSupplier.get();
         } else if (NOT_FOUND.getStatusCode() == response.getStatus()) {
-            throw new GameOnTournamentNotFoundException("Tournament not found.");
+            throw new GameOnTournamentNotFoundException("Player Tournament not found.");
         } else if (FORBIDDEN.getStatusCode() == response.getStatus()) {
             throw new ForbiddenException("Player forbidden by GameOn");
         } else {

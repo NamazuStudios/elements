@@ -3,9 +3,10 @@ package com.namazustudios.socialengine.service.gameon;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
 import com.namazustudios.socialengine.model.gameon.*;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.service.GameOnPlayerTournamentService;
 import com.namazustudios.socialengine.service.GameOnSessionService;
-import com.namazustudios.socialengine.service.GameOnTournamentService;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnMatchInvoker;
+import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnPlayerTournamentInvoker;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnTournamentInvoker;
 
 import javax.inject.Inject;
@@ -18,7 +19,7 @@ import static com.namazustudios.socialengine.model.gameon.MatchFilter.live;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public class UserGameOnTournamentService implements GameOnTournamentService {
+public class UserGameOnPlayerTournamentService implements GameOnPlayerTournamentService {
 
     private Supplier<Profile> currentProfileSupplier;
 
@@ -26,7 +27,7 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
 
     private Provider<GameOnMatchInvoker.Builder> gameOnMatchInvokerBuilderProvider;
 
-    private Provider<GameOnTournamentInvoker.Builder> gameOnTournamentInvokerBuilderProvider;
+    private Provider<GameOnPlayerTournamentInvoker.Builder> gameOnPlayerTournamentInvokerBuilderProvider;
 
     @Override
     public List<GameOnTournamentSummary> getEligibleTournaments(
@@ -38,7 +39,7 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
 
         final Set<String> enteredTournamentIdSet = getEnteredMatchIds(gameOnSession, playerAttributes);
 
-        final List<GameOnTournamentSummary> gameOnTournamentSummaries = getGameOnTournamentInvokerBuilderProvider()
+        final List<GameOnTournamentSummary> gameOnTournamentSummaries = getGameOnPlayerTournamentInvokerBuilderProvider()
             .get()
             .withSession(gameOnSession)
             .build()
@@ -61,7 +62,7 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
 
         final Set<String> enteredTournamentIdSet = getEnteredMatchIds(gameOnSession, playerAttributes);
 
-        final GameOnTournamentDetail gameOnTournamentDetail = getGameOnTournamentInvokerBuilderProvider()
+        final GameOnTournamentDetail gameOnTournamentDetail = getGameOnPlayerTournamentInvokerBuilderProvider()
             .get()
             .withSession(gameOnSession)
             .build()
@@ -81,7 +82,7 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
             .get()
             .withSession(gameOnSession)
             .build()
-            .getSummaries(live, MatchType.developer, TournamentPeriod.all, playerAttributes);
+            .getSummaries(live, MatchType.player_generated, TournamentPeriod.all, playerAttributes);
 
         return gameOnMatchesAggregate
             .getMatches()
@@ -118,13 +119,13 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
         this.gameOnMatchInvokerBuilderProvider = gameOnMatchInvokerBuilderProvider;
     }
 
-    public Provider<GameOnTournamentInvoker.Builder> getGameOnTournamentInvokerBuilderProvider() {
-        return gameOnTournamentInvokerBuilderProvider;
+    public Provider<GameOnPlayerTournamentInvoker.Builder> getGameOnPlayerTournamentInvokerBuilderProvider() {
+        return gameOnPlayerTournamentInvokerBuilderProvider;
     }
 
     @Inject
-    public void setGameOnTournamentInvokerBuilderProvider(Provider<GameOnTournamentInvoker.Builder> gameOnTournamentInvokerBuilderProvider) {
-        this.gameOnTournamentInvokerBuilderProvider = gameOnTournamentInvokerBuilderProvider;
+    public void setGameOnPlayerTournamentInvokerBuilderProvider(Provider<GameOnPlayerTournamentInvoker.Builder> gameOnPlayerTournamentInvokerBuilderProvider) {
+        this.gameOnPlayerTournamentInvokerBuilderProvider = gameOnPlayerTournamentInvokerBuilderProvider;
     }
 
 }

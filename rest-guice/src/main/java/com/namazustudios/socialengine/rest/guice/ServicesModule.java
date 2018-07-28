@@ -12,6 +12,7 @@ import com.namazustudios.socialengine.service.auth.MockSessionServiceProvider;
 import com.namazustudios.socialengine.service.auth.StandardFacebookAuthService;
 import com.namazustudios.socialengine.service.auth.AnonSessionService;
 import com.namazustudios.socialengine.service.friend.FacebookFriendServiceProvider;
+import com.namazustudios.socialengine.service.gameon.GameOnPlayerTournamentServiceProvider;
 import com.namazustudios.socialengine.service.gameon.GameOnRegistrationServiceProvider;
 import com.namazustudios.socialengine.service.gameon.GameOnSessionServiceProvider;
 import com.namazustudios.socialengine.service.gameon.GameOnTournamentServiceProvider;
@@ -135,6 +136,10 @@ public class ServicesModule extends AbstractModule {
 
         bind(GameOnTournamentService.class)
                 .toProvider(GameOnTournamentServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
+        bind(GameOnPlayerTournamentService.class)
+                .toProvider(GameOnPlayerTournamentServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
         bind(Attributes.class).toProvider(AttributesProvider.class);

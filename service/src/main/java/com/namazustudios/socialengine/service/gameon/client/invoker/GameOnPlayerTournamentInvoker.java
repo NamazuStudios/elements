@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.model.gameon.TournamentPeriod;
 
 import java.util.List;
 
-public interface GameOnTournamentInvoker {
+public interface GameOnPlayerTournamentInvoker {
 
     GameOnTournamentDetail getDetail(String playerAttributes, String tournamentId);
 
@@ -16,6 +16,6 @@ public interface GameOnTournamentInvoker {
             TournamentPeriod period,
             String playerAttributes);
 
-    interface Builder extends PlayerRequestBuilder<GameOnTournamentInvoker> {}
+    interface Builder extends PlayerRequestBuilder<GameOnPlayerTournamentInvoker> {}
 
 }
