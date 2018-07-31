@@ -8,13 +8,12 @@ import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundE
 import com.namazustudios.socialengine.model.gameon.*;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnTournamentInvoker;
 import com.namazustudios.socialengine.service.gameon.client.model.EnterTournamentRequest;
+import com.namazustudios.socialengine.service.gameon.client.model.ErrorResponse;
 import com.namazustudios.socialengine.service.gameon.client.model.TournamentListResponse;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.function.Supplier;
@@ -98,27 +97,36 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
             final String tournamentId,
             final EnterTournamentRequest enterTournamentRequest) {
 
-        final Response response = client
+        final Invocation.Builder builder = client
             .target(BASE_API)
             .path(VERSION_V1).path(TOURNAMENTS_PATH).path("{tournamentId}").path(ENTER)
             .resolveTemplate("tournamentId", tournamentId)
             .request()
             .header(SESSION_ID, gameOnSession.getSessionId())
-            .header(X_API_KEY, gameOnSession.getSessionApiKey())
-            .post(entity(enterTournamentRequest, APPLICATION_JSON_TYPE));
+            .header(X_API_KEY, gameOnSession.getSessionApiKey());
+
+        final Response response =
+            enterTournamentRequest.getAccessKey() == null &&
+            enterTournamentRequest.getPlayerAttributes() == null ?
+                builder.post(null) :
+                builder.post(entity(enterTournamentRequest, APPLICATION_JSON_TYPE));
 
         if (OK.getStatusCode() == response.getStatus()) {
             return response.readEntity(GameOnTournamentEnterResponse.class);
-        } else if (BAD_REQUEST.getStatusCode() == response.getStatus()) {
-            throw new InvalidParameterException("Supplied invalid parameter.");
+        }
+
+        final ErrorResponse error = response.readEntity(ErrorResponse.class);
+
+        if (BAD_REQUEST.getStatusCode() == response.getStatus()) {
+            throw new InvalidParameterException("Supplied invalid parameter: " + error.getMessage());
         }  else if (FORBIDDEN.getStatusCode() == response.getStatus()) {
-            throw new ForbiddenException("Player forbidden by GameOn");
+            throw new ForbiddenException("Player forbidden by GameOn: " + error.getMessage());
         } else if (NOT_FOUND.getStatusCode() == response.getStatus()) {
-            throw new GameOnTournamentNotFoundException("Tournament not found.");
+            throw new GameOnTournamentNotFoundException("Tournament not found: " + error.getMessage());
         } else if (CONFLICT.getStatusCode() == response.getStatus()) {
-            throw new ConflictException("Could not enter game on tournament.");
+            throw new ConflictException("Could not enter GameOn tournament: " + error.getMessage());
         } else {
-            throw new InternalException("Unknown exception interacting with GameOn.");
+            throw new InternalException("Unknown exception interacting with GameOn: " + error.getMessage());
         }
 
     }
@@ -126,17 +134,23 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
     private <ResponseEntityT> ResponseEntityT get(final Response response,
                                                   final Class<ResponseEntityT> responseEntityTClass,
                                                   final Supplier<ResponseEntityT> emptyResponseSupplier) {
+
         if (OK.getStatusCode() == response.getStatus()) {
             return response.readEntity(responseEntityTClass);
-        }  else if (NO_CONTENT.getStatusCode() == response.getStatus()) {
+        } else if (NO_CONTENT.getStatusCode() == response.getStatus()) {
             return emptyResponseSupplier.get();
-        } else if (NOT_FOUND.getStatusCode() == response.getStatus()) {
-            throw new GameOnTournamentNotFoundException("Tournament not found.");
-        } else if (FORBIDDEN.getStatusCode() == response.getStatus()) {
-            throw new ForbiddenException("Player forbidden by GameOn");
-        } else {
-            throw new InternalException("Unknown exception interacting with GameOn.");
         }
+
+        final ErrorResponse error = response.readEntity(ErrorResponse.class);
+
+        if (NOT_FOUND.getStatusCode() == response.getStatus()) {
+            throw new GameOnTournamentNotFoundException("Tournament not found: " + error.getMessage());
+        } else if (FORBIDDEN.getStatusCode() == response.getStatus()) {
+            throw new ForbiddenException("Player forbidden by GameOn: " + error.getMessage());
+        } else {
+            throw new InternalException("Unknown exception interacting with GameOn: " + error.getMessage());
+        }
+
     }
 
 }
