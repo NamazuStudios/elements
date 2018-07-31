@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
 import com.namazustudios.socialengine.model.gameon.*;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnMatchInvoker;
+import com.namazustudios.socialengine.service.gameon.client.model.ErrorResponse;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
@@ -12,9 +13,9 @@ import javax.ws.rs.core.Response;
 
 import java.util.function.Supplier;
 
-import static com.namazustudios.socialengine.rt.ResponseCode.OK;
 import static com.namazustudios.socialengine.service.gameon.client.Constants.*;
 import static java.util.Collections.emptyList;
+import static javax.ws.rs.core.Response.Status.OK;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
@@ -90,17 +91,22 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
     private <ResponseEntityT> ResponseEntityT get(final Response response,
                                                   final Class<ResponseEntityT> responseEntityTClass,
                                                   final Supplier<ResponseEntityT> emptyResponseSupplier) {
-        if (OK.getCode() == response.getStatus()) {
+        if (OK.getStatusCode() == response.getStatus()) {
             return response.readEntity(responseEntityTClass);
         } else if (NO_CONTENT.getStatusCode() == response.getStatus()) {
             return emptyResponseSupplier.get();
-        } else if (NOT_FOUND.getStatusCode() == response.getStatus()) {
-            throw new GameOnTournamentNotFoundException("Match not found.");
-        } else if (FORBIDDEN.getStatusCode() == response.getStatus()) {
-            throw new ForbiddenException("Player forbidden by GameOn");
-        } else {
-            throw new InternalException("Unknown exception interacting with GameOn.");
         }
+
+        final ErrorResponse error = response.readEntity(ErrorResponse.class);
+
+        if (NOT_FOUND.getStatusCode() == response.getStatus()) {
+            throw new GameOnTournamentNotFoundException("GameOn Match not found: " + error.getMessage());
+        } else if (FORBIDDEN.getStatusCode() == response.getStatus()) {
+            throw new ForbiddenException("Player forbidden by GameOn: " + error.getMessage());
+        } else {
+            throw new InternalException("Unknown exception interacting with GameOn: " + error.getMessage());
+        }
+
     }
 
 }
