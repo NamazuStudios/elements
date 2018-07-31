@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rest.guice;
 
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.service.gameon.client.invoker.*;
+import com.namazustudios.socialengine.service.gameon.client.invoker.builder.*;
 
 public class GameOnInvokerModule extends AbstractModule {
     @Override

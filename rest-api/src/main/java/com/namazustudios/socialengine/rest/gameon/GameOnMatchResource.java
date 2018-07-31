@@ -59,9 +59,9 @@ public class GameOnMatchResource {
     @GET
     @Path("{matchId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets a single available tournament.",
-            notes = "Gets a single available tournament, specified by the identifier.")
-    public GameOnTournamentDetail getTournament(
+    @ApiOperation(value = "Gets a single match.",
+            notes = "Gets a single match, specified by the identifier.")
+    public GameOnMatchDetail getMatch(
 
             @PathParam("matchId")
             @ApiParam("The match ID.")
@@ -81,8 +81,8 @@ public class GameOnMatchResource {
 
     ) {
         return getGameOnMatchService().getMatch(
-                deviceOSType, appBuildType,       // Session related parameters
-                playerAttributes, matchId);  // Filer/query related parameters
+            deviceOSType, appBuildType,     // Session related parameters
+            playerAttributes, matchId);     // Filer/query related parameters
     }
 
     public GameOnMatchService getGameOnMatchService() {

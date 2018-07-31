@@ -9,7 +9,7 @@ public interface GameOnMatchService {
         MatchFilter filterBy, MatchType matchType, TournamentPeriod period,
         String playerAttributes);
 
-    GameOnTournamentDetail getMatch(
+    GameOnMatchDetail getMatch(
         DeviceOSType deviceOSType, AppBuildType appBuildType,
         String playerAttributes, String matchId);
 

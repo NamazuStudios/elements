@@ -1,8 +1,9 @@
-package com.namazustudios.socialengine.service.gameon.client.invoker;
+package com.namazustudios.socialengine.service.gameon.client.invoker.builder;
 
 import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import com.namazustudios.socialengine.model.gameon.GameOnRegistration;
+import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnRegistrationInvoker;
 import com.namazustudios.socialengine.service.gameon.client.invoker.v1.V1StandardSecurityRegistrationInvoker;
 
 import javax.inject.Inject;
