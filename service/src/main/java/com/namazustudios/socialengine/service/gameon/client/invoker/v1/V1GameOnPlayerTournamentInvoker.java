@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
 import com.namazustudios.socialengine.model.gameon.*;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnPlayerTournamentInvoker;
-import com.namazustudios.socialengine.service.gameon.client.model.GameOnTournamentListResponse;
+import com.namazustudios.socialengine.service.gameon.client.model.TournamentListResponse;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
@@ -77,8 +77,8 @@ public class V1GameOnPlayerTournamentInvoker implements GameOnPlayerTournamentIn
             .header(X_API_KEY, gameOnSession.getSessionApiKey())
             .get();
 
-        return get(response, GameOnTournamentListResponse.class, () -> {
-            final GameOnTournamentListResponse empty = new GameOnTournamentListResponse();
+        return get(response, TournamentListResponse.class, () -> {
+            final TournamentListResponse empty = new TournamentListResponse();
             empty.setTournaments(emptyList());
             return empty;
         }).getTournaments();

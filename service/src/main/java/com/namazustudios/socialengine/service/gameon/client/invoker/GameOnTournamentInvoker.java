@@ -1,9 +1,7 @@
 package com.namazustudios.socialengine.service.gameon.client.invoker;
 
-import com.namazustudios.socialengine.model.gameon.GameOnTournamentDetail;
-import com.namazustudios.socialengine.model.gameon.GameOnTournamentSummary;
-import com.namazustudios.socialengine.model.gameon.TournamentFilter;
-import com.namazustudios.socialengine.model.gameon.TournamentPeriod;
+import com.namazustudios.socialengine.model.gameon.*;
+import com.namazustudios.socialengine.service.gameon.client.model.EnterTournamentRequest;
 
 import java.util.List;
 
@@ -15,6 +13,10 @@ public interface GameOnTournamentInvoker {
             TournamentFilter filterBy,
             TournamentPeriod period,
             String playerAttributes);
+
+    GameOnTournamentEnterResponse postEnterRequest(
+            String tournamentId,
+            EnterTournamentRequest enterTournamentRequest);
 
     interface Builder extends PlayerRequestBuilder<GameOnTournamentInvoker> {}
 

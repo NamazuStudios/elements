@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.model.gameon.GameOnTournamentSummary;
 
 import java.util.List;
 
-public class GameOnTournamentListResponse {
+public class TournamentListResponse {
 
     private List<GameOnTournamentSummary> tournaments;
 

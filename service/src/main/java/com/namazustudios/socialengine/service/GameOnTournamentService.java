@@ -41,4 +41,15 @@ public interface GameOnTournamentService {
             DeviceOSType deviceOSType, AppBuildType appBuildType,
             String playerAttributes, String tournamentId);
 
+    /**
+     * Enters the current profile into a specific Game On tournament.
+     *
+     * @param tournamentId the tournament ID
+     * @param gameOnTournamentEnterRequest the request to enter the tournamen
+     * @return the {@link GameOnTournamentEnterResponse}, never null
+     */
+    GameOnTournamentEnterResponse enterTournament(
+            String tournamentId,
+            GameOnTournamentEnterRequest gameOnTournamentEnterRequest);
+
 }

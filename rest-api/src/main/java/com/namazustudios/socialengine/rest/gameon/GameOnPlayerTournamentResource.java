@@ -15,10 +15,9 @@ import java.util.List;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
-@Api(value = "Eligible GameOn Player Tournaments",
-    description = "Provides access to the eligible tournaments.  An eligible tournament is one for which the player " +
-                  "qualifies and has not already entered.",
-    authorizations = {@Authorization(SESSION_SECRET)})
+@Api(description = "Provides access to the eligible tournaments.  An eligible tournament is one for which the player " +
+                   "qualifies and has not already entered.",
+     authorizations = {@Authorization(SESSION_SECRET)})
 @Path("game_on/tournament/player/eligible")
 public class GameOnPlayerTournamentResource {
 

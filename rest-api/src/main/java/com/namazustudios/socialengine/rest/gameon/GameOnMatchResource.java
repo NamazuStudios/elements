@@ -13,10 +13,9 @@ import javax.ws.rs.core.MediaType;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
-@Api(value = "GameOn Matches",
-        description = "Provides access to the current profile's game on matches.  In the purview of the GameOn APIs, " +
-                      "match refers those tracked by the GameOn system and not the Matches managed by Elements.",
-        authorizations = {@Authorization(SESSION_SECRET)})
+@Api(description = "Provides access to the current profile's game on matches.  In the purview of the GameOn APIs, " +
+                   "match refers those tracked by the GameOn system and not the Matches managed by Elements.",
+     authorizations = {@Authorization(SESSION_SECRET)})
 @Path("game_on/match")
 public class GameOnMatchResource {
 

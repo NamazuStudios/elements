@@ -1,20 +1,28 @@
 package com.namazustudios.socialengine.service.gameon.client.invoker.v1;
 
+import com.namazustudios.socialengine.exception.ConflictException;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InternalException;
+import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
 import com.namazustudios.socialengine.model.gameon.*;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnTournamentInvoker;
-import com.namazustudios.socialengine.service.gameon.client.model.GameOnTournamentListResponse;
+import com.namazustudios.socialengine.service.gameon.client.model.EnterTournamentRequest;
+import com.namazustudios.socialengine.service.gameon.client.model.TournamentListResponse;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.function.Supplier;
 
 import static com.namazustudios.socialengine.service.gameon.client.Constants.*;
 import static java.util.Collections.emptyList;
+import static javax.ws.rs.client.Entity.entity;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.*;
 
 public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
@@ -22,6 +30,8 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
     public static final String TOURNAMENTS_PATH = "tournaments";
 
     public static final String PERIOD = "period";
+
+    public static final String ENTER = "enter";
 
     public static final String FILTER_BY = "filterBy";
 
@@ -75,11 +85,41 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
             .header(X_API_KEY, gameOnSession.getSessionApiKey())
             .get();
 
-        return get(response, GameOnTournamentListResponse.class, () -> {
-            final GameOnTournamentListResponse empty = new GameOnTournamentListResponse();
+        return get(response, TournamentListResponse.class, () -> {
+            final TournamentListResponse empty = new TournamentListResponse();
             empty.setTournaments(emptyList());
             return empty;
         }).getTournaments();
+
+    }
+
+    @Override
+    public GameOnTournamentEnterResponse postEnterRequest(
+            final String tournamentId,
+            final EnterTournamentRequest enterTournamentRequest) {
+
+        final Response response = client
+            .target(BASE_API)
+            .path(VERSION_V1).path(TOURNAMENTS_PATH).path("{tournamentId}").path(ENTER)
+            .resolveTemplate("tournamentId", tournamentId)
+            .request()
+            .header(SESSION_ID, gameOnSession.getSessionId())
+            .header(X_API_KEY, gameOnSession.getSessionApiKey())
+            .post(entity(enterTournamentRequest, APPLICATION_JSON_TYPE));
+
+        if (OK.getStatusCode() == response.getStatus()) {
+            return response.readEntity(GameOnTournamentEnterResponse.class);
+        } else if (BAD_REQUEST.getStatusCode() == response.getStatus()) {
+            throw new InvalidParameterException("Supplied invalid parameter.");
+        }  else if (FORBIDDEN.getStatusCode() == response.getStatus()) {
+            throw new ForbiddenException("Player forbidden by GameOn");
+        } else if (NOT_FOUND.getStatusCode() == response.getStatus()) {
+            throw new GameOnTournamentNotFoundException("Tournament not found.");
+        } else if (CONFLICT.getStatusCode() == response.getStatus()) {
+            throw new ConflictException("Could not enter game on tournament.");
+        } else {
+            throw new InternalException("Unknown exception interacting with GameOn.");
+        }
 
     }
 

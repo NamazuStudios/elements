@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.service.GameOnSessionService;
 import com.namazustudios.socialengine.service.GameOnTournamentService;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnMatchInvoker;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnTournamentInvoker;
+import com.namazustudios.socialengine.service.gameon.client.model.EnterTournamentRequest;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import static com.namazustudios.socialengine.model.gameon.MatchFilter.fulfilled_prizes;
 import static com.namazustudios.socialengine.model.gameon.MatchFilter.live;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -88,6 +90,35 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
             .stream()
             .map(s -> s.getTournamentId())
             .collect(toSet());
+
+    }
+
+    @Override
+    public GameOnTournamentEnterResponse enterTournament(
+            final String tournamentId,
+            final GameOnTournamentEnterRequest gameOnTournamentEnterRequest) {
+
+        final DeviceOSType deviceOSType = gameOnTournamentEnterRequest.getDeviceOSType() == null ?
+                                          DeviceOSType.getDefault()                              :
+                                          gameOnTournamentEnterRequest.getDeviceOSType();
+
+        final AppBuildType appBuildType = gameOnTournamentEnterRequest.getAppBuildType() == null ?
+                                          AppBuildType.getDefault()                              :
+                                          gameOnTournamentEnterRequest.getAppBuildType();
+
+        final GameOnSession gameOnSession;
+        gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
+
+        final EnterTournamentRequest enterTournamentRequest;
+        enterTournamentRequest = new EnterTournamentRequest();
+        enterTournamentRequest.setAccessKey(gameOnTournamentEnterRequest.getAccessKey());
+        enterTournamentRequest.setPlayerAttributes(gameOnTournamentEnterRequest.getPlayerAttributes());
+
+        return getGameOnTournamentInvokerBuilderProvider()
+            .get()
+            .withSession(gameOnSession)
+            .build()
+            .postEnterRequest(tournamentId, enterTournamentRequest);
 
     }
 

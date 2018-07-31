@@ -21,9 +21,8 @@ import javax.ws.rs.core.MediaType;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
-@Api(value = "GameOn Session",
-    description = "Handles the creation and deleteion of Amazon GameOn Sessions.  Only one session may exist per " +
-                  "Profile and Device OS Type.",
+@Api(description = "Handles the creation and deleteion of Amazon GameOn Sessions.  Only one session may exist per " +
+                   "Profile and Device OS Type.",
     authorizations = {@Authorization(SESSION_SECRET)})
 @Path("game_on/session")
 public class GameOnSessionResource {
@@ -34,9 +33,10 @@ public class GameOnSessionResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Search Game On Sessions",
-            notes = "Searches all GameOnSessions in the system and returning the metadata for all matches " +
-                    "against the given search filter.")
+    @ApiOperation(
+        value = "Search Game On Sessions",
+        notes = "Searches all GameOnSessions in the system and returning the metadata for all matches " +
+                "against the given search filter.")
     public Pagination<GameOnSession> getGameOnSessions(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
