@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
+import com.namazustudios.socialengine.dao.mongo.MongoConstants;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Property;
@@ -7,6 +8,7 @@ import org.mongodb.morphia.annotations.Property;
 import java.util.Base64;
 import java.util.function.Function;
 
+import static com.namazustudios.socialengine.dao.mongo.MongoConstants.*;
 import static java.lang.System.arraycopy;
 
 /**
@@ -18,8 +20,6 @@ public class MongoFriendshipId {
     public static final int VERSION = 0;
 
     public static final int VERSION_LENGTH = 1;
-
-    public static final int OID_LENGTH_BYTES = 12;
 
     public static final int LENGTH_BYTES = (2 * OID_LENGTH_BYTES) + VERSION_LENGTH;
 

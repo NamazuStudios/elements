@@ -12,6 +12,7 @@ import com.namazustudios.elements.fts.SearchException;
 import com.namazustudios.elements.fts.TopDocsSearchResult;
 import com.namazustudios.socialengine.model.Pagination;
 import org.bson.types.ObjectId;
+import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -37,6 +38,8 @@ public class MongoDBUtils {
     private ObjectIndex objectIndex;
 
     private int queryMaxResults;
+
+    private Mapper mapper;
 
     /**
      * Performs the supplied operation, catching all {@link MongoCommandException} instances and
@@ -71,6 +74,24 @@ public class MongoDBUtils {
         } catch (IllegalArgumentException ex) {
             throw new NotFoundException("Object with ID " + objectId + " not found.");
         }
+    }
+
+
+    /**
+     * Transforms the given {@link Query} to the resulting {@link Pagination}.
+     *
+     * @param query the query
+     * @param offset the offset
+     * @param count the count
+     * @param modelTClass the destination Class
+     * @param <ModelT> the desired model type
+     * @param <MongoModelT> the mongoDB model type
+     * @return a {@link Pagination} instance for the given ModelT
+     */
+    public <ModelT, MongoModelT> Pagination<ModelT> paginationFromQuery(
+            final Query<MongoModelT> query, final int offset, final int count,
+            final Class<ModelT> modelTClass) {
+        return paginationFromQuery(query, offset, count, o -> getMapper().map(o, modelTClass));
     }
 
     /**
@@ -149,6 +170,28 @@ public class MongoDBUtils {
      * @param searchQuery the search query
      * @param offset the offset
      * @param count the count
+     * @param modelTClass the destination Class
+     * @param <ModelT>
+     * @param <MongoModelT>
+     * @return the pagination object
+     */
+    public <ModelT, MongoModelT> Pagination<ModelT> paginationFromSearch(
+            final Class<MongoModelT> kind,
+            final org.apache.lucene.search.Query searchQuery,
+            final int offset, final int count,
+            final Class<ModelT> modelTClass) {
+        return paginationFromSearch(kind, searchQuery, offset, count, o -> getMapper().map(o, modelTClass));
+    }
+
+    /**
+     * Combines the functionality of {@link #queryForSearch(Class, org.apache.lucene.search.Query, int, int)} with
+     * the functionality of {@link #paginationFromQuery(Query, int, int, Function)} together to simplify
+     * searching for objects.
+     *
+     * @param kind the kind to search
+     * @param searchQuery the search query
+     * @param offset the offset
+     * @param count the count
      * @param function the function to transform the values {@see {@link #paginationFromQuery(Query, int, int, Function)}}
      * @param <ModelT>
      * @param <MongoModelT>
@@ -198,6 +241,15 @@ public class MongoDBUtils {
     @Inject
     public void setQueryMaxResults(    @Named(Constants.QUERY_MAX_RESULTS) int queryMaxResults) {
         this.queryMaxResults = queryMaxResults;
+    }
+
+    public Mapper getMapper() {
+        return mapper;
+    }
+
+    @Inject
+    public void setMapper(Mapper mapper) {
+        this.mapper = mapper;
     }
 
 }

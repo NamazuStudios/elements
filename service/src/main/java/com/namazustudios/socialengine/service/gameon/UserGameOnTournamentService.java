@@ -1,0 +1,161 @@
+package com.namazustudios.socialengine.service.gameon;
+
+import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
+import com.namazustudios.socialengine.model.gameon.*;
+import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.service.GameOnSessionService;
+import com.namazustudios.socialengine.service.GameOnTournamentService;
+import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnMatchInvoker;
+import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnTournamentInvoker;
+import com.namazustudios.socialengine.service.gameon.client.model.EnterTournamentRequest;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Supplier;
+
+import static com.namazustudios.socialengine.model.gameon.MatchFilter.fulfilled_prizes;
+import static com.namazustudios.socialengine.model.gameon.MatchFilter.live;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+
+public class UserGameOnTournamentService implements GameOnTournamentService {
+
+    private Supplier<Profile> currentProfileSupplier;
+
+    private GameOnSessionService gameOnSessionService;
+
+    private Provider<GameOnMatchInvoker.Builder> gameOnMatchInvokerBuilderProvider;
+
+    private Provider<GameOnTournamentInvoker.Builder> gameOnTournamentInvokerBuilderProvider;
+
+    @Override
+    public List<GameOnTournamentSummary> getEligibleTournaments(
+            final DeviceOSType deviceOSType, final AppBuildType appBuildType,
+            final TournamentFilter filterBy, final TournamentPeriod period, final String playerAttributes) {
+
+        final GameOnSession gameOnSession;
+        gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
+
+        final Set<String> enteredTournamentIdSet = getEnteredMatchIds(gameOnSession, playerAttributes);
+
+        final List<GameOnTournamentSummary> gameOnTournamentSummaries = getGameOnTournamentInvokerBuilderProvider()
+            .get()
+            .withSession(gameOnSession)
+            .build()
+            .getSummaries(filterBy, period, playerAttributes);
+
+        return gameOnTournamentSummaries
+            .stream()
+            .filter(s -> !enteredTournamentIdSet.contains(s.getTournamentId()))
+            .collect(toList());
+
+    }
+
+    @Override
+    public GameOnTournamentDetail getEligibleTournamentDetail(
+            final DeviceOSType deviceOSType, final AppBuildType appBuildType,
+            final String playerAttributes, final String tournamentId) {
+
+        final GameOnSession gameOnSession;
+        gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
+
+        final Set<String> enteredTournamentIdSet = getEnteredMatchIds(gameOnSession, playerAttributes);
+
+        final GameOnTournamentDetail gameOnTournamentDetail = getGameOnTournamentInvokerBuilderProvider()
+            .get()
+            .withSession(gameOnSession)
+            .build()
+            .getDetail(playerAttributes, tournamentId);
+
+        if (enteredTournamentIdSet.contains(gameOnTournamentDetail.getTournamentId())) {
+            throw new GameOnTournamentNotFoundException("Tournament not found.");
+        }
+
+        return gameOnTournamentDetail;
+
+    }
+
+    private Set<String> getEnteredMatchIds(final GameOnSession gameOnSession, final String playerAttributes) {
+
+        final GameOnMatchesAggregate gameOnMatchesAggregate = getGameOnMatchInvokerBuilderProvider()
+            .get()
+            .withSession(gameOnSession)
+            .build()
+            .getSummaries(live, MatchType.developer, TournamentPeriod.all, playerAttributes);
+
+        return gameOnMatchesAggregate
+            .getMatches()
+            .stream()
+            .map(s -> s.getTournamentId())
+            .collect(toSet());
+
+    }
+
+    @Override
+    public GameOnTournamentEnterResponse enterTournament(
+            final String tournamentId,
+            final GameOnTournamentEnterRequest gameOnTournamentEnterRequest) {
+
+        final DeviceOSType deviceOSType = gameOnTournamentEnterRequest.getDeviceOSType() == null ?
+                                          DeviceOSType.getDefault()                              :
+                                          gameOnTournamentEnterRequest.getDeviceOSType();
+
+        final AppBuildType appBuildType = gameOnTournamentEnterRequest.getAppBuildType() == null ?
+                                          AppBuildType.getDefault()                              :
+                                          gameOnTournamentEnterRequest.getAppBuildType();
+
+        final GameOnSession gameOnSession;
+        gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
+
+        final EnterTournamentRequest enterTournamentRequest;
+        enterTournamentRequest = new EnterTournamentRequest();
+        enterTournamentRequest.setAccessKey(gameOnTournamentEnterRequest.getAccessKey());
+        enterTournamentRequest.setPlayerAttributes(gameOnTournamentEnterRequest.getPlayerAttributes());
+
+        return getGameOnTournamentInvokerBuilderProvider()
+            .get()
+            .withSession(gameOnSession)
+            .build()
+            .postEnterRequest(tournamentId, enterTournamentRequest);
+
+    }
+
+    public Supplier<Profile> getCurrentProfileSupplier() {
+        return currentProfileSupplier;
+    }
+
+    @Inject
+    public void setCurrentProfileSupplier(Supplier<Profile> currentProfileSupplier) {
+        this.currentProfileSupplier = currentProfileSupplier;
+    }
+
+    public GameOnSessionService getGameOnSessionService() {
+        return gameOnSessionService;
+    }
+
+    @Inject
+    public void setGameOnSessionService(GameOnSessionService gameOnSessionService) {
+        this.gameOnSessionService = gameOnSessionService;
+    }
+
+    public Provider<GameOnMatchInvoker.Builder> getGameOnMatchInvokerBuilderProvider() {
+        return gameOnMatchInvokerBuilderProvider;
+    }
+
+    @Inject
+    public void setGameOnMatchInvokerBuilderProvider(Provider<GameOnMatchInvoker.Builder> gameOnMatchInvokerBuilderProvider) {
+        this.gameOnMatchInvokerBuilderProvider = gameOnMatchInvokerBuilderProvider;
+    }
+
+    public Provider<GameOnTournamentInvoker.Builder> getGameOnTournamentInvokerBuilderProvider() {
+        return gameOnTournamentInvokerBuilderProvider;
+    }
+
+    @Inject
+    public void setGameOnTournamentInvokerBuilderProvider(Provider<GameOnTournamentInvoker.Builder> gameOnTournamentInvokerBuilderProvider) {
+        this.gameOnTournamentInvokerBuilderProvider = gameOnTournamentInvokerBuilderProvider;
+    }
+
+}

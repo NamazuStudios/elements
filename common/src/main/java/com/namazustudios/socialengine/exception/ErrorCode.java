@@ -33,6 +33,11 @@ public enum  ErrorCode {
     DUPLICATE,
 
     /**
+     * The request conflicts with existing data for some reason.
+     */
+    CONFLICT,
+
+    /**
      * Invalid data or input was provided.
      */
     INVALID_DATA,

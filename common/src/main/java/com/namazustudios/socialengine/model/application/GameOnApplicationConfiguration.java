@@ -6,7 +6,8 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
-@ApiModel
+@ApiModel(description = "Represents the application configuration for Amazon GameOn.  This houses the api keys as " +
+                        "well as the public encryption key (if applicable).")
 public class GameOnApplicationConfiguration extends ApplicationConfiguration {
 
     @NotNull
@@ -23,8 +24,7 @@ public class GameOnApplicationConfiguration extends ApplicationConfiguration {
                       "administrator users.")
     private String adminApiKey;
 
-    @NotNull
-    @ApiModelProperty("The public key for signing requests.")
+    @ApiModelProperty("The public key for signing requests.  Only required for applications with advanced security.")
     private String publicKey;
 
     public String getGameId() {
