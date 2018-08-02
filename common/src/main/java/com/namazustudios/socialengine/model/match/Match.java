@@ -31,6 +31,7 @@ public class Match implements Serializable {
     @ApiModelProperty("The scheme to use when matching with other players.")
     private String scheme;
 
+    @NotNull(groups = Insert.class)
     @ApiModelProperty("The player requesting the match.  If not specified, then the current profile will be inferred.")
     private Profile player;
 
