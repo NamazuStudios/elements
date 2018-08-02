@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.model.gameon;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
+import com.namazustudios.socialengine.model.match.Match;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -24,6 +25,9 @@ public class GameOnTournamentEnterRequest {
 
     @ApiModelProperty("The player attribues, if applicable.  This may be empty or null.")
     private Map<String, String> playerAttributes;
+
+    @ApiModelProperty("The Match")
+    private Match match;
 
     public DeviceOSType getDeviceOSType() {
         return deviceOSType;
@@ -57,6 +61,14 @@ public class GameOnTournamentEnterRequest {
         this.playerAttributes = playerAttributes;
     }
 
+    public Match getMatch() {
+        return match;
+    }
+
+    public void setMatch(Match match) {
+        this.match = match;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -65,12 +77,13 @@ public class GameOnTournamentEnterRequest {
         return getDeviceOSType() == that.getDeviceOSType() &&
                 getAppBuildType() == that.getAppBuildType() &&
                 Objects.equals(getAccessKey(), that.getAccessKey()) &&
-                Objects.equals(getPlayerAttributes(), that.getPlayerAttributes());
+                Objects.equals(getPlayerAttributes(), that.getPlayerAttributes()) &&
+                Objects.equals(getMatch(), that.getMatch());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getDeviceOSType(), getAppBuildType(), getAccessKey(), getPlayerAttributes());
+        return Objects.hash(getDeviceOSType(), getAppBuildType(), getAccessKey(), getPlayerAttributes(), getMatch());
     }
 
     @Override
@@ -80,6 +93,7 @@ public class GameOnTournamentEnterRequest {
                 ", appBuildType=" + appBuildType +
                 ", accessKey='" + accessKey + '\'' +
                 ", playerAttributes=" + playerAttributes +
+                ", match=" + match +
                 '}';
     }
 

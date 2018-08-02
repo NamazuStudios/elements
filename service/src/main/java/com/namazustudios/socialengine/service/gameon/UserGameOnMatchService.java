@@ -41,10 +41,10 @@ public class UserGameOnMatchService implements GameOnMatchService {
         gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
 
         return getGameOnMatchInvokerProvider()
-                .get()
-                .withSession(gameOnSession)
-                .build()
-                .getDetail(matchId, playerAttributes);
+            .get()
+            .withSession(gameOnSession)
+            .build()
+            .getDetail(matchId, playerAttributes);
 
     }
 
