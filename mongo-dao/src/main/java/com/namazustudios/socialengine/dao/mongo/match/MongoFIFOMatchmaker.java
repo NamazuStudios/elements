@@ -1,7 +1,7 @@
-package com.namazustudios.socialengine.dao.mongo;
+package com.namazustudios.socialengine.dao.mongo.match;
 
 import com.namazustudios.socialengine.dao.Matchmaker;
-import com.namazustudios.socialengine.dao.mongo.model.MongoMatch;
+import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
@@ -44,6 +44,7 @@ public class MongoFIFOMatchmaker implements Matchmaker {
              .field("scheme").equal(match.getScheme())
              .field("gameId").doesNotExist()
              .field("opponent").doesNotExist()
+             .field("bucket").doesNotExist()
              .field("lock").doesNotExist();
 
         final FindOptions findOptions = new FindOptions().limit(maxCandidatesToConsider);

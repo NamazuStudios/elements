@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.dao.mongo.*;
 import com.namazustudios.socialengine.dao.mongo.application.*;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnSessionDao;
+import com.namazustudios.socialengine.dao.mongo.match.MongoMatchDao;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoAdvancedDatastoreProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoMatchmakerFunctionProvider;

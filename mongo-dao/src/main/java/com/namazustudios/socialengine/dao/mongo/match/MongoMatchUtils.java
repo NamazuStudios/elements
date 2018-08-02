@@ -1,10 +1,10 @@
-package com.namazustudios.socialengine.dao.mongo;
+package com.namazustudios.socialengine.dao.mongo.match;
 
-import com.mongodb.MongoException;
-import com.mongodb.WriteResult;
 import com.namazustudios.socialengine.dao.Matchmaker;
-import com.namazustudios.socialengine.dao.mongo.model.MongoMatch;
-import com.namazustudios.socialengine.dao.mongo.model.MongoMatchLock;
+import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils;
+import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
+import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
+import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatchLock;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.match.Match;
@@ -22,7 +22,6 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.stream;
@@ -289,13 +288,14 @@ public class MongoMatchUtils {
         }
 
         public void attempt() throws MongoConcurrentUtils.ContentionException {
+
             final Query<MongoMatch> query = getDatastore().createQuery(MongoMatch.class);
 
             query.field("_id").equal(match.getObjectId())
-                    .or(
-                            query.criteria("lock").doesNotExist(),
-                            query.criteria("lock.timestamp").lessThan(timeout)
-                    );
+                 .or(
+                    query.criteria("lock").doesNotExist(),
+                    query.criteria("lock.timestamp").lessThan(timeout)
+                 );
 
             final UpdateOperations<MongoMatch> updates = getDatastore()
                     .createUpdateOperations(MongoMatch.class)
