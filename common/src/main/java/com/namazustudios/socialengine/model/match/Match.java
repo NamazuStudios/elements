@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.model.match;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -31,19 +32,22 @@ public class Match implements Serializable {
     @ApiModelProperty("The scheme to use when matching with other players.")
     private String scheme;
 
-    @NotNull(groups = Insert.class)
+    @NotNull(groups = {Insert.class, Update.class})
     @ApiModelProperty("The player requesting the match.  If not specified, then the current profile will be inferred.")
     private Profile player;
 
+    @NotNull(groups = Update.class)
     @Null(groups = {Create.class, Insert.class})
     @ApiModelProperty("The opposing player, or null if no suitable opponent has been found.")
     private Profile opponent;
 
-    @Null
+    @NotNull(groups = Update.class)
+    @Null(groups = {Create.class, Insert.class})
     @ApiModelProperty("The time of the last modification of the match.")
     private long lastUpdatedTimestamp;
 
-    @Null
+    @NotNull(groups = Update.class)
+    @Null(groups = {Create.class, Insert.class})
     @ApiModelProperty("The system-assigned game ID of the match.  Null until the match is successfully made.")
     private String gameId;
 

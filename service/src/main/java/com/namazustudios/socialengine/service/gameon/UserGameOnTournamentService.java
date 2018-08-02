@@ -11,7 +11,7 @@ import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.GameOnSessionService;
 import com.namazustudios.socialengine.service.GameOnTournamentService;
-import com.namazustudios.socialengine.service.MatchPairing;
+import com.namazustudios.socialengine.service.MatchServiceUtils;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnMatchInvoker;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnTournamentInvoker;
 import com.namazustudios.socialengine.service.gameon.client.model.EnterTournamentRequest;
@@ -29,9 +29,11 @@ import static java.util.stream.Collectors.toSet;
 
 public class UserGameOnTournamentService implements GameOnTournamentService {
 
-    private MatchPairing matchPairing;
+    private MatchServiceUtils matchServiceUtils;
 
     private GameOnMatchDao gameOnMatchDao;
+
+    private MatchmakingApplicationConfigurationDao matchmakingApplicationConfigurationDao;
 
     private Supplier<Profile> currentProfileSupplier;
 
@@ -121,6 +123,9 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
 
         final Match match = gameOnTournamentEnterRequest.getMatch();
 
+        final MatchmakingApplicationConfiguration configuration = getMatchmakingApplicationConfigurationDao()
+            .getApplicationConfiguration(profile.getApplication().getId(), match.getScheme());
+
         if (match.getPlayer() == null) {
             match.setPlayer(profile);
         } else if (!Objects.equals(profile, match.getPlayer())) {
@@ -143,20 +148,20 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
 
         final Matchmaker matchmaker = getGameOnMatchDao().getMatchmaker(response.getTournamentId());
         final Match inserted = getGameOnMatchDao().createMatch(response.getTournamentId(), match);
-        final Match paired = getMatchPairing().attempt(matchmaker, inserted);
+        final Match paired = getMatchServiceUtils().attempt(matchmaker, inserted, configuration);
         response.setMatch(paired);
 
         return response;
 
     }
 
-    public MatchPairing getMatchPairing() {
-        return matchPairing;
+    public MatchServiceUtils getMatchServiceUtils() {
+        return matchServiceUtils;
     }
 
     @Inject
-    public void setMatchPairing(MatchPairing matchPairing) {
-        this.matchPairing = matchPairing;
+    public void setMatchServiceUtils(MatchServiceUtils matchServiceUtils) {
+        this.matchServiceUtils = matchServiceUtils;
     }
 
     public GameOnMatchDao getGameOnMatchDao() {
@@ -166,6 +171,15 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
     @Inject
     public void setGameOnMatchDao(GameOnMatchDao gameOnMatchDao) {
         this.gameOnMatchDao = gameOnMatchDao;
+    }
+
+    public MatchmakingApplicationConfigurationDao getMatchmakingApplicationConfigurationDao() {
+        return matchmakingApplicationConfigurationDao;
+    }
+
+    @Inject
+    public void setMatchmakingApplicationConfigurationDao(MatchmakingApplicationConfigurationDao matchmakingApplicationConfigurationDao) {
+        this.matchmakingApplicationConfigurationDao = matchmakingApplicationConfigurationDao;
     }
 
     public Supplier<Profile> getCurrentProfileSupplier() {
@@ -203,5 +217,7 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
     public void setGameOnTournamentInvokerBuilderProvider(Provider<GameOnTournamentInvoker.Builder> gameOnTournamentInvokerBuilderProvider) {
         this.gameOnTournamentInvokerBuilderProvider = gameOnTournamentInvokerBuilderProvider;
     }
+
+
 
 }

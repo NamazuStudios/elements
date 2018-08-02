@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.service.match;
 
-import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
 import com.namazustudios.socialengine.dao.MatchmakingApplicationConfigurationDao;
@@ -8,14 +7,10 @@ import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
 import com.namazustudios.socialengine.model.match.Match;
-import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.rt.Attributes;
-import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.SimpleAttributes;
+import com.namazustudios.socialengine.service.MatchServiceUtils;
 import com.namazustudios.socialengine.service.MatchService;
 import com.namazustudios.socialengine.service.Topic;
 import com.namazustudios.socialengine.service.TopicService;
@@ -23,8 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
-import java.io.Serializable;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -36,22 +29,20 @@ public class UserMatchService implements MatchService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserMatchService.class);
 
-    private Provider<Attributes> attributesProvider;
-
     private Supplier<Profile> currentProfileSupplier;
 
     private MatchDao matchDao;
 
     private TopicService topicService;
 
-    private ContextFactory contextFactory;
+    private MatchServiceUtils matchServiceUtils;
 
     private MatchmakingApplicationConfigurationDao matchmakingApplicationConfigurationDao;
 
     @Override
     public Match getMatch(final String matchId) {
         final Profile profile = getCurrentProfileSupplier().get();
-        return redactOpponentUser(getMatchDao().getMatchForPlayer(profile.getId(), matchId));
+        return getMatchServiceUtils().redactOpponentUser(getMatchDao().getMatchForPlayer(profile.getId(), matchId));
     }
 
     @Override
@@ -59,7 +50,7 @@ public class UserMatchService implements MatchService {
         final Profile profile = getCurrentProfileSupplier().get();
         return getMatchDao()
             .getMatchesForPlayer(profile.getId(), offset, count)
-            .transform(this::redactOpponentUser);
+            .transform(getMatchServiceUtils()::redactOpponentUser);
     }
 
     @Override
@@ -67,17 +58,13 @@ public class UserMatchService implements MatchService {
         final Profile profile = getCurrentProfileSupplier().get();
         return getMatchDao()
             .getMatchesForPlayer(profile.getId(), offset, count, search)
-            .transform(this::redactOpponentUser);
+            .transform(getMatchServiceUtils()::redactOpponentUser);
     }
 
     @Override
     public Match createMatch(final Match match) {
 
         final Profile profile = getCurrentProfileSupplier().get();
-
-        final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration;
-        matchmakingApplicationConfiguration = getMatchmakingApplicationConfigurationDao()
-            .getApplicationConfiguration(profile.getApplication().getId(), match.getScheme());
 
         if (match.getPlayer() == null) {
             match.setPlayer(profile);
@@ -88,64 +75,7 @@ public class UserMatchService implements MatchService {
         }
 
         final Match newMatch = getMatchDao().createMatch(match);
-
-        try {
-
-            final Matchmaker matchmaker = getMatchDao().getMatchmaker(matchmakingApplicationConfiguration.getAlgorithm());
-
-            final Matchmaker.SuccessfulMatchTuple successfulMatchTuple = matchmaker
-                .attemptToFindOpponent(newMatch, (p, o) -> finalize(p, o, matchmakingApplicationConfiguration));
-
-            return handleSuccessfulMatch(successfulMatchTuple);
-
-        } catch (NoSuitableMatchException ex) {
-            return redactOpponentUser(newMatch);
-        }
-
-    }
-
-    private Match handleSuccessfulMatch(final Matchmaker.SuccessfulMatchTuple successfulMatchTuple) {
-        notifyComplete(successfulMatchTuple.getPlayerMatch());
-        notifyComplete(successfulMatchTuple.getOpponentMatch());
-        return redactOpponentUser(successfulMatchTuple.getPlayerMatch());
-    }
-
-    private void notifyComplete(final Match match) {
-
-        final Topic<Match> matchTopic = getTopicService()
-                .getTopicForTypeNamed(Match.class, Match.ROOT_TOPIC)
-                .getSubtopicNamed(match.getId());
-
-        try (final Topic.Publisher<Match> matchPublisher = matchTopic.getPublisher()) {
-            matchPublisher.accept(match);
-        }
-
-    }
-
-    private String finalize(final Match player, final Match opponent,
-                            final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration) {
-
-        final String module = matchmakingApplicationConfiguration.getSuccess().getModule();
-        final String method = matchmakingApplicationConfiguration.getSuccess().getMethod();
-
-        final Profile profile = getCurrentProfileSupplier().get();
-        final Context context = getContextFactory().getContextForApplication(profile.getApplication().getId());
-
-        final Attributes attributes = new SimpleAttributes.Builder()
-            .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
-            .build();
-
-        final Object result = context
-            .getHandlerContext()
-            .invokeRetainedHandler(attributes, module, method, player, opponent);
-
-        logger.debug("Player {} Opponent {}", player, opponent);
-
-        if (!(result instanceof String)) {
-            throw new InternalError("Returned value not string from match processor.");
-        }
-
-        return (String) result;
+        return attempt(newMatch);
 
     }
 
@@ -160,7 +90,7 @@ public class UserMatchService implements MatchService {
         final Topic.Subscription subscription =  getTopicService()
             .getTopicForTypeNamed(Match.class, Match.ROOT_TOPIC)
             .getSubtopicNamed(match.getId())
-            .subscribeNext(m -> matchConsumer.accept(redactOpponentUser(m)), exceptionConsumer);
+            .subscribeNext(m -> matchConsumer.accept(getMatchServiceUtils().redactOpponentUser(m)), exceptionConsumer);
 
         try {
             attempt(match);
@@ -175,16 +105,12 @@ public class UserMatchService implements MatchService {
     private Match attempt(final Match match) throws NoSuitableMatchException {
 
         final Profile profile = getCurrentProfileSupplier().get();
-        final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration;
-        matchmakingApplicationConfiguration = getMatchmakingApplicationConfigurationDao()
+
+        final MatchmakingApplicationConfiguration configuration = getMatchmakingApplicationConfigurationDao()
             .getApplicationConfiguration(profile.getApplication().getId(), match.getScheme());
 
-        final Matchmaker matchmaker = getMatchDao().getMatchmaker(matchmakingApplicationConfiguration.getAlgorithm());
-
-        final Matchmaker.SuccessfulMatchTuple successfulMatchTuple = matchmaker
-            .attemptToFindOpponent(match, (p, o) -> finalize(p, o, matchmakingApplicationConfiguration));
-
-        return handleSuccessfulMatch(successfulMatchTuple);
+        final Matchmaker matchmaker = getMatchDao().getMatchmaker(configuration.getAlgorithm());
+        return getMatchServiceUtils().attempt(matchmaker, match, configuration);
 
     }
 
@@ -203,27 +129,6 @@ public class UserMatchService implements MatchService {
             exceptionPublisher.accept(null);
         }
 
-    }
-
-    private Match redactOpponentUser(final Match match) {
-
-        final Profile opponent = match.getOpponent();
-
-        if (opponent != null) {
-            match.getOpponent().setUser(null);
-        }
-
-        return match;
-
-    }
-
-    public Provider<Attributes> getAttributesProvider() {
-        return attributesProvider;
-    }
-
-    @Inject
-    public void setAttributesProvider(Provider<Attributes> attributesProvider) {
-        this.attributesProvider = attributesProvider;
     }
 
     public Supplier<Profile> getCurrentProfileSupplier() {
@@ -253,13 +158,13 @@ public class UserMatchService implements MatchService {
         this.topicService = topicService;
     }
 
-    public ContextFactory getContextFactory() {
-        return contextFactory;
+    public MatchServiceUtils getMatchServiceUtils() {
+        return matchServiceUtils;
     }
 
     @Inject
-    public void setContextFactory(ContextFactory contextFactory) {
-        this.contextFactory = contextFactory;
+    public void setMatchServiceUtils(MatchServiceUtils matchServiceUtils) {
+        this.matchServiceUtils = matchServiceUtils;
     }
 
     public MatchmakingApplicationConfigurationDao getMatchmakingApplicationConfigurationDao() {
