@@ -19,6 +19,8 @@ import java.util.function.BiFunction;
  */
 public class MongoFIFOMatchmaker implements Matchmaker {
 
+    private String scope;
+
     private AdvancedDatastore datastore;
 
     private MongoMatchDao mongoMatchDao;
@@ -44,13 +46,24 @@ public class MongoFIFOMatchmaker implements Matchmaker {
              .field("scheme").equal(match.getScheme())
              .field("gameId").doesNotExist()
              .field("opponent").doesNotExist()
-             .field("bucket").doesNotExist()
              .field("lock").doesNotExist();
+
+        if (scope == null) {
+            query.field("scope").doesNotExist();
+        } else {
+            query.field("scope").equal(scope);
+        }
 
         final FindOptions findOptions = new FindOptions().limit(maxCandidatesToConsider);
         final List<MongoMatch> mongoMatchList = query.asList(findOptions);
         return getMongoMatchUtils().attemptToPairCandidates(mongoMatch, mongoMatchList, finalizer);
 
+    }
+
+    @Override
+    public Matchmaker withScope(final String scope) {
+        this.scope = scope;
+        return this;
     }
 
     public AdvancedDatastore getDatastore() {

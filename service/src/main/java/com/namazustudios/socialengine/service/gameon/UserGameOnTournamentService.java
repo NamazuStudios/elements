@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service.gameon;
 
 import com.namazustudios.socialengine.dao.GameOnMatchDao;
+import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
 import com.namazustudios.socialengine.dao.MatchmakingApplicationConfigurationDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
@@ -29,9 +30,9 @@ import static java.util.stream.Collectors.toSet;
 
 public class UserGameOnTournamentService implements GameOnTournamentService {
 
-    private MatchServiceUtils matchServiceUtils;
+    private MatchDao matchDao;
 
-    private GameOnMatchDao gameOnMatchDao;
+    private MatchServiceUtils matchServiceUtils;
 
     private MatchmakingApplicationConfigurationDao matchmakingApplicationConfigurationDao;
 
@@ -146,8 +147,12 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
             .build()
             .postEnterRequest(tournamentId, enterTournamentRequest);
 
-        final Matchmaker matchmaker = getGameOnMatchDao().getMatchmaker(response.getTournamentId());
-        final Match inserted = getGameOnMatchDao().createMatch(response.getTournamentId(), match);
+        final Match inserted = getMatchDao().createMatch(match);
+
+        final Matchmaker matchmaker = getMatchDao()
+            .getMatchmaker(configuration.getAlgorithm())
+            .withScope(response.getTournamentId());
+
         final Match paired = getMatchServiceUtils().attempt(matchmaker, inserted, configuration);
         response.setMatch(paired);
 
@@ -164,13 +169,13 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
         this.matchServiceUtils = matchServiceUtils;
     }
 
-    public GameOnMatchDao getGameOnMatchDao() {
-        return gameOnMatchDao;
+    public MatchDao getMatchDao() {
+        return matchDao;
     }
 
     @Inject
-    public void setGameOnMatchDao(GameOnMatchDao gameOnMatchDao) {
-        this.gameOnMatchDao = gameOnMatchDao;
+    public void setMatchDao(MatchDao matchDao) {
+        this.matchDao = matchDao;
     }
 
     public MatchmakingApplicationConfigurationDao getMatchmakingApplicationConfigurationDao() {

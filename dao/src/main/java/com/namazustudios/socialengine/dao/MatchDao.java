@@ -75,7 +75,7 @@ public interface MatchDao {
      *
      * @throws {@link NotImplementedException} if the supplied algorithm is not supported.
      */
-    Matchmaker getMatchmaker(final MatchingAlgorithm matchingAlgorithm);
+    Matchmaker getMatchmaker(MatchingAlgorithm matchingAlgorithm);
 
     /**
      * Delets a {@link Match}, specyifying the id of the {@link Match}.  Note that a {@link Match} may not be deleted

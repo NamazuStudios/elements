@@ -32,6 +32,10 @@ public class Match implements Serializable {
     @ApiModelProperty("The scheme to use when matching with other players.")
     private String scheme;
 
+    @ApiModelProperty("An optional scope for the match.  For example, if the match were part of a tournament, " +
+                      "it could be scoped to the unique ID of the tournament.")
+    private String scope;
+
     @NotNull(groups = {Insert.class, Update.class})
     @ApiModelProperty("The player requesting the match.  If not specified, then the current profile will be inferred.")
     private Profile player;
@@ -84,6 +88,24 @@ public class Match implements Serializable {
      */
     public void setScheme(String scheme) {
         this.scheme = scheme;
+    }
+
+    /**
+     * Gets the scope of the match.
+     *
+     * @return the scope
+     */
+    public String getScope() {
+        return scope;
+    }
+
+    /**
+     * Sets the scope of the scheme.
+     *
+     * @param scope the scope
+     */
+    public void setScope(String scope) {
+        this.scope = scope;
     }
 
     /**
