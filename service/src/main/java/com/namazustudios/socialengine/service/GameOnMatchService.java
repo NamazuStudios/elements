@@ -36,4 +36,14 @@ public interface GameOnMatchService {
         DeviceOSType deviceOSType, AppBuildType appBuildType,
         String playerAttributes, String matchId);
 
+    /**
+     * Enters a match by suppling an instance of {@link GameOnEnterMatchRequest}.  Throwing the appropriate exception
+     * if the request failed for any reason.
+     *
+     * @param matchId the GameOn assigned Match ID
+     * @param gameOnEnterMatchRequest the {@link GameOnEnterMatchRequest} to use
+     * @return the {@link GameOnEnterMatchResponse}, never null
+     */
+    GameOnEnterMatchResponse enterMatch(String matchId, GameOnEnterMatchRequest gameOnEnterMatchRequest);
+
 }
