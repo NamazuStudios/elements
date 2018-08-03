@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.service.gameon;
 
-import com.namazustudios.socialengine.dao.GameOnMatchDao;
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
 import com.namazustudios.socialengine.dao.MatchmakingApplicationConfigurationDao;
@@ -148,6 +147,7 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
             .postEnterRequest(tournamentId, enterTournamentRequest);
 
         final Match inserted = getMatchDao().createMatch(match);
+        match.setScope(response.getTournamentId());
 
         final Matchmaker matchmaker = getMatchDao()
             .getMatchmaker(configuration.getAlgorithm())
