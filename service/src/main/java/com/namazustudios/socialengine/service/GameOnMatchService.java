@@ -37,7 +37,7 @@ public interface GameOnMatchService {
         String playerAttributes, String matchId);
 
     /**
-     * Enters a match by suppling an instance of {@link GameOnEnterMatchRequest}.  Throwing the appropriate exception
+     * Enters a match by supplying an instance of {@link GameOnEnterMatchRequest}.  Throwing the appropriate exception
      * if the request failed for any reason.
      *
      * @param matchId the GameOn assigned Match ID

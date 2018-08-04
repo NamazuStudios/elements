@@ -103,7 +103,7 @@ public class UserGameOnMatchService implements GameOnMatchService {
             .get()
             .withSession(gameOnSession)
             .build()
-            .enterMatch(enterMatchRequest);
+            .postEnterMatch(matchId, enterMatchRequest);
 
         final Match inserted = getMatchDao().createMatch(match);
         match.setScope(response.getTournamentId());

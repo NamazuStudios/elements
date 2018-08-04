@@ -3,8 +3,6 @@ package com.namazustudios.socialengine.service.gameon.client.invoker;
 import com.namazustudios.socialengine.model.gameon.*;
 import com.namazustudios.socialengine.service.gameon.client.model.EnterMatchRequest;
 
-import java.util.List;
-
 public interface GameOnMatchInvoker {
 
     GameOnMatchDetail getDetail(String matchId, String playerAttributes);
@@ -14,7 +12,8 @@ public interface GameOnMatchInvoker {
                                         TournamentPeriod period,
                                         String playerAttributes);
 
-    GameOnEnterMatchResponse enterMatch(EnterMatchRequest enterMatchRequest);
+    GameOnEnterMatchResponse postEnterMatch(String matchId,
+                                            EnterMatchRequest enterMatchRequest);
 
     interface Builder extends PlayerRequestBuilder<GameOnMatchInvoker> {}
 
