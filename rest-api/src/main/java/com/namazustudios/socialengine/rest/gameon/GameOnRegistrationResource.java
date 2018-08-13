@@ -20,9 +20,10 @@ import javax.ws.rs.core.MediaType;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
-@Api(description = "Handles the creation and deletion of the GameOn Registrations tokens.  This allows clients to " +
+@Api(value = "GameOnRegistration",
+     description = "Handles the creation and deletion of the GameOn Registrations tokens.  This allows clients to " +
                    "create, read, and delete registration.  Only one GameOnRegistration may exist per Profile.",
-    authorizations = {@Authorization(SESSION_SECRET)})
+     authorizations = {@Authorization(SESSION_SECRET)})
 @Path("game_on/registration")
 public class GameOnRegistrationResource {
 
@@ -33,8 +34,8 @@ public class GameOnRegistrationResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Search Game On Registrations",
-            notes = "Searches all GameOnRegistrations in the system and returning the metadata for all matches " +
-                    "against the given search filter.")
+                  notes = "Searches all GameOnRegistrations in the system and returning the metadata for all matches " +
+                          "against the given search filter.")
     public Pagination<GameOnRegistration> getGameOnRegistrations(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
@@ -60,7 +61,7 @@ public class GameOnRegistrationResource {
     @Path("{gameOnRegistrationId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a Specific Registration",
-            notes = "Gets a specific profile by profile ID.")
+                  notes = "Gets a specific profile by profile ID.")
     public GameOnRegistration getGameOnRegistration(@PathParam("gameOnRegistrationId") String gameOnRegistrationId) {
 
         gameOnRegistrationId = Strings.nullToEmpty(gameOnRegistrationId).trim();
@@ -89,7 +90,8 @@ public class GameOnRegistrationResource {
             notes = "Supplying a GameOn Registration, this will create a new token based on the information supplied " +
                     "to the endpoint.  The response will contain the token as it was written to the database.  Only " +
                     "one GameOnRegistration may exist per Profile.  However a user may see several " +
-                    "GameOnRegistration instances for their User.")
+                    "GameOnRegistration instances for their User.  " +
+                    "See:  https://developer.amazon.com/docs/gameon/game-api-ref.html#register-player")
     public GameOnRegistration createRegistration(final GameOnRegistration gameOnRegistration) {
 
         getValidationHelper().validateModel(gameOnRegistration, ValidationGroups.Create.class);

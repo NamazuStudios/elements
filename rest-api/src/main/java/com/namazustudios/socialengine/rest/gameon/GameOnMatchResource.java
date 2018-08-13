@@ -13,7 +13,8 @@ import javax.ws.rs.core.MediaType;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
-@Api(description = "Provides access to the current profile's game on matches.  In the purview of the GameOn APIs, " +
+@Api(value = "GameOnMatches",
+     description = "Provides access to the current profile's game on matches.  In the purview of the GameOn APIs, " +
                    "match refers those tracked by the GameOn system and not the Matches managed by Elements.",
      authorizations = {@Authorization(SESSION_SECRET)})
 @Path("game_on/match")
@@ -25,7 +26,7 @@ public class GameOnMatchResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
             value = "Gets all matches.",
-            notes = "")
+            notes = "See: https://developer.amazon.com/docs/gameon/game-api-ref.html#get-matches")
     public GameOnMatchesAggregate getMatches(
 
             @QueryParam("os")
@@ -59,7 +60,7 @@ public class GameOnMatchResource {
     @Path("{matchId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a single match.",
-            notes = "Gets a single match, specified by the identifier.")
+                  notes = "See: https://developer.amazon.com/docs/gameon/game-api-ref.html#get-match-details")
     public GameOnMatchDetail getMatch(
 
             @PathParam("matchId")
@@ -82,6 +83,35 @@ public class GameOnMatchResource {
         return getGameOnMatchService().getMatch(
             deviceOSType, appBuildType,     // Session related parameters
             playerAttributes, matchId);     // Filer/query related parameters
+    }
+
+    @POST
+    @Path("{matchId}/enter")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Re-Enters a Match",
+                  notes = "See: https://developer.amazon.com/docs/gameon/game-api-ref.html#enter-match")
+    public GameOnMatchDetail enterMatch(
+
+            @PathParam("matchId")
+            @ApiParam("The match ID.")
+            final String matchId,
+
+            @QueryParam("os")
+            @DefaultValue(DeviceOSType.DEFAULT_TYPE_STRING)
+            final DeviceOSType deviceOSType,
+
+            @QueryParam("build")
+            @DefaultValue(AppBuildType.DEFAULT_TYPE_STRING)
+            final AppBuildType appBuildType,
+
+            @QueryParam("playerAttributes")
+            @ApiParam("Custom player attributes.")
+            final String playerAttributes
+
+    ) {
+        return getGameOnMatchService().getMatch(
+                deviceOSType, appBuildType,     // Session related parameters
+                playerAttributes, matchId);     // Filer/query related parameters
     }
 
     public GameOnMatchService getGameOnMatchService() {
