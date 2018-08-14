@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.gameon.client.invoker.v1;
 
+import com.namazustudios.socialengine.GameOnConstants;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
@@ -13,7 +14,6 @@ import javax.ws.rs.core.Response;
 
 import java.util.function.Supplier;
 
-import static com.namazustudios.socialengine.service.gameon.client.Constants.*;
 import static java.util.Collections.emptyList;
 import static javax.ws.rs.core.Response.Status.OK;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
@@ -44,15 +44,15 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
                                        final String playerAttributes) {
 
         WebTarget target = client
-            .target(BASE_API)
-            .path(VERSION_V1).path(MATCHES_PATH).path(matchId);
+            .target(GameOnConstants.BASE_API)
+            .path(GameOnConstants.VERSION_V1).path(MATCHES_PATH).path(matchId);
 
         if (playerAttributes != null)   target = target.queryParam(PLAYER_ATTRIBUTES, playerAttributes);
 
         final Response response = target
             .request()
-            .header(SESSION_ID, gameOnSession.getSessionId())
-            .header(X_API_KEY, gameOnSession.getSessionApiKey())
+            .header(GameOnConstants.SESSION_ID, gameOnSession.getSessionId())
+            .header(GameOnConstants.X_API_KEY, gameOnSession.getSessionApiKey())
             .get();
 
         return get(response, GameOnMatchDetail.class, () -> null);
@@ -66,8 +66,8 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
                                                final String playerAttributes) {
 
         WebTarget target = client
-            .target(BASE_API)
-            .path(VERSION_V1).path(MATCHES_PATH);
+            .target(GameOnConstants.BASE_API)
+            .path(GameOnConstants.VERSION_V1).path(MATCHES_PATH);
 
         if (period != null)             target = target.queryParam(PERIOD, period);
         if (filterBy != null)           target = target.queryParam(FILTER_BY, filterBy);
@@ -75,8 +75,8 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
 
         final Response response = target
             .request()
-            .header(SESSION_ID, gameOnSession.getSessionId())
-            .header(X_API_KEY, gameOnSession.getSessionApiKey())
+            .header(GameOnConstants.SESSION_ID, gameOnSession.getSessionId())
+            .header(GameOnConstants.X_API_KEY, gameOnSession.getSessionApiKey())
             .get();
 
         return get(response, GameOnMatchesAggregate.class, () -> {

@@ -9,6 +9,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import static com.namazustudios.socialengine.GameOnConstants.ADMIN_BASE_API;
+import static com.namazustudios.socialengine.GameOnConstants.VERSION_V1;
+import static java.lang.String.format;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 /**
@@ -27,6 +30,7 @@ public class UiConfigResource {
     public UiConfig getUiConfig() {
         final UiConfig uiConfig = new UiConfig();
         uiConfig.setApiUrl(getOutsideApiUrl());
+        uiConfig.setGameOnAdminApiUrl(format("%s/%s", ADMIN_BASE_API, VERSION_V1));
         return uiConfig;
     }
 

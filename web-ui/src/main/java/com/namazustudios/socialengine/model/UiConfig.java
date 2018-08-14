@@ -10,7 +10,7 @@ public class UiConfig {
 
     private String apiUrl;
 
-    private String gameOnApiUrl;
+    private String gameOnAdminApiUrl;
 
     public String getApiUrl() {
         return apiUrl;
@@ -20,12 +20,12 @@ public class UiConfig {
         this.apiUrl = apiUrl;
     }
 
-    public String getGameOnApiUrl() {
-        return gameOnApiUrl;
+    public String getGameOnAdminApiUrl() {
+        return gameOnAdminApiUrl;
     }
 
-    public void setGameOnApiUrl(String gameOnApiUrl) {
-        this.gameOnApiUrl = gameOnApiUrl;
+    public void setGameOnAdminApiUrl(String gameOnAdminApiUrl) {
+        this.gameOnAdminApiUrl = gameOnAdminApiUrl;
     }
 
 }

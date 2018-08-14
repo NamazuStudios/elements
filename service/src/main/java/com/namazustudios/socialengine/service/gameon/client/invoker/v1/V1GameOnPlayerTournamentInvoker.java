@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.gameon.client.invoker.v1;
 
+import com.namazustudios.socialengine.GameOnConstants;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
@@ -13,9 +14,8 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.function.Supplier;
 
-import static com.namazustudios.socialengine.service.gameon.client.Constants.*;
-import static com.namazustudios.socialengine.service.gameon.client.Constants.SESSION_ID;
-import static com.namazustudios.socialengine.service.gameon.client.Constants.X_API_KEY;
+import static com.namazustudios.socialengine.GameOnConstants.SESSION_ID;
+import static com.namazustudios.socialengine.GameOnConstants.X_API_KEY;
 import static java.util.Collections.emptyList;
 import static javax.ws.rs.core.Response.Status.*;
 
@@ -42,8 +42,8 @@ public class V1GameOnPlayerTournamentInvoker implements GameOnPlayerTournamentIn
     public GameOnTournamentDetail getDetail(String playerAttributes, final String tournamentId) {
 
         WebTarget target = client
-                .target(BASE_API)
-                .path(VERSION_V1).path(PLAYER_TOURNAMENTS_PATH).path(tournamentId);
+                .target(GameOnConstants.BASE_API)
+                .path(GameOnConstants.VERSION_V1).path(PLAYER_TOURNAMENTS_PATH).path(tournamentId);
 
         if (playerAttributes != null)   target = target.queryParam(PLAYER_ATTRIBUTES, playerAttributes);
 
@@ -64,8 +64,8 @@ public class V1GameOnPlayerTournamentInvoker implements GameOnPlayerTournamentIn
             final String playerAttributes) {
 
         WebTarget target = client
-            .target(BASE_API)
-            .path(VERSION_V1).path(PLAYER_TOURNAMENTS_PATH);
+            .target(GameOnConstants.BASE_API)
+            .path(GameOnConstants.VERSION_V1).path(PLAYER_TOURNAMENTS_PATH);
 
         if (period != null)             target = target.queryParam(PERIOD, period);
         if (filterBy != null)           target = target.queryParam(FILTER_BY, filterBy);

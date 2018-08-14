@@ -9,12 +9,15 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
+import org.fusesource.restygwt.client.ServiceRoots;
 
 import javax.inject.Inject;
 
+import static com.namazustudios.socialengine.GameOnConstants.GAMEON_SERVICE_ROOT;
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static org.fusesource.restygwt.client.Defaults.setDispatcher;
 import static org.fusesource.restygwt.client.Defaults.setServiceRoot;
+import static org.fusesource.restygwt.client.ServiceRoots.add;
 
 /**
  * Created by patricktwohig on 5/4/15.
@@ -58,6 +61,7 @@ public class ControlPanelBootstrapper implements Bootstrapper {
             @Override
             public void onSuccess(Method method, UiConfig uiConfig) {
                 setServiceRoot(uiConfig.getApiUrl());
+                add(GAMEON_SERVICE_ROOT, uiConfig.getGameOnAdminApiUrl());
                 refreshCurrentUser();
             }
 
