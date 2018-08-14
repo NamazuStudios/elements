@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
-import com.namazustudios.socialengine.model.gameon.AppBuildType;
+import com.namazustudios.socialengine.model.gameon.game.AppBuildType;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 

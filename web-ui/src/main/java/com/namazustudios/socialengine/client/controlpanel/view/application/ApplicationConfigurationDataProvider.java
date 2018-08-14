@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.client.controlpanel.view.application;
 
 import com.google.gwt.view.client.HasData;
 import com.google.gwt.view.client.Range;
-import com.namazustudios.socialengine.client.rest.client.ApplicationConfigurationClient;
+import com.namazustudios.socialengine.client.rest.client.internal.ApplicationConfigurationClient;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;

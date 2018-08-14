@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rest.gameon;
 
 
-import com.namazustudios.socialengine.model.gameon.*;
+import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.service.GameOnTournamentService;
 import io.swagger.annotations.*;
 

@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service.gameon;
 
-import com.namazustudios.socialengine.model.gameon.*;
+import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.service.GameOnMatchService;
 import com.namazustudios.socialengine.service.GameOnSessionService;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnMatchInvoker;

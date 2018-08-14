@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.service.gameon.client.invoker;
 
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
-import com.namazustudios.socialengine.model.gameon.GameOnRegistration;
-import com.namazustudios.socialengine.model.gameon.GameOnSession;
+import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
+import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 
 public interface GameOnAuthenticationInvoker {
 

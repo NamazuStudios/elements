@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.client.rest;
 
 import com.google.gwt.inject.client.AbstractGinModule;
-import com.namazustudios.socialengine.client.rest.client.*;
+import com.namazustudios.socialengine.client.rest.client.internal.LoginClient;
+import com.namazustudios.socialengine.client.rest.client.internal.*;
+import com.namazustudios.socialengine.client.rest.client.internal.UserClient;
 import com.namazustudios.socialengine.client.rest.gin.UserProvider;
 import com.namazustudios.socialengine.client.rest.service.LoginService;
 import com.namazustudios.socialengine.client.rest.service.RestyLoginService;

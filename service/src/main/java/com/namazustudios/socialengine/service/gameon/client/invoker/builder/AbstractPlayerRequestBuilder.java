@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service.gameon.client.invoker.builder;
 
-import com.namazustudios.socialengine.model.gameon.GameOnSession;
+import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 import com.namazustudios.socialengine.service.gameon.client.invoker.PlayerRequestBuilder;
 
 import javax.inject.Inject;

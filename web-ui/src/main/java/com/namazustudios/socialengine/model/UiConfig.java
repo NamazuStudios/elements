@@ -10,12 +10,22 @@ public class UiConfig {
 
     private String apiUrl;
 
+    private String gameOnApiUrl;
+
     public String getApiUrl() {
         return apiUrl;
     }
 
     public void setApiUrl(String apiUrl) {
         this.apiUrl = apiUrl;
+    }
+
+    public String getGameOnApiUrl() {
+        return gameOnApiUrl;
+    }
+
+    public void setGameOnApiUrl(String gameOnApiUrl) {
+        this.gameOnApiUrl = gameOnApiUrl;
     }
 
 }

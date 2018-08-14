@@ -11,7 +11,7 @@ import com.gwtplatform.mvp.client.ViewImpl;
 import com.namazustudios.socialengine.client.modal.ConfirmationModal;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
 import com.namazustudios.socialengine.client.modal.OnConfirmHandler;
-import com.namazustudios.socialengine.client.rest.client.ShortLinkClient;
+import com.namazustudios.socialengine.client.rest.client.internal.ShortLinkClient;
 import com.namazustudios.socialengine.model.ShortLink;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;

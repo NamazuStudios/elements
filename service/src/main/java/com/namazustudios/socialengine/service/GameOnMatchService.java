@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service;
 
-import com.namazustudios.socialengine.model.gameon.*;
+import com.namazustudios.socialengine.model.gameon.game.*;
 
 /**
  * Used to manage the GameOn Matches.
@@ -20,9 +20,9 @@ public interface GameOnMatchService {
      * @return the {@link GameOnMatchesAggregate}, never null
      */
     GameOnMatchesAggregate getMatches(
-        DeviceOSType deviceOSType, AppBuildType appBuildType,
-        MatchFilter filterBy, MatchType matchType, TournamentPeriod period,
-        String playerAttributes);
+            DeviceOSType deviceOSType, AppBuildType appBuildType,
+            MatchFilter filterBy, MatchType matchType, TournamentPeriod period,
+            String playerAttributes);
 
     /**
      * Gets a specific {@link GameOnMatchDetail} for a GameOn match with the suppplied ID and player attributes.

@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.service.gameon.client.model;
 
-import com.namazustudios.socialengine.model.gameon.AppBuildType;
-import com.namazustudios.socialengine.model.gameon.DeviceOSType;
+import com.namazustudios.socialengine.model.gameon.game.AppBuildType;
+import com.namazustudios.socialengine.model.gameon.game.DeviceOSType;
 
 public class AuthPlayerRequest {
 

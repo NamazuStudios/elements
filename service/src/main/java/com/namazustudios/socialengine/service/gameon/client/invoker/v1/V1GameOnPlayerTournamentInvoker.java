@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.service.gameon.client.invoker.v1;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
-import com.namazustudios.socialengine.model.gameon.*;
+import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnPlayerTournamentInvoker;
 import com.namazustudios.socialengine.service.gameon.client.model.TournamentListResponse;
 

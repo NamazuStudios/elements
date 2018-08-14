@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
-import com.namazustudios.socialengine.model.gameon.*;
+import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnTournamentInvoker;
 import com.namazustudios.socialengine.service.gameon.client.model.EnterTournamentRequest;
 import com.namazustudios.socialengine.service.gameon.client.model.ErrorResponse;

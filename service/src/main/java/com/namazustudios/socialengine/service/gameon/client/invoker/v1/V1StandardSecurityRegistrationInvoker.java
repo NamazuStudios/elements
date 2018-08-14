@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.service.gameon.client.invoker.v1;
 
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
-import com.namazustudios.socialengine.model.gameon.GameOnRegistration;
+import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnRegistrationInvoker;
 import com.namazustudios.socialengine.service.gameon.client.model.RegisterPlayerResponse;
 import org.slf4j.Logger;

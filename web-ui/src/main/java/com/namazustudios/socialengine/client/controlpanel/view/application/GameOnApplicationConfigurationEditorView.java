@@ -12,8 +12,8 @@ import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.socialengine.client.controlpanel.NameTokens;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
-import com.namazustudios.socialengine.client.rest.client.ApplicationClient;
-import com.namazustudios.socialengine.client.rest.client.GameOnApplicationConfigurationClient;
+import com.namazustudios.socialengine.client.rest.client.internal.ApplicationClient;
+import com.namazustudios.socialengine.client.rest.client.internal.GameOnApplicationConfigurationClient;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import org.fusesource.restygwt.client.Method;
@@ -27,7 +27,6 @@ import javax.validation.Validator;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.AMAZON_GAME_ON;
-import static com.namazustudios.socialengine.model.application.ConfigurationCategory.FIREBASE;
 
 public class GameOnApplicationConfigurationEditorView extends ViewImpl implements
         Editor<GameOnApplicationConfiguration>,

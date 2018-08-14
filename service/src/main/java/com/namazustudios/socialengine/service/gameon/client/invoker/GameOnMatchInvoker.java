@@ -1,8 +1,6 @@
 package com.namazustudios.socialengine.service.gameon.client.invoker;
 
-import com.namazustudios.socialengine.model.gameon.*;
-
-import java.util.List;
+import com.namazustudios.socialengine.model.gameon.game.*;
 
 public interface GameOnMatchInvoker {
 

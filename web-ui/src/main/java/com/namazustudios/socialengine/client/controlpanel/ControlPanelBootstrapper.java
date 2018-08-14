@@ -2,9 +2,7 @@ package com.namazustudios.socialengine.client.controlpanel;
 
 import com.gwtplatform.mvp.client.Bootstrapper;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
-import com.namazustudios.socialengine.Headers;
-import com.namazustudios.socialengine.client.rest.client.CORSRequestDispatcher;
-import com.namazustudios.socialengine.client.rest.client.UiConfigClient;
+import com.namazustudios.socialengine.client.rest.client.internal.UiConfigClient;
 import com.namazustudios.socialengine.client.rest.service.LoginService;
 import com.namazustudios.socialengine.model.UiConfig;
 import com.namazustudios.socialengine.model.User;
