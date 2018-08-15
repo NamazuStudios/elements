@@ -12,7 +12,7 @@ import org.fusesource.restygwt.client.MethodCallback;
 
 import javax.inject.Inject;
 
-import static com.namazustudios.socialengine.GameOnConstants.GAMEON_SERVICE_ROOT;
+import static com.namazustudios.socialengine.GameOnConstants.GAMEON_ADMIN_SERVICE_ROOT;
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static org.fusesource.restygwt.client.Defaults.setDispatcher;
 import static org.fusesource.restygwt.client.Defaults.setServiceRoot;
@@ -60,7 +60,7 @@ public class ControlPanelBootstrapper implements Bootstrapper {
             @Override
             public void onSuccess(Method method, UiConfig uiConfig) {
                 setServiceRoot(uiConfig.getApiUrl());
-                add(GAMEON_SERVICE_ROOT, uiConfig.getGameOnAdminApiUrl());
+                add(GAMEON_ADMIN_SERVICE_ROOT, uiConfig.getGameOnAdminApiUrl());
                 refreshCurrentUser();
             }
 

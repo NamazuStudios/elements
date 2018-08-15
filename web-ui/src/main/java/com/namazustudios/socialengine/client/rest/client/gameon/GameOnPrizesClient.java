@@ -9,13 +9,13 @@ import org.fusesource.restygwt.client.RestService;
 
 import javax.ws.rs.*;
 
-import static com.namazustudios.socialengine.GameOnConstants.GAMEON_SERVICE_ROOT;
+import static com.namazustudios.socialengine.GameOnConstants.GAMEON_ADMIN_SERVICE_ROOT;
 import static com.namazustudios.socialengine.GameOnConstants.X_API_KEY;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path("prizes")
-@Options(serviceRootKey = GAMEON_SERVICE_ROOT)
-public interface PrizesClient extends RestService {
+@Options(serviceRootKey = GAMEON_ADMIN_SERVICE_ROOT)
+public interface GameOnPrizesClient extends RestService {
 
     /**
      * Fetches all {@link GetPrizeListResponse} from amazon GameOn.

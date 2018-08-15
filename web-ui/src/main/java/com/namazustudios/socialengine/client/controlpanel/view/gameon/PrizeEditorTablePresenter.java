@@ -3,8 +3,11 @@ package com.namazustudios.socialengine.client.controlpanel.view.gameon;
 import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.Presenter;
 import com.gwtplatform.mvp.client.View;
+import com.gwtplatform.mvp.client.annotations.NameToken;
+import com.gwtplatform.mvp.client.annotations.ProxyStandard;
 import com.gwtplatform.mvp.client.proxy.ProxyPlace;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
+import com.namazustudios.socialengine.client.controlpanel.NameTokens;
 import com.namazustudios.socialengine.client.rest.client.internal.GameOnApplicationConfigurationClient;
 import com.namazustudios.socialengine.client.util.PlaceRequestParameters;
 import com.namazustudios.socialengine.model.application.Application;
@@ -17,7 +20,7 @@ import javax.inject.Inject;
 
 import static com.namazustudios.socialengine.client.controlpanel.view.ControlPanelPresenter.SET_MAIN_CONTENT_TYPE;
 
-public class PrizeEditorPresenter extends Presenter<PrizeEditorPresenter.MyView, PrizeEditorPresenter.MyProxy> {
+public class PrizeEditorTablePresenter extends Presenter<PrizeEditorTablePresenter.MyView, PrizeEditorTablePresenter.MyProxy> {
 
     @Inject
     private GameOnApplicationConfigurationClient gameOnApplicationConfigurationClient;
@@ -26,15 +29,15 @@ public class PrizeEditorPresenter extends Presenter<PrizeEditorPresenter.MyView,
 
         void reset();
 
-        void create(GameOnApplicationConfiguration gameOnApplicationConfiguration);
+        void load(GameOnApplicationConfiguration gameOnApplicationConfiguration);
 
     }
 
-    public interface MyProxy extends ProxyPlace<PrizeEditorPresenter> {
+    @ProxyStandard
+    @NameToken(NameTokens.GAMEON_PRIZE_EDIT_TABLE)
+    public interface MyProxy extends ProxyPlace<PrizeEditorTablePresenter> {}
 
-    }
-
-    public PrizeEditorPresenter(EventBus eventBus, MyView view, MyProxy proxy) {
+    public PrizeEditorTablePresenter(EventBus eventBus, MyView view, MyProxy proxy) {
         super(eventBus, view, proxy, SET_MAIN_CONTENT_TYPE);
     }
 
@@ -74,7 +77,7 @@ public class PrizeEditorPresenter extends Presenter<PrizeEditorPresenter.MyView,
             @Override
             public void onSuccess(final Method method,
                                   final GameOnApplicationConfiguration gameOnApplicationConfiguration) {
-                getView().create(gameOnApplicationConfiguration);
+                getView().load(gameOnApplicationConfiguration);
             }
 
         });

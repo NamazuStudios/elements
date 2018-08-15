@@ -31,6 +31,6 @@ public interface GameOnConstants {
     /**
      * Used by client code to determine the service root for the GameOn API
      */
-    String GAMEON_SERVICE_ROOT = "com.namazustudios.socialengine.gameon.service.root";
+    String GAMEON_ADMIN_SERVICE_ROOT = "com.namazustudios.socialengine.gameon.admin.service.root";
 
 }
