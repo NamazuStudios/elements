@@ -90,13 +90,28 @@ public class GameOnMatchResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Re-Enters a Match",
                   notes = "See: https://developer.amazon.com/docs/gameon/game-api-ref.html#enter-match")
-    public GameOnEnterMatchResponse enterMatch(
+    public GameOnMatchDetail enterMatch(
+
             @PathParam("matchId")
             @ApiParam("The match ID.")
             final String matchId,
-            final GameOnEnterMatchRequest gameOnEnterMatchRequest
+
+            @QueryParam("os")
+            @DefaultValue(DeviceOSType.DEFAULT_TYPE_STRING)
+            final DeviceOSType deviceOSType,
+
+            @QueryParam("build")
+            @DefaultValue(AppBuildType.DEFAULT_TYPE_STRING)
+            final AppBuildType appBuildType,
+
+            @QueryParam("playerAttributes")
+            @ApiParam("Custom player attributes.")
+            final String playerAttributes
+
     ) {
-        return getGameOnMatchService().enterMatch(matchId, gameOnEnterMatchRequest);
+        return getGameOnMatchService().getMatch(
+                deviceOSType, appBuildType,     // Session related parameters
+                playerAttributes, matchId);     // Filer/query related parameters
     }
 
     public GameOnMatchService getGameOnMatchService() {
