@@ -21,9 +21,10 @@ import javax.ws.rs.core.MediaType;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
-@Api(description = "Handles the creation and deleteion of Amazon GameOn Sessions.  Only one session may exist per " +
+@Api(value = "GameOnSession",
+     description = "Handles the creation and deleteion of Amazon GameOn Sessions.  Only one session may exist per " +
                    "Profile and Device OS Type.",
-    authorizations = {@Authorization(SESSION_SECRET)})
+     authorizations = {@Authorization(SESSION_SECRET)})
 @Path("game_on/session")
 public class GameOnSessionResource {
 
@@ -96,7 +97,8 @@ public class GameOnSessionResource {
             notes = "Supplying a GameOn Session, this will create a new token based on the information supplied " +
                     "to the endpoint.  The response will contain the token as it was written to the database.  Only " +
                     "one GameOnSession may exist per Profile.  However a user may see several " +
-                    "GameOnSession instances for their User.")
+                    "GameOnSession instances for their User.  " +
+                    "See:  https://developer.amazon.com/docs/gameon/game-api-ref.html#authenticate-player")
     public GameOnSession createSession(final GameOnSession gameOnSession) {
 
         getValidationHelper().validateModel(gameOnSession, Create.class);

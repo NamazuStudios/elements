@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
-@Api(value = "Entries",
+@Api(value = "GameOnEntry",
      description = "Provides access to the eligible tournaments.  An eligible tournament is one for which the player " +
                 "qualifies and has not already entered.",
         authorizations = {@Authorization(SESSION_SECRET)})
@@ -33,7 +33,8 @@ public class GameOnTournamentEntryResource {
             notes = "Supplying a GameOn Registration, this will create a new token based on the information supplied " +
                     "to the endpoint.  The response will contain the token as it was written to the database.  Only " +
                     "one GameOnRegistration may exist per Profile.  However a user may see several " +
-                    "GameOnRegistration instances for their User.")
+                    "GameOnRegistration instances for their User.  " +
+                    "See:  https://developer.amazon.com/docs/gameon/game-api-ref.html#enter-tournament")
     public GameOnTournamentEnterResponse enterTournament(
             @PathParam("tournamentId") final String tournamentId,
             final GameOnTournamentEnterRequest gameOnTournamentEnterRequest) {

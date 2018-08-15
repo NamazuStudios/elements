@@ -13,7 +13,8 @@ import java.util.List;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
-@Api(description = "Provides access to the eligible tournaments.  An eligible tourname is one for which the player " +
+@Api(value = "GameOnTournament",
+     description = "Provides access to the eligible tournaments.  An eligible tourname is one for which the player " +
                    "qualifies and has not already entered.",
      authorizations = {@Authorization(SESSION_SECRET)})
 @Path("game_on/tournament/developer/eligible")
@@ -25,7 +26,8 @@ public class GameOnTournamentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets all available tournaments",
                   notes = "Gets all availble tournaments that the player can enter.  This automatically filters out " +
-                          "any tournaments that the player has not alrady entered.")
+                          "any tournaments that the player has not alrady entered.  " +
+                          "See:  https://developer.amazon.com/docs/gameon/game-api-ref.html#get-tournaments")
     public List<GameOnTournamentSummary> getTournaments(
 
             @QueryParam("os")
@@ -56,7 +58,8 @@ public class GameOnTournamentResource {
     @Path("{tournamentId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a single available tournament.",
-            notes = "Gets a single available tournament, specified by the identifier.")
+                  notes = "Gets a single available tournament, specified by the identifier.  " +
+                          "See:  https://developer.amazon.com/docs/gameon/game-api-ref.html#get-tournament-details")
     public GameOnTournamentDetail getTournament(
 
             @PathParam("tournamentId")
