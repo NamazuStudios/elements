@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.model.application.GameOnApplicationConfigu
 public class PrizeEditorView extends ViewImpl implements PrizeEditorPresenter.MyView {
 
     @Override
-    public void createEmpty() {
+    public void reset() {
 
     }
 

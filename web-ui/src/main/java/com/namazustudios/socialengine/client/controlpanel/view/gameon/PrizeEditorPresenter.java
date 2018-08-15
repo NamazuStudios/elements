@@ -24,9 +24,9 @@ public class PrizeEditorPresenter extends Presenter<PrizeEditorPresenter.MyView,
 
     public interface MyView extends View {
 
-        void createEmpty();
+        void reset();
 
-        void editPrizes(GameOnApplicationConfiguration gameOnApplicationConfiguration);
+        void create(GameOnApplicationConfiguration gameOnApplicationConfiguration);
 
     }
 
@@ -47,7 +47,7 @@ public class PrizeEditorPresenter extends Presenter<PrizeEditorPresenter.MyView,
             .require(Parameter.configuration_id)
             .build(request);
 
-        getView().createEmpty();
+        getView().reset();
 
         if (!parameters.check(Parameter.application_id)) {
             Notify.notify("Application not specified.");
@@ -74,7 +74,7 @@ public class PrizeEditorPresenter extends Presenter<PrizeEditorPresenter.MyView,
             @Override
             public void onSuccess(final Method method,
                                   final GameOnApplicationConfiguration gameOnApplicationConfiguration) {
-                getView().editPrizes(gameOnApplicationConfiguration);
+                getView().create(gameOnApplicationConfiguration);
             }
 
         });
