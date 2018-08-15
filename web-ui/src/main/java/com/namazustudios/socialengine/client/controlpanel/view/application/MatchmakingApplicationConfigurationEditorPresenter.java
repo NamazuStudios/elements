@@ -52,8 +52,8 @@ public class MatchmakingApplicationConfigurationEditorPresenter extends Presente
          * @param facebookApplicationConfiguration
          */
         void editApplicationConfiguration(
-                String applicationNameOrId,
-                MatchmakingApplicationConfiguration facebookApplicationConfiguration);
+            String applicationNameOrId,
+            MatchmakingApplicationConfiguration facebookApplicationConfiguration);
 
     }
 
@@ -82,7 +82,7 @@ public class MatchmakingApplicationConfigurationEditorPresenter extends Presente
     }
 
     @Override
-    public void prepareFromRequest(PlaceRequest request) {
+    public void prepareFromRequest(final PlaceRequest request) {
         super.prepareFromRequest(request);
 
         final String applicationId = request.getParameter(application_id.name().toLowerCase(), "").trim();
@@ -103,24 +103,24 @@ public class MatchmakingApplicationConfigurationEditorPresenter extends Presente
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId) {
         matchmakingApplicationConfigurationClient.getApplicationConfiguration(
-                applicationNameOrId,
-                applicationConfigurationNameOrId,
-                new MethodCallback<MatchmakingApplicationConfiguration>() {
+            applicationNameOrId,
+            applicationConfigurationNameOrId,
+            new MethodCallback<MatchmakingApplicationConfiguration>() {
 
-                    @Override
-                    public void onFailure(Method method, Throwable exception) {
-                        getProxy().manualReveal(MatchmakingApplicationConfigurationEditorPresenter.this);
-                        getView().createEmpty();
-                        Notify.notify("Could not load application configuration " + method.getData());
-                    }
+                @Override
+                public void onFailure(Method method, Throwable exception) {
+                    getProxy().manualReveal(MatchmakingApplicationConfigurationEditorPresenter.this);
+                    getView().createEmpty();
+                    Notify.notify("Could not load application configuration " + method.getData());
+                }
 
-                    @Override
-                    public void onSuccess(Method method, MatchmakingApplicationConfiguration response) {
-                        getProxy().manualReveal(MatchmakingApplicationConfigurationEditorPresenter.this);
-                        getView().editApplicationConfiguration(applicationNameOrId, response);
-                    }
+                @Override
+                public void onSuccess(Method method, MatchmakingApplicationConfiguration response) {
+                    getProxy().manualReveal(MatchmakingApplicationConfigurationEditorPresenter.this);
+                    getView().editApplicationConfiguration(applicationNameOrId, response);
+                }
 
-                });
+            });
     }
 
     public enum Param {

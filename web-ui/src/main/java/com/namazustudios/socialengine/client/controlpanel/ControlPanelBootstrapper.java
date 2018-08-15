@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
-import org.fusesource.restygwt.client.ServiceRoots;
 
 import javax.inject.Inject;
 

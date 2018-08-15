@@ -17,6 +17,8 @@ public class NameTokens {
     public static final String APPLICATION_CONFIG_MATCHMAKING_EDIT = "application_config_matchmaking_edit";
     public static final String APPLICATION_CONFIG_FIREBASE_EDIT = "application_config_firebase_edit";
     public static final String APPLICATION_CONFIG_GAME_ON_EDIT = "application_config_game_on_edit";
+    public static final String GAMEON_PRIZE = "gameon_prize";
+    public static final String GAMEON_PRIZE_EDIT_TABLE = "gameon_prize_edit";
 
     public static String getLogin() { return LOGIN; }
     public static String getUserEdit() {return USER_EDIT;}
@@ -29,5 +31,7 @@ public class NameTokens {
     public static String getApplicationConfigFacebookEdit() { return APPLICATION_CONFIG_FACEBOOK_EDIT; }
     public static String getApplicationConfigFirebaseEdit() { return APPLICATION_CONFIG_FIREBASE_EDIT; }
     public static String getApplicationConfigGameOnEdit() { return APPLICATION_CONFIG_GAME_ON_EDIT; }
+    public static String getGameonPrize() { return GAMEON_PRIZE; }
+    public static String getGameonPrizeEditTable() { return GAMEON_PRIZE_EDIT_TABLE; }
 
 }
