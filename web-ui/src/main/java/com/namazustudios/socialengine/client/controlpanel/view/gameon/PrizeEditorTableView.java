@@ -1,7 +1,10 @@
 package com.namazustudios.socialengine.client.controlpanel.view.gameon;
 
+import com.google.gwt.cell.client.TextCell;
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.cellview.client.Column;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.namazustudios.socialengine.client.modal.ConfirmationModal;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
@@ -9,14 +12,24 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import com.namazustudios.socialengine.model.gameon.admin.GetPrizeListResponse;
 import org.gwtbootstrap3.client.ui.Button;
+import org.gwtbootstrap3.client.ui.Container;
 import org.gwtbootstrap3.client.ui.Panel;
+import org.gwtbootstrap3.client.ui.constants.ButtonType;
+import org.gwtbootstrap3.client.ui.constants.IconType;
+import org.gwtbootstrap3.client.ui.gwt.ButtonCell;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
 
 import javax.inject.Inject;
 
+import java.util.Date;
+
+import static com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat.DATE_TIME_MEDIUM;
+import static org.gwtbootstrap3.client.ui.constants.ButtonType.PRIMARY;
+import static org.gwtbootstrap3.client.ui.constants.IconType.PICTURE_O;
+
 public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePresenter.MyView {
 
-    public interface PrizeEditorTableViewBinder extends UiBinder<Panel, PrizeEditorTableView> {}
+    public interface PrizeEditorTableViewBinder extends UiBinder<Container, PrizeEditorTableView> {}
 
     @UiField
     Button addPrize;
@@ -30,10 +43,75 @@ public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePr
     @UiField
     CellTable<GetPrizeListResponse.Prize> prizeEditorCellTable;
 
+    private final PrizeDataProvider prizeDataProvider;
+
     @Inject
     public PrizeEditorTableView(final PrizeDataProvider prizeDataProvider,
                                 final PrizeEditorTableViewBinder prizeEditorTableViewBinder) {
 
+        this.prizeDataProvider = prizeDataProvider;
+        initWidget(prizeEditorTableViewBinder.createAndBindUi(this));
+
+        final Column<GetPrizeListResponse.Prize, String> prizeIdColumn =
+            new Column<GetPrizeListResponse.Prize, String>(new TextCell()) {
+
+                @Override
+                public String getValue(GetPrizeListResponse.Prize object) {
+                    return object.getPrizeId();
+                }
+
+            };
+
+        final Column<GetPrizeListResponse.Prize, String> titleColumn =
+            new Column<GetPrizeListResponse.Prize, String>(new TextCell()) {
+                @Override
+                public String getValue(final GetPrizeListResponse.Prize object) {
+                    return object.getTitle();
+                }
+            };
+
+        final Column<GetPrizeListResponse.Prize, String> descriptionColumn =
+            new Column<GetPrizeListResponse.Prize, String>(new TextCell()) {
+                @Override
+                public String getValue(final GetPrizeListResponse.Prize object) {
+                    return object.getDescription();
+                }
+            };
+
+        final Column<GetPrizeListResponse.Prize, String> prizeInfoTypeColumn =
+            new Column<GetPrizeListResponse.Prize, String>(new TextCell()) {
+                @Override
+                public String getValue(final GetPrizeListResponse.Prize object) {
+                    return object.getPrizeInfoType().name();
+                }
+            };
+
+        final Column<GetPrizeListResponse.Prize, String> expirationColumn =
+            new Column<GetPrizeListResponse.Prize, String>(new TextCell()) {
+
+                private final DateTimeFormat dateTimeFormat = DateTimeFormat.getFormat(DATE_TIME_MEDIUM);
+
+                @Override
+                public String getValue(final GetPrizeListResponse.Prize object) {
+                    final Long expiration = object.getDateOfExpiration();
+                    return expiration == null ? "" : formatDate(expiration);
+                }
+
+                private String formatDate(final Long expiration) {
+                    final Date date = new Date(expiration);
+                    return dateTimeFormat.format(date);
+                }
+
+            };
+
+        final Column<GetPrizeListResponse.Prize, String> imageUrlColumn =
+            new Column<GetPrizeListResponse.Prize, String>(new ButtonCell(PRIMARY, PICTURE_O)) {
+                @Override
+                public String getValue(GetPrizeListResponse.Prize object) {
+                    final String url = object.getImageUrl();
+                    return url == null ? "Not Available" : "Preview ";
+                }
+            };
     }
 
     @Override
@@ -43,7 +121,7 @@ public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePr
 
     @Override
     public void load(final GameOnApplicationConfiguration gameOnApplicationConfiguration) {
-
+        prizeDataProvider.reconfigure(gameOnApplicationConfiguration);
     }
 
 }
