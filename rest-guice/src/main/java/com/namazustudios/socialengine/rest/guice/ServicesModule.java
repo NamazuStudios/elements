@@ -19,6 +19,7 @@ import com.namazustudios.socialengine.service.leaderboard.ScoreServiceProvider;
 import com.namazustudios.socialengine.service.friend.FriendServiceProvider;
 import com.namazustudios.socialengine.service.manifest.ManifestServiceProvider;
 import com.namazustudios.socialengine.service.match.MatchServiceProvider;
+import com.namazustudios.socialengine.service.match.StandardMatchServiceUtils;
 import com.namazustudios.socialengine.service.notification.FCMRegistrationServiceProvider;
 import com.namazustudios.socialengine.service.profile.ProfileServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
@@ -145,8 +146,10 @@ public class ServicesModule extends AbstractModule {
 
         bind(Attributes.class).toProvider(AttributesProvider.class);
 
+        bind(MatchServiceUtils.class).to(StandardMatchServiceUtils.class);
         bind(SessionService.class).to(AnonSessionService.class);
         bind(FacebookAuthService.class).to(StandardFacebookAuthService.class);
+
         bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
         bind(PasswordGenerator.class).to(SecureRandomPasswordGenerator.class).asEagerSingleton();
         bind(DisplayNameGenerator.class).to(SimpleDisplayNameGenerator.class).asEagerSingleton();

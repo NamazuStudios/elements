@@ -1,6 +1,5 @@
-package com.namazustudios.socialengine.dao.mongo.model;
+package com.namazustudios.socialengine.dao.mongo.model.match;
 
-import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 

@@ -65,6 +65,15 @@ public interface Matchmaker {
         BiFunction<Match, Match, String> finalizer) throws NoSuitableMatchException;
 
     /**
+     * Restricts this {@link Matchmaker} to the supplied scope.  Will return only whose {@link Match#getScope()} method
+     * matches the supplied scope.
+     *
+     * @param scope the scope
+     * @return this instance
+     */
+    Matchmaker withScope(String scope);
+
+    /**
      * Combines a {@link Match} for both a player and an opponent.  This is used to supply
      * information on a succssful match between players only.
      */

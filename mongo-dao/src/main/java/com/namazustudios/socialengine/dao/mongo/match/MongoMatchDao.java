@@ -1,9 +1,12 @@
-package com.namazustudios.socialengine.dao.mongo;
+package com.namazustudios.socialengine.dao.mongo.match;
 
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
-import com.namazustudios.socialengine.dao.mongo.model.MongoMatch;
+import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils;
+import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
+import com.namazustudios.socialengine.dao.mongo.MongoProfileDao;
+import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.BadQueryException;
@@ -23,7 +26,6 @@ import org.apache.lucene.search.TermQuery;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;

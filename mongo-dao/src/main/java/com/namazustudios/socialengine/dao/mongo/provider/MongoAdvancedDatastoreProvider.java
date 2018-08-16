@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.dao.mongo.model.*;
 import com.namazustudios.socialengine.dao.mongo.model.application.*;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnRegistration;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSession;
+import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 
