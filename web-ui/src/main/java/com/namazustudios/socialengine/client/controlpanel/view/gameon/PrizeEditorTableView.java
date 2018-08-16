@@ -5,22 +5,21 @@ import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.Column;
+import com.google.gwt.user.cellview.client.SimplePager;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.namazustudios.socialengine.client.modal.ConfirmationModal;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
-import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import com.namazustudios.socialengine.model.gameon.admin.GetPrizeListResponse;
 import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.Container;
-import org.gwtbootstrap3.client.ui.Panel;
-import org.gwtbootstrap3.client.ui.constants.ButtonType;
-import org.gwtbootstrap3.client.ui.constants.IconType;
+import org.gwtbootstrap3.client.ui.Label;
+import org.gwtbootstrap3.client.ui.Pagination;
+import org.gwtbootstrap3.client.ui.constants.LabelType;
 import org.gwtbootstrap3.client.ui.gwt.ButtonCell;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
 
 import javax.inject.Inject;
-
 import java.util.Date;
 
 import static com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat.DATE_TIME_MEDIUM;
@@ -28,6 +27,8 @@ import static org.gwtbootstrap3.client.ui.constants.ButtonType.PRIMARY;
 import static org.gwtbootstrap3.client.ui.constants.IconType.PICTURE_O;
 
 public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePresenter.MyView {
+
+    public static final int PAGE_SIZE = 20;
 
     public interface PrizeEditorTableViewBinder extends UiBinder<Container, PrizeEditorTableView> {}
 
@@ -43,7 +44,12 @@ public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePr
     @UiField
     CellTable<GetPrizeListResponse.Prize> prizeEditorCellTable;
 
+    @UiField
+    Pagination prizeEditorCellTablePagination;
+
     private final PrizeDataProvider prizeDataProvider;
+
+    private final SimplePager simplePager = new SimplePager();
 
     @Inject
     public PrizeEditorTableView(final PrizeDataProvider prizeDataProvider,
@@ -112,11 +118,36 @@ public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePr
                     return url == null ? "Not Available" : "Preview ";
                 }
             };
+
+        // Empty label
+        final Label emptyLabel = new Label();
+        emptyLabel.setType(LabelType.INFO);
+        emptyLabel.setText("No Prizes Defined.");
+        prizeEditorCellTable.setEmptyTableWidget(emptyLabel);
+
+        // Columns
+        prizeEditorCellTable.addColumn(prizeIdColumn, "Prize ID");
+        prizeEditorCellTable.addColumn(titleColumn, "Title");
+        prizeEditorCellTable.addColumn(descriptionColumn, "Description");
+        prizeEditorCellTable.addColumn(prizeInfoTypeColumn, "Prize Info Type");
+        prizeEditorCellTable.addColumn(expirationColumn, "Expires At");
+        prizeEditorCellTable.addColumn(imageUrlColumn, "Image");
+
+        // Pagination and events
+
+        prizeEditorCellTable.addRangeChangeHandler(event -> prizeEditorCellTablePagination.rebuild(simplePager));
+
+        simplePager.setDisplay(prizeEditorCellTable);
+        simplePager.setPageSize(PAGE_SIZE);
+        prizeEditorCellTablePagination.clear();
+
+        prizeDataProvider.addDataDisplay(prizeEditorCellTable);
+
     }
 
     @Override
     public void reset() {
-
+        prizeDataProvider.clear();
     }
 
     @Override

@@ -110,9 +110,7 @@ public class ApplicationEditorTableView extends ViewImpl implements ApplicationE
             }
         };
 
-        deleteColumn.setFieldUpdater(((index, object, value) -> {
-            confirmDelete(object);
-        }));
+        deleteColumn.setFieldUpdater(((index, object, value) -> confirmDelete(object)));
 
         applicationEditorCellTable.addColumn(applicationIdColumn, "Id");
         applicationEditorCellTable.addColumn(applicationNameColumn, "Name");

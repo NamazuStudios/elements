@@ -41,6 +41,8 @@
                                      hover="true"                    addStyleNames="{style.table}"/>
                 </b:PanelBody>
 
+                <b:Pagination ui:field="prizeEditorCellTablePagination"/>
+
             </b:Panel>
         </b:Row>
     </b:Container>
