@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.service;
 
+import com.namazustudios.socialengine.model.gameon.GameOnEnterMatchRequest;
+import com.namazustudios.socialengine.model.gameon.GameOnEnterMatchResponse;
 import com.namazustudios.socialengine.model.gameon.game.*;
 
 /**
@@ -35,5 +37,15 @@ public interface GameOnMatchService {
     GameOnMatchDetail getMatch(
         DeviceOSType deviceOSType, AppBuildType appBuildType,
         String playerAttributes, String matchId);
+
+    /**
+     * Enters a match by supplying an instance of {@link GameOnEnterMatchRequest}.  Throwing the appropriate exception
+     * if the request failed for any reason.
+     *
+     * @param matchId the GameOn assigned Match ID
+     * @param gameOnEnterMatchRequest the {@link GameOnEnterMatchRequest} to use
+     * @return the {@link GameOnEnterMatchResponse}, never null
+     */
+    GameOnEnterMatchResponse enterMatch(String matchId, GameOnEnterMatchRequest gameOnEnterMatchRequest);
 
 }

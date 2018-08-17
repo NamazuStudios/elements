@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.gameon.game;
 
+import com.namazustudios.socialengine.model.match.Match;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -48,6 +49,9 @@ public class GameOnMatchSummary {
 
     @ApiModelProperty("The detailed listing of prize bundles.")
     private List<GameOnPrizeBundle> prizeBundles;
+
+    @ApiModelProperty("The Match created as part of the tournament entry.")
+    private Match match;
 
     public String getMatchId() {
         return matchId;
@@ -153,29 +157,38 @@ public class GameOnMatchSummary {
         this.prizeBundles = prizeBundles;
     }
 
+    public Match getMatch() {
+        return match;
+    }
+
+    public void setMatch(Match match) {
+        this.match = match;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
         if (!(object instanceof GameOnMatchSummary)) return false;
         GameOnMatchSummary that = (GameOnMatchSummary) object;
-        return Objects.equals(matchId, that.matchId) &&
-                Objects.equals(tournamentId, that.tournamentId) &&
-                Objects.equals(attemptsRemaining, that.attemptsRemaining) &&
-                Objects.equals(title, that.title) &&
-                Objects.equals(subtitle, that.subtitle) &&
-                Objects.equals(canEnter, that.canEnter) &&
-                Objects.equals(dateStart, that.dateStart) &&
-                Objects.equals(dateEnd, that.dateEnd) &&
-                Objects.equals(imageUrl, that.imageUrl) &&
-                Objects.equals(matchesPerPlayer, that.matchesPerPlayer) &&
-                Objects.equals(playerAttemtpsPerMatch, that.playerAttemtpsPerMatch) &&
-                Objects.equals(playersPerMatch, that.playersPerMatch) &&
-                Objects.equals(prizeBundles, that.prizeBundles);
+        return Objects.equals(getMatchId(), that.getMatchId()) &&
+                Objects.equals(getTournamentId(), that.getTournamentId()) &&
+                Objects.equals(getAttemptsRemaining(), that.getAttemptsRemaining()) &&
+                Objects.equals(getTitle(), that.getTitle()) &&
+                Objects.equals(getSubtitle(), that.getSubtitle()) &&
+                Objects.equals(getCanEnter(), that.getCanEnter()) &&
+                Objects.equals(getDateStart(), that.getDateStart()) &&
+                Objects.equals(getDateEnd(), that.getDateEnd()) &&
+                Objects.equals(getImageUrl(), that.getImageUrl()) &&
+                Objects.equals(getMatchesPerPlayer(), that.getMatchesPerPlayer()) &&
+                Objects.equals(getPlayerAttemtpsPerMatch(), that.getPlayerAttemtpsPerMatch()) &&
+                Objects.equals(getPlayersPerMatch(), that.getPlayersPerMatch()) &&
+                Objects.equals(getPrizeBundles(), that.getPrizeBundles()) &&
+                Objects.equals(getMatch(), that.getMatch());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(matchId, tournamentId, attemptsRemaining, title, subtitle, canEnter, dateStart, dateEnd, imageUrl, matchesPerPlayer, playerAttemtpsPerMatch, playersPerMatch, prizeBundles);
+        return Objects.hash(getMatchId(), getTournamentId(), getAttemptsRemaining(), getTitle(), getSubtitle(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getPlayerAttemtpsPerMatch(), getPlayersPerMatch(), getPrizeBundles(), getMatch());
     }
 
     @Override
@@ -194,6 +207,7 @@ public class GameOnMatchSummary {
                 ", playerAttemtpsPerMatch=" + playerAttemtpsPerMatch +
                 ", playersPerMatch=" + playersPerMatch +
                 ", prizeBundles=" + prizeBundles +
+                ", match=" + match +
                 '}';
     }
 

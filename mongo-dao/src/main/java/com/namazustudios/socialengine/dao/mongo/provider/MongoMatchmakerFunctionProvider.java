@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
 import com.namazustudios.socialengine.dao.Matchmaker;
-import com.namazustudios.socialengine.dao.mongo.MongoFIFOMatchmaker;
+import com.namazustudios.socialengine.dao.mongo.match.MongoFIFOMatchmaker;
 import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 

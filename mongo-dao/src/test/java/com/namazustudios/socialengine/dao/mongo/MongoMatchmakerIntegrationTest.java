@@ -1,9 +1,8 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.google.common.collect.Streams;
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
-import com.namazustudios.socialengine.dao.mongo.model.MongoMatch;
+import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.User;
@@ -21,13 +20,11 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.namazustudios.socialengine.model.match.MatchingAlgorithm.FIFO;
 import static java.util.Arrays.asList;
-import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.testng.Assert.*;

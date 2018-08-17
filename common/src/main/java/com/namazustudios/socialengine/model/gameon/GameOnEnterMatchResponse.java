@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.gameon.game;
+package com.namazustudios.socialengine.model.gameon;
 
 import com.namazustudios.socialengine.model.match.Match;
 import io.swagger.annotations.ApiModel;
@@ -6,8 +6,8 @@ import io.swagger.annotations.ApiModelProperty;
 
 import java.util.Objects;
 
-@ApiModel(description = "The response returned when entering a tournament.")
-public class GameOnTournamentEnterResponse {
+@ApiModel(description = "The result returned from entering a GameOn Match")
+public class GameOnEnterMatchResponse {
 
     @ApiModelProperty("The GameOn Match ID that was created in response to the request.")
     private String matchId;
@@ -67,8 +67,8 @@ public class GameOnTournamentEnterResponse {
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
-        if (!(object instanceof GameOnTournamentEnterResponse)) return false;
-        GameOnTournamentEnterResponse that = (GameOnTournamentEnterResponse) object;
+        if (!(object instanceof GameOnEnterMatchResponse)) return false;
+        GameOnEnterMatchResponse that = (GameOnEnterMatchResponse) object;
         return Objects.equals(getMatchId(), that.getMatchId()) &&
                 Objects.equals(getTournamentId(), that.getTournamentId()) &&
                 Objects.equals(getAttemptsRemaining(), that.getAttemptsRemaining()) &&
@@ -83,7 +83,7 @@ public class GameOnTournamentEnterResponse {
 
     @Override
     public String toString() {
-        return "GameOnTournamentEnterResponse{" +
+        return "GameOnEnterMatchResponse{" +
                 "matchId='" + matchId + '\'' +
                 ", tournamentId='" + tournamentId + '\'' +
                 ", attemptsRemaining=" + attemptsRemaining +

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.gameon.game;
 
+import com.namazustudios.socialengine.model.match.Match;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -33,6 +34,9 @@ public class GameOnMatchDetail {
 
     @ApiModelProperty("The date the score was submitted.")
     private Long scoreDate;
+
+    @ApiModelProperty("The Match created as part of the tournament entry.")
+    private Match match;
 
     public String getMatchId() {
         return matchId;
@@ -98,6 +102,14 @@ public class GameOnMatchDetail {
         this.scoreDate = scoreDate;
     }
 
+    public Match getMatch() {
+        return match;
+    }
+
+    public void setMatch(Match match) {
+        this.match = match;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -110,12 +122,14 @@ public class GameOnMatchDetail {
                 Objects.equals(getLastScore(), that.getLastScore()) &&
                 Objects.equals(getLastScoreDate(), that.getLastScoreDate()) &&
                 Objects.equals(getScore(), that.getScore()) &&
-                Objects.equals(getScoreDate(), that.getScoreDate());
+                Objects.equals(getScoreDate(), that.getScoreDate()) &&
+                Objects.equals(getMatch(), that.getMatch());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getMatchId(), getTournamentDetails(), getAwardedPrizes(), getCanEnter(), getLastScore(), getLastScoreDate(), getScore(), getScoreDate());
+
+        return Objects.hash(getMatchId(), getTournamentDetails(), getAwardedPrizes(), getCanEnter(), getLastScore(), getLastScoreDate(), getScore(), getScoreDate(), getMatch());
     }
 
     @Override
@@ -129,6 +143,7 @@ public class GameOnMatchDetail {
                 ", lastScoreDate=" + lastScoreDate +
                 ", score=" + score +
                 ", scoreDate=" + scoreDate +
+                ", match=" + match +
                 '}';
     }
 

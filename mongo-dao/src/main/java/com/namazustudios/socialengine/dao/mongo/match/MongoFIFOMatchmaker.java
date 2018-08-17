@@ -1,7 +1,7 @@
-package com.namazustudios.socialengine.dao.mongo;
+package com.namazustudios.socialengine.dao.mongo.match;
 
 import com.namazustudios.socialengine.dao.Matchmaker;
-import com.namazustudios.socialengine.dao.mongo.model.MongoMatch;
+import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
@@ -18,6 +18,8 @@ import java.util.function.BiFunction;
  * Created by patricktwohig on 7/27/17.
  */
 public class MongoFIFOMatchmaker implements Matchmaker {
+
+    private String scope;
 
     private AdvancedDatastore datastore;
 
@@ -46,10 +48,22 @@ public class MongoFIFOMatchmaker implements Matchmaker {
              .field("opponent").doesNotExist()
              .field("lock").doesNotExist();
 
+        if (scope == null) {
+            query.field("scope").doesNotExist();
+        } else {
+            query.field("scope").equal(scope);
+        }
+
         final FindOptions findOptions = new FindOptions().limit(maxCandidatesToConsider);
         final List<MongoMatch> mongoMatchList = query.asList(findOptions);
         return getMongoMatchUtils().attemptToPairCandidates(mongoMatch, mongoMatchList, finalizer);
 
+    }
+
+    @Override
+    public Matchmaker withScope(final String scope) {
+        this.scope = scope;
+        return this;
     }
 
     public AdvancedDatastore getDatastore() {

@@ -1,16 +1,27 @@
 package com.namazustudios.socialengine.service.gameon;
 
+import com.namazustudios.socialengine.dao.MatchDao;
+import com.namazustudios.socialengine.dao.Matchmaker;
+import com.namazustudios.socialengine.dao.MatchmakingApplicationConfigurationDao;
+import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
+import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
+import com.namazustudios.socialengine.model.gameon.GameOnPlayerTournamentEnterRequest;
+import com.namazustudios.socialengine.model.gameon.GameOnPlayerTournamentEnterResponse;
 import com.namazustudios.socialengine.model.gameon.game.*;
+import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.GameOnPlayerTournamentService;
 import com.namazustudios.socialengine.service.GameOnSessionService;
+import com.namazustudios.socialengine.service.MatchServiceUtils;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnMatchInvoker;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnPlayerTournamentInvoker;
+import com.namazustudios.socialengine.service.gameon.client.model.EnterPlayerTournamentRequest;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -19,6 +30,12 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 public class UserGameOnPlayerTournamentService implements GameOnPlayerTournamentService {
+
+    private MatchDao matchDao;
+
+    private MatchServiceUtils matchServiceUtils;
+
+    private MatchmakingApplicationConfigurationDao matchmakingApplicationConfigurationDao;
 
     private Supplier<Profile> currentProfileSupplier;
 
@@ -91,6 +108,86 @@ public class UserGameOnPlayerTournamentService implements GameOnPlayerTournament
 
     }
 
+    @Override
+    public GameOnPlayerTournamentEnterResponse enterTournament(
+            final String tournamentId,
+            final GameOnPlayerTournamentEnterRequest gameOnPlayerTournamentEnterRequest) {
+
+        final Profile profile = getCurrentProfileSupplier().get();
+
+        final DeviceOSType deviceOSType = gameOnPlayerTournamentEnterRequest.getDeviceOSType() == null ?
+                DeviceOSType.getDefault()                              :
+                gameOnPlayerTournamentEnterRequest.getDeviceOSType();
+
+        final AppBuildType appBuildType = gameOnPlayerTournamentEnterRequest.getAppBuildType() == null ?
+                AppBuildType.getDefault()                              :
+                gameOnPlayerTournamentEnterRequest.getAppBuildType();
+
+        final Match match = gameOnPlayerTournamentEnterRequest.getMatch();
+
+        final MatchmakingApplicationConfiguration configuration = getMatchmakingApplicationConfigurationDao()
+                .getApplicationConfiguration(profile.getApplication().getId(), match.getScheme());
+
+        if (match.getPlayer() == null) {
+            match.setPlayer(profile);
+        } else if (!Objects.equals(profile, match.getPlayer())) {
+            throw new ForbiddenException("player must match current profile");
+        }
+
+        final GameOnSession gameOnSession;
+        gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
+
+        final EnterPlayerTournamentRequest enterPlayerTournamentRequest;
+        enterPlayerTournamentRequest = new EnterPlayerTournamentRequest();
+        enterPlayerTournamentRequest.setAccessKey(gameOnPlayerTournamentEnterRequest.getAccessKey());
+
+        final GameOnPlayerTournamentEnterResponse response = getGameOnPlayerTournamentInvokerBuilderProvider()
+                .get()
+                .withSession(gameOnSession)
+                .build()
+                .postEnterRequest(tournamentId, enterPlayerTournamentRequest);
+
+        final Match inserted = getMatchDao().createMatch(match);
+        match.setScope(response.getTournamentId());
+
+        final Matchmaker matchmaker = getMatchDao()
+                .getMatchmaker(configuration.getAlgorithm())
+                .withScope(response.getTournamentId());
+
+        final Match paired = getMatchServiceUtils().attempt(matchmaker, inserted, configuration);
+        response.setMatch(paired);
+
+        return response;
+
+    }
+
+    public MatchDao getMatchDao() {
+        return matchDao;
+    }
+
+    @Inject
+    public void setMatchDao(MatchDao matchDao) {
+        this.matchDao = matchDao;
+    }
+
+    public MatchServiceUtils getMatchServiceUtils() {
+        return matchServiceUtils;
+    }
+
+    @Inject
+    public void setMatchServiceUtils(MatchServiceUtils matchServiceUtils) {
+        this.matchServiceUtils = matchServiceUtils;
+    }
+
+    public MatchmakingApplicationConfigurationDao getMatchmakingApplicationConfigurationDao() {
+        return matchmakingApplicationConfigurationDao;
+    }
+
+    @Inject
+    public void setMatchmakingApplicationConfigurationDao(MatchmakingApplicationConfigurationDao matchmakingApplicationConfigurationDao) {
+        this.matchmakingApplicationConfigurationDao = matchmakingApplicationConfigurationDao;
+    }
+
     public Supplier<Profile> getCurrentProfileSupplier() {
         return currentProfileSupplier;
     }
@@ -126,5 +223,6 @@ public class UserGameOnPlayerTournamentService implements GameOnPlayerTournament
     public void setGameOnPlayerTournamentInvokerBuilderProvider(Provider<GameOnPlayerTournamentInvoker.Builder> gameOnPlayerTournamentInvokerBuilderProvider) {
         this.gameOnPlayerTournamentInvokerBuilderProvider = gameOnPlayerTournamentInvokerBuilderProvider;
     }
+
 
 }

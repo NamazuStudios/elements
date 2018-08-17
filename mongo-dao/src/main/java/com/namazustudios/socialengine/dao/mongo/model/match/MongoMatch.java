@@ -1,8 +1,11 @@
-package com.namazustudios.socialengine.dao.mongo.model;
+package com.namazustudios.socialengine.dao.mongo.model.match;
 
 import com.namazustudios.elements.fts.annotation.SearchableDocument;
 import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
+import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
+import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
+import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
@@ -13,18 +16,19 @@ import java.util.Objects;
  * Created by patricktwohig on 7/21/17.
  */
 @SearchableIdentity(@SearchableField(
-        name = "id",
-        path = "/objectId",
-        type = ObjectId.class,
-        extractor = ObjectIdExtractor.class,
-        processors = ObjectIdProcessor.class))
+    name = "id",
+    path = "/objectId",
+    type = ObjectId.class,
+    extractor = ObjectIdExtractor.class,
+    processors = ObjectIdProcessor.class))
 @SearchableDocument(
-        fields = {
-                @SearchableField(name = "scheme", path = "/scheme"),
-                @SearchableField(name = "lastUpdatedTimestamp", path = "/lastUpdatedTimestamp"),
-                @SearchableField(name = "playerId",  path = "/player/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class),
-                @SearchableField(name = "opponentId",  path = "/opponent/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class)
-        })
+    fields = {
+        @SearchableField(name = "scheme", path = "/scheme"),
+        @SearchableField(name = "lastUpdatedTimestamp", path = "/lastUpdatedTimestamp"),
+        @SearchableField(name = "scope", path = "/scope"),
+        @SearchableField(name = "playerId",  path = "/player/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class),
+        @SearchableField(name = "opponentId",  path = "/opponent/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class)
+    })
 @Entity(value = "match", noClassnameStored = true)
 @Indexes({
     @Index(fields = @Field(value = "gameId")),
@@ -51,6 +55,10 @@ public class MongoMatch {
     @Indexed
     @Property
     private String scheme;
+
+    @Indexed
+    @Property
+    private String scope;
 
     @Indexed
     @Reference
@@ -84,6 +92,14 @@ public class MongoMatch {
 
     public void setScheme(String scheme) {
         this.scheme = scheme;
+    }
+
+    public String getScope() {
+        return scope;
+    }
+
+    public void setScope(String scope) {
+        this.scope = scope;
     }
 
     public MongoProfile getPlayer() {
@@ -135,13 +151,14 @@ public class MongoMatch {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof MongoMatch)) return false;
-        MongoMatch that = (MongoMatch) o;
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof MongoMatch)) return false;
+        MongoMatch that = (MongoMatch) object;
         return Objects.equals(getObjectId(), that.getObjectId()) &&
                 Objects.equals(getPlayer(), that.getPlayer()) &&
                 Objects.equals(getScheme(), that.getScheme()) &&
+                Objects.equals(getScope(), that.getScope()) &&
                 Objects.equals(getOpponent(), that.getOpponent()) &&
                 Objects.equals(getLastUpdatedTimestamp(), that.getLastUpdatedTimestamp()) &&
                 Objects.equals(getGameId(), that.getGameId()) &&
@@ -151,7 +168,22 @@ public class MongoMatch {
 
     @Override
     public int hashCode() {
-
-        return Objects.hash(getObjectId(), getPlayer(), getScheme(), getOpponent(), getLastUpdatedTimestamp(), getGameId(), getExpiry(), getLock());
+        return Objects.hash(getObjectId(), getPlayer(), getScheme(), getScope(), getOpponent(), getLastUpdatedTimestamp(), getGameId(), getExpiry(), getLock());
     }
+
+    @Override
+    public String toString() {
+        return "MongoMatch{" +
+                "objectId=" + objectId +
+                ", player=" + player +
+                ", scheme='" + scheme + '\'' +
+                ", scope='" + scope + '\'' +
+                ", opponent=" + opponent +
+                ", lastUpdatedTimestamp=" + lastUpdatedTimestamp +
+                ", gameId='" + gameId + '\'' +
+                ", expiry=" + expiry +
+                ", lock=" + lock +
+                '}';
+    }
+
 }

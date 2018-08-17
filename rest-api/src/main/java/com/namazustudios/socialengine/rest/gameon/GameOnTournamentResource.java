@@ -17,7 +17,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
      description = "Provides access to the eligible tournaments.  An eligible tourname is one for which the player " +
                    "qualifies and has not already entered.",
      authorizations = {@Authorization(SESSION_SECRET)})
-@Path("game_on/tournament/developer/eligible")
+@Path("game_on/tournament/developer")
 public class GameOnTournamentResource {
 
     private GameOnTournamentService gameOnTournamentService;
@@ -85,6 +85,18 @@ public class GameOnTournamentResource {
         return getGameOnTournamentService().getEligibleTournamentDetail(
             deviceOSType, appBuildType,       // Session related parameters
             playerAttributes, tournamentId);  // Filer/query related parameters
+    }
+
+    @POST
+    @Path("{tournamentId}/entry")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            value = "Enters a Tournament",
+            notes = "See:  https://developer.amazon.com/docs/gameon/game-api-ref.html#enter-tournament")
+    public GameOnTournamentEnterResponse enterTournament(
+            @PathParam("tournamentId") final String tournamentId,
+            final GameOnTournamentEnterRequest gameOnTournamentEnterRequest) {
+        return getGameOnTournamentService().enterTournament(tournamentId, gameOnTournamentEnterRequest);
     }
 
     public GameOnTournamentService getGameOnTournamentService() {

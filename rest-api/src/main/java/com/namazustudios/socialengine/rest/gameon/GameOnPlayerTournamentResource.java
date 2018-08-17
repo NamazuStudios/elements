@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rest.gameon;
 
+import com.namazustudios.socialengine.model.gameon.GameOnPlayerTournamentEnterRequest;
+import com.namazustudios.socialengine.model.gameon.GameOnPlayerTournamentEnterResponse;
 import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.service.GameOnPlayerTournamentService;
 import io.swagger.annotations.Api;
@@ -19,7 +21,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
      description = "Provides access to the eligible tournaments.  An eligible tournament is one for which the player " +
                    "qualifies and has not already entered.",
      authorizations = {@Authorization(SESSION_SECRET)})
-@Path("game_on/tournament/player/eligible")
+@Path("game_on/tournament/player")
 public class GameOnPlayerTournamentResource {
 
     private GameOnPlayerTournamentService gameOnPlayerTournamentService;
@@ -89,6 +91,19 @@ public class GameOnPlayerTournamentResource {
         return getGameOnPlayerTournamentService().getEligibleTournamentDetail(
                 deviceOSType, appBuildType,       // Session related parameters
                 playerAttributes, tournamentId);  // Filer/query related parameters
+    }
+
+
+    @POST
+    @Path("{tournamentId}/entry")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+        value = "Enters a Player Tournament",
+        notes = "See:  https://developer.amazon.com/docs/gameon/game-api-ref.html#enter-player-tournament")
+    public GameOnPlayerTournamentEnterResponse enterTournament(
+            @PathParam("tournamentId") final String tournamentId,
+            final GameOnPlayerTournamentEnterRequest gameOnPlayerTournamentEnterRequest) {
+        return getGameOnPlayerTournamentService().enterTournament(tournamentId, gameOnPlayerTournamentEnterRequest);
     }
 
     public GameOnPlayerTournamentService getGameOnPlayerTournamentService() {
