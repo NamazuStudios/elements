@@ -37,6 +37,7 @@ public class PrizeEditorTablePresenter extends Presenter<PrizeEditorTablePresent
     @NameToken(NameTokens.GAMEON_PRIZE_EDIT_TABLE)
     public interface MyProxy extends ProxyPlace<PrizeEditorTablePresenter> {}
 
+    @Inject
     public PrizeEditorTablePresenter(EventBus eventBus, MyView view, MyProxy proxy) {
         super(eventBus, view, proxy, SET_MAIN_CONTENT_TYPE);
     }
@@ -83,7 +84,7 @@ public class PrizeEditorTablePresenter extends Presenter<PrizeEditorTablePresent
         });
     }
 
-    private enum Parameter {
+    public enum Parameter {
 
         /**
          * The application ID of the {@link Application} used to edit the underlying prize.

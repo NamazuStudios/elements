@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.client.controlpanel;
 import com.gwtplatform.mvp.client.gin.AbstractPresenterModule;
 import com.namazustudios.socialengine.client.controlpanel.view.*;
 import com.namazustudios.socialengine.client.controlpanel.view.application.*;
+import com.namazustudios.socialengine.client.controlpanel.view.gameon.PrizeEditorTablePresenter;
+import com.namazustudios.socialengine.client.controlpanel.view.gameon.PrizeEditorTableView;
 import com.namazustudios.socialengine.client.controlpanel.view.login.LoginView;
 import com.namazustudios.socialengine.client.controlpanel.view.login.LoginViewPresenter;
 import com.namazustudios.socialengine.client.controlpanel.view.shortlink.ShortLinkEditorPresenter;
@@ -95,6 +97,13 @@ public class ControlPanelPresenters extends AbstractPresenterModule {
                 GameOnApplicationConfigurationEditorPresenter.MyView.class,
                 GameOnApplicationConfigurationEditorView.class,
                 GameOnApplicationConfigurationEditorPresenter.MyProxy.class
+        );
+
+        bindPresenter(
+                PrizeEditorTablePresenter.class,
+                PrizeEditorTablePresenter.MyView.class,
+                PrizeEditorTableView.class,
+                PrizeEditorTablePresenter.MyProxy.class
         );
 
     }
