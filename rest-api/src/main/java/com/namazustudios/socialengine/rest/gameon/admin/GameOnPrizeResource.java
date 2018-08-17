@@ -3,13 +3,17 @@ package com.namazustudios.socialengine.rest.gameon.admin;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListResponse;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListRequest;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnGetPrizeListResponse;
+import com.namazustudios.socialengine.service.GameOnPrizeService;
 import io.swagger.annotations.ApiOperation;
 
+import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 @Path("game_on_admin/{applicationId}/{configurationId}/prizes")
 public class GameOnPrizeResource {
+
+    private GameOnPrizeService gameOnPrizeService;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -26,7 +30,7 @@ public class GameOnPrizeResource {
         final String configurationId
 
     ) {
-        return null;
+        return getGameOnPrizeService().getPrizes(applicationId, configurationId);
     }
 
     @POST
@@ -46,8 +50,16 @@ public class GameOnPrizeResource {
         final GameOnAddPrizeListRequest addPrizeListRequest
 
     ) {
-        return null;
+        return getGameOnPrizeService().addPrizes(applicationId, configurationId, addPrizeListRequest);
     }
 
+    public GameOnPrizeService getGameOnPrizeService() {
+        return gameOnPrizeService;
+    }
+
+    @Inject
+    public void setGameOnPrizeService(GameOnPrizeService gameOnPrizeService) {
+        this.gameOnPrizeService = gameOnPrizeService;
+    }
 
 }
