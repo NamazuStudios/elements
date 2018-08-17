@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.client.rest.client.gameon;
 
-import com.namazustudios.socialengine.model.gameon.admin.AddPrizeListRequest;
-import com.namazustudios.socialengine.model.gameon.admin.AddPrizeListResponse;
-import com.namazustudios.socialengine.model.gameon.admin.GetPrizeListResponse;
+import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListRequest;
+import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListResponse;
+import com.namazustudios.socialengine.model.gameon.admin.GameOnGetPrizeListResponse;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.Options;
 import org.fusesource.restygwt.client.RestService;
@@ -18,7 +18,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 public interface GameOnPrizesClient extends RestService {
 
     /**
-     * Fetches all {@link GetPrizeListResponse} from amazon GameOn.
+     * Fetches all {@link GameOnGetPrizeListResponse} from amazon GameOn.
      *
      * <a href="https://developer.amazon.com/docs/gameon/admin-api-ref.html#get-prize-list">GET /prizes</a>
      *
@@ -29,23 +29,23 @@ public interface GameOnPrizesClient extends RestService {
     @Consumes(APPLICATION_JSON)
     void getPrizes(
         @HeaderParam(X_API_KEY) final String apiKey,
-        final MethodCallback<GetPrizeListResponse> callback);
+        final MethodCallback<GameOnGetPrizeListResponse> callback);
 
     /**
-     * Creates one or more prizes from the supplied {@link AddPrizeListRequest}.
+     * Creates one or more prizes from the supplied {@link GameOnAddPrizeListRequest}.
      *
      * <a href="https://developer.amazon.com/docs/gameon/admin-api-ref.html#add-prize-list">POST /prizes</a>
      *
      * @param apiKey the API key
-     * @param addPrizeListRequest the {@link AddPrizeListRequest} containined the necessary metadata
-     * @param callback the {@link MethodCallback<AddPrizeListResponse>} used to handle the response
+     * @param addPrizeListRequest the {@link GameOnAddPrizeListRequest} containined the necessary metadata
+     * @param callback the {@link MethodCallback< GameOnAddPrizeListResponse >} used to handle the response
      */
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     void addPrizes(
         @HeaderParam(X_API_KEY) final String apiKey,
-        final AddPrizeListRequest addPrizeListRequest,
-        final MethodCallback<AddPrizeListResponse> callback);
+        final GameOnAddPrizeListRequest addPrizeListRequest,
+        final MethodCallback<GameOnAddPrizeListResponse> callback);
 
 }

@@ -9,7 +9,7 @@ import java.util.Objects;
 @ApiModel(description =
     "Used by the GameOn API to return instances of prizes that were created or failed to create.  Used only in the " +
     "Admin API.  See: https://developer.amazon.com/docs/gameon/admin-api-ref.html#addprizelistrequest")
-public class AddPrizeListResponse {
+public class GameOnAddPrizeListResponse {
 
     private List<Prize> addedPrizes;
 
@@ -34,8 +34,8 @@ public class AddPrizeListResponse {
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
-        if (!(object instanceof AddPrizeListResponse)) return false;
-        AddPrizeListResponse that = (AddPrizeListResponse) object;
+        if (!(object instanceof GameOnAddPrizeListResponse)) return false;
+        GameOnAddPrizeListResponse that = (GameOnAddPrizeListResponse) object;
         return Objects.equals(getAddedPrizes(), that.getAddedPrizes()) &&
                 Objects.equals(getFailedPrizes(), that.getFailedPrizes());
     }

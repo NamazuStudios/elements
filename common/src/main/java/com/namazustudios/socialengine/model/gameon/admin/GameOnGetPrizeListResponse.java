@@ -8,7 +8,7 @@ import java.util.Objects;
 
 @ApiModel(description = "Used by the GameOn API to fetch instances of prizes.  Used only in the Admin API.  " +
                         "See: https://developer.amazon.com/docs/gameon/admin-api-ref.html#getprizelistresponse")
-public class GetPrizeListResponse {
+public class GameOnGetPrizeListResponse {
 
     private List<Prize> prizes;
 
@@ -23,8 +23,8 @@ public class GetPrizeListResponse {
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
-        if (!(object instanceof GetPrizeListResponse)) return false;
-        GetPrizeListResponse that = (GetPrizeListResponse) object;
+        if (!(object instanceof GameOnGetPrizeListResponse)) return false;
+        GameOnGetPrizeListResponse that = (GameOnGetPrizeListResponse) object;
         return Objects.equals(getPrizes(), that.getPrizes());
     }
 

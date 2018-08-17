@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.model.gameon.admin;
 
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -9,7 +8,7 @@ import java.util.Objects;
 
 @ApiModel(description = "Used by the GameOn API to create instances of prizes.  Used only in the Admin API.  " +
                         "See: https://developer.amazon.com/docs/gameon/admin-api-ref.html#addprizelistrequest")
-public class AddPrizeListRequest {
+public class GameOnAddPrizeListRequest {
 
     @ApiModelProperty("Allows for the specification of one or more Prizes when creating a prize with Amazon GameOn")
     private List<Prize> prizes;
@@ -25,8 +24,8 @@ public class AddPrizeListRequest {
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
-        if (!(object instanceof AddPrizeListRequest)) return false;
-        AddPrizeListRequest that = (AddPrizeListRequest) object;
+        if (!(object instanceof GameOnAddPrizeListRequest)) return false;
+        GameOnAddPrizeListRequest that = (GameOnAddPrizeListRequest) object;
         return Objects.equals(getPrizes(), that.getPrizes());
     }
 

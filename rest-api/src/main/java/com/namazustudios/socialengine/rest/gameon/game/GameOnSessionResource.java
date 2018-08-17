@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rest.gameon;
+package com.namazustudios.socialengine.rest.gameon.game;
 
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.exception.InvalidDataException;

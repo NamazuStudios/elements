@@ -10,7 +10,7 @@ import com.gwtplatform.mvp.client.ViewImpl;
 import com.namazustudios.socialengine.client.modal.ConfirmationModal;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
-import com.namazustudios.socialengine.model.gameon.admin.GetPrizeListResponse;
+import com.namazustudios.socialengine.model.gameon.admin.GameOnGetPrizeListResponse;
 import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.Container;
 import org.gwtbootstrap3.client.ui.Label;
@@ -42,7 +42,7 @@ public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePr
     ConfirmationModal confirmationModal;
 
     @UiField
-    CellTable<GetPrizeListResponse.Prize> prizeEditorCellTable;
+    CellTable<GameOnGetPrizeListResponse.Prize> prizeEditorCellTable;
 
     @UiField
     Pagination prizeEditorCellTablePagination;
@@ -58,47 +58,47 @@ public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePr
         this.prizeDataProvider = prizeDataProvider;
         initWidget(prizeEditorTableViewBinder.createAndBindUi(this));
 
-        final Column<GetPrizeListResponse.Prize, String> prizeIdColumn =
-            new Column<GetPrizeListResponse.Prize, String>(new TextCell()) {
+        final Column<GameOnGetPrizeListResponse.Prize, String> prizeIdColumn =
+            new Column<GameOnGetPrizeListResponse.Prize, String>(new TextCell()) {
 
                 @Override
-                public String getValue(GetPrizeListResponse.Prize object) {
+                public String getValue(GameOnGetPrizeListResponse.Prize object) {
                     return object.getPrizeId();
                 }
 
             };
 
-        final Column<GetPrizeListResponse.Prize, String> titleColumn =
-            new Column<GetPrizeListResponse.Prize, String>(new TextCell()) {
+        final Column<GameOnGetPrizeListResponse.Prize, String> titleColumn =
+            new Column<GameOnGetPrizeListResponse.Prize, String>(new TextCell()) {
                 @Override
-                public String getValue(final GetPrizeListResponse.Prize object) {
+                public String getValue(final GameOnGetPrizeListResponse.Prize object) {
                     return object.getTitle();
                 }
             };
 
-        final Column<GetPrizeListResponse.Prize, String> descriptionColumn =
-            new Column<GetPrizeListResponse.Prize, String>(new TextCell()) {
+        final Column<GameOnGetPrizeListResponse.Prize, String> descriptionColumn =
+            new Column<GameOnGetPrizeListResponse.Prize, String>(new TextCell()) {
                 @Override
-                public String getValue(final GetPrizeListResponse.Prize object) {
+                public String getValue(final GameOnGetPrizeListResponse.Prize object) {
                     return object.getDescription();
                 }
             };
 
-        final Column<GetPrizeListResponse.Prize, String> prizeInfoTypeColumn =
-            new Column<GetPrizeListResponse.Prize, String>(new TextCell()) {
+        final Column<GameOnGetPrizeListResponse.Prize, String> prizeInfoTypeColumn =
+            new Column<GameOnGetPrizeListResponse.Prize, String>(new TextCell()) {
                 @Override
-                public String getValue(final GetPrizeListResponse.Prize object) {
+                public String getValue(final GameOnGetPrizeListResponse.Prize object) {
                     return object.getPrizeInfoType().name();
                 }
             };
 
-        final Column<GetPrizeListResponse.Prize, String> expirationColumn =
-            new Column<GetPrizeListResponse.Prize, String>(new TextCell()) {
+        final Column<GameOnGetPrizeListResponse.Prize, String> expirationColumn =
+            new Column<GameOnGetPrizeListResponse.Prize, String>(new TextCell()) {
 
                 private final DateTimeFormat dateTimeFormat = DateTimeFormat.getFormat(DATE_TIME_MEDIUM);
 
                 @Override
-                public String getValue(final GetPrizeListResponse.Prize object) {
+                public String getValue(final GameOnGetPrizeListResponse.Prize object) {
                     final Long expiration = object.getDateOfExpiration();
                     return expiration == null ? "" : formatDate(expiration);
                 }
@@ -110,10 +110,10 @@ public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePr
 
             };
 
-        final Column<GetPrizeListResponse.Prize, String> imageUrlColumn =
-            new Column<GetPrizeListResponse.Prize, String>(new ButtonCell(PRIMARY, PICTURE_O)) {
+        final Column<GameOnGetPrizeListResponse.Prize, String> imageUrlColumn =
+            new Column<GameOnGetPrizeListResponse.Prize, String>(new ButtonCell(PRIMARY, PICTURE_O)) {
                 @Override
-                public String getValue(GetPrizeListResponse.Prize object) {
+                public String getValue(GameOnGetPrizeListResponse.Prize object) {
                     final String url = object.getImageUrl();
                     return url == null ? "Not Available" : "Preview ";
                 }

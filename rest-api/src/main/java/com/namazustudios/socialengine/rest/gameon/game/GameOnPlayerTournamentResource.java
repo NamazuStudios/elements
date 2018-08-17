@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rest.gameon;
+package com.namazustudios.socialengine.rest.gameon.game;
 
 import com.namazustudios.socialengine.model.gameon.GameOnPlayerTournamentEnterRequest;
 import com.namazustudios.socialengine.model.gameon.GameOnPlayerTournamentEnterResponse;

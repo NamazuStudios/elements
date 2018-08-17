@@ -5,7 +5,7 @@ import com.google.gwt.view.client.HasData;
 import com.google.gwt.view.client.Range;
 import com.namazustudios.socialengine.client.rest.client.gameon.GameOnPrizesClient;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
-import com.namazustudios.socialengine.model.gameon.admin.GetPrizeListResponse;
+import com.namazustudios.socialengine.model.gameon.admin.GameOnGetPrizeListResponse;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 
@@ -18,21 +18,21 @@ import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
-public class PrizeDataProvider extends AsyncDataProvider<GetPrizeListResponse.Prize> {
+public class PrizeDataProvider extends AsyncDataProvider<GameOnGetPrizeListResponse.Prize> {
 
     @Inject
     private GameOnPrizesClient prizesClient;
 
-    private List<GetPrizeListResponse.Prize> prizeList = emptyList();
+    private List<GameOnGetPrizeListResponse.Prize> prizeList = emptyList();
 
     private GameOnApplicationConfiguration gameOnApplicationConfiguration;
 
     private final List<Consumer<Throwable>> prizesFailedListeners = new ArrayList<>();
 
-    private final List<Consumer<GetPrizeListResponse>> prizesLoadedListeners = new ArrayList<>();
+    private final List<Consumer<GameOnGetPrizeListResponse>> prizesLoadedListeners = new ArrayList<>();
 
     @Override
-    protected void onRangeChanged(final HasData<GetPrizeListResponse.Prize> display) {
+    protected void onRangeChanged(final HasData<GameOnGetPrizeListResponse.Prize> display) {
 
         final Range visibleRange = display.getVisibleRange();
 
@@ -40,7 +40,7 @@ public class PrizeDataProvider extends AsyncDataProvider<GetPrizeListResponse.Pr
         final int visibleStart = visibleRange.getStart();
         final int visibleLength = visibleRange.getLength();
 
-        final List<GetPrizeListResponse.Prize> data =
+        final List<GameOnGetPrizeListResponse.Prize> data =
             prizeList.isEmpty()                         ? prizeList   :                      // No Prizes
             prizeList.size() <= visibleRange.getStart() ? emptyList() :                      // Scrolling past data set
             prizeList.subList(visibleStart, min(prizeCount, visibleStart + visibleLength));  // In-range of data
@@ -64,7 +64,7 @@ public class PrizeDataProvider extends AsyncDataProvider<GetPrizeListResponse.Pr
 
         final String adminApiKey = getGameOnApplicationConfiguration().getAdminApiKey();
 
-        prizesClient.getPrizes(adminApiKey, new MethodCallback<GetPrizeListResponse>() {
+        prizesClient.getPrizes(adminApiKey, new MethodCallback<GameOnGetPrizeListResponse>() {
 
             @Override
             public void onFailure(Method method, Throwable exception) {
@@ -75,7 +75,7 @@ public class PrizeDataProvider extends AsyncDataProvider<GetPrizeListResponse.Pr
             }
 
             @Override
-            public void onSuccess(Method method, GetPrizeListResponse response) {
+            public void onSuccess(Method method, GameOnGetPrizeListResponse response) {
                 prizeList = response.getPrizes();
                 prizesLoadedListeners
                     .stream()
@@ -92,7 +92,7 @@ public class PrizeDataProvider extends AsyncDataProvider<GetPrizeListResponse.Pr
         return () -> prizesFailedListeners.remove(prizesFailedListener);
     }
 
-    public ListenerRegistration addPrizesLoadedListener(final Consumer<GetPrizeListResponse> prizesLoadedListener) {
+    public ListenerRegistration addPrizesLoadedListener(final Consumer<GameOnGetPrizeListResponse> prizesLoadedListener) {
         prizesLoadedListeners.add(prizesLoadedListener);
         return () -> prizesLoadedListeners.remove(prizesLoadedListener);
     }
