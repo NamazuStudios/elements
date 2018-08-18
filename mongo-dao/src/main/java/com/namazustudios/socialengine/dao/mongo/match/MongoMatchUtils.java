@@ -199,6 +199,10 @@ public class MongoMatchUtils {
         final UpdateOperations<MongoMatch> oppponentUpdateOperations;
         oppponentUpdateOperations = getDatastore().createUpdateOperations(MongoMatch.class);
 
+        if (gameId == null) {
+            throw new InternalException("Unspecified gameId");
+        }
+
         playerUpdateOperations
             .set("opponent", opponentMatch.getPlayer())
             .set("expiry", now)
