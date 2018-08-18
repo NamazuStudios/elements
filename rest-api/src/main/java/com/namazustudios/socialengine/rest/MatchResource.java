@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.Headers;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.MatchService;
@@ -142,19 +143,8 @@ public class MatchResource {
                 "match object may be updated as a suitable opponent is found.  The client must poll matches " +
                 "for updates and react accordingly.")
     public Match createMatch(final Match match) {
-
-        getValidationHelper().validateModel(match);
-
-        final String matchId = nullToEmpty(match.getId()).trim();
-
-        if (!matchId.isEmpty()) {
-            throw new BadRequestException("match ID must be blank when creating a match");
-        } else if (match.getOpponent() != null) {
-            throw new BadRequestException("matches may not specify opponents on creation");
-        }
-
+        getValidationHelper().validateModel(match, ValidationGroups.Create.class);
         return getMatchService().createMatch(match);
-
     }
 
     @DELETE

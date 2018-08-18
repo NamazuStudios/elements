@@ -39,17 +39,14 @@ public class Match implements Serializable {
     @ApiModelProperty("The player requesting the match.  If not specified, then the current profile will be inferred.")
     private Profile player;
 
-    @NotNull(groups = Update.class)
     @Null(groups = {Create.class, Insert.class})
     @ApiModelProperty("The opposing player, or null if no suitable opponent has been found.")
     private Profile opponent;
 
-    @NotNull(groups = Update.class)
     @Null(groups = {Create.class, Insert.class})
     @ApiModelProperty("The time of the last modification of the match.")
-    private long lastUpdatedTimestamp;
+    private Long lastUpdatedTimestamp;
 
-    @NotNull(groups = Update.class)
     @Null(groups = {Create.class, Insert.class})
     @ApiModelProperty("The system-assigned game ID of the match.  Null until the match is successfully made.")
     private String gameId;
@@ -148,7 +145,7 @@ public class Match implements Serializable {
      *
      * @return the last-updated date
      */
-    public long getLastUpdatedTimestamp() {
+    public Long getLastUpdatedTimestamp() {
         return lastUpdatedTimestamp;
     }
 
@@ -157,7 +154,7 @@ public class Match implements Serializable {
      *
      * @param lastUpdatedTimestamp the last-updated date
      */
-    public void setLastUpdatedTimestamp(long lastUpdatedTimestamp) {
+    public void setLastUpdatedTimestamp(Long lastUpdatedTimestamp) {
         this.lastUpdatedTimestamp = lastUpdatedTimestamp;
     }
 
