@@ -60,7 +60,6 @@ public class ControlPanelBootstrapper implements Bootstrapper {
             @Override
             public void onSuccess(Method method, UiConfig uiConfig) {
                 setServiceRoot(uiConfig.getApiUrl());
-                add(GAMEON_ADMIN_SERVICE_ROOT, uiConfig.getGameOnAdminApiUrl());
                 refreshCurrentUser();
             }
 

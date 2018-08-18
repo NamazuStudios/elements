@@ -30,7 +30,6 @@ public class UiConfigResource {
     public UiConfig getUiConfig() {
         final UiConfig uiConfig = new UiConfig();
         uiConfig.setApiUrl(getOutsideApiUrl());
-        uiConfig.setGameOnAdminApiUrl(format("%s/%s", ADMIN_BASE_API, VERSION_V1));
         return uiConfig;
     }
 

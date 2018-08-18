@@ -20,12 +20,4 @@ public class UiConfig {
         this.apiUrl = apiUrl;
     }
 
-    public String getGameOnAdminApiUrl() {
-        return gameOnAdminApiUrl;
-    }
-
-    public void setGameOnAdminApiUrl(String gameOnAdminApiUrl) {
-        this.gameOnAdminApiUrl = gameOnAdminApiUrl;
-    }
-
 }

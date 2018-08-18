@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static java.lang.Math.floor;
 import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -62,12 +63,13 @@ public class PrizeDataProvider extends AsyncDataProvider<GameOnGetPrizeListRespo
 
         this.gameOnApplicationConfiguration = gameOnApplicationConfiguration;
 
-        final String adminApiKey = getGameOnApplicationConfiguration().getAdminApiKey();
+        final String applicationId = gameOnApplicationConfiguration.getParent().getId();
+        final String configurationId = gameOnApplicationConfiguration.getId();
 
-        prizesClient.getPrizes(adminApiKey, new MethodCallback<GameOnGetPrizeListResponse>() {
+        prizesClient.getPrizes(applicationId, configurationId, new MethodCallback<GameOnGetPrizeListResponse>() {
 
             @Override
-            public void onFailure(Method method, Throwable exception) {
+            public void onFailure(final Method method, final Throwable exception) {
                 prizesFailedListeners
                     .stream()
                     .collect(toList())
@@ -75,7 +77,7 @@ public class PrizeDataProvider extends AsyncDataProvider<GameOnGetPrizeListRespo
             }
 
             @Override
-            public void onSuccess(Method method, GameOnGetPrizeListResponse response) {
+            public void onSuccess(final Method method, final GameOnGetPrizeListResponse response) {
                 prizeList = response.getPrizes();
                 prizesLoadedListeners
                     .stream()

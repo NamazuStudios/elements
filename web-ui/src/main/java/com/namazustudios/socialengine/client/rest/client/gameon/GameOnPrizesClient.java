@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.client.rest.client.gameon;
 
+import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListRequest;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListResponse;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnGetPrizeListResponse;
@@ -13,8 +15,7 @@ import static com.namazustudios.socialengine.GameOnConstants.GAMEON_ADMIN_SERVIC
 import static com.namazustudios.socialengine.GameOnConstants.X_API_KEY;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-@Path("prizes")
-@Options(serviceRootKey = GAMEON_ADMIN_SERVICE_ROOT)
+@Path("game_on_admin/{applicationId}/{configurationId}/prizes")
 public interface GameOnPrizesClient extends RestService {
 
     /**
@@ -22,13 +23,15 @@ public interface GameOnPrizesClient extends RestService {
      *
      * <a href="https://developer.amazon.com/docs/gameon/admin-api-ref.html#get-prize-list">GET /prizes</a>
      *
-     * @param apiKey the API key
+     * @param applicationId the value of {@link Application#getId()}
+     * @param configurationId the value of {@link GameOnApplicationConfiguration#getId()}
      * @param callback the {@link MethodCallback} to receive the response
      */
     @GET
     @Consumes(APPLICATION_JSON)
     void getPrizes(
-        @HeaderParam(X_API_KEY) final String apiKey,
+        @PathParam("applicationId") String applicationId,
+        @PathParam("configurationId") String configurationId,
         final MethodCallback<GameOnGetPrizeListResponse> callback);
 
     /**
@@ -36,7 +39,8 @@ public interface GameOnPrizesClient extends RestService {
      *
      * <a href="https://developer.amazon.com/docs/gameon/admin-api-ref.html#add-prize-list">POST /prizes</a>
      *
-     * @param apiKey the API key
+     * @param applicationId the value of {@link Application#getId()}
+     * @param configurationId the value of {@link GameOnApplicationConfiguration#getId()}
      * @param addPrizeListRequest the {@link GameOnAddPrizeListRequest} containined the necessary metadata
      * @param callback the {@link MethodCallback< GameOnAddPrizeListResponse >} used to handle the response
      */
@@ -44,8 +48,9 @@ public interface GameOnPrizesClient extends RestService {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     void addPrizes(
-        @HeaderParam(X_API_KEY) final String apiKey,
-        final GameOnAddPrizeListRequest addPrizeListRequest,
-        final MethodCallback<GameOnAddPrizeListResponse> callback);
+        @PathParam("applicationId") String applicationId,
+        @PathParam("configurationId") String configurationId,
+        GameOnAddPrizeListRequest addPrizeListRequest,
+        MethodCallback<GameOnAddPrizeListResponse> callback);
 
 }
