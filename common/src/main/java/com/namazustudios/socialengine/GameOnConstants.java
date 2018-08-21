@@ -21,11 +21,13 @@ public interface GameOnConstants {
     /**
      * The base API for Amazon GameOn Game API.
      */
+//    String BASE_API = "https://localhost:8280";
     String BASE_API = "https://api.amazongameon.com";
 
     /**
      * The base API for Amazon GameOn Admin API.
      */
+//    String ADMIN_BASE_API = "https://localhost:8281";
     String ADMIN_BASE_API = "https://admin-api.amazongameon.com";
 
     /**

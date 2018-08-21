@@ -15,7 +15,6 @@ import static com.namazustudios.socialengine.GameOnConstants.GAMEON_ADMIN_SERVIC
 import static com.namazustudios.socialengine.GameOnConstants.X_API_KEY;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-@Path("game_on_admin/{applicationId}/{configurationId}/prizes")
 public interface GameOnPrizesClient extends RestService {
 
     /**
@@ -29,10 +28,11 @@ public interface GameOnPrizesClient extends RestService {
      */
     @GET
     @Consumes(APPLICATION_JSON)
+    @Path("game_on_admin/{applicationId}/{configurationId}/prizes")
     void getPrizes(
         @PathParam("applicationId") String applicationId,
         @PathParam("configurationId") String configurationId,
-        final MethodCallback<GameOnGetPrizeListResponse> callback);
+        MethodCallback<GameOnGetPrizeListResponse> callback);
 
     /**
      * Creates one or more prizes from the supplied {@link GameOnAddPrizeListRequest}.
@@ -47,6 +47,7 @@ public interface GameOnPrizesClient extends RestService {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
+    @Path("game_on_admin/{applicationId}/{configurationId}/prizes")
     void addPrizes(
         @PathParam("applicationId") String applicationId,
         @PathParam("configurationId") String configurationId,
