@@ -12,6 +12,7 @@ import org.fusesource.restygwt.client.MethodCallback;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static java.lang.Math.floor;
@@ -28,9 +29,9 @@ public class PrizeDataProvider extends AsyncDataProvider<GameOnGetPrizeListRespo
 
     private GameOnApplicationConfiguration gameOnApplicationConfiguration;
 
-    private final List<Consumer<Throwable>> prizesFailedListeners = new ArrayList<>();
+    private final List<BiConsumer<Method, Throwable>> prizesFailedListeners = new ArrayList<>();
 
-    private final List<Consumer<GameOnGetPrizeListResponse>> prizesLoadedListeners = new ArrayList<>();
+    private final List<BiConsumer<Method, GameOnGetPrizeListResponse>> prizesLoadedListeners = new ArrayList<>();
 
     @Override
     protected void onRangeChanged(final HasData<GameOnGetPrizeListResponse.Prize> display) {
@@ -73,33 +74,29 @@ public class PrizeDataProvider extends AsyncDataProvider<GameOnGetPrizeListRespo
                 prizesFailedListeners
                     .stream()
                     .collect(toList())
-                    .forEach(c -> c.accept(exception));
+                    .forEach(c -> c.accept(method, exception));
             }
 
             @Override
             public void onSuccess(final Method method, final GameOnGetPrizeListResponse response) {
                 prizeList = response.getPrizes();
+                updateRowData(0, prizeList);
                 prizesLoadedListeners
                     .stream()
                     .collect(toList())
-                    .forEach(c -> c.accept(response));
+                    .forEach(c -> c.accept(method, response));
             }
 
         });
 
     }
 
-    public ListenerRegistration addPrizesFailedListener(final Consumer<Throwable> prizesFailedListener) {
+    public void addPrizesFailedListener(final BiConsumer<Method, Throwable> prizesFailedListener) {
         prizesFailedListeners.add(prizesFailedListener);
-        return () -> prizesFailedListeners.remove(prizesFailedListener);
     }
 
-    public ListenerRegistration addPrizesLoadedListener(final Consumer<GameOnGetPrizeListResponse> prizesLoadedListener) {
+    public void addPrizesLoadedListener(final BiConsumer<Method, GameOnGetPrizeListResponse> prizesLoadedListener) {
         prizesLoadedListeners.add(prizesLoadedListener);
-        return () -> prizesLoadedListeners.remove(prizesLoadedListener);
     }
-
-    @FunctionalInterface
-    public interface ListenerRegistration { void remove(); }
 
 }

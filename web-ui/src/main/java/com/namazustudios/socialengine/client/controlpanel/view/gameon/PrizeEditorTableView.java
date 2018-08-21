@@ -18,6 +18,7 @@ import org.gwtbootstrap3.client.ui.Pagination;
 import org.gwtbootstrap3.client.ui.constants.LabelType;
 import org.gwtbootstrap3.client.ui.gwt.ButtonCell;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
+import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
 import javax.inject.Inject;
 import java.util.Date;
@@ -136,6 +137,8 @@ public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePr
         // Pagination and events
 
         prizeEditorCellTable.addRangeChangeHandler(event -> prizeEditorCellTablePagination.rebuild(simplePager));
+        prizeDataProvider.addPrizesLoadedListener((method, re) -> prizeEditorCellTablePagination.rebuild(simplePager));
+        prizeDataProvider.addPrizesFailedListener((method, ex) -> prizeEditorCellTablePagination.rebuild(simplePager));
 
         simplePager.setDisplay(prizeEditorCellTable);
         simplePager.setPageSize(PAGE_SIZE);

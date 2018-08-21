@@ -59,11 +59,11 @@ public class V1StandardGameOnPrizeInvoker implements GameOnPrizeInvoker {
     }
 
     private <T> T getResponse(final Response response, Class<T> responseTClass) {
-        if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+        if (response.getStatus() == Response.Status.OK.getStatusCode()) {
             return response.readEntity(responseTClass);
-        } else if (response.getStatus() != Response.Status.FORBIDDEN.getStatusCode()) {
+        } else if (response.getStatus() == Response.Status.FORBIDDEN.getStatusCode()) {
             throw new ForbiddenException("GameOn API Rejected Request");
-        } else if (response.getStatus() != Response.Status.BAD_REQUEST.getStatusCode()) {
+        } else if (response.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
             throw new InvalidDataException("GameOn API returned Bad Request.  Check Configuration.");
         } else {
             throw new InternalException("Error Interacting with GameOn API.");
