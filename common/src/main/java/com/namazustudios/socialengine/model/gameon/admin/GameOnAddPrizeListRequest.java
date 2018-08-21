@@ -54,7 +54,7 @@ public class GameOnAddPrizeListRequest {
         @ApiModelProperty("The image URL for the prize.")
         private String imageUrl;
 
-        @ApiModelProperty("The prize-info. Used for ")
+        @ApiModelProperty("The prize-info. Additional arbitrary metadata.")
         private String prizeInfo;
 
         public String getTitle() {

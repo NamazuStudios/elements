@@ -30,6 +30,7 @@
   <inherits name="org.gwtbootstrap3.GwtBootstrap3Theme"/>
   <inherits name="org.gwtbootstrap3.extras.animate.Animate"/>
   <inherits name="org.gwtbootstrap3.extras.notify.Notify"/>
+  <inherits name="org.gwtbootstrap3.extras.toggleswitch.ToggleSwitch"/>
 
   <!-- Validation -->
   <inherits name="org.hibernate.validator.HibernateValidator" />
@@ -46,5 +47,4 @@
   <source path="client/widget"/>
   <source path="client/validation"/>
   <source path="client/controlpanel"/>
-
 </module>

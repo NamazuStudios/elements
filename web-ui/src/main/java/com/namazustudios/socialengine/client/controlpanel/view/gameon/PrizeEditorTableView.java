@@ -1,9 +1,11 @@
 package com.namazustudios.socialengine.client.controlpanel.view.gameon;
 
 import com.google.gwt.cell.client.TextCell;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.SimplePager;
 import com.gwtplatform.mvp.client.ViewImpl;
@@ -18,7 +20,6 @@ import org.gwtbootstrap3.client.ui.Pagination;
 import org.gwtbootstrap3.client.ui.constants.LabelType;
 import org.gwtbootstrap3.client.ui.gwt.ButtonCell;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
-import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
 import javax.inject.Inject;
 import java.util.Date;
@@ -47,6 +48,12 @@ public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePr
 
     @UiField
     Pagination prizeEditorCellTablePagination;
+
+    @UiField
+    PrizeImageModal prizeImageModal;
+
+    @UiField
+    PrizeEditorModal editPrizeModal;
 
     private final PrizeDataProvider prizeDataProvider;
 
@@ -101,7 +108,7 @@ public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePr
                 @Override
                 public String getValue(final GameOnGetPrizeListResponse.Prize object) {
                     final Long expiration = object.getDateOfExpiration();
-                    return expiration == null ? "" : formatDate(expiration);
+                    return expiration == null ? "Never" : formatDate(expiration);
                 }
 
                 private String formatDate(final Long expiration) {
@@ -116,9 +123,16 @@ public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePr
                 @Override
                 public String getValue(GameOnGetPrizeListResponse.Prize object) {
                     final String url = object.getImageUrl();
-                    return url == null ? "Not Available" : "Preview ";
+                    return url == null || url.trim().isEmpty() ? "Not Available" : "Preview ";
                 }
             };
+
+        imageUrlColumn.setFieldUpdater((index, object, value) -> {
+            if (object.getImageUrl() != null && !object.getImageUrl().isEmpty()) {
+                prizeImageModal.setPrize(object);
+                prizeImageModal.show();
+            }
+        });
 
         // Empty label
         final Label emptyLabel = new Label();
@@ -156,6 +170,11 @@ public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePr
     @Override
     public void load(final GameOnApplicationConfiguration gameOnApplicationConfiguration) {
         prizeDataProvider.reconfigure(gameOnApplicationConfiguration);
+    }
+
+    @UiHandler("addPrize")
+    public void addPrize(final ClickEvent clickEvent) {
+        editPrizeModal.show();
     }
 
 }
