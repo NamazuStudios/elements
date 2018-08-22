@@ -167,11 +167,11 @@ public class PrizeEditorModal extends Modal implements Editor<GameOnAddPrizeList
 
             if (validator.validateProperty(prize, "title").isEmpty()) {
                 titleFormGroup.setValidationState(ValidationState.NONE);
-                titleWarningLabel.setVisible(true);
+                titleWarningLabel.setVisible(false);
             } else {
                 failed = true;
                 titleFormGroup.setValidationState(ValidationState.ERROR);
-                titleWarningLabel.setVisible(false);
+                titleWarningLabel.setVisible(true);
             }
 
             if (validator.validateProperty(prize, "description").isEmpty()) {
