@@ -149,10 +149,14 @@ public class PrizeEditorModal extends Modal implements Editor<GameOnAddPrizeList
                 final Validator validator,
                 final Consumer<GameOnAddPrizeListRequest.Prize> success,
                 final Consumer<GameOnAddPrizeListRequest.Prize> failure) {
+
             this.validator = validator;
             this.success = success;
             this.failure = failure;
+
             driver.initialize(PrizeEditorModal.this);
+            driver.edit(new GameOnAddPrizeListRequest.Prize());
+
         }
 
         public void validateAndFinish() {
@@ -162,11 +166,11 @@ public class PrizeEditorModal extends Modal implements Editor<GameOnAddPrizeList
             boolean failed = false;
 
             if (validator.validateProperty(prize, "title").isEmpty()) {
-                titleFormGroup.setValidationState(ValidationState.ERROR);
+                titleFormGroup.setValidationState(ValidationState.NONE);
                 titleWarningLabel.setVisible(true);
             } else {
                 failed = true;
-                titleFormGroup.setValidationState(ValidationState.NONE);
+                titleFormGroup.setValidationState(ValidationState.ERROR);
                 titleWarningLabel.setVisible(false);
             }
 
