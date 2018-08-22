@@ -28,7 +28,7 @@
                 <b:Label ui:field="prizeInfoWarningLabel" visible="false" text="Prize Info Invalid." type="DANGER"/>
             </b:FormGroup>
 
-            <b:Button ui:field="create">Submit</b:Button>
+            <b:Button ui:field="submit">Submit</b:Button>
 
         </b:Form>
     </b:ModalBody>

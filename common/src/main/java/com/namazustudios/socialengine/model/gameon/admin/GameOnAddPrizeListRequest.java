@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.model.gameon.admin;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
 
@@ -10,6 +11,7 @@ import java.util.Objects;
                         "See: https://developer.amazon.com/docs/gameon/admin-api-ref.html#addprizelistrequest")
 public class GameOnAddPrizeListRequest {
 
+    @NotNull
     @ApiModelProperty("Allows for the specification of one or more Prizes when creating a prize with Amazon GameOn")
     private List<Prize> prizes;
 
@@ -45,16 +47,21 @@ public class GameOnAddPrizeListRequest {
               "See: https://developer.amazon.com/docs/gameon/admin-api-ref.html#addprizelistrequest_prize")
     public static class Prize {
 
+        @NotNull
         @ApiModelProperty("The title of the prize.")
         private String title;
 
+        @NotNull
         @ApiModelProperty("A brief description of the prize.")
         private String description;
 
-        @ApiModelProperty("The image URL for the prize.")
+        @ApiModelProperty("The image URL for the prize.  This may be blank.")
         private String imageUrl;
 
-        @ApiModelProperty("The prize-info. Additional arbitrary metadata.")
+        @NotNull
+        @ApiModelProperty("The prize-info. Additional arbitrary metadata, used for claiming the prize later.  This " +
+                          "should reflect, for example, an internal ID for the prize itself used by the application to " +
+                          "uniquely identify it later.")
         private String prizeInfo;
 
         public String getTitle() {

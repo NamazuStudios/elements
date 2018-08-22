@@ -11,8 +11,13 @@ import com.google.gwt.user.cellview.client.SimplePager;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.namazustudios.socialengine.client.modal.ConfirmationModal;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
+import com.namazustudios.socialengine.client.rest.client.gameon.GameOnPrizesClient;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
+import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListRequest;
+import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListResponse;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnGetPrizeListResponse;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.Container;
 import org.gwtbootstrap3.client.ui.Label;
@@ -20,9 +25,13 @@ import org.gwtbootstrap3.client.ui.Pagination;
 import org.gwtbootstrap3.client.ui.constants.LabelType;
 import org.gwtbootstrap3.client.ui.gwt.ButtonCell;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
+import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
 import javax.inject.Inject;
+import javax.validation.Validator;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import static com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat.DATE_TIME_MEDIUM;
 import static org.gwtbootstrap3.client.ui.constants.ButtonType.PRIMARY;
@@ -54,6 +63,12 @@ public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePr
 
     @UiField
     PrizeEditorModal editPrizeModal;
+
+    @Inject
+    private Validator validator;
+
+    @Inject
+    private GameOnPrizesClient gameOnPrizesClient;
 
     private final PrizeDataProvider prizeDataProvider;
 
@@ -175,6 +190,38 @@ public class PrizeEditorTableView extends ViewImpl implements PrizeEditorTablePr
     @UiHandler("addPrize")
     public void addPrize(final ClickEvent clickEvent) {
         editPrizeModal.show();
+        editPrizeModal.createNewPrize(validator, this::submit, prize -> {});
+    }
+
+    private void submit(final GameOnAddPrizeListRequest.Prize prize) {
+
+        final GameOnAddPrizeListRequest request = new GameOnAddPrizeListRequest();
+        final List<GameOnAddPrizeListRequest.Prize> prizes = new ArrayList<>();
+        prizes.add(prize);
+        request.setPrizes(prizes);
+
+        final GameOnApplicationConfiguration configuration = prizeDataProvider.getGameOnApplicationConfiguration();
+        final String applicationId = configuration.getParent().getId();
+        final String configurationId = configuration.getId();
+
+        editPrizeModal.lockOut();
+
+        gameOnPrizesClient.addPrizes(applicationId, configurationId, request, new MethodCallback<GameOnAddPrizeListResponse>() {
+            @Override
+            public void onFailure(Method method, Throwable exception) {
+                editPrizeModal.unlock();
+                Notify.notify("Failed to add prize: " + method.getData());
+            }
+
+            @Override
+            public void onSuccess(Method method, GameOnAddPrizeListResponse response) {
+                editPrizeModal.hide();
+                prizeDataProvider.reload();
+                Notify.notify("Successfully added prize.");
+            }
+
+        });
+
     }
 
 }

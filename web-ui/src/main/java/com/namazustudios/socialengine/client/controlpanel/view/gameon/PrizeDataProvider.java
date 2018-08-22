@@ -60,6 +60,10 @@ public class PrizeDataProvider extends AsyncDataProvider<GameOnGetPrizeListRespo
         updateRowCount(0, true);
     }
 
+    public void reload() {
+        reconfigure(getGameOnApplicationConfiguration());
+    }
+
     public void reconfigure(final GameOnApplicationConfiguration gameOnApplicationConfiguration) {
 
         this.gameOnApplicationConfiguration = gameOnApplicationConfiguration;

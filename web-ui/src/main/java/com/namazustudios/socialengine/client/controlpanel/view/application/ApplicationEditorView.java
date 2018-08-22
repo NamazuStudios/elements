@@ -41,7 +41,7 @@ import static org.gwtbootstrap3.client.ui.constants.ValidationState.NONE;
  */
 public class ApplicationEditorView extends ViewImpl implements ApplicationEditorPresenter.MyView, Editor<Application> {
 
-    interface Driver extends SimpleBeanEditorDriver<Application, ApplicationEditorView> {};
+    interface Driver extends SimpleBeanEditorDriver<Application, ApplicationEditorView> {}
 
     interface ApplicationEditorViewBinder extends UiBinder<Container, ApplicationEditorView> {}
 
