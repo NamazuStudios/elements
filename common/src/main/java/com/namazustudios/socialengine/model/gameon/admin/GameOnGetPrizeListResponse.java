@@ -3,12 +3,13 @@ package com.namazustudios.socialengine.model.gameon.admin;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
 @ApiModel(description = "Used by the GameOn API to fetch instances of prizes.  Used only in the Admin API.  " +
                         "See: https://developer.amazon.com/docs/gameon/admin-api-ref.html#getprizelistresponse")
-public class GameOnGetPrizeListResponse {
+public class GameOnGetPrizeListResponse implements Serializable {
 
     private List<Prize> prizes;
 
@@ -42,7 +43,7 @@ public class GameOnGetPrizeListResponse {
 
     @ApiModel(description = "Provides specific metadata on a prize.  " +
                             "See: https://developer.amazon.com/docs/gameon/admin-api-ref.html#getprizelistresponse_prize")
-    public static class Prize {
+    public static class Prize implements Serializable {
 
         @ApiModelProperty("The ID of the prize.")
         private String prizeId;

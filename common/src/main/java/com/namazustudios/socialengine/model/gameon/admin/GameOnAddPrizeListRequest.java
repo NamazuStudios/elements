@@ -4,12 +4,13 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
 @ApiModel(description = "Used by the GameOn API to create instances of prizes.  Used only in the Admin API.  " +
                         "See: https://developer.amazon.com/docs/gameon/admin-api-ref.html#addprizelistrequest")
-public class GameOnAddPrizeListRequest {
+public class GameOnAddPrizeListRequest implements Serializable {
 
     @NotNull
     @ApiModelProperty("Allows for the specification of one or more Prizes when creating a prize with Amazon GameOn")
@@ -45,7 +46,7 @@ public class GameOnAddPrizeListRequest {
 
     @ApiModel("The Prize metadata itself.  " +
               "See: https://developer.amazon.com/docs/gameon/admin-api-ref.html#addprizelistrequest_prize")
-    public static class Prize {
+    public static class Prize implements Serializable {
 
         @NotNull
         @ApiModelProperty("The title of the prize.")

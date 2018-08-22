@@ -50,7 +50,13 @@ public class GameOnPrizeResource {
         final GameOnAddPrizeListRequest addPrizeListRequest
 
     ) {
-        return getGameOnPrizeService().addPrizes(applicationId, configurationId, addPrizeListRequest);
+
+        final GameOnAddPrizeListResponse response =
+            getGameOnPrizeService().
+            addPrizes(applicationId, configurationId, addPrizeListRequest);
+
+        return response;
+
     }
 
     public GameOnPrizeService getGameOnPrizeService() {
