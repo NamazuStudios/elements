@@ -5,7 +5,7 @@
     <b:ModalBody>
         <b:Form>
             <b:FormGroup ui:field="titleFormGroup">
-                <b:FormLabel for="title">Username</b:FormLabel>
+                <b:FormLabel for="title">Title</b:FormLabel>
                 <b:TextBox placeholder="Title" ui:field="titleTextBox"/>
                 <b:Label ui:field="titleWarningLabel" visible="false" text="TItle must be alpha-numeric." type="DANGER"/>
             </b:FormGroup>
