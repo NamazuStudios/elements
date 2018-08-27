@@ -1,6 +1,10 @@
 package com.namazustudios.socialengine.service.gameon.client.invoker;
 
-import com.namazustudios.socialengine.model.gameon.*;
+import com.namazustudios.socialengine.model.gameon.GameOnPlayerTournamentEnterResponse;
+import com.namazustudios.socialengine.model.gameon.game.GameOnTournamentDetail;
+import com.namazustudios.socialengine.model.gameon.game.GameOnTournamentSummary;
+import com.namazustudios.socialengine.model.gameon.game.TournamentFilter;
+import com.namazustudios.socialengine.model.gameon.game.TournamentPeriod;
 import com.namazustudios.socialengine.service.gameon.client.model.EnterPlayerTournamentRequest;
 
 import java.util.List;

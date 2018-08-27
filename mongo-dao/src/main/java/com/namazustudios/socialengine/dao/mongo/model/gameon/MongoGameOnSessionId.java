@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model.gameon;
 
 import com.namazustudios.elements.fts.*;
-import com.namazustudios.socialengine.model.gameon.DeviceOSType;
+import com.namazustudios.socialengine.model.gameon.game.DeviceOSType;
 import org.apache.lucene.document.Document;
 import org.bson.types.ObjectId;
 import org.dozer.CustomConverter;

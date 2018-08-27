@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.gameon.GameOnRegistration;
+import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
 
 /**
  * Manages instances of {@link GameOnRegistration}.

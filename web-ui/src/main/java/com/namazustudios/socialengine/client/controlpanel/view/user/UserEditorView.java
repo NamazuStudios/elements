@@ -10,7 +10,7 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Panel;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
-import com.namazustudios.socialengine.client.rest.client.UserClient;
+import com.namazustudios.socialengine.client.rest.client.internal.UserClient;
 import com.namazustudios.socialengine.client.widget.UserLevelEnumDropDown;
 import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.Method;

@@ -10,6 +10,8 @@ public class UiConfig {
 
     private String apiUrl;
 
+    private String gameOnAdminApiUrl;
+
     public String getApiUrl() {
         return apiUrl;
     }

@@ -1,7 +1,10 @@
 package com.namazustudios.socialengine.client.rest;
 
 import com.google.gwt.inject.client.AbstractGinModule;
-import com.namazustudios.socialengine.client.rest.client.*;
+import com.namazustudios.socialengine.client.rest.client.gameon.GameOnPrizesClient;
+import com.namazustudios.socialengine.client.rest.client.internal.LoginClient;
+import com.namazustudios.socialengine.client.rest.client.internal.*;
+import com.namazustudios.socialengine.client.rest.client.internal.UserClient;
 import com.namazustudios.socialengine.client.rest.gin.UserProvider;
 import com.namazustudios.socialengine.client.rest.service.LoginService;
 import com.namazustudios.socialengine.client.rest.service.RestyLoginService;
@@ -26,6 +29,7 @@ public class RestyModule extends AbstractGinModule {
         binder().bind(FacebookApplicationConfigurationClient.class);
         binder().bind(FirebaseApplicationConfigurationClient.class);
         binder().bind(GameOnApplicationConfigurationClient.class);
+        binder().bind(GameOnPrizesClient.class);
 
         binder().bind(User.class).toProvider(UserProvider.class);
         binder().bind(LoginService.class).to(RestyLoginService.class).asEagerSingleton();

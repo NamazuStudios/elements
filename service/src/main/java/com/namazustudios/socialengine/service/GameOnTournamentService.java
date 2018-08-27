@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service;
 
-import com.namazustudios.socialengine.model.gameon.*;
+import com.namazustudios.socialengine.model.gameon.game.*;
 
 import java.util.List;
 

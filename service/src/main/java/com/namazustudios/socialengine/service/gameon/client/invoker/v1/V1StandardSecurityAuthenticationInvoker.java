@@ -2,8 +2,8 @@ package com.namazustudios.socialengine.service.gameon.client.invoker.v1;
 
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
-import com.namazustudios.socialengine.model.gameon.GameOnRegistration;
-import com.namazustudios.socialengine.model.gameon.GameOnSession;
+import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
+import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnAuthenticationInvoker;
 import com.namazustudios.socialengine.service.gameon.client.model.AuthPlayerRequest;
 import com.namazustudios.socialengine.service.gameon.client.model.AuthPlayerResponse;
@@ -13,9 +13,9 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
 
-import static com.namazustudios.socialengine.service.gameon.client.Constants.BASE_API;
-import static com.namazustudios.socialengine.service.gameon.client.Constants.VERSION_V1;
-import static com.namazustudios.socialengine.service.gameon.client.Constants.X_API_KEY;
+import static com.namazustudios.socialengine.GameOnConstants.BASE_API;
+import static com.namazustudios.socialengine.GameOnConstants.VERSION_V1;
+import static com.namazustudios.socialengine.GameOnConstants.X_API_KEY;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.OK;

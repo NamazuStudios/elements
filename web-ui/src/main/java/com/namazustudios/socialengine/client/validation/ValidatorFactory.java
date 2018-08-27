@@ -7,6 +7,7 @@ import com.google.gwt.validation.client.impl.AbstractGwtValidator;
 import com.namazustudios.socialengine.model.ShortLink;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.*;
+import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListRequest;
 
 import javax.validation.Validator;
 
@@ -27,7 +28,8 @@ public class ValidatorFactory extends AbstractGwtValidatorFactory {
             PSNApplicationConfiguration.class,
             CallbackDefinition.class,
             FirebaseApplicationConfiguration.class,
-            GameOnApplicationConfiguration.class})
+            GameOnApplicationConfiguration.class,
+            GameOnAddPrizeListRequest.Prize.class})
     public interface GwtValidator extends Validator {}
 
     @Override

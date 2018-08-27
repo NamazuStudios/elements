@@ -16,7 +16,7 @@ import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.socialengine.client.controlpanel.NameTokens;
 import com.namazustudios.socialengine.client.modal.ConfirmationModal;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
-import com.namazustudios.socialengine.client.rest.client.ApplicationClient;
+import com.namazustudios.socialengine.client.rest.client.internal.ApplicationClient;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.ConfigurationCategory;
@@ -41,7 +41,7 @@ import static org.gwtbootstrap3.client.ui.constants.ValidationState.NONE;
  */
 public class ApplicationEditorView extends ViewImpl implements ApplicationEditorPresenter.MyView, Editor<Application> {
 
-    interface Driver extends SimpleBeanEditorDriver<Application, ApplicationEditorView> {};
+    interface Driver extends SimpleBeanEditorDriver<Application, ApplicationEditorView> {}
 
     interface ApplicationEditorViewBinder extends UiBinder<Container, ApplicationEditorView> {}
 

@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.client.rest.service;
 
-import com.namazustudios.socialengine.client.rest.client.LoginClient;
-import com.namazustudios.socialengine.client.rest.client.UserClient;
+import com.namazustudios.socialengine.client.rest.client.internal.LoginClient;
+import com.namazustudios.socialengine.client.rest.client.internal.UserClient;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.model.session.UsernamePasswordSessionRequest;

@@ -1,11 +1,12 @@
 package com.namazustudios.socialengine.service.gameon.client.invoker.v1;
 
+import com.namazustudios.socialengine.GameOnConstants;
 import com.namazustudios.socialengine.exception.ConflictException;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
-import com.namazustudios.socialengine.model.gameon.*;
+import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnTournamentInvoker;
 import com.namazustudios.socialengine.service.gameon.client.model.EnterTournamentRequest;
 import com.namazustudios.socialengine.service.gameon.client.model.ErrorResponse;
@@ -18,7 +19,6 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.function.Supplier;
 
-import static com.namazustudios.socialengine.service.gameon.client.Constants.*;
 import static java.util.Collections.emptyList;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -49,15 +49,15 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
     public GameOnTournamentDetail getDetail(String playerAttributes, final String tournamentId) {
 
         WebTarget target = client
-            .target(BASE_API)
-            .path(VERSION_V1).path(TOURNAMENTS_PATH).path(tournamentId);
+            .target(GameOnConstants.BASE_API)
+            .path(GameOnConstants.VERSION_V1).path(TOURNAMENTS_PATH).path(tournamentId);
 
         if (playerAttributes != null)   target = target.queryParam(PLAYER_ATTRIBUTES, playerAttributes);
 
         final Response response = target
             .request()
-            .header(SESSION_ID, gameOnSession.getSessionId())
-            .header(X_API_KEY, gameOnSession.getSessionApiKey())
+            .header(GameOnConstants.SESSION_ID, gameOnSession.getSessionId())
+            .header(GameOnConstants.X_API_KEY, gameOnSession.getSessionApiKey())
             .get();
 
         return get(response, GameOnTournamentDetail.class, () -> null);
@@ -71,8 +71,8 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
             final String playerAttributes) {
 
         WebTarget target = client
-            .target(BASE_API)
-            .path(VERSION_V1).path(TOURNAMENTS_PATH);
+            .target(GameOnConstants.BASE_API)
+            .path(GameOnConstants.VERSION_V1).path(TOURNAMENTS_PATH);
 
         if (period != null)             target = target.queryParam(PERIOD, period);
         if (filterBy != null)           target = target.queryParam(FILTER_BY, filterBy);
@@ -80,8 +80,8 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
 
         final Response response = target
             .request()
-            .header(SESSION_ID, gameOnSession.getSessionId())
-            .header(X_API_KEY, gameOnSession.getSessionApiKey())
+            .header(GameOnConstants.SESSION_ID, gameOnSession.getSessionId())
+            .header(GameOnConstants.X_API_KEY, gameOnSession.getSessionApiKey())
             .get();
 
         return get(response, TournamentListResponse.class, () -> {
@@ -98,12 +98,12 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
             final EnterTournamentRequest enterTournamentRequest) {
 
         final Invocation.Builder builder = client
-            .target(BASE_API)
-            .path(VERSION_V1).path(TOURNAMENTS_PATH).path("{tournamentId}").path(ENTER)
+            .target(GameOnConstants.BASE_API)
+            .path(GameOnConstants.VERSION_V1).path(TOURNAMENTS_PATH).path("{tournamentId}").path(ENTER)
             .resolveTemplate("tournamentId", tournamentId)
             .request()
-            .header(SESSION_ID, gameOnSession.getSessionId())
-            .header(X_API_KEY, gameOnSession.getSessionApiKey());
+            .header(GameOnConstants.SESSION_ID, gameOnSession.getSessionId())
+            .header(GameOnConstants.X_API_KEY, gameOnSession.getSessionApiKey());
 
         final Response response =
             enterTournamentRequest.getAccessKey() == null &&

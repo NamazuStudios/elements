@@ -1,8 +1,9 @@
 package com.namazustudios.socialengine.service.gameon.client.invoker.v1;
 
+import com.namazustudios.socialengine.GameOnConstants;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
-import com.namazustudios.socialengine.model.gameon.GameOnRegistration;
+import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnRegistrationInvoker;
 import com.namazustudios.socialengine.service.gameon.client.model.RegisterPlayerResponse;
 import org.slf4j.Logger;
@@ -12,7 +13,6 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import static com.namazustudios.socialengine.service.gameon.client.Constants.*;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.Response.Status.OK;
 
@@ -46,10 +46,10 @@ public class V1StandardSecurityRegistrationInvoker implements GameOnRegistration
     public GameOnRegistration invoke() {
 
         final Response response = client
-              .target(BASE_API)
-              .path(VERSION_V1).path(PLAYERS_PATH).path(REGISTER_PATH)
+              .target(GameOnConstants.BASE_API)
+              .path(GameOnConstants.VERSION_V1).path(PLAYERS_PATH).path(REGISTER_PATH)
               .request()
-              .header(X_API_KEY, gameOnApplicationConfiguration.getPublicApiKey())
+              .header(GameOnConstants.X_API_KEY, gameOnApplicationConfiguration.getPublicApiKey())
               .post(entity(null, MediaType.APPLICATION_JSON_TYPE));
 
         if (OK.getStatusCode() != response.getStatus()) {

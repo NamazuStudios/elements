@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.gameon.AppBuildType;
-import com.namazustudios.socialengine.model.gameon.DeviceOSType;
-import com.namazustudios.socialengine.model.gameon.GameOnSession;
+import com.namazustudios.socialengine.model.gameon.game.AppBuildType;
+import com.namazustudios.socialengine.model.gameon.game.DeviceOSType;
+import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 import com.namazustudios.socialengine.model.profile.Profile;
 
 public interface GameOnSessionService {

@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.dao.MatchmakingApplicationConfigurationDao
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
 import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
-import com.namazustudios.socialengine.model.gameon.*;
+import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.GameOnSessionService;
@@ -23,7 +23,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import static com.namazustudios.socialengine.model.gameon.MatchFilter.live;
+import static com.namazustudios.socialengine.model.gameon.game.MatchFilter.live;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 

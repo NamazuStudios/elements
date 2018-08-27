@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.exception.gameon.GameOnRegistrationNotFoun
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
-import com.namazustudios.socialengine.model.gameon.GameOnRegistration;
+import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.GameOnRegistrationService;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnRegistrationInvoker;

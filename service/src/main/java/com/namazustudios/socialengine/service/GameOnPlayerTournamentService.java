@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.service;
 
-import com.namazustudios.socialengine.model.gameon.*;
+import com.namazustudios.socialengine.model.gameon.GameOnPlayerTournamentEnterRequest;
+import com.namazustudios.socialengine.model.gameon.GameOnPlayerTournamentEnterResponse;
+import com.namazustudios.socialengine.model.gameon.game.*;
 
 import java.util.List;
 
@@ -18,9 +20,9 @@ public interface GameOnPlayerTournamentService {
      * @return a {@link List<GameOnTournamentSummary>}, never null
      */
     List<GameOnTournamentSummary> getEligibleTournaments(
-        DeviceOSType deviceOSType, AppBuildType appBuildType,
-        TournamentFilter filterBy, TournamentPeriod period,
-        String playerAttributes);
+            DeviceOSType deviceOSType, AppBuildType appBuildType,
+            TournamentFilter filterBy, TournamentPeriod period,
+            String playerAttributes);
 
     /**
      * Gets details for a specific tournament.  For a tournament to be eligible, the player must meet all eligibility

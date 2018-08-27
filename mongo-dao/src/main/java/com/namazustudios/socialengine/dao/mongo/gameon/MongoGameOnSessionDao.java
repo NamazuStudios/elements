@@ -18,8 +18,8 @@ import com.namazustudios.socialengine.exception.gameon.GameOnSessionNotFoundExce
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
-import com.namazustudios.socialengine.model.gameon.DeviceOSType;
-import com.namazustudios.socialengine.model.gameon.GameOnSession;
+import com.namazustudios.socialengine.model.gameon.game.DeviceOSType;
+import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.apache.lucene.index.Term;

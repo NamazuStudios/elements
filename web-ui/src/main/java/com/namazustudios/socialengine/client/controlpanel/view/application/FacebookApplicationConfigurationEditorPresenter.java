@@ -9,7 +9,7 @@ import com.gwtplatform.mvp.client.proxy.ProxyPlace;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.socialengine.client.controlpanel.NameTokens;
 import com.namazustudios.socialengine.client.controlpanel.view.ControlPanelPresenter;
-import com.namazustudios.socialengine.client.rest.client.FacebookApplicationConfigurationClient;
+import com.namazustudios.socialengine.client.rest.client.internal.FacebookApplicationConfigurationClient;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;

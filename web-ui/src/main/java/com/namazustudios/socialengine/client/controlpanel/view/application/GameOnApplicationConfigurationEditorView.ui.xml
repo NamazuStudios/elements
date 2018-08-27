@@ -52,6 +52,7 @@
                     </b:FormGroup>
 
                     <b:Button ui:field="create">Submit</b:Button>
+                    <b:Button ui:field="editPrizes" icon="TROPHY">Edit Prizes</b:Button>
 
                 </b:FieldSet>
             </b:Form>

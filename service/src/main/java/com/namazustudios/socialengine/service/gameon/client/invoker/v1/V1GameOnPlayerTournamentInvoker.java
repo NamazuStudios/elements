@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.gameon.client.invoker.v1;
 
+import com.namazustudios.socialengine.GameOnConstants;
 import com.namazustudios.socialengine.exception.ConflictException;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InternalException;
@@ -7,7 +8,8 @@ import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.gameon.GameOnMatchNotFoundException;
 import com.namazustudios.socialengine.exception.gameon.GameOnPlayerTournamentNotFoundException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
-import com.namazustudios.socialengine.model.gameon.*;
+import com.namazustudios.socialengine.model.gameon.GameOnPlayerTournamentEnterResponse;
+import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnPlayerTournamentInvoker;
 import com.namazustudios.socialengine.service.gameon.client.model.EnterPlayerTournamentRequest;
 import com.namazustudios.socialengine.service.gameon.client.model.ErrorResponse;
@@ -20,9 +22,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.function.Supplier;
 
-import static com.namazustudios.socialengine.service.gameon.client.Constants.*;
-import static com.namazustudios.socialengine.service.gameon.client.Constants.SESSION_ID;
-import static com.namazustudios.socialengine.service.gameon.client.Constants.X_API_KEY;
+import static com.namazustudios.socialengine.GameOnConstants.*;
 import static java.util.Collections.emptyList;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;

@@ -10,7 +10,7 @@ import com.gwtplatform.mvp.client.proxy.ProxyPlace;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.socialengine.client.controlpanel.NameTokens;
 import com.namazustudios.socialengine.client.controlpanel.view.ControlPanelPresenter;
-import com.namazustudios.socialengine.client.rest.client.UserClient;
+import com.namazustudios.socialengine.client.rest.client.internal.UserClient;
 import com.namazustudios.socialengine.model.User;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;

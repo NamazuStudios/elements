@@ -20,7 +20,7 @@
         <guice.version>3.0</guice.version>
         <gwtp.version>1.6</gwtp.version>
         <gin.version>2.1.2</gin.version>
-        <restygwt.version>2.2.0</restygwt.version>
+        <restygwt.version>2.2.3</restygwt.version>
         <boostrap.version>0.9.4</boostrap.version>
         <hibernate.validator.version>4.1.0.Final</hibernate.validator.version>
         <log4j.version>1.2.16</log4j.version>

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.gameon;
 
+import com.namazustudios.socialengine.model.gameon.game.GameOnTournamentEnterResponse;
 import com.namazustudios.socialengine.model.match.Match;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

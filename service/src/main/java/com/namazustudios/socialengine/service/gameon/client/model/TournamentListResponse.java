@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service.gameon.client.model;
 
-import com.namazustudios.socialengine.model.gameon.GameOnTournamentSummary;
+import com.namazustudios.socialengine.model.gameon.game.GameOnTournamentSummary;
 
 import java.util.List;
 

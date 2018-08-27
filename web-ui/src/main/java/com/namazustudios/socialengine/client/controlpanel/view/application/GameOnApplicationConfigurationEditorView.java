@@ -11,9 +11,10 @@ import com.gwtplatform.mvp.client.ViewImpl;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
 import com.namazustudios.socialengine.client.controlpanel.NameTokens;
+import com.namazustudios.socialengine.client.controlpanel.view.gameon.PrizeEditorTablePresenter;
 import com.namazustudios.socialengine.client.modal.ErrorModal;
-import com.namazustudios.socialengine.client.rest.client.ApplicationClient;
-import com.namazustudios.socialengine.client.rest.client.GameOnApplicationConfigurationClient;
+import com.namazustudios.socialengine.client.rest.client.internal.ApplicationClient;
+import com.namazustudios.socialengine.client.rest.client.internal.GameOnApplicationConfigurationClient;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import org.fusesource.restygwt.client.Method;
@@ -27,7 +28,6 @@ import javax.validation.Validator;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.AMAZON_GAME_ON;
-import static com.namazustudios.socialengine.model.application.ConfigurationCategory.FIREBASE;
 
 public class GameOnApplicationConfigurationEditorView extends ViewImpl implements
         Editor<GameOnApplicationConfiguration>,
@@ -91,6 +91,9 @@ public class GameOnApplicationConfigurationEditorView extends ViewImpl implement
     @UiField
     Button create;
 
+    @UiField
+    Button editPrizes;
+
     @Inject
     private Validator validator;
 
@@ -106,6 +109,10 @@ public class GameOnApplicationConfigurationEditorView extends ViewImpl implement
     @Inject
     private PlaceManager placeManager;
 
+    private Application currentApplication;
+
+    private GameOnApplicationConfiguration currentGameOnApplicationConfiguration;
+
     private Consumer<GameOnApplicationConfiguration> submitter = configuration -> {
         Notify.notify("No application specified.");
     };
@@ -117,6 +124,7 @@ public class GameOnApplicationConfigurationEditorView extends ViewImpl implement
 
     public void lockOut() {
         create.setEnabled(false);
+        editPrizes.setEnabled(false);
         gameIdTextBox.setEnabled(false);
         adminApiKeyTextBox.setEnabled(false);
         publicApiKeyTextBox.setEnabled(false);
@@ -125,10 +133,16 @@ public class GameOnApplicationConfigurationEditorView extends ViewImpl implement
 
     public void unlock() {
         create.setEnabled(true);
+        editPrizes.setEnabled(true);
         gameIdTextBox.setEnabled(true);
         adminApiKeyTextBox.setEnabled(true);
         publicApiKeyTextBox.setEnabled(true);
         publicKeyTextArea.setEnabled(true);
+
+        if (currentApplication != null && currentGameOnApplicationConfiguration != null) {
+
+        }
+
     }
 
     @Override
@@ -155,6 +169,9 @@ public class GameOnApplicationConfigurationEditorView extends ViewImpl implement
         publicKeyFormGroup.setValidationState(ValidationState.NONE);
 
         create.setVisible(false);
+
+        currentApplication = null;
+        currentGameOnApplicationConfiguration = null;
 
     }
 
@@ -210,9 +227,14 @@ public class GameOnApplicationConfigurationEditorView extends ViewImpl implement
 
                 @Override
                 public void onSuccess(Method method, GameOnApplicationConfiguration response) {
+
+                    currentApplication = response.getParent();
+                    currentGameOnApplicationConfiguration = response;
+
                     unlock();
                     Notify.notify("Successfully created Game On Configuration: " + gameOnApplicationConfiguration.getUniqueIdentifier());
                     editApplicationConfiguration(applicationNameOrId, response);
+
                 }
 
             });
@@ -227,6 +249,10 @@ public class GameOnApplicationConfigurationEditorView extends ViewImpl implement
         loadApplication(applicationNameOrId, application -> {
 
             reset();
+
+            currentApplication = application;
+            currentGameOnApplicationConfiguration = gameOnApplicationConfiguration;
+
             unlock();
 
             gameOnApplicationConfiguration.setParent(application);
@@ -357,6 +383,22 @@ public class GameOnApplicationConfigurationEditorView extends ViewImpl implement
 
         applicationLink.setText(application.getName());
         breadcrumbs.add(applicationLink);
+
+    }
+
+    @UiHandler("editPrizes")
+    void openPrizeEditor(final ClickEvent ev) {
+
+        final String applicationId = currentApplication.getId();
+        final String configurationId = currentGameOnApplicationConfiguration.getId();
+
+        final PlaceRequest placeRequest = new PlaceRequest.Builder()
+            .nameToken(NameTokens.GAMEON_PRIZE_EDIT_TABLE)
+            .with(PrizeEditorTablePresenter.Parameter.application_id.name(), applicationId)
+            .with(PrizeEditorTablePresenter.Parameter.configuration_id.name(), configurationId)
+            .build();
+
+        placeManager.revealPlace(placeRequest);
 
     }
 

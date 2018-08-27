@@ -2,10 +2,9 @@ package com.namazustudios.socialengine.client.controlpanel.view.application;
 
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
 import com.gwtplatform.mvp.shared.proxy.PlaceRequest;
-import com.namazustudios.socialengine.client.rest.client.*;
+import com.namazustudios.socialengine.client.rest.client.internal.*;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
-import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 
