@@ -1,9 +1,10 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
-import com.google.inject.*;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Node;
-import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 import org.zeromq.ZContext;
 
@@ -13,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static jdk.nashorn.internal.objects.NativeFunction.bind;
 import static org.zeromq.ZContext.shadow;
 
 /**
