@@ -8,13 +8,9 @@ import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
-import com.namazustudios.socialengine.rt.lua.LuaResource;
 import com.namazustudios.socialengine.rt.lua.LuaResourceLoader;
-import com.namazustudios.socialengine.rt.lua.builtin.AssetLoaderBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
-import com.namazustudios.socialengine.rt.lua.builtin.HttpClientBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectModuleBuiltin;
-import javafx.application.Application;
 import org.reflections.Reflections;
 
 import javax.inject.Provider;

@@ -8,11 +8,8 @@ import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.ContextNodeLifecycle;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
-import com.sun.org.apache.xpath.internal.operations.Mod;
-import javafx.application.Application;
 import org.zeromq.ZContext;
 
-import javax.ws.rs.client.Client;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
