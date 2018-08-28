@@ -1,14 +1,12 @@
 package com.namazustudios.socialengine.rt.servlet;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.net.HttpHeaders;
 import com.namazustudios.socialengine.rt.NamedHeaders;
 import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.ResponseCode;
 import com.namazustudios.socialengine.rt.http.HttpResponse;
 import com.namazustudios.socialengine.rt.http.HttpStatus;
 import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
-import com.sun.org.apache.regexp.internal.RE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
