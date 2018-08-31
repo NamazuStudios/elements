@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="web-ui-war" type="GWT.ConfigurationType" factoryName="GWT Configuration">
+    <option name="VM_PARAMETERS" value="-Xmx2048m" />
+    <option name="SHELL_PARAMETERS" value="-style DETAILED" />
+    <option name="RUN_PAGE" value="index.html" />
+    <option name="START_JAVASCRIPT_DEBUGGER" value="true" />
+    <option name="USE_SUPER_DEV_MODE" value="true" />
+    <option name="WORKING_DIRECTORY" value="" />
+    <module name="web-ui-war" />
+    <method />
+  </configuration>
+</component>

@@ -9,3 +9,15 @@ buildNumber.properties
 *.iml
 test-repositories
 storage.xodus
+
+#IntelliJ Configurations (except shared run configurations
+.idea/artifacts/
+.idea/compiler.xml
+.idea/encodings.xml
+.idea/libraries/
+.idea/misc.xml
+.idea/modules.xml
+.idea/uiDesigner.xml
+.idea/vcs.xml
+.idea/workspace.xml
+
