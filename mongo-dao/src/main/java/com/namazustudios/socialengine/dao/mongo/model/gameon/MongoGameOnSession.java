@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.model.gameon.game.AppBuildType;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
+import java.sql.Timestamp;
 import java.util.Objects;
 
 @SearchableIdentity(@SearchableField(
@@ -45,7 +46,7 @@ public class MongoGameOnSession {
     private MongoProfile profile;
 
     @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-    private long sessionExpirationDate;
+    private Timestamp sessionExpirationDate;
 
     @Property
     private String sessionId;
@@ -80,11 +81,11 @@ public class MongoGameOnSession {
         this.profile = profile;
     }
 
-    public long getSessionExpirationDate() {
+    public Timestamp getSessionExpirationDate() {
         return sessionExpirationDate;
     }
 
-    public void setSessionExpirationDate(long sessionExpirationDate) {
+    public void setSessionExpirationDate(Timestamp sessionExpirationDate) {
         this.sessionExpirationDate = sessionExpirationDate;
     }
 
@@ -117,10 +118,10 @@ public class MongoGameOnSession {
         if (this == object) return true;
         if (!(object instanceof MongoGameOnSession)) return false;
         MongoGameOnSession that = (MongoGameOnSession) object;
-        return getSessionExpirationDate() == that.getSessionExpirationDate() &&
-                Objects.equals(getObjectId(), that.getObjectId()) &&
+        return Objects.equals(getObjectId(), that.getObjectId()) &&
                 Objects.equals(getUser(), that.getUser()) &&
                 Objects.equals(getProfile(), that.getProfile()) &&
+                Objects.equals(getSessionExpirationDate(), that.getSessionExpirationDate()) &&
                 Objects.equals(getSessionId(), that.getSessionId()) &&
                 Objects.equals(getSessionApiKey(), that.getSessionApiKey()) &&
                 getAppBuildType() == that.getAppBuildType();
@@ -128,6 +129,7 @@ public class MongoGameOnSession {
 
     @Override
     public int hashCode() {
+
         return Objects.hash(getObjectId(), getUser(), getProfile(), getSessionExpirationDate(), getSessionId(), getSessionApiKey(), getAppBuildType());
     }
 
