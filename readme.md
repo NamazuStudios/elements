@@ -205,7 +205,38 @@ project should depend on the other modules.
 - **rt-server-xodus-guice** - Guice bindings and configuration for the Xodus
   backed RT server core.
   
+# Useful Tips
 
+## Manually Adding User to Database
+
+You can run the Setup tool in the IDE which will connect to the local instance
+and add a user to your specifications.  This is the only easy way to add an 
+initial test user.
+
+Pass the following argumetns to ```com.namazustudios.socialengine.Setup``` as a
+standalone Java application.
+
+```
+add-user
+	-email=root@namazustudios.net
+	-user=root
+	-password=root
+	-level=SUPERUSER
+```
+
+Alternatively, after a build, you can use the following command from within the
+directory ```{project root}/setup/target```
+
+```
+java -jar setup-1.0-SNAPSHOT-jar-with-dependencies.jar
+	add-user
+		-email=root@namazustudios.net
+		-user=root
+		-password=root
+		-level=SUPERUSER
+```
+
+If using IntelliJ, the run scheme is also shared.
 
 # Coding Standards and Practices
 

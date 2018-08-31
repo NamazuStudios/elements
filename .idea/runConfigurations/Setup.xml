@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Setup" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.Setup" />
+    <module name="setup" />
+    <option name="PROGRAM_PARAMETERS" value="add-user -email=root@namazustudios.net -user=root -password=root -level=SUPERUSER" />
+    <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+    <method />
+  </configuration>
+</component>
