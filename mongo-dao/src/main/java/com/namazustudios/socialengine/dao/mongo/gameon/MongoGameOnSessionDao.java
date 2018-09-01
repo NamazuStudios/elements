@@ -13,7 +13,6 @@ import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSession;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSessionId;
 import com.namazustudios.socialengine.exception.BadQueryException;
 import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.gameon.GameOnRegistrationNotFoundException;
 import com.namazustudios.socialengine.exception.gameon.GameOnSessionNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
@@ -33,6 +32,7 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
+import java.sql.Timestamp;
 
 public class MongoGameOnSessionDao implements GameOnSessionDao {
 
@@ -157,9 +157,29 @@ public class MongoGameOnSessionDao implements GameOnSessionDao {
         final WriteResult writeResult = getAdvancedDatastore().delete(query);
 
         if (writeResult.getN() == 0) {
-            throw new GameOnRegistrationNotFoundException("GameOn session not found " + gameOnSessionId);
+            throw new GameOnSessionNotFoundException("GameOn session not found " + gameOnSessionId);
         } else {
             getObjectIndex().delete(MongoGameOnSession.class, gameOnSessionId);
+        }
+
+    }
+
+    @Override
+    public void deleteSession(final String id) {
+        final MongoGameOnSessionId sessionId;
+
+        try {
+            sessionId = new MongoGameOnSessionId(id);
+        } catch (IllegalArgumentException ex) {
+            throw new GameOnSessionNotFoundException("GameOn session not found " + id);
+        }
+
+        final WriteResult writeResult = getAdvancedDatastore().delete(MongoGameOnSession.class, sessionId);
+
+        if (writeResult.getN() == 0) {
+            throw new GameOnSessionNotFoundException("GameOn session not found " + id);
+        } else {
+            getObjectIndex().delete(MongoGameOnSession.class, id);
         }
 
     }
@@ -185,7 +205,9 @@ public class MongoGameOnSessionDao implements GameOnSessionDao {
         mongoGameOnSession.setAppBuildType(authenticated.getAppBuildType());
         mongoGameOnSession.setSessionId(authenticated.getSessionId().trim());
         mongoGameOnSession.setSessionApiKey(authenticated.getSessionApiKey().trim());
-        mongoGameOnSession.setSessionExpirationDate(authenticated.getSessionExpirationDate());
+
+        final Timestamp timestamp = new Timestamp(authenticated.getSessionExpirationDate());
+        mongoGameOnSession.setSessionExpirationDate(timestamp);
 
         try {
             getAdvancedDatastore().insert(mongoGameOnSession);

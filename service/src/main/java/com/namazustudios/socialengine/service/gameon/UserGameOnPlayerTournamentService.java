@@ -58,6 +58,7 @@ public class UserGameOnPlayerTournamentService implements GameOnPlayerTournament
         final List<GameOnTournamentSummary> gameOnTournamentSummaries = getGameOnPlayerTournamentInvokerBuilderProvider()
             .get()
             .withSession(gameOnSession)
+            .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
             .build()
             .getSummaries(filterBy, period, playerAttributes);
 
@@ -81,6 +82,7 @@ public class UserGameOnPlayerTournamentService implements GameOnPlayerTournament
         final GameOnTournamentDetail gameOnTournamentDetail = getGameOnPlayerTournamentInvokerBuilderProvider()
             .get()
             .withSession(gameOnSession)
+            .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
             .build()
             .getDetail(playerAttributes, tournamentId);
 
@@ -97,6 +99,7 @@ public class UserGameOnPlayerTournamentService implements GameOnPlayerTournament
         final GameOnMatchesAggregate gameOnMatchesAggregate = getGameOnMatchInvokerBuilderProvider()
             .get()
             .withSession(gameOnSession)
+            .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
             .build()
             .getSummaries(live, MatchType.player_generated, TournamentPeriod.all, playerAttributes);
 
@@ -144,6 +147,7 @@ public class UserGameOnPlayerTournamentService implements GameOnPlayerTournament
         final GameOnPlayerTournamentEnterResponse response = getGameOnPlayerTournamentInvokerBuilderProvider()
                 .get()
                 .withSession(gameOnSession)
+                .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
                 .build()
                 .postEnterRequest(tournamentId, enterPlayerTournamentRequest);
 

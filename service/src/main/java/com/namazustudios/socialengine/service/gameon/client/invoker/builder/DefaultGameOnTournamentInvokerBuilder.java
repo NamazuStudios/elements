@@ -9,6 +9,10 @@ import javax.ws.rs.client.Client;
 public class DefaultGameOnTournamentInvokerBuilder extends AbstractPlayerRequestBuilder<GameOnTournamentInvoker>
                                                    implements GameOnTournamentInvoker.Builder {
 
+    public DefaultGameOnTournamentInvokerBuilder() {
+        super(GameOnTournamentInvoker.class);
+    }
+
     @Override
     protected GameOnTournamentInvoker doBuild(final Client client, final GameOnSession gameOnSession) {
         return new V1GameOnTournamentInvoker(client, gameOnSession);

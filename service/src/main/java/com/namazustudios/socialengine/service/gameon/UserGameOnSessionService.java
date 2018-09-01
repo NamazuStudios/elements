@@ -127,6 +127,12 @@ public class UserGameOnSessionService implements GameOnSessionService {
     }
 
     @Override
+    public GameOnSession refreshExpiredSession(final GameOnSession gameOnSession) {
+        getGameOnSessionDao().deleteSession(gameOnSession.getId());
+        return createOrGetCurrentSession(gameOnSession.getDeviceOSType(), gameOnSession.getAppBuildType());
+    }
+
+    @Override
     public void deleteSession(final String gameOnSessionId) {
         getGameOnSessionDao().deleteSessionForUser(getUser(), gameOnSessionId);
     }

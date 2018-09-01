@@ -55,6 +55,13 @@ public interface GameOnSessionDao {
     void deleteSessionForUser(User user, String gameOnSessionId);
 
     /**
+     * Deletes a {@link GameOnSession} with the specified ID
+     *
+     * @param id the id as reported by {@link GameOnSession#getId()}
+     */
+    void deleteSession(String id);
+
+    /**
      * Creates the {@link GameOnSession} in the database.  The {@link GameOnSession} must have previously been
      * created by calls to the Amazon Game On APIs.  This merely stores it in the database.  The stored session may take
      * into account the supplied expiration when querying sessions.
