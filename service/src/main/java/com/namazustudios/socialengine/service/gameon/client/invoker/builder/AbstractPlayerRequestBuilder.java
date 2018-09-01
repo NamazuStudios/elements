@@ -45,7 +45,7 @@ public abstract class AbstractPlayerRequestBuilder<BuiltT> implements PlayerRequ
 
     @Override
     public PlayerRequestBuilder<BuiltT> withExpirationRetry(final Function<PlayerSessionExpiredException, GameOnSession> unauthorizedHandler) {
-//        this.unauthorizedHandler = unauthorizedHandler;
+        this.unauthorizedHandler = unauthorizedHandler;
         return this;
     }
 
