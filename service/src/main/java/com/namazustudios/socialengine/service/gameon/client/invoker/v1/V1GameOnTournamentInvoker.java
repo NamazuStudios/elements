@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
 import com.namazustudios.socialengine.model.gameon.game.*;
+import com.namazustudios.socialengine.service.gameon.client.exception.PlayerSessionExpiredException;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnTournamentInvoker;
 import com.namazustudios.socialengine.service.gameon.client.model.EnterTournamentRequest;
 import com.namazustudios.socialengine.service.gameon.client.model.ErrorResponse;
@@ -125,6 +126,8 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
             throw new GameOnTournamentNotFoundException("Tournament not found: " + error.getMessage());
         } else if (CONFLICT.getStatusCode() == response.getStatus()) {
             throw new ConflictException("Could not enter GameOn tournament: " + error.getMessage());
+        } else if (UNAUTHORIZED.getStatusCode() == response.getStatus()) {
+            throw new PlayerSessionExpiredException(gameOnSession, error);
         } else {
             throw new InternalException("Unknown exception interacting with GameOn: " + error.getMessage());
         }
@@ -147,6 +150,8 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
             throw new GameOnTournamentNotFoundException("Tournament not found: " + error.getMessage());
         } else if (FORBIDDEN.getStatusCode() == response.getStatus()) {
             throw new ForbiddenException("Player forbidden by GameOn: " + error.getMessage());
+        } else if (UNAUTHORIZED.getStatusCode() == response.getStatus()) {
+            throw new PlayerSessionExpiredException(gameOnSession, error);
         } else {
             throw new InternalException("Unknown exception interacting with GameOn: " + error.getMessage());
         }

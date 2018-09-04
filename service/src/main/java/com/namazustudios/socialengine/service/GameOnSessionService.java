@@ -66,7 +66,15 @@ public interface GameOnSessionService {
     GameOnSession createOrGetCurrentSession(DeviceOSType deviceOSType, AppBuildType appBuildType);
 
     /**
-     * Deltes the {@link GameOnSession} with the supplied id as determined by {@link GameOnSession#getId()}
+     * Refreshes the supplied {@link GameOnSession} and returns the renewed version of it.
+     *
+     * @param gameOnSession the {@link GameOnSession} to refresh
+     * @return the {@link GameOnSession}
+     */
+    GameOnSession refreshExpiredSession(GameOnSession gameOnSession);
+
+    /**
+     * Deletes the {@link GameOnSession} with the supplied id as determined by {@link GameOnSession#getId()}
      *
      * @param gameOnSessionId
      */
