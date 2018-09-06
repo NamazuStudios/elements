@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.util.stream.Collectors.toList;
 
 public class MongoRankDao implements RankDao {
@@ -68,7 +69,8 @@ public class MongoRankDao implements RankDao {
             .field("pointValue").greaterThan(mongoScore.getPointValue())
             .count();
 
-        final long adjustedOffset = max(0, offset + playerRank);
+        // if adjustedOffset is greater than totalrecords - count, set offset to totalrecords - count
+        final long adjustedOffset = min(max(0, offset + playerRank), query.count() - count);
         return getMongoDBUtils().paginationFromQuery(query, (int) adjustedOffset, count, new Counter(adjustedOffset));
 
     }
