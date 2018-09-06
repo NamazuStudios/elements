@@ -10,6 +10,10 @@ public class DefaultGameOnPlayerTournamentInvokerBuilder
         extends AbstractPlayerRequestBuilder<GameOnPlayerTournamentInvoker>
         implements GameOnPlayerTournamentInvoker.Builder {
 
+    public DefaultGameOnPlayerTournamentInvokerBuilder() {
+        super(GameOnPlayerTournamentInvoker.class);
+    }
+
     @Override
     protected GameOnPlayerTournamentInvoker doBuild(final Client client, final GameOnSession gameOnSession) {
         return new V1GameOnPlayerTournamentInvoker(client, gameOnSession);

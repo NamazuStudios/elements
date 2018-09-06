@@ -48,6 +48,7 @@ public class UserGameOnMatchService implements GameOnMatchService {
         return getGameOnMatchInvokerProvider()
             .get()
             .withSession(gameOnSession)
+            .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
             .build()
             .getSummaries(filterBy, matchType, period, playerAttributes);
 
@@ -64,6 +65,7 @@ public class UserGameOnMatchService implements GameOnMatchService {
         return getGameOnMatchInvokerProvider()
             .get()
             .withSession(gameOnSession)
+            .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
             .build()
             .getDetail(matchId, playerAttributes);
 
@@ -104,6 +106,7 @@ public class UserGameOnMatchService implements GameOnMatchService {
         final GameOnEnterMatchResponse response = getGameOnMatchInvokerProvider()
             .get()
             .withSession(gameOnSession)
+            .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
             .build()
             .postEnterMatch(matchId, enterMatchRequest);
 
