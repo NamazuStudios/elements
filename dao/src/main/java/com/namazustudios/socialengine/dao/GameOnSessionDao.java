@@ -5,7 +5,9 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.gameon.game.DeviceOSType;
 import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.annotation.Expose;
 
+@Expose(module = "namazu.elements.dao.gameon.session")
 public interface GameOnSessionDao {
 
     /**

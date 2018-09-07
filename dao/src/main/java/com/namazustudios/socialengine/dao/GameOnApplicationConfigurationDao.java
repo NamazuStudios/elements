@@ -12,7 +12,10 @@ import java.util.List;
 /**
  * Accesss and manages instances of {@link GameOnApplicationConfiguration} in the database.
  */
-@Expose(module = "namazu.socialengine.dao.application.configuration.gameon")
+@Expose(module = {
+    "namazu.elements.dao.application.configuration.gameon",
+    "namazu.socialengine.dao.application.configuration.gameon"
+})
 public interface GameOnApplicationConfigurationDao {
 
     /**

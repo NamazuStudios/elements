@@ -18,6 +18,7 @@ import javax.ws.rs.client.Client;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.function.Function.identity;
 
@@ -117,9 +118,9 @@ public class LuaModule extends PrivateModule {
         final Set<Class<?>> classSet = reflections.getTypesAnnotatedWith(Expose.class);
 
         classSet.stream()
-                .filter(cls -> cls.getAnnotation(Expose.class) != null)
-                .collect(Collectors.toMap(cls -> cls.getAnnotation(Expose.class), identity()))
-                .forEach((expose, type) -> bindModuleBuiltin(type).toModuleNamed(expose.module()));
+            .filter(cls -> cls.getAnnotation(Expose.class) != null)
+            .collect(Collectors.toMap(cls -> cls.getAnnotation(Expose.class), identity()))
+            .forEach((expose, type) -> Stream.of(expose.module()).forEach(m -> bindModuleBuiltin(type).toModuleNamed(m)));
 
         return this;
 
