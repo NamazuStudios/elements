@@ -59,8 +59,13 @@ public class MongoFIFOMatchmaker implements Matchmaker {
 
     @Override
     public Matchmaker withScope(final String scope) {
-        applyScope = q -> q.field("scope").equal(scope);
+
+        applyScope = scope == null ?
+            q -> q.field("scope").doesNotExist() :
+            q -> q.field("scope").equal(scope);
+
         return this;
+
     }
 
     public AdvancedDatastore getDatastore() {
