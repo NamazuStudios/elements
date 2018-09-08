@@ -15,7 +15,7 @@ import com.namazustudios.socialengine.model.User;
  *
  * Created by patricktwohig on 3/26/15.
  */
-@Expose(module = {
+@Expose(modules = {
     "namazu.elements.dao.user",
     "namazu.socialengine.dao.user"
 })

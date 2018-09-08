@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 
-@Expose(module = "namazu.elements.dao.gameon.session")
+@Expose(modules = "namazu.elements.dao.gameon.session")
 public interface GameOnSessionDao {
 
     /**

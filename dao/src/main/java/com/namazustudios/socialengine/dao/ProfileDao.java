@@ -11,7 +11,7 @@ import com.namazustudios.socialengine.model.profile.Profile;
 /**
  * Created by patricktwohig on 6/28/17.
  */
-@Expose(module = {
+@Expose(modules = {
     "namazu.elements.dao.profile",
     "namazu.socialengine.dao.profile",
 })

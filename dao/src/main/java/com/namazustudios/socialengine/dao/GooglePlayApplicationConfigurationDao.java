@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.model.application.GooglePlayApplicationCon
 /**
  * Created by patricktwohig on 5/25/17.
  */
-@Expose(module = {
+@Expose(modules = {
     "namazu.elements.dao.googleplay",
     "namazu.socialengine.dao.googleplay"
 })

@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.rt.annotation.Expose;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Expose(module = {
+@Expose(modules = {
     "test.java.module.a",
     "test.java.module.b",
 })

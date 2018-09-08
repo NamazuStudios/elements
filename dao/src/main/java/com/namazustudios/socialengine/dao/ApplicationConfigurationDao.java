@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.model.application.ApplicationConfiguration
 /**
  * Created by patricktwohig on 7/13/15.
  */
-@Expose(module = "namazu.socialengine.dao.applicationconfiguration")
+@Expose(modules = "namazu.socialengine.dao.applicationconfiguration")
 public interface ApplicationConfigurationDao {
 
     /**
