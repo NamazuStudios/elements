@@ -15,6 +15,9 @@ local gameon_session_dao = require "namazu.elements.dao.gameon.session"
 local gameon_registration_dao = require "namazu.elements.dao.gameon.registration"
 local configuration_dao = require "namazu.socialengine.dao.application.configuration.gameon"
 
+local session_not_found_exception = java.require "com.namazustudios.socialengine.exception.gameon.GameOnSessionNotFoundException"
+local registration_not_found_exception = java.require "com.namazustudios.socialengine.exception.gameon.GameOnRegistrationNotFoundException"
+
 local session = {}
 
 --- Raw Constructor
@@ -85,7 +88,23 @@ end
 --
 function session:refresh(profile, device_os_type, app_build_type)
 
---    java.pcall("")
+    local registration = java.pcall(
+        function()
+
+        end,
+        function(ex)
+            if registration_not_found_exception:isInstance(ex) then
+
+            end
+            error(ex)
+        end)
+
+    local session = java.pcall(
+        function()
+        end,
+        function(ex)
+            error(ex)
+        end)
 
 end
 

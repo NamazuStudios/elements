@@ -16,6 +16,8 @@ local table = require "table"
 
 local util = {}
 
+util.java = require "namazu.util.java"
+
 --- Returns a Path object.
 -- This can accept a single string, which will be parsed out accordingly.  Alternatively,
 -- this accepts variadic arguments which will specify the individual components of the Path.  See the constructor
