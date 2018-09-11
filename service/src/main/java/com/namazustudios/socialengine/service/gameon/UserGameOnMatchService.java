@@ -110,8 +110,11 @@ public class UserGameOnMatchService implements GameOnMatchService {
             .build()
             .postEnterMatch(matchId, enterMatchRequest);
 
-        final Match inserted = getMatchDao().createMatch(match);
+        // Sets the scope of the match to the tournament ID first, so the match will follow the same tournament
         match.setScope(response.getTournamentId());
+
+        // Attempts the insert it into the database, assuming that works, we then reply with the match
+        final Match inserted = getMatchDao().createMatch(match);
 
         final Matchmaker matchmaker = getMatchDao()
                 .getMatchmaker(configuration.getAlgorithm())
@@ -121,6 +124,7 @@ public class UserGameOnMatchService implements GameOnMatchService {
         response.setMatch(paired);
 
         return response;
+
     }
 
     public MatchDao getMatchDao() {

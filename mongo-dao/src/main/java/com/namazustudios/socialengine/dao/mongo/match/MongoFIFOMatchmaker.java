@@ -13,19 +13,20 @@ import org.mongodb.morphia.query.Sort;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 /**
  * Created by patricktwohig on 7/27/17.
  */
 public class MongoFIFOMatchmaker implements Matchmaker {
 
-    private String scope;
-
     private AdvancedDatastore datastore;
 
     private MongoMatchDao mongoMatchDao;
 
     private MongoMatchUtils mongoMatchUtils;
+
+    private Consumer<Query<MongoMatch>> applyScope = q -> q.field("scope").doesNotExist();
 
     @Override
     public MatchingAlgorithm getAlgorithm() {
@@ -48,11 +49,7 @@ public class MongoFIFOMatchmaker implements Matchmaker {
              .field("opponent").doesNotExist()
              .field("lock").doesNotExist();
 
-        if (scope == null) {
-            query.field("scope").doesNotExist();
-        } else {
-            query.field("scope").equal(scope);
-        }
+        applyScope.accept(query);
 
         final FindOptions findOptions = new FindOptions().limit(maxCandidatesToConsider);
         final List<MongoMatch> mongoMatchList = query.asList(findOptions);
@@ -62,8 +59,13 @@ public class MongoFIFOMatchmaker implements Matchmaker {
 
     @Override
     public Matchmaker withScope(final String scope) {
-        this.scope = scope;
+
+        applyScope = scope == null ?
+            q -> q.field("scope").doesNotExist() :
+            q -> q.field("scope").equal(scope);
+
         return this;
+
     }
 
     public AdvancedDatastore getDatastore() {

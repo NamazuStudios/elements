@@ -66,7 +66,7 @@ public interface Matchmaker {
 
     /**
      * Restricts this {@link Matchmaker} to the supplied scope.  Will return only whose {@link Match#getScope()} method
-     * matches the supplied scope.
+     * matches the supplied scope.  Unscoped {@link Match} instances will also be excluded from the candidate pool.
      *
      * @param scope the scope
      * @return this instance
