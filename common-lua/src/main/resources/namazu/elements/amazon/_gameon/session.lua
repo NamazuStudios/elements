@@ -8,9 +8,12 @@
 
 local http_client = require "namazu.http.client"
 local ioc = require "namazu.ioc.resolver"
-local configuration_dao = require "namazu.socialengine.dao.application.configuration.gameon"
 local application_provider = ioc:provider("com.namazustudios.socialengine.model.application.Application")
 local gameon_constants = require "namazu.elements.amazon._gameon.constants"
+
+local gameon_session_dao = require "namazu.elements.dao.gameon.session"
+local gameon_registration_dao = require "namazu.elements.dao.gameon.registration"
+local configuration_dao = require "namazu.socialengine.dao.application.configuration.gameon"
 
 local session = {}
 
@@ -71,6 +74,18 @@ function session:authenticate(profile, device_os_type, app_build_type)
     else
         return status, nil
     end
+
+end
+
+
+--- Refreshes a Session
+-- Looks up the current session for the player, or if no such session exists, this will authenticate the session so
+-- that requests may be made.
+--
+--
+function session:refresh(profile, device_os_type, app_build_type)
+
+--    java.pcall("")
 
 end
 
