@@ -20,7 +20,7 @@ public class GameOnRegistration implements Serializable {
     private String id;
 
     @NotNull(groups = Insert.class)
-    @ApiModelProperty("The profile assocaited with this GameOn registration.")
+    @ApiModelProperty("The profile associated with this GameOn registration.")
     private Profile profile;
 
     @Null(groups = Create.class, message = "Must not specify player token when creating.")

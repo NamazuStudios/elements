@@ -9,9 +9,12 @@
 local gameon = {}
 
 --- Amazon GameOn related constants
-gameon.constants = require "namazu.elements.amazon._gameon.constants"
+gameon.constants = require "namazu.elements.amazon.gameon.constants"
 
 --- A class for managing session
-gameon.session = require "namazu.elements.amazon._gameon.session"
+gameon.session = require "namazu.elements.amazon.gameon.session"
+
+--- A class for managing registration
+gameon.session = require "namazu.elements.amazon.gameon.registration"
 
 return gameon
