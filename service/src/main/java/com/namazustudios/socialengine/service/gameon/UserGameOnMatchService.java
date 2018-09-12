@@ -109,7 +109,7 @@ public class UserGameOnMatchService implements GameOnMatchService {
             .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
             .build()
             .postEnterMatch(matchId, enterMatchRequest);
-
+        
         // Sets the scope of the match to the tournament ID first, so the match will follow the same tournament
         match.setScope(response.getTournamentId());
 

@@ -17,14 +17,13 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.*;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.namazustudios.socialengine.model.match.MatchingAlgorithm.FIFO;
 import static java.util.Arrays.asList;
+import static java.util.Arrays.fill;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.testng.Assert.*;
@@ -34,6 +33,10 @@ import static org.testng.AssertJUnit.fail;
 public class MongoMatchmakerIntegrationTest {
 
     private static final String TEST_SCOPE = "test-scope";
+
+    private static final String TEST_METADATA_KEY = "md_key";
+
+    private static final String TEST_METADATA_VALUE = "md_value";
 
     private static final Logger logger = LoggerFactory.getLogger(MongoMatchmakerIntegrationTest.class);
 
@@ -109,6 +112,9 @@ public class MongoMatchmakerIntegrationTest {
         assertEquals(mongoMatcha.getGameId(), Stream.of(matcha.getId(), matchb.getId()).sorted().collect(joining("+")));
         assertEquals(mongoMatchb.getGameId(), Stream.of(matcha.getId(), matchb.getId()).sorted().collect(joining("+")));
 
+        assertEquals(mongoMatcha.getMetadata().get(TEST_METADATA_KEY), TEST_METADATA_VALUE);
+        assertEquals(mongoMatchb.getMetadata().get(TEST_METADATA_KEY), TEST_METADATA_VALUE);
+
         intermediateMatches.add(matcha);
         intermediateMatches.add(matchb);
 
@@ -120,11 +126,18 @@ public class MongoMatchmakerIntegrationTest {
     }
 
     private Match makeMockMatch(final Profile profile, final String scope) {
+
         final Match match = new Match();
         match.setPlayer(profile);
         match.setScheme("pvp");
         match.setScope(scope);
+
+        final Map<String, String> metadata = new HashMap<>();
+        metadata.put(TEST_METADATA_KEY, TEST_METADATA_VALUE);
+        match.setMetadata(metadata);
+
         return match;
+
     }
 
     private void crossValidateMatch(final Matchmaker.SuccessfulMatchTuple successfulMatchTuple,

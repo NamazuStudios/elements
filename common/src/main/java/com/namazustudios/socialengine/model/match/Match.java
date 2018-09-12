@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -50,6 +51,9 @@ public class Match implements Serializable {
     @Null(groups = {Create.class, Insert.class})
     @ApiModelProperty("The system-assigned game ID of the match.  Null until the match is successfully made.")
     private String gameId;
+
+    @ApiModelProperty("Additional arbitrary metadata that is attached to the match.")
+    private Map<String, ? extends Serializable> metadata;
 
     /**
      * Gets the unique server-assigned ID of this match.
@@ -175,23 +179,40 @@ public class Match implements Serializable {
         this.gameId = gameId;
     }
 
+    public Map<String, ? extends Serializable> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, ? extends Serializable> metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
         if (!(object instanceof Match)) return false;
         Match match = (Match) object;
-        return getLastUpdatedTimestamp() == match.getLastUpdatedTimestamp() &&
-                Objects.equals(getId(), match.getId()) &&
+        return Objects.equals(getId(), match.getId()) &&
                 Objects.equals(getScheme(), match.getScheme()) &&
+                Objects.equals(getScope(), match.getScope()) &&
                 Objects.equals(getPlayer(), match.getPlayer()) &&
                 Objects.equals(getOpponent(), match.getOpponent()) &&
-                Objects.equals(getGameId(), match.getGameId());
+                Objects.equals(getLastUpdatedTimestamp(), match.getLastUpdatedTimestamp()) &&
+                Objects.equals(getGameId(), match.getGameId()) &&
+                Objects.equals(getMetadata(), match.getMetadata());
     }
 
     @Override
     public int hashCode() {
-
-        return Objects.hash(getId(), getScheme(), getPlayer(), getOpponent(), getLastUpdatedTimestamp(), getGameId());
+        return Objects.hash(
+            getId(),
+            getScheme(),
+            getScope(),
+            getPlayer(),
+            getOpponent(),
+            getLastUpdatedTimestamp(),
+            getGameId(),
+            getMetadata());
     }
 
     @Override
@@ -199,10 +220,12 @@ public class Match implements Serializable {
         return "Match{" +
                 "id='" + id + '\'' +
                 ", scheme='" + scheme + '\'' +
+                ", scope='" + scope + '\'' +
                 ", player=" + player +
                 ", opponent=" + opponent +
                 ", lastUpdatedTimestamp=" + lastUpdatedTimestamp +
                 ", gameId='" + gameId + '\'' +
+                ", metadata=" + metadata +
                 '}';
     }
 
