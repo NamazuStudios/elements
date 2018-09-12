@@ -4,10 +4,11 @@ import com.namazustudios.socialengine.model.match.Match;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 @ApiModel(description = "The response returned when entering a tournament.")
-public class GameOnTournamentEnterResponse {
+public class GameOnTournamentEnterResponse implements Serializable {
 
     @ApiModelProperty("The GameOn Match ID that was created in response to the request.")
     private String matchId;

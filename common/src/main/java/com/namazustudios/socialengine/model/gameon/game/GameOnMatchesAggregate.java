@@ -2,11 +2,12 @@ package com.namazustudios.socialengine.model.gameon.game;
 
 import io.swagger.annotations.ApiModel;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
 @ApiModel(description = "Aggregates standard matches and player matches.")
-public class GameOnMatchesAggregate {
+public class GameOnMatchesAggregate implements Serializable {
 
     private List<GameOnMatchSummary> matches;
 

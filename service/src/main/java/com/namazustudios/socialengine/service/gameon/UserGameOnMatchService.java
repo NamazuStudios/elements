@@ -7,9 +7,11 @@ import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
 import com.namazustudios.socialengine.model.gameon.GameOnEnterMatchRequest;
 import com.namazustudios.socialengine.model.gameon.GameOnEnterMatchResponse;
+import com.namazustudios.socialengine.model.gameon.TournamentEntryMetadata;
 import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.annotation.Serialize;
 import com.namazustudios.socialengine.service.GameOnMatchService;
 import com.namazustudios.socialengine.service.GameOnSessionService;
 import com.namazustudios.socialengine.service.MatchServiceUtils;
@@ -18,8 +20,13 @@ import com.namazustudios.socialengine.service.gameon.client.model.EnterMatchRequ
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
+
+import static com.namazustudios.socialengine.GameOnConstants.TOURNAMENT_ENTRY_METADATA_KEY;
 
 
 public class UserGameOnMatchService implements GameOnMatchService {
@@ -109,9 +116,17 @@ public class UserGameOnMatchService implements GameOnMatchService {
             .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
             .build()
             .postEnterMatch(matchId, enterMatchRequest);
-        
+
         // Sets the scope of the match to the tournament ID first, so the match will follow the same tournament
         match.setScope(response.getTournamentId());
+
+        // Sets the game on specific metadata to the match
+        final Map<String, Serializable> metadata = new HashMap<>();
+        final TournamentEntryMetadata tournamentEntryMetadata = new TournamentEntryMetadata();
+        tournamentEntryMetadata.setMatchId(response.getMatchId());
+        tournamentEntryMetadata.setTournamentId(response.getTournamentId());
+        metadata.put(TOURNAMENT_ENTRY_METADATA_KEY, tournamentEntryMetadata);
+        match.setMetadata(metadata);
 
         // Attempts the insert it into the database, assuming that works, we then reply with the match
         final Match inserted = getMatchDao().createMatch(match);

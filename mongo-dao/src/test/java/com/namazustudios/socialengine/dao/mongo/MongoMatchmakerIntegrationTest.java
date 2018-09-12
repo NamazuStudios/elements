@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.annotation.Serialize;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.*;
 
 import javax.inject.Inject;
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -132,7 +134,7 @@ public class MongoMatchmakerIntegrationTest {
         match.setScheme("pvp");
         match.setScope(scope);
 
-        final Map<String, String> metadata = new HashMap<>();
+        final Map<String, Serializable> metadata = new HashMap<>();
         metadata.put(TEST_METADATA_KEY, TEST_METADATA_VALUE);
         match.setMetadata(metadata);
 

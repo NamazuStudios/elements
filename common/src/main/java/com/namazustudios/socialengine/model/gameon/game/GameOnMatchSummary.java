@@ -4,12 +4,13 @@ import com.namazustudios.socialengine.model.match.Match;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
 @ApiModel(description = "Represents a GameOn Match.  Maps direcly to the Amazon GameOn APIs.  Contains slightly less" +
                         "information than its detail counterpart.")
-public class GameOnMatchSummary {
+public class GameOnMatchSummary implements Serializable {
 
     @ApiModelProperty("The GameOn assigned match ID.")
     private String matchId;
