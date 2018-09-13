@@ -7,8 +7,8 @@
 --
 
 local function define_enums(target, enum_t)
-    for enum in enum_t:values() do
-        local value = tostring(enum)
+    for e in ipairs(enum_t:values()) do
+        local value = tostring(e)
         target[value] = value
     end
 end

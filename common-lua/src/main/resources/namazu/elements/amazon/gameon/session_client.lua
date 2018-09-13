@@ -8,6 +8,8 @@
 
 local ioc = require "namazu.ioc.resolver"
 local http_client = require "namazu.http.client"
+local util = require "namazu.util"
+
 
 local application_provider = ioc:provider("com.namazustudios.socialengine.model.application.Application")
 local configuration_dao = require "namazu.socialengine.dao.application.configuration.gameon"

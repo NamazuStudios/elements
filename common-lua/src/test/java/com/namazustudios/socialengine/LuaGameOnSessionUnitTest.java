@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 import com.namazustudios.socialengine.dao.GameOnApplicationConfigurationDao;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
+import com.namazustudios.socialengine.model.gameon.game.AppBuildType;
+import com.namazustudios.socialengine.model.gameon.game.DeviceOSType;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
@@ -14,9 +16,7 @@ import org.testng.annotations.*;
 
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiFunction;
 
@@ -29,9 +29,9 @@ import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertNull;
 
 @Guice(modules = UnitTestModule.class)
-public class LuaGameOnUnitTest {
+public class LuaGameOnSessionUnitTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(LuaGameOnUnitTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(LuaGameOnSessionUnitTest.class);
 
     private Client client;
 
@@ -46,9 +46,9 @@ public class LuaGameOnUnitTest {
         reset(getClient(), getApplication(), getGameOnApplicationConfigurationDao());
     }
 
-    @Test(dataProvider = "resourcesToTest")
-    public void performLuaTest(final String moduleName, final String methodName,
-                               final String deviceOsType, final String buildType) {
+    @Test(dataProvider = "authResourcesToTest")
+    public void performAuthTest(final String moduleName, final String methodName,
+                                final DeviceOSType deviceOsType, final AppBuildType buildType) {
 
         final Path path = new Path("socialengine-test-" + randomUUID().toString());
         final ResourceId resourceId = getContext().getResourceContext().create(moduleName, path);
@@ -124,15 +124,21 @@ public class LuaGameOnUnitTest {
     }
 
     @DataProvider
-    public static Object[][] resourcesToTest() {
-        return new Object[][] {
-            {"namazu.elements.test.gameon", "test_start_session", "android", "debug"},
-            {"namazu.elements.test.gameon", "test_start_session", "ios", "debug"},
-            {"namazu.elements.test.gameon", "test_start_session", "android", "production"},
-            {"namazu.elements.test.gameon", "test_start_session", "ios", "production"}
-        };
-    }
+    public static Object[][] authResourcesToTest() {
 
+        final List<Object[]> values = new ArrayList<>();
+
+        for (final DeviceOSType deviceOSType : DeviceOSType.values()) {
+            for (final AppBuildType appBuildType : AppBuildType.values()) {
+                values.add(new Object[]{
+                    "namazu.elements.test.gameon_session", "test_authenticate_session",
+                    deviceOSType, appBuildType});
+            }
+        }
+
+        return values.toArray(new Object[][]{});
+
+    }
 
     public Client getClient() {
         return client;
