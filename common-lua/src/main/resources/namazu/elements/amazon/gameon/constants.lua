@@ -6,6 +6,13 @@
 -- To change this template use File | Settings | File Templates.
 --
 
+local function define_enums(target, enum_t)
+    for enum in enum_t:values() do
+        local value = tostring(enum)
+        target[value] = value
+    end
+end
+
 local constants = {}
 
 --- The API Key Header Required by Amazon
@@ -13,5 +20,11 @@ constants.API_VERSION = "v1"
 constants.API_KEY_HEADER = "x-api-key"
 constants.USER_BASE_URI = "https://api.amazongameon.com/" .. constants.API_VERSION
 constants.ADMIN_BASE_URI = "https://admin-api.amazongameon.com/" .. constants.API_VERSION
+
+constants.app_build_type = {}
+define_enums(constants.app_build_type, java.require "com.namazustudios.socialengine.model.gameon.game.AppBuildType")
+
+constants.device_os_type = {}
+define_enums(constants.device_os_type, java.require "com.namazustudios.socialengine.model.gameon.game.DeviceOSType")
 
 return constants

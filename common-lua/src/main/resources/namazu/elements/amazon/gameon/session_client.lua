@@ -6,25 +6,30 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local http_client = require "namazu.http.client"
 local ioc = require "namazu.ioc.resolver"
+local http_client = require "namazu.http.client"
+
 local application_provider = ioc:provider("com.namazustudios.socialengine.model.application.Application")
 local configuration_dao = require "namazu.socialengine.dao.application.configuration.gameon"
 
 local gameon_constants = require "namazu.elements.amazon.gameon.constants"
 local gameon_session = java.require "com.namazustudios.socialengine.model.gameon.game.GameOnSession"
 local gameon_session_dao = require "namazu.elements.dao.gameon.session"
+local gameon_registration_client = require "namazu.elements.amazon.gameon.registration_client"
 
 local session_not_found_exception = java.require "com.namazustudios.socialengine.exception.gameon.GameOnSessionNotFoundException"
 
-local session = {}
+local session_client = {}
+
+--- The base path for session APIs
+session_client.PATH = "/players/session"
 
 --- Raw Constructor
-function session:new(session)
-    session = session or {}
-    session.__index = session
-    setmetatable(session, self)
-    return session
+function session_client:new(session_client)
+    session_client = session_client or {}
+    session_client.__index = session_client
+    setmetatable(session_client, self)
+    return session_client
 end
 
 --- Creates a new Session
@@ -34,8 +39,16 @@ end
 -- @param id the session id
 -- @param api_key the session api key
 -- @param expires the time at which the session expires (stored only for reference, not used in implementation)
-function session.create(id, api_key, expires)
-    return session:new{id = id, api_key = api_key, expires = expires}
+function session_client.create(session)
+    return session_client:new{
+        id = session.id,
+        deviceOSType = tostring(session.deviceOSType),
+        appBuildType = tostring(session.appBuildType),
+        sessionId = session.id,
+        sessionApiKey = session.sessionApiKey,
+        sessionExpirationDate = session.sessionExpirationDate,
+        profile = session.profile
+    }
 end
 
 --- Authenticates a session (Class Method)
@@ -49,15 +62,19 @@ end
 -- @param device_os_type the user's OS (eg Android or iOS)
 -- @param app_build_type the build type (development vs production)
 -- @return a freshly created session with Amazon GameOn
-function session.authenticate(profile, device_os_type, app_build_type)
+function session_client:authenticate(profile, device_os_type, app_build_type)
 
     local application = application_provider:get()
     local configuration = configuration_dao.get_default_configuration_for_application(application.id)
+    local registration_client = gameon_registration_client:refresh(profile)
+
+    device_os_type = tostring(device_os_type or gameon_constants.device_os_type.html)
+    app_build_type = tostring(app_build_type or gameon_constants.app_build_type.release)
 
     local request = {
         method = "POST",
         base = gameon_constants.USER_BASE_URI,
-        path = "/players/auth",
+        path = session_client.PATH,
         headers = {
             [gameon_constants.API_KEY_HEADER] = configuration.publicApiKey
         },
@@ -66,7 +83,8 @@ function session.authenticate(profile, device_os_type, app_build_type)
             value = {
                 playerName = profile.displayName,
                 appBuildType = app_build_type,
-                deviceOSType = device_os_type
+                deviceOSType = device_os_type,
+                playerToken = registration_client.playerToken
             }
         }
     }
@@ -75,9 +93,9 @@ function session.authenticate(profile, device_os_type, app_build_type)
 
     if (status == 200)
     then
-        return status, session:create(response.sessionId, response.sessionApiKey, response.sessionExpirationDate)
+        return registration_client:create(response)
     else
-        return status, nil
+        error{ status = status, message = response.message }
     end
 
 end
@@ -91,49 +109,31 @@ end
 -- @param profile the profile of the user
 -- @param device_os_type the device OS type
 -- @param app_build_type the app build type
-function session.refresh(profile, device_os_type, app_build_type)
+function session_client:refresh(profile, device_os_type, app_build_type)
 
     -- Local function which simply performs the registration if necessary
 
-    local function register_if_necessary()
-        return java.pcallx(
-            function()
-                return gameon_registration_dao:get_registration_for_profile(profile)
-            end,
-            registration_not_found_exception, function(ex)
-                -- TODO Return registration from Amazon API
-                return nil;
-            end
-        )
-    end
-
     return util.java.pcallx(
-        function()
+    function()
+        local session = gameon_session_dao.get_session_for_profile(profile)
+        return session_client:create(session)
+    end,
+    session_not_found_exception, function(ex)
 
-            local go_session = gameon_session_dao.get_session_for_profile(profile)
+        local client = session_client:authenticate(profile, device_os_type, app_build_type)
+        local session = gameon_session:new()
 
-            return session:create(
-                go_session.session_id,
-                go_session.session_api_key,
-                go_session.session_expiration_date
-            )
+        session.profile = profile
+        session.sessionId = client.id
+        session.sessionApiKey = client.sessionApiKey
+        session.sessionExpirationDate = client.sessionExpirationDate
+        session.deviceOSType = tostring(client.deviceOSType)
+        session.appBuildType = tostring(client.appBuildType)
 
-        end,
-        session_not_found_exception, function(ex)
+        return client
 
-            local session = session:authenticate(profile, device_os_type, app_build_type)
-            local go_session = gameon_session:new()
-            go_session.profile = profile
-            go_session.session_id = session.id
-            go_session.session_api_key = session.api_key
-            go_session.session_expiration_date = session.expires
-            gameon_session_dao.create_session(go_session)
-
-            return session
-
-        end
-    )
+    end)
 
 end
 
-return session
+return session_client
