@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.model.application.GameOnApplicationConfigu
 import com.namazustudios.socialengine.model.gameon.game.AppBuildType;
 import com.namazustudios.socialengine.model.gameon.game.DeviceOSType;
 import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
+import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
@@ -24,6 +25,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.BiFunction;
 
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.AMAZON_GAME_ON;
+import static java.lang.System.currentTimeMillis;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,10 +52,59 @@ public class LuaGameOnSessionUnitTest {
 
     @BeforeMethod
     public void resetMocks() {
-        reset(getClient(), getApplication(), getGameOnApplicationConfigurationDao());
+        reset(getClient(),
+              getApplication(),
+              getGameOnSessionDao(),
+              getGameOnRegistrationDao(),
+              getGameOnApplicationConfigurationDao());
     }
 
-    @Test(dataProvider = "authResourcesToTest")
+    @Test(dataProvider = "testData")
+    public void performRefreshSuccessTest(final DeviceOSType deviceOsType, final AppBuildType buildType) {
+
+        final Path path = new Path("socialengine-test-" + randomUUID().toString());
+        final ResourceId resourceId = getContext().getResourceContext().create("namazu.elements.test.gameon_session", path);
+
+        final Profile profile = new Profile();
+        profile.setId(randomUUID().toString());
+        profile.setDisplayName("Testy McTesterson");
+
+        final GameOnApplicationConfiguration gameOnApplicationConfiguration;
+        gameOnApplicationConfiguration = spy(GameOnApplicationConfiguration.class);
+        gameOnApplicationConfiguration.setCategory(AMAZON_GAME_ON);
+        gameOnApplicationConfiguration.setUniqueIdentifier(randomUUID().toString());
+        gameOnApplicationConfiguration.setPublicApiKey(randomUUID().toString());
+        when(getGameOnApplicationConfigurationDao().getDefaultConfigurationForApplication(getApplication().getId()))
+            .thenReturn(gameOnApplicationConfiguration);
+
+        final GameOnRegistration gameOnRegistration;
+        gameOnRegistration = spy(GameOnRegistration.class);
+        gameOnRegistration.setId(randomUUID().toString());
+        gameOnRegistration.setProfile(profile);
+        gameOnRegistration.setPlayerToken(randomUUID().toString());
+        gameOnRegistration.setExternalPlayerId(randomUUID().toString());
+        when(getGameOnRegistrationDao().getRegistrationForProfile(profile)).thenReturn(gameOnRegistration);
+
+        final GameOnSession gameOnSession = new GameOnSession();
+        gameOnSession.setId(randomUUID().toString());
+        gameOnSession.setProfile(profile);
+        gameOnSession.setAppBuildType(buildType);
+        gameOnSession.setDeviceOSType(deviceOsType);
+        gameOnSession.setSessionApiKey(randomUUID().toString());
+        gameOnSession.setSessionExpirationDate(currentTimeMillis() + 600000);
+        when(getGameOnSessionDao().getSessionForProfile(profile, deviceOsType.toString())).thenReturn(gameOnSession);
+
+        final Object result = getContext().getResourceContext().invoke(
+                resourceId, "test_refresh_session",
+                profile, deviceOsType.toString(), buildType.toString(), gameOnSession);
+        getContext().getResourceContext().destroy(resourceId);
+
+        verify(getGameOnSessionDao(), times(1))
+            .getSessionForProfile(eq(profile), eq(deviceOsType.toString()));
+
+    }
+
+    @Test(dataProvider = "testData")
     public void performAuthTest(final DeviceOSType deviceOsType, final AppBuildType buildType) {
 
         final Path path = new Path("socialengine-test-" + randomUUID().toString());
@@ -139,7 +190,7 @@ public class LuaGameOnSessionUnitTest {
     }
 
     @DataProvider
-    public static Object[][] authResourcesToTest() {
+    public static Object[][] testData() {
 
         final List<Object[]> values = new ArrayList<>();
 

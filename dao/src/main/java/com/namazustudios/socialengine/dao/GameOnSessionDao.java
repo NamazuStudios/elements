@@ -7,6 +7,8 @@ import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 
+import static com.namazustudios.socialengine.model.gameon.game.DeviceOSType.valueOf;
+
 @Expose(modules = "namazu.elements.dao.gameon.session")
 public interface GameOnSessionDao {
 
@@ -38,6 +40,17 @@ public interface GameOnSessionDao {
      * @return the {@link GameOnSession}, never null
      */
     GameOnSession getSessionForUser(User user, String gameOnSessionId);
+
+    /**
+     * Gets the signle designated {@link GameOnSession} for the supplied {@link Profile}.
+     *
+     * @param profile the {@link Profile}
+     * @param deviceOSType
+     * @return the {@link GameOnSession}, never null
+     */
+    default GameOnSession getSessionForProfile(Profile profile, String deviceOSType) {
+        return getSessionForProfile(profile, DeviceOSType.valueOf(deviceOSType));
+    }
 
     /**
      * Gets the signle designated {@link GameOnSession} for the supplied {@link Profile}.

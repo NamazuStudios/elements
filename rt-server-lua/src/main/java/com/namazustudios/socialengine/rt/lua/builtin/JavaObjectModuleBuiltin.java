@@ -186,8 +186,8 @@ public class JavaObjectModuleBuiltin implements Builtin {
         final int nargs = luaState.getTop();
         final Class<?>[] parameterTypes = method.getParameterTypes();
 
-        for (int i = 1; i < nargs; ++i) {
-            if (!luaState.isJavaObject(i, parameterTypes[i])) {
+        for (int i = 0; i < parameterTypes.length; ++i) {
+            if (!luaState.isJavaObject(i + 1, parameterTypes[i])) {
                 return false;
             }
         }

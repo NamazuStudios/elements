@@ -8,11 +8,12 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.io.Serializable;
 import java.util.Objects;
 
 @ApiModel(description = "Represents a GameOn session stored and managed by Elements.  This is designed to be a 1:1 " +
                         "overlap with the Amazon GameOn API with additional Elements add-ons.")
-public class GameOnSession {
+public class GameOnSession implements Serializable {
 
     @ApiModelProperty("The Elements assigned session ID.")
     @Null(groups = {Insert.class, Create.class})

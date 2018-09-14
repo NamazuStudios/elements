@@ -105,18 +105,20 @@ end
 -- such that requests may be made to GameOn
 --
 -- @param profile the profile of the user
--- @param device_os_type the device OS type
--- @param app_build_type the app build type
+-- @param device_os_type the device OS type (may be nil)
+-- @param app_build_type the app build type (may be nil)
 function session_client:refresh(profile, device_os_type, app_build_type)
 
-    -- Local function which simply performs the registration if necessary
+    device_os_type = tostring(device_os_type or gameon_constants.device_os_type.html)
 
     return util.java.pcallx(
     function()
-        local session = gameon_session_dao.get_session_for_profile(profile)
+        local session = gameon_session_dao.get_session_for_profile(profile, device_os_type)
         return session_client:create(session)
     end,
     session_not_found_exception, function(ex)
+
+        print("Attempting Auth")
 
         local client = session_client:authenticate(profile, device_os_type, app_build_type)
         local session = gameon_session:new()
