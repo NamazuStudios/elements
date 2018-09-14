@@ -25,10 +25,10 @@ function test.test_refresh_session(profile, device_os_type, build_type, session)
 
     local session_client = gameon.session_client:refresh(profile, device_os_type, build_type)
 
---    assert(session_Client ~= nil, "Expect non-nil session.  Got nil.")
---    assert(session_Client.sessionId == session.sessionId, "Got " .. tostring(session_Client.sessionId) .. ".  Expecting " ..  tostring(session.sessionId) .. ".");
---    assert(session_Client.sessionApiKey == session.sessionApiKey, "Got " .. tostring(session_Client.apiKey) .. ".  Expecting " ..  tostring(session.sessionApiKey) .. ".");
---    assert(session_Client.sessionExpirationDate == session.sessionExpirationDate, "Got " .. tostring(session_Client.sessionExpirationDate) .. ".  Expecting " ..  tostring(session.sessionExpirationDate) .. ".");
+    assert(session_client ~= nil, "Expect non-nil session.  Got nil.")
+    assert(session_client.sessionId == session.sessionId, "Got " .. tostring(session_client.sessionId) .. ".  Expecting " ..  tostring(session.sessionId) .. ".");
+    assert(session_client.sessionApiKey == session.sessionApiKey, "Got " .. tostring(session_client.apiKey) .. ".  Expecting " ..  tostring(session.sessionApiKey) .. ".");
+    assert(session_client.sessionExpirationDate == session.sessionExpirationDate, "Got " .. tostring(session_client.sessionExpirationDate) .. ".  Expecting " ..  tostring(session.sessionExpirationDate) .. ".");
 
 end
 
