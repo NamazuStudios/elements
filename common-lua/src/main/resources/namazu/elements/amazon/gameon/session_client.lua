@@ -24,14 +24,14 @@ local session_not_found_exception = java.require "com.namazustudios.socialengine
 local session_client = {}
 
 --- The base path for session APIs
-session_client.PATH = "/players/session"
+session_client.PATH = "/players/auth"
 
 --- Raw Constructor
-function session_client:new(session_client)
-    session_client = session_client or {}
-    session_client.__index = session_client
-    setmetatable(session_client, self)
-    return session_client
+function session_client:new(sc)
+    sc = sc or {}
+    sc.__index = sc
+    setmetatable(sc, self)
+    return sc
 end
 
 --- Creates a new Session
@@ -41,15 +41,11 @@ end
 -- @param id the session id
 -- @param api_key the session api key
 -- @param expires the time at which the session expires (stored only for reference, not used in implementation)
-function session_client.create(session)
+function session_client:create(session)
     return session_client:new{
-        id = session.id,
-        deviceOSType = tostring(session.deviceOSType),
-        appBuildType = tostring(session.appBuildType),
-        sessionId = session.id,
+        sessionId = session.sessionId,
         sessionApiKey = session.sessionApiKey,
-        sessionExpirationDate = session.sessionExpirationDate,
-        profile = session.profile
+        sessionExpirationDate = session.sessionExpirationDate
     }
 end
 
@@ -95,7 +91,7 @@ function session_client:authenticate(profile, device_os_type, app_build_type)
 
     if (status == 200)
     then
-        return registration_client:create(response)
+        return session_client:create(response)
     else
         error{ status = status, message = response.message }
     end

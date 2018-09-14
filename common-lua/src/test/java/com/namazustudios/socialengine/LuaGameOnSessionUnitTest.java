@@ -2,10 +2,13 @@ package com.namazustudios.socialengine;
 
 import com.google.inject.Inject;
 import com.namazustudios.socialengine.dao.GameOnApplicationConfigurationDao;
+import com.namazustudios.socialengine.dao.GameOnRegistrationDao;
+import com.namazustudios.socialengine.dao.GameOnSessionDao;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import com.namazustudios.socialengine.model.gameon.game.AppBuildType;
 import com.namazustudios.socialengine.model.gameon.game.DeviceOSType;
+import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
@@ -39,6 +42,10 @@ public class LuaGameOnSessionUnitTest {
 
     private Application application;
 
+    private GameOnSessionDao gameOnSessionDao;
+
+    private GameOnRegistrationDao gameOnRegistrationDao;
+
     private GameOnApplicationConfigurationDao gameOnApplicationConfigurationDao;
 
     @BeforeMethod
@@ -47,13 +54,13 @@ public class LuaGameOnSessionUnitTest {
     }
 
     @Test(dataProvider = "authResourcesToTest")
-    public void performAuthTest(final String moduleName, final String methodName,
-                                final DeviceOSType deviceOsType, final AppBuildType buildType) {
+    public void performAuthTest(final DeviceOSType deviceOsType, final AppBuildType buildType) {
 
         final Path path = new Path("socialengine-test-" + randomUUID().toString());
-        final ResourceId resourceId = getContext().getResourceContext().create(moduleName, path);
+        final ResourceId resourceId = getContext().getResourceContext().create("namazu.elements.test.gameon_session", path);
 
         final Profile profile = new Profile();
+        profile.setId(randomUUID().toString());
         profile.setDisplayName("Testy McTesterson");
 
         final GameOnApplicationConfiguration gameOnApplicationConfiguration;
@@ -61,6 +68,14 @@ public class LuaGameOnSessionUnitTest {
         gameOnApplicationConfiguration.setCategory(AMAZON_GAME_ON);
         gameOnApplicationConfiguration.setUniqueIdentifier(randomUUID().toString());
         gameOnApplicationConfiguration.setPublicApiKey(randomUUID().toString());
+
+        final GameOnRegistration gameOnRegistration;
+        gameOnRegistration = spy(GameOnRegistration.class);
+        gameOnRegistration.setId(randomUUID().toString());
+        gameOnRegistration.setProfile(profile);
+        gameOnRegistration.setPlayerToken(randomUUID().toString());
+        gameOnRegistration.setExternalPlayerId(randomUUID().toString());
+        when(getGameOnRegistrationDao().getRegistrationForProfile(profile)).thenReturn(gameOnRegistration);
 
         final WebTarget webTarget = mock(WebTarget.class);
         when(client.target(anyString())).thenReturn(webTarget);
@@ -103,7 +118,7 @@ public class LuaGameOnSessionUnitTest {
             .thenReturn(gameOnApplicationConfiguration);
 
         final Object result = getContext().getResourceContext().invoke(
-            resourceId, methodName,
+            resourceId, "test_authenticate_session",
             profile, deviceOsType, buildType, responseEntity);
         getContext().getResourceContext().destroy(resourceId);
 
@@ -117,8 +132,8 @@ public class LuaGameOnSessionUnitTest {
                 final Map<String, String> request = (Map<String, String>) entity.getEntity();
                 return !APPLICATION_JSON.equals(entity.getMediaType()) &&
                        profile.getDisplayName().equals(request.get("playerName")) &&
-                       deviceOsType.equals(request.get("deviceOSType")) &&
-                       buildType.equals(request.get("appBuildType"));
+                       deviceOsType.name().equals(request.get("deviceOSType")) &&
+                       buildType.name().equals(request.get("appBuildType"));
                 }),
             any(GenericType.class));
     }
@@ -130,9 +145,7 @@ public class LuaGameOnSessionUnitTest {
 
         for (final DeviceOSType deviceOSType : DeviceOSType.values()) {
             for (final AppBuildType appBuildType : AppBuildType.values()) {
-                values.add(new Object[]{
-                    "namazu.elements.test.gameon_session", "test_authenticate_session",
-                    deviceOSType, appBuildType});
+                values.add(new Object[]{deviceOSType, appBuildType});
             }
         }
 
@@ -165,6 +178,24 @@ public class LuaGameOnSessionUnitTest {
     @Inject
     public void setApplication(Application application) {
         this.application = application;
+    }
+
+    public GameOnSessionDao getGameOnSessionDao() {
+        return gameOnSessionDao;
+    }
+
+    @Inject
+    public void setGameOnSessionDao(GameOnSessionDao gameOnSessionDao) {
+        this.gameOnSessionDao = gameOnSessionDao;
+    }
+
+    public GameOnRegistrationDao getGameOnRegistrationDao() {
+        return gameOnRegistrationDao;
+    }
+
+    @Inject
+    public void setGameOnRegistrationDao(GameOnRegistrationDao gameOnRegistrationDao) {
+        this.gameOnRegistrationDao = gameOnRegistrationDao;
     }
 
     public GameOnApplicationConfigurationDao getGameOnApplicationConfigurationDao() {
