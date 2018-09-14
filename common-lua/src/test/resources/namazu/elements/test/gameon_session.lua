@@ -16,7 +16,7 @@ function test.test_authenticate_session(profile, device_os_type, build_type, moc
 
     assert(session_client ~= nil, "Expect non-nil session.  Got nil.")
     assert(session_client.sessionId == mock_response.sessionId, "Got " .. tostring(session_client.sessionId) .. ".  Expecting " ..  tostring(mock_response.sessionId) .. ".");
-    assert(session_client.sessionApiKey == mock_response.sessionApiKey, "Got " .. tostring(session_client.apiKey) .. ".  Expecting " ..  tostring(mock_response.sessionApiKey) .. ".");
+    assert(session_client.sessionApiKey == mock_response.sessionApiKey, "Got " .. tostring(session_client.sessionApiKey) .. ".  Expecting " ..  tostring(mock_response.sessionApiKey) .. ".");
     assert(session_client.sessionExpirationDate == mock_response.sessionExpirationDate, "Got " .. tostring(session_client.sessionExpirationDate) .. ".  Expecting " ..  tostring(mock_response.sessionExpirationDate) .. ".");
 
 end
@@ -27,7 +27,7 @@ function test.test_refresh_session(profile, device_os_type, build_type, session)
 
     assert(session_client ~= nil, "Expect non-nil session.  Got nil.")
     assert(session_client.sessionId == session.sessionId, "Got " .. tostring(session_client.sessionId) .. ".  Expecting " ..  tostring(session.sessionId) .. ".");
-    assert(session_client.sessionApiKey == session.sessionApiKey, "Got " .. tostring(session_client.apiKey) .. ".  Expecting " ..  tostring(session.sessionApiKey) .. ".");
+    assert(session_client.sessionApiKey == session.sessionApiKey, "Got " .. tostring(session_client.sessionApiKey) .. ".  Expecting " ..  tostring(session.sessionApiKey) .. ".");
     assert(session_client.sessionExpirationDate == session.sessionExpirationDate, "Got " .. tostring(session_client.sessionExpirationDate) .. ".  Expecting " ..  tostring(session.sessionExpirationDate) .. ".");
 
 end

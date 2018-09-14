@@ -22,15 +22,15 @@ local registration_not_found_exception = java.require "com.namazustudios.sociale
 local registration_client = {}
 
 --- The API Path for the Registration Endpoint
-registration_client.PATH = "/players/registration"
+registration_client.PATH = "/players/register"
 
 --- Raw Constructor for Registration
 -- This allocates a new instance, sets the metatable, and returns the instance created.
-function registration_client:new(obj)
-    obj = {}
-    obj.__index = registration
-    setmetatable(obj, self)
-    return obj
+function registration_client:new(rc)
+    rc = rc or {}
+    rc.__index = registration
+    setmetatable(rc, self)
+    return rc
 end
 
 --- Creates an Instance of Registration
@@ -40,8 +40,6 @@ end
 -- @param registration the registration model object
 function registration_client:create(registration)
     return registration_client:new{
-        id = registration.id,
-        profile = registration.profile,
         playerToken = registration.playerToken,
         externalPlayerId = registration.externalPlayerId
     }
@@ -96,7 +94,7 @@ function registration_client:refresh(profile)
     end,
     registration_not_found_exception, function (ex)
 
-        local client = registration_client:register()
+        local client = registration_client:register(profile)
 
         -- Set properties in the model and save to the database so it can be referenced later and cross-linked to
         -- the supplied profile.

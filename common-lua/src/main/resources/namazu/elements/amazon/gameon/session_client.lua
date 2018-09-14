@@ -119,7 +119,6 @@ function session_client:refresh(profile, device_os_type, app_build_type)
     end,
     session_not_found_exception, function(ex)
 
-
         local client = session_client:authenticate(profile, device_os_type, app_build_type)
         local device_os_type_e = java.require "com.namazustudios.socialengine.model.gameon.game.DeviceOSType"
         local app_build_type_e = java.require "com.namazustudios.socialengine.model.gameon.game.AppBuildType"
