@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.namazustudios.socialengine.dao.GameOnApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.GameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.GameOnSessionDao;
+import com.namazustudios.socialengine.exception.gameon.GameOnSessionNotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import com.namazustudios.socialengine.model.gameon.game.AppBuildType;
@@ -17,6 +18,7 @@ import com.namazustudios.socialengine.rt.ResourceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.*;
+import zmq.socket.reqrep.Req;
 
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.*;
@@ -31,6 +33,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
 import static org.testng.Assert.assertNull;
 
 @Guice(modules = UnitTestModule.class)
@@ -75,7 +78,7 @@ public class LuaGameOnSessionUnitTest {
         gameOnApplicationConfiguration.setUniqueIdentifier(randomUUID().toString());
         gameOnApplicationConfiguration.setPublicApiKey(randomUUID().toString());
         when(getGameOnApplicationConfigurationDao().getDefaultConfigurationForApplication(getApplication().getId()))
-            .thenReturn(gameOnApplicationConfiguration);
+                .thenReturn(gameOnApplicationConfiguration);
 
         final GameOnRegistration gameOnRegistration;
         gameOnRegistration = spy(GameOnRegistration.class);
@@ -100,7 +103,60 @@ public class LuaGameOnSessionUnitTest {
         getContext().getResourceContext().destroy(resourceId);
 
         verify(getGameOnSessionDao(), times(1))
-            .getSessionForProfile(eq(profile), eq(deviceOsType.toString()));
+                .getSessionForProfile(eq(profile), eq(deviceOsType.toString()));
+
+    }
+
+    @Test(dataProvider = "testData")
+    public void performRefreshFailureTest(final DeviceOSType deviceOsType, final AppBuildType buildType) {
+
+        final Path path = new Path("socialengine-test-" + randomUUID().toString());
+        final ResourceId resourceId = getContext().getResourceContext().create("namazu.elements.test.gameon_session", path);
+
+        final Profile profile = new Profile();
+        profile.setId(randomUUID().toString());
+        profile.setDisplayName("Testy McTesterson");
+
+        final GameOnApplicationConfiguration gameOnApplicationConfiguration;
+        gameOnApplicationConfiguration = spy(GameOnApplicationConfiguration.class);
+        gameOnApplicationConfiguration.setCategory(AMAZON_GAME_ON);
+        gameOnApplicationConfiguration.setUniqueIdentifier(randomUUID().toString());
+        gameOnApplicationConfiguration.setPublicApiKey(randomUUID().toString());
+
+        final GameOnRegistration gameOnRegistration;
+        gameOnRegistration = spy(GameOnRegistration.class);
+        gameOnRegistration.setId(randomUUID().toString());
+        gameOnRegistration.setProfile(profile);
+        gameOnRegistration.setPlayerToken(randomUUID().toString());
+        gameOnRegistration.setExternalPlayerId(randomUUID().toString());
+        when(getGameOnRegistrationDao().getRegistrationForProfile(profile)).thenReturn(gameOnRegistration);
+
+        final RequestMocks requestMocks = new RequestMocks(profile, deviceOsType, buildType, gameOnApplicationConfiguration);
+        final Map<String, Object> responseEntity = requestMocks.setupMocks();
+
+        when(getGameOnApplicationConfigurationDao().getDefaultConfigurationForApplication(getApplication().getId()))
+            .thenReturn(gameOnApplicationConfiguration);
+
+        when(getGameOnSessionDao().getSessionForProfile(profile, deviceOsType.toString()))
+            .thenThrow(new GameOnSessionNotFoundException());
+
+        final GameOnSession session = new GameOnSession();
+        session.setProfile(profile);
+        session.setAppBuildType(buildType);
+        session.setDeviceOSType(deviceOsType);
+        session.setSessionId((String) responseEntity.get("sessionId"));
+        session.setSessionApiKey((String) responseEntity.get("sessionApiKey"));
+        session.setSessionExpirationDate(((Number)responseEntity.get("sessionExpirationDate")).longValue());
+        when(getGameOnSessionDao().createSession(eq(session))).thenReturn(session);
+
+        final Object result = getContext().getResourceContext().invoke(
+            resourceId, "test_refresh_session",
+            profile, deviceOsType, buildType, responseEntity);
+        getContext().getResourceContext().destroy(resourceId);
+        assertNull(result);
+
+        requestMocks.verifyRequest();
+        verify(getGameOnSessionDao(), times(1)).createSession(eq(session));
 
     }
 
@@ -128,42 +184,8 @@ public class LuaGameOnSessionUnitTest {
         gameOnRegistration.setExternalPlayerId(randomUUID().toString());
         when(getGameOnRegistrationDao().getRegistrationForProfile(profile)).thenReturn(gameOnRegistration);
 
-        final WebTarget webTarget = mock(WebTarget.class);
-        when(client.target(anyString())).thenReturn(webTarget);
-        when(webTarget.path(anyString())).thenReturn(webTarget);
-
-        final Invocation.Builder invocationBuilder = mock(Invocation.Builder.class);
-        when(webTarget.request()).thenReturn(invocationBuilder);
-        when(invocationBuilder.header(anyString(), any())).thenReturn(invocationBuilder);
-
-        final CompletionStageRxInvoker completionStageRxInvoker = mock(CompletionStageRxInvoker.class);
-        when(invocationBuilder.rx()).thenReturn(completionStageRxInvoker);
-
-        final Map<String, Object> responseEntity = new HashMap<>();
-        responseEntity.put("sessionId", randomUUID().toString());
-        responseEntity.put("sessionApiKey", randomUUID().toString());
-        responseEntity.put("sessionExpirationDate", new Random().nextInt());
-
-        final CompletionStage<?> completionStage = mock(CompletionStage.class);
-        when(completionStageRxInvoker.method(any(), any(Entity.class), any(GenericType.class))).thenReturn(completionStage);
-        when(completionStage.exceptionally(any())).thenAnswer(invocation -> completionStage);
-        when(completionStage.handleAsync(any())).thenAnswer(invocation -> {
-
-            final BiFunction<Response, Throwable, ?> handler = invocation.getArgument(0);
-            final Response response = mock(Response.class);
-            final Response.StatusType statusType = mock(Response.StatusType.class);
-
-            when(response.getStatus()).thenReturn(200);
-            when(response.getStatusInfo()).thenReturn(statusType);
-            when(statusType.getFamily()).thenReturn(Response.Status.Family.SUCCESSFUL);
-            when(response.getHeaders()).thenReturn(mock(MultivaluedMap.class));
-            when(response.readEntity(eq(Object.class))).thenReturn(responseEntity);
-
-            final Object result = handler.apply(response, null);
-            assertNull(result);
-
-            return completionStage;
-        });
+        final RequestMocks requestMocks = new RequestMocks(profile, deviceOsType, buildType, gameOnApplicationConfiguration);
+        final Object responseEntity = requestMocks.setupMocks();
 
         when(getGameOnApplicationConfigurationDao().getDefaultConfigurationForApplication(getApplication().getId()))
             .thenReturn(gameOnApplicationConfiguration);
@@ -172,21 +194,10 @@ public class LuaGameOnSessionUnitTest {
             resourceId, "test_authenticate_session",
             profile, deviceOsType, buildType, responseEntity);
         getContext().getResourceContext().destroy(resourceId);
-
         assertNull(result);
-        verify(getClient(), times(1)).target("https://api.amazongameon.com/v1");
-        verify(webTarget, times(1)).path("/players/auth");
-        verify(invocationBuilder, times(1)).header("x-api-key", gameOnApplicationConfiguration.getPublicApiKey());
-        verify(completionStageRxInvoker, times(1)).method(
-            matches("POST"),
-            argThat((Entity<Object> entity) -> {
-                final Map<String, String> request = (Map<String, String>) entity.getEntity();
-                return !APPLICATION_JSON.equals(entity.getMediaType()) &&
-                       profile.getDisplayName().equals(request.get("playerName")) &&
-                       deviceOsType.name().equals(request.get("deviceOSType")) &&
-                       buildType.name().equals(request.get("appBuildType"));
-                }),
-            any(GenericType.class));
+
+        requestMocks.verifyRequest();
+
     }
 
     @DataProvider
@@ -256,6 +267,91 @@ public class LuaGameOnSessionUnitTest {
     @Inject
     public void setGameOnApplicationConfigurationDao(GameOnApplicationConfigurationDao gameOnApplicationConfigurationDao) {
         this.gameOnApplicationConfigurationDao = gameOnApplicationConfigurationDao;
+    }
+
+    private class RequestMocks {
+
+        private final Profile profile;
+
+        private final DeviceOSType deviceOSType;
+
+        private final AppBuildType appBuildType;
+
+        private final GameOnApplicationConfiguration gameOnApplicationConfiguration;
+
+        public RequestMocks(final Profile profile,
+                            final DeviceOSType deviceOSType,
+                            final AppBuildType appBuildType,
+                            final GameOnApplicationConfiguration gameOnApplicationConfiguration) {
+            this.profile = profile;
+            this.deviceOSType = deviceOSType;
+            this.appBuildType = appBuildType;
+            this.gameOnApplicationConfiguration = gameOnApplicationConfiguration;
+        }
+
+        private final WebTarget webTarget = mock(WebTarget.class);
+
+        private final Invocation.Builder invocationBuilder = mock(Invocation.Builder.class);
+
+        private final CompletionStageRxInvoker completionStageRxInvoker = mock(CompletionStageRxInvoker.class);
+
+        public Map<String, Object> setupMocks() {
+
+            when(client.target(anyString())).thenReturn(webTarget);
+            when(webTarget.path(anyString())).thenReturn(webTarget);
+            when(webTarget.request()).thenReturn(invocationBuilder);
+            when(invocationBuilder.header(anyString(), any())).thenReturn(invocationBuilder);
+            when(invocationBuilder.rx()).thenReturn(completionStageRxInvoker);
+
+            final Map<String, Object> responseEntity = new HashMap<>();
+            responseEntity.put("sessionId", randomUUID().toString());
+            responseEntity.put("sessionApiKey", randomUUID().toString());
+            responseEntity.put("sessionExpirationDate", new Random().nextInt());
+
+            final CompletionStage<?> completionStage = mock(CompletionStage.class);
+            when(completionStageRxInvoker.method(any(), any(Entity.class), any(GenericType.class))).thenReturn(completionStage);
+            when(completionStage.exceptionally(any())).thenAnswer(invocation -> completionStage);
+            when(completionStage.handleAsync(any())).thenAnswer(invocation -> {
+
+                final BiFunction<Response, Throwable, ?> handler = invocation.getArgument(0);
+                final Response response = mock(Response.class);
+                final Response.StatusType statusType = mock(Response.StatusType.class);
+
+                when(response.getStatus()).thenReturn(200);
+                when(response.getStatusInfo()).thenReturn(statusType);
+                when(statusType.getFamily()).thenReturn(Response.Status.Family.SUCCESSFUL);
+                when(response.getHeaders()).thenReturn(mock(MultivaluedMap.class));
+                when(response.readEntity(eq(Object.class))).thenReturn(responseEntity);
+
+                final Object result = handler.apply(response, null);
+                assertNull(result);
+
+                return completionStage;
+            });
+
+            when(getGameOnApplicationConfigurationDao().getDefaultConfigurationForApplication(getApplication().getId()))
+                    .thenReturn(gameOnApplicationConfiguration);
+
+            return responseEntity;
+
+        }
+
+        public void verifyRequest() {
+            verify(getClient(), times(1)).target("https://api.amazongameon.com/v1");
+            verify(webTarget, times(1)).path("/players/auth");
+            verify(invocationBuilder, times(1)).header("x-api-key", gameOnApplicationConfiguration.getPublicApiKey());
+            verify(completionStageRxInvoker, times(1)).method(
+                matches("POST"),
+                argThat((Entity<Object> entity) -> {
+                    final Map<String, String> request = (Map<String, String>) entity.getEntity();
+                    return !APPLICATION_JSON.equals(entity.getMediaType()) &&
+                            profile.getDisplayName().equals(request.get("playerName")) &&
+                            deviceOSType.name().equals(request.get("deviceOSType")) &&
+                            appBuildType.name().equals(request.get("appBuildType"));
+                }),
+                any(GenericType.class));
+
+        }
     }
 
 }

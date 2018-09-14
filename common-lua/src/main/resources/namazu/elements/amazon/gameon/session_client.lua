@@ -110,6 +110,7 @@ end
 function session_client:refresh(profile, device_os_type, app_build_type)
 
     device_os_type = tostring(device_os_type or gameon_constants.device_os_type.html)
+    app_build_type = tostring(app_build_type or gameon_constants.app_build_type.release)
 
     return util.java.pcallx(
     function()
@@ -118,17 +119,19 @@ function session_client:refresh(profile, device_os_type, app_build_type)
     end,
     session_not_found_exception, function(ex)
 
-        print("Attempting Auth")
 
         local client = session_client:authenticate(profile, device_os_type, app_build_type)
-        local session = gameon_session:new()
+        local device_os_type_e = java.require "com.namazustudios.socialengine.model.gameon.game.DeviceOSType"
+        local app_build_type_e = java.require "com.namazustudios.socialengine.model.gameon.game.AppBuildType"
 
+        local session = gameon_session:new()
         session.profile = profile
-        session.sessionId = client.id
+        session.sessionId = client.sessionId
         session.sessionApiKey = client.sessionApiKey
         session.sessionExpirationDate = client.sessionExpirationDate
-        session.deviceOSType = tostring(client.deviceOSType)
-        session.appBuildType = tostring(client.appBuildType)
+        session.deviceOSType = device_os_type_e:valueOf(tostring(device_os_type))
+        session.appBuildType = app_build_type_e:valueOf(tostring(app_build_type))
+        gameon_session_dao.create_session(session)
 
         return client
 
