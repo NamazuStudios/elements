@@ -26,11 +26,11 @@ registration_client.PATH = "/players/register"
 
 --- Raw Constructor for Registration
 -- This allocates a new instance, sets the metatable, and returns the instance created.
-function registration_client:new(rc)
-    rc = rc or {}
-    rc.__index = registration
-    setmetatable(rc, self)
-    return rc
+function registration_client:new(o)
+    o = o or {}
+    setmetatable(o, self)
+    self.__index = self
+    return o
 end
 
 --- Creates an Instance of Registration

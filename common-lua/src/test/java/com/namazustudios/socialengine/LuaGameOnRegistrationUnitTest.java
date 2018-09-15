@@ -111,7 +111,7 @@ public class LuaGameOnRegistrationUnitTest {
         gameOnApplicationConfiguration.setUniqueIdentifier(randomUUID().toString());
         gameOnApplicationConfiguration.setPublicApiKey(randomUUID().toString());
 
-        final RequestMocks requestMocks = new RequestMocks(profile, gameOnApplicationConfiguration);
+        final RequestMocks requestMocks = new RequestMocks(gameOnApplicationConfiguration);
         final Map<String, Object> responseEntity = requestMocks.setupMocks();
 
         final GameOnRegistration gameOnRegistration;
@@ -198,13 +198,9 @@ public class LuaGameOnRegistrationUnitTest {
 
     private class RequestMocks {
 
-        private final Profile profile;
-
         private final GameOnApplicationConfiguration gameOnApplicationConfiguration;
 
-        public RequestMocks(final Profile profile,
-                            final GameOnApplicationConfiguration gameOnApplicationConfiguration) {
-            this.profile = profile;
+        public RequestMocks(final GameOnApplicationConfiguration gameOnApplicationConfiguration) {
             this.gameOnApplicationConfiguration = gameOnApplicationConfiguration;
         }
 

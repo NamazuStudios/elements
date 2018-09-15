@@ -18,6 +18,7 @@ local gameon_constants = require "namazu.elements.amazon.gameon.constants"
 local gameon_session = java.require "com.namazustudios.socialengine.model.gameon.game.GameOnSession"
 local gameon_session_dao = require "namazu.elements.dao.gameon.session"
 local gameon_registration_client = require "namazu.elements.amazon.gameon.registration_client"
+local gameon_match_client = require "namazu.elements.amazon.gameon.match_client"
 
 local session_not_found_exception = java.require "com.namazustudios.socialengine.exception.gameon.GameOnSessionNotFoundException"
 
@@ -27,11 +28,11 @@ local session_client = {}
 session_client.PATH = "/players/auth"
 
 --- Raw Constructor
-function session_client:new(sc)
-    sc = sc or {}
-    sc.__index = sc
-    setmetatable(sc, self)
-    return sc
+function session_client:new(o)
+    o = o or {}
+    setmetatable(o, self)
+    self.__index = self
+    return o
 end
 
 --- Creates a new Session
@@ -136,6 +137,18 @@ function session_client:refresh(profile, device_os_type, app_build_type)
 
     end)
 
+end
+
+--- Returns a Match Client
+-- Returns the match client for the supplied match_id.
+--
+-- @param match_id the match to submit the
+function session_client:match_client(match_id)
+    return gameon_match_client:new{
+        matchId = match_id,
+        sessionId = self.sessionId,
+        sessionApiKey = self.sessionApiKey
+    }
 end
 
 return session_client
