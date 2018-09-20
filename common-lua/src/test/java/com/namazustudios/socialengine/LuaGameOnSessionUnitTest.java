@@ -90,20 +90,30 @@ public class LuaGameOnSessionUnitTest {
 
         final GameOnSession gameOnSession = new GameOnSession();
         gameOnSession.setId(randomUUID().toString());
-        gameOnSession.setProfile(profile);
-        gameOnSession.setAppBuildType(buildType);
+        gameOnSession.setAppBuildType(buildType == null ? AppBuildType.getDefault() : buildType);
+        gameOnSession.setDeviceOSType(deviceOsType == null ? DeviceOSType.getDefault() : deviceOsType);
         gameOnSession.setDeviceOSType(deviceOsType);
         gameOnSession.setSessionApiKey(randomUUID().toString());
         gameOnSession.setSessionExpirationDate(currentTimeMillis() + 600000);
-        when(getGameOnSessionDao().getSessionForProfile(profile, deviceOsType.toString())).thenReturn(gameOnSession);
+        when(getGameOnSessionDao().
+            getSessionForProfile(
+                profile,
+                deviceOsType == null ? DeviceOSType.getDefault().toString() : deviceOsType.toString())).
+            thenReturn(gameOnSession);
 
-        final Object result = getContext().getResourceContext().invoke(
+        getContext().getResourceContext().invoke(
                 resourceId, "test_refresh_session",
-                profile, deviceOsType.toString(), buildType.toString(), gameOnSession);
+                profile,
+                deviceOsType == null ? null : deviceOsType.toString(),
+                buildType == null ? null : buildType.toString(),
+                gameOnSession);
+
         getContext().getResourceContext().destroy(resourceId);
 
-        verify(getGameOnSessionDao(), times(1))
-                .getSessionForProfile(eq(profile), eq(deviceOsType.toString()));
+        verify(getGameOnSessionDao(), times(1)).getSessionForProfile(
+            eq(profile),
+            eq(deviceOsType == null ? DeviceOSType.getDefault().toString() : deviceOsType.toString())
+        );
 
     }
 
@@ -137,23 +147,29 @@ public class LuaGameOnSessionUnitTest {
         when(getGameOnApplicationConfigurationDao().getDefaultConfigurationForApplication(getApplication().getId()))
             .thenReturn(gameOnApplicationConfiguration);
 
-        when(getGameOnSessionDao().getSessionForProfile(profile, deviceOsType.toString()))
+        when(getGameOnSessionDao()
+            .getSessionForProfile(
+                profile,
+                deviceOsType == null ? DeviceOSType.getDefault().toString() : deviceOsType.toString()))
             .thenThrow(new GameOnSessionNotFoundException());
 
         final GameOnSession session = new GameOnSession();
         session.setProfile(profile);
-        session.setAppBuildType(buildType);
-        session.setDeviceOSType(deviceOsType);
+        session.setAppBuildType(buildType == null ? AppBuildType.getDefault() : buildType);
+        session.setDeviceOSType(deviceOsType == null ? DeviceOSType.getDefault() : deviceOsType);
         session.setSessionId((String) responseEntity.get("sessionId"));
         session.setSessionApiKey((String) responseEntity.get("sessionApiKey"));
         session.setSessionExpirationDate(((Number)responseEntity.get("sessionExpirationDate")).longValue());
         when(getGameOnSessionDao().createSession(eq(session))).thenReturn(session);
 
-        final Object result = getContext().getResourceContext().invoke(
+        getContext().getResourceContext().invoke(
             resourceId, "test_refresh_session",
-            profile, deviceOsType, buildType, responseEntity);
+            profile,
+            deviceOsType == null ? null : deviceOsType.toString(),
+            buildType == null ? null : buildType.toString(),
+            responseEntity);
+
         getContext().getResourceContext().destroy(resourceId);
-        assertNull(result);
 
         requestMocks.verifyRequest();
         verify(getGameOnSessionDao(), times(1)).createSession(eq(session));
@@ -211,6 +227,15 @@ public class LuaGameOnSessionUnitTest {
             }
         }
 
+        for (final DeviceOSType deviceOSType : DeviceOSType.values()) {
+            values.add(new Object[]{deviceOSType, null});
+        }
+
+        for (final AppBuildType appBuildType : AppBuildType.values()) {
+            values.add(new Object[]{null, appBuildType});
+        }
+
+        values.add(new Object[]{null, null});
         return values.toArray(new Object[][]{});
 
     }
@@ -284,8 +309,8 @@ public class LuaGameOnSessionUnitTest {
                             final AppBuildType appBuildType,
                             final GameOnApplicationConfiguration gameOnApplicationConfiguration) {
             this.profile = profile;
-            this.deviceOSType = deviceOSType;
-            this.appBuildType = appBuildType;
+            this.deviceOSType = deviceOSType == null ? DeviceOSType.getDefault() : deviceOSType;
+            this.appBuildType = appBuildType == null ? AppBuildType.getDefault() : appBuildType;
             this.gameOnApplicationConfiguration = gameOnApplicationConfiguration;
         }
 
@@ -345,9 +370,9 @@ public class LuaGameOnSessionUnitTest {
                 argThat((Entity<Object> entity) -> {
                     final Map<String, String> request = (Map<String, String>) entity.getEntity();
                     return !APPLICATION_JSON.equals(entity.getMediaType()) &&
-                            profile.getDisplayName().equals(request.get("playerName")) &&
-                            deviceOSType.name().equals(request.get("deviceOSType")) &&
-                            appBuildType.name().equals(request.get("appBuildType"));
+                        profile.getDisplayName().equals(request.get("playerName")) &&
+                        deviceOSType.name().equals(request.get("deviceOSType")) &&
+                        appBuildType.name().equals(request.get("appBuildType"));
                 }),
                 any(GenericType.class));
 

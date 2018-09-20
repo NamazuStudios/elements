@@ -10,9 +10,13 @@ local gameon = require "namazu.elements.amazon.gameon"
 
 local test = {}
 
-function test.test_authenticate_session(profile, device_os_type, build_type, mock_response)
+function test.test_authenticate_session(profile, device_os_type, app_build_type, mock_response)
 
-    local session_client = gameon.session_client:authenticate(profile, device_os_type, build_type)
+    local session_client = gameon.session_client:authenticate_with_options{
+        profile = profile,
+        device_os_type = device_os_type,
+        app_build_type = app_build_type
+    }
 
     assert(session_client ~= nil, "Expect non-nil session.  Got nil.")
     assert(session_client.sessionId == mock_response.sessionId, "Got " .. tostring(session_client.sessionId) .. ".  Expecting " ..  tostring(mock_response.sessionId) .. ".");
@@ -21,9 +25,13 @@ function test.test_authenticate_session(profile, device_os_type, build_type, moc
 
 end
 
-function test.test_refresh_session(profile, device_os_type, build_type, session)
+function test.test_refresh_session(profile, device_os_type, app_build_type, session)
 
-    local session_client = gameon.session_client:refresh(profile, device_os_type, build_type)
+    local session_client = gameon.session_client:refresh_with_options{
+        profile = profile,
+        device_os_type = device_os_type,
+        app_build_type = app_build_type
+    }
 
     assert(session_client ~= nil, "Expect non-nil session.  Got nil.")
     assert(session_client.sessionId == session.sessionId, "Got " .. tostring(session_client.sessionId) .. ".  Expecting " ..  tostring(session.sessionId) .. ".");

@@ -20,6 +20,9 @@ local gameon_session_dao = require "namazu.elements.dao.gameon.session"
 local gameon_registration_client = require "namazu.elements.amazon.gameon.registration_client"
 local gameon_match_client = require "namazu.elements.amazon.gameon.match_client"
 
+local device_os_type_e = java.require "com.namazustudios.socialengine.model.gameon.game.DeviceOSType"
+local app_build_type_e = java.require "com.namazustudios.socialengine.model.gameon.game.AppBuildType"
+
 local session_not_found_exception = java.require "com.namazustudios.socialengine.exception.gameon.GameOnSessionNotFoundException"
 
 local session_client = {}
@@ -51,24 +54,33 @@ function session_client:create(session)
 end
 
 --- Authenticates a session (Class Method)
+-- Invokes authenticate_with_options using default options.  The only mandatory parameter is the user profile used
+-- to make the session.
+--
+-- @profile the user profile
+-- @return a freshly created session with Amazon GameOn
+function session_client:authenticate(profile)
+    return self:authenticate_with_options{profile = profile}
+end
+
+--- Authenticates a session (Class Method)
 -- This calls the Amazon APIs to authenticate a new session for a particular user.  Upon successful response, a new
 -- session is returned which can be used to manage calls to the Game On APIs.  This call may suspent the currently
 -- running coroutine while the request is processed.
 --
 -- Note, the returned session is not stored in the database.
 --
--- @param profile the user's profile
--- @param device_os_type the user's OS (eg Android or iOS)
--- @param app_build_type the build type (development vs production)
+-- @param options the options to use when refreshing
 -- @return a freshly created session with Amazon GameOn
-function session_client:authenticate(profile, device_os_type, app_build_type)
+function session_client:authenticate_with_options(options)
+
+    local profile = options.profile
+    local device_os_type = tostring(options["device_os_type"] or device_os_type_e:getDefault())
+    local app_build_type = tostring(options["app_build_type"] or app_build_type_e:getDefault())
 
     local application = application_provider:get()
     local configuration = configuration_dao.get_default_configuration_for_application(application.id)
     local registration_client = gameon_registration_client:refresh(profile)
-
-    device_os_type = tostring(device_os_type or gameon_constants.device_os_type.html)
-    app_build_type = tostring(app_build_type or gameon_constants.app_build_type.release)
 
     local request = {
         method = "POST",
@@ -99,19 +111,28 @@ function session_client:authenticate(profile, device_os_type, app_build_type)
 
 end
 
+--- Refreshes a Session
+-- Invokes authenticate_with_options using default options.  The only mandatory parameter is the user profile used
+-- to make the session.
+--
+-- @profile the user profile
+-- @return a freshly created session with Amazon GameOn, or one reconstituted from the database
+function session_client:refresh(profile)
+    return self:refresh_with_options{profile = profile}
+end
 
 --- Refreshes a Session
 -- Looks up the current session for the player, or if no such session exists, this will authenticate the session so
 -- that requests may be made.  If no such seession exists, this will create a new session and store it to the database
 -- such that requests may be made to GameOn
 --
--- @param profile the profile of the user
--- @param device_os_type the device OS type (may be nil)
--- @param app_build_type the app build type (may be nil)
-function session_client:refresh(profile, device_os_type, app_build_type)
+-- @param options the options to use when refreshing
+-- @return a freshly created session with Amazon GameOn, or one reconstituted from the database
+function session_client:refresh_with_options(options)
 
-    device_os_type = tostring(device_os_type or gameon_constants.device_os_type.html)
-    app_build_type = tostring(app_build_type or gameon_constants.app_build_type.release)
+    local profile = options.profile
+    local device_os_type = tostring(options["device_os_type"] or device_os_type_e:getDefault())
+    local app_build_type = tostring(options["app_build_type"] or app_build_type_e:getDefault())
 
     return util.java.pcallx(
     function()
@@ -120,9 +141,7 @@ function session_client:refresh(profile, device_os_type, app_build_type)
     end,
     session_not_found_exception, function(ex)
 
-        local client = session_client:authenticate(profile, device_os_type, app_build_type)
-        local device_os_type_e = java.require "com.namazustudios.socialengine.model.gameon.game.DeviceOSType"
-        local app_build_type_e = java.require "com.namazustudios.socialengine.model.gameon.game.AppBuildType"
+        local client = session_client:authenticate_with_options(options)
 
         local session = gameon_session:new()
         session.profile = profile
