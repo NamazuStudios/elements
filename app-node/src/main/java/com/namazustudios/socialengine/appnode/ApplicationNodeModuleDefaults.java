@@ -7,6 +7,7 @@ import java.util.Properties;
 
 import static com.namazustudios.socialengine.appnode.Constants.STORAGE_BASE_DIRECTORY;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.BIND_ADDR;
+import static com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.STATUS_CHECK_ADDR;
 import static com.namazustudios.socialengine.rt.Constants.*;
 import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.*;
 
@@ -19,6 +20,7 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(MIN_CONNECTIONS, "10");
         properties.setProperty(MAX_CONNECTIONS, "10000");
         properties.setProperty(BIND_ADDR, "tcp://*:28883");
+        properties.setProperty(STATUS_CHECK_ADDR, "tcp://*:20883");
         properties.setProperty(SCHEDULER_THREADS, Integer.toString(Runtime.getRuntime().availableProcessors()) + 1);
         properties.setProperty(HandlerContext.HANDLER_TIMEOUT_MSEC, "180000");
         properties.setProperty(STORAGE_BASE_DIRECTORY, "storage.xodus");

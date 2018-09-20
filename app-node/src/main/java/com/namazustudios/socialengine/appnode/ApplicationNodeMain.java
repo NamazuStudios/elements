@@ -14,6 +14,7 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.rt.MultiNodeContainer;
+import com.namazustudios.socialengine.rt.jeromq.RoutingCommand;
 import com.namazustudios.socialengine.service.BuildPropertiesVersionService;
 import com.namazustudios.socialengine.service.VersionService;
 import com.namazustudios.socialengine.service.firebase.guice.FirebaseAppFactoryModule;
@@ -21,8 +22,11 @@ import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNo
 import org.apache.bval.guice.ValidationModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
 
 import static java.lang.Thread.interrupted;
+import static org.zeromq.ZMQ.REQ;
 
 /**
  * Hello world!
@@ -51,6 +55,28 @@ public class ApplicationNodeMain {
             new VersionModule()
         );
 
+        for (String arg : args) {
+            if(arg.equalsIgnoreCase("--status-check")) {
+                logger.info("Performing status check...");
+
+                boolean result = false;
+
+                try (ZContext context = new ZContext()) {
+                    ZMQ.Socket socket = context.createSocket(REQ);
+                    socket.connect("tcp://localhost:20883");
+
+                    // use proper messaging
+                    socket.send("STATUS");
+                    String reply = socket.recvStr(0);
+                }
+
+                logger.info("Status check {}", result ? "OK" : "FAIL");
+                logger.info("Shutting down.");
+
+                System.exit(result ? 0 : -1);
+            }
+        }
+
         final Object lock = new Object();
 
         try (final MultiNodeContainer container = injector.getInstance(MultiNodeContainer.class)) {
@@ -70,7 +96,7 @@ public class ApplicationNodeMain {
             logger.info("Interrupted.  Shutting down.");
         }
 
-        logger.info("Container shut downl.  Exiting process.");
+        logger.info("Container shut down.  Exiting process.");
 
     }
 

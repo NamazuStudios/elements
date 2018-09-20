@@ -16,6 +16,7 @@ import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.CLOSE;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.OPEN;
@@ -114,6 +115,18 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
         try (final ZContext context = ZContext.shadow(getzContext());
              final Connection connection = from(context, c -> c.createSocket(PUSH))) {
             connection.socket().connect(getControlAddress());
+
+            final CommandPreamble preamble = new CommandPreamble();
+            preamble.commandType.set(ROUTING_COMMAND);
+
+            ZMsg msg = new ZMsg();
+
+            msg.add(preamble.getByteBuffer());
+            
+            msg.add(command.getByteBuffer());
+
+
+            connection.socket().sendByteBuffer(preamble.getByteBuffer(), SNDMORE);
             connection.socket().sendByteBuffer(command.getByteBuffer(), 0);
         }
     }

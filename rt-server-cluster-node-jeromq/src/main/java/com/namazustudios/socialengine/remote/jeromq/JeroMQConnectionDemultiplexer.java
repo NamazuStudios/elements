@@ -17,6 +17,7 @@ import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.CLOSE;
@@ -26,11 +27,9 @@ import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.IntStream.range;
-import static org.zeromq.ZMQ.PULL;
-import static org.zeromq.ZMQ.PUSH;
+import static org.zeromq.ZMQ.*;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
-import static org.zeromq.ZMQ.ROUTER;
 import static org.zeromq.ZMsg.recvMsg;
 import static zmq.ZError.EHOSTUNREACH;
 
@@ -40,6 +39,8 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
     public static final String BIND_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.bindAddress";
 
+    public static final String STATUS_CHECK_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.statusCheckAddress";
+
     private Routing routing;
 
     private Identity identity;
@@ -47,6 +48,8 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
     private ZContext zContext;
 
     private String bindAddress;
+
+    private String statusCheckAddress;
 
     private final AtomicReference<Thread> routerThread = new AtomicReference<>();
 
@@ -161,6 +164,15 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         this.bindAddress = bindAddress;
     }
 
+    public String getStatusCheckAddress() {
+        return statusCheckAddress;
+    }
+
+    @Inject
+    public void setStatusCheckAddress(@Named(STATUS_CHECK_ADDR) String statusCheckAddress) {
+        this.statusCheckAddress = statusCheckAddress;
+    }
+
     public String getControlAddress() {
         return controlAddress;
     }
@@ -173,7 +185,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
             try (final ZContext context = ZContext.shadow(getzContext());
                  final ZMQ.Poller poller = context.createPoller(1);
                  final Connection frontend = from(getzContext(), c -> c.createSocket(ROUTER));
-                 final Connection control = from(getzContext(), c -> c.createSocket(PULL));
+                 final Connection control = from(getzContext(), c -> c.createSocket(REP));
                  final RoutingTable backends = new RoutingTable(getzContext(), poller, this::connect);
                  final MonitorThread monitorThread = new MonitorThread(getClass().getSimpleName(), logger, context, frontend.socket())) {
 
@@ -181,6 +193,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                 frontend.socket().setRouterMandatory(true);
                 frontend.socket().bind(getBindAddress());
                 control.socket().bind(getControlAddress());
+                control.socket().bind(getStatusCheckAddress());
 
                 final int frontendIndex = poller.register(frontend.socket(), POLLIN | POLLERR);
                 final int controlIndex = poller.register(control.socket(),  POLLIN | POLLERR);
@@ -316,9 +329,18 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
         private void handleControlMessage(final ZMQ.Socket control, final RoutingTable backends) {
             final ZMsg msg = ZMsg.recvMsg(control);
-            final RoutingCommand command = new RoutingCommand();
-            command.getByteBuffer().put(msg.getFirst().getData());
-            backends.process(command);
+
+            final CommandPreamble preamble = new CommandPreamble();
+
+            preamble.getByteBuffer().put(msg.pop().getData());
+
+            if(preamble.commandType.get() == ROUTING_COMMAND) {
+                final RoutingCommand command = new RoutingCommand();
+                command.getByteBuffer().put(msg.pop().getData());
+
+                backends.process(command);
+            }
+
         }
 
     }
