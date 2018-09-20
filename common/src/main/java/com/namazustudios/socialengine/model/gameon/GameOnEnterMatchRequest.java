@@ -19,7 +19,7 @@ public class GameOnEnterMatchRequest {
     private AppBuildType appBuildType;
 
     @ApiModelProperty("The player attribues, if applicable.  This may be empty or null.")
-    private Map<String, String> playerAttributes;
+    private Map<String, Object> playerAttributes;
 
     @ApiModelProperty("The Match")
     private Match match;
@@ -40,11 +40,11 @@ public class GameOnEnterMatchRequest {
         this.appBuildType = appBuildType;
     }
 
-    public Map<String, String> getPlayerAttributes() {
+    public Map<String, Object> getPlayerAttributes() {
         return playerAttributes;
     }
 
-    public void setPlayerAttributes(Map<String, String> playerAttributes) {
+    public void setPlayerAttributes(Map<String, Object> playerAttributes) {
         this.playerAttributes = playerAttributes;
     }
 

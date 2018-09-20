@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rest.gameon.game;
 
+import com.namazustudios.socialengine.model.gameon.GameOnEnterMatchRequest;
+import com.namazustudios.socialengine.model.gameon.GameOnEnterMatchResponse;
 import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.service.GameOnMatchService;
 import io.swagger.annotations.Api;
@@ -90,28 +92,16 @@ public class GameOnMatchResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Re-Enters a Match",
                   notes = "See: https://developer.amazon.com/docs/gameon/game-api-ref.html#enter-match")
-    public GameOnMatchDetail enterMatch(
+    public GameOnEnterMatchResponse enterMatch(
 
-            @PathParam("matchId")
-            @ApiParam("The match ID.")
-            final String matchId,
+                @PathParam("matchId")
+                @ApiParam("The match ID.")
+                final String matchId,
 
-            @QueryParam("os")
-            @DefaultValue(DeviceOSType.DEFAULT_TYPE_STRING)
-            final DeviceOSType deviceOSType,
+                final GameOnEnterMatchRequest gameOnEnterMatchRequest
 
-            @QueryParam("build")
-            @DefaultValue(AppBuildType.DEFAULT_TYPE_STRING)
-            final AppBuildType appBuildType,
-
-            @QueryParam("playerAttributes")
-            @ApiParam("Custom player attributes.")
-            final String playerAttributes
-
-    ) {
-        return getGameOnMatchService().getMatch(
-                deviceOSType, appBuildType,     // Session related parameters
-                playerAttributes, matchId);     // Filer/query related parameters
+            ) {
+        return getGameOnMatchService().enterMatch(matchId, gameOnEnterMatchRequest);
     }
 
     public GameOnMatchService getGameOnMatchService() {

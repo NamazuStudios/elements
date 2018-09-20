@@ -151,8 +151,9 @@ public class UserGameOnPlayerTournamentService implements GameOnPlayerTournament
                 .build()
                 .postEnterRequest(tournamentId, enterPlayerTournamentRequest);
 
-        final Match inserted = getMatchDao().createMatch(match);
         match.setScope(response.getTournamentId());
+
+        final Match inserted = getMatchDao().createMatch(match);
 
         final Matchmaker matchmaker = getMatchDao()
                 .getMatchmaker(configuration.getAlgorithm())

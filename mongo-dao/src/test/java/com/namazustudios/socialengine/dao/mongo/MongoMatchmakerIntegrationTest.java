@@ -33,6 +33,8 @@ import static org.testng.AssertJUnit.fail;
 @Guice(modules = IntegrationTestModule.class)
 public class MongoMatchmakerIntegrationTest {
 
+    private static final String TEST_SCOPE = "test-scope";
+
     private static final Logger logger = LoggerFactory.getLogger(MongoMatchmakerIntegrationTest.class);
 
     private EmbeddedMongo embeddedMongo;
@@ -50,16 +52,16 @@ public class MongoMatchmakerIntegrationTest {
     private List<Matchmaker.SuccessfulMatchTuple> intermediateSuccessfulMatchTuples = new ArrayList<>();
 
     @DataProvider
-    public static Iterator<Object[]> matchingAlgorithms() {
+    public static Iterator<Object[]> matchingAlgorithmsAndScopes() {
         return asList(MatchingAlgorithm.values())
             .stream()
-            .map(algo -> new Object[]{algo})
+            .flatMap(algo -> Stream.of(new Object[]{algo, null}, new Object[]{algo, TEST_SCOPE}))
             .collect(toList())
             .iterator();
     }
 
-    @Test(dataProvider = "matchingAlgorithms")
-    public void testMatch(final MatchingAlgorithm matchingAlgorithm) {
+    @Test(dataProvider = "matchingAlgorithmsAndScopes")
+    public void testMatch(final MatchingAlgorithm matchingAlgorithm, final String scope) {
 
         logger.info("Testing matching algorithm {}", matchingAlgorithm);
 
@@ -71,7 +73,7 @@ public class MongoMatchmakerIntegrationTest {
         final Profile profilea = getMatchingMockObjects().makeMockProfile(usera, application);
         final Profile profileb = getMatchingMockObjects().makeMockProfile(userb, application);
 
-        final Match matcha = getMatchDao().createMatch(makeMockMatch(profilea));
+        final Match matcha = getMatchDao().createMatch(makeMockMatch(profilea, scope));
 
         try {
             getMatchDao().getMatchmaker(matchingAlgorithm)
@@ -81,11 +83,12 @@ public class MongoMatchmakerIntegrationTest {
             logger.info("Caught expected exception.");
         }
 
-        final Match matchb = getMatchDao().createMatch(makeMockMatch(profileb));
+        final Match matchb = getMatchDao().createMatch(makeMockMatch(profileb, scope));
 
         final Matchmaker.SuccessfulMatchTuple successfulMatchTuple;
         successfulMatchTuple = getMatchDao()
             .getMatchmaker(FIFO)
+            .withScope(scope)
             .attemptToFindOpponent(matchb, (p, o) -> Stream.of(p.getId(), o.getId()).sorted().collect(joining("+")));
 
         // Cross validates that the matches were made properly
@@ -96,6 +99,9 @@ public class MongoMatchmakerIntegrationTest {
 
         final MongoMatch mongoMatchb;
         mongoMatchb = getAdvancedDatastore().get(MongoMatch.class, new ObjectId(successfulMatchTuple.getOpponentMatch().getId()));
+
+        assertEquals(mongoMatcha.getScope(), scope);
+        assertEquals(mongoMatchb.getScope(), scope);
 
         assertNotNull(mongoMatcha.getExpiry());
         assertNotNull(mongoMatchb.getExpiry());
@@ -113,10 +119,11 @@ public class MongoMatchmakerIntegrationTest {
 
     }
 
-    private Match makeMockMatch(final Profile profile) {
+    private Match makeMockMatch(final Profile profile, final String scope) {
         final Match match = new Match();
         match.setPlayer(profile);
         match.setScheme("pvp");
+        match.setScope(scope);
         return match;
     }
 
@@ -126,6 +133,9 @@ public class MongoMatchmakerIntegrationTest {
 
         final Match playerMatch = successfulMatchTuple.getPlayerMatch();
         final Match opponentMatch = successfulMatchTuple.getOpponentMatch();
+
+        assertEquals(playerMatch.getScope(), opponentMatch.getScope());
+        assertEquals(playerMatch.getScheme(), opponentMatch.getScheme());
 
         assertEquals(playerMatch.getPlayer(), player);
         assertEquals(playerMatch.getOpponent(), opponent);
