@@ -6,6 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
+local log = require "namazu.log"
 local http_client = require "namazu.http.client"
 
 local math = require "math"
@@ -51,7 +52,9 @@ function match_client:submit_score(score)
 
     if (status ~= 200)
     then
-        error{ status = status, message = response and response.message or "<unknown>" }
+        local message = response and response.message or "<unknown>"
+        log.error("HTTP Status {}. Response {}.  Message {}", status, response, message)
+        error{ status = status, message = message }
     end
 
 end
