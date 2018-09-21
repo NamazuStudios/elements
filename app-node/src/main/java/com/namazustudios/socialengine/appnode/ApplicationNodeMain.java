@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.appnode;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.appnode.guice.JaxRSClientModule;
@@ -10,12 +9,9 @@ import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
-
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.rt.MultiNodeContainer;
-import com.namazustudios.socialengine.service.BuildPropertiesVersionService;
-import com.namazustudios.socialengine.service.VersionService;
 import com.namazustudios.socialengine.service.firebase.guice.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNotificationFactoryModule;
 import org.apache.bval.guice.ValidationModule;

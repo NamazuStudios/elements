@@ -63,7 +63,7 @@ public class HttpClientBuiltin implements Builtin {
             (PUT.equals(method) || POST.equals(method)) && (requestEntity != null) ?
                 builder.rx().method(method, requestEntity, new GenericType<Response>(){}) :
                 builder.rx().method(method, new GenericType<Response>(){});
-
+    
         responseCompletionStage
             .exceptionally(th -> null)
             .handleAsync((response, throwable) -> {
