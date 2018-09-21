@@ -1,4 +1,6 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
-public class StatusRequest {
+import javolution.io.Struct;
+
+public class StatusRequest extends Struct {
 }

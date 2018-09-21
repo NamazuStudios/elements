@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
-import com.namazustudios.socialengine.rt.remote.PackedUUID;
 import javolution.io.Struct;
 
 public class CommandPreamble extends Struct {
@@ -23,7 +22,12 @@ public class CommandPreamble extends Struct {
     /**
      * A StatusRequest
      */
-    STATUS
+    STATUS_REQUEST,
+
+    /**
+     * A StatusResponse
+     */
+    STATUS_RESPONSE
 
     }
 

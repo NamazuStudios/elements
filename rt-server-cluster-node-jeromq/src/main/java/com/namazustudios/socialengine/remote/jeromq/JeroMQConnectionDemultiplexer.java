@@ -7,13 +7,11 @@ import com.namazustudios.socialengine.rt.remote.MalformedMessageException;
 import com.namazustudios.socialengine.rt.remote.RoutingHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.ZContext;
-import org.zeromq.ZMQ;
-import org.zeromq.ZMQException;
-import org.zeromq.ZMsg;
+import org.zeromq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -124,8 +122,34 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
     private void issue(final RoutingCommand command) {
         try (final Connection connection = from(getzContext(), c -> c.createSocket(PUSH))) {
             connection.socket().connect(getControlAddress());
-            connection.socket().sendByteBuffer(command.getByteBuffer(), 0);
+            issue(connection.socket(), CommandPreamble.CommandType.ROUTING_COMMAND, command.getByteBuffer());
         }
+    }
+
+    private void issue(final StatusResponse statusResponse) {
+        try (final Connection connection = from(getzContext(), c -> c.createSocket(PUSH))) {
+            connection.socket().connect(getControlAddress());
+            issue(connection.socket(), CommandPreamble.CommandType.STATUS_RESPONSE, statusResponse.getByteBuffer());
+        }
+    }
+
+    private void issue(final ZMQ.Socket control, CommandPreamble.CommandType commandType, ByteBuffer commandByteBuffer) {
+        final CommandPreamble preamble = new CommandPreamble();
+        preamble.commandType.set(commandType);
+
+        ZMsg msg = new ZMsg();
+
+        ByteBuffer preambleByteBuffer = preamble.getByteBuffer();
+        byte[] preambleBytes = new byte[preambleByteBuffer.remaining()];
+        preambleByteBuffer.get(preambleBytes);
+
+        byte[] commandBytes = new byte[commandByteBuffer.remaining()];
+        commandByteBuffer.get(commandBytes);
+
+        msg.add(new ZFrame(preambleBytes));
+        msg.add(new ZFrame(commandBytes));
+
+        msg.send(control);
     }
 
     public Identity getIdentity() {
@@ -329,16 +353,23 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
         private void handleControlMessage(final ZMQ.Socket control, final RoutingTable backends) {
             final ZMsg msg = ZMsg.recvMsg(control);
-
             final CommandPreamble preamble = new CommandPreamble();
 
             preamble.getByteBuffer().put(msg.pop().getData());
 
-            if(preamble.commandType.get() == ROUTING_COMMAND) {
-                final RoutingCommand command = new RoutingCommand();
-                command.getByteBuffer().put(msg.pop().getData());
+            switch(preamble.commandType.get()) {
+                case STATUS_REQUEST:
+                    issue(control, CommandPreamble.CommandType.STATUS_RESPONSE, new StatusResponse().getByteBuffer());
 
-                backends.process(command);
+                    break;
+
+                case ROUTING_COMMAND:
+                    final RoutingCommand command = new RoutingCommand();
+                    command.getByteBuffer().put(msg.pop().getData());
+
+                    backends.process(command);
+
+                    break;
             }
 
         }
