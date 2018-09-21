@@ -6,6 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
+local log = require "namazu.log"
 local ioc = require "namazu.ioc.resolver"
 local http_client = require "namazu.http.client"
 local util = require "namazu.util"
@@ -106,7 +107,9 @@ function session_client:authenticate_with_options(options)
     then
         return session_client:create(response)
     else
-        error{ status = status, message = response.message }
+        local message = response and response.message or "<unknown>"
+        log.error("HTTP Status {}. Response {}.  Message {}", status, response, message)
+        error{ status = status, message = message }
     end
 
 end
