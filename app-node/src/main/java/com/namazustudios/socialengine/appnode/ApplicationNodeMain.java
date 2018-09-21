@@ -15,6 +15,7 @@ import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.rt.MultiNodeContainer;
 import com.namazustudios.socialengine.rt.jeromq.CommandPreamble;
 import com.namazustudios.socialengine.rt.jeromq.Connection;
+import com.namazustudios.socialengine.rt.jeromq.JeroMQSocketHost;
 import com.namazustudios.socialengine.rt.jeromq.StatusRequest;
 import com.namazustudios.socialengine.service.firebase.guice.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNotificationFactoryModule;
@@ -25,11 +26,17 @@ import org.zeromq.ZContext;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMsg;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.nio.ByteBuffer;
+import java.util.Properties;
 
+import static com.namazustudios.socialengine.appnode.Constants.STATUS_CHECK_TIMEOUT;
+import static com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.STATUS_CHECK_ADDR;
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND;
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_REQUEST;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
+import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
 import static org.zeromq.ZMQ.PUSH;
 import static org.zeromq.ZMQ.REP;
@@ -62,47 +69,44 @@ public class ApplicationNodeMain {
             new VersionModule()
         );
 
+        // quick and dirty arg check - may want to leverage command processing from Setup module
+
         for (String arg : args) {
             if(arg.equalsIgnoreCase("--status-check")) {
-                logger.info("Performing status check...");
+                final Properties properties = defaultConfigurationSupplier.get();
+
+                String statusCheckAddress = properties.getProperty(STATUS_CHECK_ADDR);
+
+                logger.info(format("Performing status check on %s...", statusCheckAddress));
 
                 boolean result = false;
 
                 try (ZContext context = new ZContext()) {
                     try (final Connection connection = from(context, c -> c.createSocket(REQ))) {
-                        connection.socket().connect("tcp://localhost:20883");
+                        connection.socket().connect(properties.getProperty(STATUS_CHECK_ADDR));
 
-                        connection.socket().setReceiveTimeOut(500);
+                        try {
+                            connection.socket().setReceiveTimeOut(Integer.parseInt(properties.getProperty(STATUS_CHECK_TIMEOUT)));
+                        }
+                        catch (NumberFormatException e) {
+                            // use default timeout
+                        }
 
-                        final CommandPreamble reqPreamble = new CommandPreamble();
-                        final StatusRequest statusRequest = new StatusRequest();
-
-                        reqPreamble.commandType.set(STATUS_REQUEST);
-
-                        ZMsg req = new ZMsg();
-
-                        ByteBuffer reqPreambleByteBuffer = reqPreamble.getByteBuffer();
-                        byte[] regPreambleBytes = new byte[reqPreambleByteBuffer.remaining()];
-                        reqPreambleByteBuffer.get(regPreambleBytes );
-
-                        ByteBuffer statusRequestByteBuffer = statusRequest.getByteBuffer();
-                        byte[] statusRequestBytes = new byte[statusRequestByteBuffer.remaining()];
-                        statusRequestByteBuffer.get(statusRequestBytes);
-
-                        req.add(new ZFrame(regPreambleBytes));
-                        req.add(new ZFrame(statusRequestBytes));
-
-                        req.send(connection.socket());
+                        JeroMQSocketHost.issue(connection.socket(), STATUS_REQUEST,  new StatusRequest().getByteBuffer());
 
                         final ZMsg resp = ZMsg.recvMsg(connection.socket());
-                        final CommandPreamble respPreamble = new CommandPreamble();
 
-                        respPreamble.getByteBuffer().put(resp.pop().getData());
+                        if(null != resp) {
+                            final CommandPreamble respPreamble = new CommandPreamble();
 
-                        if(respPreamble.commandType.get() == CommandPreamble.CommandType.STATUS_RESPONSE) {
-                            // actual content of the StatusResponse is not important right now
+                            respPreamble.getByteBuffer().put(resp.pop().getData());
 
-                            result = true;
+                            if(respPreamble.commandType.get() == CommandPreamble.CommandType.STATUS_RESPONSE) {
+                                // actual content of the StatusResponse is not important right now
+
+                                result = true;
+                            }
+
                         }
 
                     }

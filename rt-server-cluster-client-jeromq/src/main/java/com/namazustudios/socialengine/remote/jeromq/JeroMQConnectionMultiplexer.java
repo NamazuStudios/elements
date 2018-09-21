@@ -112,34 +112,15 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
     private void issue(final RoutingCommand command) {
         try (final Connection connection = from(getzContext(), c -> c.createSocket(PUSH))) {
             connection.socket().connect(getControlAddress());
-            issue(connection.socket(), CommandPreamble.CommandType.ROUTING_COMMAND, command.getByteBuffer());
+            JeroMQSocketHost.issue(connection.socket(), CommandPreamble.CommandType.ROUTING_COMMAND, command.getByteBuffer());
         }
     }
 
     private void issue(final StatusResponse statusResponse) {
         try (final Connection connection = from(getzContext(), c -> c.createSocket(PUSH))) {
             connection.socket().connect(getControlAddress());
-            issue(connection.socket(), CommandPreamble.CommandType.STATUS_RESPONSE, statusResponse.getByteBuffer());
+            JeroMQSocketHost.issue(connection.socket(), CommandPreamble.CommandType.STATUS_RESPONSE, statusResponse.getByteBuffer());
         }
-    }
-
-    private void issue(final ZMQ.Socket control, CommandPreamble.CommandType commandType, ByteBuffer commandByteBuffer) {
-        final CommandPreamble preamble = new CommandPreamble();
-        preamble.commandType.set(commandType);
-
-        ZMsg msg = new ZMsg();
-
-        ByteBuffer preambleByteBuffer = preamble.getByteBuffer();
-        byte[] preambleBytes = new byte[preambleByteBuffer.remaining()];
-        preambleByteBuffer.get(preambleBytes);
-
-        byte[] commandBytes = new byte[commandByteBuffer.remaining()];
-        commandByteBuffer.get(commandBytes);
-
-        msg.add(new ZFrame(preambleBytes));
-        msg.add(new ZFrame(commandBytes));
-
-        msg.send(control);
     }
 
     public Routing getRouting() {
@@ -282,7 +263,7 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
             switch(preamble.commandType.get()) {
                 case STATUS_REQUEST:
-                    issue(control, CommandPreamble.CommandType.STATUS_RESPONSE, new StatusResponse().getByteBuffer());
+                    JeroMQSocketHost.issue(control, CommandPreamble.CommandType.STATUS_RESPONSE, new StatusResponse().getByteBuffer());
 
                     break;
 
