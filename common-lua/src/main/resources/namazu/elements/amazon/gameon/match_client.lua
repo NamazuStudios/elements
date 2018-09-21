@@ -51,7 +51,7 @@ function match_client:submit_score(score)
 
     if (status ~= 200)
     then
-        error{ status = status, message = response.message }
+        error{ status = status, message = response and response.message or "<unknown>" }
     end
 
 end
