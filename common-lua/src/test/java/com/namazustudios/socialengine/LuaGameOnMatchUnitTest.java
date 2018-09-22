@@ -92,7 +92,7 @@ public class LuaGameOnMatchUnitTest {
         verify(getClient(), times(1)).target("https://api.amazongameon.com/v1");
         verify(webTarget, times(1)).path("/matches/" + matchId + "/score");
         verify(completionStageRxInvoker, times(1)).method(
-            matches("POST"),
+            matches("PUT"),
             argThat((Entity<Object> entity) -> {
                 final Map<String, Object> request = (Map<String, Object>) entity.getEntity();
                 final int score = ((Number)request.get("score")).intValue();

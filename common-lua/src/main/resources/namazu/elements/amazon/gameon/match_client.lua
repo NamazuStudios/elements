@@ -33,7 +33,7 @@ function match_client:submit_score(score)
     print("Score " .. tostring(score))
 
     local request = {
-        method = "POST",
+        method = "PUT",
         base = gameon_constants.USER_BASE_URI,
         path = match_client.PATH .. "/" .. self.matchId .. match_client.SCORE_PATH,
         headers = {
