@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.dao.MatchmakingApplicationConfigurationDao
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
 import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
+import com.namazustudios.socialengine.model.gameon.TournamentEntryMetadata;
 import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -18,11 +19,11 @@ import com.namazustudios.socialengine.service.gameon.client.model.EnterTournamen
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.io.Serializable;
+import java.util.*;
 import java.util.function.Supplier;
 
+import static com.namazustudios.socialengine.GameOnConstants.TOURNAMENT_ENTRY_METADATA_KEY;
 import static com.namazustudios.socialengine.model.gameon.game.MatchFilter.live;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -151,6 +152,13 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
             .postEnterRequest(tournamentId, enterTournamentRequest);
 
         match.setScope(response.getTournamentId());
+
+        final Map<String, Serializable> metadata = new HashMap<>();
+        final TournamentEntryMetadata tournamentEntryMetadata = new TournamentEntryMetadata();
+        tournamentEntryMetadata.setMatchId(response.getMatchId());
+        tournamentEntryMetadata.setTournamentId(response.getTournamentId());
+        metadata.put(TOURNAMENT_ENTRY_METADATA_KEY, tournamentEntryMetadata);
+        match.setMetadata(metadata);
 
         final Match inserted = getMatchDao().createMatch(match);
 

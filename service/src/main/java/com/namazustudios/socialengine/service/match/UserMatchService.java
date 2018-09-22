@@ -18,9 +18,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import static java.util.Collections.emptyMap;
 
 /**
  * Created by patricktwohig on 7/20/17.
@@ -73,6 +76,8 @@ public class UserMatchService implements MatchService {
         } else if (match.getOpponent() != null) {
             throw new InvalidDataException("must not specify opponent when creating a match.");
         }
+
+        match.setMetadata(emptyMap());
 
         final Match newMatch = getMatchDao().createMatch(match);
         return attempt(newMatch);

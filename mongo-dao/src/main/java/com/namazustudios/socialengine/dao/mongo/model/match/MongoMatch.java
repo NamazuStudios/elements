@@ -10,6 +10,7 @@ import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
 import java.sql.Timestamp;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -77,6 +78,9 @@ public class MongoMatch {
     @Indexed
     @Embedded
     private MongoMatchLock lock;
+
+    @Embedded
+    private Map<String, Object> metadata;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -150,6 +154,14 @@ public class MongoMatch {
         this.lock = lock;
     }
 
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -163,12 +175,14 @@ public class MongoMatch {
                 Objects.equals(getLastUpdatedTimestamp(), that.getLastUpdatedTimestamp()) &&
                 Objects.equals(getGameId(), that.getGameId()) &&
                 Objects.equals(getExpiry(), that.getExpiry()) &&
-                Objects.equals(getLock(), that.getLock());
+                Objects.equals(getLock(), that.getLock()) &&
+                Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getPlayer(), getScheme(), getScope(), getOpponent(), getLastUpdatedTimestamp(), getGameId(), getExpiry(), getLock());
+
+        return Objects.hash(getObjectId(), getPlayer(), getScheme(), getScope(), getOpponent(), getLastUpdatedTimestamp(), getGameId(), getExpiry(), getLock(), getMetadata());
     }
 
     @Override
@@ -183,6 +197,7 @@ public class MongoMatch {
                 ", gameId='" + gameId + '\'' +
                 ", expiry=" + expiry +
                 ", lock=" + lock +
+                ", metadata=" + metadata +
                 '}';
     }
 
