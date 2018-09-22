@@ -65,7 +65,7 @@ public class HttpClientBuiltin implements Builtin {
                 builder.rx().method(method, requestEntity, new GenericType<Response>(){}) :
                 builder.rx().method(method, new GenericType<Response>(){});
 
-        if (true || logger.isDebugEnabled()) {
+        if (logger.isDebugEnabled()) {
             final StringBuilder req = new StringBuilder();
             req.append(format("%s %s\n", method, target.getUri()));
             getOptionalMultiField(l, "headers", (k, v) -> req.append(k).append(": ").append(v).append('\n'));
