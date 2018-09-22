@@ -67,7 +67,7 @@ public class HttpClientBuiltin implements Builtin {
 
         if (true || logger.isDebugEnabled()) {
             final StringBuilder req = new StringBuilder();
-            req.append(format("%s %s", method, target.getUri()));
+            req.append(format("%s %s\n", method, target.getUri()));
             getOptionalMultiField(l, "headers", (k, v) -> req.append(k).append(": ").append(v).append('\n'));
             logger.debug("HTTP Request: \n{}\n", req);
         }
