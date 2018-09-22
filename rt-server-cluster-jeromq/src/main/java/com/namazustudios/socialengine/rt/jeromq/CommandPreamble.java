@@ -20,6 +20,11 @@ public class CommandPreamble extends Struct {
     ROUTING_COMMAND,
 
     /**
+     * A RoutingCommand acknowledgement
+     */
+    ROUTING_COMMAND_ACK,
+
+    /**
      * A StatusRequest
      */
     STATUS_REQUEST,
