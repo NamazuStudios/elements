@@ -6,10 +6,11 @@ import com.namazustudios.socialengine.model.match.Match;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 @ApiModel(description = "Contains the information necessary to enter a GameOn player tournament.")
-public class GameOnPlayerTournamentEnterRequest {
+public class GameOnPlayerTournamentEnterRequest implements Serializable {
 
     @ApiModelProperty("The device OS Type, used to create or reference the session.")
     private DeviceOSType deviceOSType;
