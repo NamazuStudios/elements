@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine;
 
 
-import com.namazustudios.socialengine.model.gameon.TournamentEntryMetadata;
 import com.namazustudios.socialengine.model.match.Match;
 
 public interface GameOnConstants {
@@ -39,9 +38,13 @@ public interface GameOnConstants {
     String GAMEON_ADMIN_SERVICE_ROOT = "com.namazustudios.socialengine.gameon.admin.service.root";
 
     /**
-     * The metadata key for use with the {@link Match#getMetadata()} property.  An instance of
-     * {@link TournamentEntryMetadata} will be set to this key.
+     * The metadata key for use with the {@link Match#getMetadata()} property to indicate the match ID
      */
-    String TOURNAMENT_ENTRY_METADATA_KEY = "gameon";
+    String MATCH_METADATA_MATCH_ID = "gameOnMatchId";
+
+    /**
+     * The metadata key for use with the {@link Match#getMetadata()} property to indicate the tournament ID
+     */
+    String MATCH_METADATA_TOURNAMENT_ID = "gameOnTournamentId";
 
 }
