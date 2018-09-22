@@ -18,7 +18,7 @@ local constants = {}
 --- The API Key Header Required by Amazon
 constants.API_VERSION = "v1"
 constants.API_KEY_HEADER = "x-api-key"
-constants.SESSION_ID_HEADER = "session-Id"
+constants.SESSION_ID_HEADER = "session-id"
 constants.USER_BASE_URI = "https://api.amazongameon.com/" .. constants.API_VERSION
 constants.ADMIN_BASE_URI = "https://admin-api.amazongameon.com/" .. constants.API_VERSION
 

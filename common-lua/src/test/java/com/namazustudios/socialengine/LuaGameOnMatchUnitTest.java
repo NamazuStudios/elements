@@ -87,6 +87,8 @@ public class LuaGameOnMatchUnitTest {
         getContext().getResourceContext().destroy(resourceId);
         assertNull(result);
 
+        verify(invocationBuilder, times(1)).header(eq("session-id"), eq(sessionId));
+        verify(invocationBuilder, times(1)).header(eq("x-api-key"), eq(sessionApiKey));
         verify(getClient(), times(1)).target("https://api.amazongameon.com/v1");
         verify(webTarget, times(1)).path("/matches/" + matchId + "/score");
         verify(completionStageRxInvoker, times(1)).method(

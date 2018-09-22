@@ -216,6 +216,20 @@ public class LuaGameOnSessionUnitTest {
 
     }
 
+    @Test
+    public void performMatchClientTest() {
+
+        final Path path = new Path("socialengine-test-" + randomUUID().toString());
+        final ResourceId resourceId = getContext().getResourceContext().create("namazu.elements.test.gameon_session", path);
+
+        final Object result = getContext().getResourceContext().invoke(
+                resourceId, "test_get_match_client");
+        getContext().getResourceContext().destroy(resourceId);
+        assertNull(result);
+
+    }
+
+
     @DataProvider
     public static Object[][] testData() {
 
