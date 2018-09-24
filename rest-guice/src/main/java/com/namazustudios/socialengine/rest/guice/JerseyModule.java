@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.rest.security.UsernamePasswordResource;
 import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
+import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

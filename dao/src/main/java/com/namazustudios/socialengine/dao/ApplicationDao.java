@@ -8,7 +8,10 @@ import com.namazustudios.socialengine.model.application.Application;
 /**
  * Created by patricktwohig on 7/10/15.
  */
-@Expose(module = "namazu.socialengine.dao.application")
+@Expose(modules = {
+    "namazu.elements.dao.application",
+    "namazu.socialengine.dao.application"
+})
 public interface ApplicationDao {
 
     /**

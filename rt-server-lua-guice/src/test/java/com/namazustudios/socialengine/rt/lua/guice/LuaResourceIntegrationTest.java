@@ -62,6 +62,10 @@ public class LuaResourceIntegrationTest {
             {"test.request", "test_unpack_parameters"},
             {"test.request", "test_unpack_path_parameters"},
             {"test.util", "test_uuid"},
+            {"test.util.java", "test_pcallx_happy"},
+            {"test.util.java", "test_pcallx_handle_exception_1"},
+            {"test.util.java", "test_pcallx_handle_exception_2"},
+            {"test.util.java", "test_pcallx_handle_exception_3"},
             {"test.resource", "test_create"},
             {"test.resource", "test_invoke"},
             {"test.resource", "test_invoke_fail"},
@@ -80,7 +84,7 @@ public class LuaResourceIntegrationTest {
             {"test.javamodule", "test_return_hello_world"},
             {"test.javamodule", "test_overload_1"},
             {"test.javamodule", "test_overload_2"},
-            {"test.response", "test_simple_response"}
+            {"test.response", "test_simple_response"},
         };
     }
 
@@ -129,6 +133,26 @@ public class LuaResourceIntegrationTest {
 
         try {
             getContext().getResourceContext().invoke(resourceId, "lua_runtime_exception");
+            fail("Expected exception by this pointl");
+        } catch (LuaRuntimeException ex) {
+            // Pass Test
+            return;
+        } catch (Exception ex) {
+            fail("Failed with exception.", ex);
+        } finally {
+            getContext().getResourceContext().destroy(resourceId);
+        }
+
+    }
+
+    @Test
+    public void testPcallxThrowsUnhandled() {
+
+        final Path path = new Path(randomUUID().toString());
+        final ResourceId resourceId = getContext().getResourceContext().create("test.util.java", path);
+
+        try {
+            getContext().getResourceContext().invoke(resourceId, "test_pcallx_unhandled");
             fail("Expected exception by this pointl");
         } catch (LuaRuntimeException ex) {
             // Pass Test

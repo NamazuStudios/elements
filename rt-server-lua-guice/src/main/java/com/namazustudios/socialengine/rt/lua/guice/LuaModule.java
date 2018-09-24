@@ -117,9 +117,9 @@ public class LuaModule extends PrivateModule {
         final Set<Class<?>> classSet = reflections.getTypesAnnotatedWith(Expose.class);
 
         classSet.stream()
-                .filter(cls -> cls.getAnnotation(Expose.class) != null)
-                .collect(Collectors.toMap(cls -> cls.getAnnotation(Expose.class), identity()))
-                .forEach((expose, type) -> bindModuleBuiltin(type).toModuleNamed(expose.module()));
+            .filter(cls -> cls.getAnnotation(Expose.class) != null)
+            .collect(Collectors.toMap(cls -> cls.getAnnotation(Expose.class), identity()))
+            .forEach((expose, type) -> bindModuleBuiltin(type).toModulesNamed(expose.modules()));
 
         return this;
 
@@ -149,10 +149,15 @@ public class LuaModule extends PrivateModule {
 
         final Provider<?> provider = getProvider(cls);
 
-        return moduleName -> {
-            visitors.accept(moduleName, (Class<Object>) cls);
-            builtinMultibinder.addBinding().toProvider(() -> new JavaObjectModuleBuiltin(moduleName, provider));
+        return moduleNames -> {
+
+            for (final String moduleName : moduleNames) {
+                visitors.accept(moduleName, (Class<Object>) cls);
+                builtinMultibinder.addBinding().toProvider(() -> new JavaObjectModuleBuiltin(moduleName, provider));
+            }
+
             return this;
+
         };
 
     }
@@ -166,9 +171,9 @@ public class LuaModule extends PrivateModule {
         /**
          * Specifies the module.
          *
-         * @param moduleName the module name.
+         * @param moduleNames the module name.
          */
-        LuaModule toModuleNamed(final String moduleName);
+        LuaModule toModulesNamed(final String[] moduleNames);
 
     }
 

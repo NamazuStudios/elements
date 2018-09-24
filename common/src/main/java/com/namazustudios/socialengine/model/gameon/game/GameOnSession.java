@@ -107,11 +107,11 @@ public class GameOnSession implements Serializable {
         if (this == object) return true;
         if (!(object instanceof GameOnSession)) return false;
         GameOnSession that = (GameOnSession) object;
-        return getSessionExpirationDate() == that.getSessionExpirationDate() &&
-                Objects.equals(getId(), that.getId()) &&
+        return Objects.equals(getId(), that.getId()) &&
                 getDeviceOSType() == that.getDeviceOSType() &&
                 Objects.equals(getSessionId(), that.getSessionId()) &&
                 Objects.equals(getSessionApiKey(), that.getSessionApiKey()) &&
+                Objects.equals(getSessionExpirationDate(), that.getSessionExpirationDate()) &&
                 Objects.equals(getProfile(), that.getProfile()) &&
                 getAppBuildType() == that.getAppBuildType();
     }

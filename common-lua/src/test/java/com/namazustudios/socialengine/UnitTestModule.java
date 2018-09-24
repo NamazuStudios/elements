@@ -10,7 +10,9 @@ import org.mockito.Mockito;
 
 import javax.ws.rs.client.Client;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static java.util.UUID.randomUUID;
 import static org.mockito.Mockito.spy;
@@ -45,7 +47,9 @@ public class UnitTestModule extends AbstractModule {
 
     private class MockModule extends AbstractModule {
 
-        private List<Runnable> bindings = new ArrayList<Runnable>();
+        private Set<Class<?>> types = new HashSet<>();
+
+        private List<Runnable> bindings = new ArrayList<>();
 
         @Override
         protected void configure() {
@@ -53,8 +57,10 @@ public class UnitTestModule extends AbstractModule {
         }
 
         public <T> void mock(final Class<T> type) {
-            final T mock = Mockito.mock(type);
-            bind(mock, type);
+            if (types.add(type)) {
+                final T mock = Mockito.mock(type);
+                bind(mock, type);
+            }
         }
 
         private <T> void bind(final T mock, final Class<T> binding) {

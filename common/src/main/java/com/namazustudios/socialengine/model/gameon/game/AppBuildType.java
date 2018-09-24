@@ -21,7 +21,7 @@ public enum AppBuildType {
     public static final String DEFAULT_TYPE_STRING = "release";
 
     /**
-     * The default type when not specified.  Currently defaults to {@link #html} per Amazon's recommendation.
+     * The default type when not specified.  Currently defaults to {@link #release} per Amazon's recommendation.
      *
      * @return the default OS type.
      */
