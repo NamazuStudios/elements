@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.service;
 
-import com.namazustudios.socialengine.model.gameon.GameOnPlayerTournamentEnterRequest;
-import com.namazustudios.socialengine.model.gameon.GameOnPlayerTournamentEnterResponse;
+import com.namazustudios.socialengine.model.gameon.game.GameOnPlayerTournamentEnterRequest;
+import com.namazustudios.socialengine.model.gameon.game.GameOnPlayerTournamentEnterResponse;
 import com.namazustudios.socialengine.model.gameon.game.*;
 
 import java.util.List;

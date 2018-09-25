@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.gameon;
+package com.namazustudios.socialengine.model.gameon.game;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

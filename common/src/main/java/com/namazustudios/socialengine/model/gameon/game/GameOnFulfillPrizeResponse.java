@@ -1,5 +1,6 @@
-package com.namazustudios.socialengine.model.gameon;
+package com.namazustudios.socialengine.model.gameon.game;
 
+import com.namazustudios.socialengine.model.gameon.GameOnPrizeInfoType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -7,8 +8,8 @@ import java.util.List;
 import java.util.Objects;
 
 @ApiModel(description = "Corresponds to the GameOn Prize Claim Response: " +
-                        "https://developer.amazon.com/docs/gameon/game-api-ref.html#claimprizelistresponse")
-public class GameOnClaimPrizeListResponse {
+                        "https://developer.amazon.com/docs/gameon/game-api-ref.html#fulfillprizelistresponse")
+public class GameOnFulfillPrizeResponse {
 
     @ApiModelProperty("The GameOn Assigned external player ID.")
     private String externalPlayerId;
@@ -17,7 +18,7 @@ public class GameOnClaimPrizeListResponse {
     private List<String> failedAwardedPrizeIds;
 
     @ApiModelProperty("A list of successfully claimed prizes.")
-    private List<ClaimedPrize> prizes;
+    private List<GameOnClaimPrizeListResponse.ClaimedPrize> prizes;
 
     public String getExternalPlayerId() {
         return externalPlayerId;
@@ -35,11 +36,11 @@ public class GameOnClaimPrizeListResponse {
         this.failedAwardedPrizeIds = failedAwardedPrizeIds;
     }
 
-    public List<ClaimedPrize> getPrizes() {
+    public List<GameOnClaimPrizeListResponse.ClaimedPrize> getPrizes() {
         return prizes;
     }
 
-    public void setPrizes(List<ClaimedPrize> prizes) {
+    public void setPrizes(List<GameOnClaimPrizeListResponse.ClaimedPrize> prizes) {
         this.prizes = prizes;
     }
 
@@ -67,8 +68,8 @@ public class GameOnClaimPrizeListResponse {
                 '}';
     }
 
-    @ApiModel(description = "Corresponds to the Claimed Prize Response: " +
-                            "https://developer.amazon.com/docs/gameon/game-api-ref.html#claimprizelistresponse_claimedprize")
+    @ApiModel(description = "Corresponds to the Fulfilled Prize Response: " +
+                            "https://developer.amazon.com/docs/gameon/game-api-ref.html#fulfillprizelistresponse_fulfilledprize")
     public static class ClaimedPrize {
 
         @ApiModelProperty("The GameOn match ID that was used to claim this prize.")
@@ -81,7 +82,7 @@ public class GameOnClaimPrizeListResponse {
         private GameOnPrizeInfoType prizeInfoType;
 
         @ApiModelProperty("The claimed prize status.")
-        private GameOnPrizeClaimStatus status;
+        private GameOnPrizeFulfilledStatus status;
 
         public String getMatchId() {
             return matchId;
@@ -107,11 +108,11 @@ public class GameOnClaimPrizeListResponse {
             this.prizeInfoType = prizeInfoType;
         }
 
-        public GameOnPrizeClaimStatus getStatus() {
+        public GameOnPrizeFulfilledStatus getStatus() {
             return status;
         }
 
-        public void setStatus(GameOnPrizeClaimStatus status) {
+        public void setStatus(GameOnPrizeFulfilledStatus status) {
             this.status = status;
         }
 
@@ -128,6 +129,7 @@ public class GameOnClaimPrizeListResponse {
 
         @Override
         public int hashCode() {
+
             return Objects.hash(getMatchId(), getPrizeInfo(), getPrizeInfoType(), getStatus());
         }
 

@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.service;
 
-import com.namazustudios.socialengine.model.gameon.GameOnEnterMatchRequest;
-import com.namazustudios.socialengine.model.gameon.GameOnEnterMatchResponse;
+import com.namazustudios.socialengine.model.gameon.game.GameOnEnterMatchRequest;
+import com.namazustudios.socialengine.model.gameon.game.GameOnEnterMatchResponse;
 import com.namazustudios.socialengine.model.gameon.game.*;
 
 /**

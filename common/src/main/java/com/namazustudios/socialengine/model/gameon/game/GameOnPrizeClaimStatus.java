@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.gameon;
+package com.namazustudios.socialengine.model.gameon.game;
 
 public enum GameOnPrizeClaimStatus {
 
