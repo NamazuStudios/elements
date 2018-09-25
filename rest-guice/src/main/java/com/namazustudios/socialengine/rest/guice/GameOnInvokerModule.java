@@ -12,6 +12,7 @@ public class GameOnInvokerModule extends AbstractModule {
         bind(GameOnTournamentInvoker.Builder.class).to(DefaultGameOnTournamentInvokerBuilder.class);
         bind(GameOnPlayerTournamentInvoker.Builder.class).to(DefaultGameOnPlayerTournamentInvokerBuilder.class);
         bind(GameOnMatchInvoker.Builder.class).to(DefaultGameOnMatchInvokerBuilder.class);
-        bind(GameOnPrizeInvoker.Builder.class).to(DefaultGameOnPrizeInvokerBuilder.class);
+        bind(GameOnAdminPrizeInvoker.Builder.class).to(DefaultGameOnPrizeInvokerBuilder.class);
+        bind(GameOnGamePrizeInvoker.Builder.class).to(DefaultGameOnGamePrizeInvokerBuilder.class);
     }
 }

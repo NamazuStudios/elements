@@ -9,7 +9,7 @@ import java.util.Objects;
 
 @ApiModel(description = "Corresponds to the GameOn Prize Claim Response: " +
                         "https://developer.amazon.com/docs/gameon/game-api-ref.html#fulfillprizelistresponse")
-public class GameOnFulfillPrizeResponse {
+public class GameOnFulfillPrizeListResponse {
 
     @ApiModelProperty("The GameOn Assigned external player ID.")
     private String externalPlayerId;

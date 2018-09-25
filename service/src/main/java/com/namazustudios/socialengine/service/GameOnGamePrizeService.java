@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.model.gameon.game.GameOnClaimPrizeListRequest;
 import com.namazustudios.socialengine.model.gameon.game.GameOnClaimPrizeListResponse;
 import com.namazustudios.socialengine.model.gameon.game.GameOnFulfillPrizeRequest;
-import com.namazustudios.socialengine.model.gameon.game.GameOnFulfillPrizeResponse;
+import com.namazustudios.socialengine.model.gameon.game.GameOnFulfillPrizeListResponse;
 
 /**
  * Provides interaction with GameOn for prizes from the User/Player perspective.
@@ -22,8 +22,8 @@ public interface GameOnGamePrizeService {
      * Fulfills all prizes contains in the supplied {@link GameOnFulfillPrizeRequest}.
      *
      * @param gameOnFulfillPrizeRequest
-     * @return an instance of {@link GameOnFulfillPrizeResponse}
+     * @return an instance of {@link GameOnFulfillPrizeListResponse}
      */
-    GameOnFulfillPrizeResponse fulfill(GameOnFulfillPrizeRequest gameOnFulfillPrizeRequest);
+    GameOnFulfillPrizeListResponse fulfill(GameOnFulfillPrizeRequest gameOnFulfillPrizeRequest);
 
 }

@@ -35,7 +35,7 @@ public class GameOnPrizeResource {
     @ApiOperation(
             value = "Fulfills Prizes.",
             notes = "See: https://developer.amazon.com/docs/gameon/game-api-ref.html#fulfill-prizes")
-    public GameOnFulfillPrizeResponse fulfillPrizes(final GameOnFulfillPrizeRequest gameOnFulfillPrizeRequest) {
+    public GameOnFulfillPrizeListResponse fulfillPrizes(final GameOnFulfillPrizeRequest gameOnFulfillPrizeRequest) {
         return getGameOnUserPrizeService().fulfill(gameOnFulfillPrizeRequest);
     }
 
