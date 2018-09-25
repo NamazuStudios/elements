@@ -12,6 +12,7 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.GameOnMatchService;
 import com.namazustudios.socialengine.service.GameOnSessionService;
 import com.namazustudios.socialengine.service.MatchServiceUtils;
+import com.namazustudios.socialengine.service.ProfileService;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnMatchInvoker;
 import com.namazustudios.socialengine.service.gameon.client.model.EnterMatchRequest;
 import org.slf4j.Logger;
@@ -40,9 +41,9 @@ public class UserGameOnMatchService implements GameOnMatchService {
 
     private MatchServiceUtils matchServiceUtils;
 
-    private GameOnSessionService gameOnSessionService;
+    private ProfileService profileService;
 
-    private Supplier<Profile> currentProfileSupplier;
+    private GameOnSessionService gameOnSessionService;
 
     private Provider<GameOnMatchInvoker.Builder> gameOnMatchInvokerProvider;
 
@@ -88,7 +89,7 @@ public class UserGameOnMatchService implements GameOnMatchService {
             final String matchId,
             final GameOnEnterMatchRequest gameOnEnterMatchRequest) {
 
-        final Profile profile = getCurrentProfileSupplier().get();
+        final Profile profile = getProfileService().getCurrentProfile();
 
         final DeviceOSType deviceOSType = gameOnEnterMatchRequest.getDeviceOSType() == null ?
             DeviceOSType.getDefault()                              :
@@ -182,9 +183,15 @@ public class UserGameOnMatchService implements GameOnMatchService {
             final String externalPlayerId = item.getExternalPlayerId();
 
             try {
+
                 final GameOnRegistration gameOnRegistration;
                 gameOnRegistration = getGameOnRegistrationDao().getRegistrationForExternalPlayerId(externalPlayerId);
-                item.setProfile(gameOnRegistration.getProfile());
+
+                final Profile profile = gameOnRegistration.getProfile();
+                final Profile redacted = getProfileService().redactPrivateInformation(profile);
+
+                item.setProfile(redacted);
+
             } catch (GameOnRegistrationNotFoundException ex) {
                 logger.warn("GameOn Registration not found for player id {}", externalPlayerId);
             }
@@ -219,13 +226,13 @@ public class UserGameOnMatchService implements GameOnMatchService {
         this.matchServiceUtils = matchServiceUtils;
     }
 
-    public Supplier<Profile> getCurrentProfileSupplier() {
-        return currentProfileSupplier;
+    public ProfileService getProfileService() {
+        return profileService;
     }
 
     @Inject
-    public void setCurrentProfileSupplier(Supplier<Profile> currentProfileSupplier) {
-        this.currentProfileSupplier = currentProfileSupplier;
+    public void setProfileService(ProfileService profileService) {
+        this.profileService = profileService;
     }
 
     public GameOnSessionService getGameOnSessionService() {
