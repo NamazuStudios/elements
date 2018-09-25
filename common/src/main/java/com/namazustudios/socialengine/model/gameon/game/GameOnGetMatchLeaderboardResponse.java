@@ -20,9 +20,6 @@ public class GameOnGetMatchLeaderboardResponse {
     @ApiModelProperty("The neighboring leadeerboard items.")
     private List<LeaderboardItem> neighbors;
 
-    @ApiModelProperty("The URL for the next page of results.")
-    private String next;
-
     public LeaderboardItem getCurrentPlayer() {
         return currentPlayer;
     }
@@ -47,14 +44,6 @@ public class GameOnGetMatchLeaderboardResponse {
         this.neighbors = neighbors;
     }
 
-    public String getNext() {
-        return next;
-    }
-
-    public void setNext(String next) {
-        this.next = next;
-    }
-
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -62,22 +51,21 @@ public class GameOnGetMatchLeaderboardResponse {
         GameOnGetMatchLeaderboardResponse that = (GameOnGetMatchLeaderboardResponse) object;
         return Objects.equals(getCurrentPlayer(), that.getCurrentPlayer()) &&
                 Objects.equals(getLeaderboard(), that.getLeaderboard()) &&
-                Objects.equals(getNeighbors(), that.getNeighbors()) &&
-                Objects.equals(getNext(), that.getNext());
+                Objects.equals(getNeighbors(), that.getNeighbors());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getCurrentPlayer(), getLeaderboard(), getNeighbors(), getNext());
+
+        return Objects.hash(getCurrentPlayer(), getLeaderboard(), getNeighbors());
     }
 
     @Override
     public String toString() {
-        return "GetMatchLeaderboardResponse{" +
+        return "GameOnGetMatchLeaderboardResponse{" +
                 "currentPlayer=" + currentPlayer +
                 ", leaderboard=" + leaderboard +
                 ", neighbors=" + neighbors +
-                ", next='" + next + '\'' +
                 '}';
     }
 
