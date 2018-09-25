@@ -5,6 +5,8 @@ import com.namazustudios.socialengine.service.GameOnGamePrizeService;
 import com.namazustudios.socialengine.service.GameOnSessionService;
 import com.namazustudios.socialengine.service.ProfileService;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnGamePrizeInvoker;
+import com.namazustudios.socialengine.service.gameon.client.model.ClaimPrizeListRequest;
+import com.namazustudios.socialengine.service.gameon.client.model.FulfillPrizeListRequest;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -29,12 +31,15 @@ public class UserGameOnGamePrizeService implements GameOnGamePrizeService {
         final GameOnSession gameOnSession;
         gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
 
+        final ClaimPrizeListRequest claimPrizeListRequest = new ClaimPrizeListRequest();
+        claimPrizeListRequest.setAwardedPrizeIds(gameOnClaimPrizeListRequest.getAwardedPrizeIds());
+
         return getGameOnGamePrizeInvokerBuilderProvider()
             .get()
             .withSession(gameOnSession)
             .withExpirationRetry(e -> getGameOnSessionService().refreshExpiredSession(e.getExpired()))
             .build()
-            .claim(gameOnClaimPrizeListRequest);
+            .claim(claimPrizeListRequest);
 
     }
 
@@ -52,12 +57,16 @@ public class UserGameOnGamePrizeService implements GameOnGamePrizeService {
         final GameOnSession gameOnSession;
         gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
 
+        final FulfillPrizeListRequest fulfillPrizeListRequest = new FulfillPrizeListRequest();
+        fulfillPrizeListRequest.setAwardedPrizeIds(gameOnFulfillPrizeRequest.getAwardedPrizeIds());
+
         return getGameOnGamePrizeInvokerBuilderProvider()
                 .get()
                 .withSession(gameOnSession)
                 .withExpirationRetry(e -> getGameOnSessionService().refreshExpiredSession(e.getExpired()))
                 .build()
-                .fulfill(gameOnFulfillPrizeRequest);
+                .fulfill(fulfillPrizeListRequest);
+
     }
 
     public GameOnSessionService getGameOnSessionService() {
