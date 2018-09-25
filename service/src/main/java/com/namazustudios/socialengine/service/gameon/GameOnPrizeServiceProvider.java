@@ -1,24 +1,24 @@
 package com.namazustudios.socialengine.service.gameon;
 
 import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.service.GameOnPrizeService;
+import com.namazustudios.socialengine.service.GameOnAdminPrizeService;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 
 import static com.namazustudios.socialengine.service.Services.forbidden;
 
-public class GameOnPrizeServiceProvider implements Provider<GameOnPrizeService> {
+public class GameOnPrizeServiceProvider implements Provider<GameOnAdminPrizeService> {
 
     private User user;
 
     private Provider<SuperUserGameOnPrizeService> superUserGameOnPrizeServiceProvider;
 
     @Override
-    public GameOnPrizeService get() {
+    public GameOnAdminPrizeService get() {
         switch (getUser().getLevel()) {
             case SUPERUSER:    return getSuperUserGameOnPrizeServiceProvider().get();
-            default:           return forbidden(GameOnPrizeService.class);
+            default:           return forbidden(GameOnAdminPrizeService.class);
         }
     }
 

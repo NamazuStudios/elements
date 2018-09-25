@@ -10,8 +10,30 @@ import java.util.Objects;
                         "https://developer.amazon.com/docs/gameon/game-api-ref.html#fulfillprizelistrequest")
 public class GameOnFulfillPrizeRequest {
 
+    @ApiModelProperty("Specifes the device OS Type.")
+    private DeviceOSType deviceOSType;
+
+    @ApiModelProperty("Specifies the application build type.")
+    private AppBuildType appBuildType;
+
     @ApiModelProperty("A list of awarded prize IDs.")
     private List<String> awardedPrizeIds;
+
+    public DeviceOSType getDeviceOSType() {
+        return deviceOSType;
+    }
+
+    public void setDeviceOSType(DeviceOSType deviceOSType) {
+        this.deviceOSType = deviceOSType;
+    }
+
+    public AppBuildType getAppBuildType() {
+        return appBuildType;
+    }
+
+    public void setAppBuildType(AppBuildType appBuildType) {
+        this.appBuildType = appBuildType;
+    }
 
     public List<String> getAwardedPrizeIds() {
         return awardedPrizeIds;
@@ -24,20 +46,25 @@ public class GameOnFulfillPrizeRequest {
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
-        if (!(object instanceof GameOnClaimPrizeListRequest)) return false;
-        GameOnClaimPrizeListRequest that = (GameOnClaimPrizeListRequest) object;
-        return Objects.equals(getAwardedPrizeIds(), that.getAwardedPrizeIds());
+        if (!(object instanceof GameOnFulfillPrizeRequest)) return false;
+        GameOnFulfillPrizeRequest that = (GameOnFulfillPrizeRequest) object;
+        return getDeviceOSType() == that.getDeviceOSType() &&
+                getAppBuildType() == that.getAppBuildType() &&
+                Objects.equals(getAwardedPrizeIds(), that.getAwardedPrizeIds());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getAwardedPrizeIds());
+
+        return Objects.hash(getDeviceOSType(), getAppBuildType(), getAwardedPrizeIds());
     }
 
     @Override
     public String toString() {
-        return "GameOnClaimPrizeListRequest{" +
-                "awardedPrizeIds=" + awardedPrizeIds +
+        return "GameOnFulfillPrizeRequest{" +
+                "deviceOSType=" + deviceOSType +
+                ", appBuildType=" + appBuildType +
+                ", awardedPrizeIds=" + awardedPrizeIds +
                 '}';
     }
 

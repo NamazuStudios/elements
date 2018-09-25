@@ -144,7 +144,7 @@ public class ServicesModule extends AbstractModule {
                 .toProvider(GameOnMatchServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
-        bind(GameOnPrizeService.class)
+        bind(GameOnAdminPrizeService.class)
                 .toProvider(GameOnPrizeServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 

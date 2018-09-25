@@ -5,13 +5,13 @@ import com.namazustudios.socialengine.model.application.GameOnApplicationConfigu
 import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListRequest;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListResponse;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnGetPrizeListResponse;
-import com.namazustudios.socialengine.service.GameOnPrizeService;
+import com.namazustudios.socialengine.service.GameOnAdminPrizeService;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnPrizeInvoker;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-public class SuperUserGameOnPrizeService implements GameOnPrizeService {
+public class SuperUserGameOnPrizeService implements GameOnAdminPrizeService {
 
     private GameOnApplicationConfigurationDao gameOnApplicationConfigurationDao;
 

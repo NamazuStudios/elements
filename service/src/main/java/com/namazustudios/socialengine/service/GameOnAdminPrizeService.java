@@ -9,7 +9,7 @@ import com.namazustudios.socialengine.model.gameon.admin.GameOnGetPrizeListRespo
 /**
  * Used to interact with the GameOn Admin API to manage available prizes.
  */
-public interface GameOnPrizeService {
+public interface GameOnAdminPrizeService {
 
     /**
      * Lists all available prizes.
