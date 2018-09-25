@@ -45,6 +45,27 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
     private Provider<GameOnTournamentInvoker.Builder> gameOnTournamentInvokerBuilderProvider;
 
     @Override
+    public List<GameOnTournamentSummary> getTournaments(
+            final DeviceOSType deviceOSType, final AppBuildType appBuildType,
+            final TournamentFilter filterBy, final TournamentPeriod period, final String playerAttributes) {
+
+        final GameOnSession gameOnSession;
+        gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
+
+        final List<GameOnTournamentSummary> gameOnTournamentSummaries = getGameOnTournamentInvokerBuilderProvider()
+                .get()
+                .withSession(gameOnSession)
+                .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
+                .build()
+                .getSummaries(filterBy, period, playerAttributes);
+
+        return gameOnTournamentSummaries
+                .stream()
+                .collect(toList());
+
+    }
+
+    @Override
     public List<GameOnTournamentSummary> getEligibleTournaments(
             final DeviceOSType deviceOSType, final AppBuildType appBuildType,
             final TournamentFilter filterBy, final TournamentPeriod period, final String playerAttributes) {
@@ -65,6 +86,25 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
             .stream()
             .filter(s -> !enteredTournamentIdSet.contains(s.getTournamentId()))
             .collect(toList());
+
+    }
+
+    @Override
+    public GameOnTournamentDetail getTournamentDetail(
+            final DeviceOSType deviceOSType, final AppBuildType appBuildType,
+            final String playerAttributes, final String tournamentId) {
+
+        final GameOnSession gameOnSession;
+        gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
+
+        final GameOnTournamentDetail gameOnTournamentDetail = getGameOnTournamentInvokerBuilderProvider()
+                .get()
+                .withSession(gameOnSession)
+                .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
+                .build()
+                .getDetail(playerAttributes, tournamentId);
+
+        return gameOnTournamentDetail;
 
     }
 
