@@ -8,11 +8,11 @@ import javax.inject.Provider;
 
 import static com.namazustudios.socialengine.service.Services.forbidden;
 
-public class GameOnPrizeServiceProvider implements Provider<GameOnAdminPrizeService> {
+public class GameOnAdminPrizeServiceProvider implements Provider<GameOnAdminPrizeService> {
 
     private User user;
 
-    private Provider<SuperUserGameOnPrizeService> superUserGameOnPrizeServiceProvider;
+    private Provider<SuperUserGameOnAdminPrizeService> superUserGameOnPrizeServiceProvider;
 
     @Override
     public GameOnAdminPrizeService get() {
@@ -31,12 +31,12 @@ public class GameOnPrizeServiceProvider implements Provider<GameOnAdminPrizeServ
         this.user = user;
     }
 
-    public Provider<SuperUserGameOnPrizeService> getSuperUserGameOnPrizeServiceProvider() {
+    public Provider<SuperUserGameOnAdminPrizeService> getSuperUserGameOnPrizeServiceProvider() {
         return superUserGameOnPrizeServiceProvider;
     }
 
     @Inject
-    public void setSuperUserGameOnPrizeServiceProvider(Provider<SuperUserGameOnPrizeService> superUserGameOnPrizeServiceProvider) {
+    public void setSuperUserGameOnPrizeServiceProvider(Provider<SuperUserGameOnAdminPrizeService> superUserGameOnPrizeServiceProvider) {
         this.superUserGameOnPrizeServiceProvider = superUserGameOnPrizeServiceProvider;
     }
 

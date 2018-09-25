@@ -11,7 +11,7 @@ import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnPrizeI
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-public class SuperUserGameOnPrizeService implements GameOnAdminPrizeService {
+public class SuperUserGameOnAdminPrizeService implements GameOnAdminPrizeService {
 
     private GameOnApplicationConfigurationDao gameOnApplicationConfigurationDao;
 
