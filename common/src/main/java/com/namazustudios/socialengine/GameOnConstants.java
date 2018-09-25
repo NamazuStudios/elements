@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine;
 
 
+import com.namazustudios.socialengine.model.match.Match;
+
 public interface GameOnConstants {
 
     /**
@@ -34,5 +36,15 @@ public interface GameOnConstants {
      * Used by client code to determine the service root for the GameOn API
      */
     String GAMEON_ADMIN_SERVICE_ROOT = "com.namazustudios.socialengine.gameon.admin.service.root";
+
+    /**
+     * The metadata key for use with the {@link Match#getMetadata()} property to indicate the match ID
+     */
+    String MATCH_METADATA_MATCH_ID = "gameOnMatchId";
+
+    /**
+     * The metadata key for use with the {@link Match#getMetadata()} property to indicate the tournament ID
+     */
+    String MATCH_METADATA_TOURNAMENT_ID = "gameOnTournamentId";
 
 }

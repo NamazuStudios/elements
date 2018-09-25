@@ -4,12 +4,13 @@ import com.namazustudios.socialengine.model.match.Match;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
 @ApiModel(description = "Represents a GameOn Match.  Maps direcly to the Amazon GameOn APIs.  Contains slightly less" +
                         "information than its detail counterpart.")
-public class GameOnMatchSummary {
+public class GameOnMatchSummary implements Serializable {
 
     @ApiModelProperty("The GameOn assigned match ID.")
     private String matchId;
@@ -49,9 +50,6 @@ public class GameOnMatchSummary {
 
     @ApiModelProperty("The detailed listing of prize bundles.")
     private List<GameOnPrizeBundle> prizeBundles;
-
-    @ApiModelProperty("The Match created as part of the tournament entry.")
-    private Match match;
 
     public String getMatchId() {
         return matchId;
@@ -157,14 +155,6 @@ public class GameOnMatchSummary {
         this.prizeBundles = prizeBundles;
     }
 
-    public Match getMatch() {
-        return match;
-    }
-
-    public void setMatch(Match match) {
-        this.match = match;
-    }
-
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -182,13 +172,12 @@ public class GameOnMatchSummary {
                 Objects.equals(getMatchesPerPlayer(), that.getMatchesPerPlayer()) &&
                 Objects.equals(getPlayerAttemtpsPerMatch(), that.getPlayerAttemtpsPerMatch()) &&
                 Objects.equals(getPlayersPerMatch(), that.getPlayersPerMatch()) &&
-                Objects.equals(getPrizeBundles(), that.getPrizeBundles()) &&
-                Objects.equals(getMatch(), that.getMatch());
+                Objects.equals(getPrizeBundles(), that.getPrizeBundles());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getMatchId(), getTournamentId(), getAttemptsRemaining(), getTitle(), getSubtitle(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getPlayerAttemtpsPerMatch(), getPlayersPerMatch(), getPrizeBundles(), getMatch());
+        return Objects.hash(getMatchId(), getTournamentId(), getAttemptsRemaining(), getTitle(), getSubtitle(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getPlayerAttemtpsPerMatch(), getPlayersPerMatch(), getPrizeBundles());
     }
 
     @Override
@@ -207,7 +196,6 @@ public class GameOnMatchSummary {
                 ", playerAttemtpsPerMatch=" + playerAttemtpsPerMatch +
                 ", playersPerMatch=" + playersPerMatch +
                 ", prizeBundles=" + prizeBundles +
-                ", match=" + match +
                 '}';
     }
 

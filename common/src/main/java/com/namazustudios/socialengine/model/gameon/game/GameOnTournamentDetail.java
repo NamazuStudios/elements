@@ -3,12 +3,13 @@ package com.namazustudios.socialengine.model.gameon.game;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
 @ApiModel(description = "A more detailed response on a particular GameOn tournament.  Contains the summary and some" +
                         "additional fields as well.")
-public class GameOnTournamentDetail {
+public class GameOnTournamentDetail implements Serializable {
 
     @ApiModelProperty("The GameOn assigned tournament ID.")
     private String tournamentId;

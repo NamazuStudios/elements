@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.lua.builtin;
 import com.google.common.base.Function;
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.JavaReflector;
+import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.persist.Persistence;
@@ -164,12 +165,15 @@ public class JavaObjectModuleBuiltin implements Builtin {
 
             try {
                 if (void.class.equals(toInvoke.getReturnType()) || Void.class.equals(toInvoke.getReturnType())) {
+                    toInvoke.invoke(target, args);
                     return 0;
                 } else {
                     luaState.pushJavaObject(toInvoke.invoke(target, args));
                     return 1;
                 }
-            } catch (InvocationTargetException | IllegalAccessException ex) {
+            } catch (InvocationTargetException ex) {
+                throw ex.getTargetException();
+            } catch (IllegalAccessException ex) {
                 throw new InternalException("Could not invoke Java method.", ex);
             }
 
@@ -182,8 +186,8 @@ public class JavaObjectModuleBuiltin implements Builtin {
         final int nargs = luaState.getTop();
         final Class<?>[] parameterTypes = method.getParameterTypes();
 
-        for (int i = 1; i < nargs; ++i) {
-            if (!luaState.isJavaObject(i, parameterTypes[i])) {
+        for (int i = 0; i < parameterTypes.length; ++i) {
+            if (!luaState.isJavaObject(i + 1, parameterTypes[i])) {
                 return false;
             }
         }

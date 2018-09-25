@@ -8,7 +8,10 @@ import com.namazustudios.socialengine.model.application.IosApplicationConfigurat
 /**
  * Created by patricktwohig on 5/25/17.
  */
-@Expose(module = "namazu.socialengine.dao.ios")
+@Expose(modules = {
+    "namazu.elements.dao.ios",
+    "namazu.socialengine.dao.ios"
+})
 public interface IosApplicationConfigurationDao {
 
     /**

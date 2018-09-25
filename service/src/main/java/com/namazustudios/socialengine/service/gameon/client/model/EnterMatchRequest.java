@@ -4,13 +4,13 @@ import java.util.Map;
 
 public class EnterMatchRequest {
 
-    private Map<String, String> playerAttributes;
+    private Map<String, Object> playerAttributes;
 
-    public Map<String, String> getPlayerAttributes() {
+    public Map<String, Object> getPlayerAttributes() {
         return playerAttributes;
     }
 
-    public void setPlayerAttributes(Map<String, String> playerAttributes) {
+    public void setPlayerAttributes(Map<String, Object> playerAttributes) {
         this.playerAttributes = playerAttributes;
     }
 

@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinUtils.currentTaskId;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstruction.INDEFINITELY;
+import static java.lang.String.format;
 import static javax.ws.rs.HttpMethod.POST;
 import static javax.ws.rs.HttpMethod.PUT;
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
@@ -64,11 +65,18 @@ public class HttpClientBuiltin implements Builtin {
                 builder.rx().method(method, requestEntity, new GenericType<Response>(){}) :
                 builder.rx().method(method, new GenericType<Response>(){});
 
+        if (logger.isDebugEnabled()) {
+            final StringBuilder req = new StringBuilder();
+            req.append(format("%s %s\n", method, target.getUri()));
+            getOptionalMultiField(l, "headers", (k, v) -> req.append(k).append(": ").append(v).append('\n'));
+            logger.debug("HTTP Request: \n{}\n", req);
+        }
+
         responseCompletionStage
             .exceptionally(th -> null)
             .handleAsync((response, throwable) -> {
 
-                logger.trace("Got response {}", response, throwable);
+                logger.debug("Got response {}", response, throwable);
 
                 try {
                     if (response == null) {

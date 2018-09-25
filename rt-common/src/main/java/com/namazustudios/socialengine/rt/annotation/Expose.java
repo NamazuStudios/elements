@@ -18,6 +18,6 @@ public @interface Expose {
      *
      * @return the module name
      */
-    String module();
+    String[] modules();
 
 }

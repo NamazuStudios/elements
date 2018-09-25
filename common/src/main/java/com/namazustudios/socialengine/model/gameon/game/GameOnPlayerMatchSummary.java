@@ -2,9 +2,10 @@ package com.namazustudios.socialengine.model.gameon.game;
 
 import io.swagger.annotations.ApiModelProperty;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class GameOnPlayerMatchSummary {
+public class GameOnPlayerMatchSummary implements Serializable {
 
     @ApiModelProperty("The GameOn assigned match ID.")
     private String matchId;

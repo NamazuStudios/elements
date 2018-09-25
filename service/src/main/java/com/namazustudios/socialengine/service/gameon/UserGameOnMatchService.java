@@ -18,8 +18,14 @@ import com.namazustudios.socialengine.service.gameon.client.model.EnterMatchRequ
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
+
+import static com.namazustudios.socialengine.GameOnConstants.MATCH_METADATA_MATCH_ID;
+import static com.namazustudios.socialengine.GameOnConstants.MATCH_METADATA_TOURNAMENT_ID;
 
 
 public class UserGameOnMatchService implements GameOnMatchService {
@@ -110,8 +116,17 @@ public class UserGameOnMatchService implements GameOnMatchService {
             .build()
             .postEnterMatch(matchId, enterMatchRequest);
 
-        final Match inserted = getMatchDao().createMatch(match);
+        // Sets the scope of the match to the tournament ID first, so the match will follow the same tournament
         match.setScope(response.getTournamentId());
+
+        // Sets the game on specific metadata to the match
+        final Map<String, Serializable> metadata = new HashMap<>();
+        metadata.put(MATCH_METADATA_MATCH_ID, response.getMatchId());
+        metadata.put(MATCH_METADATA_TOURNAMENT_ID, response.getTournamentId());
+        match.setMetadata(metadata);
+
+        // Attempts the insert it into the database, assuming that works, we then reply with the match
+        final Match inserted = getMatchDao().createMatch(match);
 
         final Matchmaker matchmaker = getMatchDao()
                 .getMatchmaker(configuration.getAlgorithm())
@@ -121,6 +136,7 @@ public class UserGameOnMatchService implements GameOnMatchService {
         response.setMatch(paired);
 
         return response;
+
     }
 
     public MatchDao getMatchDao() {

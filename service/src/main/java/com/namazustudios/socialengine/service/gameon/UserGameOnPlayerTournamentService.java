@@ -20,11 +20,12 @@ import com.namazustudios.socialengine.service.gameon.client.model.EnterPlayerTou
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.io.Serializable;
+import java.util.*;
 import java.util.function.Supplier;
 
+import static com.namazustudios.socialengine.GameOnConstants.MATCH_METADATA_MATCH_ID;
+import static com.namazustudios.socialengine.GameOnConstants.MATCH_METADATA_TOURNAMENT_ID;
 import static com.namazustudios.socialengine.model.gameon.game.MatchFilter.live;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -151,8 +152,14 @@ public class UserGameOnPlayerTournamentService implements GameOnPlayerTournament
                 .build()
                 .postEnterRequest(tournamentId, enterPlayerTournamentRequest);
 
-        final Match inserted = getMatchDao().createMatch(match);
         match.setScope(response.getTournamentId());
+
+        final Map<String, Serializable> metadata = new HashMap<>();
+        metadata.put(MATCH_METADATA_MATCH_ID, response.getMatchId());
+        metadata.put(MATCH_METADATA_TOURNAMENT_ID, response.getTournamentId());
+        match.setMetadata(metadata);
+
+        final Match inserted = getMatchDao().createMatch(match);
 
         final Matchmaker matchmaker = getMatchDao()
                 .getMatchmaker(configuration.getAlgorithm())

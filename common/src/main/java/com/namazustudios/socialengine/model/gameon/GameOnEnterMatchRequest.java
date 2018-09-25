@@ -6,11 +6,12 @@ import com.namazustudios.socialengine.model.match.Match;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
 @ApiModel(description = "Defines the data necessary to enter a match.")
-public class GameOnEnterMatchRequest {
+public class GameOnEnterMatchRequest implements Serializable {
 
     @ApiModelProperty("The device OS Type, used to create or reference the session.")
     private DeviceOSType deviceOSType;
@@ -19,7 +20,7 @@ public class GameOnEnterMatchRequest {
     private AppBuildType appBuildType;
 
     @ApiModelProperty("The player attribues, if applicable.  This may be empty or null.")
-    private Map<String, String> playerAttributes;
+    private Map<String, Object> playerAttributes;
 
     @ApiModelProperty("The Match")
     private Match match;
@@ -40,11 +41,11 @@ public class GameOnEnterMatchRequest {
         this.appBuildType = appBuildType;
     }
 
-    public Map<String, String> getPlayerAttributes() {
+    public Map<String, Object> getPlayerAttributes() {
         return playerAttributes;
     }
 
-    public void setPlayerAttributes(Map<String, String> playerAttributes) {
+    public void setPlayerAttributes(Map<String, Object> playerAttributes) {
         this.playerAttributes = playerAttributes;
     }
 

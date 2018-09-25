@@ -2,8 +2,11 @@ package com.namazustudios.socialengine.rest.guice;
 
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
+import org.eclipse.persistence.jaxb.BeanValidationMode;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.jvnet.hk2.guice.bridge.api.GuiceBridge;
 import org.jvnet.hk2.guice.bridge.api.GuiceIntoHK2Bridge;
@@ -39,11 +42,30 @@ public class GuiceResourceConfig extends ResourceConfig {
             // we're using in our data model.  DocumentEntry don't want to make this a hard dependency
             // so we safely try to load it from the classpath and log a warning if that fails.
 
-            final Class<?> cls = getClass().forName("org.glassfish.jersey.jackson.JacksonFeature");
+            final Class<?> cls = Class.forName("org.glassfish.jersey.jackson.JacksonFeature");
             register(cls);
 
         } catch (ClassNotFoundException ex) {
-            logger.info("NOT loading Jackson support.");
+            logger.info("Jackson not found.  Skipping support.");
+        }
+
+        // Optional MOXy options
+        try {
+
+            final Class<?> cls =  Class.forName("org.glassfish.jersey.moxy.json.MoxyJsonFeature");
+            logger.info("Found MOXy support {}", cls);
+
+            final Class<?> beanValidationMode = Class.forName("org.eclipse.persistence.jaxb.BeanValidationMode");
+
+            register(new MoxyJsonConfig()
+                .property("eclipselink.beanvalidation.mode", beanValidationMode.getField("NONE").get(null))
+                .resolver());
+
+        } catch (ClassNotFoundException ex) {
+            logger.info("MOXy Not Found.  Skipping support.");
+        } catch (NoSuchFieldException | IllegalAccessException ex) {
+            logger.error("Failed to disable bean validation in MOXy.", ex);
+            throw new InternalException(ex);
         }
 
         GuiceBridge.getGuiceBridge().initializeGuiceBridge(serviceLocator);

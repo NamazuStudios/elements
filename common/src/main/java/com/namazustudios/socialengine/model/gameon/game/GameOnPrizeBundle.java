@@ -2,11 +2,12 @@ package com.namazustudios.socialengine.model.gameon.game;
 
 import io.swagger.annotations.ApiModel;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
 @ApiModel
-public class GameOnPrizeBundle {
+public class GameOnPrizeBundle implements Serializable {
 
     private String title;
 

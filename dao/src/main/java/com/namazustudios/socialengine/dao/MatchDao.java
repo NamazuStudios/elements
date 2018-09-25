@@ -11,7 +11,10 @@ import com.namazustudios.socialengine.model.profile.Profile;
 /**
  * Created by patricktwohig on 7/20/17.
  */
-@Expose(module = "namazu.socialengine.dao.match")
+@Expose(modules = {
+    "namazu.elements.dao.match",
+    "namazu.socialengine.dao.match"
+})
 public interface MatchDao {
 
     /**
