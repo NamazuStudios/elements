@@ -173,6 +173,25 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
 
     }
 
+    @Override
+    public GameOnRegistration getRegistrationForExternalPlayerId(final String externalPlayerId) {
+
+        final Query<MongoGameOnRegistration> query = getAdvancedDatastore()
+            .createQuery(MongoGameOnRegistration.class)
+            .field("externalPlayerId").equal(externalPlayerId);
+
+        final MongoGameOnRegistration mongoGameOnRegistration = query.get();
+
+        if (mongoGameOnRegistration == null ||
+            !mongoGameOnRegistration.getProfile().isActive() ||
+            !mongoGameOnRegistration.getProfile().getUser().isActive()) {
+            throw new GameOnRegistrationNotFoundException("Registration not found for external player ID: " + externalPlayerId);
+        }
+
+        return getMapper().map(mongoGameOnRegistration, GameOnRegistration.class);
+
+    }
+
     public Mapper getMapper() {
         return mapper;
     }
