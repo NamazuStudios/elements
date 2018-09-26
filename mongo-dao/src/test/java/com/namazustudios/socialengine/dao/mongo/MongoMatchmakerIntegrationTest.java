@@ -172,10 +172,10 @@ public class MongoMatchmakerIntegrationTest {
     @DataProvider
     public Object[][] intermediateProfileDataProvider() {
         return intermediateProfiles
-                .stream()
-                .map(m -> new Object[]{m})
-                .collect(toList())
-                .toArray(new Object[][]{});
+            .stream()
+            .map(m -> new Object[]{m})
+            .collect(toList())
+            .toArray(new Object[][]{});
     }
 
 
