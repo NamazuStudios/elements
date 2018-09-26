@@ -104,6 +104,37 @@ public class GameOnMatchResource {
         return getGameOnMatchService().enterMatch(matchId, gameOnEnterMatchRequest);
     }
 
+    @GET
+    @Path("{matchId}/leaderboard")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Re-Enters a Match",
+                  notes = "See: https://developer.amazon.com/docs/gameon/game-api-ref.html#get-leaderboard")
+    public GameOnGetMatchLeaderboardResponse getLeaderboard(
+
+            @PathParam("matchId")
+            @ApiParam("The match ID.")
+            final String matchId,
+
+            @QueryParam("os")
+            @DefaultValue(DeviceOSType.DEFAULT_TYPE_STRING)
+            final DeviceOSType deviceOSType,
+
+            @QueryParam("build")
+            @DefaultValue(AppBuildType.DEFAULT_TYPE_STRING)
+            final AppBuildType appBuildType,
+
+            @QueryParam("currentPlayerNeighbors")
+            final Integer currentPlayerNeighbors,
+
+            @QueryParam("limit")
+            final Integer limit) {
+
+        return getGameOnMatchService().getLeaderboard(
+            deviceOSType, appBuildType,
+            matchId, currentPlayerNeighbors, limit);
+
+    }
+
     public GameOnMatchService getGameOnMatchService() {
         return gameOnMatchService;
     }

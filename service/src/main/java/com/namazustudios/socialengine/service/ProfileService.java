@@ -31,6 +31,21 @@ public interface ProfileService {
     Pagination<Profile> getProfiles(int offset, int count, String search);
 
     /**
+     * Redacts any private information from the {@link Profile} and returns either a new instance or the current
+     * instance modified.
+     *
+     * The default implementation simply sets the user to null and returns the supplied instance.  Other implementations
+     * such as those used for superuser access may redact information differently.
+     *
+     * @param profile the {@link Profile} from which to redact private information
+     * @return a {@link Profile} with the information redacted (may be the same instance provided
+     */
+    default Profile redactPrivateInformation(final Profile profile) {
+        profile.setUser(null);
+        return profile;
+    }
+
+    /**
      * Fetches a specific {@link Profile} instance based on ID.  If not found, an
      * exception is raised.
      *

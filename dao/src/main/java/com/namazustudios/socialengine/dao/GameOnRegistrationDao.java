@@ -56,6 +56,16 @@ public interface GameOnRegistrationDao {
     GameOnRegistration createRegistration(GameOnRegistration gameOnRegistration);
 
     /**
+     * Gets the {@link GameOnRegistration} for the supplied external player id as returned by
+     * {@link GameOnRegistration#getExternalPlayerId()}.
+     *
+     * @param externalPlayerId the external player ID
+     * @return the {@link GameOnRegistration}, never null
+     *
+     */
+    GameOnRegistration getRegistrationForExternalPlayerId(String externalPlayerId);
+
+    /**
      * Deletes the {@link GameOnRegistration} with the supplied id, checking to ensure that the {@link Profile} owns
      * the {@link GameOnRegistration} associated with the id.
      *  @param user the {@link Profile}
