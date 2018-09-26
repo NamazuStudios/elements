@@ -181,6 +181,8 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
 
         if (NOT_FOUND.getStatusCode() == response.getStatus()) {
             throw new GameOnTournamentNotFoundException("GameOn Match not found: " + error.getMessage());
+        } else if (BAD_REQUEST.getStatusCode() == response.getStatus()) {
+            throw new InvalidParameterException("Invalid parameters to GameOn: " + error.getMessage());
         } else if (FORBIDDEN.getStatusCode() == response.getStatus()) {
             throw new ForbiddenException("Player forbidden by GameOn: " + error.getMessage());
         } else if (UNAUTHORIZED.getStatusCode() == response.getStatus()) {
