@@ -6,6 +6,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 
+import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
@@ -43,6 +44,7 @@ public class GameOnPrizeResource {
         return gameOnUserPrizeService;
     }
 
+    @Inject
     public void setGameOnUserPrizeService(GameOnGamePrizeService gameOnUserPrizeService) {
         this.gameOnUserPrizeService = gameOnUserPrizeService;
     }

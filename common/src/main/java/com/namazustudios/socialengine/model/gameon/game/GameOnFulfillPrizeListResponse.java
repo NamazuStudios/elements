@@ -18,7 +18,7 @@ public class GameOnFulfillPrizeListResponse {
     private List<String> failedAwardedPrizeIds;
 
     @ApiModelProperty("A list of successfully claimed prizes.")
-    private List<GameOnClaimPrizeListResponse.ClaimedPrize> prizes;
+    private List<GameOnFulfillPrizeListResponse.FulfilledPrize> prizes;
 
     public String getExternalPlayerId() {
         return externalPlayerId;
@@ -36,11 +36,11 @@ public class GameOnFulfillPrizeListResponse {
         this.failedAwardedPrizeIds = failedAwardedPrizeIds;
     }
 
-    public List<GameOnClaimPrizeListResponse.ClaimedPrize> getPrizes() {
+    public List<FulfilledPrize> getPrizes() {
         return prizes;
     }
 
-    public void setPrizes(List<GameOnClaimPrizeListResponse.ClaimedPrize> prizes) {
+    public void setPrizes(List<FulfilledPrize> prizes) {
         this.prizes = prizes;
     }
 
@@ -70,7 +70,7 @@ public class GameOnFulfillPrizeListResponse {
 
     @ApiModel(description = "Corresponds to the Fulfilled Prize Response: " +
                             "https://developer.amazon.com/docs/gameon/game-api-ref.html#fulfillprizelistresponse_fulfilledprize")
-    public static class ClaimedPrize {
+    public static class FulfilledPrize {
 
         @ApiModelProperty("The GameOn match ID that was used to claim this prize.")
         private String matchId;
@@ -119,8 +119,8 @@ public class GameOnFulfillPrizeListResponse {
         @Override
         public boolean equals(Object object) {
             if (this == object) return true;
-            if (!(object instanceof ClaimedPrize)) return false;
-            ClaimedPrize that = (ClaimedPrize) object;
+            if (!(object instanceof FulfilledPrize)) return false;
+            FulfilledPrize that = (FulfilledPrize) object;
             return Objects.equals(getMatchId(), that.getMatchId()) &&
                     Objects.equals(getPrizeInfo(), that.getPrizeInfo()) &&
                     getPrizeInfoType() == that.getPrizeInfoType() &&
