@@ -53,7 +53,7 @@ public class Match implements Serializable {
     private String gameId;
 
     @ApiModelProperty("Additional arbitrary metadata that is attached to the match.")
-    private Map<String, Serializable> metadata;
+    private Map<String, Object> metadata;
 
     /**
      * Gets the unique server-assigned ID of this match.
@@ -179,11 +179,20 @@ public class Match implements Serializable {
         this.gameId = gameId;
     }
 
-    public Map<String, ? extends Serializable> getMetadata() {
+    /**
+     * Gets the metdata associated with the match.
+     *
+     * @return the metadata associated with the match
+     */
+    public Map<String, Object> getMetadata() {
         return metadata;
     }
 
-    public void setMetadata(Map<String, Serializable> metadata) {
+    /**
+     * Sets the metadata associated with the match.
+     * @param metadata
+     */
+    public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
     }
 

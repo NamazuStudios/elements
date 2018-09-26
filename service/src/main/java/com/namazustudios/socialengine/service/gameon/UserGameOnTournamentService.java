@@ -198,7 +198,7 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
 
         match.setScope(response.getTournamentId());
 
-        final Map<String, Serializable> metadata = new HashMap<>();
+        final Map<String, Object> metadata = new HashMap<>();
         metadata.put(MATCH_METADATA_MATCH_ID, response.getMatchId());
         metadata.put(MATCH_METADATA_TOURNAMENT_ID, response.getTournamentId());
         match.setMetadata(metadata);
