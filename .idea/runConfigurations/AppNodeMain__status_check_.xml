@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="AppNodeMain (status check)" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.appnode.ApplicationNodeMain" />
+    <module name="app-node" />
+    <option name="PROGRAM_PARAMETERS" value="--status-check" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

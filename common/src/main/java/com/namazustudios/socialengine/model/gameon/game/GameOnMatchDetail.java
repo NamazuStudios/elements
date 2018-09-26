@@ -7,7 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import java.util.Objects;
 
-@ApiModel(description = "Represents a GameOn Match.  Maps direcly to the Amazon GameOn APIs.  Contains slightly more" +
+@ApiModel(description = "Represents a GameOn Match.  Maps direclty to the Amazon GameOn APIs.  Contains slightly more" +
                         "information than its summary counterpart.")
 public class GameOnMatchDetail {
 

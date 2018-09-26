@@ -35,9 +35,15 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
 
     public static final String PERIOD = "period";
 
+    public static final String LEADERBOARD = "leaderboard";
+
     public static final String FILTER_BY = "filterBy";
 
     public static final String PLAYER_ATTRIBUTES = "playerAttributes";
+
+    public static final String LIMIT = "limit";
+
+    public static final String CURRENT_PLAYER_NEIGHBORS = "currentPlayerNeighbors";
 
     private final Client client;
 
@@ -98,7 +104,7 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
     }
 
     @Override
-    public GameOnEnterMatchResponse postEnterMatch(String matchId, final EnterMatchRequest enterMatchRequest) {
+    public GameOnEnterMatchResponse postEnterMatch(final String matchId, final EnterMatchRequest enterMatchRequest) {
 
         final Invocation.Builder builder = client
             .target(BASE_API)
@@ -125,12 +131,39 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
         } else if (NOT_FOUND.getStatusCode() == response.getStatus()) {
             throw new GameOnMatchNotFoundException("Match not found: " + error.getMessage());
         } else if (CONFLICT.getStatusCode() == response.getStatus()) {
-            throw new ConflictException("Could not enter GameOn tournament: " + error.getMessage());
+            throw new ConflictException("Could not re-enter GameOn tournament: " + error.getMessage());
         } else if (UNAUTHORIZED.getStatusCode() == response.getStatus()) {
             throw new PlayerSessionExpiredException(gameOnSession, error);
         } else {
             throw new InternalException("Unknown exception interacting with GameOn: " + error.getMessage());
         }
+
+    }
+
+    @Override
+    public GameOnGetMatchLeaderboardResponse getLeaderboard(final String matchId,
+                                                            final Integer currentPlayerNeighbors,
+                                                            final Integer limit) {
+
+        WebTarget target = client
+            .target(BASE_API)
+            .path(VERSION_V1).path(MATCHES_PATH).path("{matchId}").path(LEADERBOARD)
+            .resolveTemplate("matchId", matchId);
+
+        if (limit != null)                  target = target.queryParam(LIMIT, limit);
+        if (currentPlayerNeighbors != null) target = target.queryParam(CURRENT_PLAYER_NEIGHBORS, currentPlayerNeighbors);
+
+        final Response response = target
+            .request()
+            .header(SESSION_ID, gameOnSession.getSessionId())
+            .header(X_API_KEY, gameOnSession.getSessionApiKey())
+            .get();
+
+        return get(response, GameOnGetMatchLeaderboardResponse.class, () -> {
+            final GameOnGetMatchLeaderboardResponse gameOnGetMatchLeaderboardResponse;
+            gameOnGetMatchLeaderboardResponse = new GameOnGetMatchLeaderboardResponse();
+            return gameOnGetMatchLeaderboardResponse;
+        });
 
     }
 
@@ -147,6 +180,8 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
 
         if (NOT_FOUND.getStatusCode() == response.getStatus()) {
             throw new GameOnTournamentNotFoundException("GameOn Match not found: " + error.getMessage());
+        } else if (BAD_REQUEST.getStatusCode() == response.getStatus()) {
+            throw new InvalidParameterException("Invalid parameters to GameOn: " + error.getMessage());
         } else if (FORBIDDEN.getStatusCode() == response.getStatus()) {
             throw new ForbiddenException("Player forbidden by GameOn: " + error.getMessage());
         } else if (UNAUTHORIZED.getStatusCode() == response.getStatus()) {

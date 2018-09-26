@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.dao.Matchmaker;
 import com.namazustudios.socialengine.dao.MatchmakingApplicationConfigurationDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
 import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
 import com.namazustudios.socialengine.model.gameon.game.*;
@@ -166,6 +167,10 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
                                           gameOnTournamentEnterRequest.getAppBuildType();
 
         final Match match = gameOnTournamentEnterRequest.getMatch();
+
+        if (match == null || match.getScheme() == null) {
+            throw new InvalidDataException("Match must be specified.");
+        }
 
         final MatchmakingApplicationConfiguration configuration = getMatchmakingApplicationConfigurationDao()
             .getApplicationConfiguration(profile.getApplication().getId(), match.getScheme());

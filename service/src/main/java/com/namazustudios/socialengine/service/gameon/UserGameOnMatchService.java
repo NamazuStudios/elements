@@ -1,9 +1,8 @@
 package com.namazustudios.socialengine.service.gameon;
 
-import com.namazustudios.socialengine.dao.MatchDao;
-import com.namazustudios.socialengine.dao.Matchmaker;
-import com.namazustudios.socialengine.dao.MatchmakingApplicationConfigurationDao;
+import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.exception.gameon.GameOnRegistrationNotFoundException;
 import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
 import com.namazustudios.socialengine.model.gameon.game.GameOnEnterMatchRequest;
 import com.namazustudios.socialengine.model.gameon.game.GameOnEnterMatchResponse;
@@ -13,13 +12,17 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.GameOnMatchService;
 import com.namazustudios.socialengine.service.GameOnSessionService;
 import com.namazustudios.socialengine.service.MatchServiceUtils;
+import com.namazustudios.socialengine.service.ProfileService;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnMatchInvoker;
 import com.namazustudios.socialengine.service.gameon.client.model.EnterMatchRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -30,13 +33,17 @@ import static com.namazustudios.socialengine.GameOnConstants.MATCH_METADATA_TOUR
 
 public class UserGameOnMatchService implements GameOnMatchService {
 
+    private static final Logger logger = LoggerFactory.getLogger(UserGameOnMatchService.class);
+
     private MatchDao matchDao;
+
+    private GameOnRegistrationDao gameOnRegistrationDao;
 
     private MatchServiceUtils matchServiceUtils;
 
-    private GameOnSessionService gameOnSessionService;
+    private ProfileService profileService;
 
-    private Supplier<Profile> currentProfileSupplier;
+    private GameOnSessionService gameOnSessionService;
 
     private Provider<GameOnMatchInvoker.Builder> gameOnMatchInvokerProvider;
 
@@ -82,15 +89,15 @@ public class UserGameOnMatchService implements GameOnMatchService {
             final String matchId,
             final GameOnEnterMatchRequest gameOnEnterMatchRequest) {
 
-        final Profile profile = getCurrentProfileSupplier().get();
+        final Profile profile = getProfileService().getCurrentProfile();
 
         final DeviceOSType deviceOSType = gameOnEnterMatchRequest.getDeviceOSType() == null ?
-                DeviceOSType.getDefault()                              :
-                gameOnEnterMatchRequest.getDeviceOSType();
+            DeviceOSType.getDefault()                              :
+            gameOnEnterMatchRequest.getDeviceOSType();
 
         final AppBuildType appBuildType = gameOnEnterMatchRequest.getAppBuildType() == null ?
-                AppBuildType.getDefault()                              :
-                gameOnEnterMatchRequest.getAppBuildType();
+            AppBuildType.getDefault()                              :
+            gameOnEnterMatchRequest.getAppBuildType();
 
         final Match match = gameOnEnterMatchRequest.getMatch();
 
@@ -139,6 +146,59 @@ public class UserGameOnMatchService implements GameOnMatchService {
 
     }
 
+    @Override
+    public GameOnGetMatchLeaderboardResponse getLeaderboard(
+            final DeviceOSType deviceOSType, final AppBuildType appBuildType,
+            final String matchId,
+            final Integer currentPlayerNeighbors,
+            final Integer limit) {
+
+        final GameOnSession gameOnSession;
+        gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
+
+        final GameOnGetMatchLeaderboardResponse response = getGameOnMatchInvokerProvider()
+                .get()
+                .withSession(gameOnSession)
+                .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
+                .build()
+                .getLeaderboard(matchId, currentPlayerNeighbors, limit);
+
+        fillInProfile(response.getCurrentPlayer());
+        fillInProfiles(response.getNeighbors());
+        fillInProfiles(response.getLeaderboard());
+
+        // TODO Rework "Next" URL.  We need to know exactly what "next" is, however.
+
+        return response;
+    }
+
+    private void fillInProfiles(final List<GameOnGetMatchLeaderboardResponse.LeaderboardItem> itemList) {
+        if (itemList == null) return;;
+        itemList.forEach(this::fillInProfile);
+    }
+
+    private void fillInProfile(GameOnGetMatchLeaderboardResponse.LeaderboardItem item) {
+        if (item != null) {
+
+            final String externalPlayerId = item.getExternalPlayerId();
+
+            try {
+
+                final GameOnRegistration gameOnRegistration;
+                gameOnRegistration = getGameOnRegistrationDao().getRegistrationForExternalPlayerId(externalPlayerId);
+
+                final Profile profile = gameOnRegistration.getProfile();
+                final Profile redacted = getProfileService().redactPrivateInformation(profile);
+
+                item.setProfile(redacted);
+
+            } catch (GameOnRegistrationNotFoundException ex) {
+                logger.warn("GameOn Registration not found for player id {}", externalPlayerId);
+            }
+
+        }
+    }
+
     public MatchDao getMatchDao() {
         return matchDao;
     }
@@ -146,6 +206,15 @@ public class UserGameOnMatchService implements GameOnMatchService {
     @Inject
     public void setMatchDao(MatchDao matchDao) {
         this.matchDao = matchDao;
+    }
+
+    public GameOnRegistrationDao getGameOnRegistrationDao() {
+        return gameOnRegistrationDao;
+    }
+
+    @Inject
+    public void setGameOnRegistrationDao(GameOnRegistrationDao gameOnRegistrationDao) {
+        this.gameOnRegistrationDao = gameOnRegistrationDao;
     }
 
     public MatchServiceUtils getMatchServiceUtils() {
@@ -157,13 +226,13 @@ public class UserGameOnMatchService implements GameOnMatchService {
         this.matchServiceUtils = matchServiceUtils;
     }
 
-    public Supplier<Profile> getCurrentProfileSupplier() {
-        return currentProfileSupplier;
+    public ProfileService getProfileService() {
+        return profileService;
     }
 
     @Inject
-    public void setCurrentProfileSupplier(Supplier<Profile> currentProfileSupplier) {
-        this.currentProfileSupplier = currentProfileSupplier;
+    public void setProfileService(ProfileService profileService) {
+        this.profileService = profileService;
     }
 
     public GameOnSessionService getGameOnSessionService() {

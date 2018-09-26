@@ -6,16 +6,15 @@ import com.namazustudios.socialengine.rt.jeromq.*;
 import com.namazustudios.socialengine.rt.remote.RoutingHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.ZContext;
-import org.zeromq.ZMQ;
-import org.zeromq.ZMQException;
-import org.zeromq.ZMsg;
+import org.zeromq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.CLOSE;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.OPEN;
@@ -111,10 +110,16 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
     }
 
     private void issue(final RoutingCommand command) {
-        try (final ZContext context = ZContext.shadow(getzContext());
-             final Connection connection = from(context, c -> c.createSocket(PUSH))) {
+        try (final Connection connection = from(ZContext.shadow(getzContext()), c -> c.createSocket(PUSH))) {
             connection.socket().connect(getControlAddress());
-            connection.socket().sendByteBuffer(command.getByteBuffer(), 0);
+            JeroMQSocketHost.issue(connection.socket(), CommandPreamble.CommandType.ROUTING_COMMAND, command.getByteBuffer());
+        }
+    }
+
+    private void issue(final StatusResponse statusResponse) {
+        try (final Connection connection = from(ZContext.shadow(getzContext()), c -> c.createSocket(PUSH))) {
+            connection.socket().connect(getControlAddress());
+            JeroMQSocketHost.issue(connection.socket(), CommandPreamble.CommandType.STATUS_RESPONSE, statusResponse.getByteBuffer());
         }
     }
 
@@ -252,9 +257,25 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
         private void handleControlMessage(final ZMQ.Socket control, final RoutingTable frontends) {
             final ZMsg msg = ZMsg.recvMsg(control);
-            final RoutingCommand command = new RoutingCommand();
-            command.getByteBuffer().put(msg.getFirst().getData());
-            frontends.process(command);
+            final CommandPreamble preamble = new CommandPreamble();
+
+            preamble.getByteBuffer().put(msg.pop().getData());
+
+            switch(preamble.commandType.get()) {
+                case STATUS_REQUEST:
+                    JeroMQSocketHost.issue(control, CommandPreamble.CommandType.STATUS_RESPONSE, new StatusResponse().getByteBuffer());
+
+                    break;
+
+                case ROUTING_COMMAND:
+                    final RoutingCommand command = new RoutingCommand();
+                    command.getByteBuffer().put(msg.pop().getData());
+
+                    frontends.process(command);
+
+                    break;
+            }
+
         }
 
     }

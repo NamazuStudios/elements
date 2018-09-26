@@ -7,10 +7,7 @@ import com.namazustudios.socialengine.rt.remote.MalformedMessageException;
 import com.namazustudios.socialengine.rt.remote.RoutingHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.ZContext;
-import org.zeromq.ZMQ;
-import org.zeromq.ZMQException;
-import org.zeromq.ZMsg;
+import org.zeromq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -26,11 +23,9 @@ import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.IntStream.range;
-import static org.zeromq.ZMQ.PULL;
-import static org.zeromq.ZMQ.PUSH;
+import static org.zeromq.ZMQ.*;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
-import static org.zeromq.ZMQ.ROUTER;
 import static org.zeromq.ZMsg.recvMsg;
 import static zmq.ZError.EHOSTUNREACH;
 
@@ -40,6 +35,8 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
     public static final String BIND_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.bindAddress";
 
+    public static final String CONTROL_BIND_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.controlBindAddress";
+
     private Routing routing;
 
     private Identity identity;
@@ -47,6 +44,8 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
     private ZContext zContext;
 
     private String bindAddress;
+
+    private String controlBindAddress;
 
     private final AtomicReference<Thread> routerThread = new AtomicReference<>();
 
@@ -119,9 +118,16 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
     }
 
     private void issue(final RoutingCommand command) {
-        try (final Connection connection = from(getzContext(), c -> c.createSocket(PUSH))) {
+        try (final Connection connection = from(ZContext.shadow(getzContext()), c -> c.createSocket(PUSH))) {
             connection.socket().connect(getControlAddress());
-            connection.socket().sendByteBuffer(command.getByteBuffer(), 0);
+            JeroMQSocketHost.issue(connection.socket(), CommandPreamble.CommandType.ROUTING_COMMAND, command.getByteBuffer());
+        }
+    }
+
+    private void issue(final StatusResponse statusResponse) {
+        try (final Connection connection = from(ZContext.shadow(getzContext()), c -> c.createSocket(PUSH))) {
+            connection.socket().connect(getControlAddress());
+            JeroMQSocketHost.issue(connection.socket(), CommandPreamble.CommandType.STATUS_RESPONSE, statusResponse.getByteBuffer());
         }
     }
 
@@ -161,6 +167,15 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         this.bindAddress = bindAddress;
     }
 
+    public String getControlBindAddress() {
+        return controlBindAddress;
+    }
+
+    @Inject
+    public void setControlBindAddress(@Named(CONTROL_BIND_ADDR) String controlBindAddress) {
+        this.controlBindAddress = controlBindAddress;
+    }
+
     public String getControlAddress() {
         return controlAddress;
     }
@@ -173,7 +188,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
             try (final ZContext context = ZContext.shadow(getzContext());
                  final ZMQ.Poller poller = context.createPoller(1);
                  final Connection frontend = from(getzContext(), c -> c.createSocket(ROUTER));
-                 final Connection control = from(getzContext(), c -> c.createSocket(PULL));
+                 final Connection control = from(getzContext(), c -> c.createSocket(REP));
                  final RoutingTable backends = new RoutingTable(getzContext(), poller, this::connect);
                  final MonitorThread monitorThread = new MonitorThread(getClass().getSimpleName(), logger, context, frontend.socket())) {
 
@@ -181,6 +196,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                 frontend.socket().setRouterMandatory(true);
                 frontend.socket().bind(getBindAddress());
                 control.socket().bind(getControlAddress());
+                control.socket().bind(getControlBindAddress());
 
                 final int frontendIndex = poller.register(frontend.socket(), POLLIN | POLLERR);
                 final int controlIndex = poller.register(control.socket(),  POLLIN | POLLERR);
@@ -316,9 +332,27 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
         private void handleControlMessage(final ZMQ.Socket control, final RoutingTable backends) {
             final ZMsg msg = ZMsg.recvMsg(control);
-            final RoutingCommand command = new RoutingCommand();
-            command.getByteBuffer().put(msg.getFirst().getData());
-            backends.process(command);
+            final CommandPreamble preamble = new CommandPreamble();
+
+            preamble.getByteBuffer().put(msg.pop().getData());
+
+            switch(preamble.commandType.get()) {
+                case STATUS_REQUEST:
+                    JeroMQSocketHost.issue(control, CommandPreamble.CommandType.STATUS_RESPONSE, new StatusResponse().getByteBuffer());
+
+                    break;
+
+                case ROUTING_COMMAND:
+                    JeroMQSocketHost.issue(control, CommandPreamble.CommandType.ROUTING_COMMAND_ACK, new RoutingCommandAcknowledgement().getByteBuffer());
+
+                    final RoutingCommand command = new RoutingCommand();
+                    command.getByteBuffer().put(msg.pop().getData());
+
+                    backends.process(command);
+
+                    break;
+            }
+
         }
 
     }

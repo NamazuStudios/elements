@@ -48,4 +48,17 @@ public interface GameOnMatchService {
      */
     GameOnEnterMatchResponse enterMatch(String matchId, GameOnEnterMatchRequest gameOnEnterMatchRequest);
 
+    /**
+     * Returns the {@link GameOnGetMatchLeaderboardResponse} for the supplied match.
+     *
+     * @param deviceOSType the device OS type to use when referencing the session, may not be null
+     * @param appBuildType the app build type to use when referencing the session, may not be null
+     * @param matchId the game-on match id
+     * @param currentPlayerNeighbors the number of current neighbors to request
+     * @param limit the limit to fetch
+     * @return the {@link GameOnGetMatchLeaderboardResponse}
+     */
+    GameOnGetMatchLeaderboardResponse getLeaderboard(DeviceOSType deviceOSType, AppBuildType appBuildType,
+                                                     String matchId, Integer currentPlayerNeighbors, Integer limit);
+
 }

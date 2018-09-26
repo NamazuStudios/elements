@@ -38,11 +38,6 @@ public class UserProfileService implements ProfileService {
             .transform(this::redactPrivateInformation);
     }
 
-    private Profile redactPrivateInformation(final Profile profile) {
-        profile.setUser(null);
-        return profile;
-    }
-
     @Override
     public Profile getProfile(String profileId) {
         return getProfileDao().getActiveProfile(profileId);
