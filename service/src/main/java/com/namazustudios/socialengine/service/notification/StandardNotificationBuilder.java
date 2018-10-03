@@ -5,8 +5,13 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.Notification;
 import com.namazustudios.socialengine.service.NotificationBuilder;
 import com.namazustudios.socialengine.service.NotificationParameters;
+import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 public class StandardNotificationBuilder implements NotificationBuilder, NotificationParameters {
@@ -22,6 +27,8 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
     private NotificationFactory notificationFactory;
 
     private String sound;
+
+    private HashMap<String, String> extraProperties = new HashMap<>();
 
     @Override
     public NotificationBuilder application(final Application application) {
@@ -54,6 +61,25 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
     }
 
     @Override
+    public NotificationBuilder add(@Nonnull String key, @Nonnull String value) {
+        extraProperties.put(key, value);
+        return this;
+    }
+
+    @Override
+    public NotificationBuilder addAll(Map<String, String> allData) {
+        if (allData == null) {
+            return this;
+        }
+        for (Map.Entry<String, String> kv : allData.entrySet()) {
+            if (!StringUtils.isNotEmpty(kv.getKey()) && kv.getValue() != null) {
+                extraProperties.put(kv.getKey(), kv.getValue());
+            }
+        }
+        return this;
+    }
+
+    @Override
     public Profile getRecipient() {
         return recipient;
     }
@@ -79,6 +105,12 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
     }
 
     @Override
+    @Nonnull
+    public Map<String, String> getExtraProperties() {
+        return Collections.unmodifiableMap(extraProperties);
+    }
+
+    @Override
     public Notification build() {
         return getNotificationFactory().apply(this);
     }
@@ -88,6 +120,7 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
     }
 
     @Inject
+    @SuppressWarnings("unused")
     public void setNotificationFactory(NotificationFactory notificationFactory) {
         this.notificationFactory = notificationFactory;
     }
@@ -95,12 +128,12 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
     @Override
     public String toString() {
         return "StandardNotificationBuilder{" +
-                "recipient=" + recipient +
-                ", application=" + application +
-                ", title='" + title + '\'' +
-                ", message='" + message + '\'' +
-                ", notificationFactory=" + notificationFactory +
-                '}';
+               "recipient=" + recipient +
+               ", application=" + application +
+               ", title='" + title + '\'' +
+               ", message='" + message + '\'' +
+               ", notificationFactory=" + notificationFactory +
+               '}';
     }
 
 }

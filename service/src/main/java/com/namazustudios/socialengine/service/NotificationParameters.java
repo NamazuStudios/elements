@@ -3,6 +3,9 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 
+import javax.annotation.Nonnull;
+import java.util.Map;
+
 /**
  * Specifies the parameters used to send the {@link Notification}.
  */
@@ -42,4 +45,12 @@ public interface NotificationParameters {
      */
     String getSound();
 
+    /**
+     * Gets a read-only mapping of extra key/value properties associated with this notification.  If there are no
+     * extra properties, an empty map is returned
+     *
+     * @return A read-only Map of extra properties
+     */
+    @Nonnull
+    Map<String,String> getExtraProperties();
 }
