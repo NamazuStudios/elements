@@ -51,6 +51,8 @@ public class LuaNotificationIntegrationTest {
         when(getMockNotificationBuilder().recipient(any())).thenReturn(getMockNotificationBuilder());
         when(getMockNotificationBuilder().message(any())).thenReturn(getMockNotificationBuilder());
         when(getMockNotificationBuilder().title(any())).thenReturn(getMockNotificationBuilder());
+        when(getMockNotificationBuilder().add(anyString(), anyString())).thenReturn(getMockNotificationBuilder());
+        when(getMockNotificationBuilder().addAll(anyMap())).thenReturn(getMockNotificationBuilder());
         when(getMockNotificationBuilder().build()).thenReturn(mockNotification);
 
         performLuaTest("namazu.elements.test.notification","test_send_with_builder", attributes);

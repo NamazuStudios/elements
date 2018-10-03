@@ -18,6 +18,8 @@ function test_notification.test_send_with_builder()
     builder:title("Hello World!")
            :message("Hello World!")
            :recipient(auth.profile())
+           :add("single","property")
+           :addAll({extraA ="foo", extraB = "bar"})
            :build()
            :send()
 

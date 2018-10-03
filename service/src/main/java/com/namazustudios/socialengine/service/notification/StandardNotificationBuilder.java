@@ -28,7 +28,7 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
 
     private String sound;
 
-    private HashMap<String,String> extraProperties = new HashMap<>();
+    private HashMap<String, String> extraProperties = new HashMap<>();
 
     @Override
     public NotificationBuilder application(final Application application) {
@@ -62,7 +62,7 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
 
     @Override
     public NotificationBuilder add(@Nonnull String key, @Nonnull String value) {
-        extraProperties.put(key,value);
+        extraProperties.put(key, value);
         return this;
     }
 
@@ -71,7 +71,7 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
         if (allData == null) {
             return this;
         }
-        for (Map.Entry<String,String> kv : allData.entrySet()) {
+        for (Map.Entry<String, String> kv : allData.entrySet()) {
             if (!StringUtils.isNotEmpty(kv.getKey()) && kv.getValue() != null) {
                 extraProperties.put(kv.getKey(), kv.getValue());
             }
@@ -128,12 +128,12 @@ public class StandardNotificationBuilder implements NotificationBuilder, Notific
     @Override
     public String toString() {
         return "StandardNotificationBuilder{" +
-                "recipient=" + recipient +
-                ", application=" + application +
-                ", title='" + title + '\'' +
-                ", message='" + message + '\'' +
-                ", notificationFactory=" + notificationFactory +
-                '}';
+               "recipient=" + recipient +
+               ", application=" + application +
+               ", title='" + title + '\'' +
+               ", message='" + message + '\'' +
+               ", notificationFactory=" + notificationFactory +
+               '}';
     }
 
 }
