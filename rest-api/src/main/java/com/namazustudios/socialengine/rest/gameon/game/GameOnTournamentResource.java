@@ -46,12 +46,21 @@ public class GameOnTournamentResource {
 
             @QueryParam("playerAttributes")
             @ApiParam("Custom player attributes.")
-            final String playerAttributes
+            final String playerAttributes,
+
+            @QueryParam("eligibleOnly")
+            @DefaultValue("true")
+            @ApiParam("Set to true to filter tournaments that have not been entered already.")
+            final boolean eligibleOnly
 
     ) {
-        return getGameOnTournamentService().getEligibleTournaments(
-            deviceOSType, appBuildType,             // Session related parameters
-            filterBy, period, playerAttributes);    // Filter/query related parameters
+        return eligibleOnly ?
+            getGameOnTournamentService().getEligibleTournaments(
+                deviceOSType, appBuildType,             // Session related parameters
+                filterBy, period, playerAttributes) :   // Filter/query related parameters
+            getGameOnTournamentService().getTournaments(
+                deviceOSType, appBuildType,             // Session related parameters
+                filterBy, period, playerAttributes);    // Filter/query related parameters
     }
 
     @GET
@@ -79,12 +88,21 @@ public class GameOnTournamentResource {
 
             @QueryParam("playerAttributes")
             @ApiParam("Custom player attributes.")
-            final String playerAttributes
+            final String playerAttributes,
+
+            @QueryParam("eligibleOnly")
+            @DefaultValue("true")
+            @ApiParam("Set to true to filter tournaments that have not been entered already.")
+            final boolean eligibleOnly
 
     ) {
-        return getGameOnTournamentService().getEligibleTournamentDetail(
-            deviceOSType, appBuildType,       // Session related parameters
-            playerAttributes, tournamentId);  // Filer/query related parameters
+        return eligibleOnly ?
+            getGameOnTournamentService().getEligibleTournamentDetail(
+                deviceOSType, appBuildType,       // Session related parameters
+                playerAttributes, tournamentId) : // Filer/query related parameters
+            getGameOnTournamentService().getTournamentDetail(
+                deviceOSType, appBuildType,       // Session related parameters
+                playerAttributes, tournamentId);  // Filer/query related parameters
     }
 
     @POST

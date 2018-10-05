@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.gameon.admin;
 
+import com.namazustudios.socialengine.model.gameon.GameOnPrizeInfoType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -61,7 +62,7 @@ public class GameOnGetPrizeListResponse implements Serializable {
         private String prizeInfo;
 
         @ApiModelProperty("The prize info type.")
-        private PrizeInfoType prizeInfoType;
+        private GameOnPrizeInfoType prizeInfoType;
 
         @ApiModelProperty("The date the prize expires.")
         private Long dateOfExpiration;
@@ -106,11 +107,11 @@ public class GameOnGetPrizeListResponse implements Serializable {
             this.prizeInfo = prizeInfo;
         }
 
-        public PrizeInfoType getPrizeInfoType() {
+        public GameOnPrizeInfoType getPrizeInfoType() {
             return prizeInfoType;
         }
 
-        public void setPrizeInfoType(PrizeInfoType prizeInfoType) {
+        public void setPrizeInfoType(GameOnPrizeInfoType prizeInfoType) {
             this.prizeInfoType = prizeInfoType;
         }
 

@@ -18,7 +18,7 @@ public class GameOnMatchDetail {
     private GameOnTournamentDetail tournamentDetails;
 
     @ApiModelProperty("Prizes awarded to the player.")
-    private List<GameOnPrizeBundle> awardedPrizes;
+    private List<AwardedPrize> awardedPrizes;
 
     @ApiModelProperty("True if the player can enter, false otherwise.")
     private Boolean canEnter;
@@ -51,11 +51,11 @@ public class GameOnMatchDetail {
         this.tournamentDetails = tournamentDetails;
     }
 
-    public List<GameOnPrizeBundle> getAwardedPrizes() {
+    public List<AwardedPrize> getAwardedPrizes() {
         return awardedPrizes;
     }
 
-    public void setAwardedPrizes(List<GameOnPrizeBundle> awardedPrizes) {
+    public void setAwardedPrizes(List<AwardedPrize> awardedPrizes) {
         this.awardedPrizes = awardedPrizes;
     }
 
@@ -134,4 +134,85 @@ public class GameOnMatchDetail {
                 '}';
     }
 
+    @ApiModel(description = "The awarded prize model.  See: " +
+              "https://developer.amazon.com/docs/gameon/game-api-ref.html#getmatchdetailsresponse_awardedprize")
+    public static class AwardedPrize {
+
+        @ApiModelProperty("The awarded prize ID")
+        private String awardedPrizeId;
+
+        @ApiModelProperty("The awarded prize status.")
+        private AwardedPrizeStatus status;
+
+        @ApiModelProperty("The awarded prize title.")
+        private String prizeTitle;
+
+        public String getAwardedPrizeId() {
+            return awardedPrizeId;
+        }
+
+        public void setAwardedPrizeId(String awardedPrizeId) {
+            this.awardedPrizeId = awardedPrizeId;
+        }
+
+        public AwardedPrizeStatus getStatus() {
+            return status;
+        }
+
+        public void setStatus(AwardedPrizeStatus status) {
+            this.status = status;
+        }
+
+        public String getPrizeTitle() {
+            return prizeTitle;
+        }
+
+        public void setPrizeTitle(String prizeTitle) {
+            this.prizeTitle = prizeTitle;
+        }
+
+        @Override
+        public boolean equals(Object object) {
+            if (this == object) return true;
+            if (!(object instanceof AwardedPrize)) return false;
+            AwardedPrize that = (AwardedPrize) object;
+            return Objects.equals(getAwardedPrizeId(), that.getAwardedPrizeId()) &&
+                    getStatus() == that.getStatus() &&
+                    Objects.equals(getPrizeTitle(), that.getPrizeTitle());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getAwardedPrizeId(), getStatus(), getPrizeTitle());
+        }
+
+        @Override
+        public String toString() {
+            return "AwardedPrize{" +
+                    "awardedPrizeId='" + awardedPrizeId + '\'' +
+                    ", status=" + status +
+                    ", prizeTitle='" + prizeTitle + '\'' +
+                    '}';
+        }
+
+    }
+
+    public enum AwardedPrizeStatus {
+
+        /**
+         * The prize has yet to be claimed.
+         */
+        UNCLAIMED,
+
+        /**
+         * The prize has been claimed.
+         */
+        CLAIMED,
+
+        /**
+         * The prize has been fulfilled.
+         */
+        FULFILLED
+
+    }
 }

@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.model.gameon.game;
 
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 import java.io.Serializable;
 import java.util.List;
@@ -9,16 +10,22 @@ import java.util.Objects;
 @ApiModel
 public class GameOnPrizeBundle implements Serializable {
 
+    @ApiModelProperty("The title of the prize bundle.")
     private String title;
 
+    @ApiModelProperty("The description of the prize bundle.")
     private String description;
 
+    @ApiModelProperty("The image URL of the prize bundle.")
     private String imageUrl;
 
+    @ApiModelProperty("The list of Prize IDs awareded by this bundle.")
     private List<String> prizeIds;
 
+    @ApiModelProperty("The minimum rank needed to win the prize bundle.")
     private Integer rankFrom;
 
+    @ApiModelProperty("The maximum rank needed to win the prize bundle.")
     private Integer rankTo;
 
     public String getTitle() {

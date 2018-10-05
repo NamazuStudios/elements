@@ -1,9 +1,9 @@
-package com.namazustudios.socialengine.model.gameon.admin;
+package com.namazustudios.socialengine.model.gameon;
 
 /**
  * Represents the prize info type.
  */
-public enum PrizeInfoType {
+public enum GameOnPrizeInfoType {
 
     /**
      * Vendor-supplied prize.

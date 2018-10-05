@@ -4,8 +4,8 @@ import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.gameon.GameOnRegistrationNotFoundException;
 import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
-import com.namazustudios.socialengine.model.gameon.GameOnEnterMatchRequest;
-import com.namazustudios.socialengine.model.gameon.GameOnEnterMatchResponse;
+import com.namazustudios.socialengine.model.gameon.game.GameOnEnterMatchRequest;
+import com.namazustudios.socialengine.model.gameon.game.GameOnEnterMatchResponse;
 import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -127,7 +127,7 @@ public class UserGameOnMatchService implements GameOnMatchService {
         match.setScope(response.getTournamentId());
 
         // Sets the game on specific metadata to the match
-        final Map<String, Serializable> metadata = new HashMap<>();
+        final Map<String, Object> metadata = new HashMap<>();
         metadata.put(MATCH_METADATA_MATCH_ID, response.getMatchId());
         metadata.put(MATCH_METADATA_TOURNAMENT_ID, response.getTournamentId());
         match.setMetadata(metadata);

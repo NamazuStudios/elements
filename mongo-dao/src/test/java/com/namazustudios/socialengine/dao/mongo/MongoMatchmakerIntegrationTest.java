@@ -134,7 +134,7 @@ public class MongoMatchmakerIntegrationTest {
         match.setScheme("pvp");
         match.setScope(scope);
 
-        final Map<String, Serializable> metadata = new HashMap<>();
+        final Map<String, Object> metadata = new HashMap<>();
         metadata.put(TEST_METADATA_KEY, TEST_METADATA_VALUE);
         match.setMetadata(metadata);
 
@@ -172,10 +172,10 @@ public class MongoMatchmakerIntegrationTest {
     @DataProvider
     public Object[][] intermediateProfileDataProvider() {
         return intermediateProfiles
-                .stream()
-                .map(m -> new Object[]{m})
-                .collect(toList())
-                .toArray(new Object[][]{});
+            .stream()
+            .map(m -> new Object[]{m})
+            .collect(toList())
+            .toArray(new Object[][]{});
     }
 
 
