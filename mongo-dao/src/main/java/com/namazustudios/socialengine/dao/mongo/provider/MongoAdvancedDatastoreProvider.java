@@ -47,7 +47,8 @@ public class MongoAdvancedDatastoreProvider implements Provider<AdvancedDatastor
             MongoMatch.class,
             MongoMatchmakingApplicationConfiguration.class,
             MongoGameOnRegistration.class,
-            MongoGameOnSession.class
+            MongoGameOnSession.class,
+            MongoItem.class
         );
 
         final MongoClient mongoClient = mongoProvider.get();

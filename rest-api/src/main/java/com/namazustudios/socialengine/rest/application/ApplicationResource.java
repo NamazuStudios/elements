@@ -22,9 +22,9 @@ import static com.google.common.base.Strings.nullToEmpty;
 @Api(value = "Applications",
      description = "These operations manage any variety of client side applications which " +
                    "may be communicating with the server.  This stores minimal information " +
-                   "for each and is used primairly as an aggregation point for other application " +
+                   "for each and is used primarily as an aggregation point for other application " +
                    "profiles.  Application metadata is typically used for client side apps to determine " +
-                   "the latest version or to resolve any compatiblity issues.  This can also be used to " +
+                   "the latest version or to resolve any compatibility issues.  This can also be used to " +
                    "perform force upgrades.",
      authorizations = {@Authorization(EnhancedApiListingResource.SESSION_SECRET)})
 @Path("application")
