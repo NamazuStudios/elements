@@ -47,20 +47,6 @@ public class ApplicationNodeMain {
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
-        final Injector injector = Guice.createInjector(
-            new ConfigurationModule(defaultConfigurationSupplier),
-            new MongoCoreModule(),
-            new MongoDaoModule(),
-            new ValidationModule(),
-            new MongoSearchModule(),
-            new RTFilesystemGitLoaderModule(),
-            new MultiNodeContainerModule(),
-            new FirebaseAppFactoryModule(),
-            new GuiceStandardNotificationFactoryModule(),
-            new JaxRSClientModule(),
-            new VersionModule()
-        );
-
         // quick and dirty arg check - may want to leverage command processing from Setup module
 
         for (String arg : args) {
@@ -111,6 +97,20 @@ public class ApplicationNodeMain {
                 System.exit(result ? 0 : -1);
             }
         }
+
+        final Injector injector = Guice.createInjector(
+                new ConfigurationModule(defaultConfigurationSupplier),
+                new MongoCoreModule(),
+                new MongoDaoModule(),
+                new ValidationModule(),
+                new MongoSearchModule(),
+                new RTFilesystemGitLoaderModule(),
+                new MultiNodeContainerModule(),
+                new FirebaseAppFactoryModule(),
+                new GuiceStandardNotificationFactoryModule(),
+                new JaxRSClientModule(),
+                new VersionModule()
+        );
 
         final Object lock = new Object();
 
