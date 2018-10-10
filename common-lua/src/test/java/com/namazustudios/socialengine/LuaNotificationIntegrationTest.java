@@ -13,6 +13,9 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static java.util.UUID.randomUUID;
 import static org.mockito.Mockito.*;
 
@@ -51,6 +54,8 @@ public class LuaNotificationIntegrationTest {
         when(getMockNotificationBuilder().recipient(any())).thenReturn(getMockNotificationBuilder());
         when(getMockNotificationBuilder().message(any())).thenReturn(getMockNotificationBuilder());
         when(getMockNotificationBuilder().title(any())).thenReturn(getMockNotificationBuilder());
+        when(getMockNotificationBuilder().add(anyString(), anyString())).thenReturn(getMockNotificationBuilder());
+        when(getMockNotificationBuilder().addAll(anyMap())).thenReturn(getMockNotificationBuilder());
         when(getMockNotificationBuilder().build()).thenReturn(mockNotification);
 
         performLuaTest("namazu.elements.test.notification","test_send_with_builder", attributes);
@@ -60,6 +65,12 @@ public class LuaNotificationIntegrationTest {
         verify(getMockNotificationBuilder(), times(1)).message(eq("Hello World!"));
         verify(getMockNotificationBuilder(), times(1)).application(eq(mockApplication));
         verify(getMockNotificationBuilder(), times(1)).recipient(eq(mockProfile));
+        verify(getMockNotificationBuilder(), times(1)).add(eq("single"), eq("property"));
+
+        Map<String,String> allProps = new HashMap<>();
+        allProps.put("extraA","foo");
+        allProps.put("extraB","bar");
+        verify(getMockNotificationBuilder(), times(1)).addAll(eq(allProps));
 
     }
 

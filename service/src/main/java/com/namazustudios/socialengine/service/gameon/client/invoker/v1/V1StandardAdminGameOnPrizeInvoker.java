@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListRequest;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListResponse;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnGetPrizeListResponse;
-import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnPrizeInvoker;
+import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnAdminPrizeInvoker;
 
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.client.Client;
@@ -17,7 +17,7 @@ import static com.namazustudios.socialengine.GameOnConstants.X_API_KEY;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-public class V1StandardGameOnPrizeInvoker implements GameOnPrizeInvoker {
+public class V1StandardAdminGameOnPrizeInvoker implements GameOnAdminPrizeInvoker {
 
     public static final String PRIZES_PATH = "prizes";
 
@@ -25,7 +25,7 @@ public class V1StandardGameOnPrizeInvoker implements GameOnPrizeInvoker {
 
     private final String adminApiKey;
 
-    public V1StandardGameOnPrizeInvoker(final Client client, final String adminApiKey) {
+    public V1StandardAdminGameOnPrizeInvoker(final Client client, final String adminApiKey) {
         this.client = client;
         this.adminApiKey = adminApiKey;
     }
@@ -58,7 +58,7 @@ public class V1StandardGameOnPrizeInvoker implements GameOnPrizeInvoker {
 
     }
 
-    private <T> T getResponse(final Response response, Class<T> responseTClass) {
+    private <T> T getResponse(final Response response, final Class<T> responseTClass) {
         if (response.getStatus() == Response.Status.OK.getStatusCode()) {
             return response.readEntity(responseTClass);
         } else if (response.getStatus() == Response.Status.FORBIDDEN.getStatusCode()) {

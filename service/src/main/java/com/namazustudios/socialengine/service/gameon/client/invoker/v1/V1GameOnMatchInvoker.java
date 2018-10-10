@@ -1,13 +1,12 @@
 package com.namazustudios.socialengine.service.gameon.client.invoker.v1;
 
-import com.namazustudios.socialengine.GameOnConstants;
 import com.namazustudios.socialengine.exception.ConflictException;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.gameon.GameOnMatchNotFoundException;
 import com.namazustudios.socialengine.exception.gameon.GameOnTournamentNotFoundException;
-import com.namazustudios.socialengine.model.gameon.GameOnEnterMatchResponse;
+import com.namazustudios.socialengine.model.gameon.game.GameOnEnterMatchResponse;
 import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.service.gameon.client.exception.PlayerSessionExpiredException;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnMatchInvoker;

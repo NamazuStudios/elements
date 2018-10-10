@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rest.gameon.game;
 
-import com.namazustudios.socialengine.model.gameon.GameOnPlayerTournamentEnterRequest;
-import com.namazustudios.socialengine.model.gameon.GameOnPlayerTournamentEnterResponse;
+import com.namazustudios.socialengine.model.gameon.game.GameOnPlayerTournamentEnterRequest;
+import com.namazustudios.socialengine.model.gameon.game.GameOnPlayerTournamentEnterResponse;
 import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.service.GameOnPlayerTournamentService;
 import io.swagger.annotations.Api;

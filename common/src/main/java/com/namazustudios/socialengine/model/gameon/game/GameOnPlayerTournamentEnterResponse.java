@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.gameon;
+package com.namazustudios.socialengine.model.gameon.game;
 
 import com.namazustudios.socialengine.model.gameon.game.GameOnTournamentEnterResponse;
 import com.namazustudios.socialengine.model.match.Match;

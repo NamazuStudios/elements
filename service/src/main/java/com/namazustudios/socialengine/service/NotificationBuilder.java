@@ -5,6 +5,9 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.profile.Profile;
 
+import javax.annotation.Nonnull;
+import java.util.Map;
+
 /**
  * Builds instances of {@link Notification} based on input parameters.  Instances of {@link NotificationBuilder} may
  * be configured partially by the container, therefore they should be created using a {@link javax.inject.Provider} or
@@ -76,7 +79,7 @@ public interface NotificationBuilder {
     default NotificationBuilder sound() {
         return sound("default");
     }
-    
+
     /**
      * Specifies the sound to play when delivering the message.
      *
@@ -84,6 +87,26 @@ public interface NotificationBuilder {
      * @return this instance
      */
     NotificationBuilder sound(String sound);
+
+    /**
+     * Adds a single key/value property.  Individual keys should be non-empty and all values should be non-null
+     *
+     * @param key - A non-empty string key for the property
+     * @param value - A non-null string value for the property
+     * @return this instance
+     */
+    NotificationBuilder add(@Nonnull String key, @Nonnull String value);
+
+    /**
+     * Adds all properties in the passed in mapping to the notification being built.  Any keys which are null or empty
+     * Strings will be ignored.  Any values which are null will be ignored.  For all other entries, if any keys
+     * previously exist in the notification, they will be replaced by the value specified in the passed in Map.
+     * If a value is null, then that
+     *
+     * @param properties - A Map of all properties to be added in bulk to this notification.
+     * @return this instance
+     */
+    NotificationBuilder addAll(Map<String,String> properties);
 
     /**
      * Constructs the instance of {@link Notification} with all of the configured information.  This returns a new

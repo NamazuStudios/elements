@@ -65,6 +65,7 @@ public class StandardNotificationDestinationFactoryProvider implements Provider<
                             .setSound(p.getSound() == null ? "default" : p.getSound())
                         .build())
                     .build())
+                    .putAllData(p.getExtraProperties())
                 .build();
 
                 final ApiFuture<String> apiFuture = firebaseMessaging.sendAsync(message);

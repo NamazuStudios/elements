@@ -1,7 +1,5 @@
-package com.namazustudios.socialengine.model.gameon;
+package com.namazustudios.socialengine.model.gameon.game;
 
-import com.namazustudios.socialengine.model.gameon.game.AppBuildType;
-import com.namazustudios.socialengine.model.gameon.game.DeviceOSType;
 import com.namazustudios.socialengine.model.match.Match;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
