@@ -70,7 +70,7 @@ public class ApplicationNodeMain {
                             // use default timeout
                         }
 
-                        JeroMQSocketHost.issue(connection.socket(), STATUS_REQUEST,  new StatusRequest().getByteBuffer());
+                        JeroMQSocketHost.send(connection.socket(), STATUS_REQUEST,  new StatusRequest().getByteBuffer());
 
                         final ZMsg resp = ZMsg.recvMsg(connection.socket());
 

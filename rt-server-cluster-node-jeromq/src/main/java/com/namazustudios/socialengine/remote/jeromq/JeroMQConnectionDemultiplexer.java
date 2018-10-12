@@ -14,8 +14,12 @@ import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND;
+import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND_ACK;
+import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_RESPONSE;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
+import static com.namazustudios.socialengine.rt.jeromq.JeroMQSocketHost.send;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.CLOSE;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.OPEN;
 import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.CONTINUE;
@@ -118,16 +122,10 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
     }
 
     private void issue(final RoutingCommand command) {
-        try (final Connection connection = from(ZContext.shadow(getzContext()), c -> c.createSocket(PUSH))) {
+        try (final Connection connection = from(ZContext.shadow(getzContext()), c -> c.createSocket(REQ))) {
             connection.socket().connect(getControlAddress());
-            JeroMQSocketHost.issue(connection.socket(), CommandPreamble.CommandType.ROUTING_COMMAND, command.getByteBuffer());
-        }
-    }
-
-    private void issue(final StatusResponse statusResponse) {
-        try (final Connection connection = from(ZContext.shadow(getzContext()), c -> c.createSocket(PUSH))) {
-            connection.socket().connect(getControlAddress());
-            JeroMQSocketHost.issue(connection.socket(), CommandPreamble.CommandType.STATUS_RESPONSE, statusResponse.getByteBuffer());
+            send(connection.socket(), ROUTING_COMMAND, command.getByteBuffer());
+            connection.socket().recv();
         }
     }
 
@@ -338,19 +336,16 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
             switch(preamble.commandType.get()) {
                 case STATUS_REQUEST:
-                    JeroMQSocketHost.issue(control, CommandPreamble.CommandType.STATUS_RESPONSE, new StatusResponse().getByteBuffer());
-
+                    send(control, STATUS_RESPONSE, new StatusResponse().getByteBuffer());
                     break;
-
                 case ROUTING_COMMAND:
-                    JeroMQSocketHost.issue(control, CommandPreamble.CommandType.ROUTING_COMMAND_ACK, new RoutingCommandAcknowledgement().getByteBuffer());
-
+                    send(control, ROUTING_COMMAND_ACK, new RoutingCommandAcknowledgement().getByteBuffer());
                     final RoutingCommand command = new RoutingCommand();
                     command.getByteBuffer().put(msg.pop().getData());
-
                     backends.process(command);
-
                     break;
+                default:
+                    logger.error("Unexpected command: {}", preamble.commandType.get());
             }
 
         }

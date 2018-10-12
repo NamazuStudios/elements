@@ -10,11 +10,9 @@ import org.zeromq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.CLOSE;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.OPEN;
@@ -112,14 +110,14 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
     private void issue(final RoutingCommand command) {
         try (final Connection connection = from(ZContext.shadow(getzContext()), c -> c.createSocket(PUSH))) {
             connection.socket().connect(getControlAddress());
-            JeroMQSocketHost.issue(connection.socket(), CommandPreamble.CommandType.ROUTING_COMMAND, command.getByteBuffer());
+            JeroMQSocketHost.send(connection.socket(), CommandPreamble.CommandType.ROUTING_COMMAND, command.getByteBuffer());
         }
     }
 
     private void issue(final StatusResponse statusResponse) {
         try (final Connection connection = from(ZContext.shadow(getzContext()), c -> c.createSocket(PUSH))) {
             connection.socket().connect(getControlAddress());
-            JeroMQSocketHost.issue(connection.socket(), CommandPreamble.CommandType.STATUS_RESPONSE, statusResponse.getByteBuffer());
+            JeroMQSocketHost.send(connection.socket(), CommandPreamble.CommandType.STATUS_RESPONSE, statusResponse.getByteBuffer());
         }
     }
 
@@ -263,7 +261,7 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
             switch(preamble.commandType.get()) {
                 case STATUS_REQUEST:
-                    JeroMQSocketHost.issue(control, CommandPreamble.CommandType.STATUS_RESPONSE, new StatusResponse().getByteBuffer());
+                    JeroMQSocketHost.send(control, CommandPreamble.CommandType.STATUS_RESPONSE, new StatusResponse().getByteBuffer());
 
                     break;
 

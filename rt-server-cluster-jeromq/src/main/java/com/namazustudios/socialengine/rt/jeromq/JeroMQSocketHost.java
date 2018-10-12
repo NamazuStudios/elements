@@ -7,11 +7,11 @@ import org.zeromq.ZMsg;
 import java.nio.ByteBuffer;
 
 public interface JeroMQSocketHost {
-    static void issue(final ZMQ.Socket control, CommandPreamble.CommandType commandType, ByteBuffer commandByteBuffer) {
+    static void send(final ZMQ.Socket control, CommandPreamble.CommandType commandType, ByteBuffer commandByteBuffer) {
         final CommandPreamble preamble = new CommandPreamble();
         preamble.commandType.set(commandType);
 
-        ZMsg msg = new ZMsg();
+        final ZMsg msg = new ZMsg();
 
         ByteBuffer preambleByteBuffer = preamble.getByteBuffer();
         byte[] preambleBytes = new byte[preambleByteBuffer.remaining()];
