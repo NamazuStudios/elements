@@ -6,6 +6,8 @@ import com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvi
 import com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProvider;
 import jetbrains.exodus.env.Environment;
 
+import java.io.File;
+
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.xodus.XodusResourceService.RESOURCE_ENVIRONMENT;
 import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerContext.SCHEDULER_ENVIRONMENT;
@@ -39,8 +41,16 @@ public class XodusEnvironmentModule extends AbstractModule {
     }
 
     public XodusEnvironmentModule withTempEnvironments() {
-        return withResourceEnvironmentPath(Files.createTempDir().getAbsolutePath()).
-               withSchedulerEnvironmentPath(Files.createTempDir().getAbsolutePath());
+
+        final File resourceDirectory = Files.createTempDir();
+        final File schedulerDirectory = Files.createTempDir();
+
+        resourceDirectory.deleteOnExit();
+        schedulerDirectory.deleteOnExit();
+
+        return withResourceEnvironmentPath(resourceDirectory.getAbsolutePath()).
+               withSchedulerEnvironmentPath(schedulerDirectory.getAbsolutePath());
+
     }
 
     public XodusEnvironmentModule withResourceEnvironmentPath(final String path) {

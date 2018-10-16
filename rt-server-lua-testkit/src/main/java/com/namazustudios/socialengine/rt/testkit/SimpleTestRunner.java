@@ -50,18 +50,9 @@ public class SimpleTestRunner implements TestRunner {
             } catch (Throwable th) {
                 testLogger.info("Test failed {} ");
             } finally {
-
                 final long elapsed = testStopwatch.elapsed(MILLISECONDS);
                 testLogger.info("Finished running test {} msec", elapsed);
-
-                getContext().getIndexContext().list(new Path("*")).forEach(listing -> {
-                    final Path resourcePath = listing.getPath();
-                    final ResourceId resourceId = listing.getResourceId();
-                    testLogger.warn("{} -> {} remains after test {}.", resourcePath, resourceId, test.getName());
-                });
-
                 getContext().getResourceContext().destroyAllResources();
-
             }
 
         });

@@ -33,8 +33,6 @@ public class TestKitMain {
 
     private static final String TEST_LOGGER_KEY = SYSTEM_PREFIX + LOGGER;
 
-    private static final Logger logger = LoggerFactory.getLogger(TestKitMain.class);
-
     private final String[] args;
 
     final OptionParser optionParser = new OptionParser();
@@ -132,6 +130,8 @@ public class TestKitMain {
                 systemProperties.setProperty(DEFAULT_LOG_LEVEL_KEY, selectedLogLevel);
             }
 
+            final Logger logger = LoggerFactory.getLogger(TestKitMain.class);
+
             final TestRunnerModule testRunnerModule = new TestRunnerModule()
                 .addTests(test.values(optionSet))
                 .addTests(parseTestFiles(testFile.values(optionSet)))
@@ -154,6 +154,7 @@ public class TestKitMain {
             optionParser.printHelpOn(System.out);
             return;
         } catch (UncheckedIOException ex) {
+            final Logger logger = LoggerFactory.getLogger(TestKitMain.class);
             logger.error("Caught IO Exception reading test configuration.", ex);
             throw ex;
         }
