@@ -338,7 +338,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
             switch(preamble.commandType.get()) {
 
-                case` STATUS_REQUEST:
+                case STATUS_REQUEST:
                     send(control, STATUS_RESPONSE, new StatusResponse().getByteBuffer());
                     break;
 
