@@ -13,9 +13,7 @@ import static com.google.common.net.HttpHeaders.ACCEPT;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import static com.google.common.net.MediaType.ANY_TYPE;
 import static com.namazustudios.socialengine.rt.http.Accept.parseHeader;
-import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.GET;
-import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.HEAD;
-import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.OPTIONS;
+import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
@@ -193,7 +191,9 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
 
         // A few edge cases for the OPTIONS and the HEAD
 
-        switch (req.getVerb()) {
+        final HttpVerb verb = req.getVerb();
+
+        switch (verb) {
 
             case OPTIONS:
 
@@ -236,8 +236,10 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
             throw new UnacceptableContentException("unacceptable content");
         }
 
-        final MediaType contentType = getContentType();
-        httpOperationList.removeIf(op -> !isConsumable(contentType, op));
+        if (POST.equals(verb) || PUT.equals(verb)) {
+            final MediaType contentType = getContentType();
+            httpOperationList.removeIf(op -> !isConsumable(contentType, op));
+        }
 
         return unmodifiableList(httpOperationList);
 

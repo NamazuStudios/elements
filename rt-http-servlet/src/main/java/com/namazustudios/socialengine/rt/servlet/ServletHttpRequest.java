@@ -21,8 +21,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.POST;
+import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.PUT;
 import static java.lang.String.format;
 import static java.util.Collections.list;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toList;
 
 public class ServletHttpRequest implements HttpRequest {
@@ -92,8 +95,16 @@ public class ServletHttpRequest implements HttpRequest {
     }
 
     private Object deserializePayload() {
-        final HttpContent requestContent = getManifestMetadata().getPreferredRequestContent();
-        return payloadDeserializerFunction.apply(requestContent);
+
+        final HttpVerb verb = getVerb();
+
+        if (POST.equals(verb) || PUT.equals(verb)) {
+            final HttpContent requestContent = getManifestMetadata().getPreferredRequestContent();
+            return payloadDeserializerFunction.apply(requestContent);
+        } else {
+            return null;
+        }
+
     }
 
     @Override
