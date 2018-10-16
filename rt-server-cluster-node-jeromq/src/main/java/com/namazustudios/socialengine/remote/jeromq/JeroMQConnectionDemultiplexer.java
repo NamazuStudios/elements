@@ -27,6 +27,7 @@ import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.IntStream.range;
+import static org.zeromq.ZContext.shadow;
 import static org.zeromq.ZMQ.*;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
@@ -122,7 +123,8 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
     }
 
     private void issue(final RoutingCommand command) {
-        try (final Connection connection = from(ZContext.shadow(getzContext()), c -> c.createSocket(REQ))) {
+        try (final ZContext context = shadow(getzContext());
+             final Connection connection = from(context, c -> c.createSocket(REQ))) {
             connection.socket().connect(getControlAddress());
             send(connection.socket(), ROUTING_COMMAND, command.getByteBuffer());
             connection.socket().recv();
@@ -183,11 +185,11 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         @Override
         public void run() {
 
-            try (final ZContext context = ZContext.shadow(getzContext());
+            try (final ZContext context = shadow(getzContext());
                  final ZMQ.Poller poller = context.createPoller(1);
-                 final Connection frontend = from(getzContext(), c -> c.createSocket(ROUTER));
-                 final Connection control = from(getzContext(), c -> c.createSocket(REP));
-                 final RoutingTable backends = new RoutingTable(getzContext(), poller, this::connect);
+                 final Connection frontend = from(context, c -> c.createSocket(ROUTER));
+                 final Connection control = from(context, c -> c.createSocket(REP));
+                 final RoutingTable backends = new RoutingTable(context, poller, uuid -> connect(context, uuid));
                  final MonitorThread monitorThread = new MonitorThread(getClass().getSimpleName(), logger, context, frontend.socket())) {
 
                 monitorThread.start();
@@ -246,8 +248,8 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
         }
 
-        private ZMQ.Socket connect(final UUID destinationId) {
-            final ZMQ.Socket socket = getzContext().createSocket(ZMQ.DEALER);
+        private ZMQ.Socket connect(final ZContext context, final UUID destinationId) {
+            final ZMQ.Socket socket = context.createSocket(ZMQ.DEALER);
             final String routeAddress = getRouting().getDemultiplexedAddressForDestinationId(destinationId);
             logger.info("Connecting to {} through {}", destinationId, routeAddress);
             socket.connect(routeAddress);
@@ -335,15 +337,18 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
             preamble.getByteBuffer().put(msg.pop().getData());
 
             switch(preamble.commandType.get()) {
-                case STATUS_REQUEST:
+
+                case` STATUS_REQUEST:
                     send(control, STATUS_RESPONSE, new StatusResponse().getByteBuffer());
                     break;
+
                 case ROUTING_COMMAND:
                     send(control, ROUTING_COMMAND_ACK, new RoutingCommandAcknowledgement().getByteBuffer());
                     final RoutingCommand command = new RoutingCommand();
                     command.getByteBuffer().put(msg.pop().getData());
                     backends.process(command);
                     break;
+
                 default:
                     logger.error("Unexpected command: {}", preamble.commandType.get());
             }
