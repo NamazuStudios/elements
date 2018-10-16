@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.appserve.testkit;
 
+import com.namazustudios.socialengine.appnode.guice.JaxRSClientModule;
 import com.namazustudios.socialengine.appserve.guice.ServicesModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
@@ -17,8 +18,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 
 public class AppServeTestKitMain {
-
-    private static final Logger logger = LoggerFactory.getLogger(AppServeTestKitMain.class);
 
     private final TestKitMain testKitMain;
 
@@ -46,6 +45,11 @@ public class AppServeTestKitMain {
      * @throws Exception
      */
     public void run() throws Exception {
+
+        testKitMain.addModule(new JaxRSClientModule())
+                   .addModule(new GuiceIoCResolverModule())
+                   .addModule(new LuaModule());
+
         testKitMain.run(optionSet -> {
 
             if (optionSet.valueOf(integration)) {
@@ -58,13 +62,8 @@ public class AppServeTestKitMain {
                            .addModule(new MongoDaoModule())
                            .addModule(new ValidationModule())
                            .addModule(new MongoSearchModule())
-                           .addModule(new ConfigurationModule(defaultConfigurationSupplier))
-                           .addModule(new LuaModule())
-                           .addModule(new GuiceIoCResolverModule());
+                           .addModule(new ConfigurationModule(defaultConfigurationSupplier));
 
-            } else {
-                testKitMain.addModule(new LuaModule())
-                           .addModule(new GuiceIoCResolverModule());
             }
 
         });
