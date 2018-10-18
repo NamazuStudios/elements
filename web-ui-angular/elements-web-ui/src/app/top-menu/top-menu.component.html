@@ -5,7 +5,8 @@
     fixedInViewport="true"
     [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
     [mode]="(isHandset$ | async) ? 'over' : 'side'"
-    [opened]="!(isHandset$ | async)">
+    [opened]="!(isHandset$ | async)"
+    fxShow="true" fxHide.gt-sm="true" >
     <mat-toolbar color="primary">Menu</mat-toolbar>
     <mat-nav-list>
       <a mat-list-item href="#">Link 1</a>
@@ -25,9 +26,13 @@
       </button>
       <span>Application Title</span>
 
-      <span class="example-fill-remaining-space"></span>
+      <div fxShow="true" fxHide.lt-md="true">
+        <span class="separator"></span>
 
-      <span>Right Aligned Text</span>
+        <a mat-button href="#">Link 1</a>
+        <a mat-button href="#">Link 2</a>
+        <a mat-button href="#">Link 3</a>
+      </div>
     </mat-toolbar>
   </mat-sidenav-content>
 </mat-sidenav-container>
