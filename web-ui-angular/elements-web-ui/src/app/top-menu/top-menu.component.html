@@ -3,36 +3,44 @@
     #drawer
     class="sidenav"
     fixedInViewport="true"
-    [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
-    [mode]="(isHandset$ | async) ? 'over' : 'side'"
-    [opened]="!(isHandset$ | async)"
+    [attr.role]="'navigation'"
+    [mode]="'side'"
     fxShow="true" fxHide.gt-sm="true" >
     <mat-toolbar color="primary">Menu</mat-toolbar>
     <mat-nav-list>
-      <a mat-list-item href="#">Link 1</a>
-      <a mat-list-item href="#">Link 2</a>
-      <a mat-list-item href="#">Link 3</a>
+      <a mat-list-item routerLink="/users" routerLinkActive="true">Users</a>
+      <a mat-list-item routerLink="/applications" routerLinkActive="true">Applications</a>
+      <hr />
+      <a mat-list-item href="#">Logout</a>
     </mat-nav-list>
   </mat-sidenav>
-  <mat-sidenav-content>
-    <mat-toolbar color="primary">
-      <button
-        type="button"
-        aria-label="Toggle sidenav"
-        mat-icon-button
-        (click)="drawer.toggle()"
-        *ngIf="isHandset$ | async">
-        <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
-      </button>
-      <span>Application Title</span>
 
-      <div fxShow="true" fxHide.lt-md="true">
-        <span class="separator"></span>
+  <mat-toolbar color="primary">
+    <button
+      type="button"
+      aria-label="Toggle sidenav"
+      mat-icon-button
+      (click)="drawer.toggle()"
+      fxShow="true" fxHide.gt-sm="true" >
+      <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+    </button>
 
-        <a mat-button href="#">Link 1</a>
-        <a mat-button href="#">Link 2</a>
-        <a mat-button href="#">Link 3</a>
-      </div>
-    </mat-toolbar>
-  </mat-sidenav-content>
+    <span>Namazu Elements</span>
+
+    <span fxShow="true" fxHide.lt-md="true" class="fill-remaining-space" style="display:flex;" >
+
+      <span class="separator"></span>
+
+      <a mat-button routerLink="/users" routerLinkActive="true">Users</a>
+      <a mat-button routerLink="/applications" routerLinkActive="true">Applications</a>
+
+      <span class="fill-remaining-space"></span>
+
+      <span>
+        <a mat-button href="#">Logout</a>
+      </span>
+
+    </span>
+
+  </mat-toolbar>
 </mat-sidenav-container>

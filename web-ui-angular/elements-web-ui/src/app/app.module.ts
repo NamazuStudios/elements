@@ -1,3 +1,4 @@
+import { APP_INITIALIZER } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
@@ -8,11 +9,14 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { LayoutModule } from '@angular/cdk/layout';
 import { MatToolbarModule, MatButtonModule, MatSidenavModule, MatIconModule, MatListModule } from '@angular/material';
 import { FlexLayoutModule } from "@angular/flex-layout";
+import { UsersListComponent } from './users-list/users-list.component';
+import { ApplicationsListComponent } from './applications-list/applications-list.component';
+import { AppConfigService } from './app-config.service';
 
 const appRoutes: Routes = [
-  // { path: 'users', component: UserListComponent },
+  { path: 'users', component: UsersListComponent },
   // { path: 'users/:id', component: UserDetailComponent },
-  // { path: 'applications', component: ApplicationListComponent },
+  { path: 'applications', component: ApplicationsListComponent },
   // { path: 'applications/:id', component: ApplicationDetailComponent },
   // { path: 'applications/:applicationId/configurations/:id', component: ApplicationConfigurationDetailComponent },
   // { path: '**', component: PageNotFoundComponent }
@@ -21,7 +25,9 @@ const appRoutes: Routes = [
 @NgModule({
   declarations: [
     AppComponent,
-    TopMenuComponent
+    TopMenuComponent,
+    UsersListComponent,
+    ApplicationsListComponent
   ],
   imports: [
     RouterModule.forRoot(
