@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.google.common.base.Strings;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.namazustudios.socialengine.Constants;
@@ -89,6 +90,32 @@ public class MongoUserDao implements UserDao {
         }
 
         return mongoUser;
+
+    }
+
+    @Override
+    public User getActiveUserByNameOrEmail(final String userNameOrEmail) {
+
+        final String trimmedUserNameOrEmail = nullToEmpty(userNameOrEmail).trim();
+
+        if (trimmedUserNameOrEmail.isEmpty()) {
+            throw new InvalidDataException("name/email must be specified.");
+        }
+
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
+
+        query.or(
+            query.criteria("name").equal(trimmedUserNameOrEmail),
+            query.criteria("email").equal(trimmedUserNameOrEmail)
+        );
+
+        final MongoUser mongoUser = query.get();
+
+        if (mongoUser == null) {
+            throw new UserNotFoundException("User " + trimmedUserNameOrEmail + " not found.");
+        }
+
+        return getDozerMapper().map(mongoUser, User.class);
 
     }
 
