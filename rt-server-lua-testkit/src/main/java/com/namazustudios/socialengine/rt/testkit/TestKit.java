@@ -139,7 +139,7 @@ public class TestKit {
             if (testRunnerModule.testCount() == 0) {
                 logger.error("No tests defined.");
                 optionParser.printHelpOn(System.out);
-                return;
+                throw new TestKitException("Unable to find any tests.");
             }
 
             optionSetConsumer.accept(optionSet);
@@ -151,7 +151,8 @@ public class TestKit {
 
         } catch (OptionException ex) {
             optionParser.printHelpOn(System.out);
-            return;
+            System.exit(1);
+            throw new TestKitException("Invalid command line options.");
         } catch (UncheckedIOException ex) {
             final Logger logger = LoggerFactory.getLogger(TestKit.class);
             logger.error("Caught IO Exception reading test configuration.", ex);
