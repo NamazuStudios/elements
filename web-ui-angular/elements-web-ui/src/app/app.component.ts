@@ -7,5 +7,5 @@ import { TopMenuComponent } from './top-menu/top-menu.component';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'Elements';
+  title = 'Namazu Elements';
 }
