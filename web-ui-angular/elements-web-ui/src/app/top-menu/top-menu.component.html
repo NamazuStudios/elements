@@ -31,13 +31,13 @@
 
       <span class="separator"></span>
 
-      <a mat-button routerLink="/users" routerLinkActive="true">Users</a>
-      <a mat-button routerLink="/applications" routerLinkActive="true">Applications</a>
+      <a mat-button routerLink="/users" >Users</a>
+      <a mat-button routerLink="/applications" >Applications</a>
 
       <span class="fill-remaining-space"></span>
 
       <span>
-        <a mat-button href="#">Logout</a>
+        <a mat-button routerLink="/login" *ngIf="(isLoggedIn$ | async)" >Logout</a>
       </span>
 
     </span>
