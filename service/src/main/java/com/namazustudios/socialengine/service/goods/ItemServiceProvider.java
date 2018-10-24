@@ -13,7 +13,7 @@ public class ItemServiceProvider implements Provider<ItemService> {
     @Inject
     private Provider<SuperuserItemService> superUserItemServiceProvider;
     @Inject
-    private Provider<UnprivilegedItemService> unprivilegedItemServiceProvider;
+    private Provider<AnonUserService> unprivilegedItemServiceProvider;
 
     @Override
     public ItemService get() {

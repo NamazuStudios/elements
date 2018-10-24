@@ -9,7 +9,7 @@ import com.namazustudios.socialengine.service.ItemService;
 import javax.inject.Inject;
 import java.util.Set;
 
-public class UnprivilegedItemService implements ItemService {
+public class AnonUserService implements ItemService {
 
     private ItemDao itemDao;
 
