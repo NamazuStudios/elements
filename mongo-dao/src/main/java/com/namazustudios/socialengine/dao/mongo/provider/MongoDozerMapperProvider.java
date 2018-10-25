@@ -14,6 +14,7 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.*;
 import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
 import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
+import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
 import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.friend.Friend;
@@ -110,6 +111,10 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(GameOnSession.class, MongoGameOnSession.class)
                 .fields("id", "objectId", customConverter(MongoGameOnSessionId.Converter.class))
                 .fields("deviceOSType", "objectId.deviceOSType");
+
+            mapping(Item.class, MongoItem.class)
+                .fields("id","objectId", customConverter(ObjectIdConverter.class));
+
             }
         };
 

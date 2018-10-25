@@ -61,6 +61,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(RankDao.class).to(MongoRankDao.class);
         bind(FriendDao.class).to(MongoFriendDao.class);
         bind(FacebookFriendDao.class).to(MongoFacebookFriendDao.class);
+        bind(ItemDao.class).to(MongoItemDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoAdvancedDatastoreProvider.class)
@@ -104,6 +105,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(FacebookFriendDao.class);
         expose(GameOnRegistrationDao.class);
         expose(GameOnSessionDao.class);
+        expose(ItemDao.class);
 
     }
 
