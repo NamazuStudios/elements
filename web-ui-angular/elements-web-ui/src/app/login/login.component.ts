@@ -5,6 +5,7 @@ import { AuthenticationService } from "../authentication.service";
 import { AlertService } from "../alert.service";
 import {MatSnackBar } from "@angular/material";
 import {Subscription} from "rxjs";
+import {first} from "rxjs/operators";
 
 @Component({
   selector: 'login',
@@ -28,7 +29,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.authenticationService.logout();
 
     // get return url from route parameters or default to '/'
-    this.paramMapSubscription = this.route.queryParams.subscribe(params => { this.returnUrl = params.returnUrl || '/'; console.log(this.returnUrl); });
+    this.paramMapSubscription = this.route.queryParams.subscribe(params => this.returnUrl = params.returnUrl || '/');
 
     this.alertSubscription = this.alertService.getMessage().subscribe((message: any) => {
       if(message) {
@@ -43,10 +44,14 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   login() : void {
-    if(this.authenticationService.login(this.username, this.password)) {
-      console.log(this.returnUrl);
-
-      this.router.navigate([this.returnUrl]);
-    }
+    this.authenticationService.login(this.username, this.password)
+      .pipe(first())
+      .subscribe(result => {
+          this.router.navigate([this.returnUrl]);
+          this.alertService.success("login success");
+        },
+        err => {
+          this.alertService.error(err);
+      });
   }
 }

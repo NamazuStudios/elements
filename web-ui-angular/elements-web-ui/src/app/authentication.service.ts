@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable } from "rxjs";
 import {AlertService} from "./alert.service";
 import {Router} from "@angular/router";
 import { UsernamePasswordSessionService } from './api/services/username-password-session.service'
-import {UsernamePasswordSessionRequest} from "./api/models";
+import {map} from "rxjs/operators";
 
 @Injectable({
   providedIn: 'root'
@@ -21,17 +21,13 @@ export class AuthenticationService {
     return this.isLoginSubject.asObservable();
   }
 
-  public login(username: string, password: string): boolean {
+  public login(username: string, password: string) {
+    return this.usernamePasswordSessionService.createSession({ userId: username, password: password })
+      .pipe(map(sessionCreation => {
+        localStorage.setItem('currentUser', JSON.stringify(sessionCreation));
 
-    this.usernamePasswordSessionService.createSession({ userId: username, password: password }).subscribe(sessionCreation => {
-      console.log(sessionCreation);
-      localStorage.setItem('currentUser', JSON.stringify(sessionCreation));
-
-      this.alertService.success("login success");
-      this.isLoginSubject.next(true);
-    });
-
-    return this.hasUser();
+        this.isLoginSubject.next(true);
+      }));
   }
 
   public logout() {
