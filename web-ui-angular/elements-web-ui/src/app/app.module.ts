@@ -13,6 +13,7 @@ import {
 } from '@angular/material';
 import { LayoutModule } from '@angular/cdk/layout';
 import { FlexLayoutModule } from "@angular/flex-layout";
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { routing } from './app.routing';
 import { AuthenticationGuard } from './authentication.guard';
@@ -55,6 +56,8 @@ import {ApiErrorInterceptor} from "./api-error.interceptor";
     MatInputModule,
     MatSnackBarModule,
     FlexLayoutModule,
+    FormsModule,
+    ReactiveFormsModule,
     routing
   ],
   providers: [

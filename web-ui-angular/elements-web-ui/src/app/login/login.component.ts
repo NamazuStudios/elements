@@ -6,6 +6,7 @@ import { AlertService } from "../alert.service";
 import {MatSnackBar } from "@angular/material";
 import {Subscription} from "rxjs";
 import {first} from "rxjs/operators";
+import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 
 @Component({
   selector: 'login',
@@ -15,16 +16,24 @@ import {first} from "rxjs/operators";
 
 export class LoginComponent implements OnInit, OnDestroy {
 
-  username: string;
-  password: string;
+  loginForm: FormGroup;
+  loading = false;
+  submitted = false;
   returnUrl: string;
   alertSubscription: Subscription;
   paramMapSubscription: Subscription;
 
-  constructor(private route: ActivatedRoute, private router: Router, private authenticationService: AuthenticationService, private alertService: AlertService, private snackBar: MatSnackBar) {
+  get f() { return this.loginForm.controls; }
+
+  constructor(private formBuilder: FormBuilder, private route: ActivatedRoute, private router: Router, private authenticationService: AuthenticationService, private alertService: AlertService, private snackBar: MatSnackBar) {
   }
 
   ngOnInit() {
+    this.loginForm = this.formBuilder.group({
+      userId: ['', Validators.required],
+      password: ['', Validators.required]
+    });
+
     // reset login status
     this.authenticationService.logout();
 
@@ -33,7 +42,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     this.alertSubscription = this.alertService.getMessage().subscribe((message: any) => {
       if(message) {
-        this.snackBar.open(message.text, message.type, { duration: 3000 });
+        this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
       }
     });
   }
@@ -43,8 +52,15 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.paramMapSubscription.unsubscribe();
   }
 
-  login() : void {
-    this.authenticationService.login(this.username, this.password)
+  login() {
+    this.submitted = true;
+
+    if(this.loginForm.invalid)
+      return;
+
+    this.loading = true;
+
+    this.authenticationService.login(this.f.userId.value, this.f.password.value)
       .pipe(first())
       .subscribe(result => {
           this.router.navigate([this.returnUrl]);
@@ -52,6 +68,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         },
         err => {
           this.alertService.error(err);
+          this.loading = false;
       });
   }
 }
