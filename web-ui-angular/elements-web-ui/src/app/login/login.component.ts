@@ -33,7 +33,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     this.alertSubscription = this.alertService.getMessage().subscribe((message: any) => {
       if(message) {
-        this.snackBar.open(message.text, message.type, { duration: 3000 });
+        this.snackBar.open(message.text, 'Dismiss', { duration: 3000 });
       }
     });
   }
@@ -48,7 +48,6 @@ export class LoginComponent implements OnInit, OnDestroy {
       .pipe(first())
       .subscribe(result => {
           this.router.navigate([this.returnUrl]);
-          this.alertService.success("login success");
         },
         err => {
           this.alertService.error(err);
