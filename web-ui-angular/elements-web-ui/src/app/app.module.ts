@@ -2,15 +2,6 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import {
-  MatToolbarModule,
-  MatButtonModule,
-  MatSidenavModule,
-  MatIconModule,
-  MatListModule,
-  MatDialogModule,
-  MatInputModule, MatCardModule, MatProgressSpinnerModule, MatSnackBarModule
-} from '@angular/material';
 import { LayoutModule } from '@angular/cdk/layout';
 import { FlexLayoutModule } from "@angular/flex-layout";
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -24,20 +15,26 @@ import { UsersListComponent } from './users-list/users-list.component';
 import { ApplicationsListComponent } from './applications-list/applications-list.component';
 import { LoginComponent } from './login/login.component';
 import { HomeComponent } from './home/home.component';
+import { ConfirmationDialogComponent } from './confirmation-dialog/confirmation-dialog.component';
 
 import { AuthenticationService } from "./authentication.service";
 import { AlertService } from "./alert.service";
-import {FormsModule} from "@angular/forms";
 import {ApiErrorInterceptor} from "./api-error.interceptor";
+import {MaterialModule} from "./material.module";
+import {ConfirmationDialogService} from "./confirmation-dialog/confirmation-dialog.service";
 
 @NgModule({
+  entryComponents: [
+    ConfirmationDialogComponent
+  ],
   declarations: [
     AppComponent,
     TopMenuComponent,
     UsersListComponent,
     ApplicationsListComponent,
     LoginComponent,
-    HomeComponent
+    HomeComponent,
+    ConfirmationDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -45,24 +42,15 @@ import {ApiErrorInterceptor} from "./api-error.interceptor";
     BrowserAnimationsModule,
     HttpClientModule,
     LayoutModule,
-    MatToolbarModule,
-    MatButtonModule,
-    MatSidenavModule,
-    MatIconModule,
-    MatListModule,
-    MatDialogModule,
-    MatProgressSpinnerModule,
-    MatCardModule,
-    MatInputModule,
-    MatSnackBarModule,
     FlexLayoutModule,
-    FormsModule,
     ReactiveFormsModule,
+    MaterialModule,
     routing
   ],
   providers: [
     AuthenticationService,
     AlertService,
+    ConfirmationDialogService,
     AuthenticationGuard,
     { provide: HTTP_INTERCEPTORS, useClass: AuthenticationInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: ApiErrorInterceptor, multi: true }

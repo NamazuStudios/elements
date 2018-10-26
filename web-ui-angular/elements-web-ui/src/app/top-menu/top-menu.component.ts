@@ -12,15 +12,10 @@ import {AuthenticationService} from "../authentication.service";
 })
 export class TopMenuComponent {
 
-  isLoggedIn$: Observable<boolean>;
-
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
     .pipe(
       map(result => result.matches)
     );
 
-
-  constructor(private router: Router, private breakpointObserver: BreakpointObserver, private authenticationService: AuthenticationService) {
-    this.isLoggedIn$ = authenticationService.isLoggedIn();
-  }
+  constructor(private router: Router, private breakpointObserver: BreakpointObserver, public authenticationService: AuthenticationService) { }
 }

@@ -23,4 +23,8 @@
   margin-right:.5em;
 }
 
+.title a {
+  text-decoration: none;
+  color:white;
+}
 
