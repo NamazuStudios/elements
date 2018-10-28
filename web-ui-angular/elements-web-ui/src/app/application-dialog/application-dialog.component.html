@@ -1,16 +1,22 @@
 <h1 mat-dialog-title>{{data.action}} Application</h1>
 
 <div mat-dialog-content>
-  <mat-form-field>
-    <input matInput placeholder="Id" name="id" formControlName="id" />
-  </mat-form-field>
-
-  <mat-form-field>
-    <input matInput placeholder="Name" name="name" formControlName="name" />
-  </mat-form-field>
+  <form [formGroup]="applicationForm">
+    <div class="application-form-container">
+      <mat-form-field>
+        <input matInput placeholder="Name" name="name" formControlName="name" >
+      </mat-form-field>
+      <mat-form-field>
+        <input matInput placeholder="Description" name="description" formControlName="description" >
+      </mat-form-field>
+      <mat-form-field>
+        <input matInput placeholder="Script Repo URL" name="scriptRepoUrl" formControlName="scriptRepoUrl" >
+      </mat-form-field>
+    </div>
+  </form>
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-button (click)="dialogRef.close(true)">OK</button>
-  <button type="button" mat-button (click)="dialogRef.close()">Cancel</button>
+  <button type="button" mat-raised-button (click)="dialogRef.close(data.application)">OK</button>
+  <button type="button" mat-raised-button (click)="dialogRef.close()">Cancel</button>
 </div>
