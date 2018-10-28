@@ -1,0 +1,16 @@
+<h1 mat-dialog-title>{{data.action}} Application</h1>
+
+<div mat-dialog-content>
+  <mat-form-field>
+    <input matInput placeholder="Id" name="id" formControlName="id" />
+  </mat-form-field>
+
+  <mat-form-field>
+    <input matInput placeholder="Name" name="name" formControlName="name" />
+  </mat-form-field>
+</div>
+
+<div mat-dialog-actions>
+  <button type="button" mat-raised-button (click)="dialogRef.close(true)">OK</button>
+  <button type="button" mat-button (click)="dialogRef.close()">Cancel</button>
+</div>

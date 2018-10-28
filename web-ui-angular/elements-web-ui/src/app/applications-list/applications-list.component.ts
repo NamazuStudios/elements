@@ -6,9 +6,11 @@ import {debounceTime, distinctUntilChanged, filter, tap} from "rxjs/operators";
 import {fromEvent} from "rxjs";
 import {SelectionModel} from "@angular/cdk/collections";
 import {Application} from "../api/models/application";
-import {MatTable} from "@angular/material";
+import {MatDialog, MatTable} from "@angular/material";
 import {AlertService} from "../alert.service";
 import {ConfirmationDialogService} from "../confirmation-dialog/confirmation-dialog.service";
+import {ApplicationDialogComponent} from "../application-dialog/application-dialog.component";
+import {ApplicationViewModel} from "../models/application-view-model";
 
 @Component({
   selector: 'app-applications-list',
@@ -26,7 +28,7 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
   @ViewChild('input') input: ElementRef;
   @ViewChild(MatTable) table: MatTable<Application>;
 
-  constructor(private applicationsService: ApplicationsService, private alertService: AlertService, private dialogService: ConfirmationDialogService) { }
+  constructor(private applicationsService: ApplicationsService, private alertService: AlertService, private dialogService: ConfirmationDialogService, public dialog: MatDialog) { }
 
   ngOnInit() {
     this.selection = new SelectionModel<Application>(true, []);
@@ -82,12 +84,6 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
       this.currentApplications.forEach(row => this.selection.select(row));
   }
 
-  editApplication(application) {
-    console.log('edit');
-    console.log(application);
-    this.refresh();
-  }
-
   deleteApplication(application) {
     this.dialogService
       .confirm('Confirm Dialog', `Are you sure you want to delete the application '${application.name}'`)
@@ -103,11 +99,6 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
       error => this.alertService.error(error));
   }
 
-  addApplication() {
-    console.log('add');
-    this.refresh();
-  }
-
   deleteSelectedApplications(){
     this.dialogService
       .confirm('Confirm Dialog', `Are you sure you want to delete the ${this.selection.selected.length} selected application${this.selection.selected.length==1 ? '' : 's'}?`)
@@ -117,5 +108,25 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
         this.selection.clear();
         setTimeout(() => this.refresh(), 500);
       });
+  }
+
+  showDialog(action: string, application: Application) {
+    const dialogRef = this.dialog.open(ApplicationDialogComponent, {
+      width: '500px',
+      data: { action: action, application: application }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('The dialog was closed');
+//    this.refresh();
+    });
+  }
+
+  addApplication() {
+    this.showDialog("New", new ApplicationViewModel());
+  }
+
+  editApplication(application) {
+    this.showDialog("Edit", application);
   }
 }
