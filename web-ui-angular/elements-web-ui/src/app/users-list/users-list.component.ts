@@ -3,12 +3,14 @@ import {UsersService} from "../api/services/users.service";
 import {UsersDataSource} from "../users.datasource";
 import {MatPaginator} from "@angular/material/paginator";
 import {debounceTime, distinctUntilChanged, filter, tap} from "rxjs/operators";
-import {BehaviorSubject, fromEvent} from "rxjs";
+import {fromEvent} from "rxjs";
 import {SelectionModel} from "@angular/cdk/collections";
 import {User} from "../api/models/user";
-import {MatTable} from "@angular/material";
+import {MatDialog, MatTable} from "@angular/material";
 import {AlertService} from "../alert.service";
 import {ConfirmationDialogService} from "../confirmation-dialog/confirmation-dialog.service";
+import {UserDialogComponent} from "../user-dialog/user-dialog.component";
+import {UserViewModel} from "../models/user-view-model";
 
 @Component({
   selector: 'app-users-list',
@@ -26,11 +28,10 @@ export class UsersListComponent implements OnInit, AfterViewInit {
   @ViewChild('input') input: ElementRef;
   @ViewChild(MatTable) table: MatTable<User>;
 
-  constructor(private usersService: UsersService, private alertService: AlertService, private dialogService: ConfirmationDialogService) { }
+  constructor(private usersService: UsersService, private alertService: AlertService, private dialogService: ConfirmationDialogService, public dialog: MatDialog) { }
 
   ngOnInit() {
     this.selection = new SelectionModel<User>(true, []);
-
     this.dataSource = new UsersDataSource(this.usersService);
     this.paginator.pageSize = 10;
     this.refresh();
@@ -61,12 +62,14 @@ export class UsersListComponent implements OnInit, AfterViewInit {
   }
 
   // add support for searching here
-  refresh() {
-    this.selection.clear();
-    this.dataSource.loadUsers(
-      this.input.nativeElement.value,
-      this.paginator.pageIndex,
-      this.paginator.pageSize);
+  refresh(delay = 0) {
+    setTimeout(() => {
+      this.selection.clear();
+      this.dataSource.loadUsers(
+        this.input.nativeElement.value,
+        this.paginator.pageIndex,
+        this.paginator.pageSize);
+    }, delay)
   }
 
   /** Whether the number of selected elements matches the total number of rows. */
@@ -83,19 +86,13 @@ export class UsersListComponent implements OnInit, AfterViewInit {
       this.currentUsers.forEach(row => this.selection.select(row));
   }
 
-  editUser(user) {
-    console.log('edit');
-    console.log(user);
-    this.refresh();
-  }
-
   deleteUser(user) {
     this.dialogService
       .confirm('Confirm Dialog', `Are you sure you want to delete the user '${user.name}'`)
       .pipe(filter(r => r))
       .subscribe(res => {
         this.doDeleteUser(user);
-        setTimeout(() => this.refresh(), 500);
+        this.refresh(500);
       });
   }
 
@@ -104,19 +101,44 @@ export class UsersListComponent implements OnInit, AfterViewInit {
       error => this.alertService.error(error));
   }
 
-  addUser() {
-    console.log('add');
-    this.refresh();
-  }
-
-  deleteSelectedUsers() {
+  deleteSelectedUsers(){
     this.dialogService
       .confirm('Confirm Dialog', `Are you sure you want to delete the ${this.selection.selected.length} selected user${this.selection.selected.length==1 ? '' : 's'}?`)
       .pipe(filter(r => r))
       .subscribe(res => {
         this.selection.selected.forEach(row => this.doDeleteUser(row));
         this.selection.clear();
-        setTimeout(() => this.refresh(), 500);
+        this.refresh(500);
       });
+  }
+
+  showDialog(action: string, user: User, next) {
+    const dialogRef = this.dialog.open(UserDialogComponent, {
+      width: '500px',
+      data: { action: action, user: user }
+    });
+
+    dialogRef
+      .afterClosed()
+      .pipe(filter(r => r))
+      .subscribe(next);
+  }
+
+  addUser() {
+    this.showDialog("New", new UserViewModel(),result => {
+      this.usersService.createUser({ password: result.password, body: result }).subscribe(r => {
+          this.refresh(500);
+        },
+        error => this.alertService.error(error));
+    });
+  }
+
+  editUser(user) {
+    this.showDialog("Edit", user, result => {
+      this.usersService.updateUser({ name: user.id, password: user.password, body: result }).subscribe(r => {
+          this.refresh(500);
+        },
+        error => this.alertService.error(error));
+    });
   }
 }

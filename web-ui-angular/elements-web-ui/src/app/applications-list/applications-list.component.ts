@@ -118,7 +118,10 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
       data: { action: action, application: application }
     });
 
-    dialogRef.afterClosed().subscribe(next);
+    dialogRef
+      .afterClosed()
+      .pipe(filter(r => r))
+      .subscribe(next);
   }
 
   addApplication() {

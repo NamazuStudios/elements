@@ -10,10 +10,9 @@ import {FormBuilder, FormControl, Validators} from "@angular/forms";
 export class ApplicationDialogComponent implements OnInit {
 
   applicationForm = this.formBuilder.group({
-    name: [ this.data.application.name, Validators.required ],
+    name: [ this.data.application.name, [Validators.required, Validators.pattern('^[a-zA-Z0-9]+$') ]],
     description: [ this.data.application.description ],
-    scriptRepoUrl: new FormControl({ value: this.data.application.scriptRepoUrl, disabled: true }),
-
+    scriptRepoUrl: [ { value: this.data.application.scriptRepoUrl, disabled: true } ]
   });
 
   constructor(public dialogRef: MatDialogRef<ApplicationDialogComponent>,
@@ -22,5 +21,4 @@ export class ApplicationDialogComponent implements OnInit {
 
   ngOnInit() {
   }
-
 }

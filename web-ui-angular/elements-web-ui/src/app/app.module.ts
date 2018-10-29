@@ -23,11 +23,13 @@ import {ApiErrorInterceptor} from "./api-error.interceptor";
 import {MaterialModule} from "./material.module";
 import {ConfirmationDialogService} from "./confirmation-dialog/confirmation-dialog.service";
 import {ApplicationDialogComponent} from "./application-dialog/application-dialog.component";
+import { UserDialogComponent } from './user-dialog/user-dialog.component';
 
 @NgModule({
   entryComponents: [
     ConfirmationDialogComponent,
-    ApplicationDialogComponent
+    ApplicationDialogComponent,
+    UserDialogComponent
   ],
   declarations: [
     AppComponent,
@@ -37,7 +39,8 @@ import {ApplicationDialogComponent} from "./application-dialog/application-dialo
     LoginComponent,
     HomeComponent,
     ConfirmationDialogComponent,
-    ApplicationDialogComponent
+    ApplicationDialogComponent,
+    UserDialogComponent
   ],
   imports: [
     BrowserModule,
