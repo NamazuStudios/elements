@@ -62,12 +62,14 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
   }
 
   // add support for searching here
-  refresh() {
-    this.selection.clear();
-    this.dataSource.loadApplications(
-      this.input.nativeElement.value,
-      this.paginator.pageIndex,
-      this.paginator.pageSize);
+  refresh(delay = 0) {
+    setTimeout(() => {
+      this.selection.clear();
+      this.dataSource.loadApplications(
+        this.input.nativeElement.value,
+        this.paginator.pageIndex,
+        this.paginator.pageSize);
+    }, delay)
   }
 
   /** Whether the number of selected elements matches the total number of rows. */
@@ -90,7 +92,7 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
       .pipe(filter(r => r))
       .subscribe(res => {
         this.doDeleteApplication(application);
-        setTimeout(() => this.refresh(), 500);
+        this.refresh(500);
       });
   }
 
@@ -106,27 +108,34 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
       .subscribe(res => {
         this.selection.selected.forEach(row => this.doDeleteApplication(row));
         this.selection.clear();
-        setTimeout(() => this.refresh(), 500);
+        this.refresh(500);
       });
   }
 
-  showDialog(action: string, application: Application) {
+  showDialog(action: string, application: Application, next) {
     const dialogRef = this.dialog.open(ApplicationDialogComponent, {
       width: '500px',
       data: { action: action, application: application }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      console.log(result);
-//    this.refresh();
-    });
+    dialogRef.afterClosed().subscribe(next);
   }
 
   addApplication() {
-    this.showDialog("New", new ApplicationViewModel());
+    this.showDialog("New", new ApplicationViewModel(),result => {
+      this.applicationsService.createApplication(result).subscribe(r => {
+          this.refresh(500);
+        },
+        error => this.alertService.error(error));
+    });
   }
 
   editApplication(application) {
-    this.showDialog("Edit", application);
+    this.showDialog("Edit", application, result => {
+      this.applicationsService.updateApplication({ nameOrId: application.id, body: result }).subscribe(r => {
+          this.refresh(500);
+        },
+        error => this.alertService.error(error));
+    });
   }
 }

@@ -9,14 +9,19 @@
       <mat-form-field>
         <input matInput placeholder="Description" name="description" formControlName="description" >
       </mat-form-field>
-      <mat-form-field>
-        <input matInput placeholder="Script Repo URL" name="scriptRepoUrl" formControlName="scriptRepoUrl" >
-      </mat-form-field>
+      <div *ngIf="(data.action=='Edit')">
+        <mat-form-field>
+          <input matInput placeholder="Script Repo URL" name="scriptRepoUrl" formControlName="scriptRepoUrl" >
+        </mat-form-field>
+        <p><a href="{{data.application.httpDocumentationUrl}}" target="_blank">API Documentation</a></p>
+        <p><a href="{{data.application.httpDocumentationUiUrl}}" target="_blank">OpenAPI Documentation</a></p>
+
+      </div>
     </div>
   </form>
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-button (click)="dialogRef.close(data.application)">OK</button>
+  <button type="button" mat-raised-button (click)="dialogRef.close(applicationForm.value)">OK</button>
   <button type="button" mat-raised-button (click)="dialogRef.close()">Cancel</button>
 </div>

@@ -1,6 +1,6 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material";
-import {FormBuilder, Validators} from "@angular/forms";
+import {FormBuilder, FormControl, Validators} from "@angular/forms";
 
 @Component({
   selector: 'app-application-dialog',
@@ -12,7 +12,8 @@ export class ApplicationDialogComponent implements OnInit {
   applicationForm = this.formBuilder.group({
     name: [ this.data.application.name, Validators.required ],
     description: [ this.data.application.description ],
-    scriptRepoUrl: [ this.data.application.scriptRepoUrl ]
+    scriptRepoUrl: new FormControl({ value: this.data.application.scriptRepoUrl, disabled: true }),
+
   });
 
   constructor(public dialogRef: MatDialogRef<ApplicationDialogComponent>,
