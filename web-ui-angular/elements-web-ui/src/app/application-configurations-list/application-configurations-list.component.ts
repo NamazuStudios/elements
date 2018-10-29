@@ -14,6 +14,8 @@ import {FacebookApplicationConfigurationService} from "../api/services/facebook-
 import {FirebaseApplicationConfigurationService} from "../api/services/firebase-application-configuration.service";
 import {FacebookApplicationConfigurationDialogComponent} from "../facebook-application-configuration-dialog/facebook-application-configuration-dialog.component";
 import {FacebookApplicationConfigurationViewModel} from "../models/facebook-application-configuration-view-model";
+import {ApplicationViewModel} from "../models/application-view-model";
+import {FirebaseApplicationConfigurationDialogComponent} from "../firebase-application-configuration-dialog/firebase-application-configuration-dialog.component";
 
 @Component({
   selector: 'app-application-configurations-list',
@@ -98,7 +100,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
 
   deleteApplicationConfiguration(applicationConfiguration) {
     this.dialogService
-      .confirm('Confirm Dialog', `Are you sure you want to delete the applicationConfiguration '${applicationConfiguration.name}'`)
+      .confirm('Confirm Dialog', `Are you sure you want to delete the application configuration '${applicationConfiguration.uniqueIdentifier}'`)
       .pipe(filter(r => r))
       .subscribe(res => {
         this.doDeleteApplicationConfiguration(applicationConfiguration);
@@ -107,13 +109,24 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
   }
 
   doDeleteApplicationConfiguration(applicationConfiguration) {
-    // this.applicationConfigurationsService.deleteApplicationConfiguration(applicationConfiguration.id).subscribe(r => {},
-    //   error => this.alertService.error(error));
+    switch(applicationConfiguration.category) {
+      case 'FACEBOOK':
+        this.facebookApplicationConfigurationService.deleteFacebookApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => { },
+          error => this.alertService.error(error));
+
+        break;
+      case 'FIREBASE':
+        this.firebaseApplicationConfigurationService.deleteFirebaseApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => { },
+          error => this.alertService.error(error));
+
+        break;
+    }
+
   }
 
   deleteSelectedApplicationConfigurations(){
     this.dialogService
-      .confirm('Confirm Dialog', `Are you sure you want to delete the ${this.selection.selected.length} selected applicationConfiguration${this.selection.selected.length==1 ? '' : 's'}?`)
+      .confirm('Confirm Dialog', `Are you sure you want to delete the ${this.selection.selected.length} selected application configuration${this.selection.selected.length==1 ? '' : 's'}?`)
       .pipe(filter(r => r))
       .subscribe(res => {
         this.selection.selected.forEach(row => this.doDeleteApplicationConfiguration(row));
@@ -122,54 +135,65 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
       });
   }
 
-  // showDialog(isNew: boolean, applicationConfiguration: ApplicationConfiguration, next) {
-  //   const dialogRef = this.dialog.open(ApplicationConfigurationDialogComponent, {
-  //     width: '500px',
-  //     data: { isNew: isNew, applicationConfiguration: applicationConfiguration }
-  //   });
-  //
-  //   dialogRef
-  //     .afterClosed()
-  //     .pipe(filter(r => r))
-  //     .subscribe(next);
-  // }
+  showDialog(isNew: boolean, dialog: any, applicationConfiguration: any, next) {
+    const dialogRef = this.dialog.open(dialog, {
+      width: '500px',
+      data: { isNew: isNew, applicationConfiguration: applicationConfiguration }
+    });
+
+    dialogRef
+      .afterClosed()
+      .pipe(filter(r => r))
+      .subscribe(next);
+  }
 
   addApplicationConfiguration(category: string) {
     switch(category) {
       case 'FACEBOOK':
-
-          const dialogRef = this.dialog.open(FacebookApplicationConfigurationDialogComponent, {
-            width: '500px',
-            data: { isNew: true, applicationConfiguration: new FacebookApplicationConfigurationViewModel() }
+          this.showDialog(true, FacebookApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
+            this.facebookApplicationConfigurationService.createFacebookApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
+                this.refresh();
+              },
+              error => this.alertService.error(error));
           });
 
-          dialogRef
-            .afterClosed()
-            .pipe(filter(r => r))
-            .subscribe(result => {
-                this.facebookApplicationConfigurationService.createFacebookApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
-                    this.refresh();
-                  },
-                  error => this.alertService.error(error));
-              });
+        break;
+      case 'FIREBASE':
+        this.showDialog(true, FirebaseApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
+          this.firebaseApplicationConfigurationService.createFirebaseApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
+              this.refresh();
+            },
+            error => this.alertService.error(error));
+        });
 
         break;
     }
-
-    // this.showDialog(true, new ApplicationConfigurationViewModel(),result => {
-    //   this.applicationConfigurationsService.createApplicationConfiguration(result).subscribe(r => {
-    //       this.refresh();
-    //     },
-    //     error => this.alertService.error(error));
-    // });
   }
 
   editApplicationConfiguration(applicationConfiguration) {
-    // this.showDialog(false, applicationConfiguration, result => {
-    //   this.applicationConfigurationsService.updateApplicationConfiguration({ nameOrId: applicationConfiguration.id, body: result }).subscribe(r => {
-    //       this.refresh();
-    //     },
-    //     error => this.alertService.error(error));
-    // });
+    switch(applicationConfiguration.category) {
+      case 'FACEBOOK':
+        this.facebookApplicationConfigurationService.getFacebookApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id})
+          .subscribe(applicationConfiguration =>
+          this.showDialog(false, FacebookApplicationConfigurationDialogComponent, applicationConfiguration, result => {
+            this.facebookApplicationConfigurationService.updateApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id, body: result }).subscribe(r => {
+                this.refresh();
+              },
+              error => this.alertService.error(error));
+          }));
+
+        break;
+      case 'FIREBASE':
+        this.firebaseApplicationConfigurationService.getFirebaseApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id})
+          .subscribe(applicationConfiguration =>
+            this.showDialog(false, FirebaseApplicationConfigurationDialogComponent, applicationConfiguration, result => {
+              this.firebaseApplicationConfigurationService.updateApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id, body: result }).subscribe(r => {
+                  this.refresh();
+                },
+                error => this.alertService.error(error));
+            }));
+
+        break;
+    }
   }
 }

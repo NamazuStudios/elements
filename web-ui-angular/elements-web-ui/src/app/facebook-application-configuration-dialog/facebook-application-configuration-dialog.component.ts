@@ -10,8 +10,12 @@ import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material";
 export class FacebookApplicationConfigurationDialogComponent implements OnInit {
 
   configurationForm = this.formBuilder.group({
+    category: [ 'FACEBOOK' ],
     applicationId: [ this.data.applicationConfiguration.applicationId, Validators.required ],
-    applicationSecret: [ this.data.applicationConfiguration.applicationSecret, Validators.required ]
+    applicationSecret: [ this.data.applicationConfiguration.applicationSecret, Validators.required ],
+    parent: this.formBuilder.group({
+      id: [ this.data.applicationConfiguration.parent.id ]
+    })
   });
 
   constructor(public dialogRef: MatDialogRef<FacebookApplicationConfigurationDialogComponent>,
