@@ -23,6 +23,6 @@
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-button (click)="dialogRef.close(applicationForm.value)">OK</button>
+  <button type="button" mat-raised-button (click)="dialogRef.close(applicationForm.value)" [disabled]="!applicationForm.valid">OK</button>
   <button type="button" mat-raised-button (click)="dialogRef.close()">Cancel</button>
 </div>

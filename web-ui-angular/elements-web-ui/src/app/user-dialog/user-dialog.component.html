@@ -1,16 +1,16 @@
-<h1 mat-dialog-title>{{data.action}} User</h1>
+<h1 mat-dialog-title>{{data.isNew ? "New" : "Edit"}} User</h1>
 
 <div mat-dialog-content>
   <form [formGroup]="userForm">
     <div class="user-form-container">
       <mat-form-field>
-        <input matInput placeholder="Username" name="id" formControlName="id">
-        <mat-error *ngIf="userForm.controls.id.hasError('required')">Username is required</mat-error>
-        <mat-error *ngIf="userForm.controls.id.hasError('pattern')">Username must consist only of alphanumeric characters</mat-error>
+        <input matInput placeholder="Username" name="name" formControlName="name">
+        <mat-error *ngIf="userForm.controls.name.hasError('required')">Username is required</mat-error>
+        <mat-error *ngIf="userForm.controls.name.hasError('pattern')">Username must consist only of alphanumeric characters</mat-error>
       </mat-form-field>
       <mat-form-field>
         <input matInput placeholder="Email" name="email" formControlName="email">
-        <mat-error *ngIf="userForm.controls.email.hasError('required')">Emali is required</mat-error>
+        <mat-error *ngIf="userForm.controls.email.hasError('required')">Email is required</mat-error>
         <mat-error *ngIf="userForm.controls.email.hasError('email')">Email must be a valid email address</mat-error>
       </mat-form-field>
       <mat-form-field>
@@ -21,6 +21,14 @@
         <input matInput placeholder="Password Confirmation" name="passwordConfirmation" formControlName="passwordConfirmation" type="password">
         <mat-error *ngIf="userForm.controls.passwordConfirmation.hasError('required')">Password confirmation is required</mat-error>
         <mat-error *ngIf="userForm.controls.passwordConfirmation.hasError('passwordMatch')">Password confirmation does not match</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-select placeholder="User Level" name="level" formControlName="level">
+          <mat-option *ngFor="let userLevel of userLevels" [value]="userLevel.key">
+            {{userLevel.description}}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="userForm.controls.level.hasError('required')">User level is required</mat-error>
       </mat-form-field>
     </div>
   </form>

@@ -67,7 +67,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
       this.selection.clear();
       this.dataSource.loadUsers(
         this.input.nativeElement.value,
-        this.paginator.pageIndex,
+        this.paginator.pageIndex * this.paginator.pageSize,
         this.paginator.pageSize);
     }, delay)
   }
@@ -112,10 +112,10 @@ export class UsersListComponent implements OnInit, AfterViewInit {
       });
   }
 
-  showDialog(action: string, user: User, next) {
+  showDialog(isNew: boolean, user: User, next) {
     const dialogRef = this.dialog.open(UserDialogComponent, {
       width: '500px',
-      data: { action: action, user: user }
+      data: { isNew: isNew, user: user }
     });
 
     dialogRef
@@ -125,7 +125,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
   }
 
   addUser() {
-    this.showDialog("New", new UserViewModel(),result => {
+    this.showDialog(true, new UserViewModel(),result => {
       this.usersService.createUser({ password: result.password, body: result }).subscribe(r => {
           this.refresh(500);
         },
@@ -134,8 +134,8 @@ export class UsersListComponent implements OnInit, AfterViewInit {
   }
 
   editUser(user) {
-    this.showDialog("Edit", user, result => {
-      this.usersService.updateUser({ name: user.id, password: user.password, body: result }).subscribe(r => {
+    this.showDialog(false, user, result => {
+      this.usersService.updateUser({ name: user.name, password: result.password, body: result }).subscribe(r => {
           this.refresh(500);
         },
         error => this.alertService.error(error));

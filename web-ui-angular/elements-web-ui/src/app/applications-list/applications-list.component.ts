@@ -67,7 +67,7 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
       this.selection.clear();
       this.dataSource.loadApplications(
         this.input.nativeElement.value,
-        this.paginator.pageIndex,
+        this.paginator.pageIndex * this.paginator.pageSize,
         this.paginator.pageSize);
     }, delay)
   }
