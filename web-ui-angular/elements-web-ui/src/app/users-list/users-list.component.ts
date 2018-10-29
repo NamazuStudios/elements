@@ -34,7 +34,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
     this.selection = new SelectionModel<User>(true, []);
     this.dataSource = new UsersDataSource(this.usersService);
     this.paginator.pageSize = 10;
-    this.refresh();
+    this.refresh(0);
   }
 
   ngAfterViewInit() {
@@ -62,7 +62,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
   }
 
   // add support for searching here
-  refresh(delay = 0) {
+  refresh(delay = 500) {
     setTimeout(() => {
       this.selection.clear();
       this.dataSource.loadUsers(
@@ -92,7 +92,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
       .pipe(filter(r => r))
       .subscribe(res => {
         this.doDeleteUser(user);
-        this.refresh(500);
+        this.refresh();
       });
   }
 
@@ -127,7 +127,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
   addUser() {
     this.showDialog(true, new UserViewModel(),result => {
       this.usersService.createUser({ password: result.password, body: result }).subscribe(r => {
-          this.refresh(500);
+          this.refresh();
         },
         error => this.alertService.error(error));
     });
@@ -136,7 +136,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
   editUser(user) {
     this.showDialog(false, user, result => {
       this.usersService.updateUser({ name: user.name, password: result.password, body: result }).subscribe(r => {
-          this.refresh(500);
+          this.refresh();
         },
         error => this.alertService.error(error));
     });

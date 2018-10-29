@@ -1,4 +1,4 @@
-import {AfterViewInit, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {ApplicationsService} from "../api/services/applications.service";
 import {ApplicationsDataSource} from "../applications.datasource";
 import {MatPaginator} from "@angular/material/paginator";
@@ -34,7 +34,7 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
     this.selection = new SelectionModel<Application>(true, []);
     this.dataSource = new ApplicationsDataSource(this.applicationsService);
     this.paginator.pageSize = 10;
-    this.refresh();
+    this.refresh(0);
   }
 
   ngAfterViewInit() {
@@ -61,8 +61,7 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
     this.dataSource.totalCount$.subscribe(totalCount => this.paginator.length = totalCount);
   }
 
-  // add support for searching here
-  refresh(delay = 0) {
+  refresh(delay = 500) {
     setTimeout(() => {
       this.selection.clear();
       this.dataSource.loadApplications(
@@ -92,7 +91,7 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
       .pipe(filter(r => r))
       .subscribe(res => {
         this.doDeleteApplication(application);
-        this.refresh(500);
+        this.refresh();
       });
   }
 
@@ -108,14 +107,14 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
       .subscribe(res => {
         this.selection.selected.forEach(row => this.doDeleteApplication(row));
         this.selection.clear();
-        this.refresh(500);
+        this.refresh();
       });
   }
 
-  showDialog(action: string, application: Application, next) {
+  showDialog(isNew: boolean, application: Application, next) {
     const dialogRef = this.dialog.open(ApplicationDialogComponent, {
-      width: '500px',
-      data: { action: action, application: application }
+      width: '900px',
+      data: { isNew: isNew, application: application }
     });
 
     dialogRef
@@ -125,18 +124,18 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
   }
 
   addApplication() {
-    this.showDialog("New", new ApplicationViewModel(),result => {
+    this.showDialog(true, new ApplicationViewModel(),result => {
       this.applicationsService.createApplication(result).subscribe(r => {
-          this.refresh(500);
+          this.refresh();
         },
         error => this.alertService.error(error));
     });
   }
 
   editApplication(application) {
-    this.showDialog("Edit", application, result => {
+    this.showDialog(false, application, result => {
       this.applicationsService.updateApplication({ nameOrId: application.id, body: result }).subscribe(r => {
-          this.refresh(500);
+          this.refresh();
         },
         error => this.alertService.error(error));
     });

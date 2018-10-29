@@ -1,4 +1,4 @@
-<h1 mat-dialog-title>{{data.action}} Application</h1>
+<h1 mat-dialog-title>{{data.isNew ? "New" : "Edit"}} Application</h1>
 
 <div mat-dialog-content>
   <form [formGroup]="applicationForm">
@@ -11,16 +11,18 @@
       <mat-form-field>
         <input matInput placeholder="Description" name="description" formControlName="description" >
       </mat-form-field>
-      <mat-form-field *ngIf="(data.action=='Edit')">
+      <mat-form-field *ngIf="(!data.isNew)">
         <input matInput placeholder="Script Repo URL" name="scriptRepoUrl" formControlName="scriptRepoUrl" >
       </mat-form-field>
-      <div *ngIf="(data.action=='Edit')">
+      <div *ngIf="(!data.isNew)">
         <p><a href="{{data.application.httpDocumentationUrl}}" target="_blank">API Documentation</a></p>
         <p><a href="{{data.application.httpDocumentationUiUrl}}" target="_blank">OpenAPI Documentation</a></p>
       </div>
     </div>
   </form>
 </div>
+
+<app-application-configurations-list [applicationNameOrId]="data.application.id" *ngIf="(!data.isNew)"></app-application-configurations-list>
 
 <div mat-dialog-actions>
   <button type="button" mat-raised-button (click)="dialogRef.close(applicationForm.value)" [disabled]="!applicationForm.valid">OK</button>

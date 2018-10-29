@@ -24,12 +24,17 @@ import {MaterialModule} from "./material.module";
 import {ConfirmationDialogService} from "./confirmation-dialog/confirmation-dialog.service";
 import {ApplicationDialogComponent} from "./application-dialog/application-dialog.component";
 import { UserDialogComponent } from './user-dialog/user-dialog.component';
+import { ApplicationConfigurationsListComponent } from './application-configurations-list/application-configurations-list.component';
+import { FacebookApplicationConfigurationDialogComponent } from './facebook-application-configuration-dialog/facebook-application-configuration-dialog.component';
+import { FirebaseApplicationConfigurationDialogComponent } from './firebase-application-configuration-dialog/firebase-application-configuration-dialog.component';
 
 @NgModule({
   entryComponents: [
     ConfirmationDialogComponent,
     ApplicationDialogComponent,
-    UserDialogComponent
+    UserDialogComponent,
+    FacebookApplicationConfigurationDialogComponent,
+    FirebaseApplicationConfigurationDialogComponent
   ],
   declarations: [
     AppComponent,
@@ -40,7 +45,10 @@ import { UserDialogComponent } from './user-dialog/user-dialog.component';
     HomeComponent,
     ConfirmationDialogComponent,
     ApplicationDialogComponent,
-    UserDialogComponent
+    UserDialogComponent,
+    ApplicationConfigurationsListComponent,
+    FacebookApplicationConfigurationDialogComponent,
+    FirebaseApplicationConfigurationDialogComponent
   ],
   imports: [
     BrowserModule,
