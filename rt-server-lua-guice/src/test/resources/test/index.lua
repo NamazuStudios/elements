@@ -122,4 +122,50 @@ function test_index.test_unlink_and_destroy()
 
 end
 
+function test_index.test_link_yield_and_list()
+
+    local original = {}
+    local p1_id = util.uuid();
+    local p2_id = util.uuid();
+    -- Builds the listing
+
+    for i = 1,10
+    do
+        local path = "test/" .. util.uuid()
+        local rid, code = resource.create("test.helloworld", path)
+
+        index.link(rid, p1_id .. "/" .. rid)
+        index.link(rid, p2_id .. "/" .. rid)
+
+        index.unlink(path)
+
+        print("added " .. rid .. " at path " .. path)
+        assert(code == responsecode.OK, "Expected OK response code got " .. tostring(code))
+        original[path] = rid
+    end
+
+    -- Check player 1 listing
+    local listing = index.list(p1_id .. "/*")
+    print(type(listing) == "table", "Expected table for listing but got " .. type(listing))
+
+    for path, resource_id in pairs(listing)
+    do
+        print("resource "  .. tostring(path)  .. " -> " .. tostring(resource_id))
+    end
+
+    assert(#listing == #original, "Listing for player one failed to find all resources! Expected: " .. tostring(#original) .. " Found: " .. tostring(#listing))
+
+    -- Check player 2 listing
+    listing = index.list(p2_id .. "/*")
+    print(type(listing) == "table", "Expected table for listing but got " .. type(listing))
+
+    for path, resource_id in pairs(listing)
+    do
+        print("resource "  .. tostring(path)  .. " -> " .. tostring(resource_id))
+    end
+
+    assert(#listing == #original, "Listing for player two failed to find all resources! Expected: " .. tostring(#original) .. " Found: " .. tostring(#listing))
+
+end
+
 return test_index
