@@ -42,11 +42,12 @@
                                 <artifactItem>
                                     <groupId>com.namazustudios.socialengine</groupId>
                                     <artifactId>web-ui-angular</artifactId>
+                                    <type>zip</type>
                                     <overWrite>true</overWrite>
                                     <includes>**/*</includes>
                                 </artifactItem>
                             </artifactItems>
-                            <outputDirectory>${project.build.directory}/lib/dist</outputDirectory>
+                            <outputDirectory>${project.build.directory}/lib/</outputDirectory>
                             <overWriteReleases>true</overWriteReleases>
                             <overWriteSnapshots>true</overWriteSnapshots>
                         </configuration>

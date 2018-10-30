@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { APP_INITIALIZER, NgModule} from '@angular/core';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { LayoutModule } from '@angular/cdk/layout';
@@ -27,6 +27,11 @@ import { UserDialogComponent } from './user-dialog/user-dialog.component';
 import { ApplicationConfigurationsListComponent } from './application-configurations-list/application-configurations-list.component';
 import { FacebookApplicationConfigurationDialogComponent } from './facebook-application-configuration-dialog/facebook-application-configuration-dialog.component';
 import { FirebaseApplicationConfigurationDialogComponent } from './firebase-application-configuration-dialog/firebase-application-configuration-dialog.component';
+import {ConfigService} from "./config.service";
+
+export function initialize(configService: ConfigService) {
+  return () => configService.load();
+}
 
 @NgModule({
   entryComponents: [
@@ -62,12 +67,14 @@ import { FirebaseApplicationConfigurationDialogComponent } from './firebase-appl
     routing
   ],
   providers: [
+    ConfigService,
+    { provide: APP_INITIALIZER, useFactory: initialize, multi: true, deps: [ ConfigService ] },
     AuthenticationService,
     AlertService,
     ConfirmationDialogService,
     AuthenticationGuard,
     { provide: HTTP_INTERCEPTORS, useClass: AuthenticationInterceptor, multi: true },
-    { provide: HTTP_INTERCEPTORS, useClass: ApiErrorInterceptor, multi: true }
+    { provide: HTTP_INTERCEPTORS, useClass: ApiErrorInterceptor, multi: true },
   ],
   bootstrap: [AppComponent]
 })
