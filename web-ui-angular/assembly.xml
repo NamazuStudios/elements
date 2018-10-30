@@ -1,0 +1,9 @@
+<formats>
+    <format>zip</format>
+</formats>
+<fileSets>
+    <fileSet>
+        <directory>elements-web-ui/dist</directory>
+        <outputDirectory>dist</outputDirectory>
+    </fileSet>
+</fileSets>
