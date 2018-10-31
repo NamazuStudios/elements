@@ -71,7 +71,7 @@
         <module>rt-server-lua-testkit</module>
         <module>socialengine-jnlua/jnlua</module>
         <module>common-lua</module>
-        <module>web-ui-angular-war</module>
+        <module>web-ui-angular</module>
     </modules>
 
     <properties>
