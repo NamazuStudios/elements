@@ -19,26 +19,37 @@
     <dependencies>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>web-ui-war</artifactId>
+            <artifactId>web-ui-angular</artifactId>
             <version>${project.version}</version>
-            <type>war</type>
+            <type>zip</type>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <phase>initialize</phase>
+                        <id>unpack angular distribution</id>
+                        <phase>generate-resources</phase>
                         <goals>
-                            <goal>copy-dependencies</goal>
+                            <goal>unpack</goal>
                         </goals>
                         <configuration>
-                            <includeScope>runtime</includeScope>
-                            <overWriteReleases>false</overWriteReleases>
-                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.namazustudios.socialengine</groupId>
+                                    <artifactId>web-ui-angular</artifactId>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <includes>**/*</includes>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.build.directory}/lib/</outputDirectory>
+                            <overWriteReleases>true</overWriteReleases>
+                            <overWriteSnapshots>true</overWriteSnapshots>
                         </configuration>
                     </execution>
                 </executions>
@@ -64,7 +75,7 @@
                         <argument>build</argument>
                         <argument>${project.basedir}</argument>
                         <argument>--build-arg</argument>
-                        <argument>WEB_UI_WAR=target/lib/web-ui-war-${project.version}.war</argument>
+                        <argument>WEB_UI_DIR=target/lib/dist</argument>
                         <argument>--tag</argument>
                         <argument>${project.artifactId}:latest</argument>
                         <argument>--tag</argument>
