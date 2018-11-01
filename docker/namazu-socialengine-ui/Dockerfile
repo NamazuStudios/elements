@@ -8,7 +8,4 @@ COPY $WEB_UI_DIR /usr/share/nginx/html
 # expose port 8080
 EXPOSE 8080
 
-RUN sed -i 's/listen.*80;/listen\t8080;/' /etc/nginx/conf.d/default.conf
-
-# run nginx
-CMD ["nginx", "-g", "daemon off;"]
+COPY default.conf /etc/nginx/conf.d
