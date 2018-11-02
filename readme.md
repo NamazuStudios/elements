@@ -8,12 +8,17 @@ environment from scratch.
 - [Maven 3.5](https://maven.apache.org/)
 - [Docker (Latest Version)](https://www.docker.com/products/docker-engine)
 - [git](https://git-scm.com/)
+- [node](https://nodejs.org/en/download/)
 
-All dependencies are fetched using Maven, so the first build may take a 
+All dependencies are fetched using Maven*, so the first build may take a 
 considerably long time.  Most of Elements depends on freely available open 
 source software, so everything should work out of the box.  However, there are 
 a few exceptions that we have handled by either including as submodules or 
 provided separately.
+
+* Note that the web-ui-angular project uses npm for dependency management. A maven
+build spec triggers the build and is referenced in the master maven build, so it 
+should all "just work" when you do a build.
 
 ## 2) Clone and install mina-guice
 
@@ -153,6 +158,11 @@ accomplish their tasks.
   includes many bug fixes and code changes at the C/Native level for JNLua.
   This also includes support for Eris, which allows full Lua Virtual Machines
   to be serialized to a database for later running.
+- **web-ui** *(deprecated)* - The GWT-based admin interface, backed by the REST API.
+- **web-ui-war** *(deprecated)* - A war file, representing a microservice that handles 
+  the web-based admin UI.
+- **web-ui-angular** - A single-page application written in Angular 7 used to manage
+  the Elements system.
 
 The following modules are part of the "RT" sub-project.  The "RT" subproject
 was originally named for being a "Real Time" game server.  However the intent
