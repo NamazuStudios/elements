@@ -9,6 +9,7 @@ buildNumber.properties
 *.iml
 test-repositories
 storage.xodus
+node_modules
 
 #IntelliJ Configurations (except shared run configurations
 .idea/artifacts/

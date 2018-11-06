@@ -1,0 +1,46 @@
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav
+    #drawer
+    class="sidenav"
+    fixedInViewport="true"
+    [attr.role]="'navigation'"
+    [mode]="'side'"
+    fxShow="true" fxHide.gt-sm="true" >
+    <mat-toolbar color="primary">Menu</mat-toolbar>
+    <mat-nav-list>
+      <a mat-list-item routerLink="/users" >Users</a>
+      <a mat-list-item routerLink="/applications" >Applications</a>
+      <hr />
+      <a mat-list-item routerLink="/login" >Logout {{this.authenticationService.currentSession?.session.user.name}}</a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-toolbar color="primary">
+    <button
+      type="button"
+      aria-label="Toggle sidenav"
+      mat-icon-button
+      (click)="drawer.toggle()"
+      fxShow="true" fxHide.gt-sm="true" >
+      <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+    </button>
+
+    <span class="title"><a routerLink="/">Namazu Elements</a></span>
+
+    <span fxShow="true" fxHide.lt-md="true" class="fill-remaining-space" style="display:flex;" >
+
+      <span class="separator"></span>
+
+      <a mat-button routerLink="/users" *ngIf="(this.authenticationService.isLoggedIn() | async)">Users</a>
+      <a mat-button routerLink="/applications" *ngIf="(this.authenticationService.isLoggedIn() | async)">Applications</a>
+
+      <span class="fill-remaining-space"></span>
+
+      <span *ngIf="(this.authenticationService.isLoggedIn() | async)">
+        <a mat-button routerLink="/login" >Logout {{this.authenticationService.currentSession?.session.user.name}}</a>
+      </span>
+
+    </span>
+
+  </mat-toolbar>
+</mat-sidenav-container>
