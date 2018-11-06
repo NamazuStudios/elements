@@ -6,6 +6,8 @@ import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.FileAssetLoader;
 import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
+import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
+import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -25,9 +27,10 @@ public class TestRunnerModule extends AbstractModule {
             addError("No tests defined.  Please define tests.");
         }
 
-        install(new SimpleContextModule());
+        install(new XodusContextModule());
+        install(new XodusEnvironmentModule().withTempEnvironments());
 
-        final Multibinder<Test> testMultibinder = Multibinder.newSetBinder(binder(), Test .class, named(SimpleTestRunner.TESTS));
+        final Multibinder<Test> testMultibinder = Multibinder.newSetBinder(binder(), Test.class, named(SimpleTestRunner.TESTS));
         tests.forEach(t -> testMultibinder.addBinding().toInstance(t));
 
         bind(TestRunner.class).to(SimpleTestRunner.class);

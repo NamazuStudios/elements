@@ -22,18 +22,27 @@ import com.namazustudios.socialengine.model.User;
 public interface UserDao {
 
     /**
-     * Gets the user with the userId, which may be either email address or name.  Additionally,
-     * the user requested must be active.
+     * Gets the user with the userId.  If the user is not active, then this method will behave as if the user does
+     * not exist.
      *
      * @param userId the user's as determined by {@link User#getId()}
      *
-     * @return
+     * @return the active user
      */
     User getActiveUser(String userId);
 
     /**
-     * Gets a listing of all users given the offset, and count.  Additionally, the
-     * user requested must be active.
+     * Gets the user with the user name or email address.  If the user is not active, then this method will behave as
+     * if the user does not exist.
+     *
+     * @param userNameOrEmail the username or email
+     * @return the active user
+     */
+    User getActiveUserByNameOrEmail(String userNameOrEmail);
+
+    /**
+     * Gets a listing of all users given the offset, and count.  Additionally, the user requested must be active.  Users
+     * not active will be treated as if they do not exist.
      *
      * @param offset the offset
      * @param count the count
