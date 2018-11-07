@@ -15,6 +15,7 @@ public class XodusResourceContextModule extends PrivateModule {
 
     @Override
     protected void configure() {
+
         expose(ResourceContext.class);
 
         // Xodus Resource Context binds to the simple resource scheduler.

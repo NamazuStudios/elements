@@ -20,8 +20,8 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
     @Override
     public <T> T convertLuaValue(final LuaState luaState, final int index, final Class<T> formalType) {
         if (isArray(luaState, index) && formalType.isAssignableFrom(Iterable.class)) {
-            final List<?> proxyList = getInstance().convertLuaValue(luaState, index, List.class);
-            return (T) new ArrayList<Object>(proxyList);
+            final Map<?, ?> proxyMap = getInstance().convertLuaValue(luaState, index, Map.class);
+            return (T) new ArrayList<Object>(proxyMap.values());
         } else if (formalType.isAssignableFrom(Map.class)) {
             final Map<?, ?> proxyMap = getInstance().convertLuaValue(luaState, index, Map.class);
             return (T) new LinkedHashMap<Object, Object>(proxyMap);

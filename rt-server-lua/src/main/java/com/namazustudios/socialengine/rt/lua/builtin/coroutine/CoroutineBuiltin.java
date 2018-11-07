@@ -184,12 +184,12 @@ public class CoroutineBuiltin implements Builtin {
 
             } else {
 
-                luaState.remove(1);
-                cleanup(taskId, luaState);
-
                 // If the coroutine wasn't yielded because it finished normally, then we simply take what's on the stack
                 // and return it to the caller.  The caller then will collect the values that are returned.  However,
                 // we do prepend the task ID and status so the caller can make sense of the execution result.
+
+                luaState.remove(1);
+                cleanup(taskId, luaState);
 
                 luaState.pushInteger(status);
                 luaState.insert(1);

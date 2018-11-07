@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.stream.Collectors.joining;
 
 @SuppressWarnings("Duplicates")
 public class SimpleHandlerContext implements HandlerContext {

@@ -5,6 +5,8 @@ import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
+import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -12,10 +14,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-
 import static java.util.UUID.randomUUID;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class HttpClientIntegrationTest {
 
@@ -24,9 +24,14 @@ public class HttpClientIntegrationTest {
     private final JettyEmbeddedRESTService jettyEmbeddedRESTService = new JettyEmbeddedRESTService();
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-            .withDefaultHttpClient()
-            .withNodeModule(new LuaModule())
-            .start();
+        .withDefaultHttpClient()
+        .withNodeModule(new LuaModule())
+        .withNodeModule(new XodusContextModule()
+            .withSchedulerThreads(1)
+            .withHandlerTimeout(3, MINUTES))
+        .withNodeModule(new XodusEnvironmentModule()
+            .withTempEnvironments())
+        .start();
 
     private final Node node = getEmbeddedTestService().getNode();
 

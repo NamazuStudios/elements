@@ -340,12 +340,12 @@ public class LuaResource implements Resource {
 
                 final TaskId taskId = new TaskId(luaState.checkString(1));            // task id
                 final int status = luaState.checkInteger(2);                          // thread status
-                final Object result = luaState.checkJavaObject(3, Object.class);      // result
                 final PendingTask pendingTask = new PendingTask(taskId, consumer, throwableConsumer);
 
                 if (status == YIELD) {
                     addPendingTask(pendingTask);
                 } else {
+                    final Object result = luaState.checkJavaObject(3, Object.class);      // result
                     pendingTask.finish(result);
                 }
 
@@ -388,7 +388,6 @@ public class LuaResource implements Resource {
 
             final String taskIdString = luaState.checkString(1);                        // task id
             final int status = luaState.checkInteger(2);                                // thread status
-            luaState.checkJavaObject(3, Object.class);                                  // the return value
 
             if (!taskId.asString().equals(taskIdString)) {
                 getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);

@@ -4,6 +4,8 @@ import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.ResourceId;
 import com.namazustudios.socialengine.rt.util.SyncWait;
+import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
+import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -12,6 +14,7 @@ import org.testng.annotations.TestInstance;
 import java.util.concurrent.Future;
 
 import static java.util.UUID.randomUUID;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.testng.Assert.assertEquals;
 
 public class TestYielding {
@@ -21,6 +24,11 @@ public class TestYielding {
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
         .withNodeModule(new LuaModule())
         .withDefaultHttpClient()
+        .withNodeModule(new XodusContextModule()
+            .withSchedulerThreads(1)
+            .withHandlerTimeout(3, MINUTES))
+        .withNodeModule(new XodusEnvironmentModule()
+            .withTempEnvironments())
         .start();
 
     private final Context context = embeddedTestService.getContext();

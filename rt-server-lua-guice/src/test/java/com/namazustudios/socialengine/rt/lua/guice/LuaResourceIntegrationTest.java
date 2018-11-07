@@ -8,6 +8,8 @@ import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.ResourceId;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
+import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -21,6 +23,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.util.UUID.randomUUID;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.testng.Assert.*;
 
 /**
@@ -32,6 +35,11 @@ public class LuaResourceIntegrationTest {
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
         .withNodeModule(new LuaModule())
+        .withNodeModule(new XodusContextModule()
+            .withSchedulerThreads(1)
+            .withHandlerTimeout(3, MINUTES))
+        .withNodeModule(new XodusEnvironmentModule()
+            .withTempEnvironments())
         .withDefaultHttpClient()
         .start();
 
@@ -44,6 +52,7 @@ public class LuaResourceIntegrationTest {
         getEmbeddedTestService().close();
     }
 
+    @SuppressWarnings("Duplicates")
     @Test(dataProvider = "resourcesToTest")
     public void performTest(final String moduleName, final String methodName) {
         final Path path = new Path(randomUUID().toString());

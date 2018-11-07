@@ -252,8 +252,13 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
         assertEquals(listingList.size(), 0);
     }
 
-    @Test
+    @Test(dependsOnMethods = "testAllPathsUnlinked")
     public void testDeleteWithPaths() {
+
+        Stream<ResourceService.Listing> listingStream = getResourceService().listStream(new Path("*"));
+        List<ResourceService.Listing> listingList = listingStream.collect(toList());
+        assertEquals(listingList.size(), 0, "Expected empty dataset to start.");
+
         final ResourceId resourceId = new ResourceId();
         final Resource resource = Mockito.mock(Resource.class);
 
@@ -269,8 +274,8 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
 
         getResourceService().destroy(resourceId);
 
-        final Stream<ResourceService.Listing> listingStream = getResourceService().listStream(new Path("*"));
-        final List<ResourceService.Listing> listingList = listingStream.collect(toList());
+        listingStream = getResourceService().listStream(new Path("*"));
+        listingList = listingStream.collect(toList());
         assertEquals(listingList.size(), 0);
 
     }
