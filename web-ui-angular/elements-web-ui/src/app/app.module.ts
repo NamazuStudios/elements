@@ -28,6 +28,8 @@ import { ApplicationConfigurationsListComponent } from './application-configurat
 import { FacebookApplicationConfigurationDialogComponent } from './facebook-application-configuration-dialog/facebook-application-configuration-dialog.component';
 import { FirebaseApplicationConfigurationDialogComponent } from './firebase-application-configuration-dialog/firebase-application-configuration-dialog.component';
 import {ConfigService} from "./config.service";
+import { MatchmakingApplicationConfigurationDialogComponent } from './matchmaking-application-configuration-dialog/matchmaking-application-configuration-dialog.component';
+import { GameOnApplicationConfigurationDialogComponent } from './game-on-application-configuration-dialog/game-on-application-configuration-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -39,7 +41,9 @@ export function initialize(configService: ConfigService) {
     ApplicationDialogComponent,
     UserDialogComponent,
     FacebookApplicationConfigurationDialogComponent,
-    FirebaseApplicationConfigurationDialogComponent
+    FirebaseApplicationConfigurationDialogComponent,
+    MatchmakingApplicationConfigurationDialogComponent,
+    GameOnApplicationConfigurationDialogComponent
   ],
   declarations: [
     AppComponent,
@@ -53,7 +57,9 @@ export function initialize(configService: ConfigService) {
     UserDialogComponent,
     ApplicationConfigurationsListComponent,
     FacebookApplicationConfigurationDialogComponent,
-    FirebaseApplicationConfigurationDialogComponent
+    FirebaseApplicationConfigurationDialogComponent,
+    MatchmakingApplicationConfigurationDialogComponent,
+    GameOnApplicationConfigurationDialogComponent
   ],
   imports: [
     BrowserModule,

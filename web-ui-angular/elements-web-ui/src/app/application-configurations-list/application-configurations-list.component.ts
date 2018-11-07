@@ -13,9 +13,10 @@ import {ApplicationConfigurationsService} from "../api/services/application-conf
 import {FacebookApplicationConfigurationService} from "../api/services/facebook-application-configuration.service";
 import {FirebaseApplicationConfigurationService} from "../api/services/firebase-application-configuration.service";
 import {FacebookApplicationConfigurationDialogComponent} from "../facebook-application-configuration-dialog/facebook-application-configuration-dialog.component";
-import {FacebookApplicationConfigurationViewModel} from "../models/facebook-application-configuration-view-model";
-import {ApplicationViewModel} from "../models/application-view-model";
 import {FirebaseApplicationConfigurationDialogComponent} from "../firebase-application-configuration-dialog/firebase-application-configuration-dialog.component";
+import {MatchmakingApplicationConfigurationDialogComponent} from "../matchmaking-application-configuration-dialog/matchmaking-application-configuration-dialog.component";
+import {MatchmakingApplicationConfigurationService} from "../api/services/matchmaking-application-configuration.service";
+import {GameOnApplicationConfigurationDialogComponent} from "../game-on-application-configuration-dialog/game-on-application-configuration-dialog.component";
 
 @Component({
   selector: 'app-application-configurations-list',
@@ -40,7 +41,8 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
               private dialogService: ConfirmationDialogService,
               public dialog: MatDialog,
               private facebookApplicationConfigurationService: FacebookApplicationConfigurationService,
-              private firebaseApplicationConfigurationService: FirebaseApplicationConfigurationService) { }
+              private firebaseApplicationConfigurationService: FirebaseApplicationConfigurationService,
+              private matchmakingApplicationConfigurationService: MatchmakingApplicationConfigurationService) { }
 
   ngOnInit() {
     this.selection = new SelectionModel<ApplicationConfiguration>(true, []);
@@ -120,6 +122,16 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
           error => this.alertService.error(error));
 
         break;
+      case 'MATCHMAKING':
+        this.matchmakingApplicationConfigurationService.deleteMatchmakingApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => { },
+          error => this.alertService.error(error));
+
+        break;
+      case 'AMAZON_GAME_ON':
+        this.firebaseApplicationConfigurationService.deleteGameOnApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => { },
+          error => this.alertService.error(error));
+
+        break;
     }
 
   }
@@ -167,6 +179,24 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
         });
 
         break;
+      case 'MATCHMAKING':
+        this.showDialog(true, MatchmakingApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId }, success: { } }, result => {
+          this.matchmakingApplicationConfigurationService.createMatchmakingApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
+              this.refresh();
+            },
+            error => this.alertService.error(error));
+        });
+
+        break;
+      case 'AMAZON_GAME_ON':
+        this.showDialog(true, GameOnApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
+          this.firebaseApplicationConfigurationService.createGameOnApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
+              this.refresh();
+            },
+            error => this.alertService.error(error));
+        });
+
+        break;
     }
   }
 
@@ -188,6 +218,26 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
           .subscribe(applicationConfiguration =>
             this.showDialog(false, FirebaseApplicationConfigurationDialogComponent, applicationConfiguration, result => {
               this.firebaseApplicationConfigurationService.updateApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id, body: result }).subscribe(r => {
+                  this.refresh();
+                },
+                error => this.alertService.error(error));
+            }));
+
+        break;
+      case 'MATCHMAKING':
+        this.matchmakingApplicationConfigurationService.getMatchmakingApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id})
+          .subscribe(applicationConfiguration =>
+            this.showDialog(false, MatchmakingApplicationConfigurationDialogComponent, applicationConfiguration, result => {
+              this.matchmakingApplicationConfigurationService.updateApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id, body: result }).subscribe(r => {
+                  this.refresh();
+                },
+                error => this.alertService.error(error));
+            }));
+      case 'AMAZON_GAME_ON':
+        this.firebaseApplicationConfigurationService.getGameOnApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id})
+          .subscribe(applicationConfiguration =>
+            this.showDialog(false, GameOnApplicationConfigurationDialogComponent, applicationConfiguration, result => {
+              this.firebaseApplicationConfigurationService.updateApplicationConfiguration_1({ applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id, body: result }).subscribe(r => {
                   this.refresh();
                 },
                 error => this.alertService.error(error));

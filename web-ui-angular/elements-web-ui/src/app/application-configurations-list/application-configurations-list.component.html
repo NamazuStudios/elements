@@ -12,6 +12,8 @@
   <mat-menu #addMenu="matMenu">
     <a mat-menu-item (click)="addApplicationConfiguration('FACEBOOK')">Add Facebook</a>
     <a mat-menu-item (click)="addApplicationConfiguration('FIREBASE')">Add Firebase</a>
+    <a mat-menu-item (click)="addApplicationConfiguration('MATCHMAKING')">Add Matchmaking</a>
+    <a mat-menu-item (click)="addApplicationConfiguration('AMAZON_GAME_ON')">Add Amazon Game On</a>
   </mat-menu>
 
   <button mat-raised-button color="primary" (click)="deleteSelectedApplicationConfigurations()" [disabled]="!hasSelection">Delete Selected</button>
