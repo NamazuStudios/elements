@@ -7,8 +7,8 @@ import { StrictHttpResponse } from '../strict-http-response';
 import { Observable } from 'rxjs';
 import { map as __map, filter as __filter } from 'rxjs/operators';
 
-import { Friend } from '../models/friend';
 import { PaginationFriend } from '../models/pagination-friend';
+import { Friend } from '../models/friend';
 import { PaginationFacebookFriend } from '../models/pagination-facebook-friend';
 @Injectable({
   providedIn: 'root',
@@ -19,6 +19,61 @@ class FriendsService extends BaseService {
     http: HttpClient
   ) {
     super(config, http);
+  }
+
+  /**
+   * Searches all friends in the system and returning the metadata for all matches against the given search filter.
+   * @param params The `FriendsService.GetFriendsParams` containing the following parameters:
+   *
+   * - `search`:
+   *
+   * - `offset`:
+   *
+   * - `count`:
+   *
+   * @return successful operation
+   */
+  getFriendsResponse(params: FriendsService.GetFriendsParams): Observable<StrictHttpResponse<PaginationFriend>> {
+    let __params = this.newParams();
+    let __headers = new HttpHeaders();
+    let __body: any = null;
+    if (params.search != null) __params = __params.set('search', params.search.toString());
+    if (params.offset != null) __params = __params.set('offset', params.offset.toString());
+    if (params.count != null) __params = __params.set('count', params.count.toString());
+    let req = new HttpRequest<any>(
+      'GET',
+      this.rootUrl + `/friend`,
+      __body,
+      {
+        headers: __headers,
+        params: __params,
+        responseType: 'json'
+      });
+
+    return this.http.request<any>(req).pipe(
+      __filter(_r => _r instanceof HttpResponse),
+      __map((_r: HttpResponse<any>) => {
+        return _r as StrictHttpResponse<PaginationFriend>;
+      })
+    );
+  }
+
+  /**
+   * Searches all friends in the system and returning the metadata for all matches against the given search filter.
+   * @param params The `FriendsService.GetFriendsParams` containing the following parameters:
+   *
+   * - `search`:
+   *
+   * - `offset`:
+   *
+   * - `count`:
+   *
+   * @return successful operation
+   */
+  getFriends(params: FriendsService.GetFriendsParams): Observable<PaginationFriend> {
+    return this.getFriendsResponse(params).pipe(
+      __map(_r => _r.body)
+    );
   }
 
   /**
@@ -93,61 +148,6 @@ class FriendsService extends BaseService {
    */
   deleteRegistration(friendId: string): Observable<void> {
     return this.deleteRegistrationResponse(friendId).pipe(
-      __map(_r => _r.body)
-    );
-  }
-
-  /**
-   * Searches all friends in the system and returning the metadata for all matches against the given search filter.
-   * @param params The `FriendsService.GetFriendsParams` containing the following parameters:
-   *
-   * - `search`:
-   *
-   * - `offset`:
-   *
-   * - `count`:
-   *
-   * @return successful operation
-   */
-  getFriendsResponse(params: FriendsService.GetFriendsParams): Observable<StrictHttpResponse<PaginationFriend>> {
-    let __params = this.newParams();
-    let __headers = new HttpHeaders();
-    let __body: any = null;
-    if (params.search != null) __params = __params.set('search', params.search.toString());
-    if (params.offset != null) __params = __params.set('offset', params.offset.toString());
-    if (params.count != null) __params = __params.set('count', params.count.toString());
-    let req = new HttpRequest<any>(
-      'GET',
-      this.rootUrl + `/friend`,
-      __body,
-      {
-        headers: __headers,
-        params: __params,
-        responseType: 'json'
-      });
-
-    return this.http.request<any>(req).pipe(
-      __filter(_r => _r instanceof HttpResponse),
-      __map((_r: HttpResponse<any>) => {
-        return _r as StrictHttpResponse<PaginationFriend>;
-      })
-    );
-  }
-
-  /**
-   * Searches all friends in the system and returning the metadata for all matches against the given search filter.
-   * @param params The `FriendsService.GetFriendsParams` containing the following parameters:
-   *
-   * - `search`:
-   *
-   * - `offset`:
-   *
-   * - `count`:
-   *
-   * @return successful operation
-   */
-  getFriends(params: FriendsService.GetFriendsParams): Observable<PaginationFriend> {
-    return this.getFriendsResponse(params).pipe(
       __map(_r => _r.body)
     );
   }
