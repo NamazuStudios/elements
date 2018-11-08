@@ -19,6 +19,13 @@ public class XodusServicesModule extends PrivateModule {
 
     private Runnable bindSchedulerThreads = () -> {};
 
+    /**
+     * Specifies the number of scheduler threads.  This number typically can be set low as the actual scheduler threads
+     * defer their work to a cached thread pool.  Typically this is set to 1+ the currently available CPUs in the system
+     *
+     * @param threads the number of threads
+     * @return  this instance
+     */
     public XodusServicesModule withSchedulerThreads(final int threads) {
         bindSchedulerThreads = () -> bind(Integer.class)
             .annotatedWith(named(SCHEDULER_THREADS))

@@ -69,7 +69,7 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rt-server-simple-guice</artifactId>
+            <artifactId>rt-server-xodus-guice</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

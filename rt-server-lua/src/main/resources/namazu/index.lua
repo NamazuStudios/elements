@@ -19,7 +19,7 @@ local function process_listing(listings)
 
     local tabular = {}
 
-    for i, listing in ipairs(listings)
+    for _, listing in pairs(listings)
     do
         local path = listing:getPath():toNormalizedPathString()
         local resourceId = listing:getResourceId():asString()

@@ -24,12 +24,6 @@ public class TestJeroMQNodeModule extends PrivateModule {
 
     private final JeroMQNodeModule jeroMQNodeModule = new JeroMQNodeModule();
 
-    private final SimpleServicesModule simpleServicesModule = new SimpleServicesModule();
-
-    private final SimpleHandlerContextModule simpleHandlerContextModule = new SimpleHandlerContextModule();
-
-    private final SimpleSchedulerContextModule simpleSchedulerContextModule = new SimpleSchedulerContextModule();
-
     public TestJeroMQNodeModule withNodeModules(final List<Module> nodeModules) {
         this.nodeModules.addAll(nodeModules);
         return this;
@@ -48,19 +42,11 @@ public class TestJeroMQNodeModule extends PrivateModule {
         bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class);
         bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(getClass().getClassLoader()));
 
-        bind(SimpleContext.class).asEagerSingleton();
-        bind(Context.class).to(SimpleContext.class);
-
         bind(ContextNodeLifecycle.class).asEagerSingleton();
         bind(NodeLifecycle.class).to(ContextNodeLifecycle.class);
 
-        install(simpleServicesModule);
-        install(new SimpleResourceContextModule());
-        install(new SimpleIndexContextModule());
         install(new GuiceIoCResolverModule());
         install(jeroMQNodeModule);
-        install(simpleHandlerContextModule);
-        install(simpleSchedulerContextModule);
         nodeModules.forEach(this::install);
 
     }
@@ -138,29 +124,6 @@ public class TestJeroMQNodeModule extends PrivateModule {
      */
     public TestJeroMQNodeModule withMaximumConnections(int maximumConnections) {
         jeroMQNodeModule.withMaximumConnections(maximumConnections);
-        return this;
-    }
-
-    /**
-     * {@see {@link SimpleHandlerContextModule#withTimeout(long, TimeUnit)}}
-     *
-     * @param duration the duration
-     * @param sourceUnits the source units of measure
-     * @return this instance
-     */
-    public TestJeroMQNodeModule withHandlerTimeout(final long duration, final TimeUnit sourceUnits) {
-        handlerTimeoutBindAction = () -> simpleHandlerContextModule.withTimeout(duration, sourceUnits);
-        return this;
-    }
-
-    /**
-     * {@see {@link SimpleServicesModule#withSchedulerThreads(int)}}
-     *
-     * @param schedulerThreads scheduler threads
-     * @return this instance
-     */
-    public TestJeroMQNodeModule withSchedulerThreads(final int schedulerThreads) {
-        simpleServicesModule.withSchedulerThreads(schedulerThreads);
         return this;
     }
 

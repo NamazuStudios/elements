@@ -196,9 +196,13 @@ public interface ResourceService extends AutoCloseable {
      * @param source the source {@link Path}
      * @param destination the destination {@link Path}
      */
-    default void linkPath(Path source, Path destination) {
+    default void linkPath(final Path source, final Path destination) {
         final Resource resource = getAndAcquireResourceAtPath(source);
-        link(resource.getId(), destination);
+        try {
+            link(resource.getId(), destination);
+        } finally {
+            release(resource);
+        }
     }
 
     /**

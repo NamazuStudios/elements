@@ -24,7 +24,7 @@ util.java = require "namazu.util.java"
 -- for Path for more information.
 -- @param ... the path components or a single string representing the path
 function util.path(...)
-    return Path:new(table.unpack(...))
+    return Path:new(table.pack(...)):toNormalizedPathString()
 end
 
 function util.uuid()

@@ -271,10 +271,6 @@ public class Path implements Comparable<Path>, Serializable {
     @Override
     public int compareTo(final Path other) {
 
-        if (getComponents().size() != other.getComponents().size()) {
-            return getComponents().size() - other.getComponents().size();
-        }
-
         final Iterator<String> o1StringIterator;
         final Iterator<String> o2StringIterator;
 
@@ -282,6 +278,8 @@ public class Path implements Comparable<Path>, Serializable {
             final int min = min(maxCompareIndex, other.maxCompareIndex);
             o1StringIterator = limit(getComponents().iterator(), min);
             o2StringIterator = limit(other.getComponents().iterator(), min);
+        } else if (getComponents().size() != other.getComponents().size()) {
+            return getComponents().size() - other.getComponents().size();
         } else {
             o1StringIterator = getComponents().iterator();
             o2StringIterator = other.getComponents().iterator();

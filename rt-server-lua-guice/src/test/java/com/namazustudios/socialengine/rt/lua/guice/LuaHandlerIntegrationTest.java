@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
+import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -8,13 +10,20 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 public class LuaHandlerIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaHandlerIntegrationTest.class);
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-        .withDefaultHttpClient()
         .withNodeModule(new LuaModule())
+        .withNodeModule(new XodusContextModule()
+            .withSchedulerThreads(1)
+            .withHandlerTimeout(3, MINUTES))
+        .withNodeModule(new XodusEnvironmentModule()
+            .withTempEnvironments())
+        .withDefaultHttpClient()
         .start();
 
     private final Node node = getEmbeddedTestService().getNode();

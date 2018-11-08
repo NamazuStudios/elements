@@ -254,7 +254,7 @@ public abstract class AbstractResourceServiceReleasingUnitTest {
         assertEquals(listingList.size(), 0);
     }
 
-    @Test
+    @Test(dependsOnMethods = "testAllPathsUnlinked")
     public void testDeleteWithPaths() {
         final ResourceId resourceId = new ResourceId();
         final Resource resource = Mockito.mock(Resource.class);
