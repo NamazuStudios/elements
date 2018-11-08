@@ -10,9 +10,11 @@
       <ng-container [formGroup]="configurationForm.controls.success">
         <mat-form-field>
           <input matInput placeholder="Success Callback Module" name="module" formControlName="module" >
+          <mat-error *ngIf="configurationForm.get('success').get('module').hasError('required')">Module is required</mat-error>
         </mat-form-field>
         <mat-form-field>
           <input matInput placeholder="Success Callback Method" name="method" formControlName="method" >
+          <mat-error *ngIf="configurationForm.get('success').get('method').hasError('required')">Method is required</mat-error>
         </mat-form-field>
       </ng-container>
     </div>
