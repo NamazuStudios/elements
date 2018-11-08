@@ -1,0 +1,8 @@
+.game-on-form-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.game-on-form-container > * {
+  width: 100%;
+}

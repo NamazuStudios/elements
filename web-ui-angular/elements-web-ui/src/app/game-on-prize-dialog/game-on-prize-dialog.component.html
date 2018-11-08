@@ -1,0 +1,29 @@
+<h1 mat-dialog-title>New Amazon Game On Prize</h1>
+
+<div mat-dialog-content>
+  <form [formGroup]="gameOnPrizeForm">
+    <div class="game-on-form-container">
+      <mat-form-field>
+        <input matInput placeholder="Title" name="title" formControlName="title" >
+        <mat-error *ngIf="gameOnPrizeForm.controls.title.hasError('required')">Title is required</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <textarea matInput placeholder="Description" name="description" formControlName="description" ></textarea>
+        <mat-error *ngIf="gameOnPrizeForm.controls.description.hasError('required')">Description is required</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <textarea matInput placeholder="Prize Information" name="prizeInfo" formControlName="prizeInfo" ></textarea>
+        <mat-error *ngIf="gameOnPrizeForm.controls.prizeInfo.hasError('required')">Prize Information is required</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <input matInput placeholder="Image URL" name="imageUrl" formControlName="imageUrl" >
+        <mat-error *ngIf="gameOnPrizeForm.controls.imageUrl.hasError('required')">Image Url is required</mat-error>
+      </mat-form-field>
+    </div>
+  </form>
+</div>
+
+<div mat-dialog-actions>
+  <button type="button" mat-raised-button (click)="dialogRef.close(gameOnPrizeForm.value)" [disabled]="!gameOnPrizeForm.valid">OK</button>
+  <button type="button" mat-raised-button (click)="dialogRef.close()">Cancel</button>
+</div>

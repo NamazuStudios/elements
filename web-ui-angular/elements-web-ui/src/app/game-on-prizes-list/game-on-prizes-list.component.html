@@ -1,0 +1,25 @@
+<div class="game-on-prizes-list">
+  <div class="spinner-container" *ngIf="dataSource.loading$ | async">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <button mat-raised-button color="primary" (click)="addGameOnPrize()">Add Prize</button>
+
+  <mat-table class="game-on-prizes-table mat-elevation-z8" [dataSource]="dataSource" >
+
+    <ng-container matColumnDef="prizeId">
+      <mat-header-cell *matHeaderCellDef>Prize Id</mat-header-cell>
+      <mat-cell *matCellDef="let gameOnPrize">{{gameOnPrize.prizeId}}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="title">
+      <mat-header-cell *matHeaderCellDef>Title</mat-header-cell>
+      <mat-cell *matCellDef="let gameOnPrize">{{gameOnPrize.title}}</mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+
+    <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+
+  </mat-table>
+</div>
