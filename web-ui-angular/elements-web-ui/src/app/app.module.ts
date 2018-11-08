@@ -28,6 +28,10 @@ import { ApplicationConfigurationsListComponent } from './application-configurat
 import { FacebookApplicationConfigurationDialogComponent } from './facebook-application-configuration-dialog/facebook-application-configuration-dialog.component';
 import { FirebaseApplicationConfigurationDialogComponent } from './firebase-application-configuration-dialog/firebase-application-configuration-dialog.component';
 import {ConfigService} from "./config.service";
+import { MatchmakingApplicationConfigurationDialogComponent } from './matchmaking-application-configuration-dialog/matchmaking-application-configuration-dialog.component';
+import { GameOnApplicationConfigurationDialogComponent } from './game-on-application-configuration-dialog/game-on-application-configuration-dialog.component';
+import { GameOnPrizeDialogComponent } from './game-on-prize-dialog/game-on-prize-dialog.component';
+import { GameOnPrizesListComponent } from './game-on-prizes-list/game-on-prizes-list.component'
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -39,7 +43,10 @@ export function initialize(configService: ConfigService) {
     ApplicationDialogComponent,
     UserDialogComponent,
     FacebookApplicationConfigurationDialogComponent,
-    FirebaseApplicationConfigurationDialogComponent
+    FirebaseApplicationConfigurationDialogComponent,
+    MatchmakingApplicationConfigurationDialogComponent,
+    GameOnApplicationConfigurationDialogComponent,
+    GameOnPrizeDialogComponent
   ],
   declarations: [
     AppComponent,
@@ -53,7 +60,11 @@ export function initialize(configService: ConfigService) {
     UserDialogComponent,
     ApplicationConfigurationsListComponent,
     FacebookApplicationConfigurationDialogComponent,
-    FirebaseApplicationConfigurationDialogComponent
+    FirebaseApplicationConfigurationDialogComponent,
+    MatchmakingApplicationConfigurationDialogComponent,
+    GameOnApplicationConfigurationDialogComponent,
+    GameOnPrizesListComponent,
+    GameOnPrizeDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -68,11 +79,11 @@ export function initialize(configService: ConfigService) {
   ],
   providers: [
     ConfigService,
-    { provide: APP_INITIALIZER, useFactory: initialize, multi: true, deps: [ ConfigService ] },
     AuthenticationService,
     AlertService,
     ConfirmationDialogService,
     AuthenticationGuard,
+    { provide: APP_INITIALIZER, useFactory: initialize, multi: true, deps: [ ConfigService ] },
     { provide: HTTP_INTERCEPTORS, useClass: AuthenticationInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: ApiErrorInterceptor, multi: true },
   ],

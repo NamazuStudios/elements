@@ -1,0 +1,8 @@
+.configuration-form-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.configuration-form-container > * {
+  width: 100%;
+}

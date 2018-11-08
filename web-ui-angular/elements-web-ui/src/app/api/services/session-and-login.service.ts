@@ -17,32 +17,6 @@ class SessionAndLoginService extends BaseService {
   ) {
     super(config, http);
   }
-  destroySessionsResponse(): Observable<StrictHttpResponse<void>> {
-    let __params = this.newParams();
-    let __headers = new HttpHeaders();
-    let __body: any = null;
-    let req = new HttpRequest<any>(
-      'DELETE',
-      this.rootUrl + `/session`,
-      __body,
-      {
-        headers: __headers,
-        params: __params,
-        responseType: 'text'
-      });
-
-    return this.http.request<any>(req).pipe(
-      __filter(_r => _r instanceof HttpResponse),
-      __map((_r: HttpResponse<any>) => {
-        return _r.clone({ body: null }) as StrictHttpResponse<void>
-      })
-    );
-  }
-  destroySessions(): Observable<void> {
-    return this.destroySessionsResponse().pipe(
-      __map(_r => _r.body)
-    );
-  }
 
   /**
    * @param sessionSecret undefined
@@ -75,6 +49,32 @@ class SessionAndLoginService extends BaseService {
    */
   destroySession(sessionSecret: string): Observable<void> {
     return this.destroySessionResponse(sessionSecret).pipe(
+      __map(_r => _r.body)
+    );
+  }
+  destroySessionsResponse(): Observable<StrictHttpResponse<void>> {
+    let __params = this.newParams();
+    let __headers = new HttpHeaders();
+    let __body: any = null;
+    let req = new HttpRequest<any>(
+      'DELETE',
+      this.rootUrl + `/session`,
+      __body,
+      {
+        headers: __headers,
+        params: __params,
+        responseType: 'text'
+      });
+
+    return this.http.request<any>(req).pipe(
+      __filter(_r => _r instanceof HttpResponse),
+      __map((_r: HttpResponse<any>) => {
+        return _r.clone({ body: null }) as StrictHttpResponse<void>
+      })
+    );
+  }
+  destroySessions(): Observable<void> {
+    return this.destroySessionsResponse().pipe(
       __map(_r => _r.body)
     );
   }

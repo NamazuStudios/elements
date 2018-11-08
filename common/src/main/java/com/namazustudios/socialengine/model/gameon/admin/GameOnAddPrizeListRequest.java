@@ -44,7 +44,7 @@ public class GameOnAddPrizeListRequest implements Serializable {
                 '}';
     }
 
-    @ApiModel("The Prize metadata itself.  " +
+    @ApiModel(description = "The Prize metadata itself.  " +
               "See: https://developer.amazon.com/docs/gameon/admin-api-ref.html#addprizelistrequest_prize")
     public static class Prize implements Serializable {
 
