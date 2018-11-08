@@ -44,8 +44,10 @@ public class GameOnAddPrizeListRequest implements Serializable {
                 '}';
     }
 
-    @ApiModel("The Prize metadata itself.  " +
-              "See: https://developer.amazon.com/docs/gameon/admin-api-ref.html#addprizelistrequest_prize")
+    @ApiModel("The Prize metadata itself.  "// +
+            // TODO the following url confuses swagger; must be a way to format it such that the notation can be included, but eliminating for now
+              //"See: https://developer.amazon.com/docs/gameon/admin-api-ref.html#addprizelistrequest_prize"
+             )
     public static class Prize implements Serializable {
 
         @NotNull

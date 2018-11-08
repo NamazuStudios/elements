@@ -4,12 +4,20 @@ import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListRespo
 import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListRequest;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnGetPrizeListResponse;
 import com.namazustudios.socialengine.service.GameOnAdminPrizeService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+
+@Api(value = "GameOnPrizes",
+        description = "Provides access to the GameOn prizes. Prizes are tracked by " +
+                "the GameOn system and not by Elements.",
+        authorizations = {@Authorization(SESSION_SECRET)})
 @Path("game_on_admin/{applicationId}/{configurationId}/prizes")
 public class GameOnPrizeResource {
 
