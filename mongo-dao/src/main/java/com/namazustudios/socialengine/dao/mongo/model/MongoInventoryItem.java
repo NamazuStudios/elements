@@ -41,6 +41,9 @@ public class MongoInventoryItem {
     @Property
     private Integer quantity;
 
+    @Property
+    private Integer priority;
+
     public ObjectId getObjectId() {
         return objectId;
     }
@@ -71,6 +74,14 @@ public class MongoInventoryItem {
         this.quantity = quantity;
     }
 
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.quantity = quantity;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -84,9 +95,9 @@ public class MongoInventoryItem {
 
         if (getObjectId() != null ? !getObjectId().equals(mongoInventoryItem.getObjectId()) : mongoInventoryItem.getObjectId() != null) return false;
         if (getUser() != null ? !getUser().equals(mongoInventoryItem.getUser()) : mongoInventoryItem.getUser() != null) return false;
-        if (getItem() != null ? !getItem().equals(mongoInventoryItem.getItem()) : mongoInventoryItem.getItem() != null)
-            return false;
-        return (getQuantity() != null ? !getQuantity().equals(mongoInventoryItem.getQuantity()) : mongoInventoryItem.getQuantity() != null);
+        if (getItem() != null ? !getItem().equals(mongoInventoryItem.getItem()) : mongoInventoryItem.getItem() != null) return false;
+        if (getQuantity() != null ? !getItem().equals(mongoInventoryItem.getQuantity()) : mongoInventoryItem.getQuantity() != null) return false;
+        return (getPriority() != null ? !getPriority().equals(mongoInventoryItem.getPriority()) : mongoInventoryItem.getPriority() != null);
     }
 
     @Override
@@ -95,6 +106,7 @@ public class MongoInventoryItem {
         result = 31 * result + (getUser() != null ? getUser().hashCode() : 0);
         result = 31 * result + (getItem() != null ? getItem().hashCode() : 0);
         result = 31 * result + (getQuantity() != null ? getQuantity().hashCode() : 0);
+        result = 31 * result + (getPriority() != null ? getPriority().hashCode() : 0);
         return result;
     }
 }
