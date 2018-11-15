@@ -1,27 +1,24 @@
 package com.namazustudios.socialengine.rest.inventory;
 
+import com.namazustudios.socialengine.exception.InvalidParameterException;
+import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.service.SimpleInventoryItemService;
+import com.namazustudios.socialengine.model.inventory.CreateInventoryItem;
+import com.namazustudios.socialengine.model.inventory.InventoryItem;
+import com.namazustudios.socialengine.model.inventory.InventoryItemQuantityAdjustment;
+import com.namazustudios.socialengine.service.inventory.SimpleInventoryItemService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import java.util.Set;
-
+import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
-@Path("inventory")
+@Path("inventory/simple")
 @Api(value = "Inventory",
         description = "Manages inventory",
         authorizations = {@Authorization(SESSION_SECRET)})
@@ -30,52 +27,69 @@ public class SimpleInventoryItemResource {
 
     private SimpleInventoryItemService simpleInventoryItemService;
 
+    @GET
+    @Path("{itemNameOrId}")
+    @ApiOperation(value = "Gets inventory item for the specified item",
+        notes = "Gets the first (primary) inventory item for the specified item")
+    public InventoryItem getInventoryItem(@PathParam("itemNameOrId") final String itemNameOrId) {
+        return simpleInventoryItemService.getInventoryItem(itemNameOrId);
+    }
 
+    @GET
+    @ApiOperation(value = "Search inventory items",
+            notes = "Searches all inventory items in the system and returns the metadata for all matches against " +
+                    "the given search filter.")
+    public Pagination<InventoryItem> getInventoryItems(@QueryParam("offset") @DefaultValue("0") final int offset,
+                                                       @QueryParam("count")  @DefaultValue("20") final int count,
+                                                       @QueryParam("search") final String search) {
+        if (offset < 0) {
+            throw new InvalidParameterException("Offset must have positive value.");
+        }
 
+        if (count < 0) {
+            throw new InvalidParameterException("Count must have positive value.");
+        }
 
-//    @POST
-//    @ApiOperation(value = "Creates a new digital Item",
-//            notes = "Supplying an item object, this will create a new item with a newly assigned unique id.  " +
-//                    "The Item representation returned in the response body is a representation of the Item as persisted " +
-//                    "with a unique identifier signed and with its fields properly normalized.  The supplied item object " +
-//                    "submitted with the request must have a name property that is unique across all items.")
-//    public Item createItem(Item itemToBeCreated) {
-//        return simpleInventoryItemService.createItem(itemToBeCreated);
-//    }
-//
-//
-//    @GET
-//    @ApiOperation(value = "Retrieves all Items",
-//            notes = "Searches all items and returns all matching items, filtered by the passed in search parameters.  " +
-//                    "If multiple tags are specified, then all items that contain at least one of the passed in tags is " +
-//                    "returned.")
-//    public Pagination<Item> getItems(@QueryParam("offset") @DefaultValue("0") final int offset,
-//                                     @QueryParam("count") @DefaultValue("20") final int count,
-//                                     @QueryParam("tags") final Set<String> tags,
-//                                     @QueryParam("search") final String search) {
-//        return simpleInventoryItemService.getItems(offset, count, tags, search);
-//    }
-//
-//    @GET
-//    @Path("{identifier}")
-//    @ApiOperation(value = "Retrieves a single Item by id or by name",
-//            notes = "Looks up an item by the passed in identifier")
-//    public Item getItemByIdentifier(@PathParam("identifier") String identifier) {
-//        return simpleInventoryItemService.getItemByIdOrName(identifier);
-//    }
-//
-//    @PUT
-//    @Path("{identifier}")
-//    @ApiOperation(value = "Updates a single Item",
-//            notes = "Supplying an item, this will update the Item identified by the identifier in the path with contents " +
-//                    "from the passed in request body. ")
-//    public Item updateItem(final Item updatedItem,
-//                           @PathParam("identifier") String identifier) {
-//        return simpleInventoryItemService.updateItem(updatedItem);
-//    }
+        final String query = nullToEmpty(search).trim();
 
+        return simpleInventoryItemService.getInventoryItems(offset, count, search);
+    }
 
+    @PATCH
+    @Path("{itemNameOrId}")
+    @ApiOperation(value = "Adjust the quantity of the inventory item for the specified item",
+            notes = "Adjust the quantity of the first (primary) inventory item for the specified item")
+    public InventoryItem adjustInventoryItemQuantity(@PathParam("itemNameOrId") final String itemNameOrId,
+             InventoryItemQuantityAdjustment inventoryItemQuantityAdjustment) {
 
+        if(null == inventoryItemQuantityAdjustment) {
+            throw new InvalidParameterException("InventoryItemQuantityAdjustment can not be null.");
+        }
+
+        return simpleInventoryItemService.adjustInventoryItemQuantity(itemNameOrId, inventoryItemQuantityAdjustment.getQuantityDelta());
+    }
+
+    @POST
+    @Path("{itemNameOrId}")
+    @ApiOperation(value = "Adjust the quantity of the inventory item for the specified item",
+            notes = "Adjust the quantity of the first (primary) inventory item for the specified item")
+    public InventoryItem createInventoryItem(@PathParam("itemNameOrId") final String itemNameOrId,
+                                             CreateInventoryItem createInventoryItem) {
+
+        if(null == createInventoryItem) {
+            throw new InvalidParameterException("CreateInventoryItem can not be null.");
+        }
+
+        return simpleInventoryItemService.createInventoryItem(itemNameOrId, createInventoryItem.getQuantity());
+    }
+
+    @DELETE
+    @Path("{itemNameOrId}")
+    @ApiOperation(value = "Delete the inventory item for the specified item",
+            notes = "Delete the first (primary) inventory item for the specified item")
+    public void deleteInventoryItem(String itemNameOrId) {
+        simpleInventoryItemService.deleteInventoryItem(itemNameOrId);
+    }
 
     public SimpleInventoryItemService getSimpleInventoryItemService() {
         return simpleInventoryItemService;
