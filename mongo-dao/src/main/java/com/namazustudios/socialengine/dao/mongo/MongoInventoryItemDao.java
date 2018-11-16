@@ -71,24 +71,24 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         if (StringUtils.isEmpty(itemNameOrId)) {
             throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
         }
-//
-//        Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
-//
-//        if (ObjectId.isValid(inventoryItemId)) {
-//            query.criteria("_id").equal(new ObjectId(inventoryItemId));
-//        } else {
-//            throw new NotFoundException("Unable to find item with an id of " + inventoryItemId);
-//        }
-//
-//        final MongoInventoryItem item = query.get();
-//
-//        if (item == null) {
-//            throw new NotFoundException("Unable to find item with an id of " + inventoryItemId);
-//        }
-//
-//        return getDozerMapper().map(item, InventoryItem.class);
 
-        throw new NotImplementedException();
+        Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
+
+        if (ObjectId.isValid(itemNameOrId)) {
+            query.criteria("item._id").equal(new ObjectId(itemNameOrId));
+        } else {
+            query.criteria("item.name").equal(new ObjectId(itemNameOrId));
+        }
+
+        query.order("priority");
+
+        final MongoInventoryItem item = query.get();
+
+        if (item == null) {
+            throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
+        }
+
+        return getDozerMapper().map(item, InventoryItem.class);
     }
 
     @Override
