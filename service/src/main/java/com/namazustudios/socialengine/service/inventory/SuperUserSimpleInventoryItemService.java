@@ -1,36 +1,46 @@
 package com.namazustudios.socialengine.service.inventory;
 
+import com.namazustudios.socialengine.dao.InventoryItemDao;
+import com.namazustudios.socialengine.dao.ItemDao;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 
-public class SuperUserSimpleInventoryItemService implements SimpleInventoryItemService {
-    @Override
-    public InventoryItem getInventoryItem(String itemNameOrId) {
-        return null;
-    }
+import javax.inject.Inject;
 
-    @Override
-    public Pagination<InventoryItem> getInventoryItems(int offset, int count) {
-        return null;
-    }
+public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItemService implements SimpleInventoryItemService {
 
-    @Override
-    public Pagination<InventoryItem> getInventoryItems(int offset, int count, String query) {
-        return null;
-    }
+    private ItemDao itemDao;
 
     @Override
     public InventoryItem adjustInventoryItemQuantity(String itemNameOrId, Integer quantityDelta) {
+        // find the inventory item by item name or id
+
         return null;
     }
 
     @Override
     public InventoryItem createInventoryItem(String itemNameOrId, Integer initialQuantity) {
-        return null;
+        InventoryItem inventoryItem = new InventoryItem();
+
+        inventoryItem.setQuantity((null != initialQuantity) ? initialQuantity : 0);
+        inventoryItem.setItem(itemDao.getItemByIdOrName(itemNameOrId));
+
+        return inventoryItemDao.createInventoryItem(inventoryItem);
     }
 
     @Override
     public void deleteInventoryItem(String itemNameOrId) {
+        // find the inventory item by item name or id
 
+    }
+
+    public ItemDao getItemDao() {
+        return itemDao;
+    }
+
+    @Inject
+    public void setItemDao(ItemDao itemDao) {
+        this.itemDao = itemDao;
     }
 }

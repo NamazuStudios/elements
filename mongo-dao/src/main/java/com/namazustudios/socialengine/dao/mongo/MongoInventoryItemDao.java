@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoInventoryItem;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -63,6 +64,31 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         }
 
         return getDozerMapper().map(item, InventoryItem.class);
+    }
+
+    @Override
+    public InventoryItem getInventoryItemByItemNameOrId(String itemNameOrId) {
+        if (StringUtils.isEmpty(itemNameOrId)) {
+            throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
+        }
+//
+//        Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
+//
+//        if (ObjectId.isValid(inventoryItemId)) {
+//            query.criteria("_id").equal(new ObjectId(inventoryItemId));
+//        } else {
+//            throw new NotFoundException("Unable to find item with an id of " + inventoryItemId);
+//        }
+//
+//        final MongoInventoryItem item = query.get();
+//
+//        if (item == null) {
+//            throw new NotFoundException("Unable to find item with an id of " + inventoryItemId);
+//        }
+//
+//        return getDozerMapper().map(item, InventoryItem.class);
+
+        throw new NotImplementedException();
     }
 
     @Override

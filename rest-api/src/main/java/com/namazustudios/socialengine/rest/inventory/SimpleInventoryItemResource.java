@@ -71,7 +71,7 @@ public class SimpleInventoryItemResource {
 
     @POST
     @Path("{itemNameOrId}")
-    @ApiOperation(value = "Adjust the quantity of the inventory item for the specified item",
+    @ApiOperation(value = "Create an inventory item for the specified item",
             notes = "Adjust the quantity of the first (primary) inventory item for the specified item")
     public InventoryItem createInventoryItem(@PathParam("itemNameOrId") final String itemNameOrId,
                                              CreateInventoryItem createInventoryItem) {
@@ -87,7 +87,7 @@ public class SimpleInventoryItemResource {
     @Path("{itemNameOrId}")
     @ApiOperation(value = "Delete the inventory item for the specified item",
             notes = "Delete the first (primary) inventory item for the specified item")
-    public void deleteInventoryItem(String itemNameOrId) {
+    public void deleteInventoryItem(@PathParam("itemNameOrId") final String itemNameOrId) {
         simpleInventoryItemService.deleteInventoryItem(itemNameOrId);
     }
 

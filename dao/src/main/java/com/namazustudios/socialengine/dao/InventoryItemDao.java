@@ -36,22 +36,20 @@ public interface InventoryItemDao {
     Pagination<InventoryItem> getInventoryItems(int offset, int count, String search);
 
     /**
-     * Gets inventory items specifying the offset and the count, specifying a search filter.
-     *
-     * @param offset the offset
-     * @param count the count
-     * @param search a query to filter the results
-     * @return a {@link Pagination} of {@link InventoryItem} objects.
-     */
-    Pagination<InventoryItem> getInventoryItems(String itemIdOrName, int offset, int count);
-
-    /**
      * Gets the specific inventory item with the id, or throws a {@link NotFoundException} if the
-     * profile can't be found.
+     * inventory item can't be found.
      *
      * @return the {@link InventoryItem} that was requested, never null
      */
     InventoryItem getInventoryItem(String inventoryItemId);
+
+    /**
+     * Gets the specific inventory item given the item id, or throws a {@link NotFoundException} if the
+     * item or inventory item can't be found.
+     *
+     * @return the {@link InventoryItem} that was requested, never null
+     */
+    InventoryItem getInventoryItemByItemNameOrId(String inventoryItemId);
 
     /**
      * Updates the specific inventory item with the id, or throws a {@link NotFoundException} if the
