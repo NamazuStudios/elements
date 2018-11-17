@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao;
 
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.exception.NotFoundException;
@@ -19,31 +20,34 @@ public interface InventoryItemDao {
     /**
      * Gets inventory items specifying the offset and the count.
      *
+     * @param user the {@link User} that owns the items
      * @param offset the offset
      * @param count the count
      * @return a {@link Pagination} of {@link InventoryItem} objects.
      */
-    Pagination<InventoryItem> getInventoryItems(int offset, int count);
+    Pagination<InventoryItem> getInventoryItems(User user, int offset, int count);
 
     /**
      * Gets inventory items specifying the offset and the count, specifying a search filter.
      *
+     * @param user the {@link User} that owns the items
      * @param offset the offset
      * @param count the count
      * @param search a query to filter the results
      * @return a {@link Pagination} of {@link InventoryItem} objects.
      */
-    Pagination<InventoryItem> getInventoryItems(int offset, int count, String search);
+    Pagination<InventoryItem> getInventoryItems(User user, int offset, int count, String search);
 
     /**
      * Gets inventory items specifying the offset and the count, specifying a search filter.
      *
+     * @param user the {@link User} that owns the items
      * @param itemNameOrId an item name or ID to limit the results
      * @param offset the offset
      * @param count the count
      * @return a {@link Pagination} of {@link InventoryItem} objects.
      */
-    Pagination<InventoryItem> getInventoryItems(String itemNameOrId, int offset, int count);
+    Pagination<InventoryItem> getInventoryItems(User user, String itemNameOrId, int offset, int count);
 
     /**
      * Gets the specific inventory item with the id, or throws a {@link NotFoundException} if the
@@ -57,9 +61,11 @@ public interface InventoryItemDao {
      * Gets the primary (single) inventory item for with the item name or id, or throws a {@link NotFoundException}
      * if the item or inventory item can't be found.
      *
+     * @param user the {@link User} that owns the item
+     * @param itemNameOrId an item name or ID to limit the results
      * @return the {@link InventoryItem} that was requested, never null
      */
-    InventoryItem getInventoryItemByItemNameOrId(String itemNameOrId);
+    InventoryItem getInventoryItemByItemNameOrId(User user, String itemNameOrId);
 
     /**
      * Updates the specific inventory item with the id, or throws a {@link NotFoundException} if the

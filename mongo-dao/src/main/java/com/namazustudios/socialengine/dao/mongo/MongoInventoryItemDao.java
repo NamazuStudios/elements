@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.apache.commons.lang3.StringUtils;
@@ -90,11 +91,12 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     }
 
     @Override
-    public InventoryItem getInventoryItemByItemNameOrId(String itemNameOrId) {
+    public InventoryItem getInventoryItemByItemNameOrId(User user, String itemNameOrId) {
 
         Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
 
         query.criteria("item").equal(getMongoItem(itemNameOrId));
+        query.criteria("user").equal(getDozerMapper().map(user, MongoUser.class));
 
         query.order("priority");
 
@@ -108,27 +110,30 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     }
 
     @Override
-    public Pagination<InventoryItem> getInventoryItems(int offset, int count) { return getInventoryItems(offset, count, null); }
+    public Pagination<InventoryItem> getInventoryItems(User user, int offset, int count) { return getInventoryItems(user, offset, count, null); }
 
     @Override
-    public Pagination<InventoryItem> getInventoryItems(int offset, int count, String query) {
-        if (StringUtils.isNotEmpty(query)) {
+    public Pagination<InventoryItem> getInventoryItems(User user, int offset, int count, String search) {
+        if (StringUtils.isNotEmpty(search)) {
             LOGGER.warn(" getItems(int offset, int count, String query) was called with a query " +
                     "string parameter.  This field is presently ignored and will return all values");
         }
 
-        final Query<MongoInventoryItem> mongoQuery = getDatastore().createQuery(MongoInventoryItem.class);
+        final Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
 
-        return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count,
+        query.criteria("user").equal(getDozerMapper().map(user, MongoUser.class));
+
+        return getMongoDBUtils().paginationFromQuery(query, offset, count,
                 mongoItem -> getDozerMapper().map(mongoItem, InventoryItem.class));
     }
 
     @Override
-    public Pagination<InventoryItem> getInventoryItems(String itemNameOrId, int offset, int count) {
+    public Pagination<InventoryItem> getInventoryItems(User user, String itemNameOrId, int offset, int count) {
 
         Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
 
         query.criteria("item").equal(getMongoItem(itemNameOrId));
+        query.criteria("user").equal(getDozerMapper().map(user, MongoUser.class));
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count,
                 mongoInventoryItem -> getDozerMapper().map(mongoInventoryItem, InventoryItem.class));

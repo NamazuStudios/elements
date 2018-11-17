@@ -3,27 +3,30 @@ package com.namazustudios.socialengine.service.inventory;
 import com.namazustudios.socialengine.dao.InventoryItemDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 
 import javax.inject.Inject;
 
 public class UserSimpleInventoryItemService implements SimpleInventoryItemService {
 
+    protected User user;
+
     protected InventoryItemDao inventoryItemDao;
 
     @Override
     public InventoryItem getInventoryItem(String itemNameOrId) {
-        return inventoryItemDao.getInventoryItemByItemNameOrId(itemNameOrId);
+        return inventoryItemDao.getInventoryItemByItemNameOrId(user, itemNameOrId);
     }
 
     @Override
     public Pagination<InventoryItem> getInventoryItems(int offset, int count) {
-        return inventoryItemDao.getInventoryItems(offset, count);
+        return inventoryItemDao.getInventoryItems(user, offset, count);
     }
 
     @Override
     public Pagination<InventoryItem> getInventoryItems(int offset, int count, String query) {
-        return inventoryItemDao.getInventoryItems(offset, count, query);
+        return inventoryItemDao.getInventoryItems(user, offset, count, query);
     }
 
 
@@ -44,5 +47,14 @@ public class UserSimpleInventoryItemService implements SimpleInventoryItemServic
     @Inject
     public void setInventoryItemDao(InventoryItemDao inventoryItemDao) {
         this.inventoryItemDao = inventoryItemDao;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
     }
 }

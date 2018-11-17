@@ -10,13 +10,11 @@ import javax.inject.Provider;
 
 public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItemService implements SimpleInventoryItemService {
 
-    private User user;
-
     private ItemDao itemDao;
 
     @Override
     public InventoryItem adjustInventoryItemQuantity(String itemNameOrId, Integer quantityDelta) {
-        InventoryItem inventoryItem = inventoryItemDao.getInventoryItemByItemNameOrId(itemNameOrId);
+        InventoryItem inventoryItem = inventoryItemDao.getInventoryItemByItemNameOrId(user, itemNameOrId);
 
         if(null == inventoryItem) {
             throw new NotFoundException();
@@ -47,7 +45,7 @@ public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItem
 
     @Override
     public void deleteInventoryItem(String itemNameOrId) {
-        InventoryItem inventoryItem = inventoryItemDao.getInventoryItemByItemNameOrId(itemNameOrId);
+        InventoryItem inventoryItem = inventoryItemDao.getInventoryItemByItemNameOrId(user, itemNameOrId);
 
         if(null == inventoryItem) {
             throw new NotFoundException();
@@ -63,14 +61,5 @@ public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItem
     @Inject
     public void setItemDao(ItemDao itemDao) {
         this.itemDao = itemDao;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    @Inject
-    public void setUser(User user) {
-        this.user = user;
     }
 }
