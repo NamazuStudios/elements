@@ -13,7 +13,7 @@ public class UserSimpleInventoryItemService implements SimpleInventoryItemServic
 
     @Override
     public InventoryItem getInventoryItem(String itemNameOrId) {
-        return inventoryItemDao.getInventoryItem(itemNameOrId);
+        return inventoryItemDao.getInventoryItemByItemNameOrId(itemNameOrId);
     }
 
     @Override

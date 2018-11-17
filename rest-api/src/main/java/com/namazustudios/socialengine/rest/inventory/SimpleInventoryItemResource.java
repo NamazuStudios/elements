@@ -72,7 +72,7 @@ public class SimpleInventoryItemResource {
     @POST
     @Path("{itemNameOrId}")
     @ApiOperation(value = "Create an inventory item for the specified item",
-            notes = "Adjust the quantity of the first (primary) inventory item for the specified item")
+            notes = "Create an inventory item for the specified item")
     public InventoryItem createInventoryItem(@PathParam("itemNameOrId") final String itemNameOrId,
                                              CreateInventoryItem createInventoryItem) {
 

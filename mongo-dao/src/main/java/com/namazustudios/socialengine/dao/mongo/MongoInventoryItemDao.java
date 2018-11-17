@@ -5,10 +5,11 @@ import com.mongodb.WriteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.InventoryItemDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoInventoryItem;
+import com.namazustudios.socialengine.dao.mongo.model.MongoItem;
+import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -43,6 +44,28 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
     private MongoDBUtils mongoDBUtils;
 
+    private MongoItem getMongoItem(String itemNameOrId) {
+        if (StringUtils.isEmpty(itemNameOrId)) {
+            throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
+        }
+
+        Query<MongoItem> itemQuery = getDatastore().createQuery(MongoItem.class);
+
+        if (ObjectId.isValid(itemNameOrId)) {
+            itemQuery.criteria("_id").equal(new ObjectId(itemNameOrId));
+        } else {
+            itemQuery.criteria("name").equal(itemNameOrId);
+        }
+
+        MongoItem mongoItem = itemQuery.get();
+
+        if(null == mongoItem) {
+            throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
+        }
+
+        return mongoItem;
+    }
+
     @Override
     public InventoryItem getInventoryItem(String inventoryItemId) {
         if (StringUtils.isEmpty(inventoryItemId)) {
@@ -68,17 +91,10 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
     @Override
     public InventoryItem getInventoryItemByItemNameOrId(String itemNameOrId) {
-        if (StringUtils.isEmpty(itemNameOrId)) {
-            throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
-        }
 
         Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
 
-        if (ObjectId.isValid(itemNameOrId)) {
-            query.criteria("item._id").equal(new ObjectId(itemNameOrId));
-        } else {
-            query.criteria("item.name").equal(new ObjectId(itemNameOrId));
-        }
+        query.criteria("item").equal(getMongoItem(itemNameOrId));
 
         query.order("priority");
 
@@ -109,16 +125,13 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
     @Override
     public Pagination<InventoryItem> getInventoryItems(String itemNameOrId, int offset, int count) {
-        final Query<MongoInventoryItem> mongoQuery = getDatastore().createQuery(MongoInventoryItem.class);
 
-        if (ObjectId.isValid(itemNameOrId)) {
-            mongoQuery.criteria("item._id").equal(new ObjectId(itemNameOrId));
-        } else {
-            mongoQuery.criteria("item.name").equal(itemNameOrId);
-        }
+        Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
 
-        return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count,
-                mongoItem -> getDozerMapper().map(mongoItem, InventoryItem.class));
+        query.criteria("item").equal(getMongoItem(itemNameOrId));
+
+        return getMongoDBUtils().paginationFromQuery(query, offset, count,
+                mongoInventoryItem -> getDozerMapper().map(mongoInventoryItem, InventoryItem.class));
     }
 
     @Override
@@ -131,9 +144,10 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         query.criteria("_id").equal(objectId);
 
         final UpdateOperations<MongoInventoryItem> operations = getDatastore().createUpdateOperations(MongoInventoryItem.class);
-        operations.set("user", inventoryItem.getUser());
-        operations.set("item", inventoryItem.getItem());
+        operations.set("user", getDozerMapper().map(inventoryItem.getUser(), MongoUser.class));
+        operations.set("item", getDozerMapper().map(inventoryItem.getItem(), MongoItem.class));
         operations.set("quantity", inventoryItem.getQuantity());
+        operations.set("priority", inventoryItem.getPriority());
 
         final FindAndModifyOptions options = new FindAndModifyOptions()
             .returnNew(true)
@@ -167,8 +181,9 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
     @Override
     public void deleteInventoryItem(String inventoryItemId) {
-        final ObjectId registrationId = getMongoDBUtils().parseOrThrowNotFoundException(inventoryItemId);
-        final WriteResult writeResult = getDatastore().delete(MongoItemDao.class, registrationId);
+
+        final ObjectId id = getMongoDBUtils().parseOrThrowNotFoundException(inventoryItemId);
+        final WriteResult writeResult = getDatastore().delete(MongoInventoryItem.class, id);
 
         if (writeResult.getN() == 0) {
             throw new NotFoundException("Item Inventory not found: " + inventoryItemId);

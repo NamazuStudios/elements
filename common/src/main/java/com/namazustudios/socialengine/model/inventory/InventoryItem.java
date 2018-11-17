@@ -71,7 +71,7 @@ public class InventoryItem implements Serializable {
         return priority;
     }
 
-    public void setPriority(Integer priority) { this.quantity = quantity; }
+    public void setPriority(Integer priority) { this.priority = priority; }
 
     @Override
     public boolean equals(Object o) {

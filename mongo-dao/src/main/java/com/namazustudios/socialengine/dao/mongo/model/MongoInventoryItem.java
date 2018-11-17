@@ -79,7 +79,7 @@ public class MongoInventoryItem {
     }
 
     public void setPriority(Integer priority) {
-        this.quantity = quantity;
+        this.priority = priority;
     }
 
     @Override
