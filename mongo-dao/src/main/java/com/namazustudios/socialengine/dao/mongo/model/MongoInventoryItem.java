@@ -33,15 +33,18 @@ public class MongoInventoryItem {
     private ObjectId objectId;
 
     @Reference
+    @Indexed()
     private MongoItem item;
 
     @Reference
+    @Indexed()
     private MongoUser user;
 
     @Property
     private Integer quantity;
 
     @Property
+    @Indexed()
     private Integer priority;
 
     public ObjectId getObjectId() {
