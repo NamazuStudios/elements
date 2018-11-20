@@ -78,6 +78,24 @@ public interface ProfileDao {
     Profile updateActiveProfile(Profile profile, Map<String, Object> metadata);
 
     /**
+     * Updates metadata for the specified {@link Profile}, ignoring changes to all other fields.
+     *
+     * @param profileId the profile
+     * @param metadata the metadata
+     * @return the updated {@link Profile}
+     */
+    Profile updateMetadata(String profileId, Map<String, Object> metadata);
+
+    /**
+     * Updates metadata for the specified {@link Profile}, ignoring changes to all other fields.
+     *
+     * @param profile the profile
+     * @param metadata the metadata
+     * @return the updated {@link Profile}
+     */
+    Profile updateMetadata(Profile profile, Map<String, Object> metadata);
+
+    /**
      * Creates or reactivates an inactive profile.  If the profile is active then this throws a
      * {@link DuplicateException}.  The newly created or reactivated profile will contain the
      * ID of the profile as requested.  The value of {@link Profile#getId()} will be ignored

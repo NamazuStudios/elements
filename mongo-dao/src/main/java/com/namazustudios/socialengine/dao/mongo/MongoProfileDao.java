@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static java.util.Collections.emptyMap;
 
 /**
  *
@@ -185,8 +184,9 @@ public class MongoProfileDao implements ProfileDao {
             query.criteria("_id").equal(objectId)
         );
 
-        final UpdateOperations<MongoProfile> updateOperations = datastore.createUpdateOperations(MongoProfile.class);
+        final UpdateOperations<MongoProfile> updateOperations;
 
+        updateOperations = getDatastore().createUpdateOperations(MongoProfile.class);
         updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
         updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
 
@@ -222,8 +222,9 @@ public class MongoProfileDao implements ProfileDao {
                 query.criteria("_id").equal(objectId)
         );
 
-        final UpdateOperations<MongoProfile> updateOperations = datastore.createUpdateOperations(MongoProfile.class);
+        final UpdateOperations<MongoProfile> updateOperations;
 
+        updateOperations = getDatastore().createUpdateOperations(MongoProfile.class);
         updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
         updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
 
@@ -253,6 +254,55 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     @Override
+    public Profile updateMetadata(final String profileId, final Map<String, Object> metadata) {
+        final MongoProfile mongoProfile = getActiveMongoProfile(profileId);
+        return doUpdateMetadata(mongoProfile.getObjectId(), metadata);
+    }
+
+    @Override
+    public Profile updateMetadata(final Profile profile, final Map<String, Object> metadata) {
+        final MongoProfile mongoProfile = getActiveMongoProfile(profile);
+        return doUpdateMetadata(mongoProfile.getObjectId(), metadata);
+    }
+
+    private Profile doUpdateMetadata(final ObjectId objectId, final Map<String, Object> metadata) {
+
+        final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
+
+        query.and(
+                query.criteria("active").equal(true),
+                query.criteria("_id").equal(objectId)
+        );
+
+        final UpdateOperations<MongoProfile> updateOperations;
+        updateOperations = getDatastore().createUpdateOperations(MongoProfile.class);
+
+        if (metadata == null) {
+            updateOperations.unset("metadata");
+        } else {
+            updateOperations.set("metadata", metadata);
+        }
+
+        final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
+
+            final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
+                    .upsert(false)
+                    .returnNew(true);
+
+            return ds.findAndModify(query, updateOperations, findAndModifyOptions);
+
+        });
+
+        if (mongoProfile == null) {
+            throw new NotFoundException("application not found: " + objectId);
+        }
+
+        getObjectIndex().index(mongoProfile);
+        return transform(mongoProfile);
+
+    }
+
+    @Override
     public Profile createOrReactivateProfile(final Profile profile) {
 
         getValidationHelper().validateModel(profile, Insert.class);
@@ -268,8 +318,9 @@ public class MongoProfileDao implements ProfileDao {
             query.criteria("application").equal(application)
         );
 
-        final UpdateOperations<MongoProfile> updateOperations = datastore.createUpdateOperations(MongoProfile.class);
+        final UpdateOperations<MongoProfile> updateOperations;
 
+        updateOperations = getDatastore().createUpdateOperations(MongoProfile.class);
         updateOperations.set("user", user);
         updateOperations.set("active", true);
         updateOperations.set("application", application);
