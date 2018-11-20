@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static java.util.Collections.emptyMap;
 
 /**
  *
@@ -225,7 +226,12 @@ public class MongoProfileDao implements ProfileDao {
 
         updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
         updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
-        updateOperations.set("metadata", metadata);
+
+        if (metadata == null) {
+            updateOperations.unset("metadata");
+        } else {
+            updateOperations.set("metadata", metadata);
+        }
 
         final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
 
@@ -312,7 +318,12 @@ public class MongoProfileDao implements ProfileDao {
         updateOperations.set("application", application);
         updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
         updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
-        updateOperations.set("metadata", metadata);
+
+        if (metadata == null) {
+            updateOperations.unset("metadata");
+        } else {
+            updateOperations.set("metadata", metadata);
+        }
 
         final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
 

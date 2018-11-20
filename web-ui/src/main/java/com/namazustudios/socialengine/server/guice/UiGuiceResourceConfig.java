@@ -35,9 +35,10 @@ public class UiGuiceResourceConfig extends ResourceConfig {
 
             final Class<?> cls = getClass().forName("org.glassfish.jersey.jackson.JacksonFeature");
             register(cls);
+            logger.info("Using Jackson Support.");
 
         } catch (ClassNotFoundException ex) {
-            logger.info("NOT loading Jackson support.");
+            logger.info("Jackson not found.  Skipping support.");
         }
 
         GuiceBridge.getGuiceBridge().initializeGuiceBridge(serviceLocator);
