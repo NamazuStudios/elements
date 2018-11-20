@@ -51,7 +51,7 @@ public class UserProfileService implements ProfileService {
     @Override
     public Profile updateProfile(Profile profile) {
         checkUserAndApplication(profile);
-        return getProfileDao().createOrReactivateProfile(profile);
+        return getProfileDao().updateActiveProfile(profile);
     }
 
     @Override

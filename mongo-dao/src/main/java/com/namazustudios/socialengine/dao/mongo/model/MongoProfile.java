@@ -7,6 +7,9 @@ import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplicati
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
+import java.util.Map;
+import java.util.Objects;
+
 /**
  * Created by patricktwohig on 6/28/17.
  */
@@ -47,6 +50,9 @@ public class MongoProfile {
 
     @Property
     private String displayName;
+
+    @Embedded
+    private Map<String, Object> metadata;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -96,33 +102,31 @@ public class MongoProfile {
         this.displayName = displayName;
     }
 
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
-    public boolean equals(Object o) {
-
-        if (this == o) return true;
-        if (!(o instanceof MongoProfile)) return false;
-
-        MongoProfile that = (MongoProfile) o;
-
-        if (isActive() != that.isActive()) return false;
-        if (getObjectId() != null ? !getObjectId().equals(that.getObjectId()) : that.getObjectId() != null)
-            return false;
-        if (getUser() != null ? !getUser().equals(that.getUser()) : that.getUser() != null) return false;
-        if (getApplication() != null ? !getApplication().equals(that.getApplication()) : that.getApplication() != null)
-            return false;
-        if (getImageUrl() != null ? !getImageUrl().equals(that.getImageUrl()) : that.getImageUrl() != null)
-            return false;
-        return getDisplayName() != null ? getDisplayName().equals(that.getDisplayName()) : that.getDisplayName() == null;
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof MongoProfile)) return false;
+        MongoProfile that = (MongoProfile) object;
+        return isActive() == that.isActive() &&
+                Objects.equals(getObjectId(), that.getObjectId()) &&
+                Objects.equals(getUser(), that.getUser()) &&
+                Objects.equals(getApplication(), that.getApplication()) &&
+                Objects.equals(getImageUrl(), that.getImageUrl()) &&
+                Objects.equals(getDisplayName(), that.getDisplayName()) &&
+                Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        int result = getObjectId() != null ? getObjectId().hashCode() : 0;
-        result = 31 * result + (isActive() ? 1 : 0);
-        result = 31 * result + (getUser() != null ? getUser().hashCode() : 0);
-        result = 31 * result + (getApplication() != null ? getApplication().hashCode() : 0);
-        result = 31 * result + (getImageUrl() != null ? getImageUrl().hashCode() : 0);
-        result = 31 * result + (getDisplayName() != null ? getDisplayName().hashCode() : 0);
-        return result;
+        return Objects.hash(getObjectId(), isActive(), getUser(), getApplication(), getImageUrl(), getDisplayName(), getMetadata());
     }
+
 }

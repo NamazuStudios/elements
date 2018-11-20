@@ -1,12 +1,19 @@
 package com.namazustudios.socialengine.model.profile;
 
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.ValidationGroups.Create;
+import com.namazustudios.socialengine.model.ValidationGroups.Insert;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.application.Application;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import java.io.Serializable;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Represents a user's profile.  Generally speaking a profile associates the {@link Application}
@@ -24,14 +31,16 @@ public class Profile implements Serializable {
      */
     public static final String PROFILE_ATTRIBUTE = Profile.class.getName();
 
+    @NotNull(groups = Update.class)
+    @Null(groups = {Insert.class, Create.class})
     @ApiModelProperty("The unique ID of the profile itself.")
-    private String id;
+    protected String id;
 
-    @NotNull
+    @NotNull(groups = Insert.class)
     @ApiModelProperty("The User associated with this Profile.")
     private User user;
 
-    @NotNull
+    @NotNull(groups = Insert.class)
     @ApiModelProperty("The Application associated with this Profile.")
     private Application application;
 
@@ -41,6 +50,9 @@ public class Profile implements Serializable {
     @NotNull
     @ApiModelProperty("A non-unique display name for this profile.")
     private String displayName;
+
+    @ApiModelProperty("An object containing arbitrary player metadata as key-value pairs.")
+    private Map<String, Object> metadata;
 
     public String getId() {
         return id;
@@ -82,30 +94,30 @@ public class Profile implements Serializable {
         this.displayName = displayName;
     }
 
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Profile)) return false;
-
-        Profile profile = (Profile) o;
-
-        if (getId() != null ? !getId().equals(profile.getId()) : profile.getId() != null) return false;
-        if (getUser() != null ? !getUser().equals(profile.getUser()) : profile.getUser() != null) return false;
-        if (getApplication() != null ? !getApplication().equals(profile.getApplication()) : profile.getApplication() != null)
-            return false;
-        if (getImageUrl() != null ? !getImageUrl().equals(profile.getImageUrl()) : profile.getImageUrl() != null)
-            return false;
-        return getDisplayName() != null ? getDisplayName().equals(profile.getDisplayName()) : profile.getDisplayName() == null;
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Profile)) return false;
+        Profile profile = (Profile) object;
+        return Objects.equals(getId(), profile.getId()) &&
+                Objects.equals(getUser(), profile.getUser()) &&
+                Objects.equals(getApplication(), profile.getApplication()) &&
+                Objects.equals(getImageUrl(), profile.getImageUrl()) &&
+                Objects.equals(getDisplayName(), profile.getDisplayName()) &&
+                Objects.equals(metadata, profile.metadata);
     }
 
     @Override
     public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + (getUser() != null ? getUser().hashCode() : 0);
-        result = 31 * result + (getApplication() != null ? getApplication().hashCode() : 0);
-        result = 31 * result + (getImageUrl() != null ? getImageUrl().hashCode() : 0);
-        result = 31 * result + (getDisplayName() != null ? getDisplayName().hashCode() : 0);
-        return result;
+        return Objects.hash(getId(), getUser(), getApplication(), getImageUrl(), getDisplayName(), metadata);
     }
 
     @Override
@@ -116,6 +128,7 @@ public class Profile implements Serializable {
                 ", application=" + application +
                 ", imageUrl='" + imageUrl + '\'' +
                 ", displayName='" + displayName + '\'' +
+                ", metadata=" + metadata +
                 '}';
     }
 

@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.annotation.FacebookPermission;
 import com.namazustudios.socialengine.annotation.FacebookPermissions;
 import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.exception.ForbiddenException;
-import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -16,7 +15,6 @@ import com.namazustudios.socialengine.service.FacebookAuthService;
 import com.restfb.*;
 import com.restfb.exception.FacebookOAuthException;
 import com.restfb.json.JsonObject;
-import com.restfb.types.FriendList;
 import com.restfb.types.ProfilePictureSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +22,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
@@ -110,7 +105,7 @@ public class StandardFacebookAuthService implements FacebookAuthService {
                 .toJavaObject(rawProfilePicture.get("data").toString(), ProfilePictureSource.class);
 
             final User user = getFacebookUserDao().createReactivateOrUpdateUser(map(fbUser));
-            final Profile profile = getProfileDao().createReactivateOrRefreshProfile(map(
+            final Profile profile = getProfileDao().createOrRefreshProfile(map(
                     user,
                     fbUser,
                     facebookApplicationConfiguration,
