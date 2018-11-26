@@ -42,12 +42,12 @@ public class SuperUserProfileService implements ProfileService {
 
     @Override
     public Profile updateProfile(Profile profile) {
-        return getProfileDao().updateActiveProfile(profile);
+        return getProfileDao().updateActiveProfile(profile, profile.getMetadata());
     }
 
     @Override
     public Profile createProfile(Profile profile) {
-        return getProfileDao().createOrReactivateProfile(profile);
+        return getProfileDao().createOrReactivateProfile(profile, profile.getMetadata());
     }
 
     @Override

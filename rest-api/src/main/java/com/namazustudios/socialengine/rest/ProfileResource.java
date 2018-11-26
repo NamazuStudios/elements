@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rest;
 
 import com.google.common.base.Strings;
+import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.ValidationGroups.Create;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
@@ -100,7 +103,7 @@ public class ProfileResource {
                     "will return the profile as it was written to the database.")
     public Profile updateProfile(final Profile profile, @PathParam("profileId") String profileId) {
 
-        getValidationHelper().validateModel(profile);
+        getValidationHelper().validateModel(profile, Update.class);
         profileId = Strings.nullToEmpty(profileId).trim();
 
         if (Strings.isNullOrEmpty(profileId)) {
@@ -120,7 +123,7 @@ public class ProfileResource {
                     "in the body of the request.  Optionally, the user's password may be provided.")
     public Profile createProfile(final Profile profile) {
 
-        getValidationHelper().validateModel(profile);
+        getValidationHelper().validateModel(profile, Create.class);
 
         final String profileId = nullToEmpty(profile.getId()).trim();
 

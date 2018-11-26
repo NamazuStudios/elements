@@ -4,7 +4,6 @@ import com.google.inject.Injector;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
-import org.eclipse.persistence.jaxb.BeanValidationMode;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -35,6 +34,19 @@ public class GuiceResourceConfig extends ResourceConfig {
         packages(true, "com.namazustudios.socialengine.rest");
         packages(true, "com.namazustudios.socialengine.model");
 
+        if (!tryConfigureJackson() || !tryConfigureMoxy()) {
+            logger.warn("Neither Jackson nor Moxy could be configured.  Using default media support.");
+        }
+
+        GuiceBridge.getGuiceBridge().initializeGuiceBridge(serviceLocator);
+
+        final GuiceIntoHK2Bridge guiceBridge = serviceLocator.getService(GuiceIntoHK2Bridge.class);
+        final Injector injector = (Injector) context.getAttribute(INJECTOR_ATTRIBUTE_NAME);
+        guiceBridge.bridgeGuiceInjector(injector);
+
+    }
+
+    private boolean tryConfigureJackson() {
         try {
 
             // This attempts to soft-load Jackson support.  The jersey-media-moxy dependency
@@ -44,12 +56,17 @@ public class GuiceResourceConfig extends ResourceConfig {
 
             final Class<?> cls = Class.forName("org.glassfish.jersey.jackson.JacksonFeature");
             register(cls);
+            logger.info("Using Jackson Support.");
+
+            return true;
 
         } catch (ClassNotFoundException ex) {
             logger.info("Jackson not found.  Skipping support.");
+            return false;
         }
+    }
 
-        // Optional MOXy options
+    private boolean tryConfigureMoxy() {
         try {
 
             final Class<?> cls =  Class.forName("org.glassfish.jersey.moxy.json.MoxyJsonFeature");
@@ -58,22 +75,17 @@ public class GuiceResourceConfig extends ResourceConfig {
             final Class<?> beanValidationMode = Class.forName("org.eclipse.persistence.jaxb.BeanValidationMode");
 
             register(new MoxyJsonConfig()
-                .property("eclipselink.beanvalidation.mode", beanValidationMode.getField("NONE").get(null))
-                .resolver());
+                    .property("eclipselink.beanvalidation.mode", beanValidationMode.getField("NONE").get(null))
+                    .resolver());
 
+            return true;
         } catch (ClassNotFoundException ex) {
             logger.info("MOXy Not Found.  Skipping support.");
+            return false;
         } catch (NoSuchFieldException | IllegalAccessException ex) {
             logger.error("Failed to disable bean validation in MOXy.", ex);
             throw new InternalException(ex);
         }
-
-        GuiceBridge.getGuiceBridge().initializeGuiceBridge(serviceLocator);
-
-        final GuiceIntoHK2Bridge guiceBridge = serviceLocator.getService(GuiceIntoHK2Bridge.class);
-        final Injector injector = (Injector) context.getAttribute(INJECTOR_ATTRIBUTE_NAME);
-        guiceBridge.bridgeGuiceInjector(injector);
-
     }
 
 }
