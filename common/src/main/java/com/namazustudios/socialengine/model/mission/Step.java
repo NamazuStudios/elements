@@ -14,11 +14,11 @@ import javax.validation.constraints.NotNull;
 @ApiModel
 public class Step {
 
-    @ApiModelProperty("The display name for the step.")
+    @ApiModelProperty("The display name for the step")
     @NotNull
     private String displayName;
 
-    @ApiModelProperty("The description of the step.")
+    @ApiModelProperty("The description of the step")
     @NotNull
     private String description;
 
@@ -28,7 +28,7 @@ public class Step {
     private Integer count;
 
     @NotNull
-    @ApiModelProperty("The Rewards that will be granted upon completion")
+    @ApiModelProperty("The reward(s) that will be granted upon completion")
     private Reward[] rewards;
 
     public String getDisplayName() {
@@ -61,6 +61,38 @@ public class Step {
 
     public void setRewards(Reward[] rewards) {
         this.rewards = rewards;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Step)) return false;
+
+        Step step = (Step) o;
+
+        if (getDisplayName() != null ? !getDisplayName().equals(step.getDisplayName()) : step.getDisplayName() != null) return false;
+        if (getDescription() != null ? !getDescription().equals(step.getDescription()) : step.getDescription() != null) return false;
+        if (!java.util.Arrays.equals(getRewards(), step.getRewards())) return false;
+        return (getCount() != null ? !getCount().equals(step.getCount()) : step.getCount() != null);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (getDisplayName() != null ? getDisplayName().hashCode() : 0);
+        result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
+        result = 31 * result + (getRewards() != null ? java.util.Arrays.hashCode(getRewards()) : 0);
+        result = 31 * result + (getCount() != null ? getCount().hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Step{" +
+                ", displayName='" + displayName + '\'' +
+                ", description='" + description + '\'' +
+                ", rewards='" + rewards + '\'' +
+                ", count='" + count + '\'' +
+                '}';
     }
 
 }

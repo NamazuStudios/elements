@@ -38,4 +38,30 @@ public class Reward {
 
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Reward)) return false;
+
+        Reward reward = (Reward) o;
+
+        if (getItem() != null ? !getItem().equals(reward.getItem()) : reward.getItem() != null) return false;
+        return (getQuantity() != null ? !getQuantity().equals(reward.getQuantity()) : reward.getQuantity() != null);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (getItem() != null ? getItem().hashCode() : 0);
+        result = 31 * result + (getQuantity() != null ? getQuantity().hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Reward{" +
+                ", item='" + item + '\'' +
+                ", quantity='" + quantity + '\'' +
+                '}';
+    }
+
 }
