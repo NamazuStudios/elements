@@ -135,7 +135,7 @@ public class MongoItemDao implements ItemDao {
         if (item == null) {
             throw new InvalidDataException("Item must not be null.");
         }
-
+        getValidationHelper().validateModel(item);
     }
 
     private void normalize(Item item) {
