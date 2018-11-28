@@ -31,12 +31,12 @@ public class Mission {
     @ApiModelProperty("The steps that constitute the mission (may be null if finalRepeatStep is specified)")
     private Step[] steps;
 
+    @ApiModelProperty("The final repeating step (may be null if step(s) are specified)")
+    private Step finalRepeatStep;
+
     public String getId() {
         return id;
     }
-
-    @ApiModelProperty("The final repeating step (may be null if step(s) are specified)")
-    private Step finalRepeatStep;
 
     public void setId(String id) {
         this.id = id;

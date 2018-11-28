@@ -23,6 +23,7 @@ import com.namazustudios.socialengine.service.friend.FriendServiceProvider;
 import com.namazustudios.socialengine.service.manifest.ManifestServiceProvider;
 import com.namazustudios.socialengine.service.match.MatchServiceProvider;
 import com.namazustudios.socialengine.service.match.StandardMatchServiceUtils;
+import com.namazustudios.socialengine.service.mission.*;
 import com.namazustudios.socialengine.service.notification.FCMRegistrationServiceProvider;
 import com.namazustudios.socialengine.service.profile.ProfileServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
@@ -161,6 +162,10 @@ public class ServicesModule extends AbstractModule {
 
         bind(SimpleInventoryItemService.class)
                 .toProvider(SimpleInventoryItemServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
+        bind(MissionService.class)
+                .toProvider(MissionServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
         bind(Attributes.class).toProvider(AttributesProvider.class);
