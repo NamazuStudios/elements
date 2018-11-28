@@ -158,9 +158,6 @@ accomplish their tasks.
   includes many bug fixes and code changes at the C/Native level for JNLua.
   This also includes support for Eris, which allows full Lua Virtual Machines
   to be serialized to a database for later running.
-- **web-ui** *(deprecated)* - The GWT-based admin interface, backed by the REST API.
-- **web-ui-war** *(deprecated)* - A war file, representing a microservice that handles 
-  the web-based admin UI.
 - **web-ui-angular** - A single-page application written in Angular 7 used to manage
   the Elements system.
 
