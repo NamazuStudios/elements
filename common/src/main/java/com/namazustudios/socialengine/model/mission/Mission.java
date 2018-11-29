@@ -3,7 +3,11 @@ package com.namazustudios.socialengine.model.mission;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import com.namazustudios.socialengine.model.ValidationGroups.Create;
+import com.namazustudios.socialengine.model.ValidationGroups.Insert;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 
 /**
  * Represents a mission.
@@ -14,6 +18,8 @@ import javax.validation.constraints.NotNull;
 public class Mission {
 
     @ApiModelProperty("The unique ID of the mission")
+    @Null(groups={Create.class, Insert.class})
+    @NotNull(groups={Update.class})
     private String id;
 
     @ApiModelProperty("The name of the mission")
@@ -29,7 +35,7 @@ public class Mission {
     private String description;
 
     @ApiModelProperty("The steps that constitute the mission (may be null if finalRepeatStep is specified)")
-    private Step[] steps;
+    private java.util.List<Step> steps;
 
     @ApiModelProperty("The final repeating step (may be null if step(s) are specified)")
     private Step finalRepeatStep;
@@ -66,11 +72,11 @@ public class Mission {
         this.description = description;
     }
 
-    public Step[] getSteps() {
+    public java.util.List<Step> getSteps() {
         return steps;
     }
 
-    public void setSteps(Step[] steps) {
+    public void setSteps(java.util.List<Step> steps) {
         this.steps = steps;
     }
 
@@ -93,7 +99,7 @@ public class Mission {
         if (getName() != null ? !getName().equals(mission.getName()) : mission.getName() != null) return false;
         if (getDisplayName() != null ? !getDisplayName().equals(mission.getDisplayName()) : mission.getDisplayName() != null) return false;
         if (getDescription() != null ? !getDescription().equals(mission.getDescription()) : mission.getDescription() != null) return false;
-        if (!java.util.Arrays.equals(getSteps(), mission.getSteps())) return false;
+        if (getSteps() != null ? !getSteps().equals(mission.getSteps()) : mission.getSteps() != null) return false;
         return (getFinalRepeatStep() != null ? !getFinalRepeatStep().equals(mission.getFinalRepeatStep()) : mission.getFinalRepeatStep() != null);
     }
 
@@ -103,7 +109,7 @@ public class Mission {
         result = 31 * result + (getDisplayName() != null ? getDisplayName().hashCode() : 0);
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
-        result = 31 * result + (getSteps() != null ? java.util.Arrays.hashCode(getSteps()) : 0);
+        result = 31 * result + (getSteps() != null ? getSteps().hashCode() : 0);
         result = 31 * result + (getFinalRepeatStep() != null ? getFinalRepeatStep().hashCode() : 0);
         return result;
     }

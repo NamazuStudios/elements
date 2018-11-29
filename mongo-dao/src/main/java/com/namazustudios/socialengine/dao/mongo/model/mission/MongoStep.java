@@ -17,7 +17,7 @@ public class MongoStep {
 
     private Integer count;
 
-    private MongoReward[] rewards;
+    private java.util.List<MongoReward> rewards;
 
     public String getDisplayName() {
         return displayName;
@@ -43,11 +43,11 @@ public class MongoStep {
         this.count= count;
     }
 
-    public MongoReward[] getRewards() {
+    public java.util.List<MongoReward> getRewards() {
         return rewards;
     }
 
-    public void setRewards(MongoReward[] rewards) {
+    public void setRewards(java.util.List<MongoReward> rewards) {
         this.rewards = rewards;
     }
 
@@ -60,7 +60,7 @@ public class MongoStep {
 
         if (getDisplayName() != null ? !getDisplayName().equals(mongoStep.getDisplayName()) : mongoStep.getDisplayName() != null) return false;
         if (getDescription() != null ? !getDescription().equals(mongoStep.getDescription()) : mongoStep.getDescription() != null) return false;
-        if (!java.util.Arrays.equals(getRewards(), mongoStep.getRewards())) return false;
+        if (getRewards() != null ? !getRewards().equals(mongoStep.getRewards()) : mongoStep.getRewards() != null) return false;
         return (getCount() != null ? !getCount().equals(mongoStep.getCount()) : mongoStep.getCount() != null);
     }
 
@@ -68,7 +68,7 @@ public class MongoStep {
     public int hashCode() {
         int result = (getDisplayName() != null ? getDisplayName().hashCode() : 0);
         result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
-        result = 31 * result + (getRewards() != null ? java.util.Arrays.hashCode(getRewards()) : 0);
+        result = 31 * result + (getRewards() != null ? getRewards().hashCode() : 0);
         result = 31 * result + (getCount() != null ? getCount().hashCode() : 0);
         return result;
     }

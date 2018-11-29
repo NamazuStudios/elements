@@ -1,21 +1,25 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
 import com.namazustudios.socialengine.model.goods.Item;
+import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.annotations.Property;
+import org.mongodb.morphia.annotations.Reference;
 
 /**
  * Mongo DTO for a mission step reward.
  *
  * This is NOT an entity, and is therefore not directly searchable
- *
- * As a purely embedded object, we could have leveraged the domain model - however, we may change our mind and create
- * a collection for this object and/or implement mongo-specific logic here
- *
+
  * Created by davidjbrooks on 11/27/2018.
  */
+
+@Embedded
 public class MongoReward {
 
+    @Reference
     private Item item;
 
+    @Property
     private Integer quantity;
 
     public Item getItem() {

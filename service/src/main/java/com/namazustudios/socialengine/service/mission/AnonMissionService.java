@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.model.mission.Mission;
 
 import javax.inject.Inject;
 
-public class UserMissionService implements MissionService {
+public class AnonMissionService implements MissionService {
 
     protected User user;
 

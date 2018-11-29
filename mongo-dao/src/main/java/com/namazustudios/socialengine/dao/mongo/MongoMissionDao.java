@@ -6,9 +6,10 @@ import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.MissionDao;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoMission;
 import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.ValidationGroups.Insert;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.mission.Mission;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.apache.commons.lang3.StringUtils;
@@ -82,7 +83,7 @@ public class MongoMissionDao implements MissionDao {
 
     @Override
     public Mission updateMission(Mission mission) {
-        validate(mission);
+        getValidationHelper().validateModel(mission, Update.class);
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(mission.getId());
 
@@ -112,7 +113,8 @@ public class MongoMissionDao implements MissionDao {
 
     @Override
     public Mission createMission(Mission mission) {
-        validate(mission);
+        getValidationHelper().validateModel(mission, Insert.class);
+
         normalize(mission);
 
         final MongoMission mongoItem = getDozerMapper().map(mission, MongoMission.class);
@@ -137,13 +139,6 @@ public class MongoMissionDao implements MissionDao {
         }
     }
 
-
-    private void validate(Mission item) {
-        if (item == null) {
-            throw new InvalidDataException("Inventory item must not be null.");
-        }
-        getValidationHelper().validateModel(item);
-    }
 
     private void normalize(Mission item) {
         // leave this stub here in case we implement some normalization logic later

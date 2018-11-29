@@ -14,7 +14,7 @@ public class MissionServiceProvider implements Provider<MissionService> {
 
     private User user;
 
-    private Provider<UserMissionService> userMissionServiceProvider;
+    private Provider<AnonMissionService> anonMissionServiceProvider;
 
     private Provider<SuperUserMissionService> superUserMissionServiceProvider;
 
@@ -23,12 +23,9 @@ public class MissionServiceProvider implements Provider<MissionService> {
         switch (getUser().getLevel()) {
             case SUPERUSER:
                 return getSuperUserMissionServiceProvider().get();
-            case USER:
-                return getUserMissionServiceProvider().get();
             default:
-                return forbidden(MissionService.class);
-
-        }
+                return getAnonMissionServiceProvider().get();
+       }
     }
 
     public User getUser() {
@@ -40,13 +37,13 @@ public class MissionServiceProvider implements Provider<MissionService> {
         this.user = user;
     }
 
-    public Provider<UserMissionService> getUserMissionServiceProvider() {
-        return userMissionServiceProvider;
+    public Provider<AnonMissionService> getAnonMissionServiceProvider() {
+        return anonMissionServiceProvider;
     }
 
     @Inject
-    public void setUserMissionServiceProvider(Provider<UserMissionService> anonApplicationServiceProvider) {
-        this.userMissionServiceProvider = anonApplicationServiceProvider;
+    public void setAnonMissionServiceProvider(Provider<AnonMissionService> anonApplicationServiceProvider) {
+        this.anonMissionServiceProvider = anonApplicationServiceProvider;
     }
 
     public Provider<SuperUserMissionService> getSuperUserMissionServiceProvider() {

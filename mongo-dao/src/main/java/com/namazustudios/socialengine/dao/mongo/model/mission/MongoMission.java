@@ -44,7 +44,7 @@ public class MongoMission {
     private String description;
 
     @Property
-    private MongoStep[] steps;
+    private java.util.List<MongoStep> steps;
 
     @Property
     private MongoStep finalRepeatStep;
@@ -81,11 +81,11 @@ public class MongoMission {
         this.description = description;
     }
 
-    public MongoStep[] getSteps() {
+    public java.util.List<MongoStep> getSteps() {
         return steps;
     }
 
-    public void setSteps(MongoStep[] steps) {
+    public void setSteps(java.util.List<MongoStep> steps) {
         this.steps = steps;
     }
 
@@ -108,7 +108,7 @@ public class MongoMission {
         if (getName() != null ? !getName().equals(mission.getName()) : mission.getName() != null) return false;
         if (getDisplayName() != null ? !getDisplayName().equals(mission.getDisplayName()) : mission.getDisplayName() != null) return false;
         if (getDescription() != null ? !getDescription().equals(mission.getDescription()) : mission.getDescription() != null) return false;
-        if (!java.util.Arrays.equals(getSteps(), mission.getSteps())) return false;
+        if (getSteps() != null ? !getSteps().equals(mission.getSteps()) : mission.getSteps() != null) return false;
         return (getFinalRepeatStep() != null ? !getFinalRepeatStep().equals(mission.getFinalRepeatStep()) : mission.getFinalRepeatStep() != null);
     }
 
@@ -118,7 +118,7 @@ public class MongoMission {
         result = 31 * result + (getDisplayName() != null ? getDisplayName().hashCode() : 0);
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
-        result = 31 * result + (getSteps() != null ? java.util.Arrays.hashCode(getSteps()) : 0);
+        result = 31 * result + (getSteps() != null ? getSteps().hashCode() : 0);
         result = 31 * result + (getFinalRepeatStep() != null ? getFinalRepeatStep().hashCode() : 0);
         return result;
     }

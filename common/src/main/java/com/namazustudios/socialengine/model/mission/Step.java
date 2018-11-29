@@ -29,7 +29,7 @@ public class Step {
 
     @NotNull
     @ApiModelProperty("The reward(s) that will be granted upon completion")
-    private Reward[] rewards;
+    private java.util.List<Reward> rewards;
 
     public String getDisplayName() {
         return displayName;
@@ -55,11 +55,11 @@ public class Step {
         this.count= count;
     }
 
-    public Reward[] getRewards() {
+    public java.util.List<Reward> getRewards() {
         return rewards;
     }
 
-    public void setRewards(Reward[] rewards) {
+    public void setRewards(java.util.List<Reward> rewards) {
         this.rewards = rewards;
     }
 
@@ -72,7 +72,7 @@ public class Step {
 
         if (getDisplayName() != null ? !getDisplayName().equals(step.getDisplayName()) : step.getDisplayName() != null) return false;
         if (getDescription() != null ? !getDescription().equals(step.getDescription()) : step.getDescription() != null) return false;
-        if (!java.util.Arrays.equals(getRewards(), step.getRewards())) return false;
+        if (getRewards() != null ? !getRewards().equals(step.getRewards()) : step.getRewards() != null) return false;
         return (getCount() != null ? !getCount().equals(step.getCount()) : step.getCount() != null);
     }
 
@@ -80,7 +80,7 @@ public class Step {
     public int hashCode() {
         int result = (getDisplayName() != null ? getDisplayName().hashCode() : 0);
         result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
-        result = 31 * result + (getRewards() != null ? java.util.Arrays.hashCode(getRewards()) : 0);
+        result = 31 * result + (getRewards() != null ? getRewards().hashCode() : 0);
         result = 31 * result + (getCount() != null ? getCount().hashCode() : 0);
         return result;
     }
