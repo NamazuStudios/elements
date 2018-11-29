@@ -41,7 +41,7 @@ public interface MissionDao {
      *
      * @return the {@link Mission} that was requested, never null
      */
-    Mission getMission(String missionId);
+    Mission getMissionByNameOrId(String missionId);
 
     /**
      * Updates the mission, or throws a {@link NotFoundException} if the

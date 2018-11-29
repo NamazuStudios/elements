@@ -6,10 +6,7 @@ import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Property;
+import org.mongodb.morphia.annotations.*;
 
 /**
  * Mongo DTO for a mission.
@@ -32,10 +29,10 @@ import org.mongodb.morphia.annotations.Property;
 public class MongoMission {
 
     @Id
-    private String id;
+    private ObjectId objectId;
 
-    @Indexed()
     @Property
+    @Indexed(options = @IndexOptions(unique = true))
     private String name;
 
     @Indexed()
@@ -52,12 +49,12 @@ public class MongoMission {
     @Property
     private MongoStep finalRepeatStep;
 
-    public String getId() {
-        return id;
+    public ObjectId getObjectId() {
+        return objectId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setObjectId(ObjectId id) {
+        this.objectId = id;
     }
 
     public String getName() {
@@ -107,7 +104,7 @@ public class MongoMission {
 
         MongoMission mission = (MongoMission) o;
 
-        if (getId() != null ? !getId().equals(mission.getId()) : mission.getId() != null) return false;
+        if (getObjectId() != null ? !getObjectId().equals(mission.getObjectId()) : mission.getObjectId() != null) return false;
         if (getName() != null ? !getName().equals(mission.getName()) : mission.getName() != null) return false;
         if (getDisplayName() != null ? !getDisplayName().equals(mission.getDisplayName()) : mission.getDisplayName() != null) return false;
         if (getDescription() != null ? !getDescription().equals(mission.getDescription()) : mission.getDescription() != null) return false;
@@ -117,7 +114,7 @@ public class MongoMission {
 
     @Override
     public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
+        int result = getObjectId() != null ? getObjectId().hashCode() : 0;
         result = 31 * result + (getDisplayName() != null ? getDisplayName().hashCode() : 0);
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
@@ -129,7 +126,7 @@ public class MongoMission {
     @Override
     public String toString() {
         return "MongoMission{" +
-                ", id='" + id + '\'' +
+                ", objectId='" + getObjectId() + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
