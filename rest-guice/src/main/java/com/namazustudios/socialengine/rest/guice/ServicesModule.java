@@ -26,6 +26,8 @@ import com.namazustudios.socialengine.service.match.StandardMatchServiceUtils;
 import com.namazustudios.socialengine.service.mission.*;
 import com.namazustudios.socialengine.service.notification.FCMRegistrationServiceProvider;
 import com.namazustudios.socialengine.service.profile.ProfileServiceProvider;
+import com.namazustudios.socialengine.service.progress.ProgressService;
+import com.namazustudios.socialengine.service.progress.ProgressServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
@@ -166,6 +168,10 @@ public class ServicesModule extends AbstractModule {
 
         bind(MissionService.class)
                 .toProvider(MissionServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
+        bind(ProgressService.class)
+                .toProvider(ProgressServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
         bind(Attributes.class).toProvider(AttributesProvider.class);
