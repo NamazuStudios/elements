@@ -2,31 +2,38 @@ package com.namazustudios.socialengine.service.progress;
 
 import com.namazustudios.socialengine.dao.ProgressDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.profile.Profile;
 
 import javax.inject.Inject;
+import java.util.function.Supplier;
 
 public class UserProgressService implements ProgressService {
 
-    protected Profile profile;
+    protected Supplier<Profile> currentProfileSupplier;
 
     protected ProgressDao progressDao;
 
     @Override
     public Progress getProgress(String progressId) {
+        Progress progress = progressDao.getProgress(progressId);
+
+        if(!progress.getProfile().equals(currentProfileSupplier.get()))
+            throw new NotFoundException();
+
         return progressDao.getProgress(progressId);
     }
 
     @Override
     public Pagination<Progress> getProgresses(int offset, int count) {
-        return progressDao.getProgresses(profile, offset, count);
+        return progressDao.getProgresses(currentProfileSupplier.get(), offset, count);
     }
 
     @Override
     public Pagination<Progress> getProgresses(int offset, int count, String query)  {
-        return progressDao.getProgresses(profile, offset, count, query);
+        return progressDao.getProgresses(currentProfileSupplier.get(), offset, count, query);
     }
 
     @Override
@@ -48,13 +55,9 @@ public class UserProgressService implements ProgressService {
         this.progressDao = progressDao;
     }
 
-    public Profile getProfile() {
-        return profile;
+    @Inject
+    public void setCurrentProfileSupplier(Supplier<Profile> currentProfileSupplier) {
+        this.currentProfileSupplier = currentProfileSupplier;
     }
 
-    @Inject
-    public void setProfile(Profile profile) {
-        this.profile = profile;
-    }
-    
 }

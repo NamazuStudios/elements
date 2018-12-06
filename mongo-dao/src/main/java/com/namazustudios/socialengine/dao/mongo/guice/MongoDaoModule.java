@@ -111,5 +111,6 @@ public class MongoDaoModule extends PrivateModule {
         expose(ItemDao.class);
         expose(InventoryItemDao.class);
         expose(MissionDao.class);
+        expose(ProgressDao.class);
     }
 }

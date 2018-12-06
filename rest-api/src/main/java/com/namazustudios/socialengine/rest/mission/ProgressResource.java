@@ -45,26 +45,26 @@ public class ProgressResource {
     @Path("{progressId}")
     @ApiOperation(value = "Retrieves a single Progress by id",
             notes = "Looks up a progress by the passed in identifier")
-    public Progress getProgressByNameOrId(@PathParam("progressId") String progressNameOrId) {
-        return progressService.getProgress(progressNameOrId);
+    public Progress getProgressByNameOrId(@PathParam("progressId") String progressId) {
+        return progressService.getProgress(progressId);
     }
 
     @PUT
-    @Path("{progressNameOrId}")
+    @Path("{progressId}")
     @ApiOperation(value = "Updates a single Progress",
             notes = "Supplying a progress, this will update the Progress identified by the ID in the path with contents " +
                     "from the passed in request body. ")
     public Progress updateItem(final Progress updatedProgress,
-                              @PathParam("progressNameOrId") String progressNameOrId) {
+                              @PathParam("progressId") String progressId) {
         return progressService.updateProgress(updatedProgress);
     }
 
     @DELETE
-    @Path("{progressNameOrId}")
+    @Path("{progressId}")
     @ApiOperation(value = "Deletes the Progress identified by id",
             notes = "Deletes a progress by the passed in identifier")
-    public void deleteProgress(@PathParam("progressNameOrId") String progressNameOrId) {
-        progressService.deleteProgress(progressNameOrId);
+    public void deleteProgress(@PathParam("progressId") String progressId) {
+        progressService.deleteProgress(progressId);
     }
 
 
