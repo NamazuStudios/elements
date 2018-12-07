@@ -1,12 +1,10 @@
 package com.namazustudios.socialengine.model.leaderboard;
 
-import com.namazustudios.socialengine.model.ValidationGroups;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
-import javax.validation.groups.Default;
 
 @ApiModel
 public class Leaderboard {
