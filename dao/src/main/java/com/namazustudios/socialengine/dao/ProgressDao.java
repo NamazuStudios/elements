@@ -5,8 +5,12 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.mission.Progress;
+import com.namazustudios.socialengine.model.mission.Reward;
+import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+
+import java.util.List;
 
 /**
  * Created by davidjbrooks on 12/05/18.
