@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
 import com.namazustudios.elements.fts.*;
+import com.namazustudios.socialengine.exception.InternalException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -28,8 +29,33 @@ public class MongoObjectIndexProvider implements Provider<ObjectIndex> {
 
     @Override
     public ObjectIndex get() {
-        // TODO Fix performacne bottlenecks with search index
-        return new NullObjectIndex(null, null);
+
+        final IOContext.Provider<IndexWriter> indexWriterProvider  = () -> {
+            final Analyzer analyzer = getAnalyzerProvider().get();
+            final Directory directory = getDirectoryProvider().get();
+            final IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer).setOpenMode(CREATE_OR_APPEND);
+            final IndexWriter indexWriter = new IndexWriter(directory, indexWriterConfig);
+            return new DefaultIOContext<>(indexWriter);
+        };
+
+        final IOContext.Provider<IndexSearcher> indexSearcherProvider = () -> {
+            final Directory directory = getDirectoryProvider().get();
+            final IndexReader indexReader = DirectoryReader.open(directory);
+            final IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+            return IOContext.from(indexSearcher, indexReader);
+        };
+
+        // Before anything else, Lucene requires an index be created with the appropriate configuration.  This may
+        // collide with other processes attempting start-up as well.
+
+        try (final IOContext<IndexWriter> indexWriterIOContext = indexWriterProvider.get()) {
+            indexWriterIOContext.instance().commit();
+        } catch (IOException ex) {
+            throw new InternalException("Could not create search index.", ex);
+        }
+
+        return new DefaultObjectIndex(indexWriterProvider, indexSearcherProvider);
+
     }
 
     public Provider<Analyzer> getAnalyzerProvider() {

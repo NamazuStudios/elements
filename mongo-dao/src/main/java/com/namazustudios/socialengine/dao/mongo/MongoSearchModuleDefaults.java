@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.config.ModuleDefaults;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDirectoryProvider;
+import com.namazustudios.socialengine.dao.mongo.provider.MongoLockFactoryProvider;
 
 import java.util.Properties;
 
@@ -13,8 +14,10 @@ public class MongoSearchModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final Properties defaultProperties = new Properties(System.getProperties());
-        defaultProperties.setProperty(MongoDirectoryProvider.LOCK_COLLECTION, "fts.locks");
+        defaultProperties.setProperty(MongoLockFactoryProvider.PEER_COLLECTION, "fts.peers");
+        defaultProperties.setProperty(MongoLockFactoryProvider.LOCK_COLLECTION, "fts.locks");
         defaultProperties.setProperty(MongoDirectoryProvider.SEARCH_INDEX_BUCKET, "fts.index");
+//        defaultProperties.setProperty(JeroMQConditionProvider.BIND_ADDRESSES, JeroMQCondition.)
         return defaultProperties;
     }
 
