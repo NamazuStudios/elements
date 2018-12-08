@@ -6,10 +6,15 @@ import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.mission.Reward;
 import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.annotation.Expose;
 
 /**
  * Provides logic to advance a {@link Profile} through a {@link Mission}.
  */
+@Expose(modules = {
+    "namazu.elements.service.advancement",
+    "namazu.socialengine.service.advancement",
+})
 public interface AdvancementService {
 
     /**
