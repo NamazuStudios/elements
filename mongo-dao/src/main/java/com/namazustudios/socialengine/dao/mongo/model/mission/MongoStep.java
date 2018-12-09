@@ -1,5 +1,9 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
+import org.mongodb.morphia.annotations.Embedded;
+
+import java.util.Objects;
+
 /**
  * Mongo DTO for a mission step.
  *
@@ -10,12 +14,14 @@ package com.namazustudios.socialengine.dao.mongo.model.mission;
  *
  * Created by davidjbrooks on 11/27/2018.
  */
+@Embedded
 public class MongoStep {
+
     private String displayName;
 
     private String description;
 
-    private Integer count;
+    private int count;
 
     private java.util.List<MongoReward> rewards;
 
@@ -35,12 +41,12 @@ public class MongoStep {
         this.description = description;
     }
 
-    public Integer getCount() {
+    public int getCount() {
         return count;
     }
 
-    public void setCount(Integer count) {
-        this.count= count;
+    public void setCount(int count) {
+        this.count = count;
     }
 
     public java.util.List<MongoReward> getRewards() {
@@ -52,25 +58,20 @@ public class MongoStep {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof MongoStep)) return false;
-
-        MongoStep mongoStep = (MongoStep) o;
-
-        if (getDisplayName() != null ? !getDisplayName().equals(mongoStep.getDisplayName()) : mongoStep.getDisplayName() != null) return false;
-        if (getDescription() != null ? !getDescription().equals(mongoStep.getDescription()) : mongoStep.getDescription() != null) return false;
-        if (getRewards() != null ? !getRewards().equals(mongoStep.getRewards()) : mongoStep.getRewards() != null) return false;
-        return (getCount() != null ? !getCount().equals(mongoStep.getCount()) : mongoStep.getCount() != null);
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof MongoStep)) return false;
+        MongoStep mongoStep = (MongoStep) object;
+        return getCount() == mongoStep.getCount() &&
+                Objects.equals(getDisplayName(), mongoStep.getDisplayName()) &&
+                Objects.equals(getDescription(), mongoStep.getDescription()) &&
+                Objects.equals(getRewards(), mongoStep.getRewards());
     }
 
     @Override
     public int hashCode() {
-        int result = (getDisplayName() != null ? getDisplayName().hashCode() : 0);
-        result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
-        result = 31 * result + (getRewards() != null ? getRewards().hashCode() : 0);
-        result = 31 * result + (getCount() != null ? getCount().hashCode() : 0);
-        return result;
+
+        return Objects.hash(getDisplayName(), getDescription(), getCount(), getRewards());
     }
 
     @Override
