@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
  * Represents a mission step.
@@ -29,7 +30,7 @@ public class Step {
 
     @NotNull
     @ApiModelProperty("The reward(s) that will be granted upon completion")
-    private java.util.List<Reward> rewards;
+    private List<Reward> rewards;
 
     public String getDisplayName() {
         return displayName;
@@ -55,11 +56,11 @@ public class Step {
         this.count= count;
     }
 
-    public java.util.List<Reward> getRewards() {
+    public List<Reward> getRewards() {
         return rewards;
     }
 
-    public void setRewards(java.util.List<Reward> rewards) {
+    public void setRewards(List<Reward> rewards) {
         this.rewards = rewards;
     }
 

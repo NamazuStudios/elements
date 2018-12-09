@@ -4,7 +4,9 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.MissionDao;
+import com.namazustudios.socialengine.dao.mongo.model.MongoItem;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoMission;
+import com.namazustudios.socialengine.dao.mongo.model.mission.MongoStep;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
@@ -25,8 +27,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.List;
+import java.util.stream.Stream;
 
-@Singleton
+import static com.google.common.collect.Streams.concat;
+import static java.util.stream.Stream.empty;
+import static java.util.stream.Stream.of;
+
 public class MongoMissionDao implements MissionDao {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoMissionDao.class);
@@ -43,11 +50,14 @@ public class MongoMissionDao implements MissionDao {
 
     private MongoDBUtils mongoDBUtils;
 
+    private MongoItemDao mongoItemDao;
+
     @Override
     public Pagination<Mission> getMissions(int offset, int count)  { return getMissions(offset, count, null); }
 
     @Override
     public Pagination<Mission> getMissions(int offset, int count, String search) {
+
         if (StringUtils.isNotEmpty(search)) {
             LOGGER.warn(" getMissions(int offset, int count, String query) was called with a query " +
                     "string parameter.  This field is presently ignored and will return all values");
@@ -84,12 +94,15 @@ public class MongoMissionDao implements MissionDao {
     }
 
     @Override
-    public Mission updateMission(Mission mission) {
+    public Mission updateMission(final Mission mission) {
+
         getValidationHelper().validateModel(mission, Update.class);
+        checkSteps(mission);
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(mission.getId());
 
         final Query<MongoMission> query = getDatastore().createQuery(MongoMission.class);
+
         query.criteria("_id").equal(objectId);
 
         final UpdateOperations<MongoMission> operations = getDatastore().createUpdateOperations(MongoMission.class);
@@ -114,12 +127,13 @@ public class MongoMissionDao implements MissionDao {
     }
 
     @Override
-    public Mission createMission(Mission mission) {
+    public Mission createMission(final Mission mission) {
         getValidationHelper().validateModel(mission, Insert.class);
 
         normalize(mission);
 
         final MongoMission mongoItem = getDozerMapper().map(mission, MongoMission.class);
+        checkSteps(mongoItem);
 
         try {
             getDatastore().save(mongoItem);
@@ -131,68 +145,79 @@ public class MongoMissionDao implements MissionDao {
         return getDozerMapper().map(getDatastore().get(mongoItem), Mission.class);
     }
 
+    private void checkSteps(final Mission mission) {
+        final MongoMission mongoMission = getDozerMapper().map(mission, MongoMission.class);
+        checkSteps(mongoMission);
+    }
+
+    private void checkSteps(final MongoMission mongoMission) {
+
+        final List<MongoStep> steps = mongoMission.getSteps();
+        final MongoStep finalRepeatStep = mongoMission.getFinalRepeatStep();
+
+        concat(
+            steps == null ? empty() : steps.stream(),
+            finalRepeatStep == null ? empty() : of(finalRepeatStep))
+        .flatMap(s -> s.getRewards().stream())
+        .map(r -> r.getItem())
+        .forEach(item -> getMongoItemDao().getMongoItem(item.getObjectId()));
+
+    }
+
     @Override
     public void deleteMission(String missionId) {
+
         final ObjectId id = getMongoDBUtils().parseOrThrowNotFoundException(missionId);
         final WriteResult writeResult = getDatastore().delete(MongoMission.class, id);
 
         if (writeResult.getN() == 0) {
             throw new NotFoundException("Mission not found: " + missionId);
         }
-    }
 
+    }
 
     private void normalize(Mission item) {
         // leave this stub here in case we implement some normalization logic later
     }
 
     public AdvancedDatastore getDatastore() {
-
         return datastore;
     }
 
     @Inject
     public void setDatastore(AdvancedDatastore datastore) {
-
         this.datastore = datastore;
     }
 
     public Mapper getDozerMapper() {
-
         return dozerMapper;
     }
 
     @Inject
     public void setDozerMapper(Mapper dozerMapper) {
-
         this.dozerMapper = dozerMapper;
     }
 
     public ValidationHelper getValidationHelper() {
-
         return validationHelper;
     }
 
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
-
         this.validationHelper = validationHelper;
     }
 
     public MongoDBUtils getMongoDBUtils() {
-
         return mongoDBUtils;
     }
 
     @Inject
     public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
-
         this.mongoDBUtils = mongoDBUtils;
     }
 
 
     public StandardQueryParser getStandardQueryParser() {
-
         return standardQueryParser;
     }
 
@@ -202,14 +227,21 @@ public class MongoMissionDao implements MissionDao {
     }
 
     public ObjectIndex getObjectIndex() {
-
         return objectIndex;
     }
 
     @Inject
     public void setObjectIndex(ObjectIndex objectIndex) {
-
         this.objectIndex = objectIndex;
+    }
+
+    public MongoItemDao getMongoItemDao() {
+        return mongoItemDao;
+    }
+
+    @Inject
+    public void setMongoItemDao(MongoItemDao mongoItemDao) {
+        this.mongoItemDao = mongoItemDao;
     }
 
 }

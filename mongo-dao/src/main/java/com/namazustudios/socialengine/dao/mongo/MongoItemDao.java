@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoItem;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.item.ItemNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -28,7 +29,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Singleton
 public class MongoItemDao implements ItemDao {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoItemDao.class);
@@ -66,6 +66,21 @@ public class MongoItemDao implements ItemDao {
         }
 
         return getDozerMapper().map(item, Item.class);
+    }
+
+    public MongoItem getMongoItem(final ObjectId objectId) {
+
+        final Query<MongoItem> query = getDatastore().createQuery(MongoItem.class);
+        query.criteria("_id").equal(objectId);
+
+        final MongoItem item = query.get();
+
+        if (item == null) {
+            throw new ItemNotFoundException("Unable to find item with an id or name of " + objectId);
+        }
+
+        return item;
+
     }
 
     @Override

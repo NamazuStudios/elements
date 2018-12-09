@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo.model.mission;
 
 import org.mongodb.morphia.annotations.Embedded;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -23,7 +24,7 @@ public class MongoStep {
 
     private int count;
 
-    private java.util.List<MongoReward> rewards;
+    private List<MongoReward> rewards;
 
     public String getDisplayName() {
         return displayName;
@@ -49,11 +50,11 @@ public class MongoStep {
         this.count = count;
     }
 
-    public java.util.List<MongoReward> getRewards() {
+    public List<MongoReward> getRewards() {
         return rewards;
     }
 
-    public void setRewards(java.util.List<MongoReward> rewards) {
+    public void setRewards(List<MongoReward> rewards) {
         this.rewards = rewards;
     }
 

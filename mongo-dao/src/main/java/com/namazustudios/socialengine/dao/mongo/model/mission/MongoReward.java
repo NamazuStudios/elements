@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
+import com.namazustudios.socialengine.dao.mongo.model.MongoItem;
 import com.namazustudios.socialengine.model.goods.Item;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Property;
@@ -17,16 +18,16 @@ import org.mongodb.morphia.annotations.Reference;
 public class MongoReward {
 
     @Reference
-    private Item item;
+    private MongoItem item;
 
     @Property
     private Integer quantity;
 
-    public Item getItem() {
+    public MongoItem getItem() {
         return item;
     }
 
-    public void setItem(Item item) {
+    public void setItem(MongoItem item) {
         this.item = item;
     }
 

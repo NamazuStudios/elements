@@ -1,7 +1,9 @@
-package com.namazustudios.socialengine.model.goods;
+    package com.namazustudios.socialengine.model.goods;
 
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
+import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import io.swagger.annotations.ApiModel;
 
 import javax.validation.constraints.NotNull;
@@ -21,7 +23,7 @@ import java.util.StringJoiner;
 @ApiModel
 public class Item implements Serializable {
 
-    @Null(groups = Create.class)
+    @Null(groups = {Create.class, Insert.class})
     private String id;
 
     @NotNull
