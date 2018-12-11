@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSessionI
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatchSnapshot;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoMission;
+import com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgress;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.*;
 import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
@@ -22,6 +23,7 @@ import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.mission.Mission;
+import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
 import org.dozer.DozerBeanMapper;
@@ -123,6 +125,9 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(Mission.class, MongoMission.class)
                 .fields("id","objectId", customConverter(ObjectIdConverter.class));
+
+            mapping(Progress.class, MongoProgress.class)
+                    .fields("id","objectId", customConverter(ObjectIdConverter.class));
             }
         };
 

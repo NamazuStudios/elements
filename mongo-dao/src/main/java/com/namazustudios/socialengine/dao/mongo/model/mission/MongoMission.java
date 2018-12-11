@@ -8,6 +8,8 @@ import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
+import java.util.List;
+
 /**
  * Mongo DTO for a mission.
  *
@@ -25,7 +27,7 @@ import org.mongodb.morphia.annotations.*;
         @SearchableField(name = "displayName",  path = "/displayName"),
         @SearchableField(name = "description",  path = "/description")
 })
-@Entity(value = "missions", noClassnameStored = true)
+@Entity(value = "mission", noClassnameStored = true)
 public class MongoMission {
 
     @Id
@@ -35,18 +37,16 @@ public class MongoMission {
     @Indexed(options = @IndexOptions(unique = true))
     private String name;
 
-    @Indexed()
     @Property
     private String displayName;
 
-    @Indexed()
     @Property
     private String description;
 
-    @Property
-    private java.util.List<MongoStep> steps;
+    @Embedded
+    private List<MongoStep> steps;
 
-    @Property
+    @Embedded
     private MongoStep finalRepeatStep;
 
     public ObjectId getObjectId() {
@@ -81,11 +81,11 @@ public class MongoMission {
         this.description = description;
     }
 
-    public java.util.List<MongoStep> getSteps() {
+    public List<MongoStep> getSteps() {
         return steps;
     }
 
-    public void setSteps(java.util.List<MongoStep> steps) {
+    public void setSteps(List<MongoStep> steps) {
         this.steps = steps;
     }
 
