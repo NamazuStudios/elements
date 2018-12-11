@@ -1,15 +1,12 @@
 package com.namazustudios.socialengine.dao.mongo.guice;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.PrivateModule;
-import com.namazustudios.elements.fts.mongo.Condition;
+import com.namazustudios.elements.fts.concurrent.Condition;
 import com.namazustudios.socialengine.dao.mongo.provider.*;
 import com.namazustudios.elements.fts.ObjectIndex;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.LockFactory;
-
-import javax.inject.Singleton;
 
 /**
  * Sets up and configures the {@link ObjectIndex} using the Mongo Lucene drivers

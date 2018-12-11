@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.dao.mongo.provider;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.namazustudios.elements.fts.mongo.Condition;
+import com.namazustudios.elements.fts.concurrent.Condition;
 import com.namazustudios.elements.fts.mongo.MongoLockFactory;
 import com.namazustudios.elements.fts.mongo.MongoLockFactoryBuilder;
 import com.namazustudios.socialengine.util.ShutdownHooks;

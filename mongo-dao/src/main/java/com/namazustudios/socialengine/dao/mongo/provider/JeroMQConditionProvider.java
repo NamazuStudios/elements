@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
-import com.namazustudios.elements.fts.mongo.Condition;
+import com.namazustudios.elements.fts.concurrent.Condition;
 import com.namazustudios.elements.fts.concurrent.jeromq.JeroMQCondition;
 import com.namazustudios.elements.fts.concurrent.jeromq.JeroMQConditionBuilder;
 import com.namazustudios.socialengine.util.ShutdownHooks;
