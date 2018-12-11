@@ -14,9 +14,17 @@ import static java.util.Arrays.stream;
 
 public class JeroMQConditionProvider implements Provider<Condition> {
 
-    public static final String BIND_ADDRESSES = "com.namazustudios.socialengine.fts.jeromq.condition.bind.addresses";
+    public static final String BIND_ADDRESS = "com.namazustudios.socialengine.fts.jeromq.condition.bind.address";
 
-    public static final String HOST_ADDRESSES = "com.namazustudios.socialengine.fts.jeromq.condition.host.addresses";
+    public static final String HOST_ADDRESS = "com.namazustudios.socialengine.fts.jeromq.condition.host.address";
+
+    public static final String PORT_RANGE_LOWER = "com.namazustudios.socialengine.fts.jeromq.condition.lower.port";
+
+    public static final String PORT_RANGE_UPPER = "com.namazustudios.socialengine.fts.jeromq.condition.upper.port";
+
+    private int lowerPortRange;
+
+    private int upperPortRange;
 
     private String hostAddresses;
 
@@ -31,17 +39,9 @@ public class JeroMQConditionProvider implements Provider<Condition> {
 
         final JeroMQConditionBuilder builder = new JeroMQConditionBuilder();
 
-        builder.withStaticBindStrategy(b -> {
-
-            stream(getBindAddresses().split(","))
-                .map(s -> s.trim())
-                .filter(s -> !s.isEmpty())
-                .forEach(b::withBindAddress);
-
-            stream(getHostAddresses().split(","))
-                .map(s -> s.trim())
-                .filter(s -> !s.isEmpty())
-                .forEach(b::withHostAddress);
+        builder.withDynamicBindStrategy(b -> {
+            b.withPortRange(getLowerPortRange(), getUpperPortRange())
+             .withBinding(getBindAddresses(), getHostAddresses());
         });
 
         final JeroMQCondition jeroMQCondition =  new JeroMQConditionBuilder().build(getzContextProvider().get());
@@ -56,7 +56,7 @@ public class JeroMQConditionProvider implements Provider<Condition> {
     }
 
     @Inject
-    public void setHostAddresses(@Named(HOST_ADDRESSES) String hostAddresses) {
+    public void setHostAddresses(@Named(HOST_ADDRESS) String hostAddresses) {
         this.hostAddresses = hostAddresses;
     }
 
@@ -65,7 +65,7 @@ public class JeroMQConditionProvider implements Provider<Condition> {
     }
 
     @Inject
-    public void setBindAddresses(@Named(BIND_ADDRESSES) String bindAddresses) {
+    public void setBindAddresses(@Named(BIND_ADDRESS) String bindAddresses) {
         this.bindAddresses = bindAddresses;
     }
 
@@ -76,6 +76,24 @@ public class JeroMQConditionProvider implements Provider<Condition> {
     @Inject
     public void setzContextProvider(Provider<ZContext> zContextProvider) {
         this.zContextProvider = zContextProvider;
+    }
+
+    public int getLowerPortRange() {
+        return lowerPortRange;
+    }
+
+    @Inject
+    public void setLowerPortRange(@Named(PORT_RANGE_LOWER) int lowerPortRange) {
+        this.lowerPortRange = lowerPortRange;
+    }
+
+    public int getUpperPortRange() {
+        return upperPortRange;
+    }
+
+    @Inject
+    public void setUpperPortRange(@Named(PORT_RANGE_UPPER) int upperPortRange) {
+        this.upperPortRange = upperPortRange;
     }
 
 }
