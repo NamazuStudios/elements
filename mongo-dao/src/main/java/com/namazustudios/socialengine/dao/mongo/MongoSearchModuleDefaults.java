@@ -26,7 +26,7 @@ public class MongoSearchModuleDefaults implements ModuleDefaults {
         defaultProperties.setProperty(MongoLockFactoryProvider.LOCK_COLLECTION, "fts.locks");
         defaultProperties.setProperty(MongoDirectoryProvider.SEARCH_INDEX_BUCKET, "fts.index");
         defaultProperties.setProperty(JeroMQConditionProvider.BIND_ADDRESS, DEFAULT_BIND_ADDRESS);
-        defaultProperties.setProperty(JeroMQConditionProvider.HOST_ADDRESS, format("%s://localhost", DEFAULT_TRANSPORT));
+        defaultProperties.setProperty(JeroMQConditionProvider.HOST_ADDRESS, format("%s://127.0.0.1", DEFAULT_TRANSPORT));
         return defaultProperties;
     }
 

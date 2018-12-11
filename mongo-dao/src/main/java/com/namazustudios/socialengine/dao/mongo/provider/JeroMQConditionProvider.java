@@ -18,14 +18,6 @@ public class JeroMQConditionProvider implements Provider<Condition> {
 
     public static final String HOST_ADDRESS = "com.namazustudios.socialengine.fts.jeromq.condition.host.address";
 
-    public static final String PORT_RANGE_LOWER = "com.namazustudios.socialengine.fts.jeromq.condition.lower.port";
-
-    public static final String PORT_RANGE_UPPER = "com.namazustudios.socialengine.fts.jeromq.condition.upper.port";
-
-    private int lowerPortRange;
-
-    private int upperPortRange;
-
     private String hostAddresses;
 
     private String bindAddresses;
@@ -37,14 +29,10 @@ public class JeroMQConditionProvider implements Provider<Condition> {
     @Override
     public Condition get() {
 
-        final JeroMQConditionBuilder builder = new JeroMQConditionBuilder();
+        final JeroMQCondition jeroMQCondition =  new JeroMQConditionBuilder()
+            .withDynamicBindStrategy(b -> b.withPortSpecBinding(getBindAddresses(), getHostAddresses()))
+            .build(getzContextProvider().get());
 
-        builder.withDynamicBindStrategy(b -> {
-            b.withPortRange(getLowerPortRange(), getUpperPortRange())
-             .withBinding(getBindAddresses(), getHostAddresses());
-        });
-
-        final JeroMQCondition jeroMQCondition =  new JeroMQConditionBuilder().build(getzContextProvider().get());
         shutdownHooks.add(jeroMQCondition, () -> jeroMQCondition.close());
 
         return jeroMQCondition;
@@ -76,24 +64,6 @@ public class JeroMQConditionProvider implements Provider<Condition> {
     @Inject
     public void setzContextProvider(Provider<ZContext> zContextProvider) {
         this.zContextProvider = zContextProvider;
-    }
-
-    public int getLowerPortRange() {
-        return lowerPortRange;
-    }
-
-    @Inject
-    public void setLowerPortRange(@Named(PORT_RANGE_LOWER) int lowerPortRange) {
-        this.lowerPortRange = lowerPortRange;
-    }
-
-    public int getUpperPortRange() {
-        return upperPortRange;
-    }
-
-    @Inject
-    public void setUpperPortRange(@Named(PORT_RANGE_UPPER) int upperPortRange) {
-        this.upperPortRange = upperPortRange;
     }
 
 }
