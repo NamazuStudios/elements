@@ -31,15 +31,18 @@ public class JeroMQConditionProvider implements Provider<Condition> {
 
         final JeroMQConditionBuilder builder = new JeroMQConditionBuilder();
 
-        stream(getBindAddresses().split(","))
-            .map(s -> s.trim())
-            .filter(s -> !s.isEmpty())
-            .forEach(builder::withBindAddress);
+        builder.withStaticBindStrategy(b -> {
 
-        stream(getHostAddresses().split(","))
-            .map(s -> s.trim())
-            .filter(s -> !s.isEmpty())
-            .forEach(builder::withHostAddress);
+            stream(getBindAddresses().split(","))
+                .map(s -> s.trim())
+                .filter(s -> !s.isEmpty())
+                .forEach(b::withBindAddress);
+
+            stream(getHostAddresses().split(","))
+                .map(s -> s.trim())
+                .filter(s -> !s.isEmpty())
+                .forEach(b::withHostAddress);
+        });
 
         final JeroMQCondition jeroMQCondition =  new JeroMQConditionBuilder().build(getzContextProvider().get());
         shutdownHooks.add(jeroMQCondition, () -> jeroMQCondition.close());
