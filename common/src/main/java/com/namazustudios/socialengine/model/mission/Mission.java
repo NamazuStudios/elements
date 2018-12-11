@@ -45,7 +45,7 @@ public class Mission {
     @ApiModelProperty("The final repeating step (may be null if step(s) are specified)")
     private Step finalRepeatStep;
 
-    @ApiModelProperty("The final repeating step (may be null if step(s) are specified)")
+    @ApiModelProperty("The metadata for this mission")
     private Map<String, String> metadata;
 
     public String getId() {

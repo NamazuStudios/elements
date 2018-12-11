@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a mission step.
@@ -31,6 +32,9 @@ public class Step {
     @NotNull
     @ApiModelProperty("The reward(s) that will be granted upon completion")
     private List<Reward> rewards;
+
+    @ApiModelProperty("The metadata for this step")
+    private Map<String, String> metadata;
 
     public String getDisplayName() {
         return displayName;
@@ -64,6 +68,10 @@ public class Step {
         this.rewards = rewards;
     }
 
+    public Map<String, String> getMetadata() { return metadata; }
+
+    public void setMetadata(Map<String, String> metadata) { this.metadata = metadata; }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -74,6 +82,7 @@ public class Step {
         if (getDisplayName() != null ? !getDisplayName().equals(step.getDisplayName()) : step.getDisplayName() != null) return false;
         if (getDescription() != null ? !getDescription().equals(step.getDescription()) : step.getDescription() != null) return false;
         if (getRewards() != null ? !getRewards().equals(step.getRewards()) : step.getRewards() != null) return false;
+        if (getMetadata() != null ? !getMetadata().equals(step.getMetadata()) : step.getMetadata() != null) return false;
         return (getCount() != null ? !getCount().equals(step.getCount()) : step.getCount() != null);
     }
 
@@ -83,6 +92,7 @@ public class Step {
         result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
         result = 31 * result + (getRewards() != null ? getRewards().hashCode() : 0);
         result = 31 * result + (getCount() != null ? getCount().hashCode() : 0);
+        result = 31 * result + (getMetadata() != null ? getMetadata().hashCode() : 0);
         return result;
     }
 
@@ -92,6 +102,7 @@ public class Step {
                 ", displayName='" + displayName + '\'' +
                 ", description='" + description + '\'' +
                 ", rewards='" + rewards + '\'' +
+                ", metadata='" + metadata + '\'' +
                 ", count='" + count + '\'' +
                 '}';
     }
