@@ -45,9 +45,6 @@ public class MongoObjectIndexProvider implements Provider<ObjectIndex> {
             return IOContext.from(indexSearcher, indexReader);
         };
 
-        // Before anything else, Lucene requires an index be created with the appropriate configuration.  This may
-        // collide with other processes attempting start-up as well.
-
         try (final IOContext<IndexWriter> indexWriterIOContext = indexWriterProvider.get()) {
             indexWriterIOContext.instance().commit();
         } catch (IOException ex) {
