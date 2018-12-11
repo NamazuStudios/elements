@@ -68,18 +68,29 @@ public class MongoItemDao implements ItemDao {
         return getDozerMapper().map(item, Item.class);
     }
 
-    public MongoItem getMongoItem(final ObjectId objectId) {
+    public MongoItem refresh(final MongoItem mongoItem) {
 
         final Query<MongoItem> query = getDatastore().createQuery(MongoItem.class);
-        query.criteria("_id").equal(objectId);
 
-        final MongoItem item = query.get();
+        final String identifier;
 
-        if (item == null) {
-            throw new ItemNotFoundException("Unable to find item with an id or name of " + objectId);
+        if (mongoItem.getObjectId() != null) {
+            query.criteria("_id").equal(mongoItem.getObjectId());
+            identifier = mongoItem.getObjectId().toHexString();
+        } else if (mongoItem.getName() != null) {
+            query.criteria("name").equal(mongoItem.getName());
+            identifier = mongoItem.getName();
+        } else {
+            throw new InvalidDataException("Must specify Item name or id");
         }
 
-        return item;
+        final MongoItem refreshedMongoItem = query.get();
+
+        if (refreshedMongoItem == null) {
+            throw new ItemNotFoundException("Unable to find item with an id or name of " + identifier);
+        }
+
+        return refreshedMongoItem;
 
     }
 

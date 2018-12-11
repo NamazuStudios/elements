@@ -6,8 +6,10 @@ import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.MissionDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoItem;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoMission;
+import com.namazustudios.socialengine.dao.mongo.model.mission.MongoReward;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoStep;
 import com.namazustudios.socialengine.exception.DuplicateException;
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
@@ -28,9 +30,11 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.Streams.concat;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 
@@ -91,16 +95,17 @@ public class MongoMissionDao implements MissionDao {
         }
 
         return getDozerMapper().map(mission, Mission.class);
+
     }
 
     @Override
     public Mission updateMission(final Mission mission) {
 
         getValidationHelper().validateModel(mission, Update.class);
-        checkSteps(mission);
+
+        final MongoMission mongoMission = checkMission(mission);
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(mission.getId());
-
         final Query<MongoMission> query = getDatastore().createQuery(MongoMission.class);
 
         query.criteria("_id").equal(objectId);
@@ -109,8 +114,8 @@ public class MongoMissionDao implements MissionDao {
         operations.set("name", mission.getName());
         operations.set("displayName", mission.getDisplayName());
         operations.set("description", mission.getDescription());
-        operations.set("steps", mission.getSteps());
-        operations.set("getFinalRepeatStep", mission.getFinalRepeatStep());
+        operations.set("steps", mongoMission.getSteps());
+        operations.set("finalRepeatStep", mongoMission.getFinalRepeatStep());
 
         final FindAndModifyOptions options = new FindAndModifyOptions()
             .returnNew(true)
@@ -132,35 +137,73 @@ public class MongoMissionDao implements MissionDao {
 
         normalize(mission);
 
-        final MongoMission mongoItem = getDozerMapper().map(mission, MongoMission.class);
-        checkSteps(mongoItem);
+        final MongoMission mongoMission = checkMission(mission);
 
         try {
-            getDatastore().save(mongoItem);
+            getDatastore().save(mongoMission);
         } catch (DuplicateKeyException e) {
             throw new DuplicateException(e);
         }
-        getObjectIndex().index(mongoItem);
 
-        return getDozerMapper().map(getDatastore().get(mongoItem), Mission.class);
+        getObjectIndex().index(mongoMission);
+
+        return getDozerMapper().map(getDatastore().get(mongoMission), Mission.class);
+
     }
 
-    private void checkSteps(final Mission mission) {
+    private MongoMission checkMission(final Mission mission) {
         final MongoMission mongoMission = getDozerMapper().map(mission, MongoMission.class);
-        checkSteps(mongoMission);
+        return checkMission(mongoMission);
     }
 
-    private void checkSteps(final MongoMission mongoMission) {
+    private MongoMission checkMission(final MongoMission mongoMission) {
 
-        final List<MongoStep> steps = mongoMission.getSteps();
-        final MongoStep finalRepeatStep = mongoMission.getFinalRepeatStep();
+        if (mongoMission.getSteps() != null) {
+            final List<MongoStep> mongoSteps = checkSteps(mongoMission.getSteps());
+            mongoMission.setSteps(mongoSteps);
+        }
 
-        concat(
-            steps == null ? empty() : steps.stream(),
-            finalRepeatStep == null ? empty() : of(finalRepeatStep))
-        .flatMap(s -> s.getRewards().stream())
-        .map(r -> r.getItem())
-        .forEach(item -> getMongoItemDao().getMongoItem(item.getObjectId()));
+        if (mongoMission.getFinalRepeatStep() != null) {
+            final MongoStep mongoStep = checkStep(mongoMission.getFinalRepeatStep());
+            mongoMission.setFinalRepeatStep(mongoStep);
+        }
+
+        return mongoMission;
+
+    }
+
+    private List<MongoStep> checkSteps(final List<MongoStep> mongoSteps) {
+        return mongoSteps.stream().map(mongoStep -> checkStep(mongoStep)).collect(toList());
+    }
+
+    private MongoStep checkStep(final MongoStep mongoStep) {
+
+        if (mongoStep.getRewards() == null) return null;
+
+        final List<MongoReward> mongoRewards = mongoStep.getRewards()
+            .stream()
+            .filter(mongoReward -> mongoReward != null)
+            .map(mongoReward -> checkReward(mongoReward))
+            .collect(toList());
+
+        mongoStep.setRewards(mongoRewards);
+        return mongoStep;
+
+    }
+
+    private MongoReward checkReward(final MongoReward mongoReward) {
+
+        final MongoItem mongoItem = mongoReward.getItem();
+        final Integer quantity = mongoReward.getQuantity();
+
+        if (quantity == null) throw new InvalidDataException("Reward quantity not specified.");
+        if (quantity <  0) throw new InvalidDataException("Reward quantity must be positive.");
+        if (mongoItem == null) throw new InvalidDataException("Reward items must be specified.");
+
+        final MongoItem refreshedMongoItem = getMongoItemDao().refresh(mongoItem);
+        mongoReward.setItem(refreshedMongoItem);
+
+        return mongoReward;
 
     }
 
