@@ -34,7 +34,7 @@ public class Step {
     private List<Reward> rewards;
 
     @ApiModelProperty("The metadata for this step")
-    private Map<String, String> metadata;
+    private Map<String, Object> metadata;
 
     public String getDisplayName() {
         return displayName;
@@ -68,9 +68,9 @@ public class Step {
         this.rewards = rewards;
     }
 
-    public Map<String, String> getMetadata() { return metadata; }
+    public Map<String, Object> getMetadata() { return metadata; }
 
-    public void setMetadata(Map<String, String> metadata) { this.metadata = metadata; }
+    public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
 
     @Override
     public boolean equals(Object o) {

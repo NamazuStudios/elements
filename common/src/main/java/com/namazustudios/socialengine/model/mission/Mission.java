@@ -46,7 +46,7 @@ public class Mission {
     private Step finalRepeatStep;
 
     @ApiModelProperty("The metadata for this mission")
-    private Map<String, String> metadata;
+    private Map<String, Object> metadata;
 
     public String getId() {
         return id;
@@ -100,9 +100,9 @@ public class Mission {
         this.finalRepeatStep = finalRepeatStep;
     }
 
-    public Map<String, String> getMetadata() { return metadata; }
+    public Map<String, Object> getMetadata() { return metadata; }
 
-    public void setMetadata(Map<String, String> metadata) { this.metadata = metadata; }
+    public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
 
     @Override
     public boolean equals(Object o) {
