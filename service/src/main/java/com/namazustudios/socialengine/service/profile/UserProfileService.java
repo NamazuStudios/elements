@@ -56,13 +56,8 @@ public class UserProfileService implements ProfileService {
 
     @Override
     public Profile createProfile(Profile profile) {
-        try {
-            final Profile currentProfile = getCurrentProfile();
-            throw new DuplicateException("profile already exists for user " + currentProfile.getUser().getId());
-        } catch (NotFoundException ex) {
-            checkUserAndApplication(profile);
-            return getProfileDao().createOrReactivateProfile(profile);
-        }
+        checkUserAndApplication(profile);
+        return getProfileDao().createOrReactivateProfile(profile);
     }
 
     private void checkUserAndApplication(final Profile requestedProfile) {
