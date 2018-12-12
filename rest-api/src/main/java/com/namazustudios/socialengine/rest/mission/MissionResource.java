@@ -12,8 +12,12 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import java.util.Collections;
+import java.util.Set;
+
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static java.util.Collections.emptySet;
 
 @Path("mission")
 @Api(value = "Missions",
@@ -43,6 +47,7 @@ public class MissionResource {
     public Pagination<Mission> getMissions(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
+            @QueryParam("tags") final Set<String> tags,
             @QueryParam("search") final String search) {
 
         if (offset < 0) {
@@ -56,7 +61,7 @@ public class MissionResource {
         final String query = nullToEmpty(search).trim();
 
         return query.isEmpty() ?
-                getMissionService().getMissions(offset, count) :
+                getMissionService().getMissions(offset, count, tags == null ? Collections.<String>emptySet() : tags) :
                 getMissionService().getMissions(offset, count, search);
 
     }
