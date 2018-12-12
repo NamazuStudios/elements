@@ -24,11 +24,11 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
 /**
  * Created by patricktwohig on 3/25/15.
  */
-@Path("user")
 @Api(value = "Users",
      description = "Manages users in the server.  Users are single-end users typically associated " +
                    "with a login name or email address.",
      authorizations = {@Authorization(SESSION_SECRET)})
+@Path("")
 public class UserResource {
 
     private UserService userService;
@@ -40,6 +40,7 @@ public class UserResource {
     @ApiOperation(value = "Search Users",
                   notes = "Searches all users in the system and returning the metadata for all matches against " +
                           "the given search filter.")
+    @Path("user")
     public Pagination<User> getUsers(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
@@ -62,7 +63,7 @@ public class UserResource {
     }
 
     @GET
-    @Path("{name}")
+    @Path("user/{name}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a Specific User",
                   notes = "Gets a specific user by email or unique user ID.")
@@ -71,7 +72,7 @@ public class UserResource {
     }
 
     @GET
-    @Path("me")
+    @Path("user/me")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets the current User",
                   notes = "A special endpoint used to get the current user for the request.  The current " +
@@ -82,7 +83,7 @@ public class UserResource {
     }
 
     @PUT
-    @Path("{name}")
+    @Path("user/{name}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates a User",
                   notes = "Supplying the user object, this will update the user with the new information supplied " +
@@ -118,6 +119,7 @@ public class UserResource {
     @ApiOperation(value = "Creates a User",
                   notes = "Supplying the user object, this will update the user with the new information supplied " +
                           "in the body of the request.  Optionally, the user's password may be provided.")
+    @Path("user")
     public User createUser(final User user, @QueryParam("password") String password) {
 
         getValidationHelper().validateModel(user);
@@ -132,7 +134,7 @@ public class UserResource {
     }
 
     @POST
-    @Path("signup")
+    @Path("user_signup")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Sign Up a User",
             notes = "Supplying the user create request object, this will create a new user.")
@@ -145,7 +147,7 @@ public class UserResource {
     }
 
     @DELETE
-    @Path("{name}")
+    @Path("user/{name}")
     @ApiOperation(value = "Deletes a User",
                   notes = "Deletes and permanently removes the user from the server.  The server may keep " +
                           "some metadata as necessary to avoid data inconsistency.  However, the user has been " +

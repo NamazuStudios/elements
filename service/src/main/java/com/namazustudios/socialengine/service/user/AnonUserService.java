@@ -45,9 +45,8 @@ public class AnonUserService extends AbstractUserService implements UserService 
 
         user.setEmail(userCreateRequest.getEmail());
         user.setName(userCreateRequest.getName());
-        user.setFacebookId(userCreateRequest.getFacebookId());
 
-        user.setLevel(User.Level.UNPRIVILEGED);
+        user.setLevel(User.Level.USER);
         user.setActive(true);
 
         // reuse existing DAO method

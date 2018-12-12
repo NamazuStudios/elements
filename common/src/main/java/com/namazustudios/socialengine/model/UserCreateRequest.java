@@ -27,47 +27,6 @@ public class UserCreateRequest implements Serializable {
     @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     private String password;
 
-    private String facebookId;
-
-    private static final User UNPRIVILIGED = new User() {
-
-        @Override
-        public String getEmail() {
-            return "";
-        }
-
-        @Override
-        public String getName() {
-            return "";
-        }
-
-        @Override
-        public Level getLevel() {
-            return Level.UNPRIVILEGED;
-        }
-
-        @Override
-        public boolean isActive() {
-            return false;
-        }
-
-        @Override
-        public String getFacebookId() {
-            return null;
-        }
-
-        @Override
-        public int hashCode() {
-            return 0;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return  obj == this;
-        }
-
-    };
-
     /**
      * Gets the user's login name.
      *
@@ -80,7 +39,6 @@ public class UserCreateRequest implements Serializable {
     /**
      * Gets the user's password.
      *
-     * @param password
      */
     public String getPassword() {
         return password;
@@ -118,25 +76,6 @@ public class UserCreateRequest implements Serializable {
         this.email = email;
     }
 
-    /**
-     * Gets the user's facebook id, if present.  If a user is not linked to
-     * a Facebook account then this will simply be null.
-     *
-     * @return the user's facebook ID
-     */
-    public String getFacebookId() {
-        return facebookId;
-    }
-
-    /**
-     * Sets a user's facebook id.
-     *
-     * @param facebookId the user's facebook id
-     */
-    public void setFacebookId(String facebookId) {
-        this.facebookId = facebookId;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -146,8 +85,7 @@ public class UserCreateRequest implements Serializable {
 
         if (getName() != null ? !getName().equals(userCreateRequest.getName()) : userCreateRequest.getName() != null) return false;
         if (getPassword() != null ? !getPassword().equals(userCreateRequest.getPassword()) : userCreateRequest.getPassword() != null) return false;
-        if (getEmail() != null ? !getEmail().equals(userCreateRequest.getEmail()) : userCreateRequest.getEmail() != null) return false;
-        return getFacebookId() != null ? getFacebookId().equals(userCreateRequest.getFacebookId()) : userCreateRequest.getFacebookId() == null;
+        return (getEmail() != null ? !getEmail().equals(userCreateRequest.getEmail()) : userCreateRequest.getEmail() != null);
     }
 
     @Override
@@ -155,7 +93,6 @@ public class UserCreateRequest implements Serializable {
         int result = (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getPassword() != null ? getPassword().hashCode() : 0);
         result = 31 * result + (getEmail() != null ? getEmail().hashCode() : 0);
-        result = 31 * result + (getFacebookId() != null ? getFacebookId().hashCode() : 0);
         return result;
     }
 
