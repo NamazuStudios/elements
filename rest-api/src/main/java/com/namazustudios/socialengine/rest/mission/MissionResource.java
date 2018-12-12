@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rest.mission;
 
+import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.mission.Mission;
 import com.namazustudios.socialengine.service.mission.MissionService;
@@ -11,6 +12,7 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
 @Path("mission")
@@ -34,12 +36,29 @@ public class MissionResource {
 
 
     @GET
-    @ApiOperation(value = "Retrieves all Missions",
-            notes = "Searches all mission and returns all matching items, filtered by the passed in search parameters.")
-    public Pagination<Mission> getMission(@QueryParam("offset") @DefaultValue("0") final int offset,
-                                     @QueryParam("count") @DefaultValue("20") final int count,
-                                     @QueryParam("search") final String search) {
-        return missionService.getMissions(offset, count, search);
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Search Missions",
+            notes = "Searches all missions in the system and returning a number of matches against " +
+                    "the given search filter, delimited by the offset and count.")
+    public Pagination<Mission> getMissions(
+            @QueryParam("offset") @DefaultValue("0") final int offset,
+            @QueryParam("count")  @DefaultValue("20") final int count,
+            @QueryParam("search") final String search) {
+
+        if (offset < 0) {
+            throw new InvalidParameterException("Offset must have positive value.");
+        }
+
+        if (count < 0) {
+            throw new InvalidParameterException("Count must have positive value.");
+        }
+
+        final String query = nullToEmpty(search).trim();
+
+        return query.isEmpty() ?
+                getMissionService().getMissions(offset, count) :
+                getMissionService().getMissions(offset, count, search);
+
     }
 
     @GET
