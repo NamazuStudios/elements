@@ -12,10 +12,7 @@ import javax.inject.Inject;
 /**
  * Created by patricktwohig on 3/26/15.
  */
-public class UserUserService extends AbstractUserService implements UserService {
-
-    @Inject
-    private UserDao userDao;
+public class UserUserService extends AnonUserService implements UserService {
 
     @Override
     public User getUser(String userId) {
@@ -53,9 +50,7 @@ public class UserUserService extends AbstractUserService implements UserService 
     }
 
     @Override
-    public User createUser(User user, String password) {
-        throw new ForbiddenException();
-    }
+    public User createUser(User user, String password) { throw new ForbiddenException(); }
 
     @Override
     public User updateUser(User user) {

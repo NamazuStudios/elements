@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rest;
 
 import com.google.common.base.Strings;
+import com.namazustudios.socialengine.model.UserCreateRequest;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
@@ -127,6 +128,18 @@ public class UserResource {
         } else {
             return getUserService().createUser(user, password);
         }
+
+    }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Sign Up a User",
+            notes = "Supplying the user create request object, this will create a new user.")
+    public User createUser(final UserCreateRequest userCreateRequest) {
+
+        getValidationHelper().validateModel(userCreateRequest);
+
+        return getUserService().createUser(userCreateRequest);
 
     }
 

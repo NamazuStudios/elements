@@ -24,6 +24,9 @@ public class UserServiceProvider implements Provider<UserService> {
     @Inject
     private Provider<UserUserService> userUserServiceProvider;
 
+    @Inject
+    private Provider<AnonUserService> anonUserServiceProvider;
+
     @Override
     public UserService get() {
         switch (user.getLevel()) {
@@ -32,7 +35,7 @@ public class UserServiceProvider implements Provider<UserService> {
             case USER:
                 return userUserServiceProvider.get();
             default:
-                return Services.forbidden(UserService.class);
+                return anonUserServiceProvider.get();
         }
     }
 
