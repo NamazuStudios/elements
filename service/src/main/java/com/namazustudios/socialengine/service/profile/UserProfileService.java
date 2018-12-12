@@ -71,10 +71,6 @@ public class UserProfileService implements ProfileService {
             throw new InvalidDataException("Profile user must match current user.");
         }
 
-        if (!Objects.equals(getCurrentProfile().getApplication(), requestedProfile.getApplication())) {
-            throw new InvalidDataException("Profile application must match current profile application.");
-        }
-
     }
 
     @Override
