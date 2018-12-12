@@ -12,7 +12,6 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import java.util.Collections;
 import java.util.Set;
 
 import static com.google.common.base.Strings.nullToEmpty;
@@ -61,7 +60,7 @@ public class MissionResource {
         final String query = nullToEmpty(search).trim();
 
         return query.isEmpty() ?
-                getMissionService().getMissions(offset, count, tags == null ? Collections.<String>emptySet() : tags) :
+                getMissionService().getMissions(offset, count, tags == null ? emptySet() : tags) :
                 getMissionService().getMissions(offset, count, search);
 
     }
