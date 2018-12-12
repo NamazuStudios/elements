@@ -132,6 +132,7 @@ public class UserResource {
     }
 
     @POST
+    @Path("signup")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Sign Up a User",
             notes = "Supplying the user create request object, this will create a new user.")
