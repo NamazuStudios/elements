@@ -68,9 +68,13 @@ public class Step {
         this.rewards = rewards;
     }
 
-    public Map<String, Object> getMetadata() { return metadata; }
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
 
-    public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
 
     @Override
     public boolean equals(Object o) {

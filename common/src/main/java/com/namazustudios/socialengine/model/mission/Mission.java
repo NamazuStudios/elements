@@ -80,9 +80,13 @@ public class Mission {
         this.description = description;
     }
 
-    public List<String> getTags() { return tags; }
+    public List<String> getTags() {
+        return tags;
+    }
 
-    public void setTags(List<String> tags) { this.tags = tags; }
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
 
     public List<Step> getSteps() {
         return steps;
@@ -100,9 +104,14 @@ public class Mission {
         this.finalRepeatStep = finalRepeatStep;
     }
 
-    public Map<String, Object> getMetadata() { return metadata; }
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
 
-    public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
 
     @Override
     public boolean equals(Object o) {
