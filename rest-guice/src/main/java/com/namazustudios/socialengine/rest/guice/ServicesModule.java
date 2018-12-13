@@ -9,7 +9,7 @@ import com.namazustudios.socialengine.service.*;
 import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.AuthServiceProvider;
 import com.namazustudios.socialengine.service.auth.MockSessionServiceProvider;
-import com.namazustudios.socialengine.service.auth.StandardFacebookAuthService;
+import com.namazustudios.socialengine.service.auth.AnonFacebookAuthService;
 import com.namazustudios.socialengine.service.auth.AnonSessionService;
 import com.namazustudios.socialengine.service.friend.FacebookFriendServiceProvider;
 import com.namazustudios.socialengine.service.gameon.*;
@@ -178,7 +178,7 @@ public class ServicesModule extends AbstractModule {
 
         bind(MatchServiceUtils.class).to(StandardMatchServiceUtils.class);
         bind(SessionService.class).to(AnonSessionService.class);
-        bind(FacebookAuthService.class).to(StandardFacebookAuthService.class);
+        bind(FacebookAuthService.class).to(AnonFacebookAuthService.class);
 
         bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
         bind(PasswordGenerator.class).to(SecureRandomPasswordGenerator.class).asEagerSingleton();

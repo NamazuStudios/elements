@@ -43,9 +43,9 @@ import static java.util.stream.Collectors.toList;
     @FacebookPermission("public_profile"),
     @FacebookPermission("user_friends")
 })
-public class StandardFacebookAuthService implements FacebookAuthService {
+public class AnonFacebookAuthService implements FacebookAuthService {
 
-    private static final Logger logger = LoggerFactory.getLogger(StandardFacebookAuthService.class);
+    private static final Logger logger = LoggerFactory.getLogger(AnonFacebookAuthService.class);
 
     private static final String FIELDS_PARAMETER_VALUE = Joiner.on(",")
         .join("id","name","email","first_name","last_name","picture");
