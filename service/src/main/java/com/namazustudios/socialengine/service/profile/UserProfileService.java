@@ -56,23 +56,14 @@ public class UserProfileService implements ProfileService {
 
     @Override
     public Profile createProfile(Profile profile) {
-        try {
-            final Profile currentProfile = getCurrentProfile();
-            throw new DuplicateException("profile already exists for user " + currentProfile.getUser().getId());
-        } catch (NotFoundException ex) {
-            checkUserAndApplication(profile);
-            return getProfileDao().createOrReactivateProfile(profile);
-        }
+        checkUserAndApplication(profile);
+        return getProfileDao().createOrReactivateProfile(profile);
     }
 
     private void checkUserAndApplication(final Profile requestedProfile) {
 
         if (!Objects.equals(getUser(), requestedProfile.getUser())) {
             throw new InvalidDataException("Profile user must match current user.");
-        }
-
-        if (!Objects.equals(getCurrentProfile().getApplication(), requestedProfile.getApplication())) {
-            throw new InvalidDataException("Profile application must match current profile application.");
         }
 
     }
