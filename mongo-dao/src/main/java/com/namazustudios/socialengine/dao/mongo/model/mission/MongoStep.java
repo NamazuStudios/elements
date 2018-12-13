@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
+import org.mongodb.morphia.annotations.Embedded;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -13,6 +15,7 @@ import java.util.Objects;
  *
  * Created by davidjbrooks on 11/27/2018.
  */
+@Embedded
 public class MongoStep {
 
     private String displayName;
@@ -68,6 +71,7 @@ public class MongoStep {
 
     @Override
     public int hashCode() {
+
         return Objects.hash(getDisplayName(), getDescription(), getCount(), getRewards());
     }
 
@@ -80,5 +84,4 @@ public class MongoStep {
                 ", count='" + count + '\'' +
                 '}';
     }
-
 }

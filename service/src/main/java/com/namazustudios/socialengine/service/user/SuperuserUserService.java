@@ -10,10 +10,7 @@ import javax.inject.Inject;
 /**
  * Created by patricktwohig on 3/26/15.
  */
-public class SuperuserUserService extends AbstractUserService implements UserService {
-
-    @Inject
-    private UserDao userDao;
+public class SuperuserUserService extends UserUserService implements UserService {
 
     @Override
     public User getUser(String userId) {

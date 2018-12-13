@@ -1,13 +1,14 @@
 package com.namazustudios.socialengine.model.mission;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.util.List;
 
 /**
  * Represents a mission.
@@ -35,7 +36,7 @@ public class Mission {
     private String description;
 
     @ApiModelProperty("The steps that constitute the mission (may be null if finalRepeatStep is specified)")
-    private java.util.List<Step> steps;
+    private List<Step> steps;
 
     @ApiModelProperty("The final repeating step (may be null if step(s) are specified)")
     private Step finalRepeatStep;
@@ -72,11 +73,11 @@ public class Mission {
         this.description = description;
     }
 
-    public java.util.List<Step> getSteps() {
+    public List<Step> getSteps() {
         return steps;
     }
 
-    public void setSteps(java.util.List<Step> steps) {
+    public void setSteps(List<Step> steps) {
         this.steps = steps;
     }
 

@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.UserCreateRequest;
 
 /**
  * Created by patricktwohig on 3/19/15.
@@ -71,6 +72,14 @@ public interface UserService {
      * @return the User, as it was created in the database
      */
     User createUser(final User user, final String password);
+
+    /**
+     * Signs up a new user.
+     *
+     * @param userCreateRequest the details to use when creating the user
+     * @return the User, as it was create
+     */
+    User createUser(final UserCreateRequest userCreateRequest);
 
     /**
      * Updates a user.

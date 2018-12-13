@@ -107,7 +107,7 @@ public class GameOnMatchResource {
     @GET
     @Path("{matchId}/leaderboard")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Re-Enters a Match",
+    @ApiOperation(value = "Displays the match leaderboard",
                   notes = "See: https://developer.amazon.com/docs/gameon/game-api-ref.html#get-leaderboard")
     public GameOnGetMatchLeaderboardResponse getLeaderboard(
 

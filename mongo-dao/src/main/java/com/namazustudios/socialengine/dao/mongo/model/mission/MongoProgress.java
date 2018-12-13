@@ -6,10 +6,9 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Property;
-import org.mongodb.morphia.annotations.Reference;
+import org.mongodb.morphia.annotations.*;
+
+import java.util.Objects;
 
 /**
  * Mongo DTO for a mission progress.
@@ -32,11 +31,11 @@ public class MongoProgress {
     @Reference
     private MongoProfile profile;
 
-    @Property
+    @Embedded
     private MongoStep currentStep;
 
     @Property
-    private Integer remaining;
+    private int remaining;
 
     @Property
     private MongoMission mission;
@@ -65,11 +64,11 @@ public class MongoProgress {
         this.currentStep = currentStep;
     }
 
-    public Integer getRemaining() {
+    public int getRemaining() {
         return remaining;
     }
 
-    public void setRemaining(Integer remaining) {
+    public void setRemaining(int remaining) {
         this.remaining = remaining;
     }
 
@@ -82,27 +81,21 @@ public class MongoProgress {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof MongoMission)) return false;
-
-        MongoProgress mongoProgress = (MongoProgress) o;
-
-        if (getObjectId() != null ? !getObjectId().equals(mongoProgress.getObjectId()) : mongoProgress.getObjectId() != null) return false;
-        if (getProfile() != null ? !getProfile().equals(mongoProgress.getProfile()) : mongoProgress.getProfile() != null) return false;
-        if (getCurrentStep() != null ? !getCurrentStep().equals(mongoProgress.getCurrentStep()) : mongoProgress.getCurrentStep() != null) return false;
-        if (getRemaining() != null ? !getRemaining().equals(mongoProgress.getRemaining()) : mongoProgress.getRemaining() != null) return false;
-        return (getMission() != null ? !getMission().equals(mongoProgress.getMission()) : mongoProgress.getMission() != null);
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof MongoProgress)) return false;
+        MongoProgress that = (MongoProgress) object;
+        return getRemaining() == that.getRemaining() &&
+                Objects.equals(getObjectId(), that.getObjectId()) &&
+                Objects.equals(getProfile(), that.getProfile()) &&
+                Objects.equals(getCurrentStep(), that.getCurrentStep()) &&
+                Objects.equals(getMission(), that.getMission());
     }
 
     @Override
     public int hashCode() {
-        int result = getObjectId() != null ? getObjectId().hashCode() : 0;
-        result = 31 * result + (getProfile() != null ? getProfile().hashCode() : 0);
-        result = 31 * result + (getCurrentStep() != null ? getCurrentStep().hashCode() : 0);
-        result = 31 * result + (getRemaining() != null ? getRemaining().hashCode() : 0);
-        result = 31 * result + (getMission() != null ? getMission().hashCode() : 0);
-        return result;
+
+        return Objects.hash(getObjectId(), getProfile(), getCurrentStep(), getRemaining(), getMission());
     }
 
     @Override
