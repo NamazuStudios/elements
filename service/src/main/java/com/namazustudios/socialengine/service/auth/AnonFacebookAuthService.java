@@ -45,22 +45,22 @@ import static java.util.stream.Collectors.toList;
 })
 public class AnonFacebookAuthService implements FacebookAuthService {
 
-    private static final Logger logger = LoggerFactory.getLogger(AnonFacebookAuthService.class);
+    protected static final Logger logger = LoggerFactory.getLogger(AnonFacebookAuthService.class);
 
-    private static final String FIELDS_PARAMETER_VALUE = Joiner.on(",")
+    protected static final String FIELDS_PARAMETER_VALUE = Joiner.on(",")
         .join("id","name","email","first_name","last_name","picture");
 
-    private ProfileDao profileDao;
+    protected ProfileDao profileDao;
 
-    private SessionDao sessionDao;
+    protected SessionDao sessionDao;
 
-    private FacebookUserDao facebookUserDao;
+    protected FacebookUserDao facebookUserDao;
 
-    private FacebookFriendDao facebookFriendDao;
+    protected FacebookFriendDao facebookFriendDao;
 
-    private FacebookApplicationConfigurationDao facebookApplicationConfigurationDao;
+    protected FacebookApplicationConfigurationDao facebookApplicationConfigurationDao;
 
-    private long sessionTimeoutSeconds;
+    protected long sessionTimeoutSeconds;
 
     @Override
     public FacebookSessionCreation createOrUpdateUserWithFacebookOAuthAccessToken(
@@ -133,7 +133,7 @@ public class AnonFacebookAuthService implements FacebookAuthService {
         });
     }
 
-    private void syncFriendsForUser(final User user,
+    protected void syncFriendsForUser(final User user,
                                     final FacebookClient facebookClient,
                                     final String appsecretProof) {
         try {
@@ -143,7 +143,7 @@ public class AnonFacebookAuthService implements FacebookAuthService {
         }
     }
 
-    private void doSyncFriendsForUser(final User user,
+    protected void doSyncFriendsForUser(final User user,
                                       final FacebookClient facebookClient,
                                       final String appsecretProof) {
 
@@ -159,7 +159,7 @@ public class AnonFacebookAuthService implements FacebookAuthService {
 
     }
 
-    private <T> T doFacebookOperation(final Supplier<T> supplier) {
+    protected <T> T doFacebookOperation(final Supplier<T> supplier) {
         try {
             return supplier.get();
         } catch (FacebookOAuthException ex) {
@@ -167,7 +167,7 @@ public class AnonFacebookAuthService implements FacebookAuthService {
         }
     }
 
-    private User map(final com.restfb.types.User fbUser) {
+    protected User map(final com.restfb.types.User fbUser) {
         final User user = new User();
         user.setLevel(User.Level.USER);
         user.setActive(true);
@@ -177,14 +177,14 @@ public class AnonFacebookAuthService implements FacebookAuthService {
         return user;
     }
 
-    private String generateUserName(final com.restfb.types.User fbUser) {
+    protected String generateUserName(final com.restfb.types.User fbUser) {
         final String firstName = emptyToNull(nullToEmpty(fbUser.getFirstName()).trim().toLowerCase());
         final String middleName = emptyToNull(nullToEmpty(fbUser.getMiddleName()).trim().toLowerCase());
         final String lastName = emptyToNull(nullToEmpty(fbUser.getLastName()).trim().toLowerCase());
         return Joiner.on(".").skipNulls().join(firstName, middleName, lastName, fbUser.getId());
     }
 
-    private Profile map(final User user,
+    protected Profile map(final User user,
                         final com.restfb.types.User fbUser,
                         final FacebookApplicationConfiguration facebookApplicationConfiguration,
                         final ProfilePictureSource profilePictureSource) {
@@ -196,7 +196,7 @@ public class AnonFacebookAuthService implements FacebookAuthService {
         return profile;
     }
 
-    private String generateDisplayName(final com.restfb.types.User fbUser) {
+    protected String generateDisplayName(final com.restfb.types.User fbUser) {
 
         final String firstName = nullToEmpty(fbUser.getFirstName()).trim();
         final String lastName = nullToEmpty(fbUser.getLastName()).trim();
