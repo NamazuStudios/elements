@@ -2,15 +2,13 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.common.base.Strings;
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.MongoException;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFriendship;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFriendshipId;
-import com.namazustudios.socialengine.exception.DuplicateException;
+import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.FacebookUserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
-import com.namazustudios.socialengine.exception.InvalidDataException;
-import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.User;
 import org.bson.types.ObjectId;
@@ -66,8 +64,8 @@ public class MongoFacebookUserDao implements FacebookUserDao {
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
 
         query.and(
-                query.criteria("active").equal(true),
-                query.criteria("facebookId").equal(facebookId)
+            query.criteria("active").equal(true),
+            query.criteria("facebookId").equal(facebookId)
         );
 
         final MongoUser mongoUser = query.get();
@@ -80,7 +78,7 @@ public class MongoFacebookUserDao implements FacebookUserDao {
     }
 
     @Override
-    public User connectFacebookUserIfNecessary(User user) {
+    public User connectActiveFacebookUserIfNecessary(final User user) {
 
         validate(user);
 
@@ -89,14 +87,13 @@ public class MongoFacebookUserDao implements FacebookUserDao {
 
         if (user.getId() == null) {
             throw new IllegalArgumentException("User must have user id.");
-        } else {
-            final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
-            query.field("_id").equal(objectId);
         }
 
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
+
+        query.field("_id").equal(objectId);
         query.field("active").equal(true);
-        query.field("name").equal(user.getName());
-        query.field("email").equal(user.getEmail());
+
         query.or(
             query.criteria("facebookId").doesNotExist(),
             query.criteria("facebookId").equal(user.getFacebookId())
@@ -110,8 +107,12 @@ public class MongoFacebookUserDao implements FacebookUserDao {
             mongoUser = getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
                 .upsert(true)
                 .returnNew(true));
-        } catch (DuplicateKeyException ex) {
-            throw new DuplicateException(ex);
+        } catch (MongoException ex) {
+            if (ex.getCode() == 11000) {
+                throw new DuplicateException(ex);
+            } else {
+                throw new InternalException(ex);
+            }
         }
 
         getObjectIndex().index(mongoUser);
@@ -128,22 +129,30 @@ public class MongoFacebookUserDao implements FacebookUserDao {
         final UpdateOperations<MongoUser> updates = getDatastore().createUpdateOperations(MongoUser.class);
 
         if (user.getId() == null) {
-            updates.set("_id", new ObjectId());
+            updates.setOnInsert("_id", new ObjectId());
         } else {
             final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
             query.field("_id").equal(objectId);
         }
 
-        query.field("name").equal(user.getName());
-        query.field("email").equal(user.getEmail());
         query.or(
-            query.criteria("facebookId").doesNotExist(),
-            query.criteria("facebookId").equal(user.getFacebookId())
+
+            // Either we find a user with the supplied FacebookID.
+            query.criteria("facebookId").equal(user.getFacebookId()),
+
+            // Or we find a user who has no Facebook ID and the email does match.
+            query.and(
+                query.criteria("facebookId").doesNotExist(),
+                query.criteria("email").equal(user.getEmail())
+            )
+
         );
 
+        // We only reactivate the existing user, all other fields are left untouched if the user exists.
         updates.set("active", true);
-        updates.setOnInsert("name", user.getName());
+
         updates.setOnInsert("email", user.getEmail());
+        updates.setOnInsert("name", user.getName());
         updates.setOnInsert("level", user.getLevel());
         updates.setOnInsert("facebookId", user.getFacebookId());
 
@@ -155,8 +164,12 @@ public class MongoFacebookUserDao implements FacebookUserDao {
             mongoUser = getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
                 .upsert(true)
                 .returnNew(true));
-        } catch (DuplicateKeyException ex) {
-            throw new DuplicateException(ex);
+        } catch (MongoException ex) {
+            if (ex.getCode() == 11000) {
+                throw new DuplicateException(ex);
+            } else {
+                throw new InternalException(ex);
+            }
         }
 
         getObjectIndex().index(mongoUser);

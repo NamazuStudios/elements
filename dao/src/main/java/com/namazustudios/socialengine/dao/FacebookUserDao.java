@@ -38,7 +38,7 @@ public interface FacebookUserDao {
      * @param user the user
      * @return the User, as written to the database
      */
-    User connectFacebookUserIfNecessary(User user);
+    User connectActiveFacebookUserIfNecessary(User user);
 
     /**
      * Creates, reactivates, or updates a user.  Unlike the operations in {@link UserDao}, this

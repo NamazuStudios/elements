@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.service.auth;
 
-import com.google.common.base.Joiner;
 import com.namazustudios.socialengine.annotation.FacebookPermission;
 import com.namazustudios.socialengine.annotation.FacebookPermissions;
 import com.namazustudios.socialengine.dao.*;
@@ -10,8 +9,6 @@ import com.namazustudios.socialengine.service.FacebookAuthService;
 
 import javax.inject.Inject;
 
-import static com.google.common.base.Strings.emptyToNull;
-import static com.google.common.base.Strings.nullToEmpty;
 import static java.lang.Math.min;
 
 /**
@@ -45,10 +42,10 @@ public class UserFacebookAuthService extends AnonFacebookAuthService implements 
                 final User user = new User();
                 user.setLevel(getUser().getLevel());
                 user.setActive(getUser().isActive());
-                user.setFacebookId(getUser().getFacebookId());
+                user.setFacebookId(fbUser.getId());
                 user.setEmail(getUser().getEmail());
                 user.setName(getUser().getName());
-                return getFacebookUserDao().connectFacebookUserIfNecessary(user);
+                return getFacebookUserDao().connectActiveFacebookUserIfNecessary(user);
             }
         );
     }
