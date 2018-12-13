@@ -33,6 +33,14 @@ public interface FacebookUserDao {
     Map<String, User> findActiveUsersWithFacebookIds(List<String> facebookIds);
 
     /**
+     * Connects the supplied user to facebook, if not already done so.
+     *
+     * @param user the user
+     * @return the User, as written to the database
+     */
+    User connectFacebookUserIfNecessary(User user);
+
+    /**
      * Creates, reactivates, or updates a user.  Unlike the operations in {@link UserDao}, this
      * queries for user based on Facebook ID.
      *
@@ -44,5 +52,4 @@ public interface FacebookUserDao {
      * @return the User, as written to the database
      */
     User createReactivateOrUpdateUser(final User user);
-
 }

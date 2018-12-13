@@ -1,8 +1,10 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.common.base.Strings;
+import com.mongodb.DuplicateKeyException;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFriendship;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFriendshipId;
+import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.FacebookUserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
@@ -14,6 +16,7 @@ import com.namazustudios.socialengine.model.User;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -27,6 +30,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Strings.nullToEmpty;
 import static java.util.function.Function.identity;
 
 /**
@@ -76,36 +80,83 @@ public class MongoFacebookUserDao implements FacebookUserDao {
     }
 
     @Override
+    public User connectFacebookUserIfNecessary(User user) {
+
+        validate(user);
+
+        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> updates = getDatastore().createUpdateOperations(MongoUser.class);
+
+        if (user.getId() == null) {
+            throw new IllegalArgumentException("User must have user id.");
+        } else {
+            final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
+            query.field("_id").equal(objectId);
+        }
+
+        query.field("active").equal(true);
+        query.field("name").equal(user.getName());
+        query.field("email").equal(user.getEmail());
+        query.or(
+            query.criteria("facebookId").doesNotExist(),
+            query.criteria("facebookId").equal(user.getFacebookId())
+        );
+
+        updates.set("facebookId", user.getFacebookId());
+
+        final MongoUser mongoUser;
+
+        try {
+            mongoUser = getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
+                .upsert(true)
+                .returnNew(true));
+        } catch (DuplicateKeyException ex) {
+            throw new DuplicateException(ex);
+        }
+
+        getObjectIndex().index(mongoUser);
+        return getDozerMapper().map(mongoUser, User.class);
+
+    }
+
+    @Override
     public User createReactivateOrUpdateUser(User user) {
 
         validate(user);
 
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
+        final UpdateOperations<MongoUser> updates = getDatastore().createUpdateOperations(MongoUser.class);
 
-        query.and(
+        if (user.getId() == null) {
+            updates.set("_id", new ObjectId());
+        } else {
+            final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
+            query.field("_id").equal(objectId);
+        }
+
+        query.field("name").equal(user.getName());
+        query.field("email").equal(user.getEmail());
+        query.or(
+            query.criteria("facebookId").doesNotExist(),
             query.criteria("facebookId").equal(user.getFacebookId())
         );
+
+        updates.set("active", true);
+        updates.setOnInsert("name", user.getName());
+        updates.setOnInsert("email", user.getEmail());
+        updates.setOnInsert("level", user.getLevel());
+        updates.setOnInsert("facebookId", user.getFacebookId());
+
+        getMongoPasswordUtils().scramblePasswordOnInsert(updates);
 
         final MongoUser mongoUser;
 
         try {
-            mongoUser = getMongoConcurrentUtils().performOptimisticUpsert(query, (datastore, toUpsert) -> {
-
-                if (toUpsert.getObjectId() == null) {
-                    toUpsert.setObjectId(new ObjectId());
-                }
-
-                user.setId(toUpsert.getObjectId().toHexString());
-
-                if (!toUpsert.isActive()) {
-                    toUpsert.setActive(true);
-                    getDozerMapper().map(user, toUpsert);
-                    getMongoPasswordUtils().scramblePassword(toUpsert);
-                }
-
-            });
-        } catch (MongoConcurrentUtils.ConflictException e) {
-            throw new TooBusyException(e);
+            mongoUser = getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
+                .upsert(true)
+                .returnNew(true));
+        } catch (DuplicateKeyException ex) {
+            throw new DuplicateException(ex);
         }
 
         getObjectIndex().index(mongoUser);
@@ -136,14 +187,15 @@ public class MongoFacebookUserDao implements FacebookUserDao {
             throw new InvalidDataException("User must not be null.");
         }
 
-        if (user.getFacebookId() == null) {
+        if (user.getFacebookId() == null || user.getFacebookId().trim().isEmpty()) {
             throw new InvalidDataException("User must specify Facebook ID.");
         }
 
         getValidationHelper().validateModel(user);
 
-        user.setEmail(Strings.nullToEmpty(user.getEmail()).trim());
-        user.setName(Strings.nullToEmpty(user.getName()).trim());
+        user.setEmail(nullToEmpty(user.getEmail()).trim());
+        user.setName(nullToEmpty(user.getName()).trim());
+        user.setFacebookId(nullToEmpty(user.getFacebookId()));
 
     }
 

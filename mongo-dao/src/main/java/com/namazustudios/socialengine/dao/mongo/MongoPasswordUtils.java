@@ -82,6 +82,31 @@ public class MongoPasswordUtils {
     }
 
     /**
+     * Scrambles both the salt and the password.  This effectively wipes out the account's
+     * password making it inaccessible.
+     *
+     * @param operations the operations
+     */
+    public void scramblePasswordOnInsert(final UpdateOperations<MongoUser> operations) {
+
+        final SecureRandom secureRandom = new SecureRandom();
+
+        byte[] tmp;
+
+        tmp = new byte[SALT_LENGTH];
+        secureRandom.nextBytes(tmp);
+        operations.setOnInsert("salt", tmp);
+
+        tmp = new byte[SALT_LENGTH];
+        secureRandom.nextBytes(tmp);
+        operations.setOnInsert("passwordHash", tmp);
+
+        final MessageDigest digest = getMessageDigestProvider().get();
+        operations.setOnInsert("hashAlgorithm", digest.getAlgorithm());
+
+    }
+
+    /**
      * Given the instance of {@link MongoUser}, this will scramble the password making it
      * extremely impossible for a user to login.
      *

@@ -4,34 +4,15 @@ import com.google.common.base.Joiner;
 import com.namazustudios.socialengine.annotation.FacebookPermission;
 import com.namazustudios.socialengine.annotation.FacebookPermissions;
 import com.namazustudios.socialengine.dao.*;
-import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
-import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.FacebookSessionCreation;
-import com.namazustudios.socialengine.model.session.Session;
-import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.service.FacebookAuthService;
-import com.restfb.*;
-import com.restfb.exception.FacebookOAuthException;
-import com.restfb.json.JsonObject;
-import com.restfb.types.ProfilePictureSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import java.util.List;
-import java.util.function.Supplier;
 
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.namazustudios.socialengine.Constants.SESSION_TIMEOUT_SECONDS;
 import static java.lang.Math.min;
-import static java.lang.System.currentTimeMillis;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.stream.Collectors.toList;
 
 /**
  * This is the user-scope {@link FacebookAuthService} used
@@ -45,82 +26,58 @@ import static java.util.stream.Collectors.toList;
 })
 public class UserFacebookAuthService extends AnonFacebookAuthService implements FacebookAuthService {
 
+    private User user;
+
+    private FacebookUserDao facebookUserDao;
+
+    private FacebookAuthServiceOperations facebookAuthServiceOperations;
+
     @Override
     public FacebookSessionCreation createOrUpdateUserWithFacebookOAuthAccessToken(
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId,
             final String facebookOAuthAccessToken) {
+        return getFacebookAuthServiceOperations().createOrUpdateUserWithFacebookOAuthAccessToken(
+            applicationNameOrId,
+            applicationConfigurationNameOrId,
+            facebookOAuthAccessToken,
+            (fbUser) -> {
+                final User user = new User();
+                user.setLevel(getUser().getLevel());
+                user.setActive(getUser().isActive());
+                user.setFacebookId(getUser().getFacebookId());
+                user.setEmail(getUser().getEmail());
+                user.setName(getUser().getName());
+                return getFacebookUserDao().connectFacebookUserIfNecessary(user);
+            }
+        );
+    }
 
-        return doFacebookOperation(() -> {
+    public User getUser() {
+        return user;
+    }
 
-            final FacebookApplicationConfiguration facebookApplicationConfiguration =
-                getFacebookApplicationConfigurationDao()
-                    .getApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
+    }
 
+    public FacebookUserDao getFacebookUserDao() {
+        return facebookUserDao;
+    }
 
-            final FacebookClient facebookClient = new DefaultFacebookClient(facebookOAuthAccessToken, Version.LATEST);
+    @Inject
+    public void setFacebookUserDao(FacebookUserDao facebookUserDao) {
+        this.facebookUserDao = facebookUserDao;
+    }
 
-            final FacebookClient.AccessToken longLivedAccessToken;
-            longLivedAccessToken = facebookClient.obtainExtendedAccessToken(
-                facebookApplicationConfiguration.getApplicationId(),
-                facebookApplicationConfiguration.getApplicationSecret());
+    public FacebookAuthServiceOperations getFacebookAuthServiceOperations() {
+        return facebookAuthServiceOperations;
+    }
 
-            final String appsecretProof = facebookClient.obtainAppSecretProof(
-                facebookOAuthAccessToken,
-                facebookApplicationConfiguration.getApplicationSecret());
-
-            final com.restfb.types.User fbUser = facebookClient
-                .fetchObject(
-                    "me",
-                    com.restfb.types.User.class,
-                    Parameter.with("fields", FIELDS_PARAMETER_VALUE),
-                    Parameter.with("appsecret_proof", appsecretProof));
-
-            final JsonObject rawProfilePicture = facebookClient
-                .fetchObject(
-                    "me/picture",
-                    JsonObject.class,
-                    Parameter.with("type", "large"),
-                    Parameter.with("redirect", false),
-                    Parameter.with("appsecret_proof", appsecretProof));
-
-            final ProfilePictureSource profilePictureSource = facebookClient
-                .getJsonMapper()
-                .toJavaObject(rawProfilePicture.get("data").toString(), ProfilePictureSource.class);
-
-
-            // check to ensure facebook ID isn't already assigned to another account
-
-
-
-            final User user = getFacebookUserDao().createReactivateOrUpdateUser(map(fbUser));
-            final Profile profile = getProfileDao().createOrRefreshProfile(map(
-                user,
-                fbUser,
-                facebookApplicationConfiguration,
-                profilePictureSource));
-
-
-            syncFriendsForUser(user, facebookClient, appsecretProof);
-
-            final Session session = new Session();
-            final FacebookSessionCreation facebookSessionCreation = new FacebookSessionCreation();
-            final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
-
-            session.setUser(user);
-            session.setProfile(profile);
-            session.setApplication(facebookApplicationConfiguration.getParent());
-            session.setExpiry(expiry);
-
-            final SessionCreation sessionCreation = getSessionDao().create(user, session);
-
-            facebookSessionCreation.setSession(sessionCreation.getSession());
-            facebookSessionCreation.setSessionSecret(sessionCreation.getSessionSecret());
-            facebookSessionCreation.setUserAccessToken(longLivedAccessToken.getAccessToken());
-
-            return facebookSessionCreation;
-
-        });
+    @Inject
+    public void setFacebookAuthServiceOperations(FacebookAuthServiceOperations facebookAuthServiceOperations) {
+        this.facebookAuthServiceOperations = facebookAuthServiceOperations;
     }
 
 }
