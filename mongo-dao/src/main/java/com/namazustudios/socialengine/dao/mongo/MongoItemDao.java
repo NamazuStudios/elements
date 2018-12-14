@@ -107,6 +107,7 @@ public class MongoItemDao implements ItemDao {
         if (tags != null && !tags.isEmpty()) {
             mongoQuery.criteria("tags").hasAnyOf(tags);
         }
+
         return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count,
             mongoItem -> getDozerMapper().map(mongoItem, Item.class));
     }
