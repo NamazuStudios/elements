@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.model.mission;
 
-import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
@@ -17,7 +16,6 @@ import java.util.Objects;
  *
  * Created by davidjbrooks on 12/03/2018.
  */
-
 public class Progress {
 
     @NotNull(groups={Update.class})
@@ -42,7 +40,7 @@ public class Progress {
     private ProgressMissionInfo mission;
 
     @ApiModelProperty("List of unclaimed rewards.")
-    private List<Reward> unclaimedRewards;
+    private List<PendingReward> pendingRewards;
 
     public String getId() {
         return id;
@@ -80,6 +78,14 @@ public class Progress {
         this.mission = mission;
     }
 
+    public List<PendingReward> getPendingRewards() {
+        return pendingRewards;
+    }
+
+    public void setPendingRewards(List<PendingReward> pendingRewards) {
+        this.pendingRewards = pendingRewards;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -90,12 +96,12 @@ public class Progress {
                 Objects.equals(getCurrentStep(), progress.getCurrentStep()) &&
                 Objects.equals(getRemaining(), progress.getRemaining()) &&
                 Objects.equals(getMission(), progress.getMission()) &&
-                Objects.equals(unclaimedRewards, progress.unclaimedRewards);
+                Objects.equals(pendingRewards, progress.pendingRewards);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getProfile(), getCurrentStep(), getRemaining(), getMission(), unclaimedRewards);
+        return Objects.hash(getId(), getProfile(), getCurrentStep(), getRemaining(), getMission(), pendingRewards);
     }
 
     @Override
@@ -106,7 +112,7 @@ public class Progress {
                 ", currentStep=" + currentStep +
                 ", remaining=" + remaining +
                 ", mission=" + mission +
-                ", unclaimedRewards=" + unclaimedRewards +
+                ", pendingRewards=" + pendingRewards +
                 '}';
     }
 

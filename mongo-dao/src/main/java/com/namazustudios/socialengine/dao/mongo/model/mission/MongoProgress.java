@@ -43,17 +43,14 @@ public class MongoProgress {
     @Embedded
     private MongoProgressMissionInfo mission;
 
-    @Embedded
-    private MongoStep currentStep;
+    @Property
+    private int sequence;
 
     @Property
     private int remaining;
 
-    @Property
-    private int stepSequence;
-
-    @Property
-    private List<MongoReward> unclaimedRewards;
+    @Reference
+    private List<MongoPendingReward> pendingRewards;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -80,11 +77,19 @@ public class MongoProgress {
     }
 
     public MongoStep getCurrentStep() {
-        return currentStep;
+        final int sequence = getSequence();
+        return getStepForSequence(sequence);
     }
 
-    public void setCurrentStep(MongoStep currentStep) {
-        this.currentStep = currentStep;
+    public MongoStep getStepForSequence(final int sequence) {
+
+        final MongoProgressMissionInfo mission = getMission();
+        final List<MongoStep> mongoSteps = mission.getSteps();
+
+        return (mongoSteps == null || mongoSteps.size() <= sequence) ?
+                mission.getFinalRepeatStep() :
+                mongoSteps.get(sequence);
+
     }
 
     public int getRemaining() {
@@ -103,20 +108,20 @@ public class MongoProgress {
         this.mission = mission;
     }
 
-    public int getStepSequence() {
-        return stepSequence;
+    public int getSequence() {
+        return sequence;
     }
 
-    public void setStepSequence(int stepSequence) {
-        this.stepSequence = stepSequence;
+    public void setSequence(int sequence) {
+        this.sequence = sequence;
     }
 
-    public List<MongoReward> getUnclaimedRewards() {
-        return unclaimedRewards;
+    public List<MongoPendingReward> getPendingRewards() {
+        return pendingRewards;
     }
 
-    public void setUnclaimedRewards(List<MongoReward> unclaimedRewards) {
-        this.unclaimedRewards = unclaimedRewards;
+    public void setPendingRewards(List<MongoPendingReward> pendingRewards) {
+        this.pendingRewards = pendingRewards;
     }
 
     @Override
@@ -125,19 +130,19 @@ public class MongoProgress {
         if (!(object instanceof MongoProgress)) return false;
         MongoProgress that = (MongoProgress) object;
         return getRemaining() == that.getRemaining() &&
-                getStepSequence() == that.getStepSequence() &&
+                getSequence() == that.getSequence() &&
                 Objects.equals(getObjectId(), that.getObjectId()) &&
                 Objects.equals(getVersion(), that.getVersion()) &&
                 Objects.equals(getProfile(), that.getProfile()) &&
                 Objects.equals(getMission(), that.getMission()) &&
                 Objects.equals(getCurrentStep(), that.getCurrentStep()) &&
-                Objects.equals(getUnclaimedRewards(), that.getUnclaimedRewards());
+                Objects.equals(getPendingRewards(), that.getPendingRewards());
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(getObjectId(), getVersion(), getProfile(), getMission(), getCurrentStep(), getRemaining(), getStepSequence(), getUnclaimedRewards());
+        return Objects.hash(getObjectId(), getVersion(), getProfile(), getMission(), getCurrentStep(), getRemaining(), getSequence(), getPendingRewards());
     }
 
     @Override
@@ -147,10 +152,10 @@ public class MongoProgress {
                 ", version='" + version + '\'' +
                 ", profile=" + profile +
                 ", mission=" + mission +
-                ", currentStep=" + currentStep +
+                ", currentStep=" + getCurrentStep() +
                 ", remaining=" + remaining +
-                ", stepSequence=" + stepSequence +
-                ", unclaimedRewards=" + unclaimedRewards +
+                ", sequence=" + sequence +
+                ", pendingRewards=" + pendingRewards +
                 '}';
     }
 

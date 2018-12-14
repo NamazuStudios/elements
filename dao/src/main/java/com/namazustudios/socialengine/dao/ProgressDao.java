@@ -6,8 +6,6 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.mission.Mission;
 import com.namazustudios.socialengine.model.mission.Progress;
-import com.namazustudios.socialengine.model.mission.Reward;
-import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 
@@ -104,10 +102,10 @@ public interface ProgressDao {
      * Advances {@link Progress} by the specified number of actions.
      *
      * @param progress the {@link Progress}
-     * @param amount the amount of actions to apply
+     * @param actionsPerformed the amount of actions to apply
      * @return
      */
-    Progress advanceProgress(Progress progress, int amount);
+    Progress advanceProgress(Progress progress, int actionsPerformed);
 
     /**
      * Gets all active {@link Progress} instances for the supplied {@link Profile} and {@link Mission} instance.

@@ -6,7 +6,9 @@ import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.ProgressDao;
 import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils.ContentionException;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
+import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgress;
+import com.namazustudios.socialengine.dao.mongo.model.mission.MongoStep;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
@@ -23,6 +25,7 @@ import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -30,9 +33,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.sql.Timestamp;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import static java.lang.System.currentTimeMillis;
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toList;
 
 @Singleton
 public class MongoProgressDao implements ProgressDao {
@@ -97,7 +104,7 @@ public class MongoProgressDao implements ProgressDao {
     }
 
     @Override
-    public Progress getProgress(String identifier) {
+    public Progress getProgress(final String identifier) {
         if (StringUtils.isEmpty(identifier)) {
             throw new NotFoundException("Unable to find progress with an id " + identifier);
         }
@@ -120,7 +127,8 @@ public class MongoProgressDao implements ProgressDao {
     }
 
     @Override
-    public Progress updateProgress(Progress progress) {
+    public Progress updateProgress(final Progress progress) {
+
         getValidationHelper().validateModel(progress, Update.class);
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(progress.getId());
@@ -129,21 +137,24 @@ public class MongoProgressDao implements ProgressDao {
         query.criteria("_id").equal(objectId);
 
         final UpdateOperations<MongoProgress> operations = getDatastore().createUpdateOperations(MongoProgress.class);
-        operations.set("currentStep", progress.getCurrentStep());
+
+        operations.set("version", randomUUID().toString());
         operations.set("remaining", progress.getRemaining());
+        operations.set("currentStep", progress.getCurrentStep());
 
         final FindAndModifyOptions options = new FindAndModifyOptions()
-                .returnNew(true)
-                .upsert(false);
+            .returnNew(true)
+            .upsert(false);
 
-        final MongoProgress updatedMongoItem = getDatastore().findAndModify(query, operations, options);
-        if (updatedMongoItem == null) {
+        final MongoProgress updatedMongoProgress = getDatastore().findAndModify(query, operations, options);
+
+        if (updatedMongoProgress == null) {
             throw new NotFoundException("Progress with id or name of " + progress.getId() + " does not exist");
         }
 
-        getObjectIndex().index(updatedMongoItem);
+        getObjectIndex().index(updatedMongoProgress);
 
-        return getDozerMapper().map(updatedMongoItem, Progress.class);
+        return getDozerMapper().map(updatedMongoProgress, Progress.class);
     }
 
     @Override
@@ -182,15 +193,33 @@ public class MongoProgressDao implements ProgressDao {
     }
 
     @Override
-    public Progress advanceProgress(final Progress progress, final int amount) {
+    public Progress advanceProgress(final Progress progress, final int actionsPerformed) {
+
+        final MongoProgress mongoProgress;
+
         try {
-            return getMongoConcurrentUtils().performOptimistic(ads -> doAdvanceProgress(progress, amount));
+            mongoProgress = getMongoConcurrentUtils().performOptimistic(ads -> doAdvanceProgress(progress, actionsPerformed));
         } catch (MongoConcurrentUtils.ConflictException e) {
             throw new TooBusyException(e);
         }
+
+        // To finalize the advancement, we clear the expiry of hte rewards.  The rationale here is if extra orphaned
+        // pending rewards exist, then the will be eventually cleared by the database.  However, sicne the actual
+        // MongoProress tracks the object IDs we will still have a consistent view even if orphans exist.  The expiry
+        // on the MongoPending reward is just to provide a means of garbage collecting unreferenced rewards.
+        final Query<MongoPendingReward> query = getDatastore().createQuery(MongoPendingReward.class);
+        query.field("progress").equal(mongoProgress);
+
+        final UpdateOperations<MongoPendingReward> updates = getDatastore().createUpdateOperations(MongoPendingReward.class);
+        updates.unset("expires");
+
+        getDatastore().update(query, updates, new UpdateOptions().multi(true).upsert(false));
+
+        return getDozerMapper().map(mongoProgress, Progress.class);
+
     }
 
-    private Progress doAdvanceProgress(final Progress progress, final int amount) throws ContentionException {
+    private MongoProgress doAdvanceProgress(final Progress progress, final int actionsPerformed) throws ContentionException {
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(progress.getId());
         final MongoProgress mongoProgress = getDatastore().get(MongoProgress.class, objectId);
@@ -207,10 +236,78 @@ public class MongoProgressDao implements ProgressDao {
         final UpdateOperations<MongoProgress> updates = getDatastore().createUpdateOperations(MongoProgress.class);
         updates.set("version", randomUUID().toString());
 
-        final int remaining = progress.getRemaining() - amount;
-        // TODO: Calculate Prizes and apply.
+        if (actionsPerformed < progress.getRemaining()) {
+            updates.dec("remaining", actionsPerformed);
+        } else {
+            advanceMission(updates, mongoProgress, actionsPerformed);
+        }
 
-        return getDozerMapper().map(mongoProgress, Progress.class);
+        final MongoProgress result = getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
+            .upsert(false)
+            .returnNew(true));
+
+        if (result == null) {
+            // This happens because either the Progress was deleted while applying the rewards, the version mismatched
+            // indicating that another process beat us to writing this to the database.  If it was deleted, the next
+            // go around will get the NotFoundException above.
+            throw new ContentionException();
+        }
+
+        return result;
+
+    }
+
+    private void advanceMission(final UpdateOperations<MongoProgress> updates,
+                                final MongoProgress mongoProgress,
+                                final int actionsPerformed) {
+
+        MongoStep step;
+        int completedSteps = 0;
+        int actionsToApply = actionsPerformed;
+
+        do {
+
+            // Determines the current step in the progress
+            step = mongoProgress.getStepForSequence(mongoProgress.getSequence() + completedSteps);
+
+            // We've hit the end of the mission the mission has no final repeat step and has no remaining
+            // steps.  Therefore the mission is assumed to be complete.  No further rewards will be issued
+            // and this effectively ignores the progress.
+
+            if (step == null) break;
+
+            // Assigns the rewards from the step
+
+            final List<MongoPendingReward> pendingRewards = step.getRewards()
+                .stream()
+                .filter(r -> r != null && r.getItem() != null)
+                .map(r -> {
+                    final MongoPendingReward pending = new MongoPendingReward();
+                    pending.setReward(r);
+                    pending.setObjectId(new ObjectId());
+                    pending.setProgress(mongoProgress);
+                    pending.setExpires(new Timestamp(currentTimeMillis()));
+                    getDatastore().insert(pending);
+                    return pending;
+                }).collect(toList());
+
+            updates.push("pendingRewards", pendingRewards);
+
+            // Increments the completed steps and applies to the remaining actions to apply.  We keep
+            // repeating this process until we have consumed all actions and assigned all remaining
+            // rewards to the Progress.
+
+            ++completedSteps;
+            actionsToApply -= step.getCount();
+
+        } while (actionsToApply > 0);
+
+        // Advances the remaining fields and then corrects the remaining steps.  If we hit the end of the mission
+        // where the Step is simply null, then we set the remaining to zero.  Future iterations of this should
+        // skip the mission.
+
+        updates.inc("sequence", completedSteps);
+        updates.set("remaining", step == null ? 0 : step.getCount() + actionsToApply);
 
     }
 
