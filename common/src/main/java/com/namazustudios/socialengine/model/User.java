@@ -202,6 +202,18 @@ public class User implements Serializable {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "User{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", level=" + level +
+                ", active=" + active +
+                ", facebookId='" + facebookId + '\'' +
+                '}';
+    }
+
     /**
      * Gets a special User object which is set to unprivileged.  This is used
      * as a palceholder when a user is not logged in.

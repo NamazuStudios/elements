@@ -165,4 +165,19 @@ public class MongoUser {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "MongoUser{" +
+                "objectId=" + objectId +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", hashAlgorithm='" + hashAlgorithm + '\'' +
+                ", salt=" + Arrays.toString(salt) +
+                ", passwordHash=" + Arrays.toString(passwordHash) +
+                ", level=" + level +
+                ", active=" + active +
+                ", facebookId='" + facebookId + '\'' +
+                '}';
+    }
+
 }

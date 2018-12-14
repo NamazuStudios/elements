@@ -6,12 +6,16 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.UserNotFoundException;
 import com.namazustudios.socialengine.model.User;
 import org.bson.types.ObjectId;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
+import static java.lang.String.format;
+import static java.lang.Thread.sleep;
+import static java.util.UUID.randomUUID;
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
@@ -20,6 +24,18 @@ public class MongoFacebookUserDaoTest {
     private UserDao userDao;
 
     private FacebookUserDao facebookUserDao;
+
+    @BeforeClass
+    public void seedOtherUsers() {
+        for (int i = 0; i < 50; ++i) {
+            final User user = new User();
+            user.setLevel(USER);
+            user.setActive(true);
+            user.setName(format("test%s", randomUUID()));
+            user.setEmail(format("test%s@example.com", randomUUID()));
+            getUserDao().createUserStrict(user);
+        }
+    }
 
     @Test
     public void testCreateOrRefreshWitnNoExistingUser() {
@@ -145,22 +161,6 @@ public class MongoFacebookUserDaoTest {
         final User user = getUserDao().getActiveUserByNameOrEmail("testy.mctesterson.1@example.com");
         user.setFacebookId("1245");
         getFacebookUserDao().connectActiveFacebookUserIfNecessary(user);
-    }
-
-    @Test(dependsOnMethods = "testConnectingFacebookIdFails", expectedExceptions = DuplicateException.class)
-    public void testMaliciousUserConnectingUser() {
-
-        final User user = new User();
-        user.setLevel(USER);
-        user.setActive(true);
-        user.setName("trudy.beekman@gmail.com");
-        user.setEmail("trudy.beekman@gmail.com");
-
-        final User inserted = getUserDao().createUserStrict(user);
-        inserted.setFacebookId("0987654321");
-
-        getFacebookUserDao().connectActiveFacebookUserIfNecessary(inserted);
-
     }
 
     public UserDao getUserDao() {

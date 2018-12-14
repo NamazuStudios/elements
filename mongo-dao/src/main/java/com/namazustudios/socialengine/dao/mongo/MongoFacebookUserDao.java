@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
 import static java.util.function.Function.identity;
 
@@ -35,8 +36,6 @@ import static java.util.function.Function.identity;
  * Created by patricktwohig on 6/25/17.
  */
 public class MongoFacebookUserDao implements FacebookUserDao {
-
-    private static final Logger logger = LoggerFactory.getLogger(MongoFacebookUserDao.class);
 
     private AdvancedDatastore datastore;
 
@@ -208,7 +207,7 @@ public class MongoFacebookUserDao implements FacebookUserDao {
 
         user.setEmail(nullToEmpty(user.getEmail()).trim());
         user.setName(nullToEmpty(user.getName()).trim());
-        user.setFacebookId(nullToEmpty(user.getFacebookId()));
+        user.setFacebookId(emptyToNull(nullToEmpty(user.getFacebookId()).trim()));
 
     }
 
