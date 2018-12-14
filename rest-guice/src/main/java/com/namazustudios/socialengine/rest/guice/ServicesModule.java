@@ -7,10 +7,7 @@ import com.namazustudios.socialengine.security.PasswordGenerator;
 import com.namazustudios.socialengine.security.SecureRandomPasswordGenerator;
 import com.namazustudios.socialengine.service.*;
 import com.namazustudios.socialengine.service.application.*;
-import com.namazustudios.socialengine.service.auth.AuthServiceProvider;
-import com.namazustudios.socialengine.service.auth.MockSessionServiceProvider;
-import com.namazustudios.socialengine.service.auth.StandardFacebookAuthService;
-import com.namazustudios.socialengine.service.auth.AnonSessionService;
+import com.namazustudios.socialengine.service.auth.*;
 import com.namazustudios.socialengine.service.friend.FacebookFriendServiceProvider;
 import com.namazustudios.socialengine.service.gameon.*;
 import com.namazustudios.socialengine.service.goods.ItemServiceProvider;
@@ -174,11 +171,14 @@ public class ServicesModule extends AbstractModule {
                 .toProvider(ProgressServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
+        bind(FacebookAuthService.class)
+                .toProvider(FacebookAuthServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
         bind(Attributes.class).toProvider(AttributesProvider.class);
 
         bind(MatchServiceUtils.class).to(StandardMatchServiceUtils.class);
         bind(SessionService.class).to(AnonSessionService.class);
-        bind(FacebookAuthService.class).to(StandardFacebookAuthService.class);
 
         bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
         bind(PasswordGenerator.class).to(SecureRandomPasswordGenerator.class).asEagerSingleton();
