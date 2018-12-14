@@ -21,11 +21,10 @@ public interface AdvancementService {
      * Begins a {@link Mission} by assigning and creating a new instance of {@link Progress}.  This is shorthand
      * for looking up a mission by name ({@link Mission#getName()}), setting the {@link Profile} and saving to the
      * database.
-     *
-     * @param profile the {@link Profile} of the person starting the mission
-     * @param mission the unique name of the {@link Mission}, as determined by {@link Mission#getName()}
+     *  @param profile the {@link Profile} of the person starting the mission
+     * @param missionNameOrId the unique name of the {@link Mission}, as determined by {@link Mission#getName()}
      */
-    Progress startMission(Profile profile, String mission);
+    Progress startMission(Profile profile, String missionNameOrId);
 
     /**
      * Advances {@link Progress} by decrementing the value specified by the amount, and returning the prizes rewarded

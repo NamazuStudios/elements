@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.model.mission;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.ValidationGroups.Create;
+import com.namazustudios.socialengine.model.ValidationGroups.Insert;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -15,27 +18,25 @@ import javax.validation.constraints.Null;
 
 public class Progress {
 
+    @NotNull(groups={Update.class})
+    @Null(groups={Create.class, Insert.class})
     @ApiModelProperty("The unique ID of the progress instance")
-    @Null(groups={ValidationGroups.Create.class, ValidationGroups.Insert.class})
-    @NotNull(groups={ValidationGroups.Update.class})
     private String id;
 
+    @NotNull(groups={Create.class, Insert.class, Update.class})
     @ApiModelProperty("The profile of the owner of this progress")
-    @Null(groups={ValidationGroups.Update.class})
-    @NotNull(groups={ValidationGroups.Create.class, ValidationGroups.Insert.class})
     private Profile profile;
 
+    @NotNull
     @ApiModelProperty("The current step")
-    @NotNull()
     private Step currentStep;
 
+    @NotNull
     @ApiModelProperty("The remaining actions")
-    @NotNull()
     private Integer remaining;
 
+    @NotNull(groups={Create.class, Insert.class, Update.class})
     @ApiModelProperty("The mission")
-    @Null(groups={ValidationGroups.Update.class})
-    @NotNull(groups={ValidationGroups.Create.class, ValidationGroups.Insert.class})
     private Mission mission;
 
 
@@ -74,7 +75,6 @@ public class Progress {
     public void setMission(Mission mission) {
         this.mission = mission;
     }
-
 
     @Override
     public boolean equals(Object o) {

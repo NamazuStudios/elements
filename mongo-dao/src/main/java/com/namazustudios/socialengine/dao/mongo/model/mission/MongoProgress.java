@@ -94,7 +94,6 @@ public class MongoProgress {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(getObjectId(), getProfile(), getCurrentStep(), getRemaining(), getMission());
     }
 
