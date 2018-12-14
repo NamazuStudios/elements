@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -23,13 +24,24 @@ import java.util.Objects;
         extractor = ObjectIdExtractor.class,
         processors = ObjectIdProcessor.class))
 @Entity(value = "progress", noClassnameStored = true)
+@Indexes({
+    @Index(fields = @Field("mission.name"))
+})
 public class MongoProgress {
 
     @Id
     private ObjectId objectId;
 
+    @Indexed
+    @Property()
+    private String version;
+
+    @Indexed
     @Reference
     private MongoProfile profile;
+
+    @Embedded
+    private MongoProgressMissionInfo mission;
 
     @Embedded
     private MongoStep currentStep;
@@ -38,7 +50,10 @@ public class MongoProgress {
     private int remaining;
 
     @Property
-    private MongoMission mission;
+    private int stepSequence;
+
+    @Property
+    private List<MongoReward> unclaimedRewards;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -46,6 +61,14 @@ public class MongoProgress {
 
     public void setObjectId(ObjectId id) {
         this.objectId = id;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     public MongoProfile getProfile() {
@@ -72,12 +95,28 @@ public class MongoProgress {
         this.remaining = remaining;
     }
 
-    public MongoMission getMission() {
+    public MongoProgressMissionInfo getMission() {
         return mission;
     }
 
-    public void setMission(MongoMission mission) {
+    public void setMission(MongoProgressMissionInfo mission) {
         this.mission = mission;
+    }
+
+    public int getStepSequence() {
+        return stepSequence;
+    }
+
+    public void setStepSequence(int stepSequence) {
+        this.stepSequence = stepSequence;
+    }
+
+    public List<MongoReward> getUnclaimedRewards() {
+        return unclaimedRewards;
+    }
+
+    public void setUnclaimedRewards(List<MongoReward> unclaimedRewards) {
+        this.unclaimedRewards = unclaimedRewards;
     }
 
     @Override
@@ -86,25 +125,32 @@ public class MongoProgress {
         if (!(object instanceof MongoProgress)) return false;
         MongoProgress that = (MongoProgress) object;
         return getRemaining() == that.getRemaining() &&
+                getStepSequence() == that.getStepSequence() &&
                 Objects.equals(getObjectId(), that.getObjectId()) &&
+                Objects.equals(getVersion(), that.getVersion()) &&
                 Objects.equals(getProfile(), that.getProfile()) &&
+                Objects.equals(getMission(), that.getMission()) &&
                 Objects.equals(getCurrentStep(), that.getCurrentStep()) &&
-                Objects.equals(getMission(), that.getMission());
+                Objects.equals(getUnclaimedRewards(), that.getUnclaimedRewards());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getProfile(), getCurrentStep(), getRemaining(), getMission());
+
+        return Objects.hash(getObjectId(), getVersion(), getProfile(), getMission(), getCurrentStep(), getRemaining(), getStepSequence(), getUnclaimedRewards());
     }
 
     @Override
     public String toString() {
         return "MongoProgress{" +
-                ", objectId='" + getObjectId() + '\'' +
-                ", profile='" + profile + '\'' +
-                ", currentStep='" + currentStep + '\'' +
-                ", remaining='" + remaining + '\'' +
-                ", mission='" + mission + '\'' +
+                "objectId=" + objectId +
+                ", version='" + version + '\'' +
+                ", profile=" + profile +
+                ", mission=" + mission +
+                ", currentStep=" + currentStep +
+                ", remaining=" + remaining +
+                ", stepSequence=" + stepSequence +
+                ", unclaimedRewards=" + unclaimedRewards +
                 '}';
     }
 

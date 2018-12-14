@@ -4,13 +4,16 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.ProgressDao;
+import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils.ContentionException;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgress;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
+import com.namazustudios.socialengine.model.mission.Mission;
 import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -27,6 +30,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.List;
+
+import static java.util.UUID.randomUUID;
 
 @Singleton
 public class MongoProgressDao implements ProgressDao {
@@ -45,8 +51,12 @@ public class MongoProgressDao implements ProgressDao {
 
     private MongoDBUtils mongoDBUtils;
 
+    private MongoConcurrentUtils mongoConcurrentUtils;
+
     @Override
-    public Pagination<Progress> getProgresses(Profile profile, int offset, int count)  { return getProgresses(profile, offset, count, null); }
+    public Pagination<Progress> getProgresses(Profile profile, int offset, int count)  {
+        return getProgresses(profile, offset, count, null);
+    }
 
     @Override
     public Pagination<Progress> getProgresses(Profile profile, int offset, int count, String search) {
@@ -79,6 +89,11 @@ public class MongoProgressDao implements ProgressDao {
         return getMongoDBUtils().paginationFromQuery(query, offset, count,
                 mongoItem -> getDozerMapper().map(mongoItem, Progress.class));
 
+    }
+
+    @Override
+    public List<Progress> getProgressesForProfileAndMission(Profile profile, Mission mission) {
+        return null;
     }
 
     @Override
@@ -133,20 +148,23 @@ public class MongoProgressDao implements ProgressDao {
 
     @Override
     public Progress createProgress(Progress progress) {
+
         getValidationHelper().validateModel(progress, Insert.class);
 
         normalize(progress);
 
-        final MongoProgress mongoItem = getDozerMapper().map(progress, MongoProgress.class);
+        final MongoProgress mongoProgress = getDozerMapper().map(progress, MongoProgress.class);
+        mongoProgress.setVersion(randomUUID().toString());
 
         try {
-            getDatastore().save(mongoItem);
+            getDatastore().save(mongoProgress);
         } catch (DuplicateKeyException e) {
             throw new DuplicateException(e);
         }
-        getObjectIndex().index(mongoItem);
 
-        return getDozerMapper().map(getDatastore().get(mongoItem), Progress.class);
+        getObjectIndex().index(mongoProgress);
+        return getDozerMapper().map(getDatastore().get(mongoProgress), Progress.class);
+
     }
 
     @Override
@@ -159,13 +177,44 @@ public class MongoProgressDao implements ProgressDao {
         }
     }
 
-
     private void normalize(Progress item) {
         // leave this stub here in case we implement some normalization logic later
     }
 
-    public AdvancedDatastore getDatastore() {
+    @Override
+    public Progress advanceProgress(final Progress progress, final int amount) {
+        try {
+            return getMongoConcurrentUtils().performOptimistic(ads -> doAdvanceProgress(progress, amount));
+        } catch (MongoConcurrentUtils.ConflictException e) {
+            throw new TooBusyException(e);
+        }
+    }
 
+    private Progress doAdvanceProgress(final Progress progress, final int amount) throws ContentionException {
+
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(progress.getId());
+        final MongoProgress mongoProgress = getDatastore().get(MongoProgress.class, objectId);
+
+        final Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
+
+        query.field("_id").equal(objectId);
+        query.field("version").equal(mongoProgress.getVersion());
+
+        if (mongoProgress == null) {
+            throw new NotFoundException("Progress with id not found: " + progress.getId());
+        }
+
+        final UpdateOperations<MongoProgress> updates = getDatastore().createUpdateOperations(MongoProgress.class);
+        updates.set("version", randomUUID().toString());
+
+        final int remaining = progress.getRemaining() - amount;
+        // TODO: Calculate Prizes and apply.
+
+        return getDozerMapper().map(mongoProgress, Progress.class);
+
+    }
+
+    public AdvancedDatastore getDatastore() {
         return datastore;
     }
 
@@ -226,8 +275,15 @@ public class MongoProgressDao implements ProgressDao {
 
     @Inject
     public void setObjectIndex(ObjectIndex objectIndex) {
-
         this.objectIndex = objectIndex;
+    }
+
+    public MongoConcurrentUtils getMongoConcurrentUtils() {
+        return mongoConcurrentUtils;
+    }
+
+    public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
+        this.mongoConcurrentUtils = mongoConcurrentUtils;
     }
 
 }

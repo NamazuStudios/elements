@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.service.advancement;
 import com.namazustudios.socialengine.dao.MissionDao;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.ProgressDao;
-import com.namazustudios.socialengine.model.advancement.Advancement;
 import com.namazustudios.socialengine.model.mission.Mission;
 import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.mission.Step;
@@ -12,6 +11,8 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 
 import javax.inject.Inject;
 import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 public class StandardAdvancementService implements AdvancementService {
 
@@ -65,14 +66,15 @@ public class StandardAdvancementService implements AdvancementService {
     }
 
     @Override
-    public Advancement advanceProgress(final Profile profile, final String mission, final int amount) {
+    public List<Progress> advanceProgress(final Profile profile, final String missionNameOrId, final int amount) {
 
+        final Mission mission = getMissionDao().getMissionByNameOrId(missionNameOrId);
+        final List<Progress> progressList = getProgressDao().getProgressesForProfileAndMission(profile, mission);
 
-        for (int remaining = amount; remaining > 0;) {
-
-        }
-
-        return null;
+        return progressList
+            .stream()
+            .map(progress -> getProgressDao().advanceProgress(progress, amount))
+            .collect(toList());
 
     }
 

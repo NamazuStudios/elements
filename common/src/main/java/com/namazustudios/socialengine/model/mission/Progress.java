@@ -9,6 +9,8 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents the mission state (i.e., progress).
@@ -37,8 +39,10 @@ public class Progress {
 
     @NotNull(groups={Create.class, Insert.class, Update.class})
     @ApiModelProperty("The mission")
-    private Mission mission;
+    private ProgressMissionInfo mission;
 
+    @ApiModelProperty("List of unclaimed rewards.")
+    private List<Reward> unclaimedRewards;
 
     public String getId() {
         return id;
@@ -68,46 +72,41 @@ public class Progress {
 
     public void setRemaining(Integer remaining) { this.remaining = remaining; }
 
-    public Mission getMission() {
+    public ProgressMissionInfo getMission() {
         return mission;
     }
 
-    public void setMission(Mission mission) {
+    public void setMission(ProgressMissionInfo mission) {
         this.mission = mission;
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Progress)) return false;
-
-        Progress progress = (Progress) o;
-
-        if (getId() != null ? !getId().equals(progress.getId()) : progress.getId() != null) return false;
-        if (getProfile() != null ? !getProfile().equals(progress.getProfile()) : progress.getProfile() != null) return false;
-        if (getCurrentStep() != null ? !getCurrentStep().equals(progress.getCurrentStep()) : progress.getCurrentStep() != null) return false;
-        if (getRemaining() != null ? !getRemaining().equals(progress.getRemaining()) : progress.getRemaining() != null) return false;
-        return (getMission() != null ? !getMission().equals(progress.getMission()) : progress.getMission() != null);
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Progress)) return false;
+        Progress progress = (Progress) object;
+        return Objects.equals(getId(), progress.getId()) &&
+                Objects.equals(getProfile(), progress.getProfile()) &&
+                Objects.equals(getCurrentStep(), progress.getCurrentStep()) &&
+                Objects.equals(getRemaining(), progress.getRemaining()) &&
+                Objects.equals(getMission(), progress.getMission()) &&
+                Objects.equals(unclaimedRewards, progress.unclaimedRewards);
     }
 
     @Override
     public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + (getProfile() != null ? getProfile().hashCode() : 0);
-        result = 31 * result + (getCurrentStep() != null ? getCurrentStep().hashCode() : 0);
-        result = 31 * result + (getRemaining() != null ? getRemaining().hashCode() : 0);
-        result = 31 * result + (getMission() != null ? getMission().hashCode() : 0);
-        return result;
+        return Objects.hash(getId(), getProfile(), getCurrentStep(), getRemaining(), getMission(), unclaimedRewards);
     }
 
     @Override
     public String toString() {
         return "Progress{" +
-                ", id='" + id + '\'' +
-                ", getProfile='" + profile + '\'' +
-                ", currentStep='" + currentStep + '\'' +
-                ", remaining='" + remaining + '\'' +
-                ", mission='" + mission + '\'' +
+                "id='" + id + '\'' +
+                ", profile=" + profile +
+                ", currentStep=" + currentStep +
+                ", remaining=" + remaining +
+                ", mission=" + mission +
+                ", unclaimedRewards=" + unclaimedRewards +
                 '}';
     }
 

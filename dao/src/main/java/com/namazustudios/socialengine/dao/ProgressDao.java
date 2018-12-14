@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.mission.Mission;
 import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.mission.Reward;
 import com.namazustudios.socialengine.model.mission.Step;
@@ -41,8 +42,6 @@ public interface ProgressDao {
      * @return a {@link Pagination} of {@link Progress} objects.
      */
     Pagination<Progress> getProgresses(Profile profile, int offset, int count, String search);
-
-
 
     /**
      * Gets progresses specifying the offset and the count.
@@ -100,5 +99,23 @@ public interface ProgressDao {
      * @param progressId the progress ID
      */
     void deleteProgress(String progressId);
+
+    /**
+     * Advances {@link Progress} by the specified number of actions.
+     *
+     * @param progress the {@link Progress}
+     * @param amount the amount of actions to apply
+     * @return
+     */
+    Progress advanceProgress(Progress progress, int amount);
+
+    /**
+     * Gets all active {@link Progress} instances for the supplied {@link Profile} and {@link Mission} instance.
+     *
+     * @param profile the {@link Profile} linked to the progress
+     * @param mission the {@link Mission} linked to the progress
+     * @return all active {@link Progress} instances
+     */
+    List<Progress> getProgressesForProfileAndMission(Profile profile, Mission mission);
 
 }

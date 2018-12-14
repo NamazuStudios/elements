@@ -8,6 +8,8 @@ import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 
+import java.util.List;
+
 /**
  * Provides logic to advance a {@link Profile} through a {@link Mission}.
  */
@@ -21,7 +23,8 @@ public interface AdvancementService {
      * Begins a {@link Mission} by assigning and creating a new instance of {@link Progress}.  This is shorthand
      * for looking up a mission by name ({@link Mission#getName()}), setting the {@link Profile} and saving to the
      * database.
-     *  @param profile the {@link Profile} of the person starting the mission
+     *
+     * @param profile the {@link Profile} of the person starting the mission
      * @param missionNameOrId the unique name of the {@link Mission}, as determined by {@link Mission#getName()}
      */
     Progress startMission(Profile profile, String missionNameOrId);
@@ -42,10 +45,10 @@ public interface AdvancementService {
      * Additionally, the operation must be performed atomically without fear of race conditions.
      *
      * @param profile the {@link Profile} tracking the {@link Mission}
-     * @param mission the {@link Mission}'s name as determined by {@link Mission#getName()}.
+     * @param missionNameOrId the {@link Mission}'s name as determined by {@link Mission#getName()}.
      * @param amount the amount of actions to apply to the {@link Progress#getRemaining()}
      * @return the {@link Advancement}, never null
      */
-    Advancement advanceProgress(Profile profile, String mission, int amount);
+    List<Progress> advanceProgress(Profile profile, String missionNameOrId, int amount);
 
 }
