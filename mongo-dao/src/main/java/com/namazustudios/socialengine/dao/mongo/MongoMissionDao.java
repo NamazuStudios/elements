@@ -4,7 +4,7 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.MissionDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoItem;
+import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoMission;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoReward;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoStep;
@@ -28,14 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.google.common.collect.Streams.concat;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 
 public class MongoMissionDao implements MissionDao {

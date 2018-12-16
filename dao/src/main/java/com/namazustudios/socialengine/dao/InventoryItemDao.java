@@ -47,7 +47,7 @@ public interface InventoryItemDao {
      * @param count the count
      * @return a {@link Pagination} of {@link InventoryItem} objects.
      */
-    Pagination<InventoryItem> getInventoryItems(User user, String itemNameOrId, int offset, int count);
+    InventoryItem getInventoryItem(User user, String itemNameOrId, int offset, int count);
 
     /**
      * Gets the specific inventory item with the id, or throws a {@link NotFoundException} if the

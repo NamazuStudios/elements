@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rest.inventory;
 
 import com.namazustudios.socialengine.exception.InvalidParameterException;
-import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.CreateInventoryItem;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
@@ -60,7 +59,7 @@ public class SimpleInventoryItemResource {
     @ApiOperation(value = "Adjust the quantity of the inventory item for the specified item",
             notes = "Adjust the quantity of the first (primary) inventory item for the specified item")
     public InventoryItem adjustInventoryItemQuantity(@PathParam("itemNameOrId") final String itemNameOrId,
-             InventoryItemQuantityAdjustment inventoryItemQuantityAdjustment) {
+                                                     InventoryItemQuantityAdjustment inventoryItemQuantityAdjustment) {
 
         if(null == inventoryItemQuantityAdjustment) {
             throw new InvalidParameterException("InventoryItemQuantityAdjustment can not be null.");

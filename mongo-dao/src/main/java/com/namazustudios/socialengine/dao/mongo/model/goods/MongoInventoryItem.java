@@ -1,15 +1,16 @@
-package com.namazustudios.socialengine.dao.mongo.model;
+package com.namazustudios.socialengine.dao.mongo.model.goods;
 
 import com.namazustudios.elements.fts.annotation.SearchableDocument;
 import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
+import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
+import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
+import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
+import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 @SearchableIdentity(@SearchableField(
@@ -30,28 +31,31 @@ import java.util.Set;
 public class MongoInventoryItem {
 
     @Id
-    private ObjectId objectId;
+    private MongoInventoryItemId objectId;
 
     @Reference
-    @Indexed()
+    @Indexed
     private MongoItem item;
 
     @Reference
-    @Indexed()
+    @Indexed
     private MongoUser user;
 
     @Property
     private Integer quantity;
 
     @Property
-    @Indexed()
+    @Indexed
     private Integer priority;
 
-    public ObjectId getObjectId() {
+    @Reference
+    private List<MongoPendingReward> pendingRewards;
+
+    public MongoInventoryItemId getObjectId() {
         return objectId;
     }
 
-    public void setObjectId(ObjectId objectId) {
+    public void setObjectId(MongoInventoryItemId objectId) {
         this.objectId = objectId;
     }
 
@@ -85,31 +89,42 @@ public class MongoInventoryItem {
         this.priority = priority;
     }
 
+    public List<MongoPendingReward> getPendingRewards() {
+        return pendingRewards;
+    }
+
+    public void setPendingRewards(List<MongoPendingReward> pendingRewards) {
+        this.pendingRewards = pendingRewards;
+    }
+
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        MongoInventoryItem mongoInventoryItem = (MongoInventoryItem) o;
-
-        if (getObjectId() != null ? !getObjectId().equals(mongoInventoryItem.getObjectId()) : mongoInventoryItem.getObjectId() != null) return false;
-        if (getUser() != null ? !getUser().equals(mongoInventoryItem.getUser()) : mongoInventoryItem.getUser() != null) return false;
-        if (getItem() != null ? !getItem().equals(mongoInventoryItem.getItem()) : mongoInventoryItem.getItem() != null) return false;
-        if (getQuantity() != null ? !getItem().equals(mongoInventoryItem.getQuantity()) : mongoInventoryItem.getQuantity() != null) return false;
-        return (getPriority() != null ? !getPriority().equals(mongoInventoryItem.getPriority()) : mongoInventoryItem.getPriority() != null);
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof MongoInventoryItem)) return false;
+        MongoInventoryItem that = (MongoInventoryItem) object;
+        return Objects.equals(getObjectId(), that.getObjectId()) &&
+                Objects.equals(getItem(), that.getItem()) &&
+                Objects.equals(getUser(), that.getUser()) &&
+                Objects.equals(getQuantity(), that.getQuantity()) &&
+                Objects.equals(getPriority(), that.getPriority()) &&
+                Objects.equals(getPendingRewards(), that.getPendingRewards());
     }
 
     @Override
     public int hashCode() {
-        int result = getObjectId() != null ? getObjectId().hashCode() : 0;
-        result = 31 * result + (getUser() != null ? getUser().hashCode() : 0);
-        result = 31 * result + (getItem() != null ? getItem().hashCode() : 0);
-        result = 31 * result + (getQuantity() != null ? getQuantity().hashCode() : 0);
-        result = 31 * result + (getPriority() != null ? getPriority().hashCode() : 0);
-        return result;
+        return Objects.hash(getObjectId(), getItem(), getUser(), getQuantity(), getPriority(), getPendingRewards());
     }
+
+    @Override
+    public String toString() {
+        return "MongoInventoryItem{" +
+                "objectId=" + objectId +
+                ", item=" + item +
+                ", user=" + user +
+                ", quantity=" + quantity +
+                ", priority=" + priority +
+                ", pendingRewards=" + pendingRewards +
+                '}';
+    }
+
 }

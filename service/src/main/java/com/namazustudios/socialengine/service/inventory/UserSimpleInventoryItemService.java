@@ -29,7 +29,6 @@ public class UserSimpleInventoryItemService implements SimpleInventoryItemServic
         return inventoryItemDao.getInventoryItems(user, offset, count, query);
     }
 
-
     @Override
     public InventoryItem adjustInventoryItemQuantity(String itemNameOrId, Integer quantityDelta)  { throw new ForbiddenException("Unprivileged requests are unable to modify inventory items."); }
 

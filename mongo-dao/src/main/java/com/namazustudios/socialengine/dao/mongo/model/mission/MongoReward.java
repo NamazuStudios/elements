@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
-import com.namazustudios.socialengine.dao.mongo.model.MongoItem;
-import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Reference;

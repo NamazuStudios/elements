@@ -4,8 +4,6 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.goods.Item;
 
-import java.util.Set;
-
 public interface SimpleInventoryItemService {
 
     /**

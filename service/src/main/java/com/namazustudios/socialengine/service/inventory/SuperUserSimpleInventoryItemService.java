@@ -2,11 +2,9 @@ package com.namazustudios.socialengine.service.inventory;
 
 import com.namazustudios.socialengine.dao.ItemDao;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItemService implements SimpleInventoryItemService {
 

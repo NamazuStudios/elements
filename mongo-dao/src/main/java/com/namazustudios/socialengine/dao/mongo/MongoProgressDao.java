@@ -35,7 +35,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.UUID.randomUUID;
