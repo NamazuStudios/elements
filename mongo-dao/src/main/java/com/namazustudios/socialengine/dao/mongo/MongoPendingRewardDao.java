@@ -184,7 +184,6 @@ public class MongoPendingRewardDao implements PendingRewardDao {
 
         final Query<PendingReward> query = getDatastore().createQuery(PendingReward.class);
         query.field("_id").in(objectIds);
-        query.field("state").equal(PENDING);
 
         final List<PendingReward> flaggedPendingRewards = new ArrayList<>(query.asList());
 
