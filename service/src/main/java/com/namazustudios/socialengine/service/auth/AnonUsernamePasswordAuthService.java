@@ -68,8 +68,6 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
         final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
         session.setExpiry(expiry);
 
-
-
         return getSessionDao().create(session);
 
     }

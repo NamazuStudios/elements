@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.rest.security.FacebookAuthResource;
 import com.namazustudios.socialengine.rest.security.UsernamePasswordResource;
 import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
+import com.namazustudios.socialengine.rest.user.UserResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
