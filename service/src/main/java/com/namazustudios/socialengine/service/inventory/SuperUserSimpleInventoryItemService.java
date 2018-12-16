@@ -7,8 +7,11 @@ import com.namazustudios.socialengine.model.inventory.InventoryItem;
 public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItemService implements SimpleInventoryItemService {
 
     @Override
-    public InventoryItem adjustInventoryItemQuantity(final String itemNameOrId, final int quantityDelta) {
-        return getInventoryItemDao().adjustQuantityForItem(itemNameOrId, quantityDelta);
+    public InventoryItem adjustInventoryItemQuantity(
+            final User user,
+            final String itemNameOrId,
+            final int quantityDelta) {
+        return getInventoryItemDao().adjustQuantityForItem(user, itemNameOrId, SIMPLE_PRIORITY, quantityDelta);
     }
 
     @Override
@@ -17,7 +20,7 @@ public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItem
 
         inventoryItem.setUser(user);
         inventoryItem.setItem(item);
-        inventoryItem.setPriority(0);
+        inventoryItem.setPriority(SIMPLE_PRIORITY);
         inventoryItem.setQuantity(initialQuantity);
 
         return getInventoryItemDao().createInventoryItem(inventoryItem);

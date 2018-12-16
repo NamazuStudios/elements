@@ -33,20 +33,16 @@ public class MongoInventoryItem {
     @Id
     private MongoInventoryItemId objectId;
 
-    @Reference
     @Indexed
+    @Reference
     private MongoItem item;
 
-    @Reference
     @Indexed
+    @Reference
     private MongoUser user;
 
     @Property
     private Integer quantity;
-
-    @Property
-    @Indexed
-    private Integer priority;
 
     @Reference
     private List<MongoPendingReward> pendingRewards;
@@ -81,14 +77,6 @@ public class MongoInventoryItem {
         this.quantity = quantity;
     }
 
-    public Integer getPriority() {
-        return priority;
-    }
-
-    public void setPriority(Integer priority) {
-        this.priority = priority;
-    }
-
     public List<MongoPendingReward> getPendingRewards() {
         return pendingRewards;
     }
@@ -106,13 +94,12 @@ public class MongoInventoryItem {
                 Objects.equals(getItem(), that.getItem()) &&
                 Objects.equals(getUser(), that.getUser()) &&
                 Objects.equals(getQuantity(), that.getQuantity()) &&
-                Objects.equals(getPriority(), that.getPriority()) &&
                 Objects.equals(getPendingRewards(), that.getPendingRewards());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getItem(), getUser(), getQuantity(), getPriority(), getPendingRewards());
+        return Objects.hash(getObjectId(), getItem(), getUser(), getQuantity(), getPendingRewards());
     }
 
     @Override
@@ -122,7 +109,6 @@ public class MongoInventoryItem {
                 ", item=" + item +
                 ", user=" + user +
                 ", quantity=" + quantity +
-                ", priority=" + priority +
                 ", pendingRewards=" + pendingRewards +
                 '}';
     }

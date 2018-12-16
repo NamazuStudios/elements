@@ -8,6 +8,11 @@ import com.namazustudios.socialengine.model.goods.Item;
 public interface SimpleInventoryItemService {
 
     /**
+     * The priority for use by the {@link SimpleInventoryItemService}
+     */
+    int SIMPLE_PRIORITY = 0;
+
+    /**
      * Returns the {@link InventoryItem} associated with the specified {@Link Item}.
      *
      * @param itemNameOrId the value of {@link Item#getId()} or {@link Item#getName()}
@@ -37,11 +42,13 @@ public interface SimpleInventoryItemService {
     /**
      * Adjusts the quantity of the {@link InventoryItem} associated with the specified {@Link Item}.
      *
+     *
+     * @param user
      * @param itemNameOrId the value of {@link Item#getId()} or {@link Item#getName()}
      * @param quantityDelta the amount by which to adjust the quantity of the {@Link InventoryItem}
      * @return the {@link InventoryItem} as it was written to the database
      */
-    InventoryItem adjustInventoryItemQuantity(String itemNameOrId, int quantityDelta);
+    InventoryItem adjustInventoryItemQuantity(User user, String itemNameOrId, int quantityDelta);
 
     /**
      * Creates a new {@link InventoryItem} for the specified {@link Item}.

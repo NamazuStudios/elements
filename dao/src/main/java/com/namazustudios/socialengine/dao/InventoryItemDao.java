@@ -19,6 +19,14 @@ import com.namazustudios.socialengine.model.Pagination;
 public interface InventoryItemDao {
 
     /**
+     * Gets the specific inventory item with the id, or throws a {@link NotFoundException} if the
+     * inventory item can't be found.
+     *
+     * @return the {@link InventoryItem} that was requested, never null
+     */
+    InventoryItem getInventoryItem(String inventoryItemId);
+
+    /**
      * Gets inventory items specifying the offset and the count.
      *
      * @param user the {@link User} that owns the items
@@ -38,25 +46,6 @@ public interface InventoryItemDao {
      * @return a {@link Pagination} of {@link InventoryItem} objects.
      */
     Pagination<InventoryItem> getInventoryItems(User user, int offset, int count, String search);
-
-    /**
-     * Gets inventory items specifying the offset and the count, specifying a search filter.
-     *
-     * @param user the {@link User} that owns the items
-     * @param itemNameOrId an item name or ID to limit the results
-     * @param offset the offset
-     * @param count the count
-     * @return a {@link Pagination} of {@link InventoryItem} objects.
-     */
-    InventoryItem getInventoryItem(User user, String itemNameOrId, int offset, int count);
-
-    /**
-     * Gets the specific inventory item with the id, or throws a {@link NotFoundException} if the
-     * inventory item can't be found.
-     *
-     * @return the {@link InventoryItem} that was requested, never null
-     */
-    InventoryItem getInventoryItem(String inventoryItemId);
 
     /**
      * Gets the primary (single) inventory item for with the item name or id, or throws a {@link NotFoundException}
@@ -90,12 +79,15 @@ public interface InventoryItemDao {
     InventoryItem createInventoryItem(InventoryItem inventoryItem);
 
     /**
-     * Adjusts the quantity of the supplied
+     * Adjusts the quantity of the supplied item and user.
+     *
+     * @param user the {@link User} for which to adjust the item.
      * @param itemNameOrId the {@link Item#getName()} or {@link Item#getId()}
+     * @param priority the priority of the item slot
      * @param quantityDelta the amount to adjust the quantity by
      * @return the updated {@link InventoryItem}
      */
-    InventoryItem adjustQuantityForItem(String itemNameOrId, int quantityDelta);
+    InventoryItem adjustQuantityForItem(User user, String itemNameOrId, int priority, int quantityDelta);
 
     /**
      * Deletes an inventory item using the value of {@link InventoryItem#getId()}.

@@ -72,8 +72,14 @@ public class SimpleInventoryItemResource {
             @PathParam("itemNameOrId")
             final String itemNameOrId,
             final InventoryItemQuantityAdjustment inventoryItemQuantityAdjustment) {
+
         getValidationHelper().validateModel(inventoryItemQuantityAdjustment);
-        return getSimpleInventoryItemService().adjustInventoryItemQuantity(itemNameOrId, inventoryItemQuantityAdjustment.getQuantityDelta());
+
+        return getSimpleInventoryItemService().adjustInventoryItemQuantity(
+            inventoryItemQuantityAdjustment.getUser(),
+            itemNameOrId,
+            inventoryItemQuantityAdjustment.getQuantityDelta());
+
     }
 
     @POST
