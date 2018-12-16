@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rest.guice;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.PrivateModule;
 import com.google.inject.servlet.ServletScopes;
 import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.security.PasswordGenerator;
@@ -30,14 +31,19 @@ import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvid
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
 import com.namazustudios.socialengine.util.DisplayNameGenerator;
 import com.namazustudios.socialengine.util.SimpleDisplayNameGenerator;
+import org.dozer.Mapper;
 
 /**
  * Created by patricktwohig on 3/19/15.
  */
-public class ServicesModule extends AbstractModule {
+public class ServicesModule extends PrivateModule {
 
     @Override
     protected void configure() {
+
+        bind(Mapper.class)
+                .toProvider(ServicesDozerMapperProvider.class)
+                .asEagerSingleton();
 
         bind(UsernamePasswordAuthService.class)
                 .toProvider(AuthServiceProvider.class)
@@ -183,6 +189,40 @@ public class ServicesModule extends AbstractModule {
         bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
         bind(PasswordGenerator.class).to(SecureRandomPasswordGenerator.class).asEagerSingleton();
         bind(DisplayNameGenerator.class).to(SimpleDisplayNameGenerator.class).asEagerSingleton();
+
+        expose(UsernamePasswordAuthService.class);
+        expose(SocialCampaignService.class);
+        expose(UserService.class);
+        expose(ShortLinkService.class);
+        expose(ApplicationService.class);
+        expose(ApplicationConfigurationService.class);
+        expose(PSNApplicationConfigurationService.class);
+        expose(FacebookApplicationConfigurationService.class);
+        expose(ProfileService.class);
+        expose(MatchService.class);
+        expose(ManifestService.class);
+        expose(MatchmakingApplicationConfigurationService.class);
+        expose(FirebaseApplicationConfigurationService.class);
+        expose(FCMRegistrationService.class);
+        expose(ScoreService.class);
+        expose(RankService.class);
+        expose(LeaderboardService.class);
+        expose(FriendService.class);
+        expose(FacebookFriendService.class);
+        expose(MockSessionService.class);
+        expose(GameOnApplicationConfigurationService.class);
+        expose(GameOnRegistrationService.class);
+        expose(GameOnSessionService.class);
+        expose(GameOnTournamentService.class);
+        expose(GameOnPlayerTournamentService.class);
+        expose(GameOnMatchService.class);
+        expose(GameOnAdminPrizeService.class);
+        expose(GameOnGamePrizeService.class);
+        expose(ItemService.class);
+        expose(SimpleInventoryItemService.class);
+        expose(MissionService.class);
+        expose(ProgressService.class);
+        expose(FacebookAuthService.class);
 
     }
 

@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class ProgressMissionInfo {
@@ -25,6 +26,9 @@ public class ProgressMissionInfo {
 
     @ApiModelProperty("The final repeating step (may be null if step(s) are specified)")
     private Step finalRepeatStep;
+
+    @ApiModelProperty("The metadata for this mission")
+    private Map<String, Object> metadata;
 
     public String getName() {
         return name;
@@ -66,6 +70,14 @@ public class ProgressMissionInfo {
         this.finalRepeatStep = finalRepeatStep;
     }
 
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -75,12 +87,13 @@ public class ProgressMissionInfo {
                 Objects.equals(getDisplayName(), that.getDisplayName()) &&
                 Objects.equals(getDescription(), that.getDescription()) &&
                 Objects.equals(getSteps(), that.getSteps()) &&
-                Objects.equals(getFinalRepeatStep(), that.getFinalRepeatStep());
+                Objects.equals(getFinalRepeatStep(), that.getFinalRepeatStep()) &&
+                Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getDisplayName(), getDescription(), getSteps(), getFinalRepeatStep());
+        return Objects.hash(getName(), getDisplayName(), getDescription(), getSteps(), getFinalRepeatStep(), getMetadata());
     }
 
     @Override
@@ -91,6 +104,7 @@ public class ProgressMissionInfo {
                 ", description='" + description + '\'' +
                 ", steps=" + steps +
                 ", finalRepeatStep=" + finalRepeatStep +
+                ", metadata=" + metadata +
                 '}';
     }
 

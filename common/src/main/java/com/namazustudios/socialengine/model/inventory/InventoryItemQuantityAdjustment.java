@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 
 public class InventoryItemQuantityAdjustment {
+
     @NotNull
     @ApiModelProperty("The delta to be applied to the inventory item quantity (positive or negative)")
     private Integer quantityDelta;

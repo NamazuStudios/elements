@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service.inventory;
 
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.goods.Item;
 
@@ -40,21 +41,16 @@ public interface SimpleInventoryItemService {
      * @param quantityDelta the amount by which to adjust the quantity of the {@Link InventoryItem}
      * @return the {@link InventoryItem} as it was written to the database
      */
-    InventoryItem adjustInventoryItemQuantity(String itemNameOrId, Integer quantityDelta);
+    InventoryItem adjustInventoryItemQuantity(String itemNameOrId, int quantityDelta);
 
     /**
      * Creates a new {@link InventoryItem} for the specified {@link Item}.
      *
-     * @param itemNameOrId the value of {@link Item#getId()} or {@link Item#getName()}
+     * @param user the user to own the {@link InventoryItem}
+     * @param item the {@link Item} to use
      * @param initialQuantity the initial quantity
      * @return the {@link InventoryItem} as it was written to the database
      */
-    InventoryItem createInventoryItem(String itemNameOrId, Integer initialQuantity);
+    InventoryItem createInventoryItem(User user, Item item, int initialQuantity);
 
-    /**
-     * Deletes the single {@link InventoryItem} associated with {@link Item}.
-     *
-     * @param itemNameOrId the value of {@link Item#getId()} or {@link Item#getName()}
-     */
-    void deleteInventoryItem(String itemNameOrId);
 }

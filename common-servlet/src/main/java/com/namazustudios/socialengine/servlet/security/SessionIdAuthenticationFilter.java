@@ -38,16 +38,16 @@ public class SessionIdAuthenticationFilter implements Filter {
         final HttpServletRequest request = (HttpServletRequest) _request;
         final HttpServletResponse response = (HttpServletResponse) _response;
 
-        final String sessionId = request.getHeader(SESSION_SECRET);
+        final String sessionSecret = request.getHeader(SESSION_SECRET);
 
-        if (sessionId == null) {
+        if (sessionSecret == null) {
             chain.doFilter(request, response);
         } else {
 
             final Session session;
 
             try {
-                session = getSessionService().checkAndRefreshSessionIfNecessary(sessionId);
+                session = getSessionService().checkAndRefreshSessionIfNecessary(sessionSecret);
             } catch (final ForbiddenException ex) {
                 response.setStatus(SC_FORBIDDEN);
                 return;

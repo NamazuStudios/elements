@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.dao;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.exception.NotFoundException;
@@ -89,9 +90,18 @@ public interface InventoryItemDao {
     InventoryItem createInventoryItem(InventoryItem inventoryItem);
 
     /**
-     * Deletes an inventory item.
+     * Adjusts the quantity of the supplied
+     * @param itemNameOrId the {@link Item#getName()} or {@link Item#getId()}
+     * @param quantityDelta the amount to adjust the quantity by
+     * @return the updated {@link InventoryItem}
+     */
+    InventoryItem adjustQuantityForItem(String itemNameOrId, int quantityDelta);
+
+    /**
+     * Deletes an inventory item using the value of {@link InventoryItem#getId()}.
      *
      * @param inventoryItemId the inventory item ID
      */
     void deleteInventoryItem(String inventoryItemId);
+
 }

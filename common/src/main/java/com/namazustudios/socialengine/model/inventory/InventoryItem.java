@@ -1,12 +1,17 @@
 package com.namazustudios.socialengine.model.inventory;
 
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.ValidationGroups.Create;
+import com.namazustudios.socialengine.model.ValidationGroups.Insert;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.goods.Item;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -18,6 +23,8 @@ import java.util.Objects;
 @ApiModel
 public class InventoryItem implements Serializable {
 
+    @Null(groups = {Create.class, Insert.class})
+    @NotNull(groups = Update.class)
     @ApiModelProperty("The unique ID of the inventory item itself.")
     private String id;
 

@@ -5,9 +5,11 @@ import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.ProgressDao;
 import com.namazustudios.socialengine.model.mission.Mission;
 import com.namazustudios.socialengine.model.mission.Progress;
+import com.namazustudios.socialengine.model.mission.ProgressMissionInfo;
 import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -15,6 +17,8 @@ import java.util.List;
 import static java.util.stream.Collectors.toList;
 
 public class StandardAdvancementService implements AdvancementService {
+
+    private Mapper mapper;
 
     private ProfileDao profileDao;
 
@@ -31,9 +35,12 @@ public class StandardAdvancementService implements AdvancementService {
         progress.setProfile(active);
 
         final Mission mission = getMissionDao().getMissionByNameOrId(missionNameOrId);
-        progress.setMission(mission);
+        final ProgressMissionInfo progressMissionInfo = getMapper().map(mission, ProgressMissionInfo.class);
+        progress.setMission(progressMissionInfo);
 
-        if (mission.getSteps() == null) {
+        final List<Step> missionSteps = mission.getSteps();
+
+        if (missionSteps == null) {
 
             final Step step = mission.getFinalRepeatStep();
 
@@ -47,9 +54,7 @@ public class StandardAdvancementService implements AdvancementService {
 
         } else {
 
-            final List<Step> missionSteps = mission.getSteps();
-
-            if (missionSteps == null || missionSteps.isEmpty()) {
+            if (missionSteps.isEmpty()) {
                 // This should not be necessary.  See SOC-249
                 throw new InternalException("Corrupted Mission.  Missing steps. (" + mission.getName() + ")");
             }
@@ -76,6 +81,15 @@ public class StandardAdvancementService implements AdvancementService {
             .map(progress -> getProgressDao().advanceProgress(progress, amount))
             .collect(toList());
 
+    }
+
+    public Mapper getMapper() {
+        return mapper;
+    }
+
+    @Inject
+    public void setMapper(Mapper mapper) {
+        this.mapper = mapper;
     }
 
     public ProfileDao getProfileDao() {
