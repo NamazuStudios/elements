@@ -73,8 +73,7 @@ public class StandardAdvancementService implements AdvancementService {
     @Override
     public List<Progress> advanceProgress(final Profile profile, final String missionNameOrId, final int amount) {
 
-        final Mission mission = getMissionDao().getMissionByNameOrId(missionNameOrId);
-        final List<Progress> progressList = getProgressDao().getProgressesForProfileAndMission(profile, mission);
+        final List<Progress> progressList = getProgressDao().getProgressesForProfileAndMission(profile, missionNameOrId);
 
         return progressList
             .stream()
