@@ -30,10 +30,10 @@ public class MongoInventoryItemId {
         final byte[] objectIdBytes = new byte[OBJECT_ID_LENGTH];
         arraycopy(bytes, 0, objectIdBytes, 0, objectIdBytes.length);
 
-        priority |= bytes[0] << (0 * Byte.SIZE);
-        priority |= bytes[1] << (1 * Byte.SIZE);
-        priority |= bytes[2] << (2 * Byte.SIZE);
-        priority |= bytes[3] << (3 * Byte.SIZE);
+        priority |= bytes[OBJECT_ID_LENGTH + 0] << (0 * Byte.SIZE);
+        priority |= bytes[OBJECT_ID_LENGTH + 1] << (1 * Byte.SIZE);
+        priority |= bytes[OBJECT_ID_LENGTH + 2] << (2 * Byte.SIZE);
+        priority |= bytes[OBJECT_ID_LENGTH + 3] << (3 * Byte.SIZE);
 
     }
 

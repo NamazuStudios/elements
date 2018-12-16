@@ -4,6 +4,7 @@ import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Property;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -30,6 +31,8 @@ public class MongoStep {
 
     @Property
     private List<MongoReward> rewards;
+
+    private Map<String, Object> metadata;
 
     public String getDisplayName() {
         return displayName;
@@ -63,6 +66,14 @@ public class MongoStep {
         this.rewards = rewards;
     }
 
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -71,7 +82,8 @@ public class MongoStep {
         return getCount() == mongoStep.getCount() &&
                 Objects.equals(getDisplayName(), mongoStep.getDisplayName()) &&
                 Objects.equals(getDescription(), mongoStep.getDescription()) &&
-                Objects.equals(getRewards(), mongoStep.getRewards());
+                Objects.equals(getRewards(), mongoStep.getRewards()) &&
+                Objects.equals(getMetadata(), mongoStep.getMetadata());
     }
 
     @Override
@@ -87,6 +99,7 @@ public class MongoStep {
                 ", description='" + description + '\'' +
                 ", rewards='" + rewards + '\'' +
                 ", count='" + count + '\'' +
+                ", metadata='" + metadata + '\'' +
                 '}';
     }
 }

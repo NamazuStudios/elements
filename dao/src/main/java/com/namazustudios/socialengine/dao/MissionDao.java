@@ -7,6 +7,8 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.mission.Mission;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 
+import java.util.Set;
+
 /**
  * Created by davidjbrooks on 11/24/18.
  */
@@ -21,9 +23,10 @@ public interface MissionDao {
      *
      * @param offset the offset
      * @param count the count
+     * @param tags
      * @return a {@link Pagination} of {@link Mission} objects.
      */
-    Pagination<Mission> getMissions(int offset, int count);
+    Pagination<Mission> getMissions(int offset, int count, Set<String> tags);
 
     /**
      * Gets missions specifying the offset and the count, specifying a search filter.

@@ -3,15 +3,19 @@ package com.namazustudios.socialengine.service.mission;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.mission.Mission;
 
+import java.util.Set;
+
 public interface MissionService {
+
     /**
      * Returns a list of {@link Mission} objects.
      *
      * @param offset the offset
      * @param count the count
+     * @param tags the search query
      * @return the list of {@link Mission} instances
      */
-    Pagination<Mission> getMissions(int offset, int count);
+    Pagination<Mission> getMissions(int offset, int count, Set<String> tags);
 
     /**
      * Returns a list of {@link Mission} objects.

@@ -29,6 +29,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.collect.Streams.concat;
 import static java.util.stream.Collectors.toList;
@@ -53,7 +56,18 @@ public class MongoMissionDao implements MissionDao {
     private MongoItemDao mongoItemDao;
 
     @Override
-    public Pagination<Mission> getMissions(int offset, int count)  { return getMissions(offset, count, null); }
+    public Pagination<Mission> getMissions(int offset, int count, Set<String> tags)  {
+
+        final Query<MongoMission> query = getDatastore().createQuery(MongoMission.class);
+
+        if (tags != null && !tags.isEmpty()) {
+            query.criteria("tags").hasAnyOf(tags);
+        }
+
+        return getMongoDBUtils().paginationFromQuery(query, offset, count,
+            mongoItem -> getDozerMapper().map(mongoItem, Mission.class));
+
+    }
 
     @Override
     public Pagination<Mission> getMissions(int offset, int count, String search) {
