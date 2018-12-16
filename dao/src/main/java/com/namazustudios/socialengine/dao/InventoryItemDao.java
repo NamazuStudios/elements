@@ -13,8 +13,8 @@ import com.namazustudios.socialengine.model.Pagination;
  * Created by davidjbrooks on 11/11/18.
  */
 @Expose(modules = {
-        "namazu.elements.dao.inventoryitem",
-        "namazu.socialengine.dao.inventoryitem",
+    "namazu.elements.dao.inventoryitem",
+    "namazu.socialengine.dao.inventoryitem",
 })
 public interface InventoryItemDao {
 

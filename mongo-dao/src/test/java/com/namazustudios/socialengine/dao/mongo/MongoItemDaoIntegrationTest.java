@@ -130,7 +130,7 @@ public class MongoItemDaoIntegrationTest {
     }
 
     private Item createMockItem() {
-        Map<String, String> mockMetadata = new HashMap<>();
+        Map<String, Object> mockMetadata = new HashMap<>();
         mockMetadata.put("ham", "eggs");
 
         Item item = new Item();
@@ -175,8 +175,7 @@ public class MongoItemDaoIntegrationTest {
         };
     }
 
-    private Item createItem(String name, String displayName, String description, HashSet<String> tags, HashMap<String
-        , String> metadata) {
+    private Item createItem(String name, String displayName, String description, HashSet<String> tags, HashMap<String, Object> metadata) {
         Item item = new Item();
         item.setName(name);
         item.setDisplayName(displayName);
