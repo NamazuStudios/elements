@@ -21,7 +21,7 @@ public class MongoInventoryItemId {
 
     private static final int PRIORITY_OFFSET = OBJECT_ID_LENGTH * 2;
 
-    private static final int INVENTORY_ITEM_ID_LENGTH = OBJECT_ID_LENGTH + Integer.BYTES;
+    private static final int INVENTORY_ITEM_ID_LENGTH = PRIORITY_OFFSET + Integer.BYTES;
 
     private ObjectId userObjectId;
 

@@ -82,27 +82,20 @@ public class InventoryItem implements Serializable {
     public void setPriority(Integer priority) { this.priority = priority; }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof InventoryItem)) return false;
-
-        InventoryItem inventoryItem = (InventoryItem) o;
-
-        if (getId() != null ? !getId().equals(inventoryItem.getId()) : inventoryItem.getId() != null) return false;
-        if (getUser() != null ? !getUser().equals(inventoryItem.getUser()) : inventoryItem.getUser() != null) return false;
-        if (getItem() != null ? !getItem().equals(inventoryItem.getItem()) : inventoryItem.getItem() != null) return false;
-        if (getQuantity() != null ? !getQuantity().equals(inventoryItem.getQuantity()) : inventoryItem.getQuantity() != null) return false;
-        return (getPriority() != null ? !getPriority().equals(inventoryItem.getPriority()) : inventoryItem.getPriority() != null);
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof InventoryItem)) return false;
+        InventoryItem that = (InventoryItem) object;
+        return Objects.equals(getId(), that.getId()) &&
+                Objects.equals(getUser(), that.getUser()) &&
+                Objects.equals(getItem(), that.getItem()) &&
+                Objects.equals(getQuantity(), that.getQuantity()) &&
+                Objects.equals(getPriority(), that.getPriority());
     }
 
     @Override
     public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + (getUser() != null ? getUser().hashCode() : 0);
-        result = 31 * result + (getItem() != null ? getItem().hashCode() : 0);
-        result = 31 * result + (getQuantity() != null ? getQuantity().hashCode() : 0);
-        result = 31 * result + (getPriority() != null ? getPriority().hashCode() : 0);
-        return result;
+        return Objects.hash(getId(), getUser(), getItem(), getQuantity(), getPriority());
     }
 
     @Override

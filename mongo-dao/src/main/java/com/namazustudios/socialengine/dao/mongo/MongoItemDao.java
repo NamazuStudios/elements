@@ -28,6 +28,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Strings.nullToEmpty;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoItemDao implements ItemDao {
@@ -77,7 +78,7 @@ public class MongoItemDao implements ItemDao {
 
     public MongoItem getMongoItemByNameOrId(final String itemNameOrId) {
 
-        if (isEmpty(itemNameOrId)) {
+        if (isEmpty(nullToEmpty(itemNameOrId).trim())) {
             throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
         }
 
@@ -126,7 +127,7 @@ public class MongoItemDao implements ItemDao {
     }
 
     @Override
-    public Pagination<Item> getItems(int offset, int count, Set<String> tags, String query) {
+    public Pagination<Item> getItems(final int offset, final int count, Set<String> tags, final String query) {
         if (StringUtils.isNotEmpty(query)) {
             LOGGER.warn(" getItems(int offset, int count, Set<String> tags, String query) was called with a query " +
                         "string parameter.  This field is presently ignored and will return all values after filtering " +
