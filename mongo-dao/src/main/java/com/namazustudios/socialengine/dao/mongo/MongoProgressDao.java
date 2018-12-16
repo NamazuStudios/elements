@@ -6,6 +6,7 @@ import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.ProgressDao;
 import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils.ContentionException;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
+import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgress;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoStep;
@@ -35,10 +36,14 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Set;
 
+import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward.State.CREATED;
+import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward.State.PENDING;
 import static java.lang.System.currentTimeMillis;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 @Singleton
 public class MongoProgressDao implements ProgressDao {
@@ -73,7 +78,7 @@ public class MongoProgressDao implements ProgressDao {
 
         final Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
 
-        query.criteria("profile").equal(getDozerMapper().map(profile, MongoProfile.class));
+        query.field("profile").equal(getDozerMapper().map(profile, MongoProfile.class));
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count,
                 mongoItem -> getDozerMapper().map(mongoItem, Progress.class));
@@ -111,9 +116,9 @@ public class MongoProgressDao implements ProgressDao {
         Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
 
         if (ObjectId.isValid(identifier)) {
-            query.criteria("_id").equal(new ObjectId(identifier));
+            query.field("_id").equal(new ObjectId(identifier));
         } else {
-            query.criteria("name").equal(identifier);
+            query.field("name").equal(identifier);
         }
 
         final MongoProgress progress = query.get();
@@ -133,7 +138,7 @@ public class MongoProgressDao implements ProgressDao {
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(progress.getId());
 
         final Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
-        query.criteria("_id").equal(objectId);
+        query.field("_id").equal(objectId);
 
         final UpdateOperations<MongoProgress> operations = getDatastore().createUpdateOperations(MongoProgress.class);
 
@@ -164,7 +169,6 @@ public class MongoProgressDao implements ProgressDao {
         normalize(progress);
 
         final MongoProgress mongoProgress = getDozerMapper().map(progress, MongoProgress.class);
-        mongoProgress.setVersion(randomUUID().toString());
 
         try {
             getDatastore().save(mongoProgress);
@@ -202,15 +206,22 @@ public class MongoProgressDao implements ProgressDao {
             throw new TooBusyException(e);
         }
 
+        final Set<ObjectId> pendingRewardIds = mongoProgress.getPendingRewards()
+            .stream()
+            .map(r -> r.getObjectId())
+            .collect(toSet());
+
         // To finalize the advancement, we clear the expiry of hte rewards.  The rationale here is if extra orphaned
         // pending rewards exist, then the will be eventually cleared by the database.  However, sicne the actual
         // MongoProress tracks the object IDs we will still have a consistent view even if orphans exist.  The expiry
         // on the MongoPending reward is just to provide a means of garbage collecting unreferenced rewards.
         final Query<MongoPendingReward> query = getDatastore().createQuery(MongoPendingReward.class);
-        query.field("progress").equal(mongoProgress);
+        query.field("_id").hasAnyOf(pendingRewardIds);
+        query.field("state").equal(CREATED);
 
         final UpdateOperations<MongoPendingReward> updates = getDatastore().createUpdateOperations(MongoPendingReward.class);
         updates.unset("expires");
+        updates.set("state", PENDING);
 
         getDatastore().update(query, updates, new UpdateOptions().multi(true).upsert(false));
 
@@ -233,7 +244,6 @@ public class MongoProgressDao implements ProgressDao {
         }
 
         final UpdateOperations<MongoProgress> updates = getDatastore().createUpdateOperations(MongoProgress.class);
-        updates.set("version", randomUUID().toString());
 
         if (actionsPerformed < progress.getRemaining()) {
             updates.dec("remaining", actionsPerformed);
@@ -264,6 +274,8 @@ public class MongoProgressDao implements ProgressDao {
         int completedSteps = 0;
         int actionsToApply = actionsPerformed;
 
+        final MongoUser mongoUser = mongoProgress.getProfile().getUser();
+
         do {
 
             // Determines the current step in the progress
@@ -283,9 +295,11 @@ public class MongoProgressDao implements ProgressDao {
                 .map(r -> {
                     final MongoPendingReward pending = new MongoPendingReward();
                     pending.setReward(r);
+                    pending.setUser(mongoUser);
                     pending.setObjectId(new ObjectId());
                     pending.setProgress(mongoProgress);
                     pending.setExpires(new Timestamp(currentTimeMillis()));
+                    pending.setState(CREATED);
                     getDatastore().insert(pending);
                     return pending;
                 }).collect(toList());
@@ -378,6 +392,7 @@ public class MongoProgressDao implements ProgressDao {
         return mongoConcurrentUtils;
     }
 
+    @Inject
     public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
         this.mongoConcurrentUtils = mongoConcurrentUtils;
     }

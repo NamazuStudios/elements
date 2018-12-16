@@ -34,6 +34,10 @@ public class MongoInventoryItem {
     private MongoInventoryItemId objectId;
 
     @Indexed
+    @Property
+    private String version;
+
+    @Indexed
     @Reference
     private MongoItem item;
 
@@ -45,7 +49,7 @@ public class MongoInventoryItem {
     private Integer quantity;
 
     @Reference
-    private List<MongoPendingReward> pendingRewards;
+    private Set<MongoPendingReward> pendingRewards;
 
     public MongoInventoryItemId getObjectId() {
         return objectId;
@@ -53,6 +57,14 @@ public class MongoInventoryItem {
 
     public void setObjectId(MongoInventoryItemId objectId) {
         this.objectId = objectId;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     public MongoUser getUser() {
@@ -77,11 +89,11 @@ public class MongoInventoryItem {
         this.quantity = quantity;
     }
 
-    public List<MongoPendingReward> getPendingRewards() {
+    public Set<MongoPendingReward> getPendingRewards() {
         return pendingRewards;
     }
 
-    public void setPendingRewards(List<MongoPendingReward> pendingRewards) {
+    public void setPendingRewards(Set<MongoPendingReward> pendingRewards) {
         this.pendingRewards = pendingRewards;
     }
 
@@ -91,6 +103,7 @@ public class MongoInventoryItem {
         if (!(object instanceof MongoInventoryItem)) return false;
         MongoInventoryItem that = (MongoInventoryItem) object;
         return Objects.equals(getObjectId(), that.getObjectId()) &&
+                Objects.equals(getVersion(), that.getVersion()) &&
                 Objects.equals(getItem(), that.getItem()) &&
                 Objects.equals(getUser(), that.getUser()) &&
                 Objects.equals(getQuantity(), that.getQuantity()) &&
@@ -99,13 +112,15 @@ public class MongoInventoryItem {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getItem(), getUser(), getQuantity(), getPendingRewards());
+
+        return Objects.hash(getObjectId(), getVersion(), getItem(), getUser(), getQuantity(), getPendingRewards());
     }
 
     @Override
     public String toString() {
         return "MongoInventoryItem{" +
                 "objectId=" + objectId +
+                ", version='" + version + '\'' +
                 ", item=" + item +
                 ", user=" + user +
                 ", quantity=" + quantity +

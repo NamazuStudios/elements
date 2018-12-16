@@ -8,11 +8,6 @@ import com.namazustudios.socialengine.model.goods.Item;
 public interface SimpleInventoryItemService {
 
     /**
-     * The priority for use by the {@link SimpleInventoryItemService}
-     */
-    int SIMPLE_PRIORITY = 0;
-
-    /**
      * Returns the {@link InventoryItem} associated with the specified {@Link Item}.
      *
      * @param itemNameOrId the value of {@link Item#getId()} or {@link Item#getName()}

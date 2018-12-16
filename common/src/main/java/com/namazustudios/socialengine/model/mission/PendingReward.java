@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.mission;
 
+import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
@@ -19,9 +20,13 @@ public class PendingReward {
     @ApiModelProperty("The databased-assigned unique ID of the pending reward.")
     private String id;
 
-    @NotNull(groups = {Create.class, Update.class, Insert.class})
+    @NotNull
     @ApiModelProperty("The reward to issue when this pending reward is claimed.")
     private Reward reward;
+
+    @NotNull
+    @ApiModelProperty("The state of the reward.")
+    private State state;
 
     public String getId() {
         return id;
@@ -39,18 +44,27 @@ public class PendingReward {
         this.reward = reward;
     }
 
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
         if (!(object instanceof PendingReward)) return false;
         PendingReward that = (PendingReward) object;
         return Objects.equals(getId(), that.getId()) &&
-                Objects.equals(getReward(), that.getReward());
+                Objects.equals(getReward(), that.getReward()) &&
+                getState() == that.getState();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getReward());
+        return Objects.hash(getId(), getReward(), getState());
     }
 
     @Override
@@ -58,7 +72,23 @@ public class PendingReward {
         return "PendingReward{" +
                 "id='" + id + '\'' +
                 ", reward=" + reward +
+                ", state=" + state +
                 '}';
+    }
+
+    public enum State {
+
+        /**
+         * Indicates that the reward is in a state of pending.
+         */
+        PENDING,
+
+        /**
+         * Indicates that the reward is in the rewarded state. Once rewarded, the system may delete the reward
+         * after some time.
+         */
+        REWARDED
+
     }
 
 }

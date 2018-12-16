@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.inventory;
 
+import com.namazustudios.socialengine.dao.InventoryItemDao;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
@@ -11,7 +12,7 @@ public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItem
             final User user,
             final String itemNameOrId,
             final int quantityDelta) {
-        return getInventoryItemDao().adjustQuantityForItem(user, itemNameOrId, SIMPLE_PRIORITY, quantityDelta);
+        return getInventoryItemDao().adjustQuantityForItem(user, itemNameOrId, InventoryItemDao.SIMPLE_PRIORITY, quantityDelta);
     }
 
     @Override
@@ -20,7 +21,7 @@ public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItem
 
         inventoryItem.setUser(user);
         inventoryItem.setItem(item);
-        inventoryItem.setPriority(SIMPLE_PRIORITY);
+        inventoryItem.setPriority(InventoryItemDao.SIMPLE_PRIORITY);
         inventoryItem.setQuantity(initialQuantity);
 
         return getInventoryItemDao().createInventoryItem(inventoryItem);

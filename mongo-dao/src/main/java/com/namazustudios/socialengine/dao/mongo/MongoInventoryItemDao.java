@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import static com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId.parseOrThrowNotFoundException;
+import static java.util.UUID.randomUUID;
 
 @Singleton
 public class MongoInventoryItemDao implements InventoryItemDao {
@@ -58,7 +59,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         final MongoInventoryItemId objectId = parseOrThrowNotFoundException(inventoryItemId);
         final Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
 
-        query.criteria("_id").equal(objectId);
+        query.field("_id").equal(objectId);
 
         final MongoInventoryItem item = query.get();
 
@@ -75,8 +76,8 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         final Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
 
-        query.criteria("user").equal(getDozerMapper().map(user, MongoUser.class));
-        query.criteria("item").equal(getMongoItemDao().getMongoItemByNameOrId(itemNameOrId));
+        query.field("user").equal(getDozerMapper().map(user, MongoUser.class));
+        query.field("item").equal(getMongoItemDao().getMongoItemByNameOrId(itemNameOrId));
 
         final MongoInventoryItem item = query.get();
 
@@ -104,7 +105,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         final Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
 
-        query.criteria("user").equal(getDozerMapper().map(user, MongoUser.class));
+        query.field("user").equal(getDozerMapper().map(user, MongoUser.class));
 
         return getMongoDBUtils().paginationFromQuery(
             query, offset, count,
@@ -122,6 +123,8 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(inventoryItem.getUser());
 
         final MongoInventoryItem mongoInventoryItem = getDozerMapper().map(inventoryItem, MongoInventoryItem.class);
+
+        mongoInventoryItem.setVersion(randomUUID().toString());
         mongoInventoryItem.setObjectId(new MongoInventoryItemId(mongoUser, mongoItem, inventoryItem.getPriority()));
 
         try {
@@ -143,9 +146,11 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         final Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
 
         final MongoInventoryItemId objectId = parseOrThrowNotFoundException(inventoryItem.getId());
-        query.criteria("_id").equal(objectId);
+        query.field("_id").equal(objectId);
 
         final UpdateOperations<MongoInventoryItem> operations = getDatastore().createUpdateOperations(MongoInventoryItem.class);
+
+        operations.set("version", randomUUID().toString());
         operations.set("quantity", inventoryItem.getQuantity());
 
         final FindAndModifyOptions options = new FindAndModifyOptions()
@@ -176,13 +181,14 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         final MongoItem mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
 
         final MongoInventoryItemId objectId = new MongoInventoryItemId(mongoUser, mongoItem, priority);
-        query.criteria("_id").equal(objectId);
+        query.field("_id").equal(objectId);
 
         final UpdateOperations<MongoInventoryItem> operations = getDatastore().createUpdateOperations(MongoInventoryItem.class);
 
         operations.set("_id", objectId);
         operations.inc("quantity", quantityDelta);
         operations.min("quantity", 0);
+        operations.set("version", randomUUID().toString());
 
         final FindAndModifyOptions options = new FindAndModifyOptions()
                 .returnNew(true)

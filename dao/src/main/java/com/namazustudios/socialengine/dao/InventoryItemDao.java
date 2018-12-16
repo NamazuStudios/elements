@@ -19,6 +19,11 @@ import com.namazustudios.socialengine.model.Pagination;
 public interface InventoryItemDao {
 
     /**
+     * The priority for use by the {@link InventoryItemDao};
+     */
+    int SIMPLE_PRIORITY = 0;
+
+    /**
      * Gets the specific inventory item with the id, or throws a {@link NotFoundException} if the
      * inventory item can't be found.
      *
