@@ -5,6 +5,7 @@ import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Reference;
 
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -24,6 +25,8 @@ public class MongoReward {
     @Property
     private int quantity;
 
+    private Map<String, Object> metadata;
+
     public MongoItem getItem() {
         return item;
     }
@@ -40,24 +43,35 @@ public class MongoReward {
         this.quantity = quantity;
     }
 
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
         if (!(object instanceof MongoReward)) return false;
         MongoReward that = (MongoReward) object;
-        return getQuantity() == that.getQuantity() && Objects.equals(getItem(), that.getItem());
+        return getQuantity() == that.getQuantity() &&
+                Objects.equals(getItem(), that.getItem()) &&
+                Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getItem(), getQuantity());
+        return Objects.hash(getItem(), getQuantity(), getMetadata());
     }
 
     @Override
     public String toString() {
         return "MongoReward{" +
-                ", item='" + item + '\'' +
-                ", quantity='" + quantity + '\'' +
+                "item=" + item +
+                ", quantity=" + quantity +
+                ", metadata=" + metadata +
                 '}';
     }
 

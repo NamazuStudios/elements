@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Represents a mission step reward.
@@ -24,6 +26,8 @@ public class Reward {
     @ApiModelProperty("The quantity of the Item that is rewarded")
     private Integer quantity;
 
+    private Map<String, Object> metadata;
+
     public Item getItem() {
         return item;
     }
@@ -38,29 +42,35 @@ public class Reward {
 
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
 
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Reward)) return false;
-
-        Reward reward = (Reward) o;
-
-        if (getItem() != null ? !getItem().equals(reward.getItem()) : reward.getItem() != null) return false;
-        return (getQuantity() != null ? !getQuantity().equals(reward.getQuantity()) : reward.getQuantity() != null);
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Reward)) return false;
+        Reward reward = (Reward) object;
+        return Objects.equals(getItem(), reward.getItem()) &&
+                Objects.equals(getQuantity(), reward.getQuantity()) &&
+                Objects.equals(getMetadata(), reward.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        int result = (getItem() != null ? getItem().hashCode() : 0);
-        result = 31 * result + (getQuantity() != null ? getQuantity().hashCode() : 0);
-        return result;
+        return Objects.hash(getItem(), getQuantity(), getMetadata());
     }
 
     @Override
     public String toString() {
         return "Reward{" +
-                ", item='" + item + '\'' +
-                ", quantity='" + quantity + '\'' +
+                "item=" + item +
+                ", quantity=" + quantity +
+                ", metadata=" + metadata +
                 '}';
     }
 
