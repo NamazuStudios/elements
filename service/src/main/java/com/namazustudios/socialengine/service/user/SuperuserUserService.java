@@ -14,42 +14,42 @@ public class SuperuserUserService extends UserUserService implements UserService
 
     @Override
     public User getUser(String userId) {
-        return userDao.getActiveUser(userId);
+        return getUserDao().getActiveUser(userId);
     }
 
     @Override
     public Pagination<User> getUsers(int offset, int count) {
-        return userDao.getActiveUsers(offset, count);
+        return getUserDao().getActiveUsers(offset, count);
     }
 
     @Override
     public Pagination<User> getUsers(int offset, int count, String search) {
-        return userDao.getActiveUsers(offset, count, search);
+        return getUserDao().getActiveUsers(offset, count, search);
     }
 
     @Override
     public User createUser(User user) {
-        return userDao.createOrReactivateUser(user);
+        return getUserDao().createOrReactivateUser(user);
     }
 
     @Override
     public User createUser(User user, String password) {
-        return userDao.createOrRectivateUserWithPassword(user, password);
+        return getUserDao().createOrRectivateUserWithPassword(user, password);
     }
 
     @Override
     public User updateUser(User user) {
-        return userDao.updateActiveUser(user);
+        return getUserDao().updateActiveUser(user);
     }
 
     @Override
     public User updateUser(User user, String password) {
-        return userDao.updateActiveUser(user, password);
+        return getUserDao().updateActiveUser(user, password);
     }
 
     @Override
     public void deleteUser(String userId) {
-        userDao.softDeleteUser(userId);
+        getUserDao().softDeleteUser(userId);
     }
 
 }

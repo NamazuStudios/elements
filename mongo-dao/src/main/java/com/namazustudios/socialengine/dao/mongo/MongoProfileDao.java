@@ -129,29 +129,6 @@ public class MongoProfileDao implements ProfileDao {
         return mongoProfile;
     }
 
-    @Override
-    public Profile getActiveProfile(final String userId, final String applicationId) {
-
-        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(userId);
-        final MongoApplication mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationId);
-
-        final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
-
-        query.and(
-            query.criteria("user").equal(mongoUser),
-            query.criteria("application").equal(mongoApplication)
-        );
-
-        final MongoProfile mongoProfile = query.get();
-
-        if (mongoProfile == null) {
-            throw new NotFoundException("no matching profile for user " + userId + " and application " + applicationId);
-        }
-
-        return transform(mongoProfile);
-
-    }
-
     public Stream<MongoProfile> getActiveMongoProfilesForUser(final MongoUser user) {
 
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);

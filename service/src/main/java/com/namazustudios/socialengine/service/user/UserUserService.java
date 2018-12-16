@@ -64,7 +64,7 @@ public class UserUserService extends AnonUserService implements UserService {
         user.setName(getCurrentUser().getName());
         user.setActive(true);
 
-        return userDao.updateActiveUser(user);
+        return getUserDao().updateActiveUser(user);
 
     }
 
@@ -77,7 +77,7 @@ public class UserUserService extends AnonUserService implements UserService {
         user.setName(getCurrentUser().getName());
         user.setActive(true);
 
-        return userDao.updateActiveUser(user, password);
+        return getUserDao().updateActiveUser(user, password);
 
     }
 
@@ -85,7 +85,7 @@ public class UserUserService extends AnonUserService implements UserService {
     public void deleteUser(String userId) {
         // The user can only delete his or her own account.
         checkForCurrentUser(userId);
-        userDao.softDeleteUser(userId);
+        getUserDao().softDeleteUser(userId);
     }
 
 }

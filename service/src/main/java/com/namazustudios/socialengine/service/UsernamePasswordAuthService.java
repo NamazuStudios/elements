@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 
@@ -23,12 +24,23 @@ public interface UsernamePasswordAuthService {
     }
 
     /**
-     * Creates a {@link Session} with the login credential for a {@link User}.
+     * Creates a {@link Session} with the login credentials for a {@link User}.
      *
      * @param userId the user ID
      * @param password the password
      * @return the {@link Session} created
      */
     SessionCreation createSessionWithLogin(String userId, String password);
+
+    /**
+     * Creates a {@link Session} with the login credentials for a {@link User} while also specifying the id of the
+     * {@link Profile} to use.
+     *
+     * @param userId the user ID
+     * @param password the password
+     * @param profileId the profileId
+     * @return the {@link Session} created
+     */
+    SessionCreation createSessionWithLogin(String userId, String password, String profileId);
 
 }

@@ -1,7 +1,9 @@
-package com.namazustudios.socialengine.rest;
+package com.namazustudios.socialengine.rest.user;
 
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.model.UserCreateRequest;
+import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
@@ -28,7 +30,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
      description = "Manages users in the server.  Users are single-end users typically associated " +
                    "with a login name or email address.",
      authorizations = {@Authorization(SESSION_SECRET)})
-@Path("")
+@Path("user")
 public class UserResource {
 
     private UserService userService;
@@ -40,7 +42,6 @@ public class UserResource {
     @ApiOperation(value = "Search Users",
                   notes = "Searches all users in the system and returning the metadata for all matches against " +
                           "the given search filter.")
-    @Path("user")
     public Pagination<User> getUsers(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
@@ -63,7 +64,7 @@ public class UserResource {
     }
 
     @GET
-    @Path("user/{name}")
+    @Path("{name}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a Specific User",
                   notes = "Gets a specific user by email or unique user ID.")
@@ -72,7 +73,7 @@ public class UserResource {
     }
 
     @GET
-    @Path("user/me")
+    @Path("me")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets the current User",
                   notes = "A special endpoint used to get the current user for the request.  The current " +
@@ -83,7 +84,7 @@ public class UserResource {
     }
 
     @PUT
-    @Path("user/{name}")
+    @Path("{name}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates a User",
                   notes = "Supplying the user object, this will update the user with the new information supplied " +
@@ -119,7 +120,6 @@ public class UserResource {
     @ApiOperation(value = "Creates a User",
                   notes = "Supplying the user object, this will update the user with the new information supplied " +
                           "in the body of the request.  Optionally, the user's password may be provided.")
-    @Path("user")
     public User createUser(final User user, @QueryParam("password") String password) {
 
         getValidationHelper().validateModel(user);
@@ -133,21 +133,8 @@ public class UserResource {
 
     }
 
-    @POST
-    @Path("user_signup")
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Sign Up a User",
-            notes = "Supplying the user create request object, this will create a new user.")
-    public User createUser(final UserCreateRequest userCreateRequest) {
-
-        getValidationHelper().validateModel(userCreateRequest);
-
-        return getUserService().createUser(userCreateRequest);
-
-    }
-
     @DELETE
-    @Path("user/{name}")
+    @Path("{name}")
     @ApiOperation(value = "Deletes a User",
                   notes = "Deletes and permanently removes the user from the server.  The server may keep " +
                           "some metadata as necessary to avoid data inconsistency.  However, the user has been " +
