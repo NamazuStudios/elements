@@ -21,12 +21,14 @@ public class PendingReward {
     private String id;
 
     @NotNull
+    @ApiModelProperty("The state of the reward.")
+    private State state;
+
     @ApiModelProperty("The reward to issue when this pending reward is claimed.")
     private Reward reward;
 
-    @NotNull
-    @ApiModelProperty("The state of the reward.")
-    private State state;
+    @ApiModelProperty("The step that was completed to earn the reward.")
+    private Step step;
 
     public String getId() {
         return id;
@@ -34,6 +36,14 @@ public class PendingReward {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public Step getStep() {
+        return step;
+    }
+
+    public void setStep(Step step) {
+        this.step = step;
     }
 
     public Reward getReward() {
@@ -59,12 +69,13 @@ public class PendingReward {
         PendingReward that = (PendingReward) object;
         return Objects.equals(getId(), that.getId()) &&
                 Objects.equals(getReward(), that.getReward()) &&
+                Objects.equals(getStep(), that.getStep()) &&
                 getState() == that.getState();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getReward(), getState());
+        return Objects.hash(getId(), getReward(), getStep(), getState());
     }
 
     @Override
@@ -72,6 +83,7 @@ public class PendingReward {
         return "PendingReward{" +
                 "id='" + id + '\'' +
                 ", reward=" + reward +
+                ", step=" + step +
                 ", state=" + state +
                 '}';
     }

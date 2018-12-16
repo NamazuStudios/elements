@@ -1,13 +1,19 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Property;
 
 import java.util.List;
+import java.util.Objects;
 
 @Embedded
 public class MongoProgressMissionInfo {
+
+    @Indexed
+    @Property
+    private ObjectId missionId;
 
     @Indexed
     @Property
@@ -24,6 +30,14 @@ public class MongoProgressMissionInfo {
 
     @Embedded
     private MongoStep finalRepeatStep;
+
+    public ObjectId getMissionId() {
+        return missionId;
+    }
+
+    public void setMissionId(ObjectId missionId) {
+        this.missionId = missionId;
+    }
 
     public String getName() {
         return name;
@@ -65,5 +79,34 @@ public class MongoProgressMissionInfo {
         this.finalRepeatStep = finalRepeatStep;
     }
 
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof MongoProgressMissionInfo)) return false;
+        MongoProgressMissionInfo that = (MongoProgressMissionInfo) object;
+        return Objects.equals(getMissionId(), that.getMissionId()) &&
+                Objects.equals(getName(), that.getName()) &&
+                Objects.equals(getDisplayName(), that.getDisplayName()) &&
+                Objects.equals(getDescription(), that.getDescription()) &&
+                Objects.equals(getSteps(), that.getSteps()) &&
+                Objects.equals(getFinalRepeatStep(), that.getFinalRepeatStep());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getMissionId(), getName(), getDisplayName(), getDescription(), getSteps(), getFinalRepeatStep());
+    }
+
+    @Override
+    public String toString() {
+        return "MongoProgressMissionInfo{" +
+                "missionId=" + missionId +
+                ", name='" + name + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", description='" + description + '\'' +
+                ", steps=" + steps +
+                ", finalRepeatStep=" + finalRepeatStep +
+                '}';
+    }
 
 }

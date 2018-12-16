@@ -32,6 +32,7 @@ public class MongoStep {
     @Property
     private List<MongoReward> rewards;
 
+    @Property
     private Map<String, Object> metadata;
 
     public String getDisplayName() {

@@ -24,6 +24,9 @@ public class MongoPendingReward {
     private MongoProgress progress;
 
     @Embedded
+    private MongoStep step;
+
+    @Embedded
     private MongoReward reward;
 
     @Indexed(options = @IndexOptions(expireAfterSeconds = EXPIRY_TIME_SECONDS))
@@ -55,6 +58,14 @@ public class MongoPendingReward {
 
     public void setProgress(MongoProgress progress) {
         this.progress = progress;
+    }
+
+    public MongoStep getStep() {
+        return step;
+    }
+
+    public void setStep(MongoStep step) {
+        this.step = step;
     }
 
     public MongoReward getReward() {

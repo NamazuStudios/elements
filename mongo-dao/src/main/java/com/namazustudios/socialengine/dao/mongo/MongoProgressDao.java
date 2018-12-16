@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.dao.ProgressDao;
 import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils.ContentionException;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
+import com.namazustudios.socialengine.dao.mongo.model.mission.MongoMission;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgress;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoStep;
@@ -16,7 +17,6 @@ import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
-import com.namazustudios.socialengine.model.mission.Mission;
 import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -42,6 +42,7 @@ import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendin
 import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward.State.PENDING;
 import static java.lang.System.currentTimeMillis;
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
@@ -64,6 +65,10 @@ public class MongoProgressDao implements ProgressDao {
 
     private MongoConcurrentUtils mongoConcurrentUtils;
 
+    private MongoMissionDao mongoMissionDao;
+
+    private MongoProfileDao mongoProfileDao;
+
     @Override
     public Pagination<Progress> getProgresses(Profile profile, int offset, int count)  {
         return getProgresses(profile, offset, count, null);
@@ -73,7 +78,7 @@ public class MongoProgressDao implements ProgressDao {
     public Pagination<Progress> getProgresses(Profile profile, int offset, int count, String search) {
         if (StringUtils.isNotEmpty(search)) {
             LOGGER.warn(" getProgresss(Profile profile, int offset, int count, String query) was called with a query " +
-                    "string parameter.  This field is presently ignored and will return all values");
+                        "string parameter.  This field is presently ignored and will return all values");
         }
 
         final Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
@@ -103,8 +108,20 @@ public class MongoProgressDao implements ProgressDao {
     }
 
     @Override
-    public List<Progress> getProgressesForProfileAndMission(Profile profile, Mission mission) {
-        return null;
+    public List<Progress> getProgressesForProfileAndMission(final Profile profile, final String missionNameOrId) {
+
+        final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
+        final MongoMission mongoMission = getMongoMissionDao().getMongoMissionByNameOrId(missionNameOrId);
+
+        final Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
+        query.field("mission.profile").equal(mongoProfile);
+        query.field("mission.missionId").equal(mongoMission.getObjectId());
+
+        return query.asList()
+            .stream()
+            .map(p -> getDozerMapper()
+            .map(p, Progress.class)).collect(toList());
+
     }
 
     @Override
@@ -157,8 +174,8 @@ public class MongoProgressDao implements ProgressDao {
         }
 
         getObjectIndex().index(updatedMongoProgress);
-
         return getDozerMapper().map(updatedMongoProgress, Progress.class);
+
     }
 
     @Override
@@ -289,6 +306,7 @@ public class MongoProgressDao implements ProgressDao {
 
             // Assigns the rewards from the step
 
+            final MongoStep _step = step;
             final List<MongoPendingReward> pendingRewards = step.getRewards()
                 .stream()
                 .filter(r -> r != null && r.getItem() != null)
@@ -300,6 +318,7 @@ public class MongoProgressDao implements ProgressDao {
                     pending.setProgress(mongoProgress);
                     pending.setExpires(new Timestamp(currentTimeMillis()));
                     pending.setState(CREATED);
+                    pending.setStep(_step);
                     getDatastore().insert(pending);
                     return pending;
                 }).collect(toList());
@@ -330,46 +349,38 @@ public class MongoProgressDao implements ProgressDao {
 
     @Inject
     public void setDatastore(AdvancedDatastore datastore) {
-
         this.datastore = datastore;
     }
 
     public Mapper getDozerMapper() {
-
         return dozerMapper;
     }
 
     @Inject
     public void setDozerMapper(Mapper dozerMapper) {
-
         this.dozerMapper = dozerMapper;
     }
 
     public ValidationHelper getValidationHelper() {
-
         return validationHelper;
     }
 
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
-
         this.validationHelper = validationHelper;
     }
 
     public MongoDBUtils getMongoDBUtils() {
-
         return mongoDBUtils;
     }
 
     @Inject
     public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
-
         this.mongoDBUtils = mongoDBUtils;
     }
 
 
     public StandardQueryParser getStandardQueryParser() {
-
         return standardQueryParser;
     }
 
@@ -379,7 +390,6 @@ public class MongoProgressDao implements ProgressDao {
     }
 
     public ObjectIndex getObjectIndex() {
-
         return objectIndex;
     }
 
@@ -395,6 +405,24 @@ public class MongoProgressDao implements ProgressDao {
     @Inject
     public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
         this.mongoConcurrentUtils = mongoConcurrentUtils;
+    }
+
+    public MongoMissionDao getMongoMissionDao() {
+        return mongoMissionDao;
+    }
+
+    @Inject
+    public void setMongoMissionDao(MongoMissionDao mongoMissionDao) {
+        this.mongoMissionDao = mongoMissionDao;
+    }
+
+    public MongoProfileDao getMongoProfileDao() {
+        return mongoProfileDao;
+    }
+
+    @Inject
+    public void setMongoProfileDao(MongoProfileDao mongoProfileDao) {
+        this.mongoProfileDao = mongoProfileDao;
     }
 
 }
