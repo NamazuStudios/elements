@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.Constants.SESSION_TIMEOUT_SECONDS;
 import static java.lang.Math.min;
@@ -116,7 +115,7 @@ public class FacebookAuthServiceOperations {
             session.setApplication(facebookApplicationConfiguration.getParent());
             session.setExpiry(expiry);
 
-            final SessionCreation sessionCreation = getSessionDao().create(user, session);
+            final SessionCreation sessionCreation = getSessionDao().create(session);
 
             facebookSessionCreation.setSession(sessionCreation.getSession());
             facebookSessionCreation.setSessionSecret(sessionCreation.getSessionSecret());
