@@ -30,7 +30,7 @@ public class MongoProgress {
     private ObjectId objectId;
 
     @Indexed
-    @Property()
+    @Property
     private String version;
 
     @Indexed

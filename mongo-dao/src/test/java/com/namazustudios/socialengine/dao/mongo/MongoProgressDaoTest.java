@@ -36,13 +36,17 @@ public class MongoProgressDaoTest  {
 
     private ItemDao itemDao;
 
+    private InventoryItemDao inventoryItemDao;
+
     private MissionDao missionDao;
 
     private ProgressDao progressDao;
 
     private Application testApplication;
 
-    private Item testItem;
+    private Item testFiniteItem;
+
+    private Item testRepeatItem;
 
     private User testUser;
 
@@ -57,7 +61,8 @@ public class MongoProgressDaoTest  {
         testApplication = makeTestApplication();
         testUser = buildTestUser();
         testProfile = buildTestProfile();
-        testItem = buildTestItem();
+        testFiniteItem = buildFiniteTestItem();
+        testRepeatItem = buildRepeatTestItem();
         testFiniteMission = buildTestFiniteMission();
         testRepeatingMission = buildTestRepeatingMission();
     }
@@ -86,10 +91,20 @@ public class MongoProgressDaoTest  {
         return getProfileDao().createOrReactivateProfile(profile);
     }
 
-    private Item buildTestItem() {
+    private Item buildFiniteTestItem() {
         final Item testItem = new Item();
         testItem.setName("coin");
         testItem.setDisplayName("Magical Coins");
+        testItem.setDescription("Magical Coins for Magic!");
+        testItem.setTags(of("a").collect(toSet()));
+        testItem.addMetadata("consumable", true);
+        return getItemDao().createItem(testItem);
+    }
+
+    private Item buildRepeatTestItem() {
+        final Item testItem = new Item();
+        testItem.setName("potion");
+        testItem.setDisplayName("Magical Potions");
         testItem.setDescription("Magical Coins for Magic!");
         testItem.setTags(of("a").collect(toSet()));
         testItem.addMetadata("consumable", true);
@@ -103,9 +118,9 @@ public class MongoProgressDaoTest  {
         testMission.setDescription("Collect all the bananas");
         testMission.setTags(Stream.of("a", "b", "c").collect(toList()));
         testMission.setSteps(asList(
-            testStep("Collect 5", "Collect 5 Bananas", 5),
-            testStep("Collect 10", "Collect 10 Bananas", 10),
-            testStep("Collect 15", "Collect 15 Bananas", 15)
+            testStep("Collect 5", "Collect 5 Bananas", 5, testFiniteItem),
+            testStep("Collect 10", "Collect 10 Bananas", 10, testFiniteItem),
+            testStep("Collect 15", "Collect 15 Bananas", 15, testFiniteItem)
         ));
         testMission.addMetadata("foo", "bar");
         return getMissionDao().createMission(testMission);
@@ -118,28 +133,28 @@ public class MongoProgressDaoTest  {
         testMission.setDescription("Collect all the bananas");
         testMission.setTags(Stream.of("a", "b", "c").collect(toList()));
         testMission.setSteps(asList(
-            testStep("Collect 5", "Collect 5 Bananas", 5),
-            testStep("Collect 10", "Collect 10 Bananas", 10),
-            testStep("Collect 15", "Collect 15 Bananas", 15)
+            testStep("Collect 5", "Collect 5 Bananas", 5, testRepeatItem),
+            testStep("Collect 10", "Collect 10 Bananas", 10, testRepeatItem),
+            testStep("Collect 15", "Collect 15 Bananas", 15, testRepeatItem)
         ));
-        testMission.setFinalRepeatStep(testStep("Collect 5", "Collect 5 Bananas", 5));
+        testMission.setFinalRepeatStep(testStep("Collect 5", "Collect 5 Bananas", 5, testRepeatItem));
         testMission.addMetadata("foo", "bar");
         return getMissionDao().createMission(testMission);
     }
 
-    private Step testStep(final String displayName, final String description, final int count) {
+    private Step testStep(final String displayName, final String description, final int count, final Item item) {
         final Step step = new Step();
         step.setCount(count);
         step.setDisplayName(displayName);
         step.setDescription(description);
-        step.setRewards(asList(testReward(count * 10)));
+        step.setRewards(asList(testReward(count * 10, item)));
         step.addMetadata("foo", count * 100);
         return step;
     }
 
-    private Reward testReward(final int quantity) {
+    private Reward testReward(final int quantity, final Item item) {
         final Reward reward = new Reward();
-        reward.setItem(testItem);
+        reward.setItem(item);
         reward.setQuantity(quantity);
         reward.addMetadata("bar", 100);
         return reward;
@@ -278,6 +293,15 @@ public class MongoProgressDaoTest  {
     @Inject
     public void setItemDao(ItemDao itemDao) {
         this.itemDao = itemDao;
+    }
+
+    public InventoryItemDao getInventoryItemDao() {
+        return inventoryItemDao;
+    }
+
+    @Inject
+    public void setInventoryItemDao(InventoryItemDao inventoryItemDao) {
+        this.inventoryItemDao = inventoryItemDao;
     }
 
     public MissionDao getMissionDao() {
