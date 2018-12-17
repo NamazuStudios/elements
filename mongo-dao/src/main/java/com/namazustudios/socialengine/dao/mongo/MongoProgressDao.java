@@ -92,7 +92,7 @@ public class MongoProgressDao implements ProgressDao {
         query.field("profile").equal(getDozerMapper().map(profile, MongoProfile.class));
 
         if (tags != null && !tags.isEmpty()) {
-            query.field("tags").hasAnyOf(tags);
+            query.field("mission.tags").hasAnyOf(tags);
         }
 
         return getMongoDBUtils().paginationFromQuery(
@@ -118,7 +118,7 @@ public class MongoProgressDao implements ProgressDao {
         final Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
 
         if (tags != null && !tags.isEmpty()) {
-            query.field("tags").hasAnyOf(tags);
+            query.field("mission.tags").hasAnyOf(tags);
         }
 
         return getMongoDBUtils().paginationFromQuery(
