@@ -30,41 +30,12 @@ public class StandardAdvancementService implements AdvancementService {
     public Progress startMission(final Profile profile, final String missionNameOrId) {
 
         final Progress progress = new Progress();
-
         final Profile active = getProfileDao().getActiveProfile(profile.getId());
         progress.setProfile(active);
 
         final Mission mission = getMissionDao().getMissionByNameOrId(missionNameOrId);
         final ProgressMissionInfo progressMissionInfo = getMapper().map(mission, ProgressMissionInfo.class);
         progress.setMission(progressMissionInfo);
-
-        final List<Step> missionSteps = mission.getSteps();
-
-        if (missionSteps == null) {
-
-            final Step step = mission.getFinalRepeatStep();
-
-            if (step == null) {
-                // This should not be necessary.  See SOC-249
-                throw new InternalException("Corrupted Mission.  Missing steps. (" + mission.getName() + ")");
-            }
-
-            progress.setCurrentStep(step);
-            progress.setRemaining(step.getCount());
-
-        } else {
-
-            if (missionSteps.isEmpty()) {
-                // This should not be necessary.  See SOC-249
-                throw new InternalException("Corrupted Mission.  Missing steps. (" + mission.getName() + ")");
-            }
-
-            final Step step = missionSteps.get(0);
-
-            progress.setCurrentStep(step);
-            progress.setRemaining(step.getCount());
-
-        }
 
         return getProgressDao().createProgress(progress);
 

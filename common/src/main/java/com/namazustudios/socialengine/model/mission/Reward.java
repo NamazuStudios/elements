@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -49,6 +50,16 @@ public class Reward implements Serializable {
 
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
+    }
+
+    public void addMetadata(final String name, final Object value) {
+
+        if (getMetadata() == null) {
+            setMetadata(new HashMap<>());
+        }
+
+        getMetadata().put(name, value);
+
     }
 
     @Override

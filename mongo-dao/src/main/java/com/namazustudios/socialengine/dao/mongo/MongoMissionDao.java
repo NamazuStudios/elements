@@ -151,6 +151,7 @@ public class MongoMissionDao implements MissionDao {
 
     @Override
     public Mission createMission(final Mission mission) {
+
         getValidationHelper().validateModel(mission, Insert.class);
 
         normalize(mission);
@@ -158,7 +159,7 @@ public class MongoMissionDao implements MissionDao {
         final MongoMission mongoMission = checkMission(mission);
 
         try {
-            getDatastore().save(mongoMission);
+            getDatastore().insert(mongoMission);
         } catch (DuplicateKeyException e) {
             throw new DuplicateException(e);
         }

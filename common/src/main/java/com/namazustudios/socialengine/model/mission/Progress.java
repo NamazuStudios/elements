@@ -28,11 +28,11 @@ public class Progress implements Serializable {
     @ApiModelProperty("The profile of the owner of this progress")
     private Profile profile;
 
-    @NotNull
+    @Null
     @ApiModelProperty("The current step")
     private Step currentStep;
 
-    @NotNull
+    @Null
     @ApiModelProperty("The remaining actions")
     private Integer remaining;
 
@@ -87,6 +87,7 @@ public class Progress implements Serializable {
         this.pendingRewards = pendingRewards;
     }
 
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -97,12 +98,12 @@ public class Progress implements Serializable {
                 Objects.equals(getCurrentStep(), progress.getCurrentStep()) &&
                 Objects.equals(getRemaining(), progress.getRemaining()) &&
                 Objects.equals(getMission(), progress.getMission()) &&
-                Objects.equals(pendingRewards, progress.pendingRewards);
+                Objects.equals(getPendingRewards(), progress.getPendingRewards());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getProfile(), getCurrentStep(), getRemaining(), getMission(), pendingRewards);
+        return Objects.hash(getId(), getProfile(), getCurrentStep(), getRemaining(), getMission(), getPendingRewards());
     }
 
     @Override

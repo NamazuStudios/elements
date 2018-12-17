@@ -1,12 +1,16 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Property;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @Embedded
 public class MongoProgressMissionInfo {
@@ -30,6 +34,13 @@ public class MongoProgressMissionInfo {
 
     @Embedded
     private MongoStep finalRepeatStep;
+
+    @Indexed
+    @Property
+    private Set<String> tags;
+
+    @Property
+    private Map<String, Object> metadata;
 
     public ObjectId getMissionId() {
         return missionId;
@@ -79,6 +90,22 @@ public class MongoProgressMissionInfo {
         this.finalRepeatStep = finalRepeatStep;
     }
 
+    public Set<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
+    }
+
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -89,12 +116,14 @@ public class MongoProgressMissionInfo {
                 Objects.equals(getDisplayName(), that.getDisplayName()) &&
                 Objects.equals(getDescription(), that.getDescription()) &&
                 Objects.equals(getSteps(), that.getSteps()) &&
-                Objects.equals(getFinalRepeatStep(), that.getFinalRepeatStep());
+                Objects.equals(getFinalRepeatStep(), that.getFinalRepeatStep()) &&
+                Objects.equals(getTags(), that.getTags()) &&
+                Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getMissionId(), getName(), getDisplayName(), getDescription(), getSteps(), getFinalRepeatStep());
+        return Objects.hash(getMissionId(), getName(), getDisplayName(), getDescription(), getSteps(), getFinalRepeatStep(), getTags(), getMetadata());
     }
 
     @Override
@@ -106,6 +135,8 @@ public class MongoProgressMissionInfo {
                 ", description='" + description + '\'' +
                 ", steps=" + steps +
                 ", finalRepeatStep=" + finalRepeatStep +
+                ", tags=" + tags +
+                ", metadata=" + metadata +
                 '}';
     }
 

@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by davidjbrooks on 12/05/18.
@@ -26,9 +27,10 @@ public interface ProgressDao {
      * @Profile the {@link Profile}
      * @param offset the offset
      * @param count the count
+     * @param tags
      * @return a {@link Pagination} of {@link Progress} objects.
      */
-    Pagination<Progress> getProgresses(Profile profile, int offset, int count);
+    Pagination<Progress> getProgresses(Profile profile, int offset, int count, Set<String> tags);
 
     /**
      * Gets progresses specifying the user, offset and the count, specifying a search filter.
@@ -36,29 +38,32 @@ public interface ProgressDao {
      * @Profile the {@link Profile}
      * @param offset the offset
      * @param count the count
+     * @param tags
      * @param search a query to filter the results
      * @return a {@link Pagination} of {@link Progress} objects.
      */
-    Pagination<Progress> getProgresses(Profile profile, int offset, int count, String search);
+    Pagination<Progress> getProgresses(Profile profile, int offset, int count, Set<String> tags, String search);
 
     /**
      * Gets progresses specifying the offset and the count.
             *
             * @param offset the offset
      * @param count the count
+     * @param tags
      * @return a {@link Pagination} of {@link Progress} objects.
      */
-    Pagination<Progress> getProgresses(int offset, int count);
+    Pagination<Progress> getProgresses(int offset, int count, Set<String> tags);
 
     /**
      * Gets progresses specifying the offset and the count, specifying a search filter.
      *
      * @param offset the offset
      * @param count the count
+     * @param tags
      * @param search a query to filter the results
      * @return a {@link Pagination} of {@link Progress} objects.
      */
-    Pagination<Progress> getProgresses(int offset, int count, String search);
+    Pagination<Progress> getProgresses(int offset, int count, Set<String> tags, String search);
 
     /**
      * Gets the progress with the id, or throws a {@link NotFoundException} if the

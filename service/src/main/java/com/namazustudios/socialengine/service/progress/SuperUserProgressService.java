@@ -1,23 +1,54 @@
 package com.namazustudios.socialengine.service.progress;
 
+import com.namazustudios.socialengine.dao.ProgressDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.mission.Progress;
 
-public class SuperUserProgressService extends UserProgressService implements ProgressService {
+import javax.inject.Inject;
+import java.util.Set;
+
+public class SuperUserProgressService implements ProgressService {
+
+    private ProgressDao progressDao;
 
     @Override
-    public Pagination<Progress> getProgresses(int offset, int count) { return progressDao.getProgresses(offset, count); }
+    public Progress getProgress(final String progressId) {
+        return getProgressDao().getProgress(progressId);
+    }
 
     @Override
-    public Pagination<Progress> getProgresses(int offset, int count, String query) { return progressDao.getProgresses(offset, count, query); }
+    public Pagination<Progress> getProgresses(final int offset, final int count, final Set<String> tags) {
+        return getProgressDao().getProgresses(offset, count, tags);
+    }
 
     @Override
-    public Progress updateProgress(Progress progress) { return progressDao.updateProgress(progress); }
+    public Pagination<Progress> getProgresses(final int offset, final int count,
+                                              final Set<String> tags, final String query) {
+        return getProgressDao().getProgresses(offset, count, tags, query);
+    }
 
     @Override
-    public Progress createProgress(Progress progress) { return progressDao.createProgress(progress); }
+    public Progress updateProgress(final Progress progress) {
+        return getProgressDao().updateProgress(progress);
+    }
 
     @Override
-    public void deleteProgress(String progressNameOrId) { progressDao.deleteProgress(progressNameOrId); }
+    public Progress createProgress(final Progress progress) {
+        return getProgressDao().createProgress(progress);
+    }
+
+    @Override
+    public void deleteProgress(final String progressNameOrId) {
+        getProgressDao().deleteProgress(progressNameOrId);
+    }
+
+    public ProgressDao getProgressDao() {
+        return progressDao;
+    }
+
+    @Inject
+    public void setProgressDao(ProgressDao progressDao) {
+        this.progressDao = progressDao;
+    }
 
 }

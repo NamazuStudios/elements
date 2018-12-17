@@ -12,12 +12,14 @@ import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgress;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoStep;
 import com.namazustudios.socialengine.exception.DuplicateException;
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.mission.Progress;
+import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.apache.commons.lang3.StringUtils;
@@ -38,6 +40,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Set;
 
+import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward.State.CREATED;
 import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward.State.PENDING;
 import static java.lang.System.currentTimeMillis;
@@ -45,6 +48,7 @@ import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @Singleton
 public class MongoProgressDao implements ProgressDao {
@@ -70,14 +74,16 @@ public class MongoProgressDao implements ProgressDao {
     private MongoProfileDao mongoProfileDao;
 
     @Override
-    public Pagination<Progress> getProgresses(Profile profile, int offset, int count)  {
-        return getProgresses(profile, offset, count, null);
+    public Pagination<Progress> getProgresses(final Profile profile, final int offset, final int count,
+                                              final Set<String> tags)  {
+        return getProgresses(profile, offset, count, tags,null);
     }
 
     @Override
-    public Pagination<Progress> getProgresses(Profile profile, int offset, int count, String search) {
-        if (StringUtils.isNotEmpty(search)) {
-            LOGGER.warn(" getProgresss(Profile profile, int offset, int count, String query) was called with a query " +
+    public Pagination<Progress> getProgresses(final Profile profile, final int offset, final int count,
+                                              final Set<String> tags, final String search) {
+        if (isNotEmpty(nullToEmpty(search).trim())) {
+            LOGGER.warn("getProgresss(Profile profile, int offset, int count, String query) was called with a query " +
                         "string parameter.  This field is presently ignored and will return all values");
         }
 
@@ -85,25 +91,39 @@ public class MongoProgressDao implements ProgressDao {
 
         query.field("profile").equal(getDozerMapper().map(profile, MongoProfile.class));
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count,
-                mongoItem -> getDozerMapper().map(mongoItem, Progress.class));
+        if (tags != null && !tags.isEmpty()) {
+            query.field("tags").hasAnyOf(tags);
+        }
+
+        return getMongoDBUtils().paginationFromQuery(
+            query, offset, count,
+            mongoItem -> getDozerMapper().map(mongoItem, Progress.class));
 
     }
 
     @Override
-    public Pagination<Progress> getProgresses(int offset, int count)  { return getProgresses(offset, count, null); }
+    public Pagination<Progress> getProgresses(final int offset, final int count, Set<String> tags)  {
+        return getProgresses(offset, count, tags, null);
+    }
 
     @Override
-    public Pagination<Progress> getProgresses(int offset, int count, String search) {
-        if (StringUtils.isNotEmpty(search)) {
+    public Pagination<Progress> getProgresses(final int offset, final int count,
+                                              final Set<String> tags, final String search) {
+
+        if (isNotEmpty(search)) {
             LOGGER.warn(" getProgresss(int offset, int count, String query) was called with a query " +
                     "string parameter.  This field is presently ignored and will return all values");
         }
 
         final Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count,
-                mongoItem -> getDozerMapper().map(mongoItem, Progress.class));
+        if (tags != null && !tags.isEmpty()) {
+            query.field("tags").hasAnyOf(tags);
+        }
+
+        return getMongoDBUtils().paginationFromQuery(
+            query, offset, count,
+            mongoItem -> getDozerMapper().map(mongoItem, Progress.class));
 
     }
 
@@ -126,11 +146,12 @@ public class MongoProgressDao implements ProgressDao {
 
     @Override
     public Progress getProgress(final String identifier) {
+
         if (StringUtils.isEmpty(identifier)) {
             throw new NotFoundException("Unable to find progress with an id " + identifier);
         }
 
-        Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
+        final Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
 
         if (ObjectId.isValid(identifier)) {
             query.field("_id").equal(new ObjectId(identifier));
@@ -179,16 +200,31 @@ public class MongoProgressDao implements ProgressDao {
     }
 
     @Override
-    public Progress createProgress(Progress progress) {
+    public Progress createProgress(final Progress progress) {
 
         getValidationHelper().validateModel(progress, Insert.class);
 
         normalize(progress);
 
+        final List<Step> steps = progress.getMission().getSteps();
+        final Step finalRepeatStep = progress.getMission().getFinalRepeatStep();
+
+        final Step first;
+
+        if (steps == null || steps.isEmpty()) {
+            if (finalRepeatStep == null) throw new InvalidDataException("one step must be defined");
+            first = finalRepeatStep;
+        } else {
+            first = steps.get(0);
+        }
+
+        progress.setRemaining(first.getCount());
+        getValidationHelper().validateModel(first);
+
         final MongoProgress mongoProgress = getDozerMapper().map(progress, MongoProgress.class);
 
         try {
-            getDatastore().save(mongoProgress);
+            getDatastore().insert(mongoProgress);
         } catch (DuplicateKeyException e) {
             throw new DuplicateException(e);
         }

@@ -134,7 +134,8 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("id","objectId", customConverter(ObjectIdConverter.class));
 
             mapping(Progress.class, MongoProgress.class)
-                .fields("id","objectId", customConverter(ObjectIdConverter.class));
+                .fields("id","objectId", customConverter(ObjectIdConverter.class))
+                .fields("mission.id", "mission.missionId", customConverter(ObjectIdConverter.class));
 
             }
         };

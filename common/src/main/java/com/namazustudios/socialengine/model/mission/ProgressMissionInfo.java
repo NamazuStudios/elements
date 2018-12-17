@@ -10,6 +10,10 @@ import java.util.Objects;
 
 public class ProgressMissionInfo implements Serializable {
 
+    @ApiModelProperty("The id of the mission")
+    @NotNull
+    private String id;
+
     @ApiModelProperty("The name of the mission")
     @NotNull
     private String name;
@@ -30,6 +34,14 @@ public class ProgressMissionInfo implements Serializable {
 
     @ApiModelProperty("The metadata for this mission")
     private Map<String, Object> metadata;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getName() {
         return name;
@@ -84,7 +96,8 @@ public class ProgressMissionInfo implements Serializable {
         if (this == object) return true;
         if (!(object instanceof ProgressMissionInfo)) return false;
         ProgressMissionInfo that = (ProgressMissionInfo) object;
-        return Objects.equals(getName(), that.getName()) &&
+        return Objects.equals(getId(), that.getId()) &&
+                Objects.equals(getName(), that.getName()) &&
                 Objects.equals(getDisplayName(), that.getDisplayName()) &&
                 Objects.equals(getDescription(), that.getDescription()) &&
                 Objects.equals(getSteps(), that.getSteps()) &&
@@ -94,13 +107,14 @@ public class ProgressMissionInfo implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getDisplayName(), getDescription(), getSteps(), getFinalRepeatStep(), getMetadata());
+        return Objects.hash(getId(), getName(), getDisplayName(), getDescription(), getSteps(), getFinalRepeatStep(), getMetadata());
     }
 
     @Override
     public String toString() {
         return "ProgressMissionInfo{" +
-                "name='" + name + '\'' +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", description='" + description + '\'' +
                 ", steps=" + steps +
