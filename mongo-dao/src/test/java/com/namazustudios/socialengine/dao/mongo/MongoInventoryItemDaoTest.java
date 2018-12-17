@@ -143,13 +143,18 @@ public class MongoInventoryItemDaoTest {
         final InventoryItem idInventoryItem = getInventoryItemDao().getInventoryItemByItemNameOrId(user, testItemA.getId(), priority);
         final InventoryItem nameInventoryItem = getInventoryItemDao().getInventoryItemByItemNameOrId(user, testItemA.getName(), priority);
         assertEquals(idInventoryItem, nameInventoryItem);
+        assertEquals(idInventoryItem.getId(), nameInventoryItem.getId());
 
         idInventoryItem.setQuantity(0);
         final InventoryItem updatedToZero = getInventoryItemDao().updateInventoryItem(idInventoryItem);
+
+        assertEquals(updatedToZero.getId(), idInventoryItem.getId());
         assertEquals(updatedToZero.getQuantity(), Integer.valueOf(0));
 
         idInventoryItem.setQuantity(100);
         final InventoryItem updatedToOneHundred = getInventoryItemDao().updateInventoryItem(idInventoryItem);
+
+        assertEquals(updatedToOneHundred.getId(), idInventoryItem.getId());
         assertEquals(updatedToOneHundred.getQuantity(), Integer.valueOf(100));
 
     }
