@@ -181,12 +181,12 @@ public class ServicesModule extends PrivateModule {
                 .toProvider(FacebookAuthServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
-        bind(Attributes.class).toProvider(AttributesProvider.class);
-
-        bind(MatchServiceUtils.class).to(StandardMatchServiceUtils.class);
         bind(SessionService.class).to(AnonSessionService.class);
-
         bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
+
+        bind(Attributes.class).toProvider(AttributesProvider.class);
+        bind(MatchServiceUtils.class).to(StandardMatchServiceUtils.class);
+
         bind(PasswordGenerator.class).to(SecureRandomPasswordGenerator.class).asEagerSingleton();
         bind(DisplayNameGenerator.class).to(SimpleDisplayNameGenerator.class).asEagerSingleton();
 
@@ -223,6 +223,9 @@ public class ServicesModule extends PrivateModule {
         expose(MissionService.class);
         expose(ProgressService.class);
         expose(FacebookAuthService.class);
+        expose(VersionService.class);
+        expose(SessionService.class);
+        
 
     }
 
