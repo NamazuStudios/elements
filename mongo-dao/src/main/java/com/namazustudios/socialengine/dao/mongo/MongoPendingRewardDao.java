@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.MongoException;
 import com.namazustudios.elements.fts.ObjectIndex;
-import com.namazustudios.elements.fts.QueryExecutor;
 import com.namazustudios.socialengine.dao.PendingRewardDao;
 import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils.ContentionException;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
@@ -26,11 +25,14 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import static com.namazustudios.socialengine.dao.InventoryItemDao.SIMPLE_PRIORITY;
-import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward.State.PENDING;
-import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward.State.REWARDED;
+import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
+import static com.namazustudios.socialengine.model.mission.PendingReward.State.REWARDED;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptySet;
 import static java.util.UUID.randomUUID;

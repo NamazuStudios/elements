@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.dao.mongo.model.mission;
 
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.mission.PendingReward;
+import com.namazustudios.socialengine.model.mission.PendingReward.State;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
@@ -18,10 +20,8 @@ public class MongoPendingReward {
     private ObjectId objectId;
 
     @Indexed
-    private MongoUser user;
-
     @Reference
-    private MongoProgress progress;
+    private MongoUser user;
 
     @Embedded
     private MongoStep step;
@@ -50,14 +50,6 @@ public class MongoPendingReward {
 
     public void setUser(MongoUser user) {
         this.user = user;
-    }
-
-    public MongoProgress getProgress() {
-        return progress;
-    }
-
-    public void setProgress(MongoProgress progress) {
-        this.progress = progress;
     }
 
     public MongoStep getStep() {
@@ -98,7 +90,6 @@ public class MongoPendingReward {
         if (!(object instanceof MongoPendingReward)) return false;
         MongoPendingReward that = (MongoPendingReward) object;
         return Objects.equals(getObjectId(), that.getObjectId()) &&
-                Objects.equals(getProgress(), that.getProgress()) &&
                 Objects.equals(getReward(), that.getReward()) &&
                 Objects.equals(getExpires(), that.getExpires()) &&
                 getState() == that.getState();
@@ -106,37 +97,17 @@ public class MongoPendingReward {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getProgress(), getReward(), getExpires(), getState());
+        return Objects.hash(getObjectId(), getReward(), getExpires(), getState());
     }
 
     @Override
     public String toString() {
         return "MongoPendingReward{" +
                 "objectId=" + objectId +
-                ", progress=" + progress +
                 ", reward=" + reward +
                 ", expires=" + expires +
                 ", state=" + state +
                 '}';
-    }
-
-    public enum State {
-
-        /**
-         * Indicates that the reward has been created, but not visible and pending.
-         */
-        CREATED,
-
-        /**
-         * Indicates that the reward is in a state of pending.
-         */
-        PENDING,
-
-        /**
-         * Indicates that the reward is in the rewarded state.
-         */
-        REWARDED
-
     }
 
 }

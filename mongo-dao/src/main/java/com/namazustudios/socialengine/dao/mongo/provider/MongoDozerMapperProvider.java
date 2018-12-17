@@ -15,6 +15,7 @@ import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatchSnapshot;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoMission;
+import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgress;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.*;
@@ -27,6 +28,7 @@ import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.mission.Mission;
+import com.namazustudios.socialengine.model.mission.PendingReward;
 import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -136,6 +138,9 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(Progress.class, MongoProgress.class)
                 .fields("id","objectId", customConverter(ObjectIdConverter.class))
                 .fields("mission.id", "mission.missionId", customConverter(ObjectIdConverter.class));
+
+            mapping(PendingReward.class, MongoPendingReward.class)
+                .fields("id","objectId", customConverter(ObjectIdConverter.class));
 
             }
         };

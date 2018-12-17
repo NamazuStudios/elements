@@ -87,7 +87,6 @@ public class Progress implements Serializable {
         this.pendingRewards = pendingRewards;
     }
 
-
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;

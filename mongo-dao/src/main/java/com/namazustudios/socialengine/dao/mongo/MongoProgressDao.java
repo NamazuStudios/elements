@@ -22,7 +22,6 @@ import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
@@ -41,13 +40,14 @@ import java.util.List;
 import java.util.Set;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward.State.CREATED;
-import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward.State.PENDING;
+import static com.namazustudios.socialengine.model.mission.PendingReward.State.CREATED;
+import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
-import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @Singleton
@@ -134,20 +134,21 @@ public class MongoProgressDao implements ProgressDao {
         final MongoMission mongoMission = getMongoMissionDao().getMongoMissionByNameOrId(missionNameOrId);
 
         final Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
-        query.field("mission.profile").equal(mongoProfile);
+        query.field("profile").equal(mongoProfile);
         query.field("mission.missionId").equal(mongoMission.getObjectId());
 
-        return query.asList()
+        final List<Progress> progresses = query.asList()
             .stream()
-            .map(p -> getDozerMapper()
-            .map(p, Progress.class)).collect(toList());
+            .map(p -> getDozerMapper().map(p, Progress.class)).collect(toList());
+
+        return progresses;
 
     }
 
     @Override
     public Progress getProgress(final String identifier) {
 
-        if (StringUtils.isEmpty(identifier)) {
+        if (isEmpty(nullToEmpty(identifier).trim())) {
             throw new NotFoundException("Unable to find progress with an id " + identifier);
         }
 
@@ -166,6 +167,7 @@ public class MongoProgressDao implements ProgressDao {
         }
 
         return getDozerMapper().map(progress, Progress.class);
+
     }
 
     @Override
@@ -218,10 +220,12 @@ public class MongoProgressDao implements ProgressDao {
             first = steps.get(0);
         }
 
+        progress.setPendingRewards(emptyList());
         progress.setRemaining(first.getCount());
         getValidationHelper().validateModel(first);
 
         final MongoProgress mongoProgress = getDozerMapper().map(progress, MongoProgress.class);
+        mongoProgress.setVersion(randomUUID().toString());
 
         try {
             getDatastore().insert(mongoProgress);
@@ -278,7 +282,7 @@ public class MongoProgressDao implements ProgressDao {
 
         getDatastore().update(query, updates, new UpdateOptions().multi(true).upsert(false));
 
-        return getDozerMapper().map(mongoProgress, Progress.class);
+        return getDozerMapper().map(getDatastore().get(mongoProgress), Progress.class);
 
     }
 
@@ -351,7 +355,6 @@ public class MongoProgressDao implements ProgressDao {
                     pending.setReward(r);
                     pending.setUser(mongoUser);
                     pending.setObjectId(new ObjectId());
-                    pending.setProgress(mongoProgress);
                     pending.setExpires(new Timestamp(currentTimeMillis()));
                     pending.setState(CREATED);
                     pending.setStep(_step);

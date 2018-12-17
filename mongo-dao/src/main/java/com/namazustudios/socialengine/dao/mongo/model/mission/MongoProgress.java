@@ -24,9 +24,6 @@ import java.util.Objects;
         extractor = ObjectIdExtractor.class,
         processors = ObjectIdProcessor.class))
 @Entity(value = "progress", noClassnameStored = true)
-@Indexes({
-    @Index(fields = @Field("mission.name"))
-})
 public class MongoProgress {
 
     @Id
@@ -86,7 +83,7 @@ public class MongoProgress {
         final MongoProgressMissionInfo mission = getMission();
         final List<MongoStep> mongoSteps = mission.getSteps();
 
-        return (mongoSteps == null || mongoSteps.size() <= sequence) ?
+        return (mongoSteps == null || sequence >= mongoSteps.size()) ?
                 mission.getFinalRepeatStep() :
                 mongoSteps.get(sequence);
 

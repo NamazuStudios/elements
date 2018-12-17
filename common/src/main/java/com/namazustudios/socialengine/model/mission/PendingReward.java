@@ -92,6 +92,11 @@ public class PendingReward implements Serializable {
     public enum State {
 
         /**
+         * Indicates that the reward has been created fresh.
+         */
+        CREATED,
+
+        /**
          * Indicates that the reward is in a state of pending.
          */
         PENDING,

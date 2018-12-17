@@ -12,9 +12,12 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
+import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -150,7 +153,7 @@ public class MongoProgressDaoTest  {
     }
 
     @Test(dataProvider = "getMissions")
-    public void tetCreateProgress(final Mission mission) {
+    public void testCreateProgress(final Mission mission) {
 
         final Progress progress = new Progress();
         final Profile active = getProfileDao().getActiveProfile(testProfile.getId());
@@ -172,7 +175,7 @@ public class MongoProgressDaoTest  {
         assertEquals(created.getCurrentStep(), mission.getSteps().get(0));
         assertEquals(created.getRemaining(), created.getCurrentStep().getCount());
         assertEquals(created.getRemaining(), mission.getSteps().get(0).getCount());
-        assertTrue(created.getPendingRewards() == null || created.getPendingRewards().isEmpty());
+        assertTrue(created.getPendingRewards().isEmpty());
 
         assertNotNull(created.getMission());
         assertEquals(created.getMission().getId(), mission.getId());
@@ -185,6 +188,70 @@ public class MongoProgressDaoTest  {
 
     }
 
+    @DataProvider
+    public Object[][] getFiniteProgresses() {
+        return getProgressDao()
+            .getProgressesForProfileAndMission(testProfile, testFiniteMission.getId())
+            .stream()
+            .map(p -> new Object[]{p})
+            .toArray(Object[][]::new);
+    }
+
+    @Test(dataProvider = "getFiniteProgresses", dependsOnMethods = "testCreateProgress")
+    public void testAdvancementThroughFiniteMission(Progress progress) {
+        final Queue<Step> steps = new LinkedList<>(progress.getMission().getSteps());
+        testAdvancement(steps, progress);
+    }
+
+    @DataProvider
+    public Object[][] getRepeatingProgresses() {
+        return getProgressDao()
+            .getProgressesForProfileAndMission(testProfile, testRepeatingMission.getId())
+            .stream()
+            .map(p -> new Object[]{p})
+            .toArray(Object[][]::new);
+    }
+
+    @Test(dataProvider = "getRepeatingProgresses", dependsOnMethods = "testCreateProgress")
+    public void testAdvancementThroughRepeatingMission(final Progress progress) {
+
+        final Queue<Step> steps = new LinkedList<>(progress.getMission().getSteps());
+        assertNotNull(progress.getMission().getFinalRepeatStep());
+
+        for (int i = 0; i < 10; ++i) {
+            steps.add(progress.getMission().getFinalRepeatStep());
+        }
+
+        testAdvancement(steps, progress);
+
+    }
+
+    public void testAdvancement(final Queue<Step> steps, Progress progress) {
+
+        int expectedRewards = 0;
+
+        do {
+
+            final Step step = steps.remove();
+
+            progress = getProgressDao().advanceProgress(progress, progress.getRemaining() - 1);
+            assertEquals(progress.getPendingRewards().size(), expectedRewards);
+
+            progress = getProgressDao().advanceProgress(progress, 1);
+            expectedRewards += step.getRewards().size();
+
+            assertEquals(progress.getPendingRewards().size(), expectedRewards);
+            if (!steps.isEmpty()) assertEquals(progress.getCurrentStep(), steps.peek());
+
+            final PendingReward pendingReward = progress.getPendingRewards().get(expectedRewards - 1);
+            assertNotNull(pendingReward.getId());
+            assertEquals(pendingReward.getStep(), step);
+            assertEquals(pendingReward.getReward(), step.getRewards().get(0));
+            assertEquals(pendingReward.getState(), PENDING);
+
+        } while (!steps.isEmpty());
+
+    }
 
     public UserDao getUserDao() {
         return userDao;
