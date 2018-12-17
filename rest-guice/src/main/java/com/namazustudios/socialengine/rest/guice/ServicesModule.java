@@ -225,7 +225,7 @@ public class ServicesModule extends PrivateModule {
         expose(FacebookAuthService.class);
         expose(VersionService.class);
         expose(SessionService.class);
-        
+
 
     }
 

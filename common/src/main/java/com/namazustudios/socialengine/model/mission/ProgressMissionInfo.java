@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.mission;
 
+import com.namazustudios.socialengine.model.ValidationGroups;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
@@ -7,6 +8,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public class ProgressMissionInfo implements Serializable {
 
@@ -31,6 +33,9 @@ public class ProgressMissionInfo implements Serializable {
 
     @ApiModelProperty("The final repeating step (may be null if step(s) are specified)")
     private Step finalRepeatStep;
+
+    @ApiModelProperty("The tags used to categorize this mission")
+    private Set<String> tags;
 
     @ApiModelProperty("The metadata for this mission")
     private Map<String, Object> metadata;
@@ -83,6 +88,14 @@ public class ProgressMissionInfo implements Serializable {
         this.finalRepeatStep = finalRepeatStep;
     }
 
+    public Set<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
+    }
+
     public Map<String, Object> getMetadata() {
         return metadata;
     }
@@ -102,12 +115,13 @@ public class ProgressMissionInfo implements Serializable {
                 Objects.equals(getDescription(), that.getDescription()) &&
                 Objects.equals(getSteps(), that.getSteps()) &&
                 Objects.equals(getFinalRepeatStep(), that.getFinalRepeatStep()) &&
+                Objects.equals(getTags(), that.getTags()) &&
                 Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getDisplayName(), getDescription(), getSteps(), getFinalRepeatStep(), getMetadata());
+        return Objects.hash(getId(), getName(), getDisplayName(), getDescription(), getSteps(), getFinalRepeatStep(), getTags(), getMetadata());
     }
 
     @Override
@@ -119,6 +133,7 @@ public class ProgressMissionInfo implements Serializable {
                 ", description='" + description + '\'' +
                 ", steps=" + steps +
                 ", finalRepeatStep=" + finalRepeatStep +
+                ", tags=" + tags +
                 ", metadata=" + metadata +
                 '}';
     }
