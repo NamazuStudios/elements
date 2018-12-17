@@ -1,15 +1,18 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.InventoryItemDao;
+import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils.ContentionException;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
@@ -30,6 +33,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import static com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId.parseOrThrowNotFoundException;
+import static java.lang.Integer.max;
 import static java.util.UUID.randomUUID;
 
 @Singleton
@@ -53,6 +57,8 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
     private MongoUserDao mongoUserDao;
 
+    private MongoConcurrentUtils mongoConcurrentUtils;
+
     @Override
     public InventoryItem getInventoryItem(final String inventoryItemId) {
 
@@ -72,14 +78,13 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     }
 
     @Override
-    public InventoryItem getInventoryItemByItemNameOrId(final User user, final String itemNameOrId) {
+    public InventoryItem getInventoryItemByItemNameOrId(final User user, final String itemNameOrId, int priority) {
 
-        final Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
+        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
+        final MongoItem mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
+        final MongoInventoryItemId objectId = new MongoInventoryItemId(mongoUser, mongoItem, priority);
 
-        query.field("user").equal(getDozerMapper().map(user, MongoUser.class));
-        query.field("item").equal(getMongoItemDao().getMongoItemByNameOrId(itemNameOrId));
-
-        final MongoInventoryItem item = query.get();
+        final MongoInventoryItem item = getDatastore().get(MongoInventoryItem.class, objectId);
 
         if (item == null) {
             throw new NotFoundException("Unable to find item with an id of " + itemNameOrId + " for user " + user.getId());
@@ -128,7 +133,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         mongoInventoryItem.setObjectId(new MongoInventoryItemId(mongoUser, mongoItem, inventoryItem.getPriority()));
 
         try {
-            getDatastore().save(mongoInventoryItem);
+            getDatastore().insert(mongoInventoryItem);
         } catch (DuplicateKeyException ex) {
             throw new DuplicateException(ex);
         }
@@ -175,29 +180,51 @@ public class MongoInventoryItemDao implements InventoryItemDao {
             final int priority,
             final int quantityDelta) {
 
-        final Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
-
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
         final MongoItem mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
-
         final MongoInventoryItemId objectId = new MongoInventoryItemId(mongoUser, mongoItem, priority);
-        query.field("_id").equal(objectId);
 
+        final MongoInventoryItem mongoInventoryItem;
+
+        try {
+            mongoInventoryItem = getMongoConcurrentUtils()
+                .performOptimistic(ads -> doAdjustQuantityForItem(objectId, quantityDelta));
+        } catch (MongoConcurrentUtils.ConflictException ex) {
+            throw new TooBusyException(ex);
+        }
+
+        getObjectIndex().index(mongoInventoryItem);
+        return getDozerMapper().map(mongoInventoryItem, InventoryItem.class);
+
+    }
+
+    private MongoInventoryItem doAdjustQuantityForItem(final MongoInventoryItemId objectId, final int quantityDelta) throws ContentionException {
+
+        final MongoInventoryItem mongoInventoryItem = getDatastore().get(MongoInventoryItem.class, objectId);
+
+        final Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
         final UpdateOperations<MongoInventoryItem> operations = getDatastore().createUpdateOperations(MongoInventoryItem.class);
 
-        operations.set("_id", objectId);
-        operations.inc("quantity", quantityDelta);
-        operations.min("quantity", 0);
+        query.field("_id").equal(objectId);
+        query.field("version").equal(mongoInventoryItem.getVersion());
+
+        final int quantity = max(0, quantityDelta + mongoInventoryItem.getQuantity());
+
+        operations.set("quantity", quantity);
         operations.set("version", randomUUID().toString());
 
         final FindAndModifyOptions options = new FindAndModifyOptions()
-                .returnNew(true)
-                .upsert(false);
+            .returnNew(true)
+            .writeConcern(WriteConcern.ACKNOWLEDGED)
+            .upsert(false);
 
-        final MongoInventoryItem mongoInventoryItem = getDatastore().findAndModify(query, operations, options);
-        getObjectIndex().index(mongoInventoryItem);
+        final MongoInventoryItem item = getDatastore().findAndModify(query, operations, options);
 
-        return getDozerMapper().map(mongoInventoryItem, InventoryItem.class);
+        if (item == null) {
+            throw new ContentionException();
+        }
+
+        return item;
 
     }
 
@@ -288,6 +315,15 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     @Inject
     public void setMongoUserDao(MongoUserDao mongoUserDao) {
         this.mongoUserDao = mongoUserDao;
+    }
+
+    public MongoConcurrentUtils getMongoConcurrentUtils() {
+        return mongoConcurrentUtils;
+    }
+
+    @Inject
+    public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
+        this.mongoConcurrentUtils = mongoConcurrentUtils;
     }
 
 }

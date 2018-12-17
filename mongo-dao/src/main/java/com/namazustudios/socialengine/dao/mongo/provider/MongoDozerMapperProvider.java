@@ -126,7 +126,9 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(InventoryItem.class, MongoInventoryItem.class)
                 .fields("id","objectId", customConverter(MongoInventoryItemIdConverter.class))
-                .fields("priority", "objectId.priority");
+                .fields("priority", "objectId.priority")
+                .fields("user.id", "objectId.userObjectId", customConverter(ObjectIdConverter.class))
+                .fields("item.id", "objectId.itemObjectId", customConverter(ObjectIdConverter.class));
 
             mapping(Mission.class, MongoMission.class)
                 .fields("id","objectId", customConverter(ObjectIdConverter.class));

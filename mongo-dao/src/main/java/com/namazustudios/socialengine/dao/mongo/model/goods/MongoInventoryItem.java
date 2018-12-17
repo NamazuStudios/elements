@@ -46,7 +46,7 @@ public class MongoInventoryItem {
     private MongoUser user;
 
     @Property
-    private Integer quantity;
+    private int quantity;
 
     @Reference
     private Set<MongoPendingReward> pendingRewards;
@@ -102,17 +102,16 @@ public class MongoInventoryItem {
         if (this == object) return true;
         if (!(object instanceof MongoInventoryItem)) return false;
         MongoInventoryItem that = (MongoInventoryItem) object;
-        return Objects.equals(getObjectId(), that.getObjectId()) &&
+        return getQuantity() == that.getQuantity() &&
+                Objects.equals(getObjectId(), that.getObjectId()) &&
                 Objects.equals(getVersion(), that.getVersion()) &&
                 Objects.equals(getItem(), that.getItem()) &&
                 Objects.equals(getUser(), that.getUser()) &&
-                Objects.equals(getQuantity(), that.getQuantity()) &&
                 Objects.equals(getPendingRewards(), that.getPendingRewards());
     }
 
     @Override
     public int hashCode() {
-
         return Objects.hash(getObjectId(), getVersion(), getItem(), getUser(), getQuantity(), getPendingRewards());
     }
 

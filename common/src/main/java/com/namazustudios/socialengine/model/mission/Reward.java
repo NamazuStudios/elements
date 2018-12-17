@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
@@ -15,7 +16,7 @@ import java.util.Objects;
  * Created by davidjbrooks on 11/23/2018.
  */
 @ApiModel
-public class Reward {
+public class Reward implements Serializable {
 
     @NotNull
     @ApiModelProperty("The Item that constitutes the reward")

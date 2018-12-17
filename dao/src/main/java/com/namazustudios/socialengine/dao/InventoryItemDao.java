@@ -58,9 +58,10 @@ public interface InventoryItemDao {
      *
      * @param user the {@link User} that owns the item
      * @param itemNameOrId an item name or ID to limit the results
+     * @param priority
      * @return the {@link InventoryItem} that was requested, never null
      */
-    InventoryItem getInventoryItemByItemNameOrId(User user, String itemNameOrId);
+    InventoryItem getInventoryItemByItemNameOrId(User user, String itemNameOrId, int priority);
 
     /**
      * Updates the specific inventory item with the id, or throws a {@link NotFoundException} if the

@@ -9,6 +9,8 @@ import com.namazustudios.socialengine.model.inventory.InventoryItem;
 
 import javax.inject.Inject;
 
+import static com.namazustudios.socialengine.dao.InventoryItemDao.SIMPLE_PRIORITY;
+
 public class UserSimpleInventoryItemService implements SimpleInventoryItemService {
 
     private User user;
@@ -17,7 +19,7 @@ public class UserSimpleInventoryItemService implements SimpleInventoryItemServic
 
     @Override
     public InventoryItem getInventoryItem(final String itemNameOrId) {
-        return getInventoryItemDao().getInventoryItemByItemNameOrId(getUser(), itemNameOrId);
+        return getInventoryItemDao().getInventoryItemByItemNameOrId(getUser(), itemNameOrId, SIMPLE_PRIORITY);
     }
 
     @Override

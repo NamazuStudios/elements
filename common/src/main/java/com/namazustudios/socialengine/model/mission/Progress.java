@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
@@ -16,7 +17,7 @@ import java.util.Objects;
  *
  * Created by davidjbrooks on 12/03/2018.
  */
-public class Progress {
+public class Progress implements Serializable {
 
     @NotNull(groups={Update.class})
     @Null(groups={Create.class, Insert.class})

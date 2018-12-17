@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -14,7 +15,7 @@ import java.util.Map;
  * Created by davidjbrooks on 11/23/2018.
  */
 @ApiModel
-public class Step {
+public class Step implements Serializable {
 
     @ApiModelProperty("The display name for the step")
     @NotNull

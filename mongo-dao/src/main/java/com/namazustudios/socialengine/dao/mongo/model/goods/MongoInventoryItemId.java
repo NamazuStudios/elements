@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.annotations.Property;
 
 import java.util.Base64;
 import java.util.Objects;
@@ -23,10 +24,13 @@ public class MongoInventoryItemId {
 
     private static final int INVENTORY_ITEM_ID_LENGTH = PRIORITY_OFFSET + Integer.BYTES;
 
+    @Property
     private ObjectId userObjectId;
 
+    @Property
     private ObjectId itemObjectId;
 
+    @Property
     private int priority;
 
     public MongoInventoryItemId() {}
@@ -131,7 +135,8 @@ public class MongoInventoryItemId {
     @Override
     public String toString() {
         return "MongoInventoryItemId{" +
-                "itemObjectId=" + itemObjectId +
+                "userObjectId=" + userObjectId +
+                ", itemObjectId=" + itemObjectId +
                 ", priority=" + priority +
                 '}';
     }

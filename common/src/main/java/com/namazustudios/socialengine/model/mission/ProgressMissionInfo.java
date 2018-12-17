@@ -3,11 +3,12 @@ package com.namazustudios.socialengine.model.mission;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class ProgressMissionInfo {
+public class ProgressMissionInfo implements Serializable {
 
     @ApiModelProperty("The name of the mission")
     @NotNull

@@ -9,11 +9,12 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.io.Serializable;
 import java.util.Objects;
 
 @ApiModel(description = "Represents a Reward that has been issued but has not yet been claimed by the user.  The " +
                         "reward is assigned a unique ID to ensure that it may not have been applied more than once.")
-public class PendingReward {
+public class PendingReward implements Serializable {
 
     @Null(groups = {Create.class, Insert.class})
     @NotNull(groups = {Update.class})
