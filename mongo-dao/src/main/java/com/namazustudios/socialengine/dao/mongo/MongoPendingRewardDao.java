@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoException;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.PendingRewardDao;
@@ -9,13 +10,16 @@ import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward;
+import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.mission.PendingReward;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -31,8 +35,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import static com.namazustudios.socialengine.dao.InventoryItemDao.SIMPLE_PRIORITY;
-import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
-import static com.namazustudios.socialengine.model.mission.PendingReward.State.REWARDED;
+import static com.namazustudios.socialengine.model.mission.PendingReward.State.*;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptySet;
 import static java.util.UUID.randomUUID;
@@ -53,6 +56,8 @@ public class MongoPendingRewardDao implements PendingRewardDao {
     private MongoConcurrentUtils mongoConcurrentUtils;
 
     private ObjectIndex objectIndex;
+
+    private ValidationHelper validationHelper;
 
     @Override
     public PendingReward getPendingReward(final String id) {
@@ -95,6 +100,46 @@ public class MongoPendingRewardDao implements PendingRewardDao {
         }
 
         return mongoPendingReward;
+
+    }
+
+    @Override
+    public PendingReward createPendingReward(final PendingReward pendingReward) {
+
+        getValidationHelper().validateModel(pendingReward, ValidationGroups.Insert.class);
+
+        final MongoPendingReward mongoPendingReward = getDozerMapper().map(pendingReward, MongoPendingReward.class);
+        mongoPendingReward.setState(CREATED);
+        mongoPendingReward.setExpires(new Timestamp(currentTimeMillis()));
+
+        try {
+            getDatastore().insert(mongoPendingReward);
+        } catch (DuplicateKeyException e) {
+            throw new DuplicateException(e);
+        }
+
+        getObjectIndex().index(mongoPendingReward);
+        return getDozerMapper().map(getDatastore().get(mongoPendingReward), PendingReward.class);
+
+    }
+
+    @Override
+    public PendingReward flagPending(final PendingReward pendingReward) {
+
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(pendingReward.getId());
+
+        final Query<MongoPendingReward> query = getDatastore().createQuery(MongoPendingReward.class);
+        query.field("_id").equal(objectId);
+        query.field("state").equal(CREATED);
+
+        final UpdateOperations<MongoPendingReward> updates = getDatastore().createUpdateOperations(MongoPendingReward.class);
+        updates.unset("expires");
+        updates.set("state", PENDING);
+
+        final FindAndModifyOptions options = new FindAndModifyOptions().upsert(false).returnNew(true);
+        final MongoPendingReward mongoPendingReward = getDatastore().findAndModify(query, updates, options);
+
+        return getDozerMapper().map(mongoPendingReward, PendingReward.class);
 
     }
 
@@ -155,9 +200,8 @@ public class MongoPendingRewardDao implements PendingRewardDao {
                                     .filter(pr -> Objects.equals(mongoInventoryItem.getObjectId(), pr.getObjectId()))
                                     .map(pr -> false).findFirst().orElse(true);
 
-            if (!add) {
+            if (add) {
                 updates.inc("quantity", mongoPendingReward.getReward().getQuantity());
-                updates.max("quantity", 0);
                 updates.addToSet("pendingRewards", mongoPendingReward);
             }
 
@@ -184,14 +228,15 @@ public class MongoPendingRewardDao implements PendingRewardDao {
             inventoryItem.getPendingRewards().isEmpty() ? emptySet() :
             inventoryItem.getPendingRewards().stream().map(pr -> pr.getObjectId()).collect(toSet());
 
-        final Query<PendingReward> query = getDatastore().createQuery(PendingReward.class);
+        final Query<MongoPendingReward> query = getDatastore().createQuery(MongoPendingReward.class);
         query.field("_id").in(objectIds);
 
-        final List<PendingReward> flaggedPendingRewards = new ArrayList<>(query.asList());
+        final List<MongoPendingReward> flaggedPendingRewards = new ArrayList<>(query.asList());
+        if (flaggedPendingRewards.isEmpty()) return inventoryItem;
 
-        final UpdateOperations<PendingReward> rewardUpdates = getDatastore().createUpdateOperations(PendingReward.class);
+        final UpdateOperations<MongoPendingReward> rewardUpdates = getDatastore().createUpdateOperations(MongoPendingReward.class);
         rewardUpdates.set("state", REWARDED);
-        rewardUpdates.set("expiry", new Timestamp(currentTimeMillis()));
+        rewardUpdates.set("expires", new Timestamp(currentTimeMillis()));
         getDatastore().findAndModify(query, rewardUpdates);
 
         final UpdateOperations<MongoInventoryItem> inventoryItemUpdates = getDatastore().createUpdateOperations(MongoInventoryItem.class);
@@ -262,5 +307,14 @@ public class MongoPendingRewardDao implements PendingRewardDao {
     @Inject
     public void setObjectIndex(ObjectIndex objectIndex) {
         this.objectIndex = objectIndex;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
     }
 }

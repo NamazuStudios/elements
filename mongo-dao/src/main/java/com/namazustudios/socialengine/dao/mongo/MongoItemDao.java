@@ -64,7 +64,7 @@ public class MongoItemDao implements ItemDao {
         return getMongoItem(objectId);
     }
 
-    private MongoItem getMongoItem(final ObjectId objectId) {
+    public MongoItem getMongoItem(final ObjectId objectId) {
 
         final MongoItem mongoItem = getDatastore().get(MongoItem.class, objectId);
 

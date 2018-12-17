@@ -48,7 +48,7 @@ public class MongoInventoryItem {
     @Property
     private int quantity;
 
-    @Reference
+    @Reference(ignoreMissing = true)
     private Set<MongoPendingReward> pendingRewards;
 
     public MongoInventoryItemId getObjectId() {

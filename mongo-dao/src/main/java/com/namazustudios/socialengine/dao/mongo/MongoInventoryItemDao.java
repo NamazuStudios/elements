@@ -206,9 +206,24 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         final UpdateOperations<MongoInventoryItem> operations = getDatastore().createUpdateOperations(MongoInventoryItem.class);
 
         query.field("_id").equal(objectId);
-        query.field("version").equal(mongoInventoryItem.getVersion());
+        query.field("version").equal(mongoInventoryItem == null ? randomUUID().toString() : mongoInventoryItem.getVersion());
 
-        final int quantity = max(0, quantityDelta + mongoInventoryItem.getQuantity());
+        final int base;
+
+        if (mongoInventoryItem == null) {
+
+            final MongoItem mongoItem = getMongoItemDao().getMongoItem(objectId.getItemObjectId());
+            final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(objectId.getUserObjectId());
+
+            base = 0;
+            operations.set("user", mongoUser);
+            operations.set("item", mongoItem);
+
+        } else {
+            base = mongoInventoryItem.getQuantity();
+        }
+
+        final int quantity = max(0, base + quantityDelta);
 
         operations.set("quantity", quantity);
         operations.set("version", randomUUID().toString());
@@ -216,7 +231,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         final FindAndModifyOptions options = new FindAndModifyOptions()
             .returnNew(true)
             .writeConcern(WriteConcern.ACKNOWLEDGED)
-            .upsert(false);
+            .upsert(true);
 
         final MongoInventoryItem item = getDatastore().findAndModify(query, operations, options);
 

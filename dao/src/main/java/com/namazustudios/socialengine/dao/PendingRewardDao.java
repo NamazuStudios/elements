@@ -52,6 +52,22 @@ public interface PendingRewardDao {
     Pagination<PendingReward> getPendingRewards(User user, int offset, int count, Set<State> states);
 
     /**
+     * Creates an instance of {@link PendingReward}. This must be created with the flag {@link State#CREATED}.
+     *
+     * @param pendingReward the instance of {@link PendingReward} to create
+     * @return the {@link PendingReward} instance
+     */
+    PendingReward createPendingReward(PendingReward pendingReward);
+
+    /**
+     * Flags an instance of {@link PendingReward} as {@link State#PENDING}
+     *
+     * @param pendingReward the instance of {@link PendingReward} to create
+     * @return the {@link PendingReward} instance
+     */
+    PendingReward flagPending(PendingReward pendingReward);
+
+    /**
      * Redeems the {@link PendingReward}.  Once redeemed, the reward will be placed into the associated user's
      * inventory.  This method will select an {@link InventoryItem} with a priority of value zero to accept the
      * {@link PendingReward}.

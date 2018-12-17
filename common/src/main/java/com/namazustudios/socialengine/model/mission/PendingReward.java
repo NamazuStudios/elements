@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -22,6 +23,10 @@ public class PendingReward implements Serializable {
     private String id;
 
     @NotNull
+    @ApiModelProperty("The User to receive the reward.")
+    private User user;
+
+    @NotNull
     @ApiModelProperty("The state of the reward.")
     private State state;
 
@@ -37,6 +42,14 @@ public class PendingReward implements Serializable {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public Step getStep() {
@@ -69,23 +82,25 @@ public class PendingReward implements Serializable {
         if (!(object instanceof PendingReward)) return false;
         PendingReward that = (PendingReward) object;
         return Objects.equals(getId(), that.getId()) &&
+                Objects.equals(getUser(), that.getUser()) &&
+                getState() == that.getState() &&
                 Objects.equals(getReward(), that.getReward()) &&
-                Objects.equals(getStep(), that.getStep()) &&
-                getState() == that.getState();
+                Objects.equals(getStep(), that.getStep());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getReward(), getStep(), getState());
+        return Objects.hash(getId(), getUser(), getState(), getReward(), getStep());
     }
 
     @Override
     public String toString() {
         return "PendingReward{" +
                 "id='" + id + '\'' +
+                ", user=" + user +
+                ", state=" + state +
                 ", reward=" + reward +
                 ", step=" + step +
-                ", state=" + state +
                 '}';
     }
 
