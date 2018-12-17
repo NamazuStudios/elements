@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.*;
+import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.goods.Item;
@@ -14,7 +15,7 @@ import org.testng.annotations.Test;
 import javax.inject.Inject;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
 import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
@@ -106,7 +107,7 @@ public class MongoProgressDaoTest  {
         testItem.setName("potion");
         testItem.setDisplayName("Magical Potions");
         testItem.setDescription("Magical Coins for Magic!");
-        testItem.setTags(of("a").collect(toSet()));
+        testItem.setTags(of("repeat").collect(toSet()));
         testItem.addMetadata("consumable", true);
         return getItemDao().createItem(testItem);
     }
@@ -116,7 +117,7 @@ public class MongoProgressDaoTest  {
         testMission.setName("tally_me_banana_finite");
         testMission.setDisplayName("Tally me Banana");
         testMission.setDescription("Collect all the bananas");
-        testMission.setTags(Stream.of("a", "b", "c").collect(toList()));
+        testMission.setTags(of("finite").collect(toSet()));
         testMission.setSteps(asList(
             testStep("Collect 5", "Collect 5 Bananas", 5, testFiniteItem),
             testStep("Collect 10", "Collect 10 Bananas", 10, testFiniteItem),
@@ -131,7 +132,7 @@ public class MongoProgressDaoTest  {
         testMission.setName("tally_me_banana_repeating");
         testMission.setDisplayName("Tally me Banana");
         testMission.setDescription("Collect all the bananas");
-        testMission.setTags(Stream.of("a", "b", "c").collect(toList()));
+        testMission.setTags(of("repeating").collect(toSet()));
         testMission.setSteps(asList(
             testStep("Collect 5", "Collect 5 Bananas", 5, testRepeatItem),
             testStep("Collect 10", "Collect 10 Bananas", 10, testRepeatItem),
@@ -162,7 +163,7 @@ public class MongoProgressDaoTest  {
 
     @DataProvider
     public Object[][] getMissions() {
-        return Stream.of(testFiniteMission, testRepeatingMission)
+        return of(testFiniteMission, testRepeatingMission)
             .map(m -> new Object[]{m})
             .toArray(Object[][]::new);
     }
@@ -182,6 +183,7 @@ public class MongoProgressDaoTest  {
         progressMissionInfo.setSteps(mission.getSteps());
         progressMissionInfo.setFinalRepeatStep(mission.getFinalRepeatStep());
         progressMissionInfo.setMetadata(mission.getMetadata());
+        progressMissionInfo.setTags(mission.getTags());
         progress.setMission(progressMissionInfo);
 
         final Progress created = getProgressDao().createProgress(progress);
@@ -200,6 +202,22 @@ public class MongoProgressDaoTest  {
         assertEquals(created.getMission().getFinalRepeatStep(), mission.getFinalRepeatStep());
         assertEquals(created.getMission().getSteps(), mission.getSteps());
         assertEquals(created.getMission().getFinalRepeatStep(), mission.getFinalRepeatStep());
+        assertEquals(created.getMission().getTags(), mission.getTags());
+
+    }
+
+    @Test(dependsOnMethods = "testCreateProgress")
+    public void testGetProgressByMissionTags() {
+        final Pagination<Progress> finiteProgressPagination = getProgressDao()
+            .getProgresses(testProfile, 0, 20, of("finite").collect(toSet()));
+
+        final Pagination<Progress> repeatingProgressPagination = getProgressDao()
+            .getProgresses(testProfile, 0, 20, of("repeating").collect(toSet()));
+
+        assertEquals(finiteProgressPagination.getObjects().size(), 1);
+        assertEquals(repeatingProgressPagination.getObjects().size(), 1);
+        assertEquals(finiteProgressPagination.getObjects().get(0).getMission().getId(), testFiniteMission.getId());
+        assertEquals(repeatingProgressPagination.getObjects().get(0).getMission().getId(), testRepeatingMission.getId());
 
     }
 
@@ -212,7 +230,7 @@ public class MongoProgressDaoTest  {
             .toArray(Object[][]::new);
     }
 
-    @Test(dataProvider = "getFiniteProgresses", dependsOnMethods = "testCreateProgress")
+    @Test(dataProvider = "getFiniteProgresses", dependsOnMethods = "testGetProgressByMissionTags")
     public void testAdvancementThroughFiniteMission(Progress progress) {
         final Queue<Step> steps = new LinkedList<>(progress.getMission().getSteps());
         testAdvancement(steps, progress);
@@ -227,7 +245,7 @@ public class MongoProgressDaoTest  {
             .toArray(Object[][]::new);
     }
 
-    @Test(dataProvider = "getRepeatingProgresses", dependsOnMethods = "testCreateProgress")
+    @Test(dataProvider = "getRepeatingProgresses", dependsOnMethods = "testGetProgressByMissionTags")
     public void testAdvancementThroughRepeatingMission(final Progress progress) {
 
         final Queue<Step> steps = new LinkedList<>(progress.getMission().getSteps());
