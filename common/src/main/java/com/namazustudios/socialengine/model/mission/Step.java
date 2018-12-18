@@ -5,7 +5,6 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +32,7 @@ public class Step implements Serializable {
     @Min(value = 0, message = "Count may not be less than 1")
     private Integer count;
 
-    @Null
+    @NotNull
     @ApiModelProperty("The reward(s) that will be granted upon completion")
     private List<Reward> rewards;
 
