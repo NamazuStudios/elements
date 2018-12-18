@@ -18,7 +18,12 @@ public class UserUsernamePasswordAuthService implements UsernamePasswordAuthServ
     private Session session;
 
     @Override
-    public SessionCreation createSessionWithLogin(String userId, String password) {
+    public SessionCreation createSessionWithLogin(final String userId, final String password) {
+        throw new BadRequestException("Session already active.");
+    }
+
+    @Override
+    public SessionCreation createSessionWithLogin(final String userId, final String password, final String profileId) {
         throw new BadRequestException("Session already active.");
     }
 

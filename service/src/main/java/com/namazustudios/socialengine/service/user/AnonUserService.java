@@ -10,8 +10,9 @@ import com.namazustudios.socialengine.service.UserService;
 import javax.inject.Inject;
 
 public class AnonUserService extends AbstractUserService implements UserService {
+
     @Inject
-    protected UserDao userDao;
+    private UserDao userDao;
 
     @Override
     public User getUser(String userId)  {
@@ -39,9 +40,9 @@ public class AnonUserService extends AbstractUserService implements UserService 
     }
 
     @Override
-    public User createUser(UserCreateRequest userCreateRequest)  {
+    public User createUser(final UserCreateRequest userCreateRequest)  {
 
-        User user = new User();
+        final User user = new User();
 
         user.setEmail(userCreateRequest.getEmail());
         user.setName(userCreateRequest.getName());
@@ -50,7 +51,7 @@ public class AnonUserService extends AbstractUserService implements UserService 
         user.setActive(true);
 
         // reuse existing DAO method
-        return userDao.createOrRectivateUserWithPassword(user, userCreateRequest.getPassword());
+        return getUserDao().createOrRectivateUserWithPassword(user, userCreateRequest.getPassword());
 
     }
 
@@ -68,4 +69,14 @@ public class AnonUserService extends AbstractUserService implements UserService 
     public void deleteUser(String userId)  {
         throw new ForbiddenException();
     }
+
+    public UserDao getUserDao() {
+        return userDao;
+    }
+
+    @Inject
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
+    }
+
 }

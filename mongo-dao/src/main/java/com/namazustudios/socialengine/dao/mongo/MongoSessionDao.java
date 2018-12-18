@@ -8,7 +8,6 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoSessionSecret;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.*;
 
-import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -132,11 +131,11 @@ public class MongoSessionDao implements SessionDao {
     }
 
     @Override
-    public SessionCreation create(final User user, final Session session) {
+    public SessionCreation create(final Session session) {
 
         validate(session);
 
-        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user.getId());
+        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(session.getUser());
         final MongoSessionSecret mongoSessionSecret = new MongoSessionSecret(mongoUser.getObjectId());
 
         final MessageDigest messageDigest = getMessageDigestProvider().get();

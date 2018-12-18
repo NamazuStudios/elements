@@ -33,11 +33,10 @@ public interface SessionDao {
      * {@link SessionCreation} providing a secret key which can be used to access the {@link Session} in the future.
      *
      *
-     * @param user
      * @param session
      * @return the {@link SessionCreation} as it was created in the database
      */
-    SessionCreation create(User user, Session session);
+    SessionCreation create(Session session);
 
     /**
      * Deletes the {@link Session} instance.  The secret is determined by {@link SessionCreation#getSessionSecret()}.
