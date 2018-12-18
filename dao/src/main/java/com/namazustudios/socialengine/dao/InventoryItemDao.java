@@ -54,6 +54,18 @@ public interface InventoryItemDao {
 
     /**
      * Gets the primary (single) inventory item for with the item name or id, or throws a {@link NotFoundException}
+     * if the item or inventory item can't be found.  This uses the {@link #SIMPLE_PRIORITY} slot.
+     *
+     * @param user the {@link User} that owns the item
+     * @param itemNameOrId an item name or ID to limit the results
+     * @return the {@link InventoryItem} that was requested, never null
+     */
+    default InventoryItem getInventoryItemByItemNameOrId(User user, String itemNameOrId) {
+        return getInventoryItemByItemNameOrId(user, itemNameOrId, SIMPLE_PRIORITY);
+    }
+
+    /**
+     * Gets the primary (single) inventory item for with the item name or id, or throws a {@link NotFoundException}
      * if the item or inventory item can't be found.
      *
      * @param user the {@link User} that owns the item
