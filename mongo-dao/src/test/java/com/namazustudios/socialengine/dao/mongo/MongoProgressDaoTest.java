@@ -15,13 +15,11 @@ import org.testng.annotations.Test;
 import javax.inject.Inject;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
 import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.of;
 import static org.testng.Assert.*;
