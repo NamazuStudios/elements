@@ -7,10 +7,7 @@ import com.namazustudios.socialengine.dao.ProgressDao;
 import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils.ContentionException;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
-import com.namazustudios.socialengine.dao.mongo.model.mission.MongoMission;
-import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward;
-import com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgress;
-import com.namazustudios.socialengine.dao.mongo.model.mission.MongoStep;
+import com.namazustudios.socialengine.dao.mongo.model.mission.*;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
@@ -19,6 +16,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.mission.Progress;
+import com.namazustudios.socialengine.model.mission.Reward;
 import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -347,7 +345,8 @@ public class MongoProgressDao implements ProgressDao {
             // Assigns the rewards from the step
 
             final MongoStep _step = step;
-            final List<MongoPendingReward> pendingRewards = step.getRewards()
+            final List<MongoReward> rewards = step.getRewards();
+            final List<MongoPendingReward> pendingRewards = rewards == null ? emptyList() : rewards
                 .stream()
                 .filter(r -> r != null && r.getItem() != null)
                 .map(r -> {
