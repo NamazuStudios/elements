@@ -174,6 +174,36 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     }
 
     @Override
+    public InventoryItem setQuantityForItem(
+            final User user,
+            final String itemNameOrId,
+            final int priority,
+            final int quantity) {
+
+        if (quantity < 0) throw new IllegalArgumentException("invalid quantity: " + quantity);
+
+        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
+        final MongoItem mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
+        final MongoInventoryItemId objectId = new MongoInventoryItemId(mongoUser, mongoItem, priority);
+
+        final Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
+        final UpdateOperations<MongoInventoryItem> operations = getDatastore().createUpdateOperations(MongoInventoryItem.class);
+
+        query.field("_id").equal(objectId);
+        operations.set("quantity", quantity);
+        operations.set("version", randomUUID().toString());
+
+        final FindAndModifyOptions options = new FindAndModifyOptions()
+                .returnNew(true)
+                .writeConcern(WriteConcern.ACKNOWLEDGED)
+                .upsert(true);
+
+        final MongoInventoryItem mongoInventoryItem = getDatastore().findAndModify(query, operations, options);
+        return getDozerMapper().map(mongoInventoryItem, InventoryItem.class);
+
+    }
+
+    @Override
     public InventoryItem adjustQuantityForItem(
             final User user,
             final String itemNameOrId,

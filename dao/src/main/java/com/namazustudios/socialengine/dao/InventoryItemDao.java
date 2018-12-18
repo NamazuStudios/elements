@@ -102,6 +102,17 @@ public interface InventoryItemDao {
      * @param user the {@link User} for which to adjust the item.
      * @param itemNameOrId the {@link Item#getName()} or {@link Item#getId()}
      * @param priority the priority of the item slot
+     * @param quantity the amount to adjust the quantity by
+     * @return the updated {@link InventoryItem}
+     */
+    InventoryItem setQuantityForItem(User user, String itemNameOrId, int priority, int quantity);
+
+    /**
+     * Adjusts the quantity of the supplied item and user.
+     *
+     * @param user the {@link User} for which to adjust the item.
+     * @param itemNameOrId the {@link Item#getName()} or {@link Item#getId()}
+     * @param priority the priority of the item slot
      * @param quantityDelta the amount to adjust the quantity by
      * @return the updated {@link InventoryItem}
      */
