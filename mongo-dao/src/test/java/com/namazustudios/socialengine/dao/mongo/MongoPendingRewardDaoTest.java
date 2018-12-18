@@ -4,12 +4,15 @@ import com.namazustudios.socialengine.dao.InventoryItemDao;
 import com.namazustudios.socialengine.dao.ItemDao;
 import com.namazustudios.socialengine.dao.PendingRewardDao;
 import com.namazustudios.socialengine.dao.UserDao;
+import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.mission.PendingReward;
 import com.namazustudios.socialengine.model.mission.Reward;
 import com.namazustudios.socialengine.model.mission.Step;
+import org.bson.types.ObjectId;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -21,6 +24,7 @@ import static com.namazustudios.socialengine.model.User.Level.USER;
 import static com.namazustudios.socialengine.model.mission.PendingReward.State.CREATED;
 import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
 import static java.util.Arrays.asList;
+import static java.util.Arrays.fill;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.of;
 import static org.testng.Assert.assertEquals;
@@ -125,17 +129,29 @@ public class MongoPendingRewardDaoTest {
 
     @Test(dataProvider = "getPendingRewards", dependsOnMethods = "testFlagPending")
     public void testRedeem(final PendingReward pendingReward) {
-        final InventoryItem before = getInventoryItemDao().adjustQuantityForItem(testUser, testItem.getId(), 0, 0);
-        assertEquals(before.getUser(), testUser);
 
-        final InventoryItem after  = getPendingRewardDao().redeem(pendingReward);
-        assertEquals(after.getUser(), testUser);
+        final String id = new MongoInventoryItemId(
+                new ObjectId(testUser.getId()),
+                new ObjectId(testItem.getId()),
+                0).toHexString();
 
-        assertEquals(after.getId(), before.getId());
-        assertEquals(after.getUser(), before.getUser());
-        assertEquals(after.getItem(), testItem);
-        assertEquals(after.getPriority(), Integer.valueOf(0));
-        assertEquals(after.getQuantity(), Integer.valueOf(before.getQuantity() + pendingReward.getReward().getQuantity()));
+        int existing;
+
+        try {
+            existing = getInventoryItemDao().getInventoryItem(id).getQuantity();
+        } catch (NotFoundException ex) {
+            existing = 0;
+        }
+
+
+        final InventoryItem inventoryItem  = getPendingRewardDao().redeem(pendingReward);
+        assertEquals(inventoryItem.getUser(), testUser);
+
+        assertEquals(inventoryItem.getId(), id);
+        assertEquals(inventoryItem.getUser(), testUser);
+        assertEquals(inventoryItem.getItem(), testItem);
+        assertEquals(inventoryItem.getPriority(), Integer.valueOf(0));
+        assertEquals(inventoryItem.getQuantity(), Integer.valueOf(existing + pendingReward.getReward().getQuantity()));
 
     }
 

@@ -179,6 +179,8 @@ public class MongoPendingRewardDao implements PendingRewardDao {
         final MongoInventoryItem mongoInventoryItem = getDatastore().get(MongoInventoryItem.class, mongoInventoryItemId);
         updates.set("version", randomUUID().toString());
 
+        query.field("_id").equal(mongoInventoryItemId);
+
         if (!PENDING.equals(mongoPendingReward.getState())) {
             return getDatastore().get(MongoInventoryItem.class, mongoInventoryItemId);
         } else if (mongoInventoryItem == null) {
@@ -189,7 +191,6 @@ public class MongoPendingRewardDao implements PendingRewardDao {
             updates.addToSet("pendingRewards", mongoPendingReward);
         } else {
 
-            query.field("_id").equal(mongoInventoryItemId);
             query.field("version").equal(mongoInventoryItem.getVersion());
 
             final boolean add = mongoInventoryItem.getPendingRewards() == null   ||
