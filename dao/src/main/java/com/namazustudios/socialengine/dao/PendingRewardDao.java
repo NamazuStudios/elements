@@ -80,4 +80,11 @@ public interface PendingRewardDao {
      */
     InventoryItem redeem(final PendingReward reward);
 
+    /**
+     * Deltes a {@link PendingReward} wiht the supplied id.
+     *
+     * @param id the id
+     */
+    void delete(final String id);
+
 }

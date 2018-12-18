@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
@@ -16,13 +17,16 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
 import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.of;
 import static org.testng.Assert.*;
@@ -293,10 +297,38 @@ public class MongoProgressDaoTest  {
     public void testRedeem() {
 
         final Pagination<Progress> progressPagination = getProgressDao().getProgresses(testProfile, 0, 20, emptySet());
-        progressPagination.forEach(progress -> progress.getPendingRewards().forEach(reward -> {
-            final InventoryItem ii = getPendingRewardDao().redeem(reward);
-            assertNotNull(ii);
-        }));
+
+        final List<InventoryItem> inventoryItemList = progressPagination.getObjects()
+            .stream()
+            .flatMap(progress -> progress.getPendingRewards().stream())
+            .map(pr -> getPendingRewardDao().redeem(pr))
+            .collect(toList());
+
+        progressPagination.getObjects()
+            .stream()
+            .flatMap(progress -> progress.getPendingRewards().stream())
+            .map(pr -> getPendingRewardDao().redeem(pr))
+            .forEach(pr -> {
+
+                try {
+                    getPendingRewardDao().delete(pr.getId());
+                } catch (NotFoundException nfe) {
+                    // pass
+                }
+
+                try {
+                    getPendingRewardDao().getPendingReward(pr.getId());
+                } catch (NotFoundException nfe) {
+                    return;
+                }
+
+                fail("not deleted");
+
+            });
+
+        assertTrue(inventoryItemList.size() > 0);
+        inventoryItemList.stream().forEach(ii -> getInventoryItemDao().getInventoryItem(ii.getId()));
+        progressPagination.getObjects().stream().forEach(pr -> getProgressDao().getProgress(pr.getId()));
 
     }
 

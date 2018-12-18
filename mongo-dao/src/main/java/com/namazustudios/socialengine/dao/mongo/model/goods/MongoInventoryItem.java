@@ -10,7 +10,10 @@ import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
-import java.util.*;
+import java.util.Objects;
+import java.util.Set;
+
+import static java.util.stream.Collectors.toSet;
 
 
 @SearchableIdentity(@SearchableField(
@@ -125,6 +128,14 @@ public class MongoInventoryItem {
                 ", quantity=" + quantity +
                 ", pendingRewards=" + pendingRewards +
                 '}';
+    }
+
+
+    @PostLoad
+    public void clearNulls() {
+        if (pendingRewards != null) {
+            pendingRewards = pendingRewards.stream().filter(p -> p != null).collect(toSet());
+        }
     }
 
 }

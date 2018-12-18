@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoException;
+import com.mongodb.WriteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.PendingRewardDao;
 import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils.ContentionException;
@@ -9,6 +10,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
+import com.namazustudios.socialengine.dao.mongo.model.mission.MongoMission;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InternalException;
@@ -243,6 +245,19 @@ public class MongoPendingRewardDao implements PendingRewardDao {
         inventoryItemUpdates.removeAll("pendingRewards", flaggedPendingRewards);
 
         return getDatastore().get(inventoryItem);
+
+    }
+
+
+    @Override
+    public void delete(String id) {
+
+        final ObjectId pendingRewardId = getMongoDBUtils().parseOrThrowNotFoundException(id);
+        final WriteResult writeResult = getDatastore().delete(MongoPendingReward.class, id);
+
+        if (writeResult.getN() == 0) {
+            throw new NotFoundException("Pending Reward not found: " + pendingRewardId);
+        }
 
     }
 
