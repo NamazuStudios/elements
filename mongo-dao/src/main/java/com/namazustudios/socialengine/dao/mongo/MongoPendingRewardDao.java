@@ -186,7 +186,6 @@ public class MongoPendingRewardDao implements PendingRewardDao {
             updates.set("user", mongoUser);
             updates.set("item", mongoItem);
             updates.set("quantity", reward.getReward().getQuantity());
-            updates.max("quantity", 0);
             updates.addToSet("pendingRewards", mongoPendingReward);
         } else {
 
