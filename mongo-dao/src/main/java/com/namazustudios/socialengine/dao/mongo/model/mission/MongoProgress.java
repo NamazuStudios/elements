@@ -10,6 +10,9 @@ import org.mongodb.morphia.annotations.*;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Mongo DTO for a mission progress.
@@ -46,7 +49,7 @@ public class MongoProgress {
     @Property
     private int remaining;
 
-    @Reference
+    @Reference(ignoreMissing = true)
     private List<MongoPendingReward> pendingRewards;
 
     public ObjectId getObjectId() {
@@ -154,6 +157,13 @@ public class MongoProgress {
                 ", sequence=" + sequence +
                 ", pendingRewards=" + pendingRewards +
                 '}';
+    }
+
+    @PostLoad
+    public void clearNulls() {
+        if (pendingRewards != null) {
+            pendingRewards = pendingRewards.stream().filter(p -> p != null).collect(toList());
+        }
     }
 
 }

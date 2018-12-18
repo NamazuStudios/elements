@@ -1,10 +1,12 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.*;
+import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.mission.*;
 import com.namazustudios.socialengine.model.profile.Profile;
 import org.testng.annotations.BeforeClass;
@@ -20,6 +22,7 @@ import static com.namazustudios.socialengine.model.User.Level.USER;
 import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.of;
 import static org.testng.Assert.*;
@@ -40,6 +43,8 @@ public class MongoProgressDaoTest  {
     private MissionDao missionDao;
 
     private ProgressDao progressDao;
+
+    private PendingRewardDao pendingRewardDao;
 
     private Application testApplication;
 
@@ -284,6 +289,17 @@ public class MongoProgressDaoTest  {
 
     }
 
+    @Test(dependsOnMethods = {"testAdvancementThroughFiniteMission", "testAdvancementThroughRepeatingMission"})
+    public void testRedeem() {
+
+        final Pagination<Progress> progressPagination = getProgressDao().getProgresses(testProfile, 0, 20, emptySet());
+        progressPagination.forEach(progress -> progress.getPendingRewards().forEach(reward -> {
+            final InventoryItem ii = getPendingRewardDao().redeem(reward);
+            assertNotNull(ii);
+        }));
+
+    }
+
     public UserDao getUserDao() {
         return userDao;
     }
@@ -345,6 +361,15 @@ public class MongoProgressDaoTest  {
     @Inject
     public void setApplicationDao(ApplicationDao applicationDao) {
         this.applicationDao = applicationDao;
+    }
+
+    public PendingRewardDao getPendingRewardDao() {
+        return pendingRewardDao;
+    }
+
+    @Inject
+    public void setPendingRewardDao(PendingRewardDao pendingRewardDao) {
+        this.pendingRewardDao = pendingRewardDao;
     }
 
 }
