@@ -90,6 +90,8 @@ public class MongoPendingReward {
         if (!(object instanceof MongoPendingReward)) return false;
         MongoPendingReward that = (MongoPendingReward) object;
         return Objects.equals(getObjectId(), that.getObjectId()) &&
+                Objects.equals(getUser(), that.getUser()) &&
+                Objects.equals(getStep(), that.getStep()) &&
                 Objects.equals(getReward(), that.getReward()) &&
                 Objects.equals(getExpires(), that.getExpires()) &&
                 getState() == that.getState();
@@ -97,13 +99,15 @@ public class MongoPendingReward {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getReward(), getExpires(), getState());
+        return Objects.hash(getObjectId(), getUser(), getStep(), getReward(), getExpires(), getState());
     }
 
     @Override
     public String toString() {
         return "MongoPendingReward{" +
                 "objectId=" + objectId +
+                ", user=" + user +
+                ", step=" + step +
                 ", reward=" + reward +
                 ", expires=" + expires +
                 ", state=" + state +

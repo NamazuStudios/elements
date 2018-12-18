@@ -197,7 +197,7 @@ public class MongoPendingRewardDao implements PendingRewardDao {
                                 mongoInventoryItem.getPendingRewards().isEmpty() ||
                                 mongoInventoryItem.getPendingRewards().stream()
                                     .filter(pr -> pr != null)
-                                    .filter(pr -> Objects.equals(mongoInventoryItem.getObjectId(), pr.getObjectId()))
+                                    .filter(pr -> Objects.equals(mongoPendingReward.getObjectId(), pr.getObjectId()))
                                     .map(pr -> false).findFirst().orElse(true);
 
             if (add) {

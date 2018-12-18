@@ -25,6 +25,7 @@ import static com.namazustudios.socialengine.model.mission.PendingReward.State.C
 import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.fill;
+import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.of;
 import static org.testng.Assert.assertEquals;
@@ -152,6 +153,9 @@ public class MongoPendingRewardDaoTest {
         assertEquals(inventoryItem.getItem(), testItem);
         assertEquals(inventoryItem.getPriority(), Integer.valueOf(0));
         assertEquals(inventoryItem.getQuantity(), Integer.valueOf(existing + pendingReward.getReward().getQuantity()));
+
+        final InventoryItem repeatInventoryItem = getPendingRewardDao().redeem(pendingReward);
+        assertEquals(repeatInventoryItem.getQuantity(), Integer.valueOf(existing + pendingReward.getReward().getQuantity()));
 
     }
 
