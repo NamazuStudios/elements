@@ -154,7 +154,7 @@ public class JavaObjectModuleBuiltin implements Builtin {
                 .filter(m -> m.getParameterCount() == nargs)
                 .filter(m -> parametersMatch(luaState, m))
                 .findFirst()
-                .orElseThrow(() -> new InternalException(target + " does not match method " + methodName));
+                .orElseThrow(() -> new InternalException("parameters do not match" + target + "." + methodName));
 
             final Object[] args = new Object[nargs];
             final Class<?>[] parameterTypes = toInvoke.getParameterTypes();
