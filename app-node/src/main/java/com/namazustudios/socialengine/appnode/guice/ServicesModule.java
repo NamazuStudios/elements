@@ -12,7 +12,6 @@ public class ServicesModule extends PrivateModule {
     protected void configure() {
 
         bind(Mapper.class).toProvider(ServicesDozerMapperProvider.class).asEagerSingleton();
-
         bind(AdvancementService.class).to(StandardAdvancementService.class);
 
         expose(AdvancementService.class);
