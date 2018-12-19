@@ -282,10 +282,19 @@ public class MongoProgressDaoTest  {
 
             final Step step = steps.remove();
 
-            progress = getProgressDao().advanceProgress(progress, progress.getRemaining() - 1);
-            assertEquals(progress.getPendingRewards().size(), expectedRewards);
+            while (progress.getRemaining() > 1) {
+                progress = getProgressDao().advanceProgress(progress, 1);
+                assertEquals(progress.getPendingRewards().size(), expectedRewards);
+            }
 
             progress = getProgressDao().advanceProgress(progress, 1);
+
+            if (progress.getCurrentStep() == null) {
+                assertNull(progress.getCurrentStep());
+            } else {
+                assertEquals(progress.getCurrentStep().getCount(), progress.getRemaining());
+            }
+
             expectedRewards += step.getRewards().size();
 
             assertEquals(progress.getPendingRewards().size(), expectedRewards);
@@ -337,7 +346,59 @@ public class MongoProgressDaoTest  {
         assertTrue(inventoryItemList.size() > 0);
         inventoryItemList.stream().forEach(ii -> getInventoryItemDao().getInventoryItem(ii.getId()));
         progressPagination.getObjects().stream().forEach(pr -> getProgressDao().getProgress(pr.getId()));
+        progressPagination.forEach(progress -> getProgressDao().deleteProgress(progress.getId()));
 
+    }
+
+    @Test(dependsOnMethods = "testRedeem")
+    public void testFiniteOverkill() {
+
+        final Progress progress = new Progress();
+        final Profile active = getProfileDao().getActiveProfile(testProfile.getId());
+        progress.setProfile(active);
+
+        final ProgressMissionInfo progressMissionInfo = new ProgressMissionInfo();
+        progressMissionInfo.setId(testFiniteMission.getId());
+        progressMissionInfo.setName(testFiniteMission.getName());
+        progressMissionInfo.setDisplayName(testFiniteMission.getDisplayName());
+        progressMissionInfo.setDescription(testFiniteMission.getDescription());
+        progressMissionInfo.setSteps(testFiniteMission.getSteps());
+        progressMissionInfo.setFinalRepeatStep(testFiniteMission.getFinalRepeatStep());
+        progressMissionInfo.setMetadata(testFiniteMission.getMetadata());
+        progressMissionInfo.setTags(testFiniteMission.getTags());
+        progress.setMission(progressMissionInfo);
+
+        final Progress created = getProgressDao().createOrGetExistingProgress(progress);
+        testOverkill(created);
+
+    }
+
+    @Test(dependsOnMethods = "testRedeem")
+    public void testRepeatingOverkill() {
+
+        final Progress progress = new Progress();
+        final Profile active = getProfileDao().getActiveProfile(testProfile.getId());
+        progress.setProfile(active);
+
+        final ProgressMissionInfo progressMissionInfo = new ProgressMissionInfo();
+        progressMissionInfo.setId(testRepeatingMission.getId());
+        progressMissionInfo.setName(testRepeatingMission.getName());
+        progressMissionInfo.setDisplayName(testRepeatingMission.getDisplayName());
+        progressMissionInfo.setDescription(testRepeatingMission.getDescription());
+        progressMissionInfo.setSteps(testRepeatingMission.getSteps());
+        progressMissionInfo.setFinalRepeatStep(testRepeatingMission.getFinalRepeatStep());
+        progressMissionInfo.setMetadata(testRepeatingMission.getMetadata());
+        progressMissionInfo.setTags(testRepeatingMission.getTags());
+        progress.setMission(progressMissionInfo);
+
+        final Progress created = getProgressDao().createOrGetExistingProgress(progress);
+        testOverkill(created);
+
+    }
+
+    private void testOverkill(Progress progress) {
+        progress = getProgressDao().advanceProgress(progress, 7);
+        assertNotNull(progress);
     }
 
     public UserDao getUserDao() {

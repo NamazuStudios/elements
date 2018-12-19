@@ -39,6 +39,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgressId.parseOrThrowNotFoundException;
 import static com.namazustudios.socialengine.model.mission.PendingReward.State.CREATED;
 import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
+import static java.lang.Math.abs;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
@@ -316,7 +317,7 @@ public class MongoProgressDao implements ProgressDao {
 
         final UpdateOperations<MongoProgress> updates = getDatastore().createUpdateOperations(MongoProgress.class);
 
-        if (actionsPerformed < progress.getRemaining()) {
+        if ((progress.getRemaining() - actionsPerformed) > 0) {
             updates.dec("remaining", actionsPerformed);
         } else {
             advanceMission(updates, mongoProgress, actionsPerformed);
@@ -341,22 +342,18 @@ public class MongoProgressDao implements ProgressDao {
                                 final MongoProgress mongoProgress,
                                 final int actionsPerformed) {
 
-        MongoStep step;
         int completedSteps = 0;
         int actionsToApply = actionsPerformed;
+        int remaining = mongoProgress.getRemaining();
+        MongoStep step = mongoProgress.getCurrentStep();
 
         final MongoUser mongoUser = mongoProgress.getProfile().getUser();
 
-        do {
-
-            // Determines the current step in the progress
-            step = mongoProgress.getStepForSequence(mongoProgress.getSequence() + completedSteps);
+        while (step != null && actionsToApply >= remaining) {
 
             // We've hit the end of the mission the mission has no final repeat step and has no remaining
             // steps.  Therefore the mission is assumed to be complete.  No further rewards will be issued
             // and this effectively ignores the progress.
-
-            if (step == null) break;
 
             // Assigns the rewards from the step
 
@@ -377,22 +374,26 @@ public class MongoProgressDao implements ProgressDao {
                 }).collect(toList());
 
             updates.push("pendingRewards", pendingRewards);
+            actionsToApply -= remaining;
 
             // Increments the completed steps and applies to the remaining actions to apply.  We keep
             // repeating this process until we have consumed all actions and assigned all remaining
             // rewards to the Progress.
 
             ++completedSteps;
-            actionsToApply -= step.getCount();
 
-        } while (actionsToApply > 0);
+            // Determines the current step in the progress
+            step = mongoProgress.getStepForSequence(mongoProgress.getSequence() + completedSteps);
+            remaining = step == null ? 0 : step.getCount();
+
+        }
 
         // Advances the remaining fields and then corrects the remaining steps.  If we hit the end of the mission
         // where the Step is simply null, then we set the remaining to zero.  Future iterations of this should
         // skip the mission.
 
         updates.inc("sequence", completedSteps);
-        updates.set("remaining", step == null ? 0 : step.getCount() + actionsToApply);
+        updates.set("remaining", step == null ? 0 : step.getCount() - actionsToApply);
 
     }
 
