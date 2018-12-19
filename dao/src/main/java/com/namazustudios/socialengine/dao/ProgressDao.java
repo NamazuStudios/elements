@@ -116,6 +116,6 @@ public interface ProgressDao {
      * @param missionNameOrId the {@link Mission} linked to the progress
      * @return all active {@link Progress} instances
      */
-    Progress getProgresseForProfileAndMission(Profile profile, String missionNameOrId);
+    Progress getProgressForProfileAndMission(Profile profile, String missionNameOrId);
 
 }

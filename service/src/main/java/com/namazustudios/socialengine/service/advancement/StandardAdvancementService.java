@@ -10,9 +10,6 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
-import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 public class StandardAdvancementService implements AdvancementService {
 
@@ -41,7 +38,7 @@ public class StandardAdvancementService implements AdvancementService {
 
     @Override
     public Progress advanceProgress(final Profile profile, final String missionNameOrId, final int amount) {
-        final Progress progress = getProgressDao().getProgresseForProfileAndMission(profile, missionNameOrId);
+        final Progress progress = getProgressDao().getProgressForProfileAndMission(profile, missionNameOrId);
         return getProgressDao().advanceProgress(progress, amount);
     }
 

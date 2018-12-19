@@ -244,7 +244,7 @@ public class MongoProgressDaoTest  {
 
     @DataProvider
     public Object[][] getFiniteProgresses() {
-        final Progress progress = getProgressDao().getProgresseForProfileAndMission(testProfile, testFiniteMission.getId());
+        final Progress progress = getProgressDao().getProgressForProfileAndMission(testProfile, testFiniteMission.getId());
         return new Object[][] {new Object[] {progress}};
     }
 
@@ -256,7 +256,7 @@ public class MongoProgressDaoTest  {
 
     @DataProvider
     public Object[][] getRepeatingProgresses() {
-        final Progress progress = getProgressDao().getProgresseForProfileAndMission(testProfile, testRepeatingMission.getId());
+        final Progress progress = getProgressDao().getProgressForProfileAndMission(testProfile, testRepeatingMission.getId());
         return new Object[][] {new Object[] {progress}};
     }
 

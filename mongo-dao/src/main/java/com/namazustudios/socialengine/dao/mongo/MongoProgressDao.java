@@ -8,7 +8,6 @@ import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils.ContentionE
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.mission.*;
-import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
@@ -32,7 +31,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.swing.plaf.ToolBarUI;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Set;
@@ -127,7 +125,7 @@ public class MongoProgressDao implements ProgressDao {
     }
 
     @Override
-    public Progress getProgresseForProfileAndMission(final Profile profile, final String missionNameOrId) {
+    public Progress getProgressForProfileAndMission(final Profile profile, final String missionNameOrId) {
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
         final MongoMission mongoMission = getMongoMissionDao().getMongoMissionByNameOrId(missionNameOrId);
