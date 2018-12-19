@@ -23,6 +23,7 @@ import static com.namazustudios.socialengine.model.User.Level.USER;
 import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Arrays.fill;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -208,6 +209,17 @@ public class MongoProgressDaoTest  {
         assertEquals(created.getMission().getSteps(), mission.getSteps());
         assertEquals(created.getMission().getFinalRepeatStep(), mission.getFinalRepeatStep());
         assertEquals(created.getMission().getTags(), mission.getTags());
+
+        final Progress recreated = getProgressDao().createOrGetExistingProgress(progress);
+        assertNotNull(recreated.getMission());
+        assertEquals(recreated.getMission().getId(), mission.getId());
+        assertEquals(recreated.getMission().getName(), mission.getName());
+        assertEquals(recreated.getMission().getDisplayName(), mission.getDisplayName());
+        assertEquals(recreated.getMission().getDescription(), mission.getDescription());
+        assertEquals(recreated.getMission().getFinalRepeatStep(), mission.getFinalRepeatStep());
+        assertEquals(recreated.getMission().getSteps(), mission.getSteps());
+        assertEquals(recreated.getMission().getFinalRepeatStep(), mission.getFinalRepeatStep());
+        assertEquals(recreated.getMission().getTags(), mission.getTags());
 
     }
 
