@@ -210,6 +210,10 @@ public class MongoProgressDaoTest  {
         assertEquals(created.getMission().getFinalRepeatStep(), mission.getFinalRepeatStep());
         assertEquals(created.getMission().getTags(), mission.getTags());
 
+        progress.setId(null);
+        progress.setCurrentStep(null);
+        progress.setRemaining(null);
+
         final Progress recreated = getProgressDao().createOrGetExistingProgress(progress);
         assertNotNull(recreated.getMission());
         assertEquals(recreated.getMission().getId(), mission.getId());

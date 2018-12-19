@@ -46,14 +46,13 @@ public class MongoProgressId {
 
     public MongoProgressId(final MongoProfile mongoProfile,
                            final MongoMission mongoMission) {
-        this.profileId = mongoProfile.getObjectId();
-        this.missionId = mongoMission.getObjectId();
-        if (profileId == null || missionId == null) throw new IllegalArgumentException("Must specify both ids.");
+        this(mongoProfile.getObjectId(), mongoMission.getObjectId());
     }
 
     public MongoProgressId(final ObjectId profileId, final ObjectId missionId) {
         this.profileId = profileId;
         this.missionId = missionId;
+        if (profileId == null || missionId == null) throw new IllegalArgumentException("Must specify both ids.");
     }
     public byte[] toByteArray() {
 
