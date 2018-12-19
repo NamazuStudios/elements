@@ -34,7 +34,7 @@ public class SuperUserProgressService implements ProgressService {
 
     @Override
     public Progress createProgress(final Progress progress) {
-        return getProgressDao().createProgress(progress);
+        return getProgressDao().createOrGetExistingProgress(progress);
     }
 
     @Override

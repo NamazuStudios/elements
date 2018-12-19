@@ -1,0 +1,122 @@
+package com.namazustudios.socialengine.dao.mongo.model.mission;
+
+import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
+import com.namazustudios.socialengine.exception.NotFoundException;
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Property;
+
+import java.util.Base64;
+import java.util.Objects;
+
+import static java.lang.System.arraycopy;
+
+@Embedded
+public class MongoProgressId {
+
+    private static final int PROFILE_ID_INDEX = 0;
+
+    private static final int MISSION_ID_INDEX = 1;
+
+    private static final int OBJECT_ID_LENGTH = 12;
+
+    private ObjectId profileId;
+
+    @Indexed
+    @Property
+    private ObjectId missionId;
+
+    public MongoProgressId() {}
+
+    public MongoProgressId(final String hexString) {
+
+        final byte [] bytes = Base64.getDecoder().decode(hexString);
+        if (bytes.length != (OBJECT_ID_LENGTH * 2)) throw new IllegalArgumentException();
+
+        final byte[] objectIdBytes = new byte[OBJECT_ID_LENGTH];
+
+        arraycopy(bytes, OBJECT_ID_LENGTH * PROFILE_ID_INDEX, objectIdBytes, 0, objectIdBytes.length);
+        profileId = new ObjectId(objectIdBytes);
+
+        arraycopy(bytes, OBJECT_ID_LENGTH * MISSION_ID_INDEX, objectIdBytes, 0, objectIdBytes.length);
+        missionId = new ObjectId(objectIdBytes);
+
+    }
+
+    public MongoProgressId(final MongoProfile mongoProfile,
+                           final MongoMission mongoMission) {
+        this.profileId = mongoProfile.getObjectId();
+        this.missionId = mongoMission.getObjectId();
+        if (profileId == null || missionId == null) throw new IllegalArgumentException("Must specify both ids.");
+    }
+
+    public MongoProgressId(final ObjectId profileId, final ObjectId missionId) {
+        this.profileId = profileId;
+        this.missionId = missionId;
+    }
+    public byte[] toByteArray() {
+
+        final byte[] profileIdBytes = profileId.toByteArray();
+        final byte[] missionIdBytes = missionId.toByteArray();
+        final byte[] bytes = new byte[OBJECT_ID_LENGTH * 2];
+
+        arraycopy(profileIdBytes, 0, bytes, OBJECT_ID_LENGTH * PROFILE_ID_INDEX, profileIdBytes.length);
+        arraycopy(missionIdBytes, 0, bytes, OBJECT_ID_LENGTH * MISSION_ID_INDEX, missionIdBytes.length);
+
+        return bytes;
+
+    }
+
+    public String toHexString() {
+        final byte[] bytes = toByteArray();
+        return Base64.getEncoder().encodeToString(bytes);
+    }
+
+    public ObjectId getProfileId() {
+        return profileId;
+    }
+
+    public void setProfileId(ObjectId profileId) {
+        this.profileId = profileId;
+    }
+
+    public ObjectId getMissionId() {
+        return missionId;
+    }
+
+    public void setMissionId(ObjectId missionId) {
+        this.missionId = missionId;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof MongoProgressId)) return false;
+        MongoProgressId that = (MongoProgressId) object;
+        return Objects.equals(getProfileId(), that.getProfileId()) &&
+               Objects.equals(getMissionId(), that.getMissionId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getProfileId(), getMissionId());
+    }
+
+    @Override
+    public String toString() {
+        return "MongoProgressId{" +
+                "profileId=" + profileId +
+                ", missionId=" + missionId +
+                '}';
+    }
+
+    public static MongoProgressId parseOrThrowNotFoundException(final String inventoryItemId) {
+        try {
+            return new MongoProgressId(inventoryItemId);
+        } catch (IllegalArgumentException ex) {
+            throw new NotFoundException(ex);
+        }
+    }
+
+}

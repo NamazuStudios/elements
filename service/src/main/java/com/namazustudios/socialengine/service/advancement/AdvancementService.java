@@ -8,8 +8,6 @@ import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 
-import java.util.List;
-
 /**
  * Provides logic to advance a {@link Profile} through a {@link Mission}.
  */
@@ -49,6 +47,6 @@ public interface AdvancementService {
      * @param amount the amount of actions to apply to the {@link Progress#getRemaining()}
      * @return the {@link Advancement}, never null
      */
-    List<Progress> advanceProgress(Profile profile, String missionNameOrId, int amount);
+    Progress advanceProgress(Profile profile, String missionNameOrId, int amount);
 
 }

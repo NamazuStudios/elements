@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -73,8 +72,6 @@ public interface ProgressDao {
      */
     Progress getProgress(String progressId);
 
-
-
     /**
      * Updates the progress, or throws a {@link NotFoundException} if the
      * progress can't be found.  The {@link Progress#getId()} is used to key the progress being updated.
@@ -94,7 +91,7 @@ public interface ProgressDao {
      * @throws DuplicateException
      *     if the passed in Progress has a name that already exists
      */
-    Progress createProgress(Progress progress);
+    Progress createOrGetExistingProgress(Progress progress);
 
     /**
      * Deletes a progress.
@@ -119,6 +116,6 @@ public interface ProgressDao {
      * @param missionNameOrId the {@link Mission} linked to the progress
      * @return all active {@link Progress} instances
      */
-    List<Progress> getProgressesForProfileAndMission(Profile profile, String missionNameOrId);
+    Progress getProgresseForProfileAndMission(Profile profile, String missionNameOrId);
 
 }

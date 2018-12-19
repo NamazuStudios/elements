@@ -117,7 +117,6 @@ public class MongoInventoryItemId {
         return Base64.getEncoder().encodeToString(bytes);
     }
 
-
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;

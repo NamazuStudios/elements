@@ -30,7 +30,7 @@ import static java.util.stream.Collectors.toList;
 public class MongoProgress {
 
     @Id
-    private ObjectId objectId;
+    private MongoProgressId objectId;
 
     @Indexed
     @Property
@@ -52,11 +52,11 @@ public class MongoProgress {
     @Reference(ignoreMissing = true)
     private List<MongoPendingReward> pendingRewards;
 
-    public ObjectId getObjectId() {
+    public MongoProgressId getObjectId() {
         return objectId;
     }
 
-    public void setObjectId(ObjectId id) {
+    public void setObjectId(MongoProgressId id) {
         this.objectId = id;
     }
 

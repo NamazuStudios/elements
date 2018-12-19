@@ -6,9 +6,7 @@ import com.namazustudios.socialengine.dao.ProgressDao;
 import com.namazustudios.socialengine.model.mission.Mission;
 import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.mission.ProgressMissionInfo;
-import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
@@ -37,20 +35,14 @@ public class StandardAdvancementService implements AdvancementService {
         final ProgressMissionInfo progressMissionInfo = getMapper().map(mission, ProgressMissionInfo.class);
         progress.setMission(progressMissionInfo);
 
-        return getProgressDao().createProgress(progress);
+        return getProgressDao().createOrGetExistingProgress(progress);
 
     }
 
     @Override
-    public List<Progress> advanceProgress(final Profile profile, final String missionNameOrId, final int amount) {
-
-        final List<Progress> progressList = getProgressDao().getProgressesForProfileAndMission(profile, missionNameOrId);
-
-        return progressList
-            .stream()
-            .map(progress -> getProgressDao().advanceProgress(progress, amount))
-            .collect(toList());
-
+    public Progress advanceProgress(final Profile profile, final String missionNameOrId, final int amount) {
+        final Progress progress = getProgressDao().getProgresseForProfileAndMission(profile, missionNameOrId);
+        return getProgressDao().advanceProgress(progress, amount);
     }
 
     public Mapper getMapper() {

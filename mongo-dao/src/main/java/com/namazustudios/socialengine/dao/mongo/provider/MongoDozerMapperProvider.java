@@ -1,16 +1,12 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
-import com.namazustudios.socialengine.dao.mongo.converter.MongoFriendIdConverter;
-import com.namazustudios.socialengine.dao.mongo.converter.MongoInventoryItemIdConverter;
-import com.namazustudios.socialengine.dao.mongo.converter.MongoScoreIdConverter;
-import com.namazustudios.socialengine.dao.mongo.converter.ObjectIdConverter;
+import com.namazustudios.socialengine.dao.mongo.converter.*;
 import com.namazustudios.socialengine.dao.mongo.model.*;
 import com.namazustudios.socialengine.dao.mongo.model.application.*;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnRegistration;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSession;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSessionId;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
-import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatchSnapshot;
@@ -136,8 +132,9 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("id","objectId", customConverter(ObjectIdConverter.class));
 
             mapping(Progress.class, MongoProgress.class)
-                .fields("id","objectId", customConverter(ObjectIdConverter.class))
-                .fields("mission.id", "mission.missionId", customConverter(ObjectIdConverter.class));
+                .fields("id","objectId", customConverter(MongoProgressIdConverter.class))
+                .fields("profile.id", "objectId.profileId", customConverter(ObjectIdConverter.class))
+                .fields("mission.id", "objectId.missionId", customConverter(ObjectIdConverter.class));
 
             mapping(PendingReward.class, MongoPendingReward.class)
                 .fields("id","objectId", customConverter(ObjectIdConverter.class));

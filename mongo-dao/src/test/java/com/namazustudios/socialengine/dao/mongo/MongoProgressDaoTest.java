@@ -191,7 +191,7 @@ public class MongoProgressDaoTest  {
         progressMissionInfo.setTags(mission.getTags());
         progress.setMission(progressMissionInfo);
 
-        final Progress created = getProgressDao().createProgress(progress);
+        final Progress created = getProgressDao().createOrGetExistingProgress(progress);
         assertNotNull(created.getId());
         assertEquals(created.getProfile(), testProfile);
         assertEquals(created.getCurrentStep(), mission.getSteps().get(0));
@@ -228,11 +228,8 @@ public class MongoProgressDaoTest  {
 
     @DataProvider
     public Object[][] getFiniteProgresses() {
-        return getProgressDao()
-            .getProgressesForProfileAndMission(testProfile, testFiniteMission.getId())
-            .stream()
-            .map(p -> new Object[]{p})
-            .toArray(Object[][]::new);
+        final Progress progress = getProgressDao().getProgresseForProfileAndMission(testProfile, testFiniteMission.getId());
+        return new Object[][] {new Object[] {progress}};
     }
 
     @Test(dataProvider = "getFiniteProgresses", dependsOnMethods = "testGetProgressByMissionTags")
@@ -243,11 +240,8 @@ public class MongoProgressDaoTest  {
 
     @DataProvider
     public Object[][] getRepeatingProgresses() {
-        return getProgressDao()
-            .getProgressesForProfileAndMission(testProfile, testRepeatingMission.getId())
-            .stream()
-            .map(p -> new Object[]{p})
-            .toArray(Object[][]::new);
+        final Progress progress = getProgressDao().getProgresseForProfileAndMission(testProfile, testRepeatingMission.getId());
+        return new Object[][] {new Object[] {progress}};
     }
 
     @Test(dataProvider = "getRepeatingProgresses", dependsOnMethods = "testGetProgressByMissionTags")

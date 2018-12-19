@@ -17,10 +17,6 @@ public class MongoProgressMissionInfo {
 
     @Indexed
     @Property
-    private ObjectId missionId;
-
-    @Indexed
-    @Property
     private String name;
 
     @Property
@@ -41,14 +37,6 @@ public class MongoProgressMissionInfo {
 
     @Property
     private Map<String, Object> metadata;
-
-    public ObjectId getMissionId() {
-        return missionId;
-    }
-
-    public void setMissionId(ObjectId missionId) {
-        this.missionId = missionId;
-    }
 
     public String getName() {
         return name;
@@ -111,8 +99,7 @@ public class MongoProgressMissionInfo {
         if (this == object) return true;
         if (!(object instanceof MongoProgressMissionInfo)) return false;
         MongoProgressMissionInfo that = (MongoProgressMissionInfo) object;
-        return Objects.equals(getMissionId(), that.getMissionId()) &&
-                Objects.equals(getName(), that.getName()) &&
+        return Objects.equals(getName(), that.getName()) &&
                 Objects.equals(getDisplayName(), that.getDisplayName()) &&
                 Objects.equals(getDescription(), that.getDescription()) &&
                 Objects.equals(getSteps(), that.getSteps()) &&
@@ -123,14 +110,13 @@ public class MongoProgressMissionInfo {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getMissionId(), getName(), getDisplayName(), getDescription(), getSteps(), getFinalRepeatStep(), getTags(), getMetadata());
+        return Objects.hash(getName(), getDisplayName(), getDescription(), getSteps(), getFinalRepeatStep(), getTags(), getMetadata());
     }
 
     @Override
     public String toString() {
         return "MongoProgressMissionInfo{" +
-                "missionId=" + missionId +
-                ", name='" + name + '\'' +
+                "name='" + name + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", description='" + description + '\'' +
                 ", steps=" + steps +
