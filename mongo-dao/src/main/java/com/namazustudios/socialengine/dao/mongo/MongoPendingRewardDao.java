@@ -237,10 +237,10 @@ public class MongoPendingRewardDao implements PendingRewardDao {
         final List<MongoPendingReward> flaggedPendingRewards = new ArrayList<>(query.asList());
         if (flaggedPendingRewards.isEmpty()) return inventoryItem;
 
-        final UpdateOperations<MongoPendingReward> rewardUpdates = getDatastore().createUpdateOperations(MongoPendingReward.class);
-        rewardUpdates.set("state", REWARDED);
-        rewardUpdates.set("expires", new Timestamp(currentTimeMillis()));
-        getDatastore().update(query, rewardUpdates, new UpdateOptions().multi(true));
+        final UpdateOperations<MongoPendingReward> updates = getDatastore().createUpdateOperations(MongoPendingReward.class);
+        updates.set("state", REWARDED);
+        updates.set("expires", new Timestamp(currentTimeMillis()));
+        getDatastore().update(query, updates, new UpdateOptions().multi(true));
 
         final UpdateOperations<MongoInventoryItem> inventoryItemUpdates = getDatastore().createUpdateOperations(MongoInventoryItem.class);
         inventoryItemUpdates.removeAll("pendingRewards", flaggedPendingRewards);
