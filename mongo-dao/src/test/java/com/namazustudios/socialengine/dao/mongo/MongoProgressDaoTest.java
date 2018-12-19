@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.*;
-import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
@@ -19,7 +18,6 @@ import javax.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
 import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;

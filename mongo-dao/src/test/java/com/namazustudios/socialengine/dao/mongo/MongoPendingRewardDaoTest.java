@@ -157,6 +157,8 @@ public class MongoPendingRewardDaoTest {
         final InventoryItem repeatInventoryItem = getPendingRewardDao().redeem(pendingReward);
         assertEquals(repeatInventoryItem.getQuantity(), Integer.valueOf(existing + pendingReward.getReward().getQuantity()));
 
+        final PendingReward postModified = getPendingRewardDao().getPendingReward(pendingReward.getId());
+        assertEquals(postModified.getState(), PendingReward.State.REWARDED);
     }
 
     public UserDao getUserDao() {

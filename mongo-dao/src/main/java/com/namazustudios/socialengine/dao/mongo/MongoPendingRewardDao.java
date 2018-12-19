@@ -26,6 +26,7 @@ import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -239,7 +240,7 @@ public class MongoPendingRewardDao implements PendingRewardDao {
         final UpdateOperations<MongoPendingReward> rewardUpdates = getDatastore().createUpdateOperations(MongoPendingReward.class);
         rewardUpdates.set("state", REWARDED);
         rewardUpdates.set("expires", new Timestamp(currentTimeMillis()));
-        getDatastore().findAndModify(query, rewardUpdates);
+        getDatastore().update(query, rewardUpdates, new UpdateOptions().multi(true));
 
         final UpdateOperations<MongoInventoryItem> inventoryItemUpdates = getDatastore().createUpdateOperations(MongoInventoryItem.class);
         inventoryItemUpdates.removeAll("pendingRewards", flaggedPendingRewards);
