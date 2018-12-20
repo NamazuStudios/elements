@@ -6,6 +6,10 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Represents a mission step reward.
@@ -13,7 +17,7 @@ import javax.validation.constraints.NotNull;
  * Created by davidjbrooks on 11/23/2018.
  */
 @ApiModel
-public class Reward {
+public class Reward implements Serializable {
 
     @NotNull
     @ApiModelProperty("The Item that constitutes the reward")
@@ -23,6 +27,8 @@ public class Reward {
     @Min(value = 0, message = "Quantity may not be less than 0")
     @ApiModelProperty("The quantity of the Item that is rewarded")
     private Integer quantity;
+
+    private Map<String, Object> metadata;
 
     public Item getItem() {
         return item;
@@ -38,29 +44,45 @@ public class Reward {
 
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
 
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
+    public void addMetadata(final String name, final Object value) {
+
+        if (getMetadata() == null) {
+            setMetadata(new HashMap<>());
+        }
+
+        getMetadata().put(name, value);
+
+    }
+
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Reward)) return false;
-
-        Reward reward = (Reward) o;
-
-        if (getItem() != null ? !getItem().equals(reward.getItem()) : reward.getItem() != null) return false;
-        return (getQuantity() != null ? !getQuantity().equals(reward.getQuantity()) : reward.getQuantity() != null);
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Reward)) return false;
+        Reward reward = (Reward) object;
+        return Objects.equals(getItem(), reward.getItem()) &&
+                Objects.equals(getQuantity(), reward.getQuantity()) &&
+                Objects.equals(getMetadata(), reward.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        int result = (getItem() != null ? getItem().hashCode() : 0);
-        result = 31 * result + (getQuantity() != null ? getQuantity().hashCode() : 0);
-        return result;
+        return Objects.hash(getItem(), getQuantity(), getMetadata());
     }
 
     @Override
     public String toString() {
         return "Reward{" +
-                ", item='" + item + '\'' +
-                ", quantity='" + quantity + '\'' +
+                "item=" + item +
+                ", quantity=" + quantity +
+                ", metadata=" + metadata +
                 '}';
     }
 

@@ -1,43 +1,47 @@
 package com.namazustudios.socialengine.model.mission;
 
-import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.ValidationGroups.Create;
+import com.namazustudios.socialengine.model.ValidationGroups.Insert;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents the mission state (i.e., progress).
  *
  * Created by davidjbrooks on 12/03/2018.
  */
+public class Progress implements Serializable {
 
-public class Progress {
-
+    @NotNull(groups={Update.class})
+    @Null(groups={Create.class, Insert.class})
     @ApiModelProperty("The unique ID of the progress instance")
-    @Null(groups={ValidationGroups.Create.class, ValidationGroups.Insert.class})
-    @NotNull(groups={ValidationGroups.Update.class})
     private String id;
 
+    @NotNull(groups={Create.class, Insert.class, Update.class})
     @ApiModelProperty("The profile of the owner of this progress")
-    @Null(groups={ValidationGroups.Update.class})
-    @NotNull(groups={ValidationGroups.Create.class, ValidationGroups.Insert.class})
     private Profile profile;
 
+    @Null
     @ApiModelProperty("The current step")
-    @NotNull()
     private Step currentStep;
 
+    @Null
     @ApiModelProperty("The remaining actions")
-    @NotNull()
     private Integer remaining;
 
+    @NotNull(groups={Create.class, Insert.class, Update.class})
     @ApiModelProperty("The mission")
-    @Null(groups={ValidationGroups.Update.class})
-    @NotNull(groups={ValidationGroups.Create.class, ValidationGroups.Insert.class})
-    private Mission mission;
+    private ProgressMissionInfo mission;
 
+    @ApiModelProperty("List of unclaimed rewards.")
+    private List<PendingReward> pendingRewards;
 
     public String getId() {
         return id;
@@ -67,47 +71,49 @@ public class Progress {
 
     public void setRemaining(Integer remaining) { this.remaining = remaining; }
 
-    public Mission getMission() {
+    public ProgressMissionInfo getMission() {
         return mission;
     }
 
-    public void setMission(Mission mission) {
+    public void setMission(ProgressMissionInfo mission) {
         this.mission = mission;
     }
 
+    public List<PendingReward> getPendingRewards() {
+        return pendingRewards;
+    }
+
+    public void setPendingRewards(List<PendingReward> pendingRewards) {
+        this.pendingRewards = pendingRewards;
+    }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Progress)) return false;
-
-        Progress progress = (Progress) o;
-
-        if (getId() != null ? !getId().equals(progress.getId()) : progress.getId() != null) return false;
-        if (getProfile() != null ? !getProfile().equals(progress.getProfile()) : progress.getProfile() != null) return false;
-        if (getCurrentStep() != null ? !getCurrentStep().equals(progress.getCurrentStep()) : progress.getCurrentStep() != null) return false;
-        if (getRemaining() != null ? !getRemaining().equals(progress.getRemaining()) : progress.getRemaining() != null) return false;
-        return (getMission() != null ? !getMission().equals(progress.getMission()) : progress.getMission() != null);
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Progress)) return false;
+        Progress progress = (Progress) object;
+        return Objects.equals(getId(), progress.getId()) &&
+                Objects.equals(getProfile(), progress.getProfile()) &&
+                Objects.equals(getCurrentStep(), progress.getCurrentStep()) &&
+                Objects.equals(getRemaining(), progress.getRemaining()) &&
+                Objects.equals(getMission(), progress.getMission()) &&
+                Objects.equals(getPendingRewards(), progress.getPendingRewards());
     }
 
     @Override
     public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + (getProfile() != null ? getProfile().hashCode() : 0);
-        result = 31 * result + (getCurrentStep() != null ? getCurrentStep().hashCode() : 0);
-        result = 31 * result + (getRemaining() != null ? getRemaining().hashCode() : 0);
-        result = 31 * result + (getMission() != null ? getMission().hashCode() : 0);
-        return result;
+        return Objects.hash(getId(), getProfile(), getCurrentStep(), getRemaining(), getMission(), getPendingRewards());
     }
 
     @Override
     public String toString() {
         return "Progress{" +
-                ", id='" + id + '\'' +
-                ", getProfile='" + profile + '\'' +
-                ", currentStep='" + currentStep + '\'' +
-                ", remaining='" + remaining + '\'' +
-                ", mission='" + mission + '\'' +
+                "id='" + id + '\'' +
+                ", profile=" + profile +
+                ", currentStep=" + currentStep +
+                ", remaining=" + remaining +
+                ", mission=" + mission +
+                ", pendingRewards=" + pendingRewards +
                 '}';
     }
 

@@ -1,16 +1,17 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
-import com.namazustudios.socialengine.dao.mongo.converter.MongoFriendIdConverter;
-import com.namazustudios.socialengine.dao.mongo.converter.MongoScoreIdConverter;
-import com.namazustudios.socialengine.dao.mongo.converter.ObjectIdConverter;
+import com.namazustudios.socialengine.dao.mongo.converter.*;
 import com.namazustudios.socialengine.dao.mongo.model.*;
 import com.namazustudios.socialengine.dao.mongo.model.application.*;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnRegistration;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSession;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSessionId;
+import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
+import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatchSnapshot;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoMission;
+import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgress;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.*;
@@ -23,6 +24,7 @@ import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.mission.Mission;
+import com.namazustudios.socialengine.model.mission.PendingReward;
 import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -121,13 +123,22 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("id","objectId", customConverter(ObjectIdConverter.class));
 
             mapping(InventoryItem.class, MongoInventoryItem.class)
-                .fields("id","objectId", customConverter(ObjectIdConverter.class));
+                .fields("id","objectId", customConverter(MongoInventoryItemIdConverter.class))
+                .fields("priority", "objectId.priority")
+                .fields("user.id", "objectId.userObjectId", customConverter(ObjectIdConverter.class))
+                .fields("item.id", "objectId.itemObjectId", customConverter(ObjectIdConverter.class));
 
             mapping(Mission.class, MongoMission.class)
                 .fields("id","objectId", customConverter(ObjectIdConverter.class));
 
             mapping(Progress.class, MongoProgress.class)
-                    .fields("id","objectId", customConverter(ObjectIdConverter.class));
+                .fields("id","objectId", customConverter(MongoProgressIdConverter.class))
+                .fields("profile.id", "objectId.profileId", customConverter(ObjectIdConverter.class))
+                .fields("mission.id", "objectId.missionId", customConverter(ObjectIdConverter.class));
+
+            mapping(PendingReward.class, MongoPendingReward.class)
+                .fields("id","objectId", customConverter(ObjectIdConverter.class));
+
             }
         };
 

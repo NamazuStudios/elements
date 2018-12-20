@@ -33,7 +33,7 @@ public class Item implements Serializable {
     @NotNull
     private String description;
 
-    private Map<String, String> metadata;
+    private Map<String, Object> metadata;
 
     /**
      * Get the unique ID of the Item.
@@ -140,7 +140,7 @@ public class Item implements Serializable {
      *
      * @return The metadata for the Item
      */
-    public Map<String, String> getMetadata() {
+    public Map<String, Object> getMetadata() {
         return metadata == null ? new HashMap<>() : new HashMap<>(metadata);
     }
 
@@ -150,8 +150,18 @@ public class Item implements Serializable {
      * @param metadata
      *     The metadata for the Item
      */
-    public void setMetadata(Map<String, String> metadata) {
+    public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata != null ? metadata : Collections.emptyMap();
+    }
+
+    public void addMetadata(final String name, final Object value) {
+
+        if (getMetadata() == null) {
+            setMetadata(new HashMap<>());
+        }
+
+        getMetadata().put(name, value);
+
     }
 
     @Override

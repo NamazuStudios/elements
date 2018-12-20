@@ -4,7 +4,7 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.MissionDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoItem;
+import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoMission;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoReward;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoStep;
@@ -28,16 +28,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.collect.Streams.concat;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoMissionDao implements MissionDao {
 
@@ -87,26 +87,32 @@ public class MongoMissionDao implements MissionDao {
     }
 
     @Override
-    public Mission getMissionByNameOrId(String identifier) {
-        if (StringUtils.isEmpty(identifier)) {
-            throw new NotFoundException("Unable to find mission with an id or name of " + identifier);
+    public Mission getMissionByNameOrId(final String identifier) {
+        final MongoMission mongoMission = getMongoMissionByNameOrId(identifier);
+        return getDozerMapper().map(mongoMission, Mission.class);
+    }
+
+    public MongoMission getMongoMissionByNameOrId(final String missionNameOrId) {
+
+        if (isEmpty(nullToEmpty(missionNameOrId).trim())) {
+            throw new NotFoundException("Unable to find mission with an id or name of " + missionNameOrId);
         }
 
-        Query<MongoMission> query = getDatastore().createQuery(MongoMission.class);
+        final Query<MongoMission> query = getDatastore().createQuery(MongoMission.class);
 
-        if (ObjectId.isValid(identifier)) {
-            query.criteria("_id").equal(new ObjectId(identifier));
+        if (ObjectId.isValid(missionNameOrId)) {
+            query.criteria("_id").equal(new ObjectId(missionNameOrId));
         } else {
-            query.criteria("name").equal(identifier);
+            query.criteria("name").equal(missionNameOrId);
         }
 
         final MongoMission mission = query.get();
 
         if (mission == null) {
-            throw new NotFoundException("Unable to find item with an id or name of " + identifier);
+            throw new NotFoundException("Unable to find item with an id or name of " + missionNameOrId);
         }
 
-        return getDozerMapper().map(mission, Mission.class);
+        return mission;
 
     }
 
@@ -145,6 +151,7 @@ public class MongoMissionDao implements MissionDao {
 
     @Override
     public Mission createMission(final Mission mission) {
+
         getValidationHelper().validateModel(mission, Insert.class);
 
         normalize(mission);
@@ -152,7 +159,7 @@ public class MongoMissionDao implements MissionDao {
         final MongoMission mongoMission = checkMission(mission);
 
         try {
-            getDatastore().save(mongoMission);
+            getDatastore().insert(mongoMission);
         } catch (DuplicateKeyException e) {
             throw new DuplicateException(e);
         }

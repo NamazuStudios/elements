@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.mongodb.DuplicateKeyException;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.ItemDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoItem;
+import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
@@ -23,11 +23,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Strings.nullToEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoItemDao implements ItemDao {
 
@@ -46,26 +48,56 @@ public class MongoItemDao implements ItemDao {
     private MongoDBUtils mongoDBUtils;
 
     @Override
-    public Item getItemByIdOrName(String identifier) {
-        if (StringUtils.isEmpty(identifier)) {
-            throw new NotFoundException("Unable to find item with an id or name of " + identifier);
-        }
+    public Item getItemByIdOrName(final String identifier) {
 
-        Query<MongoItem> query = getDatastore().createQuery(MongoItem.class);
-
-        if (ObjectId.isValid(identifier)) {
-            query.criteria("_id").equal(new ObjectId(identifier));
-        } else {
-            query.criteria("name").equal(identifier);
-        }
-
-        final MongoItem item = query.get();
+        final MongoItem item = getMongoItemByNameOrId(identifier);
 
         if (item == null) {
             throw new NotFoundException("Unable to find item with an id or name of " + identifier);
         }
 
         return getDozerMapper().map(item, Item.class);
+    }
+
+    public MongoItem getMongoItem(final Item item) {
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(item == null ? null : item.getId());
+        return getMongoItem(objectId);
+    }
+
+    public MongoItem getMongoItem(final ObjectId objectId) {
+
+        final MongoItem mongoItem = getDatastore().get(MongoItem.class, objectId);
+
+        if(null == mongoItem) {
+            throw new NotFoundException("Unable to find item with an id of " + objectId);
+        }
+
+        return mongoItem;
+
+    }
+
+    public MongoItem getMongoItemByNameOrId(final String itemNameOrId) {
+
+        if (isEmpty(nullToEmpty(itemNameOrId).trim())) {
+            throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
+        }
+
+        final Query<MongoItem> itemQuery = getDatastore().createQuery(MongoItem.class);
+
+        if (ObjectId.isValid(itemNameOrId)) {
+            itemQuery.criteria("_id").equal(new ObjectId(itemNameOrId));
+        } else {
+            itemQuery.criteria("name").equal(itemNameOrId);
+        }
+
+        final MongoItem mongoItem = itemQuery.get();
+
+        if(null == mongoItem) {
+            throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
+        }
+
+        return mongoItem;
+
     }
 
     public MongoItem refresh(final MongoItem mongoItem) {
@@ -95,7 +127,7 @@ public class MongoItemDao implements ItemDao {
     }
 
     @Override
-    public Pagination<Item> getItems(int offset, int count, Set<String> tags, String query) {
+    public Pagination<Item> getItems(final int offset, final int count, Set<String> tags, final String query) {
         if (StringUtils.isNotEmpty(query)) {
             LOGGER.warn(" getItems(int offset, int count, Set<String> tags, String query) was called with a query " +
                         "string parameter.  This field is presently ignored and will return all values after filtering " +

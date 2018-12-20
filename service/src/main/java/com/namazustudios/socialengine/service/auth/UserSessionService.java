@@ -9,6 +9,10 @@ import com.namazustudios.socialengine.service.SessionService;
 import javax.inject.Inject;
 import java.util.Objects;
 
+import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 public class UserSessionService implements SessionService {
 
     private User user;

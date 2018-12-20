@@ -3,25 +3,29 @@ package com.namazustudios.socialengine.service.progress;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.mission.Progress;
 
+import java.util.Set;
+
 public interface ProgressService {
     /**
      * Returns a list of {@link Progress} objects.
      *
      * @param offset the offset
      * @param count the count
+     * @param tags
      * @return the list of {@link Progress} instances
      */
-    Pagination<Progress> getProgresses(int offset, int count);
+    Pagination<Progress> getProgresses(int offset, int count, Set<String> tags);
 
     /**
      * Returns a list of {@link Progress} objects.
      *
      * @param offset the offset
      * @param count the count
+     * @param tags
      * @param query the search query
      * @return the list of {@link Progress} instances
      */
-    Pagination<Progress> getProgresses(int offset, int count, String query);
+    Pagination<Progress> getProgresses(int offset, int count, Set<String> tags, String query);
 
     /**
      * Gets a progress with specified name or ID.

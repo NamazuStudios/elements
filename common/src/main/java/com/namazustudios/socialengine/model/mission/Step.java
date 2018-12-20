@@ -5,8 +5,11 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Represents a mission step.
@@ -14,7 +17,7 @@ import java.util.Map;
  * Created by davidjbrooks on 11/23/2018.
  */
 @ApiModel
-public class Step {
+public class Step implements Serializable {
 
     @ApiModelProperty("The display name for the step")
     @NotNull
@@ -76,38 +79,41 @@ public class Step {
         this.metadata = metadata;
     }
 
+    public void addMetadata(final String name, final Object value) {
+
+        if (getMetadata() == null) {
+            setMetadata(new HashMap<>());
+        }
+
+        getMetadata().put(name, value);
+
+    }
+
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Step)) return false;
-
-        Step step = (Step) o;
-
-        if (getDisplayName() != null ? !getDisplayName().equals(step.getDisplayName()) : step.getDisplayName() != null) return false;
-        if (getDescription() != null ? !getDescription().equals(step.getDescription()) : step.getDescription() != null) return false;
-        if (getRewards() != null ? !getRewards().equals(step.getRewards()) : step.getRewards() != null) return false;
-        if (getMetadata() != null ? !getMetadata().equals(step.getMetadata()) : step.getMetadata() != null) return false;
-        return (getCount() != null ? !getCount().equals(step.getCount()) : step.getCount() != null);
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Step)) return false;
+        Step step = (Step) object;
+        return Objects.equals(getDisplayName(), step.getDisplayName()) &&
+                Objects.equals(getDescription(), step.getDescription()) &&
+                Objects.equals(getCount(), step.getCount()) &&
+                Objects.equals(getRewards(), step.getRewards()) &&
+                Objects.equals(getMetadata(), step.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        int result = (getDisplayName() != null ? getDisplayName().hashCode() : 0);
-        result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
-        result = 31 * result + (getRewards() != null ? getRewards().hashCode() : 0);
-        result = 31 * result + (getCount() != null ? getCount().hashCode() : 0);
-        result = 31 * result + (getMetadata() != null ? getMetadata().hashCode() : 0);
-        return result;
+        return Objects.hash(getDisplayName(), getDescription(), getCount(), getRewards(), getMetadata());
     }
 
     @Override
     public String toString() {
         return "Step{" +
-                ", displayName='" + displayName + '\'' +
+                "displayName='" + displayName + '\'' +
                 ", description='" + description + '\'' +
-                ", rewards='" + rewards + '\'' +
-                ", metadata='" + metadata + '\'' +
-                ", count='" + count + '\'' +
+                ", count=" + count +
+                ", rewards=" + rewards +
+                ", metadata=" + metadata +
                 '}';
     }
 

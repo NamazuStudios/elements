@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rest.progress;
+package com.namazustudios.socialengine.rest.mission;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.mission.Progress;
@@ -10,6 +10,7 @@ import io.swagger.annotations.Authorization;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.Set;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
@@ -28,17 +29,19 @@ public class ProgressResource {
                     "The Progress representation returned in the response body is a representation of the Progress as persisted " +
                     "with a unique identifier assigned and with its fields properly normalized.")
     public Progress createProgress(Progress progressToBeCreated) {
-        return progressService.createProgress(progressToBeCreated);
+        return getProgressService().createProgress(progressToBeCreated);
     }
 
 
     @GET
     @ApiOperation(value = "Retrieves all Progresses",
             notes = "Searches all progress and returns all matching items, filtered by the passed in search parameters.")
-    public Pagination<Progress> getProgress(@QueryParam("offset") @DefaultValue("0") final int offset,
-                                          @QueryParam("count") @DefaultValue("20") final int count,
-                                          @QueryParam("search") final String search) {
-        return progressService.getProgresses(offset, count, search);
+    public Pagination<Progress> getProgress(
+            @QueryParam("offset") @DefaultValue("0")  final int offset,
+            @QueryParam("count")  @DefaultValue("20") final int count,
+            @QueryParam("tags")   final Set<String> tags,
+            @QueryParam("search") final String search) {
+        return getProgressService().getProgresses(offset, count, tags, search);
     }
 
     @GET
@@ -46,7 +49,7 @@ public class ProgressResource {
     @ApiOperation(value = "Retrieves a single Progress by id",
             notes = "Looks up a progress by the passed in identifier")
     public Progress getProgressByNameOrId(@PathParam("progressId") String progressId) {
-        return progressService.getProgress(progressId);
+        return getProgressService().getProgress(progressId);
     }
 
     @PUT
@@ -56,7 +59,7 @@ public class ProgressResource {
                     "from the passed in request body. ")
     public Progress updateItem(final Progress updatedProgress,
                               @PathParam("progressId") String progressId) {
-        return progressService.updateProgress(updatedProgress);
+        return getProgressService().updateProgress(updatedProgress);
     }
 
     @DELETE
@@ -64,9 +67,8 @@ public class ProgressResource {
     @ApiOperation(value = "Deletes the Progress identified by id",
             notes = "Deletes a progress by the passed in identifier")
     public void deleteProgress(@PathParam("progressId") String progressId) {
-        progressService.deleteProgress(progressId);
+        getProgressService().deleteProgress(progressId);
     }
-
 
     public ProgressService getProgressService() {
         return progressService;
@@ -76,4 +78,5 @@ public class ProgressResource {
     public void setProgressService(ProgressService progressService) {
         this.progressService = progressService;
     }
+
 }

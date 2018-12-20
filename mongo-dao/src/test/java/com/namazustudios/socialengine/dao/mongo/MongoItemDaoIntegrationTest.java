@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.common.collect.Sets;
 import com.namazustudios.socialengine.dao.ItemDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoItem;
+import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
@@ -18,7 +18,6 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -131,7 +130,7 @@ public class MongoItemDaoIntegrationTest {
     }
 
     private Item createMockItem() {
-        Map<String, String> mockMetadata = new HashMap<>();
+        Map<String, Object> mockMetadata = new HashMap<>();
         mockMetadata.put("ham", "eggs");
 
         Item item = new Item();
@@ -176,8 +175,7 @@ public class MongoItemDaoIntegrationTest {
         };
     }
 
-    private Item createItem(String name, String displayName, String description, HashSet<String> tags, HashMap<String
-        , String> metadata) {
+    private Item createItem(String name, String displayName, String description, HashSet<String> tags, HashMap<String, Object> metadata) {
         Item item = new Item();
         item.setName(name);
         item.setDisplayName(displayName);

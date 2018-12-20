@@ -8,32 +8,35 @@ import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.profile.Profile;
 
 import javax.inject.Inject;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class UserProgressService implements ProgressService {
 
-    protected Supplier<Profile> currentProfileSupplier;
+    private Supplier<Profile> currentProfileSupplier;
 
-    protected ProgressDao progressDao;
+    private ProgressDao progressDao;
 
     @Override
-    public Progress getProgress(String progressId) {
-        Progress progress = progressDao.getProgress(progressId);
+    public Progress getProgress(final String progressId) {
 
-        if(!progress.getProfile().equals(currentProfileSupplier.get()))
+        final Progress progress = getProgressDao().getProgress(progressId);
+
+        if(!progress.getProfile().equals(getCurrentProfileSupplier().get())) {
             throw new NotFoundException();
+        }
 
-        return progressDao.getProgress(progressId);
+        return getProgressDao().getProgress(progressId);
     }
 
     @Override
-    public Pagination<Progress> getProgresses(int offset, int count) {
-        return progressDao.getProgresses(currentProfileSupplier.get(), offset, count);
+    public Pagination<Progress> getProgresses(final int offset, final int count, final Set<String> tags) {
+        return getProgressDao().getProgresses(getCurrentProfileSupplier().get(), offset, count, tags);
     }
 
     @Override
-    public Pagination<Progress> getProgresses(int offset, int count, String query)  {
-        return progressDao.getProgresses(currentProfileSupplier.get(), offset, count, query);
+    public Pagination<Progress> getProgresses(final int offset, final int count, final Set<String> tags, final String query)  {
+        return getProgressDao().getProgresses(getCurrentProfileSupplier().get(), offset, count, tags, query);
     }
 
     @Override
@@ -45,6 +48,14 @@ public class UserProgressService implements ProgressService {
     @Override
     public void deleteProgress(String progressNameOrId) { throw new ForbiddenException("Unprivileged requests are unable to modify progress."); }
 
+    public ProgressDao getProgressDao() {
+        return progressDao;
+    }
+
+    @Inject
+    public void setProgressDao(ProgressDao progressDao) {
+        this.progressDao = progressDao;
+    }
 
     public ProgressDao setProgressDao() {
         return progressDao;
@@ -53,6 +64,10 @@ public class UserProgressService implements ProgressService {
     @Inject
     public void getProgressDao(ProgressDao progressDao) {
         this.progressDao = progressDao;
+    }
+
+    public Supplier<Profile> getCurrentProfileSupplier() {
+        return currentProfileSupplier;
     }
 
     @Inject

@@ -23,7 +23,6 @@ public interface ItemDao {
      */
     Item getItemByIdOrName(String identifier);
 
-
     /**
      * Returns all Items in the subset of items filtered by tags and the given offset position.  The count parameter
      * should be greater than 0, but may also be overridden by a system defined limit on the number of records that can

@@ -69,11 +69,13 @@ public class MongoDBUtils {
      * @return an {@link ObjectId} (never null)
      */
     public ObjectId parseOrThrowNotFoundException(final String objectId) {
-        try {
-            return new ObjectId(objectId);
-        } catch (IllegalArgumentException ex) {
+
+        if (objectId == null || !ObjectId.isValid(objectId)) {
             throw new NotFoundException("Object with ID " + objectId + " not found.");
         }
+
+        return new ObjectId(objectId);
+
     }
 
 

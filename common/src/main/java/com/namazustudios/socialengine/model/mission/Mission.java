@@ -8,8 +8,10 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Represents a mission.
@@ -37,7 +39,7 @@ public class Mission {
     private String description;
 
     @ApiModelProperty("The tags used to categorize this mission")
-    private List<String> tags;
+    private Set<String> tags;
 
     @ApiModelProperty("The steps that constitute the mission (may be null if finalRepeatStep is specified)")
     private List<Step> steps;
@@ -80,11 +82,11 @@ public class Mission {
         this.description = description;
     }
 
-    public List<String> getTags() {
+    public Set<String> getTags() {
         return tags;
     }
 
-    public void setTags(List<String> tags) {
+    public void setTags(Set<String> tags) {
         this.tags = tags;
     }
 
@@ -112,6 +114,15 @@ public class Mission {
         this.metadata = metadata;
     }
 
+    public void addMetadata(final String name, final Object value) {
+
+        if (getMetadata() == null) {
+            setMetadata(new HashMap<>());
+        }
+
+        getMetadata().put(name, value);
+
+    }
 
     @Override
     public boolean equals(Object o) {

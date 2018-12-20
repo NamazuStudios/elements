@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
 import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.annotations.Property;
 
 import java.util.List;
 import java.util.Map;
@@ -19,14 +20,19 @@ import java.util.Objects;
 @Embedded
 public class MongoStep {
 
+    @Property
     private String displayName;
 
+    @Property
     private String description;
 
+    @Property
     private int count;
 
+    @Embedded
     private List<MongoReward> rewards;
 
+    @Property
     private Map<String, Object> metadata;
 
     public String getDisplayName() {
