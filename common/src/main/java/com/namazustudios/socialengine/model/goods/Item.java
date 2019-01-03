@@ -2,18 +2,15 @@ package com.namazustudios.socialengine.model.goods;
 
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
+import com.namazustudios.socialengine.model.ValidationGroups.Insert;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import io.swagger.annotations.ApiModel;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 
 /**
  * Represents an Item that is a Digital Good.
@@ -21,10 +18,10 @@ import java.util.StringJoiner;
 @ApiModel
 public class Item implements Serializable {
 
-    @Null(groups = Create.class)
+    @Null(groups = {Create.class, Insert.class})
     private String id;
 
-    @NotNull
+    @NotNull(groups = {Create.class, Insert.class, Update.class})
     @Pattern(regexp = Constants.Regexp.WORD_ONLY)
     private String name;
 
@@ -36,7 +33,7 @@ public class Item implements Serializable {
     @NotNull
     private String description;
 
-    private Map<String, String> metadata;
+    private Map<String, Object> metadata;
 
     /**
      * Get the unique ID of the Item.
@@ -143,7 +140,7 @@ public class Item implements Serializable {
      *
      * @return The metadata for the Item
      */
-    public Map<String, String> getMetadata() {
+    public Map<String, Object> getMetadata() {
         return metadata == null ? new HashMap<>() : new HashMap<>(metadata);
     }
 
@@ -153,60 +150,48 @@ public class Item implements Serializable {
      * @param metadata
      *     The metadata for the Item
      */
-    public void setMetadata(Map<String, String> metadata) {
+    public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata != null ? metadata : Collections.emptyMap();
     }
 
+    public void addMetadata(final String name, final Object value) {
+
+        if (getMetadata() == null) {
+            setMetadata(new HashMap<>());
+        }
+
+        getMetadata().put(name, value);
+
+    }
+
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        Item item = (Item) o;
-
-        if (getId() != null ? !getId().equals(item.getId()) : item.getId() != null) {
-            return false;
-        }
-        if (!getName().equals(item.getName())) {
-            return false;
-        }
-        if (getTags() != null ? !getTags().equals(item.getTags()) : item.getTags() != null) {
-            return false;
-        }
-        if (!getDisplayName().equals(item.getDisplayName())) {
-            return false;
-        }
-        if (!getDescription().equals(item.getDescription())) {
-            return false;
-        }
-        return getMetadata() != null ? getMetadata().equals(item.getMetadata()) : item.getMetadata() == null;
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Item)) return false;
+        Item item = (Item) object;
+        return Objects.equals(getId(), item.getId()) &&
+                Objects.equals(getName(), item.getName()) &&
+                Objects.equals(getTags(), item.getTags()) &&
+                Objects.equals(getDisplayName(), item.getDisplayName()) &&
+                Objects.equals(getDescription(), item.getDescription()) &&
+                Objects.equals(getMetadata(), item.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + getName().hashCode();
-        result = 31 * result + (getTags() != null ? getTags().hashCode() : 0);
-        result = 31 * result + getDisplayName().hashCode();
-        result = 31 * result + getDescription().hashCode();
-        result = 31 * result + (getMetadata() != null ? getMetadata().hashCode() : 0);
-        return result;
+        return Objects.hash(getId(), getName(), getTags(), getDisplayName(), getDescription(), getMetadata());
     }
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", Item.class.getSimpleName() + "[", "]")
-            .add("id='" + id + "'")
-            .add("name='" + name + "'")
-            .add("tags=" + tags)
-            .add("displayName='" + displayName + "'")
-            .add("description='" + description + "'")
-            .add("metadata=" + metadata)
-            .toString();
+        return "Item{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", tags=" + tags +
+                ", displayName='" + displayName + '\'' +
+                ", description='" + description + '\'' +
+                ", metadata=" + metadata +
+                '}';
     }
 
 }

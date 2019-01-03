@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 @ApiModel
 public class UsernamePasswordSessionRequest {
@@ -15,6 +16,9 @@ public class UsernamePasswordSessionRequest {
     @NotNull
     @ApiModelProperty("The password.")
     private String password;
+
+    @ApiModelProperty("The profile ID to assign to the session.")
+    private String profileId;
 
     public String getUserId() {
         return userId;
@@ -32,29 +36,36 @@ public class UsernamePasswordSessionRequest {
         this.password = password;
     }
 
+    public String getProfileId() {
+        return profileId;
+    }
+
+    public void setProfileId(String profileId) {
+        this.profileId = profileId;
+    }
+
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof UsernamePasswordSessionRequest)) return false;
-
-        UsernamePasswordSessionRequest that = (UsernamePasswordSessionRequest) o;
-
-        if (getUserId() != null ? !getUserId().equals(that.getUserId()) : that.getUserId() != null) return false;
-        return getPassword() != null ? getPassword().equals(that.getPassword()) : that.getPassword() == null;
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof UsernamePasswordSessionRequest)) return false;
+        UsernamePasswordSessionRequest that = (UsernamePasswordSessionRequest) object;
+        return Objects.equals(getUserId(), that.getUserId()) &&
+                Objects.equals(getPassword(), that.getPassword()) &&
+                Objects.equals(getProfileId(), that.getProfileId());
     }
 
     @Override
     public int hashCode() {
-        int result = getUserId() != null ? getUserId().hashCode() : 0;
-        result = 31 * result + (getPassword() != null ? getPassword().hashCode() : 0);
-        return result;
+
+        return Objects.hash(getUserId(), getPassword(), getProfileId());
     }
 
     @Override
     public String toString() {
         return "UsernamePasswordSessionRequest{" +
                 "userId='" + userId + '\'' +
-                ", password='" + password + '\'' +
+                ", password='...you keep your secrets" + '\'' +
+                ", profileId='" + profileId + '\'' +
                 '}';
     }
 

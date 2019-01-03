@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.appnode.guice.JaxRSClientModule;
 import com.namazustudios.socialengine.appnode.guice.MultiNodeContainerModule;
+import com.namazustudios.socialengine.appnode.guice.ServicesModule;
 import com.namazustudios.socialengine.appnode.guice.VersionModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
@@ -109,7 +110,8 @@ public class ApplicationNodeMain {
                 new FirebaseAppFactoryModule(),
                 new GuiceStandardNotificationFactoryModule(),
                 new JaxRSClientModule(),
-                new VersionModule()
+                new VersionModule(),
+                new ServicesModule()
         );
 
         final Object lock = new Object();

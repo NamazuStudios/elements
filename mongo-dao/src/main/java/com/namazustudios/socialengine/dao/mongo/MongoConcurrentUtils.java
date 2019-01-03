@@ -91,81 +91,6 @@ public class MongoConcurrentUtils {
     }
 
     /**
-     * Given a {@link Query<ModelT>} object, this will attempt to find a single entity and execute
-     * an atomic update.
-     *
-     * The result of the query, or a freshly created instance, is passed to the second argument of the
-     * supplied {@link BiConsumer} just before attempting the write to perform any updates or modifications.
-     *
-     * Before attempting an update, a snapshot of the object is taken using {@link Datastore#queryByExample(Object)}
-     * to ensure that the object can be updated completely (or not at all).
-     *
-     * In the event the operation fails, the operation is retried until either it succeeds or a timeout happens.
-     *
-     * @param query the query to find the objects
-     * @param operation the operation to execute
-     * @return a freshly fetched database snapshot of the model as it was inserted or updated.
-     *
-     * @throws IllegalArgumentException if the query does not return a single result or the key was interefered with while updating
-     * @throws ContentionException if the atomic operation fails because the object was mutated
-     *
-     */
-    public <ModelT> ModelT performOptimisticUpsert(
-            final Query<ModelT> query,
-            final BiConsumer<AdvancedDatastore, ModelT> operation) throws ConflictException {
-
-        return performOptimistic(datastore -> {
-
-            final ModelT model;
-            final Key<ModelT> key;
-
-            if (datastore.getCount(query) == 0) {
-
-                key = null;
-
-                try {
-                    model = query.getEntityClass().newInstance();
-                } catch (InstantiationException ex) {
-                    throw new IllegalStateException(ex);
-                } catch (IllegalAccessException ex) {
-                    throw new IllegalStateException(ex);
-                }
-
-            } else if (datastore.getCount(query) == 1) {
-                model = query.get();
-                key = datastore.getKey(model);
-            } else {
-                throw new IllegalArgumentException("Multiple objects exist for query.");
-            }
-
-            final Query<ModelT> qbe = datastore.queryByExample(model);
-            operation.accept(datastore, model);
-
-            if (key != null && !Objects.equals(key, datastore.getKey(model))) {
-
-                // If we were looking to update a specific object we had better make sure
-                // that nobody fucked with the key or else this operation will not behave
-                // properly.
-
-                throw new IllegalArgumentException("Key mismatch.  Expected " + key +
-                        " but got " + datastore.getKey(model) + " instead.");
-
-            }
-
-            final UpdateResults result = datastore.updateFirst(qbe, model, true);
-
-            if (result.getInsertedCount() == 1) {
-                return datastore.get(query.getEntityClass(), result.getNewId());
-            } else if (result.getUpdatedCount() == 1) {
-                return datastore.getByKey(query.getEntityClass(), key);
-            } else {
-                throw new ContentionException();
-            }
-
-        });
-    }
-
-    /**
      * A basic a atomic operation.  The operation is supplied with a
      * {@link org.mongodb.morphia.Datastore} instance which is used to handel the atomic
      * operation.
@@ -209,9 +134,10 @@ public class MongoConcurrentUtils {
 
     }
 
+
     /**
-     * Thrown when the operation fails.  In the event an {@link MongoConcurrentUtils.CriticalOperation}
-     * fails because the object has changed, this exception may be raised to re-attempt the operation.
+     * Thrown when there is too much contention over a particular resource.  If an optimistic exception
+     * fails too many times then this exception is raised.
      */
     public static class ConflictException extends OptimistcException {
 
@@ -235,8 +161,8 @@ public class MongoConcurrentUtils {
     }
 
     /**
-     * Thrown when there is too much contention over a particular resource.  If an optimistic exception
-     * fails too many times then this exception is raised.
+     * Thrown when the operation fails.  In the event an {@link MongoConcurrentUtils.CriticalOperation}
+     * fails because the object has changed, this exception may be raised to re-attempt the operation.
      */
     public static class ContentionException extends  OptimistcException {
 

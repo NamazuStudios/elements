@@ -1,13 +1,17 @@
 package com.namazustudios.socialengine.model.mission;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Represents a mission.
@@ -34,11 +38,17 @@ public class Mission {
     @NotNull
     private String description;
 
+    @ApiModelProperty("The tags used to categorize this mission")
+    private Set<String> tags;
+
     @ApiModelProperty("The steps that constitute the mission (may be null if finalRepeatStep is specified)")
-    private java.util.List<Step> steps;
+    private List<Step> steps;
 
     @ApiModelProperty("The final repeating step (may be null if step(s) are specified)")
     private Step finalRepeatStep;
+
+    @ApiModelProperty("The metadata for this mission")
+    private Map<String, Object> metadata;
 
     public String getId() {
         return id;
@@ -72,11 +82,19 @@ public class Mission {
         this.description = description;
     }
 
-    public java.util.List<Step> getSteps() {
+    public Set<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
+    }
+
+    public List<Step> getSteps() {
         return steps;
     }
 
-    public void setSteps(java.util.List<Step> steps) {
+    public void setSteps(List<Step> steps) {
         this.steps = steps;
     }
 
@@ -86,6 +104,24 @@ public class Mission {
 
     public void setFinalRepeatStep(Step finalRepeatStep) {
         this.finalRepeatStep = finalRepeatStep;
+    }
+
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
+    public void addMetadata(final String name, final Object value) {
+
+        if (getMetadata() == null) {
+            setMetadata(new HashMap<>());
+        }
+
+        getMetadata().put(name, value);
+
     }
 
     @Override
@@ -99,7 +135,9 @@ public class Mission {
         if (getName() != null ? !getName().equals(mission.getName()) : mission.getName() != null) return false;
         if (getDisplayName() != null ? !getDisplayName().equals(mission.getDisplayName()) : mission.getDisplayName() != null) return false;
         if (getDescription() != null ? !getDescription().equals(mission.getDescription()) : mission.getDescription() != null) return false;
+        if (getTags() != null ? !getTags().equals(mission.getTags()) : mission.getTags() != null) return false;
         if (getSteps() != null ? !getSteps().equals(mission.getSteps()) : mission.getSteps() != null) return false;
+        if (getMetadata() != null ? !getMetadata().equals(mission.getMetadata()) : mission.getMetadata() != null) return false;
         return (getFinalRepeatStep() != null ? !getFinalRepeatStep().equals(mission.getFinalRepeatStep()) : mission.getFinalRepeatStep() != null);
     }
 
@@ -109,8 +147,10 @@ public class Mission {
         result = 31 * result + (getDisplayName() != null ? getDisplayName().hashCode() : 0);
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
+        result = 31 * result + (getTags() != null ? getTags().hashCode() : 0);
         result = 31 * result + (getSteps() != null ? getSteps().hashCode() : 0);
         result = 31 * result + (getFinalRepeatStep() != null ? getFinalRepeatStep().hashCode() : 0);
+        result = 31 * result + (getMetadata() != null ? getMetadata().hashCode() : 0);
         return result;
     }
 
@@ -121,8 +161,10 @@ public class Mission {
                 ", displayName='" + displayName + '\'' +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
+                ", tags=" + tags  + '\'' +
                 ", steps='" + steps + '\'' +
                 ", finalRepeatStep='" + finalRepeatStep + '\'' +
+                ", metadata=" + metadata +
                 '}';
     }
 

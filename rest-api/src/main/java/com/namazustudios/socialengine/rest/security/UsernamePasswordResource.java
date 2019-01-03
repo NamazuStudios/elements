@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rest.security;
 
 import com.namazustudios.socialengine.exception.InvalidDataException;
-import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.model.session.UsernamePasswordSessionRequest;
 import com.namazustudios.socialengine.service.UsernamePasswordAuthService;
@@ -15,6 +14,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.base.Strings.nullToEmpty;
 
 /**
  * Created by patricktwohig on 4/2/15.
@@ -44,6 +44,7 @@ public class UsernamePasswordResource {
 
         final String userId = usernamePasswordSessionRequest.getUserId().trim();
         final String password = usernamePasswordSessionRequest.getPassword().trim();
+        final String profileId = nullToEmpty(usernamePasswordSessionRequest.getProfileId()).trim();
 
         if (isNullOrEmpty(userId)) {
             throw new InvalidDataException("User ID must be specified.");
@@ -53,7 +54,9 @@ public class UsernamePasswordResource {
             throw new InvalidDataException("Password must be specified.");
         }
 
-        return getUsernamePasswordAuthService().createSessionWithLogin(userId, password);
+        return profileId.isEmpty() ?
+            getUsernamePasswordAuthService().createSessionWithLogin(userId, password) :
+            getUsernamePasswordAuthService().createSessionWithLogin(userId, password, profileId);
 
     }
 

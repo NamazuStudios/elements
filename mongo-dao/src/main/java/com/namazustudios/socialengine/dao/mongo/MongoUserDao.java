@@ -104,6 +104,8 @@ public class MongoUserDao implements UserDao {
 
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
 
+        query.field("active").equal(true);
+
         query.or(
             query.criteria("name").equal(trimmedUserNameOrEmail),
             query.criteria("email").equal(trimmedUserNameOrEmail)

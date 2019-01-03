@@ -8,6 +8,9 @@ import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * Mongo DTO for a mission.
  *
@@ -25,7 +28,7 @@ import org.mongodb.morphia.annotations.*;
         @SearchableField(name = "displayName",  path = "/displayName"),
         @SearchableField(name = "description",  path = "/description")
 })
-@Entity(value = "missions", noClassnameStored = true)
+@Entity(value = "mission", noClassnameStored = true)
 public class MongoMission {
 
     @Id
@@ -35,19 +38,23 @@ public class MongoMission {
     @Indexed(options = @IndexOptions(unique = true))
     private String name;
 
-    @Indexed()
     @Property
     private String displayName;
 
-    @Indexed()
     @Property
     private String description;
 
-    @Property
-    private java.util.List<MongoStep> steps;
+    @Embedded
+    private List<String> tags;
 
-    @Property
+    @Embedded
+    private List<MongoStep> steps;
+
+    @Embedded
     private MongoStep finalRepeatStep;
+
+    @Embedded
+    private Map<String, Object> metadata;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -81,11 +88,19 @@ public class MongoMission {
         this.description = description;
     }
 
-    public java.util.List<MongoStep> getSteps() {
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
+
+    public List<MongoStep> getSteps() {
         return steps;
     }
 
-    public void setSteps(java.util.List<MongoStep> steps) {
+    public void setSteps(List<MongoStep> steps) {
         this.steps = steps;
     }
 
@@ -95,6 +110,14 @@ public class MongoMission {
 
     public void setFinalRepeatStep(MongoStep finalRepeatStep) {
         this.finalRepeatStep = finalRepeatStep;
+    }
+
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
     }
 
     @Override
@@ -108,8 +131,10 @@ public class MongoMission {
         if (getName() != null ? !getName().equals(mission.getName()) : mission.getName() != null) return false;
         if (getDisplayName() != null ? !getDisplayName().equals(mission.getDisplayName()) : mission.getDisplayName() != null) return false;
         if (getDescription() != null ? !getDescription().equals(mission.getDescription()) : mission.getDescription() != null) return false;
+        if (getTags() != null ? !getTags().equals(mission.getTags()) : mission.getTags() != null) return false;
         if (getSteps() != null ? !getSteps().equals(mission.getSteps()) : mission.getSteps() != null) return false;
-        return (getFinalRepeatStep() != null ? !getFinalRepeatStep().equals(mission.getFinalRepeatStep()) : mission.getFinalRepeatStep() != null);
+        if (getFinalRepeatStep() != null ? !getFinalRepeatStep().equals(mission.getFinalRepeatStep()) : mission.getFinalRepeatStep() != null) return false;
+        return (getMetadata() != null ? !getMetadata().equals(mission.getMetadata()) : mission.getMetadata() != null);
     }
 
     @Override
@@ -118,8 +143,10 @@ public class MongoMission {
         result = 31 * result + (getDisplayName() != null ? getDisplayName().hashCode() : 0);
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
+        result = 31 * result + (getTags() != null ? getTags().hashCode() : 0);
         result = 31 * result + (getSteps() != null ? getSteps().hashCode() : 0);
         result = 31 * result + (getFinalRepeatStep() != null ? getFinalRepeatStep().hashCode() : 0);
+        result = 31 * result + (getMetadata() != null ? getMetadata().hashCode() : 0);
         return result;
     }
 
@@ -130,8 +157,10 @@ public class MongoMission {
                 ", displayName='" + displayName + '\'' +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
+                ", tags='" + tags + '\'' +
                 ", steps='" + steps + '\'' +
                 ", finalRepeatStep='" + finalRepeatStep + '\'' +
+                ", metadata='" + metadata + '\'' +
                 '}';
     }
 

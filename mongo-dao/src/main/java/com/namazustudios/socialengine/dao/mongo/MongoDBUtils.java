@@ -21,10 +21,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static java.lang.Math.min;
-import static java.util.stream.StreamSupport.stream;
+import static java.util.stream.Collectors.*;
 
 /**
  * Some helper methods used in various parts of the MongoDB code.
@@ -69,11 +68,13 @@ public class MongoDBUtils {
      * @return an {@link ObjectId} (never null)
      */
     public ObjectId parseOrThrowNotFoundException(final String objectId) {
-        try {
-            return new ObjectId(objectId);
-        } catch (IllegalArgumentException ex) {
+
+        if (objectId == null || !ObjectId.isValid(objectId)) {
             throw new NotFoundException("Object with ID " + objectId + " not found.");
         }
+
+        return new ObjectId(objectId);
+
     }
 
 
@@ -117,11 +118,14 @@ public class MongoDBUtils {
 
         final int limit = min(getQueryMaxResults(), count);
 
-        final List<ModelT> modelTList = query.asList(new FindOptions().skip(offset))
+        final FindOptions options = new FindOptions()
+            .skip(offset)
+            .limit(limit);
+
+        final List<ModelT> modelTList = query.asList(options)
             .stream()
             .map(function)
-            .limit(limit)
-            .collect(Collectors.toList());
+            .collect(toList());
 
         pagination.setObjects(modelTList);
         return pagination;

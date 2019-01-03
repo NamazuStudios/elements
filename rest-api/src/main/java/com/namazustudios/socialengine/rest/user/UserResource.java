@@ -1,6 +1,9 @@
-package com.namazustudios.socialengine.rest;
+package com.namazustudios.socialengine.rest.user;
 
 import com.google.common.base.Strings;
+import com.namazustudios.socialengine.model.UserCreateRequest;
+import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
@@ -23,11 +26,11 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
 /**
  * Created by patricktwohig on 3/25/15.
  */
-@Path("user")
 @Api(value = "Users",
      description = "Manages users in the server.  Users are single-end users typically associated " +
                    "with a login name or email address.",
      authorizations = {@Authorization(SESSION_SECRET)})
+@Path("user")
 public class UserResource {
 
     private UserService userService;

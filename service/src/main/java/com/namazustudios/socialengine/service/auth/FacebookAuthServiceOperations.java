@@ -1,8 +1,6 @@
 package com.namazustudios.socialengine.service.auth;
 
 import com.google.common.base.Joiner;
-import com.namazustudios.socialengine.annotation.FacebookPermission;
-import com.namazustudios.socialengine.annotation.FacebookPermissions;
 import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.User;
@@ -11,7 +9,6 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.FacebookSessionCreation;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
-import com.namazustudios.socialengine.service.FacebookAuthService;
 import com.restfb.*;
 import com.restfb.exception.FacebookOAuthException;
 import com.restfb.json.JsonObject;
@@ -22,9 +19,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.Constants.SESSION_TIMEOUT_SECONDS;
 import static java.lang.Math.min;
@@ -33,22 +30,17 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 
-/**
- * This is the basic {@link FacebookAuthService} used
- *
- * Created by patricktwohig on 6/22/17.
- */
-@FacebookPermissions({
-    @FacebookPermission("email"),
-    @FacebookPermission("public_profile"),
-    @FacebookPermission("user_friends")
-})
-public class StandardFacebookAuthService implements FacebookAuthService {
+public class FacebookAuthServiceOperations {
 
-    private static final Logger logger = LoggerFactory.getLogger(StandardFacebookAuthService.class);
+    public static final String PROFILE_FIELDS_PARAMETER_VALUE = Joiner.on(",")
+            .join("id",
+                    "name",
+                    "email",
+                    "first_name",
+                    "last_name",
+                    "picture");
 
-    private static final String FIELDS_PARAMETER_VALUE = Joiner.on(",")
-        .join("id","name","email","first_name","last_name","picture");
+    private static final Logger logger = LoggerFactory.getLogger(AnonFacebookAuthService.class);
 
     private ProfileDao profileDao;
 
@@ -62,11 +54,11 @@ public class StandardFacebookAuthService implements FacebookAuthService {
 
     private long sessionTimeoutSeconds;
 
-    @Override
     public FacebookSessionCreation createOrUpdateUserWithFacebookOAuthAccessToken(
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId,
-            final String facebookOAuthAccessToken) {
+            final String facebookOAuthAccessToken,
+            final Function<com.restfb.types.User, User> userMapper) {
         return doFacebookOperation(() -> {
 
             final FacebookApplicationConfiguration facebookApplicationConfiguration =
@@ -86,25 +78,26 @@ public class StandardFacebookAuthService implements FacebookAuthService {
                     facebookApplicationConfiguration.getApplicationSecret());
 
             final com.restfb.types.User fbUser = facebookClient
-                .fetchObject(
-                    "me",
-                    com.restfb.types.User.class,
-                    Parameter.with("fields", FIELDS_PARAMETER_VALUE),
-                    Parameter.with("appsecret_proof", appsecretProof));
+                    .fetchObject(
+                            "me",
+                            com.restfb.types.User.class,
+                            Parameter.with("fields", PROFILE_FIELDS_PARAMETER_VALUE),
+                            Parameter.with("appsecret_proof", appsecretProof));
 
             final JsonObject rawProfilePicture = facebookClient
-                .fetchObject(
-                    "me/picture",
-                    JsonObject.class,
-                    Parameter.with("type", "large"),
-                    Parameter.with("redirect", false),
-                    Parameter.with("appsecret_proof", appsecretProof));
+                    .fetchObject(
+                            "me/picture",
+                            JsonObject.class,
+                            Parameter.with("type", "large"),
+                            Parameter.with("redirect", false),
+                            Parameter.with("appsecret_proof", appsecretProof));
 
             final ProfilePictureSource profilePictureSource = facebookClient
-                .getJsonMapper()
-                .toJavaObject(rawProfilePicture.get("data").toString(), ProfilePictureSource.class);
+                    .getJsonMapper()
+                    .toJavaObject(rawProfilePicture.get("data").toString(), ProfilePictureSource.class);
 
-            final User user = getFacebookUserDao().createReactivateOrUpdateUser(map(fbUser));
+            final User user = userMapper.apply(fbUser);
+
             final Profile profile = getProfileDao().createOrRefreshProfile(map(
                     user,
                     fbUser,
@@ -122,7 +115,7 @@ public class StandardFacebookAuthService implements FacebookAuthService {
             session.setApplication(facebookApplicationConfiguration.getParent());
             session.setExpiry(expiry);
 
-            final SessionCreation sessionCreation = getSessionDao().create(user, session);
+            final SessionCreation sessionCreation = getSessionDao().create(session);
 
             facebookSessionCreation.setSession(sessionCreation.getSession());
             facebookSessionCreation.setSessionSecret(sessionCreation.getSessionSecret());
@@ -148,10 +141,10 @@ public class StandardFacebookAuthService implements FacebookAuthService {
                                       final String appsecretProof) {
 
         final Connection<com.restfb.types.User> userConnection = facebookClient
-            .fetchConnection(
-                "me/friends",
-                com.restfb.types.User.class,
-                Parameter.with("appsecret_proof", appsecretProof));
+                .fetchConnection(
+                        "me/friends",
+                        com.restfb.types.User.class,
+                        Parameter.with("appsecret_proof", appsecretProof));
 
         for (final List<com.restfb.types.User> userList : userConnection) {
             getFacebookFriendDao().associateFriends(user, userList.stream().map(u -> u.getId()).collect(toList()));
@@ -165,23 +158,6 @@ public class StandardFacebookAuthService implements FacebookAuthService {
         } catch (FacebookOAuthException ex) {
             throw new ForbiddenException(ex.getMessage(), ex);
         }
-    }
-
-    private User map(final com.restfb.types.User fbUser) {
-        final User user = new User();
-        user.setLevel(User.Level.USER);
-        user.setActive(true);
-        user.setFacebookId(fbUser.getId());
-        user.setEmail(fbUser.getEmail());
-        user.setName(generateUserName(fbUser));
-        return user;
-    }
-
-    private String generateUserName(final com.restfb.types.User fbUser) {
-        final String firstName = emptyToNull(nullToEmpty(fbUser.getFirstName()).trim().toLowerCase());
-        final String middleName = emptyToNull(nullToEmpty(fbUser.getMiddleName()).trim().toLowerCase());
-        final String lastName = emptyToNull(nullToEmpty(fbUser.getLastName()).trim().toLowerCase());
-        return Joiner.on(".").skipNulls().join(firstName, middleName, lastName, fbUser.getId());
     }
 
     private Profile map(final User user,

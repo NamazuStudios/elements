@@ -1,14 +1,12 @@
-package com.namazustudios.socialengine.dao.mongo.model;
+package com.namazustudios.socialengine.dao.mongo.model.goods;
 
 import com.namazustudios.elements.fts.annotation.SearchableDocument;
 import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
+import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
+import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Property;
+import org.mongodb.morphia.annotations.*;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,6 +45,7 @@ public class MongoItem {
     @Property
     private Map<String, String> metadata = new HashMap<>();
 
+    @Indexed
     @Property
     private Set<String> tags = new HashSet<>();
 

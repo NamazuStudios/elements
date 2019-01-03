@@ -59,7 +59,7 @@ public class SuperUserMockSessionService implements MockSessionService {
         }
 
         final MockSessionCreation mockSessionCreation = new MockSessionCreation();
-        final SessionCreation sessionCreation = getSessionDao().create(user, session);
+        final SessionCreation sessionCreation = getSessionDao().create(session);
 
         mockSessionCreation.setSession(sessionCreation.getSession());
         mockSessionCreation.setSessionSecret(sessionCreation.getSessionSecret());
