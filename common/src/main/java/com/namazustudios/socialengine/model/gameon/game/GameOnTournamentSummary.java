@@ -56,7 +56,7 @@ public class GameOnTournamentSummary implements Serializable {
     private String scoreType;
 
     @ApiModelProperty("The current state of the tournament (e.g. open, closed).")
-    private String tournamentState;
+    private TournamentState tournamentState;
 
     @ApiModelProperty("The types of participants that will be in the tournament (e.g. individual, team).")
     private String participantType;
@@ -165,9 +165,9 @@ public class GameOnTournamentSummary implements Serializable {
 
     public void setScoreType(String scoreType) { this.scoreType = scoreType; }
 
-    public String getTournamentState() { return tournamentState; }
+    public TournamentState getTournamentState() { return tournamentState; }
 
-    public void setTournamentState(String tournamentState) { this.tournamentState = tournamentState; }
+    public void setTournamentState(TournamentState tournamentState) { this.tournamentState = tournamentState; }
 
     public String getParticipantType() { return participantType; }
 
@@ -227,6 +227,36 @@ public class GameOnTournamentSummary implements Serializable {
                 ", tournamentState='" + tournamentState + '\'' +
                 ", participantType='" + participantType + '\'' +
                 '}';
+    }
+
+    @ApiModel(description = "Current state of the tournament (e.g. open, closed). See: " +
+            "https://developer.amazon.com/docs/gameon/game-api-ref.html#getmatchdetailsresponse_tournamentdetails")
+    public enum TournamentState {
+
+        /**
+         * The tournament is upcoming or on-going.
+         */
+        OPEN,
+
+        /**
+         * The tournament is in the process of closing.
+         */
+        WAITING_TO_BE_CLOSED,
+
+        /**
+         * The tournament has closed and is awaiting manual approval in Developer Console.
+         */
+        CLOSED,
+
+        /**
+         * The tournament is in the process of completing.
+         */
+        WAITING_TO_BE_COMPLETED,
+
+        /**
+         * The tournament has finalized and prizes have been awarded.
+         */
+        COMPLETED
     }
 
 }
