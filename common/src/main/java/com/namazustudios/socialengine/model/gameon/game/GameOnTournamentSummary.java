@@ -43,7 +43,7 @@ public class GameOnTournamentSummary implements Serializable {
     @ApiModelProperty("The detailed listing of prize bundles.")
     private List<GameOnPrizeBundle> prizeBundles;
 
-    @ApiModelProperty("The win type (eg single or cumulative).")
+    @ApiModelProperty("The win type (e.g. highest).")
     private String winType;
 
     @ApiModelProperty("The description of the tournament.")
