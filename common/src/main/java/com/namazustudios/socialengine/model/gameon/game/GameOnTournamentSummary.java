@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.gameon.game;
 
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -35,13 +36,31 @@ public class GameOnTournamentSummary implements Serializable {
     private Integer matchesPerPlayer;
 
     @ApiModelProperty("The number of attempts a player can make per match.")
-    private Integer playerAttemtpsPerMatch;
+    private Integer playerAttemptsPerMatch;
 
     @ApiModelProperty("The number of players per match.")
     private Integer playersPerMatch;
 
     @ApiModelProperty("The detailed listing of prize bundles.")
     private List<GameOnPrizeBundle> prizeBundles;
+
+    @ApiModelProperty("The win type (eg single or cumulative).")
+    private String winType;
+
+    @ApiModelProperty("The description of the tournament.")
+    private String description;
+
+    @ApiModelProperty("Whether or not an access key is required to enter the tournament.")
+    private Boolean hasAccessKey;
+
+    @ApiModelProperty("The score type (e.g. individual).")
+    private String scoreType;
+
+    @ApiModelProperty("The current state of the tournament (e.g. open, closed).")
+    private String tournamentState;
+
+    @ApiModelProperty("The types of participants that will be in the tournament (e.g. individual, team).")
+    private String participantType;
 
     public String getTournamentId() {
         return tournamentId;
@@ -91,12 +110,12 @@ public class GameOnTournamentSummary implements Serializable {
         this.matchesPerPlayer = matchesPerPlayer;
     }
 
-    public Integer getPlayerAttemtpsPerMatch() {
-        return playerAttemtpsPerMatch;
+    public Integer getPlayerAttemptsPerMatch() {
+        return playerAttemptsPerMatch;
     }
 
-    public void setPlayerAttemtpsPerMatch(Integer playerAttemtpsPerMatch) {
-        this.playerAttemtpsPerMatch = playerAttemtpsPerMatch;
+    public void setPlayerAttemptsPerMatch(Integer playerAttemptsPerMatch) {
+        this.playerAttemptsPerMatch = playerAttemptsPerMatch;
     }
 
     public Integer getPlayersPerMatch() {
@@ -131,6 +150,31 @@ public class GameOnTournamentSummary implements Serializable {
         this.subtitle = subtitle;
     }
 
+    public String getWinType() { return winType; }
+
+    public void setWinType(String winType) { this.winType = winType; }
+
+    public String getDescription() { return description; }
+
+    public void setDescription(String description) { this.description = description; }
+
+    public Boolean getHasAccessKey() { return hasAccessKey; }
+
+    public void setHasAccessKey(Boolean hasAccessKey) { this.hasAccessKey = hasAccessKey; }
+
+    public String getScoreType() { return scoreType; }
+
+    public void setScoreType(String scoreType) { this.scoreType = scoreType; }
+
+    public String getTournamentState() { return tournamentState; }
+
+    public void setTournamentState(String tournamentState) { this.tournamentState = tournamentState; }
+
+    public String getParticipantType() { return participantType; }
+
+    public void setParticipantType(String participantType) { this.participantType = participantType; }
+
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -142,16 +186,25 @@ public class GameOnTournamentSummary implements Serializable {
                 Objects.equals(getDateEnd(), that.getDateEnd()) &&
                 Objects.equals(getImageUrl(), that.getImageUrl()) &&
                 Objects.equals(getMatchesPerPlayer(), that.getMatchesPerPlayer()) &&
-                Objects.equals(getPlayerAttemtpsPerMatch(), that.getPlayerAttemtpsPerMatch()) &&
+                Objects.equals(getPlayerAttemptsPerMatch(), that.getPlayerAttemptsPerMatch()) &&
                 Objects.equals(getPlayersPerMatch(), that.getPlayersPerMatch()) &&
                 Objects.equals(getPrizeBundles(), that.getPrizeBundles()) &&
                 Objects.equals(getTitle(), that.getTitle()) &&
-                Objects.equals(getSubtitle(), that.getSubtitle());
+                Objects.equals(getSubtitle(), that.getSubtitle()) &&
+                Objects.equals(getWinType(), that.getWinType()) &&
+                Objects.equals(getDescription(), that.getDescription()) &&
+                Objects.equals(getHasAccessKey(), that.getHasAccessKey()) &&
+                Objects.equals(getScoreType(), that.getScoreType()) &&
+                Objects.equals(getTournamentState(), that.getTournamentState()) &&
+                Objects.equals(getParticipantType(), that.getParticipantType());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getTournamentId(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getPlayerAttemtpsPerMatch(), getPlayersPerMatch(), getPrizeBundles(), getTitle(), getSubtitle());
+        return Objects.hash(getTournamentId(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(),
+                getMatchesPerPlayer(), getPlayerAttemptsPerMatch(), getPlayersPerMatch(), getPrizeBundles(), getTitle(),
+                getSubtitle(), getWinType(), getDescription(), getHasAccessKey(), getScoreType(),
+                getTournamentState(), getParticipantType());
     }
 
     @Override
@@ -163,11 +216,17 @@ public class GameOnTournamentSummary implements Serializable {
                 ", dateEnd=" + dateEnd +
                 ", imageUrl='" + imageUrl + '\'' +
                 ", matchesPerPlayer=" + matchesPerPlayer +
-                ", playerAttemtpsPerMatch=" + playerAttemtpsPerMatch +
+                ", playerAttemptsPerMatch=" + playerAttemptsPerMatch +
                 ", playersPerMatch=" + playersPerMatch +
                 ", prizeBundles=" + prizeBundles +
                 ", title='" + title + '\'' +
                 ", subtitle='" + subtitle + '\'' +
+                ", winType='" + winType + '\'' +
+                ", description='" + description + '\'' +
+                ", hasAccessKey='" + hasAccessKey + '\'' +
+                ", scoreType='" + scoreType + '\'' +
+                ", tournamentState='" + tournamentState + '\'' +
+                ", participantType='" + participantType + '\'' +
                 '}';
     }
 
