@@ -197,6 +197,8 @@ public class GameOnMatchDetail {
 
     }
 
+    @ApiModel(description = "The awarded prize status. See: " +
+                "https://developer.amazon.com/docs/gameon/game-api-ref.html#getmatchlistresponse_match")
     public enum AwardedPrizeStatus {
 
         /**
