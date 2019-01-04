@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.model.gameon.game;
 
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -32,7 +31,7 @@ public class GameOnTournamentSummary implements Serializable {
     @ApiModelProperty("The image URL for the tournament.")
     private String imageUrl;
 
-    @ApiModelProperty("The nubmer of matches per player.")
+    @ApiModelProperty("The number of matches per player.")
     private Integer matchesPerPlayer;
 
     @ApiModelProperty("The number of attempts a player can make per match.")
