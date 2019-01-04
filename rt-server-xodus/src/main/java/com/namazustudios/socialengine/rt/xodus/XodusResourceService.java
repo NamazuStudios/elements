@@ -573,6 +573,8 @@ public class XodusResourceService implements ResourceService {
 
                     if (path.matches(xodusListing.getPath())) {
                         result.add(xodusListing);
+                    } else {
+                        break;
                     }
 
                     if (!cursor.getNext()) {
