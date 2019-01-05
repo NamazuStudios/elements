@@ -1,12 +1,12 @@
 package com.namazustudios.socialengine.model.leaderboard;
 
-import com.namazustudios.socialengine.model.ValidationGroups;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
-import javax.validation.groups.Default;
 
 @ApiModel
 public class Leaderboard {
@@ -25,6 +25,14 @@ public class Leaderboard {
     @NotNull
     @ApiModelProperty("The units-of measure for the score type of the leaderboard.")
     private String scoreUnits;
+
+    @Null(groups = {Update.class})
+    @ApiModelProperty("The time at which the leaderboard intervals should begin (in ms).")
+    private Long dateStart;
+
+    @Null(groups = {Update.class})
+    @ApiModelProperty("The duration for a leaderboard interval (in ms).")
+    private Long interval;
 
     public String getId() {
         return id;
@@ -58,6 +66,15 @@ public class Leaderboard {
         this.scoreUnits = scoreUnits;
     }
 
+    public Long getDateStart() { return dateStart; }
+
+    public void setDateStart(Long dateStart) { this.dateStart = dateStart; }
+
+    public Long getInterval() { return interval; }
+
+    public void setInterval(Long interval) { this.interval = interval; }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -68,6 +85,8 @@ public class Leaderboard {
         if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
         if (getTitle() != null ? !getTitle().equals(that.getTitle()) : that.getTitle() != null) return false;
+        if (getDateStart() != null ? !getDateStart().equals(that.getDateStart()) : that.getDateStart() != null) return false;
+        if (getInterval() != null ? !getInterval().equals(that.getInterval()) : that.getInterval() != null) return false;
         return getScoreUnits() != null ? getScoreUnits().equals(that.getScoreUnits()) : that.getScoreUnits() == null;
     }
 
@@ -77,6 +96,8 @@ public class Leaderboard {
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getTitle() != null ? getTitle().hashCode() : 0);
         result = 31 * result + (getScoreUnits() != null ? getScoreUnits().hashCode() : 0);
+        result = 31 * result + (getDateStart() != null ? getDateStart().hashCode() : 0);
+        result = 31 * result + (getInterval() != null ? getInterval().hashCode() : 0);
         return result;
     }
 
@@ -87,6 +108,8 @@ public class Leaderboard {
                 ", name='" + name + '\'' +
                 ", title='" + title + '\'' +
                 ", scoreUnits='" + scoreUnits + '\'' +
+                ", dateStart='" + dateStart + '\'' +
+                ", interval='" + interval + '\'' +
                 '}';
     }
 

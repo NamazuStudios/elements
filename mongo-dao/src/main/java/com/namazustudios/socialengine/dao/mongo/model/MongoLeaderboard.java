@@ -6,6 +6,8 @@ import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
+import java.sql.Timestamp;
+
 @SearchableIdentity(@SearchableField(
     name = "id",
     path = "/objectId",
@@ -35,6 +37,12 @@ public class MongoLeaderboard {
 
     @Property
     private String scoreUnits;
+
+    @Property
+    private Timestamp dateStart;
+
+    @Property
+    private Long interval;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -68,6 +76,14 @@ public class MongoLeaderboard {
         this.scoreUnits = scoreUnits;
     }
 
+    public Timestamp getDateStart() { return dateStart; }
+
+    public void setDateStart(Timestamp dateStart) { this.dateStart = dateStart; }
+
+    public Long getInterval() { return interval; }
+
+    public void setInterval(Long interval) { this.interval = interval; }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -79,6 +95,8 @@ public class MongoLeaderboard {
             return false;
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
         if (getTitle() != null ? !getTitle().equals(that.getTitle()) : that.getTitle() != null) return false;
+        if (getDateStart() != null ? !getDateStart().equals(that.getDateStart()) : that.getDateStart() != null) return false;
+        if (getInterval() != null ? !getInterval().equals(that.getInterval()) : that.getInterval() != null) return false;
         return getScoreUnits() != null ? getScoreUnits().equals(that.getScoreUnits()) : that.getScoreUnits() == null;
     }
 
@@ -88,6 +106,8 @@ public class MongoLeaderboard {
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getTitle() != null ? getTitle().hashCode() : 0);
         result = 31 * result + (getScoreUnits() != null ? getScoreUnits().hashCode() : 0);
+        result = 31 * result + (getDateStart() != null ? getDateStart().hashCode() : 0);
+        result = 31 * result + (getInterval() != null ? getInterval().hashCode() : 0);
         return result;
     }
 
