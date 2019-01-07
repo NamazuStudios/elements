@@ -19,6 +19,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 import java.sql.Timestamp;
+import java.util.Date;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -39,7 +40,7 @@ public class MongoScoreDao implements ScoreDao {
 
         getValidationHelper().validateModel(score, ValidationGroups.Create.class);
 
-        final long creationTimestamp = currentTimeMillis();
+        final long now = currentTimeMillis();
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(score.getProfile());
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
@@ -57,7 +58,7 @@ public class MongoScoreDao implements ScoreDao {
         updateOperations.set("pointValue", score.getPointValue());
         // Set the timestamp to be "now" on create as well as update since an update essentially resets an existing
         // record
-        updateOperations.set("creationTimestamp", creationTimestamp);
+        updateOperations.set("creationTimestamp", new Date());
 
         try {
             final MongoScore mongoScore = getDatastore()

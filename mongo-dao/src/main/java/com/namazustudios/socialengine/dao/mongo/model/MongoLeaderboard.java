@@ -83,6 +83,12 @@ public class MongoLeaderboard {
     public Long getEpochInterval() { return epochInterval; }
 
     public void setEpochInterval(Long epochInterval) { this.epochInterval = epochInterval; }
+//
+//    public Long getEpochForTimestamp(Long timestamp) {
+//        if (firstEpochTimestamp == null || epochInterval == null || timestamp == null) {
+//            return 0L;
+//        }
+//    }
 
     @Override
     public boolean equals(Object o) {

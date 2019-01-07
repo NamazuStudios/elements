@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.dao.mongo.model;
 import org.mongodb.morphia.annotations.*;
 import org.mongodb.morphia.utils.IndexType;
 
+import java.sql.Timestamp;
+
 /**
  * Created by patricktwohig on 6/28/17.
  */
@@ -21,7 +23,7 @@ public class MongoScore {
     private double pointValue;
 
     @Property
-    private long creationTimestamp;
+    private Timestamp creationTimestamp;
 
     @Reference
     private MongoProfile profile;
@@ -45,11 +47,11 @@ public class MongoScore {
         this.pointValue = pointValue;
     }
 
-    public long getCreationTimestamp() {
+    public Timestamp getCreationTimestamp() {
         return creationTimestamp;
     }
 
-    public void setCreationTimestamp(long creationTimestamp) {
+    public void setCreationTimestamp(Timestamp creationTimestamp) {
         this.creationTimestamp = creationTimestamp;
     }
 
