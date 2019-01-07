@@ -27,6 +27,11 @@ public class Score {
                       "\"coins\" instead of \"points\" this would be used to designate as such in the UI.")
     private String scoreUnits;
 
+    @Null(groups = ValidationGroups.Create.class)
+    @NotNull(groups = ValidationGroups.Insert.class)
+    @ApiModelProperty("The time at which the score was created on the server.")
+    private Long creationDate;
+
     public String getId() {
         return id;
     }
@@ -59,6 +64,10 @@ public class Score {
         this.scoreUnits = scoreUnits;
     }
 
+    public Long getCreationDate() { return creationDate; }
+
+    public void setCreationDate(Long creationDate) { this.creationDate = creationDate; }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -69,6 +78,7 @@ public class Score {
         if (Double.compare(score.getPointValue(), getPointValue()) != 0) return false;
         if (getId() != null ? !getId().equals(score.getId()) : score.getId() != null) return false;
         if (getProfile() != null ? !getProfile().equals(score.getProfile()) : score.getProfile() != null) return false;
+        if (getCreationDate() != null ? !getCreationDate().equals(score.getCreationDate()) : score.getCreationDate() != null) return false;
         return getScoreUnits() != null ? getScoreUnits().equals(score.getScoreUnits()) : score.getScoreUnits() == null;
     }
 
@@ -81,6 +91,7 @@ public class Score {
         temp = Double.doubleToLongBits(getPointValue());
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (getScoreUnits() != null ? getScoreUnits().hashCode() : 0);
+        result = 31 * result + (getCreationDate() != null ? getCreationDate().hashCode() : 0);
         return result;
     }
 
@@ -91,6 +102,7 @@ public class Score {
                 ", profile=" + profile +
                 ", pointValue=" + pointValue +
                 ", scoreUnits='" + scoreUnits + '\'' +
+                ", creationDate='" + creationDate + '\'' +
                 '}';
     }
 
