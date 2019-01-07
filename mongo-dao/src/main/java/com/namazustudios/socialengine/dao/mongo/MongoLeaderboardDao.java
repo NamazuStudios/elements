@@ -136,7 +136,7 @@ public class MongoLeaderboardDao implements LeaderboardDao {
         updateOperations.set("name", leaderboard.getName());
         updateOperations.set("title", leaderboard.getTitle());
         updateOperations.set("scoreUnits", leaderboard.getScoreUnits());
-        // for now, do not allow updating of dateStart or interval
+        // for now, do not allow updating of firstEpochTimestamp or epochInterval
 
         final MongoLeaderboard mongoLeaderboard;
 

@@ -39,10 +39,10 @@ public class MongoLeaderboard {
     private String scoreUnits;
 
     @Property
-    private Timestamp dateStart;
+    private Timestamp firstEpochTimestamp;
 
     @Property
-    private Long interval;
+    private Long epochInterval;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -76,13 +76,13 @@ public class MongoLeaderboard {
         this.scoreUnits = scoreUnits;
     }
 
-    public Timestamp getDateStart() { return dateStart; }
+    public Timestamp getFirstEpochTimestamp() { return firstEpochTimestamp; }
 
-    public void setDateStart(Timestamp dateStart) { this.dateStart = dateStart; }
+    public void setFirstEpochTimestamp(Timestamp firstEpochTimestamp) { this.firstEpochTimestamp = firstEpochTimestamp; }
 
-    public Long getInterval() { return interval; }
+    public Long getEpochInterval() { return epochInterval; }
 
-    public void setInterval(Long interval) { this.interval = interval; }
+    public void setEpochInterval(Long epochInterval) { this.epochInterval = epochInterval; }
 
     @Override
     public boolean equals(Object o) {
@@ -95,8 +95,8 @@ public class MongoLeaderboard {
             return false;
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
         if (getTitle() != null ? !getTitle().equals(that.getTitle()) : that.getTitle() != null) return false;
-        if (getDateStart() != null ? !getDateStart().equals(that.getDateStart()) : that.getDateStart() != null) return false;
-        if (getInterval() != null ? !getInterval().equals(that.getInterval()) : that.getInterval() != null) return false;
+        if (getFirstEpochTimestamp() != null ? !getFirstEpochTimestamp().equals(that.getFirstEpochTimestamp()) : that.getFirstEpochTimestamp() != null) return false;
+        if (getEpochInterval() != null ? !getEpochInterval().equals(that.getEpochInterval()) : that.getEpochInterval() != null) return false;
         return getScoreUnits() != null ? getScoreUnits().equals(that.getScoreUnits()) : that.getScoreUnits() == null;
     }
 
@@ -106,8 +106,8 @@ public class MongoLeaderboard {
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getTitle() != null ? getTitle().hashCode() : 0);
         result = 31 * result + (getScoreUnits() != null ? getScoreUnits().hashCode() : 0);
-        result = 31 * result + (getDateStart() != null ? getDateStart().hashCode() : 0);
-        result = 31 * result + (getInterval() != null ? getInterval().hashCode() : 0);
+        result = 31 * result + (getFirstEpochTimestamp() != null ? getFirstEpochTimestamp().hashCode() : 0);
+        result = 31 * result + (getEpochInterval() != null ? getEpochInterval().hashCode() : 0);
         return result;
     }
 
