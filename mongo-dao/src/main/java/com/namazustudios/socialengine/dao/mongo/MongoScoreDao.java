@@ -18,6 +18,9 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
+import java.sql.Timestamp;
+
+import static java.lang.System.currentTimeMillis;
 
 public class MongoScoreDao implements ScoreDao {
 
@@ -36,6 +39,8 @@ public class MongoScoreDao implements ScoreDao {
 
         getValidationHelper().validateModel(score, ValidationGroups.Create.class);
 
+        final long creationTimestamp = currentTimeMillis();
+
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(score.getProfile());
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
         final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard);
@@ -50,6 +55,9 @@ public class MongoScoreDao implements ScoreDao {
         updateOperations.set("profile", mongoProfile);
         updateOperations.set("leaderboard", mongoLeaderboard);
         updateOperations.set("pointValue", score.getPointValue());
+        // Set the timestamp to be "now" on create as well as update since an update essentially resets an existing
+        // record
+        updateOperations.set("creationTimestamp", creationTimestamp);
 
         try {
             final MongoScore mongoScore = getDatastore()

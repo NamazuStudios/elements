@@ -20,6 +20,9 @@ public class MongoScore {
     @Property
     private double pointValue;
 
+    @Property
+    private long creationTimestamp;
+
     @Reference
     private MongoProfile profile;
 
@@ -40,6 +43,14 @@ public class MongoScore {
 
     public void setPointValue(double pointValue) {
         this.pointValue = pointValue;
+    }
+
+    public long getCreationTimestamp() {
+        return creationTimestamp;
+    }
+
+    public void setCreationTimestamp(long creationTimestamp) {
+        this.creationTimestamp = creationTimestamp;
     }
 
     public MongoProfile getProfile() {
