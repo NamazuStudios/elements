@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 
@@ -27,11 +28,15 @@ public class Leaderboard {
     private String scoreUnits;
 
     @Null(groups = {Update.class})
-    @ApiModelProperty("The time at which the leaderboard epoch intervals should begin (in ms).")
+    @Min(0)
+    @ApiModelProperty("The time at which the leaderboard epoch intervals should begin (in ms). If null, then " +
+                        "the leaderboard is global and not epochal.")
     private Long firstEpochTimestamp;
 
     @Null(groups = {Update.class})
-    @ApiModelProperty("The duration for a leaderboard epoch interval (in ms).")
+    @Min(0)
+    @ApiModelProperty("The duration for a leaderboard epoch interval (in ms). If null, then " +
+            "the leaderboard is global and not epochal.")
     private Long epochInterval;
 
     public String getId() {

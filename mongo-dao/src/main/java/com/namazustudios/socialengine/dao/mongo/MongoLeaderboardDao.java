@@ -42,6 +42,13 @@ public class MongoLeaderboardDao implements LeaderboardDao {
 
         getValidationHelper().validateModel(leaderboard, ValidationGroups.Create.class);
 
+        // Manually validate that, if either a non-null firstEpochTimestamp or epochInterval is provided, then the
+        // other value must likewise be non-null
+        if ((leaderboard.getFirstEpochTimestamp() != null && leaderboard.getEpochInterval() == null) ||
+                (leaderboard.getEpochInterval() != null && leaderboard.getFirstEpochTimestamp() == null)) {
+            throw new BadParameterCombinationException("firstEpochTimestamp and getEpochInterval must be provided together.");
+        }
+
         final MongoLeaderboard mongoLeaderboard = getBeanMapper().map(leaderboard, MongoLeaderboard.class);
 
         try {
