@@ -44,7 +44,8 @@ public class MongoScoreDao implements ScoreDao {
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(score.getProfile());
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
-        final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard);
+        final long leaderboardEpoch = mongoLeaderboard.getEpochForMillis(now);
+        final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard, leaderboardEpoch);
 
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
 

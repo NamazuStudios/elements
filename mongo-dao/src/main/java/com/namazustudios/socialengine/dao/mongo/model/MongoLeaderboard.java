@@ -7,6 +7,7 @@ import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
 import java.sql.Timestamp;
+import java.util.Date;
 
 @SearchableIdentity(@SearchableField(
     name = "id",
@@ -83,12 +84,29 @@ public class MongoLeaderboard {
     public Long getEpochInterval() { return epochInterval; }
 
     public void setEpochInterval(Long epochInterval) { this.epochInterval = epochInterval; }
-//
-//    public Long getEpochForTimestamp(Long timestamp) {
-//        if (firstEpochTimestamp == null || epochInterval == null || timestamp == null) {
-//            return 0L;
-//        }
-//    }
+
+    public Long getEpochForDate(Date date) {
+        return this.getEpochForMillis(date.getTime());
+    }
+
+    // Calculates the epoch's starting millis to which the given millis timestamp belongs, defaults to 0.
+    public Long getEpochForMillis(long millis) {
+        if (firstEpochTimestamp == null || epochInterval == null) {
+            return 0L;
+        }
+
+        long firstEpochMillis = firstEpochTimestamp.getTime();
+
+        if (millis < firstEpochMillis) {
+            return 0L;
+        }
+
+        long timespanMillis = millis - firstEpochMillis;
+        long epochCount = timespanMillis / epochInterval;
+        long epochMillis = firstEpochMillis + epochCount * epochInterval;
+
+        return epochMillis;
+    }
 
     @Override
     public boolean equals(Object o) {
