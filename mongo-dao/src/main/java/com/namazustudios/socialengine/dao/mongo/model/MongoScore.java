@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 @Indexes({
     @Index(fields = @Field("profile")),
     @Index(fields = @Field("leaderboard")),
+    @Index(fields = @Field(value = "leaderboardEpoch", type = IndexType.DESC)),
     @Index(fields = @Field(value = "pointValue", type = IndexType.DESC))
 })
 public class MongoScore {
@@ -24,6 +25,9 @@ public class MongoScore {
 
     @Property
     private Timestamp creationTimestamp;
+
+    @Property
+    private Timestamp leaderboardEpoch;
 
     @Reference
     private MongoProfile profile;
@@ -53,6 +57,14 @@ public class MongoScore {
 
     public void setCreationTimestamp(Timestamp creationTimestamp) {
         this.creationTimestamp = creationTimestamp;
+    }
+
+    public Timestamp getLeaderboardEpoch() {
+        return leaderboardEpoch;
+    }
+
+    public void setLeaderboardEpoch(Timestamp leaderboardEpoch) {
+        this.leaderboardEpoch = leaderboardEpoch;
     }
 
     public MongoProfile getProfile() {

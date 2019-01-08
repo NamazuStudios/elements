@@ -57,6 +57,7 @@ public class MongoScoreDao implements ScoreDao {
         updateOperations.set("profile", mongoProfile);
         updateOperations.set("leaderboard", mongoLeaderboard);
         updateOperations.set("pointValue", score.getPointValue());
+        updateOperations.set("leaderboardEpoch", leaderboardEpoch);
         // Set the timestamp to be "now" on create as well as update since an update essentially resets an existing
         // record
         updateOperations.set("creationTimestamp", new Date());
