@@ -92,8 +92,30 @@ public class MongoLeaderboard {
      *
      * @return whether or not the leaderboard is epochal.
      */
-    public boolean isEpochal() {
-        if (firstEpochTimestamp == null || epochInterval == null) {
+    public Boolean isEpochal() {
+        if (firstEpochTimestamp == null || epochInterval == null || firstEpochTimestamp.getTime() == 0L ||
+                epochInterval == 0L) {
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+
+    /**
+     * Whether or not the leaderboard has started it's first epoch yet. If the leaderboard is not epochal, this will
+     * always return false.
+     * @return whether or not the leaderboard has started it's first epoch yet.
+     */
+    public Boolean hasStarted() {
+        if (!isEpochal()) {
+            return false;
+        }
+
+        long now = currentTimeMillis();
+        long firstEpochMillis = firstEpochTimestamp.getTime();
+
+        if (firstEpochMillis > now) {
             return false;
         }
         else {
@@ -132,7 +154,7 @@ public class MongoLeaderboard {
      * @return the epoch in millis if an epochal leaderboard and valid input, 0L if a global leaderboard, -1L if invalid
      * input.
      */
-    public long getCurrentEpoch() {
+    public Long getCurrentEpoch() {
         long millis = currentTimeMillis();
         return getEpochForMillis(millis);
     }
