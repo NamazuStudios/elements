@@ -64,7 +64,6 @@ public class RankResource {
             throw new InvalidParameterException("Offset must have positive value when using non-relative offset.");
         }
 
-        // allow
         if (leaderboardEpoch < 0) {
             throw new InvalidParameterException("LeaderboardEpoch must have positive value.");
         }

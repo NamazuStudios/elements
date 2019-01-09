@@ -67,7 +67,7 @@ public class MongoRankDao implements RankDao {
             .field("leaderboard").equal(mongoLeaderboard)
             .field("leaderboardEpoch").equal(
                     leaderboardEpoch > 0 ? leaderboardEpoch : mongoLeaderboard.getCurrentEpoch()
-                )
+                )   // if zero, try to look up current epoch (will return zero if it's a global leaderboard)
             .order(Sort.descending("pointValue"));
 
         final long playerRank = mongoScore == null ? 0 : query
@@ -103,7 +103,7 @@ public class MongoRankDao implements RankDao {
              .field("leaderboard").equal(mongoLeaderboard)
              .field("leaderboardEpoch").equal(
                      leaderboardEpoch > 0 ? leaderboardEpoch : mongoLeaderboard.getCurrentEpoch()
-        )
+        ) // if zero, try to look up current epoch (will return zero if it's a global leaderboard)
              .order(Sort.descending("pointValue"));
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(0));
@@ -133,7 +133,7 @@ public class MongoRankDao implements RankDao {
         query.field("leaderboard").equal(mongoLeaderboard)
              .field("leaderboardEpoch").equal(
                      leaderboardEpoch > 0 ? leaderboardEpoch : mongoLeaderboard.getCurrentEpoch()
-        )
+        ) // if zero, try to look up current epoch (will return zero if it's a global leaderboard)
              .field("profile").in(profiles)
              .order(Sort.descending("pointValue"));
 
