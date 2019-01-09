@@ -34,7 +34,8 @@ public class Score {
 
     @Null(groups = ValidationGroups.Create.class)
     @NotNull(groups = ValidationGroups.Insert.class)
-    @ApiModelProperty("The epoch to which the score belongs for the associated leaderboard.")
+    @ApiModelProperty("The epoch to which the score belongs for the associated leaderboard. By convention, if the " +
+            "leaderboard is global, this value will be set to zero.")
     private Long leaderboardEpoch;
 
     public String getId() {

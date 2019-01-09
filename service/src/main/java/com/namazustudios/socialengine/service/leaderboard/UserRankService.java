@@ -20,33 +20,34 @@ public class UserRankService implements RankService {
 
     @Override
     public Pagination<Rank> getRanksForGlobal(final String leaderboardNameOrId,
-                                              final int offset, final int count) {
+                                              final int offset, final int count, final long leaderboardEpoch) {
         return getRankDao()
-            .getRanksForGlobal(leaderboardNameOrId, offset, count)
+            .getRanksForGlobal(leaderboardNameOrId, offset, count, leaderboardEpoch)
             .transform(this::redactPrivateInfo);
     }
 
     @Override
     public Pagination<Rank> getRanksForGlobalRelative(final String leaderboardNameOrId, final String profileId,
-                                                      final int offset, final int count) {
+                                                      final int offset, final int count, final long leaderboardEpoch) {
         return getRankDao()
-            .getRanksForGlobalRelative(leaderboardNameOrId, profileId, offset, count)
+            .getRanksForGlobalRelative(leaderboardNameOrId, profileId, offset, count, leaderboardEpoch)
             .transform(this::redactPrivateInfo);
     }
 
     @Override
     public Pagination<Rank> getRanksForFriends(final String leaderboardNameOrId,
-                                               final int offset, final int count) {
+                                               final int offset, final int count, final long leaderboardEpoch) {
         return getRankDao()
-            .getRanksForFriends(leaderboardNameOrId, getProfileSupplier().get(), offset, count)
+            .getRanksForFriends(leaderboardNameOrId, getProfileSupplier().get(), offset, count, leaderboardEpoch)
             .transform(this::redactPrivateInfo);
     }
 
     @Override
     public Pagination<Rank> getRanksForFriendsRelative(final String leaderboardNameOrId,
-                                                       final int offset, final int count) {
+                                                       final int offset, final int count, final long leaderboardEpoch) {
         return getRankDao()
-            .getRanksForFriendsRelative(leaderboardNameOrId, getProfileSupplier().get(), offset, count)
+            .getRanksForFriendsRelative(leaderboardNameOrId, getProfileSupplier().get(), offset, count,
+                    leaderboardEpoch)
             .transform(this::redactPrivateInfo);
     }
 

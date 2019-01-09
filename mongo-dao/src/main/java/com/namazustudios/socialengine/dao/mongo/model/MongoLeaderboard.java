@@ -9,6 +9,8 @@ import org.mongodb.morphia.annotations.*;
 import java.sql.Timestamp;
 import java.util.Date;
 
+import static java.lang.System.currentTimeMillis;
+
 @SearchableIdentity(@SearchableField(
     name = "id",
     path = "/objectId",
@@ -85,20 +87,36 @@ public class MongoLeaderboard {
 
     public void setEpochInterval(Long epochInterval) { this.epochInterval = epochInterval; }
 
-    public Long getEpochForDate(Date date) {
-        return this.getEpochForMillis(date.getTime());
+    /**
+     * Whether the leaderboard is epochal (if not, the leaderboard is considered global).
+     *
+     * @return whether or not the leaderboard is epochal.
+     */
+    public boolean isEpochal() {
+        if (firstEpochTimestamp == null || epochInterval == null) {
+            return false;
+        }
+        else {
+            return true;
+        }
     }
 
-    // Calculates the epoch's starting millis to which the given millis timestamp belongs, defaults to 0.
+    /**
+     * Calculates the epoch's starting millis to which the given millis timestamp belongs.
+     *
+     * @param millis the timestamp, in milliseconds, which is being looked up.
+     * @return the epoch in millis if an epochal leaderboard and valid input, 0L if a global leaderboard, -1L if invalid
+     * input.
+     */
     public Long getEpochForMillis(long millis) {
-        if (firstEpochTimestamp == null || epochInterval == null) {
+        if (!isEpochal()) {
             return 0L;
         }
 
         long firstEpochMillis = firstEpochTimestamp.getTime();
 
         if (millis < firstEpochMillis) {
-            return 0L;
+            return -1L;
         }
 
         long timespanMillis = millis - firstEpochMillis;
@@ -106,6 +124,28 @@ public class MongoLeaderboard {
         long epochMillis = firstEpochMillis + epochCount * epochInterval;
 
         return epochMillis;
+    }
+
+    /**
+     * Calculates the epoch for the current server time.
+     *
+     * @return the epoch in millis if an epochal leaderboard and valid input, 0L if a global leaderboard, -1L if invalid
+     * input.
+     */
+    public long getCurrentEpoch() {
+        long millis = currentTimeMillis();
+        return getEpochForMillis(millis);
+    }
+
+    /**
+     * Calculates the epoch's starting millis to which the given millis timestamp belongs.
+     *
+     * @param date the date being looked up.
+     * @return the epoch in millis if an epochal leaderboard and valid input, 0L if a global leaderboard, -1L if invalid
+     * input.
+     */
+    public Long getEpochForDate(Date date) {
+        return this.getEpochForMillis(date.getTime());
     }
 
     @Override

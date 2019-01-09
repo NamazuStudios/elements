@@ -40,11 +40,9 @@ public class MongoScoreDao implements ScoreDao {
 
         getValidationHelper().validateModel(score, ValidationGroups.Create.class);
 
-        final long now = currentTimeMillis();
-
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(score.getProfile());
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
-        final long leaderboardEpoch = mongoLeaderboard.getEpochForMillis(now);
+        final long leaderboardEpoch = mongoLeaderboard.getCurrentEpoch();
         final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard, leaderboardEpoch);
 
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);

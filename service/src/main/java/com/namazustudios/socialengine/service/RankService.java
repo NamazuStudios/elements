@@ -17,9 +17,10 @@ public interface RankService {
      * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
      * @param offset the offset
      * @param count the count
+     * @param leaderboardEpoch the epoch timestamp
      * @return the {@link Pagination<Rank>}
      */
-    Pagination<Rank> getRanksForGlobal(String leaderboardNameOrId, int offset, int count);
+    Pagination<Rank> getRanksForGlobal(String leaderboardNameOrId, int offset, int count, long leaderboardEpoch);
 
     /**
      * Gets all {@link Rank} instances for the supplied {@Link Leaderboard#getId()} or {@Link Leaderboard#getRank()}
@@ -29,9 +30,11 @@ public interface RankService {
      * @param profileId the value of {@link Profile#getId()}
      * @param offset the offset
      * @param count the count
+     * @param leaderboardEpoch the epoch timestamp
      * @return the {@link Pagination<Rank>}
      */
-    Pagination<Rank> getRanksForGlobalRelative(String leaderboardNameOrId, String profileId, int offset, int count);
+    Pagination<Rank> getRanksForGlobalRelative(String leaderboardNameOrId, String profileId, int offset, int count,
+                                               long leaderboardEpoch);
 
     /**
      * Gets all {@link Rank} instances for the supplied {@Link Leaderboard#getId()} or {@Link Leaderboard#getRank()}
@@ -41,9 +44,10 @@ public interface RankService {
      * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
      * @param offset the offset
      * @param count the count
+     * @param leaderboardEpoch the epoch timestamp
      * @return the {@link Pagination<Rank>}
      */
-    Pagination<Rank> getRanksForFriends(String leaderboardNameOrId, int offset, int count);
+    Pagination<Rank> getRanksForFriends(String leaderboardNameOrId, int offset, int count, long leaderboardEpoch);
 
     /**
      * Gets all {@link Rank} instances for the supplied {@Link Leaderboard#getId()} or {@Link Leaderboard#getRank()}
@@ -53,8 +57,10 @@ public interface RankService {
      * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
      * @param offset the offset
      * @param count the count
+     * @param leaderboardEpoch the epoch timestamp
      * @return the {@link Pagination<Rank>}
      */
-    Pagination<Rank> getRanksForFriendsRelative(String leaderboardNameOrId, int offset, int count);
+    Pagination<Rank> getRanksForFriendsRelative(String leaderboardNameOrId, int offset, int count,
+                                                long leaderboardEpoch);
 
 }
