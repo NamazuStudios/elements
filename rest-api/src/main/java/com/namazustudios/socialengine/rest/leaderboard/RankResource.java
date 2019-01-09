@@ -97,7 +97,9 @@ public class RankResource {
 
             @QueryParam("leaderboardEpoch")
             @DefaultValue("0")
-            @ApiParam("Specifies the epoch for the leaderboard.")
+            @ApiParam("Specifies the epoch for the leaderboard. If not provided, the current epoch will be used by " +
+                    "default for epochal leaderboards. This value will be ignored for all-time leaderboards. Set " +
+                    "this value to 0 to explicitly reference the current epoch (when applicable).")
             final long leaderboardEpoch,
 
             @PathParam("leaderboardNameOrId")
@@ -105,18 +107,18 @@ public class RankResource {
             final String leaderboardNameOrId) {
 
         if (count < 0) {
-            throw new InvalidParameterException("Count must have positive value.");
+            throw new InvalidParameterException("Count must have a non-negative value.");
         }
 
         if (leaderboardEpoch < 0) {
-            throw new InvalidParameterException("LeaderboardEpoch must have positive value.");
+            throw new InvalidParameterException("LeaderboardEpoch must have a non-negative value.");
         }
 
         final String profileIdTrimmed = nullToEmpty(profileId).trim();
         final boolean relative = !profileIdTrimmed.isEmpty();
 
         if (!relative && offset < 0) {
-            throw new InvalidParameterException("Offset must have positive value when using non-relative offset.");
+            throw new InvalidParameterException("Offset must have non-negative value when using non-relative offset.");
         }
 
         return !relative ?

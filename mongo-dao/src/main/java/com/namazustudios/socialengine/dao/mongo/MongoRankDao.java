@@ -62,12 +62,24 @@ public class MongoRankDao implements RankDao {
         final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard);
         final MongoScore mongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
 
+        final long leaderboardEpochLookup;
+
+        if (mongoLeaderboard.isEpochal()) {
+            if (leaderboardEpoch > 0) {
+                leaderboardEpochLookup = leaderboardEpoch;
+            }
+            else {
+                leaderboardEpochLookup = mongoLeaderboard.getCurrentEpoch();
+            }
+        }
+        else {
+            leaderboardEpochLookup = MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
+        }
+
         final Query<MongoScore> query = getDatastore()
             .createQuery(MongoScore.class)
             .field("leaderboard").equal(mongoLeaderboard)
-            .field("leaderboardEpoch").equal(
-                    leaderboardEpoch > 0 ? leaderboardEpoch : mongoLeaderboard.getCurrentEpoch()
-                )   // if zero, try to look up current epoch (will return zero if it's a global leaderboard)
+            .field("leaderboardEpoch").equal(leaderboardEpochLookup)
             .order(Sort.descending("pointValue"));
 
         final long playerRank = mongoScore == null ? 0 : query
@@ -97,13 +109,25 @@ public class MongoRankDao implements RankDao {
 
         profiles.add(mongoProfile);
 
+        final long leaderboardEpochLookup;
+
+        if (mongoLeaderboard.isEpochal()) {
+            if (leaderboardEpoch > 0) {
+                leaderboardEpochLookup = leaderboardEpoch;
+            }
+            else {
+                leaderboardEpochLookup = mongoLeaderboard.getCurrentEpoch();
+            }
+        }
+        else {
+            leaderboardEpochLookup = MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
+        }
+
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
 
         query.field("profile").in(profiles)
              .field("leaderboard").equal(mongoLeaderboard)
-             .field("leaderboardEpoch").equal(
-                     leaderboardEpoch > 0 ? leaderboardEpoch : mongoLeaderboard.getCurrentEpoch()
-        ) // if zero, try to look up current epoch (will return zero if it's a global leaderboard)
+             .field("leaderboardEpoch").equal(leaderboardEpochLookup)
              .order(Sort.descending("pointValue"));
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(0));
@@ -128,12 +152,24 @@ public class MongoRankDao implements RankDao {
 
         profiles.add(mongoProfile);
 
+        final long leaderboardEpochLookup;
+
+        if (mongoLeaderboard.isEpochal()) {
+            if (leaderboardEpoch > 0) {
+                leaderboardEpochLookup = leaderboardEpoch;
+            }
+            else {
+                leaderboardEpochLookup = mongoLeaderboard.getCurrentEpoch();
+            }
+        }
+        else {
+            leaderboardEpochLookup = MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
+        }
+
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
 
         query.field("leaderboard").equal(mongoLeaderboard)
-             .field("leaderboardEpoch").equal(
-                     leaderboardEpoch > 0 ? leaderboardEpoch : mongoLeaderboard.getCurrentEpoch()
-        ) // if zero, try to look up current epoch (will return zero if it's a global leaderboard)
+             .field("leaderboardEpoch").equal(leaderboardEpochLookup)
              .field("profile").in(profiles)
              .order(Sort.descending("pointValue"));
 

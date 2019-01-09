@@ -126,12 +126,12 @@ public class MongoLeaderboard {
      * Calculates the epoch's starting millis to which the given millis timestamp belongs.
      *
      * @param millis the timestamp, in milliseconds, which is being looked up.
-     * @return the epoch in millis if an epochal leaderboard and valid input, 0L if a global leaderboard, -1L if invalid
-     * input.
+     * @return the epoch in millis if an epochal leaderboard and valid input, @Link MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH
+     * if a global leaderboard, -1L if invalid input (i.e. the given millis occur before the firstEpochTimestamp).
      */
     public long getEpochForMillis(long millis) {
         if (!isEpochal()) {
-            return 0L;
+            return MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
         }
 
         long firstEpochMillis = firstEpochTimestamp.getTime();
@@ -150,8 +150,8 @@ public class MongoLeaderboard {
     /**
      * Calculates the epoch for the current server time.
      *
-     * @return the epoch in millis if an epochal leaderboard and valid input, 0L if a global leaderboard, -1L if invalid
-     * input.
+     * @return the epoch in millis if an epochal leaderboard and valid input, @Link MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH
+     * if a global leaderboard.
      */
     public long getCurrentEpoch() {
         long millis = currentTimeMillis();
@@ -162,8 +162,8 @@ public class MongoLeaderboard {
      * Calculates the epoch's starting millis to which the given millis timestamp belongs.
      *
      * @param date the date being looked up.
-     * @return the epoch in millis if an epochal leaderboard and valid input, 0L if a global leaderboard, -1L if invalid
-     * input.
+     * @return the epoch in millis if an epochal leaderboard and valid input, @Link MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH
+     * if a global leaderboard, -1L if invalid input (i.e. the given date occurs before the firstEpochTimestamp).
      */
     public long getEpochForDate(Date date) {
         return this.getEpochForMillis(date.getTime());

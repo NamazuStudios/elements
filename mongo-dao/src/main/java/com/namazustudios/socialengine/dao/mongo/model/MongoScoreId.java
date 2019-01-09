@@ -10,6 +10,13 @@ import static java.lang.System.arraycopy;
 
 public class MongoScoreId {
 
+    /**
+     * By convention, if the leaderboard is global instead of epochal, we record the leaderboardEpoch as 0L. This is to
+     * maintain consistency across all mongo scores, i.e. all mongo score ids will always be composed of three non-null
+     * elements.
+     */
+    public static final long ALL_TIME_LEADERBOARD_EPOCH = 0L;
+
     private static final int OBJECT_ID_LENGTH = 12;
     private static final int BYTE_LENGTH = OBJECT_ID_LENGTH * 2 + Long.BYTES;
 
@@ -20,11 +27,6 @@ public class MongoScoreId {
     private ObjectId leaderboardId;
 
     @Property
-    /**
-     * By convention, if the leaderboard is global instead of epochal, we record the leaderboardEpoch as 0. This is to
-     * maintain consistency across all mongo scores, i.e. all mongo score ids will always be composed of three non-null
-     * elements.
-     */
     private long leaderboardEpoch;
 
     MongoScoreId() {}
@@ -54,11 +56,11 @@ public class MongoScoreId {
     }
 
     public MongoScoreId(final MongoProfile mongoProfile, final MongoLeaderboard mongoLeaderboard) {
-        this(mongoProfile.getObjectId(), mongoLeaderboard.getObjectId(), 0L);
+        this(mongoProfile.getObjectId(), mongoLeaderboard.getObjectId(), ALL_TIME_LEADERBOARD_EPOCH);
     }
 
     public MongoScoreId(final ObjectId profileId, final ObjectId leaderboardId) {
-        this(profileId, leaderboardId, 0L);
+        this(profileId, leaderboardId, ALL_TIME_LEADERBOARD_EPOCH);
     }
 
     public MongoScoreId(final MongoProfile mongoProfile, final MongoLeaderboard mongoLeaderboard, final Long leaderboardEpoch) {
