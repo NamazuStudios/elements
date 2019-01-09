@@ -27,7 +27,7 @@ public class MongoScore {
     private Timestamp creationTimestamp;
 
     @Property
-    private Timestamp leaderboardEpoch;
+    private long leaderboardEpoch;
 
     @Reference
     private MongoProfile profile;
@@ -59,11 +59,11 @@ public class MongoScore {
         this.creationTimestamp = creationTimestamp;
     }
 
-    public Timestamp getLeaderboardEpoch() {
+    public long getLeaderboardEpoch() {
         return leaderboardEpoch;
     }
 
-    public void setLeaderboardEpoch(Timestamp leaderboardEpoch) {
+    public void setLeaderboardEpoch(long leaderboardEpoch) {
         this.leaderboardEpoch = leaderboardEpoch;
     }
 

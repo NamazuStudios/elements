@@ -30,14 +30,14 @@ public class Leaderboard {
     @Null(groups = {Update.class})
     @Min(0)
     @ApiModelProperty("The time at which the leaderboard epoch intervals should begin (in ms). If null, then " +
-                        "the leaderboard is global and not epochal. During creation, if this value is provided, then " +
+                        "the leaderboard is all-time and not epochal. During creation, if this value is provided, then " +
             "epochInterval must also be provided.")
     private Long firstEpochTimestamp;
 
     @Null(groups = {Update.class})
     @Min(0)
     @ApiModelProperty("The duration for a leaderboard epoch interval (in ms). If null, then " +
-            "the leaderboard is global and not epochal. During creation, if this value is provided, then " +
+            "the leaderboard is all-time and not epochal. During creation, if this value is provided, then " +
             "firstEpochTimestamp must also be provided.")
     private Long epochInterval;
 

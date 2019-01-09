@@ -45,7 +45,7 @@ public class MongoLeaderboard {
     private Timestamp firstEpochTimestamp;
 
     @Property
-    private Long epochInterval;
+    private long epochInterval;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -83,18 +83,17 @@ public class MongoLeaderboard {
 
     public void setFirstEpochTimestamp(Timestamp firstEpochTimestamp) { this.firstEpochTimestamp = firstEpochTimestamp; }
 
-    public Long getEpochInterval() { return epochInterval; }
+    public long getEpochInterval() { return epochInterval; }
 
-    public void setEpochInterval(Long epochInterval) { this.epochInterval = epochInterval; }
+    public void setEpochInterval(long epochInterval) { this.epochInterval = epochInterval; }
 
     /**
-     * Whether the leaderboard is epochal (if not, the leaderboard is considered global).
+     * Whether the leaderboard is epochal (if not, the leaderboard is considered all-time).
      *
      * @return whether or not the leaderboard is epochal.
      */
-    public Boolean isEpochal() {
-        if (firstEpochTimestamp == null || epochInterval == null || firstEpochTimestamp.getTime() == 0L ||
-                epochInterval == 0L) {
+    public boolean isEpochal() {
+        if (firstEpochTimestamp == null || firstEpochTimestamp.getTime() <= 0L || epochInterval <= 0L) {
             return false;
         }
         else {
@@ -103,11 +102,11 @@ public class MongoLeaderboard {
     }
 
     /**
-     * Whether or not the leaderboard has started it's first epoch yet. If the leaderboard is not epochal, this will
+     * Whether or not the leaderboard has started its first epoch yet. If the leaderboard is not epochal, this will
      * always return false.
-     * @return whether or not the leaderboard has started it's first epoch yet.
+     * @return whether or not the leaderboard has started its first epoch yet.
      */
-    public Boolean hasStarted() {
+    public boolean hasStarted() {
         if (!isEpochal()) {
             return false;
         }
@@ -130,7 +129,7 @@ public class MongoLeaderboard {
      * @return the epoch in millis if an epochal leaderboard and valid input, 0L if a global leaderboard, -1L if invalid
      * input.
      */
-    public Long getEpochForMillis(long millis) {
+    public long getEpochForMillis(long millis) {
         if (!isEpochal()) {
             return 0L;
         }
@@ -154,7 +153,7 @@ public class MongoLeaderboard {
      * @return the epoch in millis if an epochal leaderboard and valid input, 0L if a global leaderboard, -1L if invalid
      * input.
      */
-    public Long getCurrentEpoch() {
+    public long getCurrentEpoch() {
         long millis = currentTimeMillis();
         return getEpochForMillis(millis);
     }
@@ -166,7 +165,7 @@ public class MongoLeaderboard {
      * @return the epoch in millis if an epochal leaderboard and valid input, 0L if a global leaderboard, -1L if invalid
      * input.
      */
-    public Long getEpochForDate(Date date) {
+    public long getEpochForDate(Date date) {
         return this.getEpochForMillis(date.getTime());
     }
 
@@ -182,7 +181,7 @@ public class MongoLeaderboard {
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
         if (getTitle() != null ? !getTitle().equals(that.getTitle()) : that.getTitle() != null) return false;
         if (getFirstEpochTimestamp() != null ? !getFirstEpochTimestamp().equals(that.getFirstEpochTimestamp()) : that.getFirstEpochTimestamp() != null) return false;
-        if (getEpochInterval() != null ? !getEpochInterval().equals(that.getEpochInterval()) : that.getEpochInterval() != null) return false;
+        if (getEpochInterval() != that.getEpochInterval()) return false;
         return getScoreUnits() != null ? getScoreUnits().equals(that.getScoreUnits()) : that.getScoreUnits() == null;
     }
 
@@ -193,7 +192,7 @@ public class MongoLeaderboard {
         result = 31 * result + (getTitle() != null ? getTitle().hashCode() : 0);
         result = 31 * result + (getScoreUnits() != null ? getScoreUnits().hashCode() : 0);
         result = 31 * result + (getFirstEpochTimestamp() != null ? getFirstEpochTimestamp().hashCode() : 0);
-        result = 31 * result + (getEpochInterval() != null ? getEpochInterval().hashCode() : 0);
+        result = 31 * result + (int) (getEpochInterval() ^ (getEpochInterval() >>> 32));
         return result;
     }
 

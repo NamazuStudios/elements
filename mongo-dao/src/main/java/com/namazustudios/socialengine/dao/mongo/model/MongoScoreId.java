@@ -25,7 +25,7 @@ public class MongoScoreId {
      * maintain consistency across all mongo scores, i.e. all mongo score ids will always be composed of three non-null
      * elements.
      */
-    private Long leaderboardEpoch;
+    private long leaderboardEpoch;
 
     MongoScoreId() {}
 
