@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoScore;
 import com.namazustudios.socialengine.dao.mongo.model.MongoScoreId;
 import com.namazustudios.socialengine.exception.InternalException;
+import com.namazustudios.socialengine.exception.LeaderboardNotFoundException;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -18,6 +19,10 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
+import java.sql.Timestamp;
+import java.util.Date;
+
+import static java.lang.System.currentTimeMillis;
 
 public class MongoScoreDao implements ScoreDao {
 
@@ -38,7 +43,14 @@ public class MongoScoreDao implements ScoreDao {
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(score.getProfile());
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
-        final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard);
+        final long leaderboardEpoch = mongoLeaderboard.getCurrentEpoch();
+
+        // If the leaderboard is epochal, but the current time is less than the first epoch time...
+        if (mongoLeaderboard.isEpochal() && !mongoLeaderboard.hasStarted()) {
+            throw new LeaderboardNotFoundException("Leaderboard has not started its first epoch yet.");
+        }
+
+        final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard, leaderboardEpoch);
 
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
 
@@ -50,6 +62,12 @@ public class MongoScoreDao implements ScoreDao {
         updateOperations.set("profile", mongoProfile);
         updateOperations.set("leaderboard", mongoLeaderboard);
         updateOperations.set("pointValue", score.getPointValue());
+        updateOperations.set("leaderboardEpoch", leaderboardEpoch);
+
+        // Set the timestamp to be "now" on create as well as update since an update essentially resets an existing
+        // record
+        final Date nowDate = new Date();
+        updateOperations.set("creationTimestamp", nowDate);
 
         try {
             final MongoScore mongoScore = getDatastore()

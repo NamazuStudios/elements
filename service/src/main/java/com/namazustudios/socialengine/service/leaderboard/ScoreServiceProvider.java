@@ -17,8 +17,9 @@ public class ScoreServiceProvider implements Provider<ScoreService> {
     @Override
     public ScoreService get() {
         switch (getUser().getLevel()) {
-            case USER:   return getUserScoreServiceProvider().get();
-            default:     return forbidden(ScoreService.class);
+            case USER:
+            case SUPERUSER:     return getUserScoreServiceProvider().get();
+            default:            return forbidden(ScoreService.class);
         }
     }
 

@@ -1,12 +1,13 @@
 package com.namazustudios.socialengine.model.leaderboard;
 
-import com.namazustudios.socialengine.model.ValidationGroups;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
+
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
-import javax.validation.groups.Default;
 
 @ApiModel
 public class Leaderboard {
@@ -25,6 +26,20 @@ public class Leaderboard {
     @NotNull
     @ApiModelProperty("The units-of measure for the score type of the leaderboard.")
     private String scoreUnits;
+
+    @Null(groups = {Update.class})
+    @Min(0)
+    @ApiModelProperty("The time at which the leaderboard epoch intervals should begin (in ms). If null, then " +
+                        "the leaderboard is all-time and not epochal. During creation, if this value is provided, then " +
+            "epochInterval must also be provided.")
+    private Long firstEpochTimestamp;
+
+    @Null(groups = {Update.class})
+    @Min(0)
+    @ApiModelProperty("The duration for a leaderboard epoch interval (in ms). If null, then " +
+            "the leaderboard is all-time and not epochal. During creation, if this value is provided, then " +
+            "firstEpochTimestamp must also be provided.")
+    private Long epochInterval;
 
     public String getId() {
         return id;
@@ -58,6 +73,15 @@ public class Leaderboard {
         this.scoreUnits = scoreUnits;
     }
 
+    public Long getFirstEpochTimestamp() { return firstEpochTimestamp; }
+
+    public void setFirstEpochTimestamp(Long firstEpochTimestamp) { this.firstEpochTimestamp = firstEpochTimestamp; }
+
+    public Long getEpochInterval() { return epochInterval; }
+
+    public void setEpochInterval(Long epochInterval) { this.epochInterval = epochInterval; }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -68,6 +92,8 @@ public class Leaderboard {
         if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
         if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
         if (getTitle() != null ? !getTitle().equals(that.getTitle()) : that.getTitle() != null) return false;
+        if (getFirstEpochTimestamp() != null ? !getFirstEpochTimestamp().equals(that.getFirstEpochTimestamp()) : that.getFirstEpochTimestamp() != null) return false;
+        if (getEpochInterval() != null ? !getEpochInterval().equals(that.getEpochInterval()) : that.getEpochInterval() != null) return false;
         return getScoreUnits() != null ? getScoreUnits().equals(that.getScoreUnits()) : that.getScoreUnits() == null;
     }
 
@@ -77,6 +103,8 @@ public class Leaderboard {
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getTitle() != null ? getTitle().hashCode() : 0);
         result = 31 * result + (getScoreUnits() != null ? getScoreUnits().hashCode() : 0);
+        result = 31 * result + (getFirstEpochTimestamp() != null ? getFirstEpochTimestamp().hashCode() : 0);
+        result = 31 * result + (getEpochInterval() != null ? getEpochInterval().hashCode() : 0);
         return result;
     }
 
@@ -87,6 +115,8 @@ public class Leaderboard {
                 ", name='" + name + '\'' +
                 ", title='" + title + '\'' +
                 ", scoreUnits='" + scoreUnits + '\'' +
+                ", firstEpochTimestamp='" + firstEpochTimestamp + '\'' +
+                ", epochInterval='" + epochInterval + '\'' +
                 '}';
     }
 
