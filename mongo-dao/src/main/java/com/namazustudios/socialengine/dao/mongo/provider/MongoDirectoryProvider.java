@@ -7,6 +7,7 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.gridfs.GridFS;
 import com.namazustudios.elements.fts.mongo.GridFSDirectory;
+import com.namazustudios.elements.fts.mongo.MongoLockFactory;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.SleepingLockWrapper;
 import org.bson.Document;
@@ -40,7 +41,8 @@ public class MongoDirectoryProvider implements Provider<Directory> {
         final MongoDatabase mongoDatabase = mongoClient.getDatabase(getMongoDatabaseName());
         final GridFSBucket gridFSBucket = GridFSBuckets.create(mongoDatabase, getSearchIndexBucketName());
         final MongoCollection<Document> mongoCollection = mongoDatabase.getCollection(getLockCollectionName());
-        return new SleepingLockWrapper(new GridFSDirectory(mongoCollection, gridFSBucket), 250);
+        //return new SleepingLockWrapper(new GridFSDirectory(mongoCollection, gridFSBucket, 0), 250);
+        return new SleepingLockWrapper(new GridFSDirectory(new MongoLockFactory(null, null, null, 0, 0, 0, 0, 0, 0), gridFSBucket, 0), 250);
     }
 
     public String getSearchIndexBucketName() {

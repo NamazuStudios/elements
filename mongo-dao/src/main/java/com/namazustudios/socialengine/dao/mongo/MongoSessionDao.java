@@ -1,19 +1,23 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.mongodb.MongoCommandException;
 import com.mongodb.WriteResult;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.SessionDao;
+import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoSession;
 import com.namazustudios.socialengine.dao.mongo.model.MongoSessionSecret;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.*;
 
+import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -26,6 +30,7 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import java.security.MessageDigest;
 import java.sql.Timestamp;
+import java.util.Date;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -125,6 +130,7 @@ public class MongoSessionDao implements SessionDao {
 
         } else {
             final MongoSession mongoSession = getDatastore().get(MongoSession.class, sessionId);
+            updateProfileLastLogin(mongoSession.getProfile().getObjectId().toString());
             return getMapper().map(mongoSession, Session.class);
         }
 
@@ -146,11 +152,35 @@ public class MongoSessionDao implements SessionDao {
 
         getDatastore().save(mongoSession);
 
+        updateProfileLastLogin(session.getProfile().getId());
+
         final SessionCreation sessionCreation = new SessionCreation();
         sessionCreation.setSessionSecret(mongoSessionSecret.getSessionSecret());
         sessionCreation.setSession(getMapper().map(mongoSession, Session.class));
         return sessionCreation;
 
+    }
+
+    private boolean updateProfileLastLogin(String profileId) {
+        try {
+            final UpdateOperations<MongoProfile> updateOperations =
+                    getDatastore().createUpdateOperations(MongoProfile.class);
+
+            final Date nowDate = new Date();
+            updateOperations.set("lastLogin", nowDate);
+
+            final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
+            query.field("_id").equal(profileId);
+
+            final MongoProfile mongoProfile = getDatastore()
+                    .findAndModify(query, updateOperations, new FindAndModifyOptions()
+                            .returnNew(true)
+                            .upsert(false));
+            return true;
+        }
+        catch (MongoCommandException ex) {
+            return false;
+        }
     }
 
     @Override
