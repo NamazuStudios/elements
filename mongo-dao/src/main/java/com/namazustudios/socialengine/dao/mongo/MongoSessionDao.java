@@ -179,6 +179,7 @@ public class MongoSessionDao implements SessionDao {
             return true;
         }
         catch (MongoCommandException ex) {
+            logger.error("Failed to save lastLogin to profile: {}", ex.toString());
             return false;
         }
     }

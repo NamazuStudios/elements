@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
+import com.namazustudios.elements.fts.annotation.SearchableDocument;
 import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
@@ -25,7 +26,8 @@ import static java.util.stream.Collectors.toList;
         path = "/objectId",
         type = ObjectId.class,
         extractor = ObjectIdExtractor.class,
-        processors = ObjectIdProcessor.class))
+        processors = MongoProgressIdProcessor.class))
+@SearchableDocument()
 @Entity(value = "progress", noClassnameStored = true)
 public class MongoProgress {
 

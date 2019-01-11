@@ -7,8 +7,13 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.gridfs.GridFS;
 import com.namazustudios.elements.fts.mongo.GridFSDirectory;
+<<<<<<< HEAD
 import com.namazustudios.elements.fts.mongo.MongoLockFactory;
+=======
+import com.namazustudios.elements.fts.mongo.GridFSDirectoryBuilder;
+>>>>>>> e07e89a9fd0631efe1fb353a4e22bce06b5531b7
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.LockFactory;
 import org.apache.lucene.store.SleepingLockWrapper;
 import org.bson.Document;
 
@@ -25,42 +30,21 @@ public class MongoDirectoryProvider implements Provider<Directory> {
 
     public static final String SEARCH_INDEX_BUCKET = "com.namazustudios.socialengine.mongo.search.index.bucket";
 
-    public static final String LOCK_COLLECTION = "com.namazustudios.socialengine.mongo.search.index.lock.collection";
+    private String mongoDatabaseName;
 
     private String searchIndexBucketName;
 
-    private String lockCollectionName;
-
-    private String mongoDatabaseName;
-
     private Provider<MongoClient> mongoClientProvider;
+
+    private Provider<LockFactory> lockFactoryProvider;
 
     @Override
     public Directory get() {
+        final LockFactory lockFactory = getLockFactoryProvider().get();
         final MongoClient mongoClient = getMongoClientProvider().get();
         final MongoDatabase mongoDatabase = mongoClient.getDatabase(getMongoDatabaseName());
         final GridFSBucket gridFSBucket = GridFSBuckets.create(mongoDatabase, getSearchIndexBucketName());
-        final MongoCollection<Document> mongoCollection = mongoDatabase.getCollection(getLockCollectionName());
-        //return new SleepingLockWrapper(new GridFSDirectory(mongoCollection, gridFSBucket, 0), 250);
-        return new SleepingLockWrapper(new GridFSDirectory(new MongoLockFactory(null, null, null, 0, 0, 0, 0, 0, 0), gridFSBucket, 0), 250);
-    }
-
-    public String getSearchIndexBucketName() {
-        return searchIndexBucketName;
-    }
-
-    @Inject
-    public void setSearchIndexBucketName(@Named(SEARCH_INDEX_BUCKET) String searchIndexBucketName) {
-        this.searchIndexBucketName = searchIndexBucketName;
-    }
-
-    public String getLockCollectionName() {
-        return lockCollectionName;
-    }
-
-    @Inject
-    public void setLockCollectionName(@Named(LOCK_COLLECTION) String lockCollectionName) {
-        this.lockCollectionName = lockCollectionName;
+        return new GridFSDirectoryBuilder().build(lockFactory, gridFSBucket);
     }
 
     public String getMongoDatabaseName() {
@@ -72,6 +56,15 @@ public class MongoDirectoryProvider implements Provider<Directory> {
         this.mongoDatabaseName = mongoDatabaseName;
     }
 
+    public String getSearchIndexBucketName() {
+        return searchIndexBucketName;
+    }
+
+    @Inject
+    public void setSearchIndexBucketName(@Named(SEARCH_INDEX_BUCKET) String searchIndexBucketName) {
+        this.searchIndexBucketName = searchIndexBucketName;
+    }
+
     public Provider<MongoClient> getMongoClientProvider() {
         return mongoClientProvider;
     }
@@ -79,6 +72,15 @@ public class MongoDirectoryProvider implements Provider<Directory> {
     @Inject
     public void setMongoClientProvider(Provider<MongoClient> mongoClientProvider) {
         this.mongoClientProvider = mongoClientProvider;
+    }
+
+    public Provider<LockFactory> getLockFactoryProvider() {
+        return lockFactoryProvider;
+    }
+
+    @Inject
+    public void setLockFactoryProvider(Provider<LockFactory> lockFactoryProvider) {
+        this.lockFactoryProvider = lockFactoryProvider;
     }
 
 }
