@@ -7,11 +7,7 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.gridfs.GridFS;
 import com.namazustudios.elements.fts.mongo.GridFSDirectory;
-<<<<<<< HEAD
-import com.namazustudios.elements.fts.mongo.MongoLockFactory;
-=======
 import com.namazustudios.elements.fts.mongo.GridFSDirectoryBuilder;
->>>>>>> e07e89a9fd0631efe1fb353a4e22bce06b5531b7
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.LockFactory;
 import org.apache.lucene.store.SleepingLockWrapper;
