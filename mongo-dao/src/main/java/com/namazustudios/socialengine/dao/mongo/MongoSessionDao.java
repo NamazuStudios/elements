@@ -170,13 +170,23 @@ public class MongoSessionDao implements SessionDao {
             updateOperations.set("lastLogin", nowDate);
 
             final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
-            query.field("_id").equal(profileId);
+            query.field("_id").equal(new ObjectId(profileId));
 
-            final MongoProfile mongoProfile = getDatastore()
-                    .findAndModify(query, updateOperations, new FindAndModifyOptions()
-                            .returnNew(true)
-                            .upsert(false));
-            return true;
+            final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
+                final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
+                        .upsert(false)
+                        .returnNew(true);
+
+                return ds.findAndModify(query, updateOperations, findAndModifyOptions);
+            });
+
+            if (mongoProfile == null) {
+                logger.error("Failed to save lastLogin to profile (no record matching id)");
+                return false;
+            }
+            else {
+                return true;
+            }
         }
         catch (MongoCommandException ex) {
             logger.error("Failed to save lastLogin to profile: {}", ex.toString());
