@@ -121,7 +121,6 @@ public class MongoPendingRewardDao implements PendingRewardDao {
             throw new DuplicateException(e);
         }
 
-        getObjectIndex().index(mongoPendingReward);
         return getDozerMapper().map(getDatastore().get(mongoPendingReward), PendingReward.class);
 
     }
