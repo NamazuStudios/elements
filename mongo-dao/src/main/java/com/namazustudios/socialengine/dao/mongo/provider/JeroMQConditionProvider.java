@@ -10,6 +10,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import static java.util.Arrays.stream;
 
 public class JeroMQConditionProvider implements Provider<Condition> {
@@ -29,8 +32,13 @@ public class JeroMQConditionProvider implements Provider<Condition> {
     @Override
     public Condition get() {
 
+        final List<String> hostAddresses = stream(getHostAddresses().split(","))
+            .map(s -> s.trim())
+            .filter(s -> !s.isEmpty())
+            .collect(Collectors.toList());
+
         final JeroMQCondition jeroMQCondition =  new JeroMQConditionBuilder()
-            .withDynamicBindStrategy(b -> b.withPortSpecBinding(getBindAddresses(), getHostAddresses()))
+            .withDynamicBindStrategy(b -> b.withPortSpecBinding(getBindAddresses(), hostAddresses))
             .build(getzContextProvider().get());
 
         shutdownHooks.add(jeroMQCondition, () -> jeroMQCondition.close());
