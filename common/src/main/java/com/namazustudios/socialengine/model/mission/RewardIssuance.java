@@ -195,18 +195,6 @@ public class RewardIssuance implements Serializable {
                 '}';
     }
 
-    static public Map<String, Object> generateMissionProgressMetadata() {
-        return null;
-    }
-
-    static public Map<String, Object> generateIAPMetadata() {
-        return null;
-    }
-
-    static public Map<String, Object> generateLeaderboardMetadata() {
-        return null;
-    }
-
     public enum State {
         /**
          * Indicates that the RewardIssuance has been successfully issued but not yet redeemed by the client.

@@ -6,10 +6,11 @@ import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
 import java.sql.Timestamp;
+import java.util.Map;
 import java.util.Objects;
 
 @Entity(value = "progress_pending_award", noClassnameStored = true)
-public class MongoPendingReward {
+public class MongoRewardIssuance {
 
     private static final int EXPIRY_TIME_SECONDS = 60;
 
@@ -84,8 +85,8 @@ public class MongoPendingReward {
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
-        if (!(object instanceof MongoPendingReward)) return false;
-        MongoPendingReward that = (MongoPendingReward) object;
+        if (!(object instanceof MongoRewardIssuance)) return false;
+        MongoRewardIssuance that = (MongoRewardIssuance) object;
         return Objects.equals(getObjectId(), that.getObjectId()) &&
                 Objects.equals(getUser(), that.getUser()) &&
                 Objects.equals(getStep(), that.getStep()) &&
@@ -101,7 +102,7 @@ public class MongoPendingReward {
 
     @Override
     public String toString() {
-        return "MongoPendingReward{" +
+        return "MongoRewardIssuance{" +
                 "objectId=" + objectId +
                 ", user=" + user +
                 ", step=" + step +
@@ -111,4 +112,15 @@ public class MongoPendingReward {
                 '}';
     }
 
+    static public Map<String, Object> generateMissionProgressMetadata() {
+        return null;
+    }
+
+    static public Map<String, Object> generateIAPMetadata() {
+        return null;
+    }
+
+    static public Map<String, Object> generateLeaderboardMetadata() {
+        return null;
+    }
 }

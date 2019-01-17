@@ -10,7 +10,6 @@ import org.mongodb.morphia.annotations.*;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -50,7 +49,7 @@ public class MongoProgress {
     private int remaining;
 
     @Reference(ignoreMissing = true)
-    private List<MongoPendingReward> pendingRewards;
+    private List<MongoRewardIssuance> pendingRewards;
 
     public MongoProgressId getObjectId() {
         return objectId;
@@ -116,11 +115,11 @@ public class MongoProgress {
         this.sequence = sequence;
     }
 
-    public List<MongoPendingReward> getPendingRewards() {
+    public List<MongoRewardIssuance> getPendingRewards() {
         return pendingRewards;
     }
 
-    public void setPendingRewards(List<MongoPendingReward> pendingRewards) {
+    public void setPendingRewards(List<MongoRewardIssuance> pendingRewards) {
         this.pendingRewards = pendingRewards;
     }
 

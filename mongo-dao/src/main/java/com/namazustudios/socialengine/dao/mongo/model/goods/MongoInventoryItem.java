@@ -6,14 +6,13 @@ import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
-import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward;
+import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuance;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
 import java.util.Objects;
 import java.util.Set;
 
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 
@@ -53,7 +52,7 @@ public class MongoInventoryItem {
     private int quantity;
 
     @Reference(ignoreMissing = true)
-    private Set<MongoPendingReward> pendingRewards;
+    private Set<MongoRewardIssuance> pendingRewards;
 
     public MongoInventoryItemId getObjectId() {
         return objectId;
@@ -93,11 +92,11 @@ public class MongoInventoryItem {
         this.quantity = quantity;
     }
 
-    public Set<MongoPendingReward> getPendingRewards() {
+    public Set<MongoRewardIssuance> getPendingRewards() {
         return pendingRewards;
     }
 
-    public void setPendingRewards(Set<MongoPendingReward> pendingRewards) {
+    public void setPendingRewards(Set<MongoRewardIssuance> pendingRewards) {
         this.pendingRewards = pendingRewards;
     }
 

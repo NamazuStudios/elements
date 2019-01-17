@@ -33,7 +33,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 @Guice(modules = IntegrationTestModule.class)
-public class MongoPendingRewardDaoTest {
+public class MongoRewardIssuanceDaoTest {
 
     private UserDao userDao;
 

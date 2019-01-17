@@ -285,11 +285,11 @@ public class MongoProgressDao implements ProgressDao {
         // pending rewards exist, then the will be eventually cleared by the database.  However, sicne the actual
         // MongoProress tracks the object IDs we will still have a consistent view even if orphans exist.  The expiry
         // on the MongoPending reward is just to provide a means of garbage collecting unreferenced rewards.
-        final Query<MongoPendingReward> query = getDatastore().createQuery(MongoPendingReward.class);
+        final Query<MongoRewardIssuance> query = getDatastore().createQuery(MongoRewardIssuance.class);
         query.field("_id").hasAnyOf(pendingRewardIds);
         query.field("state").equal(CREATED);
 
-        final UpdateOperations<MongoPendingReward> updates = getDatastore().createUpdateOperations(MongoPendingReward.class);
+        final UpdateOperations<MongoRewardIssuance> updates = getDatastore().createUpdateOperations(MongoRewardIssuance.class);
         updates.unset("expires");
         updates.set("state", PENDING);
 
@@ -356,11 +356,11 @@ public class MongoProgressDao implements ProgressDao {
             // Assigns the rewards from the step
 
             final MongoStep _step = step;
-            final List<MongoPendingReward> pendingRewards = step.getRewards()
+            final List<MongoRewardIssuance> pendingRewards = step.getRewards()
                 .stream()
                 .filter(r -> r != null && r.getItem() != null)
                 .map(r -> {
-                    final MongoPendingReward pending = new MongoPendingReward();
+                    final MongoRewardIssuance pending = new MongoRewardIssuance();
                     pending.setReward(r);
                     pending.setUser(mongoUser);
                     pending.setObjectId(new ObjectId());
