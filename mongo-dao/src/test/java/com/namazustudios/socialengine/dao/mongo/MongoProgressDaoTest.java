@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Queue;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
-import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.PENDING;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.fill;
@@ -198,7 +198,7 @@ public class MongoProgressDaoTest  {
         assertEquals(created.getCurrentStep(), mission.getSteps().get(0));
         assertEquals(created.getRemaining(), created.getCurrentStep().getCount());
         assertEquals(created.getRemaining(), mission.getSteps().get(0).getCount());
-        assertTrue(created.getPendingRewards().isEmpty());
+        assertTrue(created.getRewardIssuances().isEmpty());
 
         assertNotNull(created.getMission());
         assertEquals(created.getMission().getId(), mission.getId());
@@ -284,7 +284,7 @@ public class MongoProgressDaoTest  {
 
             while (progress.getRemaining() > 1) {
                 progress = getProgressDao().advanceProgress(progress, 1);
-                assertEquals(progress.getPendingRewards().size(), expectedRewards);
+                assertEquals(progress.getRewardIssuances().size(), expectedRewards);
             }
 
             progress = getProgressDao().advanceProgress(progress, 1);
@@ -297,14 +297,14 @@ public class MongoProgressDaoTest  {
 
             expectedRewards += step.getRewards().size();
 
-            assertEquals(progress.getPendingRewards().size(), expectedRewards);
+            assertEquals(progress.getRewardIssuances().size(), expectedRewards);
             if (!steps.isEmpty()) assertEquals(progress.getCurrentStep(), steps.peek());
 
-            final PendingReward pendingReward = progress.getPendingRewards().get(expectedRewards - 1);
-            assertNotNull(pendingReward.getId());
-            assertEquals(pendingReward.getStep(), step);
-            assertEquals(pendingReward.getReward(), step.getRewards().get(0));
-            assertEquals(pendingReward.getState(), PENDING);
+            final RewardIssuance rewardIssuance = progress.getRewardIssuances().get(expectedRewards - 1);
+            assertNotNull(rewardIssuance.getId());
+            assertEquals(rewardIssuance.getStep(), step);
+            assertEquals(rewardIssuance.getReward(), step.getRewards().get(0));
+            assertEquals(rewardIssuance.getState(), PENDING);
 
         } while (!steps.isEmpty());
 
@@ -317,13 +317,13 @@ public class MongoProgressDaoTest  {
 
         final List<InventoryItem> inventoryItemList = progressPagination.getObjects()
             .stream()
-            .flatMap(progress -> progress.getPendingRewards().stream())
+            .flatMap(progress -> progress.getRewardIssuances().stream())
             .map(pr -> getPendingRewardDao().redeem(pr))
             .collect(toList());
 
         progressPagination.getObjects()
             .stream()
-            .flatMap(progress -> progress.getPendingRewards().stream())
+            .flatMap(progress -> progress.getRewardIssuances().stream())
             .map(pr -> getPendingRewardDao().redeem(pr))
             .forEach(pr -> {
 

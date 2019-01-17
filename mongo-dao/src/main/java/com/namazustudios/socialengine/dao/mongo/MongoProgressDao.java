@@ -31,16 +31,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Set;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgressId.parseOrThrowNotFoundException;
-import static com.namazustudios.socialengine.model.mission.PendingReward.State.CREATED;
-import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.CREATED;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.PENDING;
 import static java.lang.Math.abs;
-import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
@@ -229,7 +227,7 @@ public class MongoProgressDao implements ProgressDao {
                     first = steps.get(0);
                 }
 
-                progress.setPendingRewards(emptyList());
+                progress.setRewardIssuances(emptyList());
                 progress.setRemaining(first.getCount());
                 getValidationHelper().validateModel(first);
 
@@ -366,7 +364,7 @@ public class MongoProgressDao implements ProgressDao {
                     pending.setReward(r);
                     pending.setUser(mongoUser);
                     pending.setObjectId(new ObjectId());
-                    pending.setExpires(new Timestamp(currentTimeMillis()));
+                    //pending.setExpires(new Timestamp(currentTimeMillis()));
                     pending.setState(CREATED);
                     pending.setStep(_step);
                     getDatastore().insert(pending);

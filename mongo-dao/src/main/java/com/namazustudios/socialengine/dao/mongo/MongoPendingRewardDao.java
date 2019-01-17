@@ -10,7 +10,6 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
-import com.namazustudios.socialengine.dao.mongo.model.mission.MongoMission;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InternalException;
@@ -20,7 +19,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
-import com.namazustudios.socialengine.model.mission.PendingReward;
+import com.namazustudios.socialengine.model.mission.RewardIssuance;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
@@ -38,7 +37,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import static com.namazustudios.socialengine.dao.InventoryItemDao.SIMPLE_PRIORITY;
-import static com.namazustudios.socialengine.model.mission.PendingReward.State.*;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptySet;
 import static java.util.UUID.randomUUID;
@@ -63,9 +61,9 @@ public class MongoPendingRewardDao implements PendingRewardDao {
     private ValidationHelper validationHelper;
 
     @Override
-    public PendingReward getPendingReward(final String id) {
+    public RewardIssuance getPendingReward(final String id) {
         final MongoPendingReward mongoPendingReward = getMongoPendingReward(id);
-        return getDozerMapper().map(mongoPendingReward, PendingReward.class);
+        return getDozerMapper().map(mongoPendingReward, RewardIssuance.class);
     }
 
     public MongoPendingReward getMongoPendingReward(final String id) {
@@ -74,10 +72,10 @@ public class MongoPendingRewardDao implements PendingRewardDao {
     }
 
     @Override
-    public Pagination<PendingReward> getPendingRewards(
+    public Pagination<RewardIssuance> getPendingRewards(
             final User user,
             final int offset, final int count,
-            final Set<PendingReward.State> states) {
+            final Set<RewardIssuance.State> states) {
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
         final Query<MongoPendingReward> query = getDatastore().createQuery(MongoPendingReward.class);
@@ -90,7 +88,7 @@ public class MongoPendingRewardDao implements PendingRewardDao {
 
         return getMongoDBUtils().paginationFromQuery(
             query, offset, count,
-            pr -> getDozerMapper().map(pr, PendingReward.class));
+            pr -> getDozerMapper().map(pr, RewardIssuance.class));
 
     }
 
@@ -107,11 +105,11 @@ public class MongoPendingRewardDao implements PendingRewardDao {
     }
 
     @Override
-    public PendingReward createPendingReward(final PendingReward pendingReward) {
+    public RewardIssuance createPendingReward(final RewardIssuance rewardIssuance) {
 
-        getValidationHelper().validateModel(pendingReward, ValidationGroups.Insert.class);
+        getValidationHelper().validateModel(rewardIssuance, ValidationGroups.Insert.class);
 
-        final MongoPendingReward mongoPendingReward = getDozerMapper().map(pendingReward, MongoPendingReward.class);
+        final MongoPendingReward mongoPendingReward = getDozerMapper().map(rewardIssuance, MongoPendingReward.class);
         mongoPendingReward.setState(CREATED);
         mongoPendingReward.setExpires(new Timestamp(currentTimeMillis()));
 
@@ -122,14 +120,14 @@ public class MongoPendingRewardDao implements PendingRewardDao {
         }
 
         getObjectIndex().index(mongoPendingReward);
-        return getDozerMapper().map(getDatastore().get(mongoPendingReward), PendingReward.class);
+        return getDozerMapper().map(getDatastore().get(mongoPendingReward), RewardIssuance.class);
 
     }
 
     @Override
-    public PendingReward flagPending(final PendingReward pendingReward) {
+    public RewardIssuance flagPending(final RewardIssuance rewardIssuance) {
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(pendingReward.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(rewardIssuance.getId());
 
         final Query<MongoPendingReward> query = getDatastore().createQuery(MongoPendingReward.class);
         query.field("_id").equal(objectId);
@@ -142,12 +140,12 @@ public class MongoPendingRewardDao implements PendingRewardDao {
         final FindAndModifyOptions options = new FindAndModifyOptions().upsert(false).returnNew(true);
         final MongoPendingReward mongoPendingReward = getDatastore().findAndModify(query, updates, options);
 
-        return getDozerMapper().map(mongoPendingReward, PendingReward.class);
+        return getDozerMapper().map(mongoPendingReward, RewardIssuance.class);
 
     }
 
     @Override
-    public InventoryItem redeem(final PendingReward reward) {
+    public InventoryItem redeem(final RewardIssuance reward) {
 
         MongoInventoryItem inventoryItem;
 
@@ -168,7 +166,7 @@ public class MongoPendingRewardDao implements PendingRewardDao {
 
     }
 
-    private MongoInventoryItem doRedeem(final PendingReward reward) throws ContentionException {
+    private MongoInventoryItem doRedeem(final RewardIssuance reward) throws ContentionException {
 
         final MongoPendingReward mongoPendingReward = getMongoPendingReward(reward.getId());
 

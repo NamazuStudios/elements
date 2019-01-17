@@ -9,7 +9,7 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
-import com.namazustudios.socialengine.model.mission.PendingReward;
+import com.namazustudios.socialengine.model.mission.RewardIssuance;
 import com.namazustudios.socialengine.model.mission.Reward;
 import com.namazustudios.socialengine.model.mission.Step;
 import org.bson.types.ObjectId;
@@ -21,8 +21,8 @@ import org.testng.annotations.Test;
 import javax.inject.Inject;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
-import static com.namazustudios.socialengine.model.mission.PendingReward.State.CREATED;
-import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.CREATED;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.PENDING;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.fill;
 import static java.util.stream.Collectors.reducing;
@@ -71,7 +71,7 @@ public class MongoPendingRewardDaoTest {
     @Test(invocationCount = 10)
     public void testCreatePendingReward() {
 
-        final PendingReward pendingReward = new PendingReward();
+        final RewardIssuance rewardIssuance = new RewardIssuance();
         final Reward reward = new Reward();
         final Step step = new Step();
 
@@ -84,12 +84,12 @@ public class MongoPendingRewardDaoTest {
         step.setRewards(asList(reward));
         step.setDisplayName("Test");
 
-        pendingReward.setUser(testUser);
-        pendingReward.setReward(reward);
-        pendingReward.setState(CREATED);
-        pendingReward.setStep(step);
+        rewardIssuance.setUser(testUser);
+        rewardIssuance.setReward(reward);
+        rewardIssuance.setState(CREATED);
+        rewardIssuance.setStep(step);
 
-        final PendingReward created = getPendingRewardDao().createPendingReward(pendingReward);
+        final RewardIssuance created = getPendingRewardDao().createPendingReward(rewardIssuance);
         assertNotNull(created.getId());
         assertEquals(created.getState(), CREATED);
         assertEquals(created.getReward(), reward);
@@ -110,8 +110,8 @@ public class MongoPendingRewardDaoTest {
     }
 
     @Test(dataProvider = "getCreatedPendingRewards", dependsOnMethods = "testCreatePendingReward")
-    public void testFlagPending(final PendingReward pendingReward) {
-        final PendingReward pending = getPendingRewardDao().flagPending(pendingReward);
+    public void testFlagPending(final RewardIssuance rewardIssuance) {
+        final RewardIssuance pending = getPendingRewardDao().flagPending(rewardIssuance);
         assertNotNull(pending.getId());
         assertEquals(pending.getState(), PENDING);
     }
@@ -129,7 +129,7 @@ public class MongoPendingRewardDaoTest {
     }
 
     @Test(dataProvider = "getPendingRewards", dependsOnMethods = "testFlagPending")
-    public void testRedeem(final PendingReward pendingReward) {
+    public void testRedeem(final RewardIssuance rewardIssuance) {
 
         final String id = new MongoInventoryItemId(
                 new ObjectId(testUser.getId()),
@@ -145,20 +145,20 @@ public class MongoPendingRewardDaoTest {
         }
 
 
-        final InventoryItem inventoryItem  = getPendingRewardDao().redeem(pendingReward);
+        final InventoryItem inventoryItem  = getPendingRewardDao().redeem(rewardIssuance);
         assertEquals(inventoryItem.getUser(), testUser);
 
         assertEquals(inventoryItem.getId(), id);
         assertEquals(inventoryItem.getUser(), testUser);
         assertEquals(inventoryItem.getItem(), testItem);
         assertEquals(inventoryItem.getPriority(), Integer.valueOf(0));
-        assertEquals(inventoryItem.getQuantity(), Integer.valueOf(existing + pendingReward.getReward().getQuantity()));
+        assertEquals(inventoryItem.getQuantity(), Integer.valueOf(existing + rewardIssuance.getReward().getQuantity()));
 
-        final InventoryItem repeatInventoryItem = getPendingRewardDao().redeem(pendingReward);
-        assertEquals(repeatInventoryItem.getQuantity(), Integer.valueOf(existing + pendingReward.getReward().getQuantity()));
+        final InventoryItem repeatInventoryItem = getPendingRewardDao().redeem(rewardIssuance);
+        assertEquals(repeatInventoryItem.getQuantity(), Integer.valueOf(existing + rewardIssuance.getReward().getQuantity()));
 
-        final PendingReward postModified = getPendingRewardDao().getPendingReward(pendingReward.getId());
-        assertEquals(postModified.getState(), PendingReward.State.REWARDED);
+        final RewardIssuance postModified = getPendingRewardDao().getPendingReward(rewardIssuance.getId());
+        assertEquals(postModified.getState(), RewardIssuance.State.REWARDED);
     }
 
     public UserDao getUserDao() {

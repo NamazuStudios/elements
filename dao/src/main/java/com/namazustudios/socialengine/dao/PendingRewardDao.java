@@ -3,8 +3,8 @@ package com.namazustudios.socialengine.dao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
-import com.namazustudios.socialengine.model.mission.PendingReward;
-import com.namazustudios.socialengine.model.mission.PendingReward.State;
+import com.namazustudios.socialengine.model.mission.RewardIssuance;
+import com.namazustudios.socialengine.model.mission.RewardIssuance.State;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 
 import java.util.Set;
@@ -12,7 +12,7 @@ import java.util.Set;
 import static java.util.Collections.emptySet;
 
 /**
- * Manipulates the instances of {@link PendingReward}, including the operations to ensure tha the rewards are properly
+ * Manipulates the instances of {@link RewardIssuance}, including the operations to ensure tha the rewards are properly
  * inserted into the database and credited to a user's inventory in an atomic way.
  */
 @Expose(modules = {
@@ -22,22 +22,22 @@ import static java.util.Collections.emptySet;
 public interface PendingRewardDao {
 
     /**
-     * Fetches the instance of {@link PendingReward}.
+     * Fetches the instance of {@link RewardIssuance}.
      *
-     * @param id the id of hte {@link PendingReward} as specified by {@link PendingReward#getId()}.
+     * @param id the id of hte {@link RewardIssuance} as specified by {@link RewardIssuance#getId()}.
      *
      * @return the pending reward
      */
-    PendingReward getPendingReward(String id);
+    RewardIssuance getPendingReward(String id);
 
     /**
      * Gets all pending rewards.
      *
      * @param offset the offset
      * @param count the count
-     * @return a {@link Pagination} of {@link PendingReward}
+     * @return a {@link Pagination} of {@link RewardIssuance}
      */
-    default Pagination<PendingReward> getPendingRewards(final User user, final int offset, final int count) {
+    default Pagination<RewardIssuance> getPendingRewards(final User user, final int offset, final int count) {
         return getPendingRewards(user, offset, count, emptySet());
     }
 
@@ -47,41 +47,41 @@ public interface PendingRewardDao {
      * @param offset the offset
      * @param count the count
      * @param states if non-empty, will include the requested states.  Otehrwise all states will be included.
-     * @return a {@link Pagination} of {@link PendingReward}
+     * @return a {@link Pagination} of {@link RewardIssuance}
      */
-    Pagination<PendingReward> getPendingRewards(User user, int offset, int count, Set<State> states);
+    Pagination<RewardIssuance> getPendingRewards(User user, int offset, int count, Set<State> states);
 
     /**
-     * Creates an instance of {@link PendingReward}. This must be created with the flag {@link State#CREATED}.
+     * Creates an instance of {@link RewardIssuance}. This must be created with the flag {@link State#CREATED}.
      *
-     * @param pendingReward the instance of {@link PendingReward} to create
-     * @return the {@link PendingReward} instance
+     * @param rewardIssuance the instance of {@link RewardIssuance} to create
+     * @return the {@link RewardIssuance} instance
      */
-    PendingReward createPendingReward(PendingReward pendingReward);
+    RewardIssuance createPendingReward(RewardIssuance rewardIssuance);
 
     /**
-     * Flags an instance of {@link PendingReward} as {@link State#PENDING}
+     * Flags an instance of {@link RewardIssuance} as {@link State#PENDING}
      *
-     * @param pendingReward the instance of {@link PendingReward} to create
-     * @return the {@link PendingReward} instance
+     * @param rewardIssuance the instance of {@link RewardIssuance} to create
+     * @return the {@link RewardIssuance} instance
      */
-    PendingReward flagPending(PendingReward pendingReward);
+    RewardIssuance flagPending(RewardIssuance rewardIssuance);
 
     /**
-     * Redeems the {@link PendingReward}.  Once redeemed, the reward will be placed into the associated user's
+     * Redeems the {@link RewardIssuance}.  Once redeemed, the reward will be placed into the associated user's
      * inventory.  This method will select an {@link InventoryItem} with a priority of value zero to accept the
-     * {@link PendingReward}.
+     * {@link RewardIssuance}.
      *
-     * Additionally this method must guarantee that applying the same {@link PendingReward} multiple times will only
+     * Additionally this method must guarantee that applying the same {@link RewardIssuance} multiple times will only
      * credit the user once.
      *
      * @param reward the reward to redeem
-     * @return the {@link InventoryItem} to which this {@link PendingReward} was applied.
+     * @return the {@link InventoryItem} to which this {@link RewardIssuance} was applied.
      */
-    InventoryItem redeem(final PendingReward reward);
+    InventoryItem redeem(final RewardIssuance reward);
 
     /**
-     * Deltes a {@link PendingReward} wiht the supplied id.
+     * Deltes a {@link RewardIssuance} wiht the supplied id.
      *
      * @param id the id
      */
