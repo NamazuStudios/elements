@@ -197,7 +197,8 @@ public class RewardIssuance implements Serializable {
 
     public enum State {
         /**
-         * Indicates that the RewardIssuance has been successfully issued but not yet redeemed by the client.
+         * Indicates that the RewardIssuance has been successfully issued but not yet redeemed by the client. This is
+         * the default value of an issuance when created.
          */
         ISSUED,
 
