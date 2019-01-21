@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.InventoryItemDao;
 import com.namazustudios.socialengine.dao.ItemDao;
-import com.namazustudios.socialengine.dao.PendingRewardDao;
+import com.namazustudios.socialengine.dao.RewardIssuanceDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
 import com.namazustudios.socialengine.exception.NotFoundException;
@@ -41,7 +41,7 @@ public class MongoRewardIssuanceDaoTest {
 
     private InventoryItemDao inventoryItemDao;
 
-    private PendingRewardDao pendingRewardDao;
+    private RewardIssuanceDao rewardIssuanceDao;
 
     private User testUser;
 
@@ -89,7 +89,7 @@ public class MongoRewardIssuanceDaoTest {
         rewardIssuance.setState(CREATED);
         rewardIssuance.setStep(step);
 
-        final RewardIssuance created = getPendingRewardDao().createPendingReward(rewardIssuance);
+        final RewardIssuance created = getRewardIssuanceDao().createRewardIssuance(rewardIssuance);
         assertNotNull(created.getId());
         assertEquals(created.getState(), CREATED);
         assertEquals(created.getReward(), reward);
@@ -99,8 +99,8 @@ public class MongoRewardIssuanceDaoTest {
 
     @DataProvider
     public Object[][] getCreatedPendingRewards() {
-        final Object[][] objects = getPendingRewardDao()
-            .getPendingRewards(testUser, 0, 20, of(CREATED).collect(toSet()))
+        final Object[][] objects = getRewardIssuanceDao()
+            .getRewardIssuances(testUser, 0, 20, of(CREATED).collect(toSet()))
             .getObjects()
             .stream()
             .map(pr -> new Object[]{pr})
@@ -111,15 +111,15 @@ public class MongoRewardIssuanceDaoTest {
 
     @Test(dataProvider = "getCreatedPendingRewards", dependsOnMethods = "testCreatePendingReward")
     public void testFlagPending(final RewardIssuance rewardIssuance) {
-        final RewardIssuance pending = getPendingRewardDao().flagPending(rewardIssuance);
+        final RewardIssuance pending = getRewardIssuanceDao().flagPending(rewardIssuance);
         assertNotNull(pending.getId());
         assertEquals(pending.getState(), PENDING);
     }
 
     @DataProvider
     public Object[][] getPendingRewards() {
-        final Object[][] objects = getPendingRewardDao()
-            .getPendingRewards(testUser, 0, 20, of(PENDING).collect(toSet()))
+        final Object[][] objects = getRewardIssuanceDao()
+            .getRewardIssuances(testUser, 0, 20, of(PENDING).collect(toSet()))
             .getObjects()
             .stream()
             .map(pr -> new Object[]{pr})
@@ -145,7 +145,7 @@ public class MongoRewardIssuanceDaoTest {
         }
 
 
-        final InventoryItem inventoryItem  = getPendingRewardDao().redeem(rewardIssuance);
+        final InventoryItem inventoryItem  = getRewardIssuanceDao().redeem(rewardIssuance);
         assertEquals(inventoryItem.getUser(), testUser);
 
         assertEquals(inventoryItem.getId(), id);
@@ -154,10 +154,10 @@ public class MongoRewardIssuanceDaoTest {
         assertEquals(inventoryItem.getPriority(), Integer.valueOf(0));
         assertEquals(inventoryItem.getQuantity(), Integer.valueOf(existing + rewardIssuance.getReward().getQuantity()));
 
-        final InventoryItem repeatInventoryItem = getPendingRewardDao().redeem(rewardIssuance);
+        final InventoryItem repeatInventoryItem = getRewardIssuanceDao().redeem(rewardIssuance);
         assertEquals(repeatInventoryItem.getQuantity(), Integer.valueOf(existing + rewardIssuance.getReward().getQuantity()));
 
-        final RewardIssuance postModified = getPendingRewardDao().getPendingReward(rewardIssuance.getId());
+        final RewardIssuance postModified = getRewardIssuanceDao().getRewardIssuance(rewardIssuance.getId());
         assertEquals(postModified.getState(), RewardIssuance.State.REWARDED);
     }
 
@@ -188,13 +188,13 @@ public class MongoRewardIssuanceDaoTest {
         this.inventoryItemDao = inventoryItemDao;
     }
 
-    public PendingRewardDao getPendingRewardDao() {
-        return pendingRewardDao;
+    public RewardIssuanceDao getRewardIssuanceDao() {
+        return rewardIssuanceDao;
     }
 
     @Inject
-    public void setPendingRewardDao(PendingRewardDao pendingRewardDao) {
-        this.pendingRewardDao = pendingRewardDao;
+    public void setRewardIssuanceDao(RewardIssuanceDao rewardIssuanceDao) {
+        this.rewardIssuanceDao = rewardIssuanceDao;
     }
 
 }

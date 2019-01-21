@@ -19,7 +19,7 @@ import static java.util.Collections.emptySet;
         "namazu.elements.dao.pendingreward",
         "namazu.socialengine.dao.pendingreward",
 })
-public interface PendingRewardDao {
+public interface RewardIssuanceDao {
 
     /**
      * Fetches the instance of {@link RewardIssuance}.
@@ -28,28 +28,28 @@ public interface PendingRewardDao {
      *
      * @return the pending reward
      */
-    RewardIssuance getPendingReward(String id);
+    RewardIssuance getRewardIssuance(String id);
 
     /**
-     * Gets all pending rewards.
+     * Gets all reward issuances.
      *
      * @param offset the offset
      * @param count the count
      * @return a {@link Pagination} of {@link RewardIssuance}
      */
-    default Pagination<RewardIssuance> getPendingRewards(final User user, final int offset, final int count) {
-        return getPendingRewards(user, offset, count, emptySet());
+    default Pagination<RewardIssuance> getRewardIssuances(final User user, final int offset, final int count) {
+        return getRewardIssuances(user, offset, count, emptySet());
     }
 
     /**
-     * Gets all pending rewards, specifying the {@link State}
+     * Gets all reward issuances, specifying the {@link State}
      *
      * @param offset the offset
      * @param count the count
      * @param states if non-empty, will include the requested states.  Otehrwise all states will be included.
      * @return a {@link Pagination} of {@link RewardIssuance}
      */
-    Pagination<RewardIssuance> getPendingRewards(User user, int offset, int count, Set<State> states);
+    Pagination<RewardIssuance> getRewardIssuances(User user, int offset, int count, Set<State> states);
 
     /**
      * Creates an instance of {@link RewardIssuance}. This must be created with the flag {@link State#CREATED}.
@@ -57,7 +57,7 @@ public interface PendingRewardDao {
      * @param rewardIssuance the instance of {@link RewardIssuance} to create
      * @return the {@link RewardIssuance} instance
      */
-    RewardIssuance createPendingReward(RewardIssuance rewardIssuance);
+    RewardIssuance createRewardIssuance(RewardIssuance rewardIssuance);
 
     /**
      * Flags an instance of {@link RewardIssuance} as {@link State#PENDING}

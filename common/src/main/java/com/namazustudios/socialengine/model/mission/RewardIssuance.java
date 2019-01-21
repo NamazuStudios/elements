@@ -203,12 +203,12 @@ public class RewardIssuance implements Serializable {
 
         /**
          * Indicates that the RewardIssuance has been successfully redeemed. If the RewardIssuance has a NON_PERSISTENT
-         * Type, then, after a successful redemption, the {@Link MongoPendingRewardDAO} will immediately attempt
+         * Type, then, after a successful redemption, the {@Link MongoRewardIssuanceDao} will immediately attempt
          * to delete the RewardIssuance.
          *
-         * TODO: since we cannot guarantee the reward issuance to a user and deleting a PERSISTENT RewardIssuance,
-         * TODO: we may need some scheduled cleanup process to clear them out (setting a new expiration date will not
-         * TODO: work since that likewise cannot be done atomically).
+         * TODO: since we cannot guarantee the reward issuance to a user and deleting a PERSISTENT RewardIssuance since
+         * TODO: mongo does not support transactions, we may need some scheduled cleanup process to clear them out
+         * TODO: (setting a new expiration date will not work since that likewise cannot be done atomically).
          *
          */
         REDEEMED

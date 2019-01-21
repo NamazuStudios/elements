@@ -4,7 +4,7 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
-import com.namazustudios.socialengine.dao.PendingRewardDao;
+import com.namazustudios.socialengine.dao.RewardIssuanceDao;
 import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils.ContentionException;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
@@ -42,7 +42,7 @@ import static java.util.Collections.emptySet;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toSet;
 
-public class MongoPendingRewardDao implements PendingRewardDao {
+public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
     private Mapper dozerMapper;
 
@@ -61,18 +61,18 @@ public class MongoPendingRewardDao implements PendingRewardDao {
     private ValidationHelper validationHelper;
 
     @Override
-    public RewardIssuance getPendingReward(final String id) {
-        final MongoRewardIssuance mongoRewardIssuance = getMongoPendingReward(id);
+    public RewardIssuance getRewardIssuance(final String id) {
+        final MongoRewardIssuance mongoRewardIssuance = getMongoRewardIssuance(id);
         return getDozerMapper().map(mongoRewardIssuance, RewardIssuance.class);
     }
 
-    public MongoRewardIssuance getMongoPendingReward(final String id) {
+    public MongoRewardIssuance getMongoRewardIssuance(final String id) {
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(id);
-        return getMongoPendingReward(objectId);
+        return getMongoRewardIssuance(objectId);
     }
 
     @Override
-    public Pagination<RewardIssuance> getPendingRewards(
+    public Pagination<RewardIssuance> getRewardIssuances(
             final User user,
             final int offset, final int count,
             final Set<RewardIssuance.State> states) {
@@ -92,7 +92,7 @@ public class MongoPendingRewardDao implements PendingRewardDao {
 
     }
 
-    private MongoRewardIssuance getMongoPendingReward(final ObjectId objectId) {
+    private MongoRewardIssuance getMongoRewardIssuance(final ObjectId objectId) {
 
         final MongoRewardIssuance mongoRewardIssuance = getDatastore().get(MongoRewardIssuance.class, objectId);
 
@@ -105,7 +105,7 @@ public class MongoPendingRewardDao implements PendingRewardDao {
     }
 
     @Override
-    public RewardIssuance createPendingReward(final RewardIssuance rewardIssuance) {
+    public RewardIssuance createRewardIssuance(final RewardIssuance rewardIssuance) {
 
         getValidationHelper().validateModel(rewardIssuance, ValidationGroups.Insert.class);
 
@@ -168,7 +168,7 @@ public class MongoPendingRewardDao implements PendingRewardDao {
 
     private MongoInventoryItem doRedeem(final RewardIssuance reward) throws ContentionException {
 
-        final MongoRewardIssuance mongoRewardIssuance = getMongoPendingReward(reward.getId());
+        final MongoRewardIssuance mongoRewardIssuance = getMongoRewardIssuance(reward.getId());
 
         final Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
         final UpdateOperations<MongoInventoryItem> updates = getDatastore().createUpdateOperations(MongoInventoryItem.class);

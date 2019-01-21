@@ -47,7 +47,7 @@ public class MongoProgressDaoTest  {
 
     private ProgressDao progressDao;
 
-    private PendingRewardDao pendingRewardDao;
+    private RewardIssuanceDao rewardIssuanceDao;
 
     private Application testApplication;
 
@@ -318,23 +318,23 @@ public class MongoProgressDaoTest  {
         final List<InventoryItem> inventoryItemList = progressPagination.getObjects()
             .stream()
             .flatMap(progress -> progress.getRewardIssuances().stream())
-            .map(pr -> getPendingRewardDao().redeem(pr))
+            .map(pr -> getRewardIssuanceDao().redeem(pr))
             .collect(toList());
 
         progressPagination.getObjects()
             .stream()
             .flatMap(progress -> progress.getRewardIssuances().stream())
-            .map(pr -> getPendingRewardDao().redeem(pr))
+            .map(pr -> getRewardIssuanceDao().redeem(pr))
             .forEach(pr -> {
 
                 try {
-                    getPendingRewardDao().delete(pr.getId());
+                    getRewardIssuanceDao().delete(pr.getId());
                 } catch (NotFoundException nfe) {
                     // pass
                 }
 
                 try {
-                    getPendingRewardDao().getPendingReward(pr.getId());
+                    getRewardIssuanceDao().getRewardIssuance(pr.getId());
                 } catch (NotFoundException nfe) {
                     return;
                 }
@@ -464,13 +464,13 @@ public class MongoProgressDaoTest  {
         this.applicationDao = applicationDao;
     }
 
-    public PendingRewardDao getPendingRewardDao() {
-        return pendingRewardDao;
+    public RewardIssuanceDao getRewardIssuanceDao() {
+        return rewardIssuanceDao;
     }
 
     @Inject
-    public void setPendingRewardDao(PendingRewardDao pendingRewardDao) {
-        this.pendingRewardDao = pendingRewardDao;
+    public void setRewardIssuanceDao(RewardIssuanceDao rewardIssuanceDao) {
+        this.rewardIssuanceDao = rewardIssuanceDao;
     }
 
 }
