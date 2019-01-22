@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
+import com.namazustudios.socialengine.model.mission.RewardIssuance;
+import com.namazustudios.socialengine.model.mission.RewardIssuance.Type;
 import com.namazustudios.socialengine.model.mission.RewardIssuance.State;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
@@ -9,36 +11,41 @@ import java.sql.Timestamp;
 import java.util.Map;
 import java.util.Objects;
 
+
 @Entity(value = "progress_pending_award", noClassnameStored = true)
 public class MongoRewardIssuance {
 
     private static final int EXPIRY_TIME_SECONDS = 60;
 
     @Id
-    private ObjectId objectId;
+    private MongoRewardIssuanceId objectId;
 
     @Indexed
     @Reference
     private MongoUser user;
 
-    @Embedded
-    private MongoStep step;
-
-    @Embedded
-    private MongoReward reward;
-
-    @Indexed(options = @IndexOptions(expireAfterSeconds = EXPIRY_TIME_SECONDS))
-    private Timestamp expires;
-
     @Indexed
-    @Property
     private State state;
 
-    public ObjectId getObjectId() {
+    @Reference
+    private MongoReward reward;
+
+    private String context;
+
+    private Type type;
+
+    private String source;
+
+    private Map<String, Object> metadata;
+
+    @Indexed(options = @IndexOptions(expireAfterSeconds = EXPIRY_TIME_SECONDS))
+    private Timestamp expirationTimestamp;
+
+    public MongoRewardIssuanceId getObjectId() {
         return objectId;
     }
 
-    public void setObjectId(ObjectId objectId) {
+    public void setObjectId(MongoRewardIssuanceId objectId) {
         this.objectId = objectId;
     }
 
@@ -50,14 +57,6 @@ public class MongoRewardIssuance {
         this.user = user;
     }
 
-    public MongoStep getStep() {
-        return step;
-    }
-
-    public void setStep(MongoStep step) {
-        this.step = step;
-    }
-
     public MongoReward getReward() {
         return reward;
     }
@@ -66,12 +65,12 @@ public class MongoRewardIssuance {
         this.reward = reward;
     }
 
-    public Timestamp getExpires() {
-        return expires;
+    public Timestamp getExpirationTimestamp() {
+        return expirationTimestamp;
     }
 
-    public void setExpires(Timestamp expires) {
-        this.expires = expires;
+    public void setExpirationTimestamp(Timestamp expirationTimestamp) {
+        this.expirationTimestamp = expirationTimestamp;
     }
 
     public State getState() {
@@ -82,6 +81,38 @@ public class MongoRewardIssuance {
         this.state = state;
     }
 
+    public String getContext() {
+        return context;
+    }
+
+    public void setContext(String context) {
+        this.context = context;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -89,15 +120,19 @@ public class MongoRewardIssuance {
         MongoRewardIssuance that = (MongoRewardIssuance) object;
         return Objects.equals(getObjectId(), that.getObjectId()) &&
                 Objects.equals(getUser(), that.getUser()) &&
-                Objects.equals(getStep(), that.getStep()) &&
+                getState() == that.getState() &&
+                Objects.equals(getContext(), that.getContext()) &&
                 Objects.equals(getReward(), that.getReward()) &&
-                Objects.equals(getExpires(), that.getExpires()) &&
-                getState() == that.getState();
+                getType() == that.getType() &&
+                Objects.equals(getSource(), that.getSource()) &&
+                Objects.equals(getMetadata(), that.getMetadata()) &&
+                Objects.equals(getExpirationTimestamp(), that.getExpirationTimestamp());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getUser(), getStep(), getReward(), getExpires(), getState());
+        return Objects.hash(getObjectId(), getUser(), getState(), getContext(), getReward(),
+                getType(), getSource(), getMetadata(), getExpirationTimestamp());
     }
 
     @Override
@@ -105,10 +140,13 @@ public class MongoRewardIssuance {
         return "MongoRewardIssuance{" +
                 "objectId=" + objectId +
                 ", user=" + user +
-                ", step=" + step +
-                ", reward=" + reward +
-                ", expires=" + expires +
                 ", state=" + state +
+                ", context=" + context +
+                ", reward=" + reward +
+                ", type=" + type +
+                ", source=" + source +
+                ", metadata=" + metadata +
+                ", expirationTimestamp=" + expirationTimestamp +
                 '}';
     }
 

@@ -31,11 +31,8 @@ public class RewardIssuance implements Serializable {
     @ApiModelProperty("The state of the reward.")
     private State state;
 
-    @ApiModelProperty("The reward to issue when this pending reward is claimed.")
+    @ApiModelProperty("The reward to issue when this issuance is redeemed.")
     private Reward reward;
-
-    @ApiModelProperty("The step that was completed to earn the reward.")
-    private Step step;
 
     @NotNull(groups = {Create.class, Insert.class})
     @Null(groups = {Update.class})
@@ -61,10 +58,10 @@ public class RewardIssuance implements Serializable {
             "Note that this value cannot be updated.")
     private Type type;
 
-    @Null(groups={Create.class, Update.class})
-    @ApiModelProperty("Identifies the source of the issuance, e.g. Client, IAP, Leaderboard. This is determined " +
-            "automatically by the server and may not be defined or updated by the client.")
-    private Source source;
+    @Null(groups={Update.class})
+    @ApiModelProperty("Identifies the source of the issuance, e.g. 'Client', 'IAP', 'Leaderboard'. This may be " +
+            "specified manually by the client if desired.")
+    private String source;
 
     @ApiModelProperty("Metadata for the issuance. May be optionally defined by the client on creation. If the " +
             "source is a server-side value, then a predefined structure will always be followed that provides" +
@@ -123,11 +120,11 @@ public class RewardIssuance implements Serializable {
         this.context = context;
     }
 
-    public Source getSource() {
+    public String getSource() {
         return source;
     }
 
-    public void setSource(Source source) {
+    public void setSource(String source) {
         this.source = source;
     }
 
@@ -167,7 +164,7 @@ public class RewardIssuance implements Serializable {
                 Objects.equals(getReward(), that.getReward()) &&
                 Objects.equals(getStep(), that.getStep()) &&
                 Objects.equals(getContext(), that.getContext()) &&
-                getSource() == that.getSource() &&
+                Objects.equals(getSource(), that.getSource()) &&
                 getType() == that.getType() &&
                 Objects.equals(getMetadata(), that.getMetadata()) &&
                 Objects.equals(getExpirationTimestamp(), that.getExpirationTimestamp());
@@ -204,7 +201,7 @@ public class RewardIssuance implements Serializable {
 
         /**
          * Indicates that the RewardIssuance has been successfully redeemed. If the RewardIssuance has a NON_PERSISTENT
-         * Type, then, after a successful redemption, the {@Link MongoRewardIssuanceDao} will immediately attempt
+         * Type, then, after a successful redemption, the {@link MongoRewardIssuanceDao} will immediately attempt
          * to delete the RewardIssuance.
          *
          * TODO: since we cannot guarantee the reward issuance to a user and deleting a PERSISTENT RewardIssuance since
@@ -213,28 +210,6 @@ public class RewardIssuance implements Serializable {
          *
          */
         REDEEMED
-    }
-
-    public enum Source {
-        /**
-         * Indicates that the source of the RewardIssuance was from the client code.
-         */
-        CLIENT,
-
-        /**
-         * Indicates that the source of the RewardIssuance was from MissionProgress (server-side).
-         */
-        MISSION_PROGRESS,
-
-        /**
-         * Indicates that the source of the RewardIssuance was from an IAP (server-side).
-         */
-        IAP,    // unused for now
-
-        /**
-         * Indicates that the source of the RewardIssuance was from a Leaderboard achievement (server-side).
-         */
-        LEADERBOARD // unused for now
     }
 
     public enum Type {
