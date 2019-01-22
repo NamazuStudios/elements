@@ -12,6 +12,7 @@ import java.util.Properties;
 import static com.namazustudios.elements.fts.concurrent.jeromq.DynamicJeroMQBindStrategy.DEFAULT_PORT_RANGE;
 import static com.namazustudios.elements.fts.concurrent.jeromq.DynamicJeroMQBindStrategyBuilder.DEFAULT_BIND_ADDRESS;
 import static com.namazustudios.elements.fts.concurrent.jeromq.DynamicJeroMQBindStrategyBuilder.DEFAULT_TRANSPORT;
+import static com.namazustudios.socialengine.dao.mongo.provider.JeroMQConditionProvider.BindStrategy.DYNAMIC;
 import static java.lang.String.format;
 
 /**
@@ -27,6 +28,7 @@ public class MongoSearchModuleDefaults implements ModuleDefaults {
         defaultProperties.setProperty(MongoDirectoryProvider.SEARCH_INDEX_BUCKET, "fts.index");
         defaultProperties.setProperty(JeroMQConditionProvider.BIND_ADDRESS, DEFAULT_BIND_ADDRESS);
         defaultProperties.setProperty(JeroMQConditionProvider.HOST_ADDRESS, format("%s://127.0.0.1", DEFAULT_TRANSPORT));
+        defaultProperties.setProperty(JeroMQConditionProvider.BIND_STRATEGY, DYNAMIC.toString());
         return defaultProperties;
     }
 
