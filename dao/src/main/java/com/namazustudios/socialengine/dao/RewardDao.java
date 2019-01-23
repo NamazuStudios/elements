@@ -24,9 +24,17 @@ public interface RewardDao {
      *
      * @param id the id of the {@link Reward} as specified by {@link Reward#getId()}.
      *
-     * @return the pending reward
+     * @return the reward
      */
     Reward getReward(String id);
+
+    /**
+     * Creates an instance of {@link Reward}.
+     *
+     * @param reward the instance of {@link Reward} to create
+     * @return the {@link Reward} instance
+     */
+    Reward createReward(Reward reward);
 
 
     /**

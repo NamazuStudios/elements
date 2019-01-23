@@ -86,6 +86,22 @@ public class MongoRewardDao implements RewardDao {
     }
 
     @Override
+    public Reward createReward(Reward reward) {
+        getValidationHelper().validateModel(reward, ValidationGroups.Insert.class);
+
+        final MongoReward mongoReward = getDozerMapper().map(reward, MongoReward.class);
+
+        try {
+            getDatastore().insert(mongoReward);
+        } catch (DuplicateKeyException e) {
+            throw new DuplicateException(e);
+        }
+
+        getObjectIndex().index(mongoReward);
+        return getDozerMapper().map(getDatastore().get(mongoReward), Reward.class);
+    }
+
+    @Override
     public void delete(String id) {
         final WriteResult writeResult = getDatastore().delete(MongoReward.class, id);
 
@@ -164,5 +180,15 @@ public class MongoRewardDao implements RewardDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
+    }
+
+    public void validate(final Reward reward) {
+
+        if (reward == null) {
+            throw new InvalidDataException("Reward must not be null.");
+        }
+
+        validationHelper.validateModel(reward);
+
     }
 }
