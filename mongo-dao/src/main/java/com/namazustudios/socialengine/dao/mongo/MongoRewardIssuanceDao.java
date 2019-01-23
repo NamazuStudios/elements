@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
+import com.namazustudios.socialengine.dao.mongo.model.mission.MongoReward;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuance;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuanceId;
 import com.namazustudios.socialengine.exception.*;
@@ -54,6 +55,8 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     private AdvancedDatastore datastore;
 
     private MongoUserDao mongoUserDao;
+
+    private MongoRewardDao mongoRewardDao;
 
     private MongoItemDao mongoItemDao;
 
@@ -123,8 +126,11 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         mongoRewardIssuance.setUuid(randomUUID().toString());
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(rewardIssuance.getUser().getId());
+        final MongoReward mongoReward = getMongoRewardDao().getMongoReward(rewardIssuance.getReward().getId());
+        final String context = rewardIssuance.getContext();
         final MongoRewardIssuanceId mongoRewardIssuanceId =
-                new MongoRewardIssuanceId(mongoUser.getObjectId(), r.getObjectId(), context);
+                new MongoRewardIssuanceId(mongoUser.getObjectId(), mongoReward.getObjectId(), context);
+        mongoRewardIssuance.setObjectId(mongoRewardIssuanceId);
 
         try {
             getDatastore().insert(mongoRewardIssuance);
@@ -320,6 +326,15 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
     public MongoItemDao getMongoItemDao() {
         return mongoItemDao;
+    }
+
+    @Inject
+    public void setMongoRewardDao(MongoRewardDao mongoRewardDao) {
+        this.mongoRewardDao = mongoRewardDao;
+    }
+
+    public MongoRewardDao getMongoRewardDao() {
+        return mongoRewardDao;
     }
 
     @Inject
