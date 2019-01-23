@@ -132,6 +132,10 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
     @Override
     public RewardIssuance updateExpirationTimestamp(RewardIssuance rewardIssuance, long expirationTimestamp) {
+        if (REDEEMED.equals(rewardIssuance.getState())) {
+            throw new InvalidDataException("Cannot update expirationTimestamp for already-redeemed issuance.");
+        }
+
         final MongoRewardIssuanceId mongoRewardIssuanceId = parseOrThrowNotFoundException(rewardIssuance.getId());
 
         final Query<MongoRewardIssuance> query = getDatastore().createQuery(MongoRewardIssuance.class);

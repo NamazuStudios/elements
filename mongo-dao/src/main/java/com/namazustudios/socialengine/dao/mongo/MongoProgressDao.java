@@ -36,8 +36,7 @@ import java.util.Set;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgressId.parseOrThrowNotFoundException;
-import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.CREATED;
-import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.PENDING;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.*;
 import static java.lang.Math.abs;
 import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
@@ -365,7 +364,7 @@ public class MongoProgressDao implements ProgressDao {
                     pending.setUser(mongoUser);
                     pending.setObjectId(new ObjectId());
                     //pending.setExpires(new Timestamp(currentTimeMillis()));
-                    pending.setState(CREATED);
+                    pending.setState(ISSUED);
                     pending.setStep(_step);
                     getDatastore().insert(pending);
                     return pending;

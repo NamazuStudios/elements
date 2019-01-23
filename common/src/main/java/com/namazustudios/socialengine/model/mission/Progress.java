@@ -40,7 +40,7 @@ public class Progress implements Serializable {
     @ApiModelProperty("The mission")
     private ProgressMissionInfo mission;
 
-    @ApiModelProperty("List of unclaimed rewards.")
+    @ApiModelProperty("List of all reward issuances that are issued but not expired, or redeemed but persistent.")
     private List<RewardIssuance> rewardIssuances;
 
     public String getId() {
