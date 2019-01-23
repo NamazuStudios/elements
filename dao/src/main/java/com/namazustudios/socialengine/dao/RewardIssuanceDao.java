@@ -16,8 +16,8 @@ import static java.util.Collections.emptySet;
  * inserted into the database and credited to a user's inventory in an atomic way.
  */
 @Expose(modules = {
-        "namazu.elements.dao.pendingreward",
-        "namazu.socialengine.dao.pendingreward",
+        "namazu.elements.dao.rewardissuance",
+        "namazu.socialengine.dao.rewardissuance",
 })
 public interface RewardIssuanceDao {
 
@@ -52,7 +52,7 @@ public interface RewardIssuanceDao {
     Pagination<RewardIssuance> getRewardIssuances(User user, int offset, int count, Set<State> states);
 
     /**
-     * Creates an instance of {@link RewardIssuance}. This must be created with the flag {@link State#CREATED}.
+     * Creates an instance of {@link RewardIssuance}. The issuance will be set to a state of {@link State#ISSUED}.
      *
      * @param rewardIssuance the instance of {@link RewardIssuance} to create
      * @return the {@link RewardIssuance} instance
@@ -60,12 +60,14 @@ public interface RewardIssuanceDao {
     RewardIssuance createRewardIssuance(RewardIssuance rewardIssuance);
 
     /**
-     * Flags an instance of {@link RewardIssuance} as {@link State#PENDING}
-     *
-     * @param rewardIssuance the instance of {@link RewardIssuance} to create
-     * @return the {@link RewardIssuance} instance
+     * Updates the given issuance to a new expiration timestamp. If a negative value is provided, the value will be
+     * unset in the db.
+     * @param rewardIssuance the issuance to update
+     * @param expirationTimestamp the expiration, in ms
+     * @return
      */
-    RewardIssuance flagPending(RewardIssuance rewardIssuance);
+    RewardIssuance updateExpirationTimestamp(RewardIssuance rewardIssuance, long expirationTimestamp);
+
 
     /**
      * Redeems the {@link RewardIssuance}.  Once redeemed, the reward will be placed into the associated user's
@@ -75,10 +77,10 @@ public interface RewardIssuanceDao {
      * Additionally this method must guarantee that applying the same {@link RewardIssuance} multiple times will only
      * credit the user once.
      *
-     * @param reward the reward to redeem
+     * @param rewardIssuance the reward to redeem
      * @return the {@link InventoryItem} to which this {@link RewardIssuance} was applied.
      */
-    InventoryItem redeem(final RewardIssuance reward);
+    InventoryItem redeem(final RewardIssuance rewardIssuance);
 
     /**
      * Deltes a {@link RewardIssuance} wiht the supplied id.

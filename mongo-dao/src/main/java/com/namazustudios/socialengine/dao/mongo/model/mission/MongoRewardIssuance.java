@@ -41,6 +41,9 @@ public class MongoRewardIssuance {
     @Indexed(options = @IndexOptions(expireAfterSeconds = EXPIRY_TIME_SECONDS))
     private Timestamp expirationTimestamp;
 
+    @Indexed
+    private String uuid;
+
     public MongoRewardIssuanceId getObjectId() {
         return objectId;
     }
@@ -113,6 +116,14 @@ public class MongoRewardIssuance {
         this.metadata = metadata;
     }
 
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -126,13 +137,14 @@ public class MongoRewardIssuance {
                 getType() == that.getType() &&
                 Objects.equals(getSource(), that.getSource()) &&
                 Objects.equals(getMetadata(), that.getMetadata()) &&
-                Objects.equals(getExpirationTimestamp(), that.getExpirationTimestamp());
+                Objects.equals(getExpirationTimestamp(), that.getExpirationTimestamp()) &&
+                Objects.equals(getUuid(), that.getUuid());
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(getObjectId(), getUser(), getState(), getContext(), getReward(),
-                getType(), getSource(), getMetadata(), getExpirationTimestamp());
+                getType(), getSource(), getMetadata(), getExpirationTimestamp(), getUuid());
     }
 
     @Override
@@ -147,6 +159,7 @@ public class MongoRewardIssuance {
                 ", source=" + source +
                 ", metadata=" + metadata +
                 ", expirationTimestamp=" + expirationTimestamp +
+                ", uuid=" + uuid +
                 '}';
     }
 

@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
@@ -142,5 +143,13 @@ public class MongoRewardIssuanceId {
                 ", rewardId=" + rewardId +
                 ", context=" + context +
                 '}';
+    }
+
+    public static MongoRewardIssuanceId parseOrThrowNotFoundException(final String id) {
+        try {
+            return new MongoRewardIssuanceId(id);
+        } catch (IllegalArgumentException ex) {
+            throw new NotFoundException(ex);
+        }
     }
 }

@@ -276,7 +276,7 @@ public class MongoProgressDao implements ProgressDao {
             throw new TooBusyException(e);
         }
 
-        final Set<ObjectId> pendingRewardIds = mongoProgress.getPendingRewards()
+        final Set<ObjectId> pendingRewardIds = mongoProgress.getRewardIssuances()
             .stream()
             .map(r -> r.getObjectId())
             .collect(toSet());

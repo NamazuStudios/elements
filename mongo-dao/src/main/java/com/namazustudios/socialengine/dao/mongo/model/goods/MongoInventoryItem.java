@@ -51,8 +51,8 @@ public class MongoInventoryItem {
     @Property
     private int quantity;
 
-    @Reference(ignoreMissing = true)
-    private Set<MongoRewardIssuance> pendingRewards;
+    @Property
+    private Set<String> rewardIssuanceUuids;
 
     public MongoInventoryItemId getObjectId() {
         return objectId;
@@ -92,12 +92,12 @@ public class MongoInventoryItem {
         this.quantity = quantity;
     }
 
-    public Set<MongoRewardIssuance> getPendingRewards() {
-        return pendingRewards;
+    public Set<String> getRewardIssuanceUuids() {
+        return rewardIssuanceUuids;
     }
 
-    public void setPendingRewards(Set<MongoRewardIssuance> pendingRewards) {
-        this.pendingRewards = pendingRewards;
+    public void setRewardIssuanceUuids(Set<String> rewardIssuanceUuids) {
+        this.rewardIssuanceUuids = rewardIssuanceUuids;
     }
 
     @Override
@@ -110,12 +110,12 @@ public class MongoInventoryItem {
                 Objects.equals(getVersion(), that.getVersion()) &&
                 Objects.equals(getItem(), that.getItem()) &&
                 Objects.equals(getUser(), that.getUser()) &&
-                Objects.equals(getPendingRewards(), that.getPendingRewards());
+                Objects.equals(getRewardIssuanceUuids(), that.getRewardIssuanceUuids());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getVersion(), getItem(), getUser(), getQuantity(), getPendingRewards());
+        return Objects.hash(getObjectId(), getVersion(), getItem(), getUser(), getQuantity(), getRewardIssuanceUuids());
     }
 
     @Override
@@ -126,16 +126,7 @@ public class MongoInventoryItem {
                 ", item=" + item +
                 ", user=" + user +
                 ", quantity=" + quantity +
-                ", pendingRewards=" + pendingRewards +
+                ", rewardIssuanceUuids=" + rewardIssuanceUuids +
                 '}';
     }
-
-
-    @PostLoad
-    public void clearNulls() {
-        if (pendingRewards != null) {
-            pendingRewards = pendingRewards.stream().filter(p -> p != null).collect(toSet());
-        }
-    }
-
 }
