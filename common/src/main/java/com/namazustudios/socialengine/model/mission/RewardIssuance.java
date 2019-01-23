@@ -11,12 +11,17 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 @ApiModel(description = "Represents a Reward that has been issued but has not yet been claimed by the user.  The " +
                         "reward is assigned a unique ID to ensure that it may not have been applied more than once.")
 public class RewardIssuance implements Serializable {
+    public static final String MISSION_PROGRESS_SOURCE = "MISSION_PROGRESS";
+
+    public static final String MISSION_PROGRESS_PROGRESS_KEY = "progress";
+    public static final String MISSION_PROGRESS_STEP_KEY = "step";
 
     @Null(groups = {Create.class, Insert.class})
     @NotNull(groups = {Update.class})
@@ -57,7 +62,7 @@ public class RewardIssuance implements Serializable {
             "If the type is set to PERSISTENT, at most one ISSUED or REDEEMED RewardIssuance may exist in the server " +
             "for a given user and context, i.e. once a PERSISTENT RewardIssuance has been submitted, a new one may " +
             "never be submitted and will be rejected by the server. " +
-            "Note that this value cannot be updated.")
+            "Note that this value cannot be updated. By default, this will be set to NON_PERSISTENT.")
     private Type type;
 
     @Null(groups={Update.class})

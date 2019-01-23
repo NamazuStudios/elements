@@ -15,6 +15,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.mission.Progress;
+import com.namazustudios.socialengine.model.mission.RewardIssuance;
 import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -31,12 +32,16 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgressId.parseOrThrowNotFoundException;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.*;
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.*;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.Type.*;
 import static java.lang.Math.abs;
 import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
@@ -275,25 +280,6 @@ public class MongoProgressDao implements ProgressDao {
             throw new TooBusyException(e);
         }
 
-        final Set<ObjectId> pendingRewardIds = mongoProgress.getRewardIssuances()
-            .stream()
-            .map(r -> r.getObjectId())
-            .collect(toSet());
-
-        // To finalize the advancement, we clear the expiry of hte rewards.  The rationale here is if extra orphaned
-        // pending rewards exist, then the will be eventually cleared by the database.  However, sicne the actual
-        // MongoProress tracks the object IDs we will still have a consistent view even if orphans exist.  The expiry
-        // on the MongoPending reward is just to provide a means of garbage collecting unreferenced rewards.
-        final Query<MongoRewardIssuance> query = getDatastore().createQuery(MongoRewardIssuance.class);
-        query.field("_id").hasAnyOf(pendingRewardIds);
-        query.field("state").equal(CREATED);
-
-        final UpdateOperations<MongoRewardIssuance> updates = getDatastore().createUpdateOperations(MongoRewardIssuance.class);
-        updates.unset("expires");
-        updates.set("state", PENDING);
-
-        getDatastore().update(query, updates, new UpdateOptions().multi(true).upsert(false));
-
         return getDozerMapper().map(getDatastore().get(mongoProgress), Progress.class);
 
     }
@@ -355,22 +341,33 @@ public class MongoProgressDao implements ProgressDao {
             // Assigns the rewards from the step
 
             final MongoStep _step = step;
-            final List<MongoRewardIssuance> pendingRewards = step.getRewards()
+            final List<MongoRewardIssuance> rewardIssuances = step.getRewards()
                 .stream()
                 .filter(r -> r != null && r.getItem() != null)
                 .map(r -> {
-                    final MongoRewardIssuance pending = new MongoRewardIssuance();
-                    pending.setReward(r);
-                    pending.setUser(mongoUser);
-                    pending.setObjectId(new ObjectId());
-                    //pending.setExpires(new Timestamp(currentTimeMillis()));
-                    pending.setState(ISSUED);
-                    pending.setStep(_step);
-                    getDatastore().insert(pending);
-                    return pending;
+                    final String context = "server." + randomUUID().toString();
+                    final MongoRewardIssuanceId mongoRewardIssuanceId =
+                            new MongoRewardIssuanceId(mongoUser.getObjectId(), r.getObjectId(), context);
+
+                    final Progress progress = getDozerMapper().map(mongoProgress, Progress.class);
+                    final Step __step = getDozerMapper().map(_step, Step.class);
+                    final Map<String, Object> metadata = generateMissionProgressMetadata(progress, __step);
+
+                    final MongoRewardIssuance issuance = new MongoRewardIssuance();
+                    issuance.setObjectId(mongoRewardIssuanceId);
+                    issuance.setReward(r);
+                    issuance.setUser(mongoUser);
+                    issuance.setState(ISSUED);
+                    issuance.setType(PERSISTENT);
+                    issuance.setSource(MISSION_PROGRESS_SOURCE);
+                    issuance.setContext(context);
+                    issuance.setMetadata(metadata);
+
+                    getDatastore().insert(issuance);
+                    return issuance;
                 }).collect(toList());
 
-            updates.push("pendingRewards", pendingRewards);
+            updates.push("rewardIssuances", rewardIssuances);
             actionsToApply -= remaining;
 
             // Increments the completed steps and applies to the remaining actions to apply.  We keep
@@ -392,6 +389,16 @@ public class MongoProgressDao implements ProgressDao {
         updates.inc("sequence", completedSteps);
         updates.set("remaining", step == null ? 0 : step.getCount() - actionsToApply);
 
+    }
+
+    public Map<String, Object> generateMissionProgressMetadata(Progress progress, Step step) {
+        final HashMap<String, Object> map = new HashMap<>();
+        final Map stepMap = getDozerMapper().map(step, Map.class);
+
+        map.put(MISSION_PROGRESS_PROGRESS_KEY, progress.getId());
+        map.put(MISSION_PROGRESS_STEP_KEY, stepMap);
+
+        return map;
     }
 
     public AdvancedDatastore getDatastore() {

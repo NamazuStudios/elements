@@ -116,6 +116,9 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         getValidationHelper().validateModel(rewardIssuance, ValidationGroups.Insert.class);
 
         final MongoRewardIssuance mongoRewardIssuance = getDozerMapper().map(rewardIssuance, MongoRewardIssuance.class);
+        if (mongoRewardIssuance.getType() == null) {
+            mongoRewardIssuance.setType(NON_PERSISTENT);
+        }
         mongoRewardIssuance.setState(ISSUED);
         mongoRewardIssuance.setUuid(randomUUID().toString());
 

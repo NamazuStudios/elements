@@ -162,16 +162,4 @@ public class MongoRewardIssuance {
                 ", uuid=" + uuid +
                 '}';
     }
-
-    static public Map<String, Object> generateMissionProgressMetadata() {
-        return null;
-    }
-
-    static public Map<String, Object> generateIAPMetadata() {
-        return null;
-    }
-
-    static public Map<String, Object> generateLeaderboardMetadata() {
-        return null;
-    }
 }
