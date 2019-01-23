@@ -23,7 +23,7 @@ public class RewardIssuance implements Serializable {
     public static final String MISSION_PROGRESS_PROGRESS_KEY = "progress";
     public static final String MISSION_PROGRESS_STEP_KEY = "step";
 
-    @Null(groups = {Create.class, Insert.class})
+    @Null(groups = {Create.class})
     @NotNull(groups = {Update.class})
     @ApiModelProperty("The unique ID of the issuance.")
     private String id;
@@ -79,7 +79,7 @@ public class RewardIssuance implements Serializable {
             "when the expiration occurs. When set, this value must be greater than the current time on the server.")
     private Long expirationTimestamp;
 
-    @Null(groups={Insert.class, Update.class})
+    @Null(groups={Create.class, Update.class})
     @ApiModelProperty("Internal unique identifier generated and assigned on creation.")
     private String uuid;
 

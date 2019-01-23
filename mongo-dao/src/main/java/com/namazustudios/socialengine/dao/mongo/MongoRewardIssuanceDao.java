@@ -71,7 +71,7 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
     public MongoRewardIssuance getMongoRewardIssuance(final String id) {
         if (isEmpty(nullToEmpty(id).trim())) {
-            throw new NotFoundException("Unable to find progress with an id " + id);
+            throw new NotFoundException("Unable to find reward issuance with an id " + id);
         }
 
         final MongoRewardIssuanceId mongoRewardIssuanceId = parseOrThrowNotFoundException(id);
@@ -121,6 +121,10 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         }
         mongoRewardIssuance.setState(ISSUED);
         mongoRewardIssuance.setUuid(randomUUID().toString());
+
+        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(rewardIssuance.getUser().getId());
+        final MongoRewardIssuanceId mongoRewardIssuanceId =
+                new MongoRewardIssuanceId(mongoUser.getObjectId(), r.getObjectId(), context);
 
         try {
             getDatastore().insert(mongoRewardIssuance);

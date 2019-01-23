@@ -13,6 +13,7 @@ import com.namazustudios.socialengine.model.mission.RewardIssuance;
 import com.namazustudios.socialengine.model.mission.Reward;
 import com.namazustudios.socialengine.model.mission.Step;
 import org.bson.types.ObjectId;
+import org.testng.ITestContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -21,8 +22,8 @@ import org.testng.annotations.Test;
 import javax.inject.Inject;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
-import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.CREATED;
-import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.PENDING;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.*;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.Type.*;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.fill;
 import static java.util.stream.Collectors.reducing;
@@ -69,8 +70,8 @@ public class MongoRewardIssuanceDaoTest {
     }
 
     @Test(invocationCount = 10)
-    public void testCreatePendingReward() {
-
+    public void testCreateRewardIssuance(ITestContext testContext) {
+        int invocation = testContext.getAllTestMethods()[0].getCurrentInvocationCount();
         final RewardIssuance rewardIssuance = new RewardIssuance();
         final Reward reward = new Reward();
         final Step step = new Step();
@@ -86,19 +87,20 @@ public class MongoRewardIssuanceDaoTest {
 
         rewardIssuance.setUser(testUser);
         rewardIssuance.setReward(reward);
-        rewardIssuance.setState(CREATED);
-        rewardIssuance.setStep(step);
+        rewardIssuance.setContext("server.test." + Integer.toString(invocation));
+        rewardIssuance.setState(ISSUED);
+        rewardIssuance.setType(NON_PERSISTENT);
 
         final RewardIssuance created = getRewardIssuanceDao().createRewardIssuance(rewardIssuance);
         assertNotNull(created.getId());
-        assertEquals(created.getState(), CREATED);
+        assertEquals(created.getState(), ISSUED);
         assertEquals(created.getReward(), reward);
         assertEquals(created.getStep(), step);
 
     }
 
     @DataProvider
-    public Object[][] getCreatedPendingRewards() {
+    public Object[][] getCreatedRewardIssuances() {
         final Object[][] objects = getRewardIssuanceDao()
             .getRewardIssuances(testUser, 0, 20, of(CREATED).collect(toSet()))
             .getObjects()
@@ -109,7 +111,7 @@ public class MongoRewardIssuanceDaoTest {
         return objects;
     }
 
-    @Test(dataProvider = "getCreatedPendingRewards", dependsOnMethods = "testCreatePendingReward")
+    @Test(dataProvider = "getCreatedRewardIssuances", dependsOnMethods = "testCreateRewardIssuance")
     public void testFlagPending(final RewardIssuance rewardIssuance) {
         final RewardIssuance pending = getRewardIssuanceDao().flagPending(rewardIssuance);
         assertNotNull(pending.getId());
@@ -117,7 +119,7 @@ public class MongoRewardIssuanceDaoTest {
     }
 
     @DataProvider
-    public Object[][] getPendingRewards() {
+    public Object[][] getRewardIssuances() {
         final Object[][] objects = getRewardIssuanceDao()
             .getRewardIssuances(testUser, 0, 20, of(PENDING).collect(toSet()))
             .getObjects()
@@ -128,7 +130,7 @@ public class MongoRewardIssuanceDaoTest {
         return objects;
     }
 
-    @Test(dataProvider = "getPendingRewards", dependsOnMethods = "testFlagPending")
+    @Test(dataProvider = "getRewardIssuances", dependsOnMethods = "testFlagPending")
     public void testRedeem(final RewardIssuance rewardIssuance) {
 
         final String id = new MongoInventoryItemId(
