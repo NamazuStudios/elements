@@ -1,15 +1,14 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.namazustudios.socialengine.dao.InventoryItemDao;
-import com.namazustudios.socialengine.dao.ItemDao;
-import com.namazustudios.socialengine.dao.RewardIssuanceDao;
-import com.namazustudios.socialengine.dao.UserDao;
+import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.mission.RewardIssuance;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.State;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.Type;
 import com.namazustudios.socialengine.model.mission.Reward;
 import com.namazustudios.socialengine.model.mission.Step;
 import org.bson.types.ObjectId;
@@ -20,6 +19,10 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.*;
@@ -35,6 +38,7 @@ import static org.testng.Assert.assertTrue;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoRewardIssuanceDaoTest {
+    private static final int INVOCATION_COUNT = 10;
 
     private UserDao userDao;
 
@@ -43,6 +47,8 @@ public class MongoRewardIssuanceDaoTest {
     private InventoryItemDao inventoryItemDao;
 
     private RewardIssuanceDao rewardIssuanceDao;
+
+    private RewardDao rewardDao;
 
     private User testUser;
 
@@ -66,37 +72,48 @@ public class MongoRewardIssuanceDaoTest {
         testItem = getItemDao().createItem(testItem);
         testUser = getUserDao().createOrReactivateUser(testUser);
         testUser = getUserDao().createOrReactivateUser(testUser);
-
     }
 
-    @Test(invocationCount = 10)
-    public void testCreateRewardIssuance(ITestContext testContext) {
-        int invocation = testContext.getAllTestMethods()[0].getCurrentInvocationCount();
-        final RewardIssuance rewardIssuance = new RewardIssuance();
+    @Test()
+    public void testCreateExpiringRewardIssuance(ITestContext testContext) {
         final Reward reward = new Reward();
-        final Step step = new Step();
 
-        reward.setQuantity(10);
+        reward.setQuantity(5);
         reward.setItem(testItem);
         reward.addMetadata("foo", "bar");
 
-        step.setCount(5);
-        step.setDescription("Test");
-        step.setRewards(asList(reward));
-        step.setDisplayName("Test");
+        final Reward createdReward = getRewardDao().createReward(reward);
+
+
+    }
+
+    @Test(invocationCount = INVOCATION_COUNT)
+    public void testCreateRewardIssuance(ITestContext testContext) {
+        int invocation = testContext.getAllTestMethods()[0].getCurrentInvocationCount();
+
+        final Reward reward = new Reward();
+
+        reward.setQuantity(invocation+1);
+        reward.setItem(testItem);
+        reward.addMetadata("foo", "bar" + invocation);
+
+        final Reward createdReward = getRewardDao().createReward(reward);
+
+        final RewardIssuance rewardIssuance = new RewardIssuance();
 
         rewardIssuance.setUser(testUser);
-        rewardIssuance.setReward(reward);
-        rewardIssuance.setContext("server.test." + Integer.toString(invocation));
+        rewardIssuance.setReward(createdReward);
+        rewardIssuance.setContext("server.test." + invocation);
         rewardIssuance.setState(ISSUED);
         rewardIssuance.setType(NON_PERSISTENT);
 
         final RewardIssuance created = getRewardIssuanceDao().createRewardIssuance(rewardIssuance);
         assertNotNull(created.getId());
+        assertEquals(created.getUser(), testUser);
+        assertEquals(created.getReward(), createdReward);
+        assertEquals(created.getContext(), "server.test."+invocation);
         assertEquals(created.getState(), ISSUED);
-        assertEquals(created.getReward(), reward);
-        assertEquals(created.getStep(), step);
-
+        assertEquals(created.getType(), NON_PERSISTENT);
     }
 
     @DataProvider
@@ -199,4 +216,12 @@ public class MongoRewardIssuanceDaoTest {
         this.rewardIssuanceDao = rewardIssuanceDao;
     }
 
+    public RewardDao getRewardDao() {
+        return rewardDao;
+    }
+
+    @Inject
+    public void setRewardDao(RewardDao rewardDao) {
+        this.rewardDao = rewardDao;
+    }
 }

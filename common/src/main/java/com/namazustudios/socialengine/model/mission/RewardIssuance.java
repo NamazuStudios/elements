@@ -147,6 +147,16 @@ public class RewardIssuance implements Serializable {
         this.metadata = metadata;
     }
 
+    public void addMetadata(final String name, final Object value) {
+
+        if (getMetadata() == null) {
+            setMetadata(new HashMap<>());
+        }
+
+        getMetadata().put(name, value);
+
+    }
+
     public Long getExpirationTimestamp() {
         return expirationTimestamp;
     }

@@ -124,6 +124,9 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         }
         mongoRewardIssuance.setState(ISSUED);
         mongoRewardIssuance.setUuid(randomUUID().toString());
+        if (mongoRewardIssuance.getType() == PERSISTENT) {
+            mongoRewardIssuance.setExpirationTimestamp(null);
+        }
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(rewardIssuance.getUser().getId());
         final MongoReward mongoReward = getMongoRewardDao().getMongoReward(rewardIssuance.getReward().getId());
@@ -147,6 +150,9 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     public RewardIssuance updateExpirationTimestamp(RewardIssuance rewardIssuance, long expirationTimestamp) {
         if (REDEEMED.equals(rewardIssuance.getState())) {
             throw new InvalidDataException("Cannot update expirationTimestamp for already-redeemed issuance.");
+        }
+        if (PERSISTENT.equals(rewardIssuance.getType())) {
+            throw new InvalidDataException("Cannot update expirationTimestamp for a PERSISTENT type issuance.");
         }
 
         final MongoRewardIssuanceId mongoRewardIssuanceId = parseOrThrowNotFoundException(rewardIssuance.getId());
