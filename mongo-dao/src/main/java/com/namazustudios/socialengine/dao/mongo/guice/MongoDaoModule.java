@@ -66,6 +66,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(MissionDao.class).to(MongoMissionDao.class);
         bind(ProgressDao.class).to(MongoProgressDao.class);
         bind(RewardIssuanceDao.class).to(MongoRewardIssuanceDao.class);
+        bind(RewardDao.class).to(MongoRewardDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoAdvancedDatastoreProvider.class)
@@ -114,6 +115,6 @@ public class MongoDaoModule extends PrivateModule {
         expose(MissionDao.class);
         expose(ProgressDao.class);
         expose(RewardIssuanceDao.class);
-
+        expose(RewardDao.class);
     }
 }

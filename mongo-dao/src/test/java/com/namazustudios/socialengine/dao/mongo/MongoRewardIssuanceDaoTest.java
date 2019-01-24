@@ -27,14 +27,13 @@ import java.util.Map;
 import static com.namazustudios.socialengine.model.User.Level.USER;
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.*;
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.Type.*;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.fill;
 import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.of;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoRewardIssuanceDaoTest {
@@ -84,7 +83,44 @@ public class MongoRewardIssuanceDaoTest {
 
         final Reward createdReward = getRewardDao().createReward(reward);
 
+        final RewardIssuance rewardIssuance = new RewardIssuance();
 
+        rewardIssuance.setUser(testUser);
+        rewardIssuance.setReward(createdReward);
+        rewardIssuance.setContext("server.test.expires");
+        rewardIssuance.setState(ISSUED);
+        rewardIssuance.setType(NON_PERSISTENT);
+        final long expirationTimestamp = currentTimeMillis() + 3000;
+        rewardIssuance.setExpirationTimestamp(expirationTimestamp);
+
+        final RewardIssuance createdRewardIssuance = getRewardIssuanceDao().createRewardIssuance(rewardIssuance);
+        assertNotNull(createdRewardIssuance.getId());
+        assertEquals((long)createdRewardIssuance.getExpirationTimestamp(), expirationTimestamp);
+
+        try {
+            final RewardIssuance fetchedRewardIssuance =
+                    getRewardIssuanceDao().getRewardIssuance(createdRewardIssuance.getId());
+            assertNotNull(fetchedRewardIssuance);
+        }
+        catch (NotFoundException e) {
+            assertTrue(false, "RewardIssuance should exist at this point.");
+        }
+
+        try {
+            Thread.sleep(10000);
+        }
+        catch (InterruptedException e) {
+            assertTrue(false, "Thread failed to sleep.");
+        }
+
+        try {
+            final RewardIssuance fetchedRewardIssuance =
+                    getRewardIssuanceDao().getRewardIssuance(createdRewardIssuance.getId());
+            assertNull(fetchedRewardIssuance);
+        }
+        catch (NotFoundException e) {
+            // this is expected
+        }
     }
 
     @Test(invocationCount = INVOCATION_COUNT)
@@ -107,78 +143,71 @@ public class MongoRewardIssuanceDaoTest {
         rewardIssuance.setState(ISSUED);
         rewardIssuance.setType(NON_PERSISTENT);
 
-        final RewardIssuance created = getRewardIssuanceDao().createRewardIssuance(rewardIssuance);
-        assertNotNull(created.getId());
-        assertEquals(created.getUser(), testUser);
-        assertEquals(created.getReward(), createdReward);
-        assertEquals(created.getContext(), "server.test."+invocation);
-        assertEquals(created.getState(), ISSUED);
-        assertEquals(created.getType(), NON_PERSISTENT);
+        final RewardIssuance createdRewardIssuance = getRewardIssuanceDao().createRewardIssuance(rewardIssuance);
+        assertNotNull(createdRewardIssuance.getId());
+        assertEquals(createdRewardIssuance.getUser(), testUser);
+        assertEquals(createdRewardIssuance.getReward(), createdReward);
+        assertEquals(createdRewardIssuance.getContext(), "server.test."+invocation);
+        assertEquals(createdRewardIssuance.getState(), ISSUED);
+        assertEquals(createdRewardIssuance.getType(), NON_PERSISTENT);
     }
 
-    @DataProvider
-    public Object[][] getCreatedRewardIssuances() {
-        final Object[][] objects = getRewardIssuanceDao()
-            .getRewardIssuances(testUser, 0, 20, of(CREATED).collect(toSet()))
-            .getObjects()
-            .stream()
-            .map(pr -> new Object[]{pr})
-            .toArray(Object[][]::new);
-        assertTrue(objects.length > 0);
-        return objects;
-    }
-
-    @Test(dataProvider = "getCreatedRewardIssuances", dependsOnMethods = "testCreateRewardIssuance")
-    public void testFlagPending(final RewardIssuance rewardIssuance) {
-        final RewardIssuance pending = getRewardIssuanceDao().flagPending(rewardIssuance);
-        assertNotNull(pending.getId());
-        assertEquals(pending.getState(), PENDING);
-    }
-
-    @DataProvider
-    public Object[][] getRewardIssuances() {
-        final Object[][] objects = getRewardIssuanceDao()
-            .getRewardIssuances(testUser, 0, 20, of(PENDING).collect(toSet()))
-            .getObjects()
-            .stream()
-            .map(pr -> new Object[]{pr})
-            .toArray(Object[][]::new);
-        assertTrue(objects.length > 0);
-        return objects;
-    }
-
-    @Test(dataProvider = "getRewardIssuances", dependsOnMethods = "testFlagPending")
-    public void testRedeem(final RewardIssuance rewardIssuance) {
-
-        final String id = new MongoInventoryItemId(
-                new ObjectId(testUser.getId()),
-                new ObjectId(testItem.getId()),
-                0).toHexString();
-
-        int existing;
-
-        try {
-            existing = getInventoryItemDao().getInventoryItem(id).getQuantity();
-        } catch (NotFoundException ex) {
-            existing = 0;
-        }
-
-
-        final InventoryItem inventoryItem  = getRewardIssuanceDao().redeem(rewardIssuance);
-        assertEquals(inventoryItem.getUser(), testUser);
-
-        assertEquals(inventoryItem.getId(), id);
-        assertEquals(inventoryItem.getUser(), testUser);
-        assertEquals(inventoryItem.getItem(), testItem);
-        assertEquals(inventoryItem.getPriority(), Integer.valueOf(0));
-        assertEquals(inventoryItem.getQuantity(), Integer.valueOf(existing + rewardIssuance.getReward().getQuantity()));
-
-        final InventoryItem repeatInventoryItem = getRewardIssuanceDao().redeem(rewardIssuance);
-        assertEquals(repeatInventoryItem.getQuantity(), Integer.valueOf(existing + rewardIssuance.getReward().getQuantity()));
-
-        final RewardIssuance postModified = getRewardIssuanceDao().getRewardIssuance(rewardIssuance.getId());
-        assertEquals(postModified.getState(), RewardIssuance.State.REWARDED);
-    }
+//    @DataProvider
+//    public Object[][] getCreatedRewardIssuances() {
+//        final Object[][] objects = getRewardIssuanceDao()
+//            .getRewardIssuances(testUser, 0, 20, of(CREATED).collect(toSet()))
+//            .getObjects()
+//            .stream()
+//            .map(pr -> new Object[]{pr})
+//            .toArray(Object[][]::new);
+//        assertTrue(objects.length > 0);
+//        return objects;
+//    }
+//
+//    @DataProvider
+//    public Object[][] getRewardIssuances() {
+//        final Object[][] objects = getRewardIssuanceDao()
+//            .getRewardIssuances(testUser, 0, 20, of(PENDING).collect(toSet()))
+//            .getObjects()
+//            .stream()
+//            .map(pr -> new Object[]{pr})
+//            .toArray(Object[][]::new);
+//        assertTrue(objects.length > 0);
+//        return objects;
+//    }
+//
+//    @Test(dataProvider = "getRewardIssuances")
+//    public void testRedeem(final RewardIssuance rewardIssuance) {
+//
+//        final String id = new MongoInventoryItemId(
+//                new ObjectId(testUser.getId()),
+//                new ObjectId(testItem.getId()),
+//                0).toHexString();
+//
+//        int existing;
+//
+//        try {
+//            existing = getInventoryItemDao().getInventoryItem(id).getQuantity();
+//        } catch (NotFoundException ex) {
+//            existing = 0;
+//        }
+//
+//
+//        final InventoryItem inventoryItem  = getRewardIssuanceDao().redeem(rewardIssuance);
+//        assertEquals(inventoryItem.getUser(), testUser);
+//
+//        assertEquals(inventoryItem.getId(), id);
+//        assertEquals(inventoryItem.getUser(), testUser);
+//        assertEquals(inventoryItem.getItem(), testItem);
+//        assertEquals(inventoryItem.getPriority(), Integer.valueOf(0));
+//        assertEquals(inventoryItem.getQuantity(), Integer.valueOf(existing + rewardIssuance.getReward().getQuantity()));
+//
+//        final InventoryItem repeatInventoryItem = getRewardIssuanceDao().redeem(rewardIssuance);
+//        assertEquals(repeatInventoryItem.getQuantity(), Integer.valueOf(existing + rewardIssuance.getReward().getQuantity()));
+//
+//        final RewardIssuance postModified = getRewardIssuanceDao().getRewardIssuance(rewardIssuance.getId());
+//        assertEquals(postModified.getState(), RewardIssuance.State.REWARDED);
+//    }
 
     public UserDao getUserDao() {
         return userDao;

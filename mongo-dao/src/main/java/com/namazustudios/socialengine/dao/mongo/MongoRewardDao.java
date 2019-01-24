@@ -23,6 +23,7 @@ import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -79,7 +80,7 @@ public class MongoRewardDao implements RewardDao {
         final MongoReward mongoReward = query.get();
 
         if (mongoReward == null) {
-            throw new LeaderboardNotFoundException("Reward " + id + " not found.");
+            throw new NotFoundException("Reward " + id + " not found.");
         }
 
         return mongoReward;
@@ -98,7 +99,8 @@ public class MongoRewardDao implements RewardDao {
         }
 
         getObjectIndex().index(mongoReward);
-        return getDozerMapper().map(getDatastore().get(mongoReward), Reward.class);
+        final MongoReward fetchedMongoReward = getDatastore().get(mongoReward);
+        return getDozerMapper().map(fetchedMongoReward, Reward.class);
     }
 
     @Override

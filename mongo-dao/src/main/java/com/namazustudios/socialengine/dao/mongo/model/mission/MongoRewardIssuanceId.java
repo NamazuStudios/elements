@@ -39,7 +39,7 @@ public class MongoRewardIssuanceId {
     public MongoRewardIssuanceId(final String hexString) {
 
         final byte [] bytes = Base64.getDecoder().decode(hexString);
-        if (bytes.length > (OBJECT_ID_LENGTH * 2)) throw new IllegalArgumentException();
+        if (bytes.length <= (OBJECT_ID_LENGTH * 2)) throw new IllegalArgumentException();
 
         final byte[] objectIdBytes = new byte[OBJECT_ID_LENGTH];
 
@@ -75,12 +75,14 @@ public class MongoRewardIssuanceId {
         if (context.length() == 0) {
             throw new IllegalArgumentException("context must not be empty.");
         }
+
+        this.context = context;
     }
 
     public byte[] toByteArray() {
 
         final byte[] userIdBytes = userId.toByteArray();
-        final byte[] rewardIdBytes = userId.toByteArray();
+        final byte[] rewardIdBytes = rewardId.toByteArray();
         final byte[] contextBytes = context.getBytes(CONTEXT_CHARSET);
         final byte[] bytes = new byte[OBJECT_ID_LENGTH * 2 + contextBytes.length];
 
