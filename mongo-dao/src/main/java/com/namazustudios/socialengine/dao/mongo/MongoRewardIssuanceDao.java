@@ -115,18 +115,19 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
     @Override
     public RewardIssuance createRewardIssuance(final RewardIssuance rewardIssuance) {
+        if (rewardIssuance.getType() == null) {
+            rewardIssuance.setType(NON_PERSISTENT);
+        }
+        rewardIssuance.setState(ISSUED);
+        rewardIssuance.setUuid(randomUUID().toString());
+        if (rewardIssuance.getType() == PERSISTENT) {
+            rewardIssuance.setExpirationTimestamp(null);
+        }
 
         getValidationHelper().validateModel(rewardIssuance, ValidationGroups.Insert.class);
 
+
         final MongoRewardIssuance mongoRewardIssuance = getDozerMapper().map(rewardIssuance, MongoRewardIssuance.class);
-        if (mongoRewardIssuance.getType() == null) {
-            mongoRewardIssuance.setType(NON_PERSISTENT);
-        }
-        mongoRewardIssuance.setState(ISSUED);
-        mongoRewardIssuance.setUuid(randomUUID().toString());
-        if (mongoRewardIssuance.getType() == PERSISTENT) {
-            mongoRewardIssuance.setExpirationTimestamp(null);
-        }
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(rewardIssuance.getUser().getId());
         final MongoReward mongoReward = getMongoRewardDao().getMongoReward(rewardIssuance.getReward().getId());
@@ -148,11 +149,13 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
     @Override
     public RewardIssuance updateExpirationTimestamp(RewardIssuance rewardIssuance, long expirationTimestamp) {
-        if (REDEEMED.equals(rewardIssuance.getState())) {
-            throw new InvalidDataException("Cannot update expirationTimestamp for already-redeemed issuance.");
-        }
-        if (PERSISTENT.equals(rewardIssuance.getType())) {
-            throw new InvalidDataException("Cannot update expirationTimestamp for a PERSISTENT type issuance.");
+        if (expirationTimestamp >= 0) {
+            if (REDEEMED.equals(rewardIssuance.getState())) {
+                throw new InvalidDataException("Cannot update expirationTimestamp for already-redeemed issuance.");
+            }
+            if (PERSISTENT.equals(rewardIssuance.getType())) {
+                throw new InvalidDataException("Cannot update expirationTimestamp for a PERSISTENT type issuance.");
+            }
         }
 
         final MongoRewardIssuanceId mongoRewardIssuanceId = parseOrThrowNotFoundException(rewardIssuance.getId());
@@ -209,6 +212,10 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     private MongoInventoryItem doRedeem(final RewardIssuance rewardIssuance) throws ContentionException {
 
         final MongoRewardIssuance mongoRewardIssuance = getMongoRewardIssuance(rewardIssuance.getId());
+
+        if (REDEEMED.equals(mongoRewardIssuance.getState())) {
+            throw new InvalidDataException("Cannot perform redemption on already-redeemed issuance.");
+        }
 
         final Query<MongoInventoryItem> query = getDatastore().createQuery(MongoInventoryItem.class);
         final UpdateOperations<MongoInventoryItem> updates = getDatastore().createUpdateOperations(MongoInventoryItem.class);
@@ -271,8 +278,9 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
             return null;
         }
 
+        final MongoRewardIssuanceId mongoRewardIssuanceId = parseOrThrowNotFoundException(rewardIssuance.getId());
         final Query<MongoRewardIssuance> query = getDatastore().createQuery(MongoRewardIssuance.class);
-        query.field("_id").equal(rewardIssuance.getId());
+        query.field("_id").equal(mongoRewardIssuanceId);
 
         final UpdateOperations<MongoRewardIssuance> updates = getDatastore().createUpdateOperations(MongoRewardIssuance.class);
         updates.set("state", REDEEMED);
@@ -287,7 +295,7 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     @Override
     public void delete(String id) {
         final MongoRewardIssuanceId mongoRewardIssuanceId = parseOrThrowNotFoundException(id);
-        final WriteResult writeResult = getDatastore().delete(MongoRewardIssuance.class, id);
+        final WriteResult writeResult = getDatastore().delete(MongoRewardIssuance.class, mongoRewardIssuanceId);
 
         if (writeResult.getN() == 0) {
             throw new NotFoundException("Pending Reward not found: " + mongoRewardIssuanceId);

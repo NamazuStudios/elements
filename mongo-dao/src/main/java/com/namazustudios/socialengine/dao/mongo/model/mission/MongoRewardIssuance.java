@@ -15,7 +15,7 @@ import java.util.Objects;
 @Entity(value = "progress_pending_award", noClassnameStored = true)
 public class MongoRewardIssuance {
 
-    private static final int EXPIRY_TIME_SECONDS = 60;
+    private static final int EXPIRY_TIME_SECONDS = 0;
 
     @Id
     private MongoRewardIssuanceId objectId;
@@ -38,7 +38,7 @@ public class MongoRewardIssuance {
 
     private Map<String, Object> metadata;
 
-    @Indexed(options = @IndexOptions(expireAfterSeconds = EXPIRY_TIME_SECONDS))
+    @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
     private Timestamp expirationTimestamp;
 
     @Indexed

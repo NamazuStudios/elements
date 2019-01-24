@@ -32,10 +32,12 @@ public class RewardIssuance implements Serializable {
     @ApiModelProperty("The User to receive the reward.")
     private User user;
 
-    @Null(groups={Create.class})
+    @Null(groups={Create.class, Update.class})
     @NotNull
     @ApiModelProperty("The state of the reward. On creation, this is automatically assigned to be ISSUED. If the " +
-            "current value of the state is REDEEMED, then the state is no longer allowed to be updated.")
+            "current value of the state is REDEEMED, then the state is no longer allowed to be updated. This value" +
+            "may not be directly modified--the redeem DAO method should be used instead to perform the redemption " +
+            "process.")
     private State state;
 
     @ApiModelProperty("The reward to issue when this issuance is redeemed.")
@@ -76,7 +78,9 @@ public class RewardIssuance implements Serializable {
     private Map<String, Object> metadata;
 
     @ApiModelProperty("Optionally define when the issuance should expire. This value may be updated to extend " +
-            "when the expiration occurs. When set, this value must be greater than the current time on the server.")
+            "when the expiration occurs. When set, this value must be greater than the current time on the server." +
+            "Note that the record may not actually be deleted for up to sixty seconds after the time noted in the" +
+            "timestamp.")
     private Long expirationTimestamp;
 
     @Null(groups={Create.class, Update.class})
