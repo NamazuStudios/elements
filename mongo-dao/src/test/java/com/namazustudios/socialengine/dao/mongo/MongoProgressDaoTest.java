@@ -49,6 +49,8 @@ public class MongoProgressDaoTest  {
 
     private RewardIssuanceDao rewardIssuanceDao;
 
+    private RewardDao rewardDao;
+
     private Application testApplication;
 
     private Item testFiniteItem;
@@ -164,7 +166,8 @@ public class MongoProgressDaoTest  {
         reward.setItem(item);
         reward.setQuantity(quantity);
         reward.addMetadata("bar", 100);
-        return reward;
+        final Reward createdReward = getRewardDao().createReward(reward);
+        return createdReward;
     }
 
     @DataProvider
@@ -302,7 +305,6 @@ public class MongoProgressDaoTest  {
 
             final RewardIssuance rewardIssuance = progress.getRewardIssuances().get(expectedRewards - 1);
             assertNotNull(rewardIssuance.getId());
-//            assertEquals(rewardIssuance.getStep(), step);
             assertEquals(rewardIssuance.getReward(), step.getRewards().get(0));
             assertEquals(rewardIssuance.getState(), ISSUED);
 
@@ -318,23 +320,22 @@ public class MongoProgressDaoTest  {
         final List<InventoryItem> inventoryItemList = progressPagination.getObjects()
             .stream()
             .flatMap(progress -> progress.getRewardIssuances().stream())
-            .map(pr -> getRewardIssuanceDao().redeem(pr))
+            .map(ri -> getRewardIssuanceDao().redeem(ri))
             .collect(toList());
 
         progressPagination.getObjects()
             .stream()
             .flatMap(progress -> progress.getRewardIssuances().stream())
-            .map(pr -> getRewardIssuanceDao().redeem(pr))
-            .forEach(pr -> {
+            .forEach(ri -> {
 
                 try {
-                    getRewardIssuanceDao().delete(pr.getId());
+                    getRewardIssuanceDao().delete(ri.getId());
                 } catch (NotFoundException nfe) {
                     // pass
                 }
 
                 try {
-                    getRewardIssuanceDao().getRewardIssuance(pr.getId());
+                    getRewardIssuanceDao().getRewardIssuance(ri.getId());
                 } catch (NotFoundException nfe) {
                     return;
                 }
@@ -345,7 +346,7 @@ public class MongoProgressDaoTest  {
 
         assertTrue(inventoryItemList.size() > 0);
         inventoryItemList.stream().forEach(ii -> getInventoryItemDao().getInventoryItem(ii.getId()));
-        progressPagination.getObjects().stream().forEach(pr -> getProgressDao().getProgress(pr.getId()));
+        progressPagination.getObjects().stream().forEach(ri -> getProgressDao().getProgress(ri.getId()));
         progressPagination.forEach(progress -> getProgressDao().deleteProgress(progress.getId()));
 
     }
@@ -471,6 +472,15 @@ public class MongoProgressDaoTest  {
     @Inject
     public void setRewardIssuanceDao(RewardIssuanceDao rewardIssuanceDao) {
         this.rewardIssuanceDao = rewardIssuanceDao;
+    }
+
+    public RewardDao getRewardDao() {
+        return rewardDao;
+    }
+
+    @Inject
+    public void setRewardDao(RewardDao rewardDao) {
+        this.rewardDao = rewardDao;
     }
 
 }

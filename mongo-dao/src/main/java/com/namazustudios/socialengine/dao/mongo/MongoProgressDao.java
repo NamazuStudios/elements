@@ -12,9 +12,11 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.mission.Progress;
+import com.namazustudios.socialengine.model.mission.Reward;
 import com.namazustudios.socialengine.model.mission.RewardIssuance;
 import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -72,6 +74,8 @@ public class MongoProgressDao implements ProgressDao {
     private MongoMissionDao mongoMissionDao;
 
     private MongoProfileDao mongoProfileDao;
+
+    private MongoRewardIssuanceDao rewardIssuanceDao;
 
     @Override
     public Pagination<Progress> getProgresses(final Profile profile, final int offset, final int count,
@@ -351,20 +355,24 @@ public class MongoProgressDao implements ProgressDao {
 
                     final Progress progress = getDozerMapper().map(mongoProgress, Progress.class);
                     final Step __step = getDozerMapper().map(_step, Step.class);
+                    final Reward reward = getDozerMapper().map(r, Reward.class);
+                    final User user = getDozerMapper().map(mongoUser, User.class);
                     final Map<String, Object> metadata = generateMissionProgressMetadata(progress, __step);
 
-                    final MongoRewardIssuance issuance = new MongoRewardIssuance();
-                    issuance.setObjectId(mongoRewardIssuanceId);
-                    issuance.setReward(r);
-                    issuance.setUser(mongoUser);
-                    issuance.setState(ISSUED);
+                    final RewardIssuance issuance = new RewardIssuance();
+                    issuance.setReward(reward);
+                    issuance.setUser(user);
                     issuance.setType(PERSISTENT);
                     issuance.setSource(MISSION_PROGRESS_SOURCE);
                     issuance.setContext(context);
                     issuance.setMetadata(metadata);
 
-                    getDatastore().insert(issuance);
-                    return issuance;
+                    final RewardIssuance createdRewardIssuance = getRewardIssuanceDao().createRewardIssuance(issuance);
+
+                    final MongoRewardIssuance mongoRewardIssuance =
+                            getDozerMapper().map(createdRewardIssuance, MongoRewardIssuance.class);
+
+                    return mongoRewardIssuance;
                 }).collect(toList());
 
             updates.push("rewardIssuances", rewardIssuances);
@@ -481,6 +489,15 @@ public class MongoProgressDao implements ProgressDao {
     @Inject
     public void setMongoProfileDao(MongoProfileDao mongoProfileDao) {
         this.mongoProfileDao = mongoProfileDao;
+    }
+
+    public MongoRewardIssuanceDao getRewardIssuanceDao() {
+        return rewardIssuanceDao;
+    }
+
+    @Inject
+    public void setRewardIssuanceDao(MongoRewardIssuanceDao rewardIssuanceDao) {
+        this.rewardIssuanceDao = rewardIssuanceDao;
     }
 
 }
