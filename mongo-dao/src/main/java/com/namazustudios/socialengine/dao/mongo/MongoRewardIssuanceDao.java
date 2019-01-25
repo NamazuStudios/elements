@@ -28,6 +28,7 @@ import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.omg.CosNaming.NamingContextPackage.NotFound;
 
 import javax.inject.Inject;
 import java.sql.Timestamp;
@@ -111,7 +112,21 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     }
 
     @Override
-    public RewardIssuance createRewardIssuance(final RewardIssuance rewardIssuance) {
+    public RewardIssuance getOrCreateRewardIssuance(final RewardIssuance rewardIssuance) {
+        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(rewardIssuance.getUser().getId());
+        final MongoReward mongoReward = getMongoRewardDao().getMongoReward(rewardIssuance.getReward().getId());
+        final String context = rewardIssuance.getContext();
+        final MongoRewardIssuanceId mongoRewardIssuanceId =
+                new MongoRewardIssuanceId(mongoUser.getObjectId(), mongoReward.getObjectId(), context);
+
+        try {
+            final MongoRewardIssuance existingIssuance = getMongoRewardIssuance(mongoRewardIssuanceId);
+            return getDozerMapper().map(getDatastore().get(existingIssuance), RewardIssuance.class);
+        }
+        catch (NotFoundException e) {
+
+        }
+
         if (rewardIssuance.getType() == null) {
             rewardIssuance.setType(NON_PERSISTENT);
         }
@@ -126,17 +141,13 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
         final MongoRewardIssuance mongoRewardIssuance = getDozerMapper().map(rewardIssuance, MongoRewardIssuance.class);
 
-        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(rewardIssuance.getUser().getId());
-        final MongoReward mongoReward = getMongoRewardDao().getMongoReward(rewardIssuance.getReward().getId());
-        final String context = rewardIssuance.getContext();
-        final MongoRewardIssuanceId mongoRewardIssuanceId =
-                new MongoRewardIssuanceId(mongoUser.getObjectId(), mongoReward.getObjectId(), context);
+
         mongoRewardIssuance.setObjectId(mongoRewardIssuanceId);
 
         try {
             getDatastore().insert(mongoRewardIssuance);
         } catch (DuplicateKeyException e) {
-            throw new RewardIssuanceDuplicateException(e);
+            throw new DuplicateException(e);
         }
 
         return getDozerMapper().map(getDatastore().get(mongoRewardIssuance), RewardIssuance.class);

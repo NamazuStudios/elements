@@ -52,12 +52,13 @@ public interface RewardIssuanceDao {
     Pagination<RewardIssuance> getRewardIssuances(User user, int offset, int count, Set<State> states);
 
     /**
-     * Creates an instance of {@link RewardIssuance}. The issuance will be set to a state of {@link State#ISSUED}.
+     * Gets or creates an instance of {@link RewardIssuance}. If created, the issuance will be set to a
+     * state of {@link State#ISSUED}.
      *
      * @param rewardIssuance the instance of {@link RewardIssuance} to create
      * @return the {@link RewardIssuance} instance
      */
-    RewardIssuance createRewardIssuance(RewardIssuance rewardIssuance);
+    RewardIssuance getOrCreateRewardIssuance(RewardIssuance rewardIssuance);
 
     /**
      * Updates the given issuance to a new expiration timestamp. If a negative value is provided, the value will be

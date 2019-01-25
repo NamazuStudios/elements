@@ -22,11 +22,9 @@ import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
-import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -42,13 +40,11 @@ import java.util.Set;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgressId.parseOrThrowNotFoundException;
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.*;
-import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.*;
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.Type.*;
 import static java.lang.Math.abs;
 import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
@@ -368,7 +364,7 @@ public class MongoProgressDao implements ProgressDao {
                     issuance.setContext(context);
                     issuance.setMetadata(metadata);
 
-                    final RewardIssuance createdRewardIssuance = getRewardIssuanceDao().createRewardIssuance(issuance);
+                    final RewardIssuance createdRewardIssuance = getRewardIssuanceDao().getOrCreateRewardIssuance(issuance);
 
                     final MongoRewardIssuance mongoRewardIssuance =
                             getDozerMapper().map(createdRewardIssuance, MongoRewardIssuance.class);
