@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
-import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.RewardIssuanceDao;
 import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils.ContentionException;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
@@ -61,8 +60,6 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     private MongoItemDao mongoItemDao;
 
     private MongoConcurrentUtils mongoConcurrentUtils;
-
-    private ObjectIndex objectIndex;
 
     private ValidationHelper validationHelper;
 
@@ -139,10 +136,9 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         try {
             getDatastore().insert(mongoRewardIssuance);
         } catch (DuplicateKeyException e) {
-            throw new DuplicateException(e);
+            throw new RewardIssuanceDuplicateException(e);
         }
 
-        getObjectIndex().index(mongoRewardIssuance);
         return getDozerMapper().map(getDatastore().get(mongoRewardIssuance), RewardIssuance.class);
 
     }
@@ -198,8 +194,6 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         if (inventoryItem == null) {
             return null;
         }
-
-        getObjectIndex().index(inventoryItem);
 
         return getDozerMapper().map(inventoryItem, InventoryItem.class);
     }
@@ -363,15 +357,6 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     @Inject
     public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
         this.mongoConcurrentUtils = mongoConcurrentUtils;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public ValidationHelper getValidationHelper() {

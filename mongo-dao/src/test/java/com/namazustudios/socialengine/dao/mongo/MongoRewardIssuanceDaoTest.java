@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.RewardIssuanceDuplicateException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
@@ -162,7 +163,7 @@ public class MongoRewardIssuanceDaoTest {
                     getRewardIssuanceDao().createRewardIssuance(secondRewardIssuance);
             assertNull(secondCreatedRewardIssuance);
         }
-        catch (DuplicateException e) {
+        catch (RewardIssuanceDuplicateException e) {
             assertNotNull(e);
         }
     }
@@ -202,7 +203,7 @@ public class MongoRewardIssuanceDaoTest {
                     getRewardIssuanceDao().createRewardIssuance(secondRewardIssuance);
             assertNull(secondCreatedRewardIssuance);
         }
-        catch (DuplicateException e) {
+        catch (RewardIssuanceDuplicateException e) {
             assertNotNull(e);
         }
     }
