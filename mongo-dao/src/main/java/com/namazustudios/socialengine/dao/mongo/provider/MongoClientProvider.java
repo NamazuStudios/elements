@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo.provider;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientURI;
 import com.mongodb.ServerAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,8 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static java.lang.String.format;
 
 /**
  * Created by patricktwohig on 4/3/15.
@@ -28,6 +31,8 @@ public class MongoClientProvider implements Provider<MongoClient> {
 
     public static final String MONGO_DB_URLS = "com.namazustudios.socialengine.mongo.db.url";
 
+    public static final String MONGO_CLIENT_URI = "com.namazustudios.socialengine.mongo.client.uri";
+
     public static final String MONGO_MIN_CONNECTIONS = "com.namazustudios.socialengine.mongo.min.connections";
 
     public static final String MONGO_MAX_CONNECTIONS = "com.namazustudios.socialengine.mongo.max.connections";
@@ -36,12 +41,22 @@ public class MongoClientProvider implements Provider<MongoClient> {
 
     private int maxConnections;
 
-    private String mongoDbUrls;
+    private String mongoDbUrl;
+
+    private String mongoDbUri;
 
     @Override
     public MongoClient get() {
+        return !getMongoDbUrl().isEmpty() ? getWithLegacyOptions() :
+               !getMongoDbUri().isEmpty() ? getWithClientUri()     :
+               fail();
+    }
 
-        final List<ServerAddress> serverAddressList = Arrays.asList(mongoDbUrls.split(",")).stream().map(input -> {
+    private MongoClient getWithLegacyOptions() {
+
+        logger.info("Using legacy DB URL configuration.");
+
+        final List<ServerAddress> serverAddressList = Arrays.asList(mongoDbUrl.split(",")).stream().map(input -> {
 
             final URI uri;
 
@@ -65,12 +80,31 @@ public class MongoClientProvider implements Provider<MongoClient> {
         }).collect(Collectors.toList());
 
         final MongoClientOptions mongoClientOptions = MongoClientOptions.builder()
-            .minConnectionsPerHost(getMinConnections())
-            .connectionsPerHost(getMaxConnections())
-            .build();
+                .minConnectionsPerHost(getMinConnections())
+                .connectionsPerHost(getMaxConnections())
+                .build();
 
         return new MongoClient(serverAddressList, mongoClientOptions);
 
+    }
+
+    private MongoClient getWithClientUri() {
+
+        logger.info("Using MongoClient URI.");
+
+        final MongoClientOptions.Builder mongoClientOptionsBuilder = MongoClientOptions.builder()
+            .minConnectionsPerHost(getMinConnections())
+            .connectionsPerHost(getMaxConnections());
+
+        final MongoClientURI mongoClientURI = new MongoClientURI(getMongoDbUri(), mongoClientOptionsBuilder);
+
+        return new MongoClient(mongoClientURI);
+
+    }
+
+    private MongoClient fail() {
+        final String message = format("Must specify one of %s or %s", MONGO_DB_URLS, MONGO_CLIENT_URI);
+        throw new IllegalStateException(message);
     }
 
     public int getMinConnections() {
@@ -91,14 +125,22 @@ public class MongoClientProvider implements Provider<MongoClient> {
         this.maxConnections = maxConnections;
     }
 
-    public String getMongoDbUrls() {
-        return mongoDbUrls;
+    public String getMongoDbUrl() {
+        return mongoDbUrl;
     }
 
     @Inject
-    public void setMongoDbUrls(@Named(MONGO_DB_URLS) String mongoDbUrls) {
-        this.mongoDbUrls = mongoDbUrls;
+    public void setMongoDbUrl(@Named(MONGO_DB_URLS) String mongoDbUrl) {
+        this.mongoDbUrl = mongoDbUrl;
     }
 
+    public String getMongoDbUri() {
+        return mongoDbUri;
+    }
+
+    @Inject
+    public void setMongoDbUri(@Named(MONGO_CLIENT_URI) String mongoDbUri) {
+        this.mongoDbUri = mongoDbUri;
+    }
 
 }
