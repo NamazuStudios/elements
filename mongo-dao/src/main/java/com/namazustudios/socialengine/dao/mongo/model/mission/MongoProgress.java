@@ -10,7 +10,6 @@ import org.mongodb.morphia.annotations.*;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -50,7 +49,7 @@ public class MongoProgress {
     private int remaining;
 
     @Reference(ignoreMissing = true)
-    private List<MongoPendingReward> pendingRewards;
+    private List<MongoRewardIssuance> rewardIssuances;
 
     public MongoProgressId getObjectId() {
         return objectId;
@@ -116,12 +115,12 @@ public class MongoProgress {
         this.sequence = sequence;
     }
 
-    public List<MongoPendingReward> getPendingRewards() {
-        return pendingRewards;
+    public List<MongoRewardIssuance> getRewardIssuances() {
+        return rewardIssuances;
     }
 
-    public void setPendingRewards(List<MongoPendingReward> pendingRewards) {
-        this.pendingRewards = pendingRewards;
+    public void setRewardIssuances(List<MongoRewardIssuance> rewardIssuances) {
+        this.rewardIssuances = rewardIssuances;
     }
 
     @Override
@@ -136,12 +135,12 @@ public class MongoProgress {
                 Objects.equals(getProfile(), that.getProfile()) &&
                 Objects.equals(getMission(), that.getMission()) &&
                 Objects.equals(getCurrentStep(), that.getCurrentStep()) &&
-                Objects.equals(getPendingRewards(), that.getPendingRewards());
+                Objects.equals(getRewardIssuances(), that.getRewardIssuances());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getProfile(), getMission(), getCurrentStep(), getRemaining(), getSequence(), getPendingRewards());
+        return Objects.hash(getObjectId(), getProfile(), getMission(), getCurrentStep(), getRemaining(), getSequence(), getRewardIssuances());
     }
 
     @Override
@@ -154,14 +153,14 @@ public class MongoProgress {
                 ", currentStep=" + getCurrentStep() +
                 ", remaining=" + remaining +
                 ", sequence=" + sequence +
-                ", pendingRewards=" + pendingRewards +
+                ", rewardIssuances=" + rewardIssuances +
                 '}';
     }
 
     @PostLoad
     public void clearNulls() {
-        if (pendingRewards != null) {
-            pendingRewards = pendingRewards.stream().filter(p -> p != null).collect(toList());
+        if (rewardIssuances != null) {
+            rewardIssuances = rewardIssuances.stream().filter(p -> p != null).collect(toList());
         }
     }
 
