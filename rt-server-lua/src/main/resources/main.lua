@@ -21,6 +21,9 @@ local pagination = require "namazu.pagination"
 
 local example_model = require "example.model"
 
+local manifest = {}
+manifest.model = {}
+
 manifest.model.foo = example_model.foo
 manifest.model.foo_pagination = pagination.manifest_for("foo")
 
@@ -330,3 +333,5 @@ manifest.http = {
     }
 
 }
+
+return manifest

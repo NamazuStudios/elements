@@ -23,19 +23,29 @@ public class LuaManifestLoaderTest {
 
     private ManifestLoader manifestLoader;
 
-    @Test
+    @Test()
+    public void testLoadAndRun() {
+        getManifestLoader().loadAndRun();
+    }
+
+    @Test(dependsOnMethods = "testLoadAndRun")
+    public void testClose() {
+        getManifestLoader().close();
+    }
+
+    @Test(dependsOnMethods = "testClose")
     public void testLoadModelManifest() {
         final ModelManifest modelManifest = getManifestLoader().getModelManifest();
         assertNotNull(modelManifest);
     }
 
-    @Test
+    @Test(dependsOnMethods = "testClose")
     public void testLoadHttpManifest() {
         final HttpManifest httpManifest = getManifestLoader().getHttpManifest();
         assertNotNull(httpManifest);
     }
 
-    @Test
+    @Test(dependsOnMethods = "testClose")
     public void testLoadSecurityManifest() {
         final SecurityManifest securityManifest = getManifestLoader().getSecurityManifest();
         assertNotNull(securityManifest);

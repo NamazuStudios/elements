@@ -41,6 +41,8 @@ public interface ManifestLoader extends AutoCloseable {
      */
     SecurityManifest getSecurityManifest();
 
+    void loadAndRun();
+
     /**
      * Closes the {@link ManifestLoader} as well as any open resources associated therein.  This also closes
      * the underlying {@link AssetLoader} which may be associated with this {@link ManifestLoader}.  If
