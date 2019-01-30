@@ -151,26 +151,26 @@ public class LuaManifestLoader implements ManifestLoader {
                 luaState.call(0, LuaState.MULTRET);
 
                 if (luaState.isTable(1)) {
-//                    luaState.getField(1, HTTP_TABLE);
-//                    HttpManifest httpManifest = luaState.toJavaObject(-1, HttpManifest.class);
-//                    if (httpManifest != null) {
-//                        scriptLogger.debug("Loaded Http Manifest");
-//                    }
-//                    this.setHttpManifest(httpManifest);
-//
-//                    luaState.getField(1, MODEL_TABLE);
-//                    ModelManifest modelManifest = luaState.toJavaObject(-1, ModelManifest.class);
-//                    if (httpManifest != null) {
-//                        scriptLogger.debug("Loaded Model Manifest");
-//                    }
-//                    this.setModelManifest(modelManifest);
-//
-//                    luaState.getField(1, SECURITY_TABLE);
-//                    SecurityManifest securityManifest = luaState.toJavaObject(-1, SecurityManifest.class);
-//                    if (httpManifest != null) {
-//                        scriptLogger.debug("Loaded Security Manifest");
-//                    }
-//                    this.setSecurityManifest(securityManifest);
+                    luaState.getField(1, HTTP_TABLE);
+                    HttpManifest httpManifest = luaState.toJavaObject(-1, HttpManifest.class);
+                    if (httpManifest != null) {
+                        scriptLogger.debug("Loaded Http Manifest");
+                    }
+                    this.setHttpManifest(httpManifest);
+
+                    luaState.getField(1, MODEL_TABLE);
+                    ModelManifest modelManifest = luaState.toJavaObject(-1, ModelManifest.class);
+                    if (httpManifest != null) {
+                        scriptLogger.debug("Loaded Model Manifest");
+                    }
+                    this.setModelManifest(modelManifest);
+
+                    luaState.getField(1, SECURITY_TABLE);
+                    SecurityManifest securityManifest = luaState.toJavaObject(-1, SecurityManifest.class);
+                    if (httpManifest != null) {
+                        scriptLogger.debug("Loaded Security Manifest");
+                    }
+                    this.setSecurityManifest(securityManifest);
 
                     luaState.getField(1, STARTUP_TABLE);
                     StartupManifest startupManifest = luaState.toJavaObject(-1, StartupManifest.class);

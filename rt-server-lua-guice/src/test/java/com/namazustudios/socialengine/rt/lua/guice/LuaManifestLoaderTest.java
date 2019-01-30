@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
+import com.namazustudios.socialengine.rt.manifest.startup.StartupManifest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -49,6 +50,12 @@ public class LuaManifestLoaderTest {
     public void testLoadSecurityManifest() {
         final SecurityManifest securityManifest = getManifestLoader().getSecurityManifest();
         assertNotNull(securityManifest);
+    }
+
+    @Test(dependsOnMethods = "testClose")
+    public void testLoadStartupManifest() {
+        final StartupManifest startupManifest = getManifestLoader().getStartupManifest();
+        assertNotNull(startupManifest);
     }
 
     public ManifestLoader getManifestLoader() {
