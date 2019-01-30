@@ -17,6 +17,8 @@
 local namazu_log = require "namazu.log"
 local pagination = require "namazu.pagination"
 
+local coroutine = require "coroutine"
+
 -- A simple example model which contains primitives
 
 local example_model = require "example.model"
@@ -332,6 +334,19 @@ manifest.http = {
 
     }
 
+}
+
+manifest.startup = { 
+    ["example.startup"] = {
+        operations = {
+            run_once = {
+                method = "run_once"
+            },
+            run_forever = {
+                method = "run_forever"
+            }
+        }
+    }
 }
 
 return manifest

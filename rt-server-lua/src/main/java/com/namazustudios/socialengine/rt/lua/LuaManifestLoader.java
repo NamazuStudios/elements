@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.rt.lua.builtin.*;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
+import com.namazustudios.socialengine.rt.manifest.startup.StartupManifest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +38,8 @@ public class LuaManifestLoader implements ManifestLoader {
 
     public static final String HTTP_TABLE = "http";
 
+    public static final String STARTUP_TABLE = "startup";
+
     private static final Logger logger = LoggerFactory.getLogger(LuaManifestLoader.class);
 
     private static final Logger scriptLogger = LoggerFactory.getLogger(MAIN_MANIFEST);
@@ -48,6 +51,8 @@ public class LuaManifestLoader implements ManifestLoader {
     private HttpManifest httpManifest;
 
     private SecurityManifest securityManifest;
+
+    private StartupManifest startupManifest;
 
     private AssetLoader assetLoader;
 
@@ -90,6 +95,15 @@ public class LuaManifestLoader implements ManifestLoader {
     @Override
     public SecurityManifest getSecurityManifest() {
         return securityManifest;
+    }
+
+    private void setStartupManifest(StartupManifest startupManifest) {
+        this.startupManifest = startupManifest;
+    }
+
+    @Override
+    public StartupManifest getStartupManifest() {
+        return startupManifest;
     }
 
     @Override
@@ -137,26 +151,34 @@ public class LuaManifestLoader implements ManifestLoader {
                 luaState.call(0, LuaState.MULTRET);
 
                 if (luaState.isTable(1)) {
-                    luaState.getField(1, HTTP_TABLE);
-                    HttpManifest httpManifest = luaState.toJavaObject(-1, HttpManifest.class);
-                    if (httpManifest != null) {
-                        scriptLogger.debug("Loaded Http Manifest");
-                    }
-                    this.setHttpManifest(httpManifest);
+//                    luaState.getField(1, HTTP_TABLE);
+//                    HttpManifest httpManifest = luaState.toJavaObject(-1, HttpManifest.class);
+//                    if (httpManifest != null) {
+//                        scriptLogger.debug("Loaded Http Manifest");
+//                    }
+//                    this.setHttpManifest(httpManifest);
+//
+//                    luaState.getField(1, MODEL_TABLE);
+//                    ModelManifest modelManifest = luaState.toJavaObject(-1, ModelManifest.class);
+//                    if (httpManifest != null) {
+//                        scriptLogger.debug("Loaded Model Manifest");
+//                    }
+//                    this.setModelManifest(modelManifest);
+//
+//                    luaState.getField(1, SECURITY_TABLE);
+//                    SecurityManifest securityManifest = luaState.toJavaObject(-1, SecurityManifest.class);
+//                    if (httpManifest != null) {
+//                        scriptLogger.debug("Loaded Security Manifest");
+//                    }
+//                    this.setSecurityManifest(securityManifest);
 
-                    luaState.getField(1, MODEL_TABLE);
-                    ModelManifest modelManifest = luaState.toJavaObject(-1, ModelManifest.class);
-                    if (httpManifest != null) {
-                        scriptLogger.debug("Loaded Model Manifest");
+                    luaState.getField(1, STARTUP_TABLE);
+                    StartupManifest startupManifest = luaState.toJavaObject(-1, StartupManifest.class);
+                    if (startupManifest != null) {
+                        scriptLogger.debug("Loaded Startup Manifest");
                     }
-                    this.setModelManifest(modelManifest);
+                    this.setStartupManifest(startupManifest);
 
-                    luaState.getField(1, SECURITY_TABLE);
-                    SecurityManifest securityManifest = luaState.toJavaObject(-1, SecurityManifest.class);
-                    if (httpManifest != null) {
-                        scriptLogger.debug("Loaded Security Manifest");
-                    }
-                    this.setSecurityManifest(securityManifest);
                 }
 
                 scriptLogger.debug("Finished Executing Script: {}", MAIN_MANIFEST);
