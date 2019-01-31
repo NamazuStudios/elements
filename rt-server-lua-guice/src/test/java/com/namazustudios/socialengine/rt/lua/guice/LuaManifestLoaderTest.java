@@ -26,7 +26,7 @@ public class LuaManifestLoaderTest {
 
     @Test()
     public void testLoadAndRun() {
-        getManifestLoader().loadAndRun();
+        getManifestLoader().loadAndRunIfNecessary();
     }
 
     @Test(dependsOnMethods = "testLoadAndRun")

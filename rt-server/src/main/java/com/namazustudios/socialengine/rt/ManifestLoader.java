@@ -31,7 +31,7 @@ public interface ManifestLoader extends AutoCloseable {
     /**
      * Gets the manifest for the HTTP mappings, if available.
      *
-     * @return the
+     * @return the {@link HttpManifest}
      */
     HttpManifest getHttpManifest();
 
@@ -42,9 +42,18 @@ public interface ManifestLoader extends AutoCloseable {
      */
     SecurityManifest getSecurityManifest();
 
+    /**
+     * Gets the {@link StartupManifest}, if available.
+     *
+     * @return the {@link StartupManifest}
+     */
     StartupManifest getStartupManifest();
 
-    void loadAndRun();
+    /**
+     * Loads and runs the lua script, populating the child manifests. If the load procedure has already occurred,
+     * calling this method will have no effect.
+     */
+    void loadAndRunIfNecessary();
 
     /**
      * Closes the {@link ManifestLoader} as well as any open resources associated therein.  This also closes
@@ -54,5 +63,11 @@ public interface ManifestLoader extends AutoCloseable {
      */
     @Override
     void close();
+
+    /**
+     * Returns whether or not the manifest loader has already loaded and closed the lua manifest.
+     * @return Whether or not the manifest has loaded and closed the manifest.
+     */
+    boolean getClosed();
 
 }

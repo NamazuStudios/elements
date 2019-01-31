@@ -70,12 +70,18 @@ public class LuaManifestLoader implements ManifestLoader {
 
     private final BuiltinManager builtinManager = new BuiltinManager(() -> luaState, () -> scriptLogger);
 
+    @Override
+    public boolean getClosed() {
+        return closed;
+    }
+
     private void setModelManifest(ModelManifest modelManifest) {
         this.modelManifest = modelManifest;
     }
 
     @Override
     public ModelManifest getModelManifest() {
+        loadAndRunIfNecessary();
         return modelManifest;
     }
 
@@ -85,6 +91,7 @@ public class LuaManifestLoader implements ManifestLoader {
 
     @Override
     public HttpManifest getHttpManifest() {
+        loadAndRunIfNecessary();
         return httpManifest;
     }
 
@@ -94,6 +101,7 @@ public class LuaManifestLoader implements ManifestLoader {
 
     @Override
     public SecurityManifest getSecurityManifest() {
+        loadAndRunIfNecessary();
         return securityManifest;
     }
 
@@ -103,7 +111,15 @@ public class LuaManifestLoader implements ManifestLoader {
 
     @Override
     public StartupManifest getStartupManifest() {
+        loadAndRunIfNecessary();
         return startupManifest;
+    }
+
+    @Override
+    public void loadAndRunIfNecessary() {
+        if (!closed) {
+            loadAndRun();
+        }
     }
 
     @Override
@@ -124,8 +140,7 @@ public class LuaManifestLoader implements ManifestLoader {
         }
     }
 
-    @Override
-    public void loadAndRun() {
+    private void loadAndRun() {
         synchronized (lock) {
             if (closed) {
                 throw new IllegalStateException("already closed");
@@ -178,7 +193,6 @@ public class LuaManifestLoader implements ManifestLoader {
                         scriptLogger.debug("Loaded Startup Manifest");
                     }
                     this.setStartupManifest(startupManifest);
-
                 }
 
                 scriptLogger.debug("Finished Executing Script: {}", MAIN_MANIFEST);
