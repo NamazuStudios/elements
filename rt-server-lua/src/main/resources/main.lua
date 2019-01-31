@@ -17,8 +17,6 @@
 local namazu_log = require "namazu.log"
 local pagination = require "namazu.pagination"
 
-local coroutine = require "coroutine"
-
 -- A simple example model which contains primitives
 
 local example_model = require "example.model"
