@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.manifest.startup.StartupManifest;
 import com.namazustudios.socialengine.rt.manifest.startup.StartupModule;
 import com.namazustudios.socialengine.rt.manifest.startup.StartupOperation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -36,6 +38,8 @@ public class SimpleContext implements Context {
 
     private Thread hook = new Thread(this::shutdown);
 
+    private static final Logger logger = LoggerFactory.getLogger(SimpleContext.class);
+
     @Override
     public void start() {
         getRuntime().addShutdownHook(hook);
@@ -53,11 +57,13 @@ public class SimpleContext implements Context {
             for (final StartupOperation startupOperation : startupOperationsByName.values()) {
                 String method = startupOperation.getMethod();
                 final Consumer<Throwable> failure = ex -> {
+                    logger.error("Startup exception caught for lua module: {}, lua method: {}.", module, method, ex);
                 };
 
                 final Consumer<Object> success = result -> {
                 };
 
+                // unused for now
                 final SimpleAttributes attributes = new SimpleAttributes();
 
                 getHandlerContext().invokeRetainedHandlerAsync(success, failure, attributes, module, method);
