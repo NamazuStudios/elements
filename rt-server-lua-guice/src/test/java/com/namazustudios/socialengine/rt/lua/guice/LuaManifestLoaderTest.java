@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
+import com.namazustudios.socialengine.rt.manifest.startup.StartupManifest;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -23,22 +24,38 @@ public class LuaManifestLoaderTest {
 
     private ManifestLoader manifestLoader;
 
-    @Test
+    @Test()
+    public void testLoadAndRun() {
+        getManifestLoader().loadAndRunIfNecessary();
+    }
+
+    @Test(dependsOnMethods = "testLoadAndRun")
+    public void testClose() {
+        getManifestLoader().close();
+    }
+
+    @Test(dependsOnMethods = "testClose")
     public void testLoadModelManifest() {
         final ModelManifest modelManifest = getManifestLoader().getModelManifest();
         assertNotNull(modelManifest);
     }
 
-    @Test
+    @Test(dependsOnMethods = "testClose")
     public void testLoadHttpManifest() {
         final HttpManifest httpManifest = getManifestLoader().getHttpManifest();
         assertNotNull(httpManifest);
     }
 
-    @Test
+    @Test(dependsOnMethods = "testClose")
     public void testLoadSecurityManifest() {
         final SecurityManifest securityManifest = getManifestLoader().getSecurityManifest();
         assertNotNull(securityManifest);
+    }
+
+    @Test(dependsOnMethods = "testClose")
+    public void testLoadStartupManifest() {
+        final StartupManifest startupManifest = getManifestLoader().getStartupManifest();
+        assertNotNull(startupManifest);
     }
 
     public ManifestLoader getManifestLoader() {

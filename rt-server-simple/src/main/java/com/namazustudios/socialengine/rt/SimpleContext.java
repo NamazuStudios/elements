@@ -1,8 +1,17 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.manifest.startup.StartupManifest;
+import com.namazustudios.socialengine.rt.manifest.startup.StartupModule;
+import com.namazustudios.socialengine.rt.manifest.startup.StartupOperation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import static java.lang.Runtime.getRuntime;
 
@@ -25,7 +34,11 @@ public class SimpleContext implements Context {
 
     private AssetLoader assetLoader;
 
+    private ManifestLoader manifestLoader;
+
     private Thread hook = new Thread(this::shutdown);
+
+    private static final Logger logger = LoggerFactory.getLogger(SimpleContext.class);
 
     @Override
     public void start() {
@@ -34,6 +47,28 @@ public class SimpleContext implements Context {
         getSchedulerContext().start();
         getIndexContext().start();
         getHandlerContext().start();
+        getManifestLoader().loadAndRunIfNecessary();
+        StartupManifest startupManifest = getManifestLoader().getStartupManifest();
+        for (final StartupModule startupModule : startupManifest.getModulesByName().values()) {
+            String module = startupModule.getModule();
+
+            final Map<String, StartupOperation> startupOperationsByName = startupModule.getOperationsByName();
+
+            for (final StartupOperation startupOperation : startupOperationsByName.values()) {
+                String method = startupOperation.getMethod();
+                final Consumer<Throwable> failure = ex -> {
+                    logger.error("Startup exception caught for lua module: {}, lua method: {}.", module, method, ex);
+                };
+
+                final Consumer<Object> success = result -> {
+                };
+
+                // unused for now
+                final SimpleAttributes attributes = new SimpleAttributes();
+
+                getHandlerContext().invokeRetainedHandlerAsync(success, failure, attributes, module, method);
+            }
+        }
     }
 
     @Override
@@ -51,6 +86,7 @@ public class SimpleContext implements Context {
         // Then stops all services
         getResourceLoader().close();
         getAssetLoader().close();
+        getManifestLoader().close();
 
     }
 
@@ -128,6 +164,15 @@ public class SimpleContext implements Context {
     @Inject
     public void setHandlerContext(HandlerContext handlerContext) {
         this.handlerContext = handlerContext;
+    }
+
+    public ManifestLoader getManifestLoader() {
+        return manifestLoader;
+    }
+
+    @Inject
+    public void setManifestLoader(ManifestLoader manifestLoader) {
+        this.manifestLoader = manifestLoader;
     }
 
 }
