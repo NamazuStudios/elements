@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.rt.lua.builtin.*;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
+import com.namazustudios.socialengine.rt.manifest.startup.StartupManifest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,11 +38,21 @@ public class LuaManifestLoader implements ManifestLoader {
 
     public static final String HTTP_TABLE = "http";
 
+    public static final String STARTUP_TABLE = "startup";
+
     private static final Logger logger = LoggerFactory.getLogger(LuaManifestLoader.class);
 
     private static final Logger scriptLogger = LoggerFactory.getLogger(MAIN_MANIFEST);
 
     private static final JavaFunction print = new ScriptLogger(s -> scriptLogger.info("{}", s));
+
+    private ModelManifest modelManifest;
+
+    private HttpManifest httpManifest;
+
+    private SecurityManifest securityManifest;
+
+    private StartupManifest startupManifest;
 
     private AssetLoader assetLoader;
 
@@ -60,18 +71,55 @@ public class LuaManifestLoader implements ManifestLoader {
     private final BuiltinManager builtinManager = new BuiltinManager(() -> luaState, () -> scriptLogger);
 
     @Override
+    public boolean getClosed() {
+        return closed;
+    }
+
+    private void setModelManifest(ModelManifest modelManifest) {
+        this.modelManifest = modelManifest;
+    }
+
+    @Override
     public ModelManifest getModelManifest() {
-        return loadIfNecessaryAndFetchFromManifestTable(MODEL_TABLE, ModelManifest.class);
+        loadAndRunIfNecessary();
+        return modelManifest;
+    }
+
+    private void setHttpManifest(HttpManifest httpManifest) {
+        this.httpManifest = httpManifest;
     }
 
     @Override
     public HttpManifest getHttpManifest() {
-        return loadIfNecessaryAndFetchFromManifestTable(HTTP_TABLE, HttpManifest.class);
+        loadAndRunIfNecessary();
+        return httpManifest;
+    }
+
+    private void setSecurityManifest(SecurityManifest securityManifest) {
+        this.securityManifest = securityManifest;
     }
 
     @Override
     public SecurityManifest getSecurityManifest() {
-        return loadIfNecessaryAndFetchFromManifestTable(SECURITY_TABLE, SecurityManifest.class);
+        loadAndRunIfNecessary();
+        return securityManifest;
+    }
+
+    private void setStartupManifest(StartupManifest startupManifest) {
+        this.startupManifest = startupManifest;
+    }
+
+    @Override
+    public StartupManifest getStartupManifest() {
+        loadAndRunIfNecessary();
+        return startupManifest;
+    }
+
+    @Override
+    public void loadAndRunIfNecessary() {
+        if (!closed) {
+            loadAndRun();
+        }
     }
 
     @Override
@@ -92,17 +140,14 @@ public class LuaManifestLoader implements ManifestLoader {
         }
     }
 
-    private <T> T loadIfNecessaryAndFetchFromManifestTable(final String table, Class<T> tClass) {
+    private void loadAndRun() {
         synchronized (lock) {
-            loadAndRunIfNecessary();
-            return fromManifestTable(table, tClass);
-        }
-    }
+            if (closed) {
+                throw new IllegalStateException("already closed");
+            } else if (luaState != null) {
+                return;
+            }
 
-    private void loadAndRunIfNecessary() {
-        if (closed) {
-            throw new IllegalStateException("already closed");
-        } else if (luaState == null) {
             try (final InputStream inputStream = getAssetLoader().open(MAIN_MANIFEST)) {
 
                 luaState = getLuaStateProvider().get();
@@ -113,14 +158,44 @@ public class LuaManifestLoader implements ManifestLoader {
                 builtinManager.installBuiltin(new JavaObjectBuiltin<>(ATTRIBUTES_MODULE, emptyAttributes()));
                 builtinManager.installBuiltin(new LoggerDetailBuiltin(() -> logger));
 
-                createManifestTables();
                 setupFunctionOverrides();
 
                 luaState.load(inputStream, MAIN_MANIFEST, "bt");
                 scriptLogger.debug("Loaded Script: {}", MAIN_MANIFEST);
 
-                luaState.call(0, 0);
-                scriptLogger.debug("Executed Script: {}", MAIN_MANIFEST);
+                luaState.call(0, LuaState.MULTRET);
+
+                if (luaState.isTable(1)) {
+                    luaState.getField(1, HTTP_TABLE);
+                    HttpManifest httpManifest = luaState.toJavaObject(-1, HttpManifest.class);
+                    if (httpManifest != null) {
+                        scriptLogger.debug("Loaded Http Manifest");
+                    }
+                    this.setHttpManifest(httpManifest);
+
+                    luaState.getField(1, MODEL_TABLE);
+                    ModelManifest modelManifest = luaState.toJavaObject(-1, ModelManifest.class);
+                    if (httpManifest != null) {
+                        scriptLogger.debug("Loaded Model Manifest");
+                    }
+                    this.setModelManifest(modelManifest);
+
+                    luaState.getField(1, SECURITY_TABLE);
+                    SecurityManifest securityManifest = luaState.toJavaObject(-1, SecurityManifest.class);
+                    if (httpManifest != null) {
+                        scriptLogger.debug("Loaded Security Manifest");
+                    }
+                    this.setSecurityManifest(securityManifest);
+
+                    luaState.getField(1, STARTUP_TABLE);
+                    StartupManifest startupManifest = luaState.toJavaObject(-1, StartupManifest.class);
+                    if (startupManifest != null) {
+                        scriptLogger.debug("Loaded Startup Manifest");
+                    }
+                    this.setStartupManifest(startupManifest);
+                }
+
+                scriptLogger.debug("Finished Executing Script: {}", MAIN_MANIFEST);
 
             } catch (IOException ex) {
                 logger.error("Caught IO exception reading manifest {}.", MAIN_MANIFEST, ex);
@@ -135,39 +210,6 @@ public class LuaManifestLoader implements ManifestLoader {
     private void setupFunctionOverrides() {
         luaState.pushJavaFunction(print);
         luaState.setGlobal(Constants.PRINT_FUNCTION);
-    }
-
-    private void createManifestTables() {
-
-        // manifest
-        luaState.newTable();
-
-        // manifest.http
-        luaState.newTable();
-        luaState.setField(-2, HTTP_TABLE);
-
-        // manifest.model
-        luaState.newTable();
-        luaState.setField(-2, MODEL_TABLE);
-
-        // manifest.security
-        luaState.newTable();
-        luaState.setField(-2, SECURITY_TABLE);
-
-        // Sets manifest to global table.
-        luaState.setGlobal(MANIFEST_TABLE);
-
-    }
-
-    private <T> T fromManifestTable(final String table, final Class<T> tClass) {
-        try {
-            luaState.getGlobal(MANIFEST_TABLE);
-            luaState.getField(1, table);
-            return luaState.toJavaObject(-1, tClass);
-        } catch (ClassCastException | LuaException ex) {
-            logger.error("Caught exception reading manifest {}.", MAIN_MANIFEST, ex);
-            throw new BadManifestException(ex);
-        }
     }
 
     public AssetLoader getAssetLoader() {

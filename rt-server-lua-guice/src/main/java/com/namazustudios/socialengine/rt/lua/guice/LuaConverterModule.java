@@ -22,6 +22,7 @@ public class LuaConverterModule extends AbstractModule {
         multiBinder.addBinding().to(HttpManifestConverter.class);
         multiBinder.addBinding().to(ModelManifestConverter.class);
         multiBinder.addBinding().to(SecurityManifestConverter.class);
+        multiBinder.addBinding().to(StartupManifestConverter.class);
 
         bind(LuaState.class).toProvider(LuaStateProvider.class);
         bind(Converter.class).to(DelegatingConverter.class).asEagerSingleton();

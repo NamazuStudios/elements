@@ -24,7 +24,8 @@ public class DelegatingConverter implements Converter {
 
     @Override
     public <T> T convertLuaValue(LuaState luaState, int index, Class<T> formalType) {
-        return getConverterForLuaValue(luaState, index, formalType).convertLuaValue(luaState, index, formalType);
+        Converter converter = getConverterForLuaValue(luaState, index, formalType);
+        return converter.convertLuaValue(luaState, index, formalType);
     }
 
     private Converter getConverterForLuaValue(LuaState luaState, int index, Class<?> formalType) {

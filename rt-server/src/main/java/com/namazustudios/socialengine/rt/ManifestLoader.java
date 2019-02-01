@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
+import com.namazustudios.socialengine.rt.manifest.startup.StartupManifest;
 
 /**
  * Cooperates with the {@link AssetLoader} to load manifest instances such as {@link HttpManifest}.  This is used
@@ -30,7 +31,7 @@ public interface ManifestLoader extends AutoCloseable {
     /**
      * Gets the manifest for the HTTP mappings, if available.
      *
-     * @return the
+     * @return the {@link HttpManifest}
      */
     HttpManifest getHttpManifest();
 
@@ -42,6 +43,19 @@ public interface ManifestLoader extends AutoCloseable {
     SecurityManifest getSecurityManifest();
 
     /**
+     * Gets the {@link StartupManifest}, if available.
+     *
+     * @return the {@link StartupManifest}
+     */
+    StartupManifest getStartupManifest();
+
+    /**
+     * Loads and runs the lua script, populating the child manifests. If the load procedure has already occurred,
+     * calling this method will have no effect.
+     */
+    void loadAndRunIfNecessary();
+
+    /**
      * Closes the {@link ManifestLoader} as well as any open resources associated therein.  This also closes
      * the underlying {@link AssetLoader} which may be associated with this {@link ManifestLoader}.  If
      * pooling or sharing resources of {@link AssetLoader} instances is desired, then something such as
@@ -49,5 +63,11 @@ public interface ManifestLoader extends AutoCloseable {
      */
     @Override
     void close();
+
+    /**
+     * Returns whether or not the manifest loader has already loaded and closed the lua manifest.
+     * @return Whether or not the manifest has loaded and closed the manifest.
+     */
+    boolean getClosed();
 
 }
