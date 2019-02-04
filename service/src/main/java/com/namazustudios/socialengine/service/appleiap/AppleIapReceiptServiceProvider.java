@@ -6,22 +6,20 @@ import com.namazustudios.socialengine.service.Services;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import static com.namazustudios.socialengine.service.Services.forbidden;
-
-public class AppleIapServiceProvider implements Provider<AppleIapService> {
+public class AppleIapReceiptServiceProvider implements Provider<AppleIapReceiptService> {
 
     private User user;
 
-    private Provider<AppleIapService> appleIapServiceProvider;
+    private Provider<AppleIapReceiptService> appleIapServiceProvider;
 
     @Override
-    public AppleIapService get() {
+    public AppleIapReceiptService get() {
         switch (getUser().getLevel()) {
             case SUPERUSER:
             case USER:
                 return getAppleIapServiceProvider().get();
             default:
-                return Services.forbidden(AppleIapService.class);
+                return Services.forbidden(AppleIapReceiptService.class);
        }
     }
 
@@ -34,12 +32,12 @@ public class AppleIapServiceProvider implements Provider<AppleIapService> {
         this.user = user;
     }
 
-    public Provider<AppleIapService> getAppleIapServiceProvider() {
+    public Provider<AppleIapReceiptService> getAppleIapServiceProvider() {
         return appleIapServiceProvider;
     }
 
     @Inject
-    public void setAppleIapServiceProvider(Provider<AppleIapService> appleIapServiceProvider) {
+    public void setAppleIapServiceProvider(Provider<AppleIapReceiptService> appleIapServiceProvider) {
         this.appleIapServiceProvider = appleIapServiceProvider;
     }
 

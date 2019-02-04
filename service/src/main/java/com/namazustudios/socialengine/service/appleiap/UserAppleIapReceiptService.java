@@ -1,17 +1,13 @@
 package com.namazustudios.socialengine.service.appleiap;
 
 import com.namazustudios.socialengine.dao.AppleIapReceiptDao;
-import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.InvalidDataException;
-import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
-import com.namazustudios.socialengine.model.mission.Mission;
 
 import javax.inject.Inject;
 
-public class UserAppleIapService implements AppleIapService {
+public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
     protected User user;
 

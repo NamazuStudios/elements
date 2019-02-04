@@ -10,7 +10,7 @@ import com.namazustudios.socialengine.model.mission.Mission;
 
 import java.util.Set;
 
-public interface AppleIapService {
+public interface AppleIapReceiptService {
 
     /**
      * Gets receipts for a given user specifying the offset and the count.
