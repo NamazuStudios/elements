@@ -58,7 +58,6 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
 
     private MongoDBUtils mongoDBUtils;
 
-
     private MongoUserDao mongoUserDao;
 
     @Override
