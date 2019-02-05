@@ -57,8 +57,6 @@ public class DefaultAppleIapVerifyReceiptInvoker implements AppleIapVerifyReceip
                 break;
         }
 
-
-
         final Response response = client
             .target(baseApi)
             .path(VERIFY_RECEIPT_PATH_COMPONENT)
@@ -80,7 +78,4 @@ public class DefaultAppleIapVerifyReceiptInvoker implements AppleIapVerifyReceip
 
         return appleIapVerifyReceiptResponse.getAppleIapGrandUnifiedReceipt();
     }
-
-
-
 }
