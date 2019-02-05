@@ -4,10 +4,11 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.Objects;
 
 @ApiModel
-public class CreateAppleIapReceipt {
+public class CreateAppleIapReceipt implements Serializable {
     @NotNull
     @ApiModelProperty("The base64-encoded string of the raw IAP receipt.")
     private String receiptData;
@@ -23,6 +24,14 @@ public class CreateAppleIapReceipt {
 
     public void setReceiptData(String receiptData) {
         this.receiptData = receiptData;
+    }
+
+    public CreateAppleIapReceiptEnvironment getCreateAppleIapReceiptEnvironment() {
+        return createAppleIapReceiptEnvironment;
+    }
+
+    public void setCreateAppleIapReceiptEnvironment(CreateAppleIapReceiptEnvironment createAppleIapReceiptEnvironment) {
+        this.createAppleIapReceiptEnvironment = createAppleIapReceiptEnvironment;
     }
 
     @Override
@@ -43,7 +52,7 @@ public class CreateAppleIapReceipt {
     public String toString() {
         return "CreateAppleIapReceipt{" +
                 "receiptData='" + receiptData + '\'' +
-                ", appleIapVerifyReceiptEnvironment=" + createAppleIapReceiptEnvironment +
+                ", createAppleIapReceiptEnvironment=" + createAppleIapReceiptEnvironment +
                 '}';
     }
 

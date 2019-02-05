@@ -10,10 +10,11 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.io.Serializable;
 import java.util.*;
 
 @ApiModel
-public class AppleIapReceipt {
+public class AppleIapReceipt implements Serializable {
     @ApiModelProperty("The original transaction identifier of the IAP. We use this as the key for the db object " +
             "as well as the {@link RewardIssuance} context. (For now, we do not persist the transaction_id, only " +
             "the original_transaction_id.)")
