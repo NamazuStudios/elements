@@ -45,7 +45,7 @@ public interface AppleIapReceiptDao {
      * @throws DuplicateException
      *     if the passed in AppleIapReceipt has a name that already exists
      */
-    AppleIapReceipt createAppleIapReceipt(AppleIapReceipt appleIapReceipt);
+    AppleIapReceipt getOrCreateAppleIapReceipt(AppleIapReceipt appleIapReceipt);
 
     /**
      * Deletes an existing receipt.

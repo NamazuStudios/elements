@@ -29,6 +29,7 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.omg.CosNaming.NamingContextPackage.NotFound;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,8 +92,16 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
     }
 
     @Override
-    public AppleIapReceipt createAppleIapReceipt(AppleIapReceipt appleIapReceipt) {
+    public AppleIapReceipt getOrCreateAppleIapReceipt(AppleIapReceipt appleIapReceipt) {
         getValidationHelper().validateModel(appleIapReceipt, Insert.class);
+
+        try {
+            AppleIapReceipt resultAppleIapReceipt = getAppleIapReceipt(appleIapReceipt.getOriginalTransactionIdentifier());
+            return resultAppleIapReceipt;
+        }
+        catch (NotFoundException e) {
+            // do nothing
+        }
 
         final MongoAppleIapReceipt mongoAppleIapReceipt =
                 getDozerMapper().map(appleIapReceipt, MongoAppleIapReceipt.class);

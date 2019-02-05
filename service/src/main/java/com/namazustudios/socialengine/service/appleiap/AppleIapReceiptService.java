@@ -7,7 +7,9 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
 import com.namazustudios.socialengine.model.mission.Mission;
+import com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker.AppleIapVerifyReceiptEnvironment;
 
+import java.util.List;
 import java.util.Set;
 
 public interface AppleIapReceiptService {
@@ -32,7 +34,7 @@ public interface AppleIapReceiptService {
     AppleIapReceipt getAppleIapReceipt(String originalTransactionIdentifier);
 
     /**
-     * Creates a new receipt.
+     * Finds a receipt in the db, or creates a new one if necessary.
      *
      * @return the {@link AppleIapReceipt} as it was written into the database
      * @throws InvalidDataException
@@ -40,7 +42,7 @@ public interface AppleIapReceiptService {
      * @throws DuplicateException
      *     if the passed in AppleIapReceipt has a name that already exists
      */
-    AppleIapReceipt createAppleIapReceipt(AppleIapReceipt appleIapReceipt);
+    AppleIapReceipt getOrCreateAppleIapReceipt(AppleIapReceipt appleIapReceipt);
 
     /**
      * Deletes an existing receipt.
@@ -48,5 +50,16 @@ public interface AppleIapReceiptService {
      * @param originalTransactionIdentifier the original apple transaction id
      */
     void deleteAppleIapReceipt(String originalTransactionIdentifier);
+
+    /**
+     * Verifies the given base64-encoded receiptData string against the Apple servers in the given environment.
+     *
+     * @param appleIapVerifyReceiptEnvironment
+     * @param receiptData
+     * @return the {@link AppleIapReceipt} as it was written into the database, or the existing database record
+     */
+    List<AppleIapReceipt> verifyAndCreateAppleIapReceiptsIfNeeded(
+            AppleIapVerifyReceiptEnvironment appleIapVerifyReceiptEnvironment,
+            String receiptData);
 
 }

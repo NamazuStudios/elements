@@ -23,15 +23,20 @@ public interface AppleIapVerifyReceiptInvoker {
 
     interface Builder {
         /**
-         * Specifies the base64-encoded receipt string to be verified against the given
-         * {@link AppleIapVerifyReceiptEnvironment}.
+         * Specifies the Apple environment against which to validate.
          *
          * @param appleIapVerifyReceiptEnvironment The desired Apple environment to point to for the request.
+         * @return this instance
+         */
+        Builder withEnvironment(AppleIapVerifyReceiptEnvironment appleIapVerifyReceiptEnvironment);
+
+        /**
+         * Specifies the base64-encoded receipt string to be verified.
+         *
          * @param receiptData The base64-encoded receipt string to be verified.
          * @return this instance
          */
-        Builder withReceiptData(AppleIapVerifyReceiptEnvironment appleIapVerifyReceiptEnvironment,
-                                String receiptData);
+        Builder withReceiptData(String receiptData);
 
         /**
          * Builds the instance of {@link AppleIapVerifyReceiptInvoker}.
