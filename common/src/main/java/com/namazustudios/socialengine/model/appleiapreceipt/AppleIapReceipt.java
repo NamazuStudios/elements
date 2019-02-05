@@ -130,7 +130,7 @@ public class AppleIapReceipt {
 
     @Override
     public String toString() {
-        return "Mission{" +
+        return "AppleIapReceipt{" +
                 ", originalTransactionIdentifier='" + originalTransactionIdentifier + '\'' +
                 ", user='" + user + '\'' +
                 ", receiptData='" + receiptData + '\'' +
