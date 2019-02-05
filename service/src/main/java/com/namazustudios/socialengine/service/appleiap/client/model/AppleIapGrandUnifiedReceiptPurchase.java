@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.appleiapreceipt;
+package com.namazustudios.socialengine.service.appleiap.client.model;
 
 import io.swagger.annotations.ApiModel;
 
