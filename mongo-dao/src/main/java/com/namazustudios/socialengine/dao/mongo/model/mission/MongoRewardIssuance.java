@@ -30,6 +30,7 @@ public class MongoRewardIssuance {
     @Reference
     private MongoReward reward;
 
+    @Indexed
     private String context;
 
     private Type type;

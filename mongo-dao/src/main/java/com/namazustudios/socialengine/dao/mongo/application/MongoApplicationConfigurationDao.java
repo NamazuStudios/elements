@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplicati
 import com.namazustudios.socialengine.exception.BadQueryException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
+import com.namazustudios.socialengine.model.application.ConfigurationCategory;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -18,6 +19,8 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by patricktwohig on 7/13/15.
@@ -33,6 +36,25 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     private AdvancedDatastore datastore;
 
     private MongoApplicationDao mongoApplicationDao;
+
+    @Override
+    public <T extends ApplicationConfiguration> List<T> getApplicationConfigurationsForApplication(
+            String applicationNameOrId,
+            ConfigurationCategory configurationCategory,
+            Class<T> type) {
+        final MongoApplication parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+
+        final Query<T> query = getDatastore().createQuery(type);
+        query.and(
+            query.criteria("parent").equal(parent),
+            query.criteria("category").equal(configurationCategory)
+        );
+
+        return query
+            .asList().stream()
+            .map(ac -> getBeanMapper().map(ac, type))
+            .collect(Collectors.toList());
+    }
 
     @Override
     public Pagination<ApplicationConfiguration> getActiveApplicationConfigurations(final String applicationNameOrId,

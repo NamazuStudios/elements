@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
 import com.namazustudios.socialengine.model.mission.Mission;
+import com.namazustudios.socialengine.model.mission.RewardIssuance;
 import com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker.AppleIapVerifyReceiptEnvironment;
 
 import java.util.List;
@@ -62,4 +63,11 @@ public interface AppleIapReceiptService {
             AppleIapVerifyReceiptEnvironment appleIapVerifyReceiptEnvironment,
             String receiptData);
 
+    /**
+     * Gets or creates a {@link RewardIssuance} in the db for each given {@link AppleIapReceipt}.
+     *
+     * @param appleIapReceipts
+     * @return
+     */
+    List<RewardIssuance> getOrCreateRewardIssuances(List<AppleIapReceipt> appleIapReceipts);
 }

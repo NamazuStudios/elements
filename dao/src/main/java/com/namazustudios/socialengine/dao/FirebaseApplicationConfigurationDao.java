@@ -1,14 +1,15 @@
 package com.namazustudios.socialengine.dao;
 
-import com.namazustudios.socialengine.exception.notification.firebase.FirebaseApplicationConfigurationNotFoundException;
+import com.namazustudios.socialengine.exception.notification.applicationconfiguration.ApplicationConfigurationNotFoundException;
 import com.namazustudios.socialengine.exception.notification.NotificationConfigurationException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
+import static com.namazustudios.socialengine.model.application.ConfigurationCategory.FIREBASE;
 import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
 
 import java.util.List;
 
-public interface FirebaseApplicationConfigurationDao {
+public interface FirebaseApplicationConfigurationDao extends ApplicationConfigurationDao {
 
     /**
      * Creates, or updates an inactive FirebaseApplicationConfiguration object.
@@ -37,26 +38,11 @@ public interface FirebaseApplicationConfigurationDao {
      * @return the single {@link FirebaseApplicationConfiguration} for the supplied {@link Application}
      */
     default FirebaseApplicationConfiguration getDefaultFirebaseApplicationConfigurationForApplication(final String applicationNameOrId) {
-        final List<FirebaseApplicationConfiguration> firebaseApplicationConfigurationList;
-        firebaseApplicationConfigurationList = getFirebaseApplicationConfigurationsForApplication(applicationNameOrId);
-
-        if (firebaseApplicationConfigurationList.isEmpty()) {
-            throw new FirebaseApplicationConfigurationNotFoundException("No Firebase configuration for " + applicationNameOrId);
-        } else if (firebaseApplicationConfigurationList.size() > 1) {
-            throw new NotificationConfigurationException(firebaseApplicationConfigurationList.size() + " Firebase configurations for " + applicationNameOrId);
-        } else {
-            return firebaseApplicationConfigurationList.get(0);
-        }
-
+        return getDefaultApplicationConfigurationForApplication(
+                applicationNameOrId,
+                FIREBASE,
+                FirebaseApplicationConfiguration.class);
     }
-
-    /**
-     * Returns all {@link FirebaseApplicationConfiguration} instances for the supplied {@link Application} id.
-     *
-     * @param applicationNameOrId
-     * @return a {@link List <FirebaseApplicationConfiguration>} associated with the {@link Application}
-     */
-    List<FirebaseApplicationConfiguration> getFirebaseApplicationConfigurationsForApplication(String applicationNameOrId);
 
     /**
      * Gets an {@link FirebaseApplicationConfiguration} with the specific name or identifier

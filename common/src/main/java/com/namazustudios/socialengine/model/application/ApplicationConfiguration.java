@@ -7,6 +7,10 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Ties the {@link Application} model to one of its associated profiles as represented by the {@link ConfigurationCategory}
@@ -30,6 +34,10 @@ public class ApplicationConfiguration implements Serializable {
     @ApiModelProperty("The parent application owning this configuration.")
     @NotNull
     private Application parent;
+
+    @ApiModelProperty("A mapping of IAP product identifiers to Item ids in the db")
+    // iap product ids to item ids
+    private Map<String, String> iapProductIdToItemIds;
 
     /**
      * Gets the actual profile ID.
@@ -103,27 +111,38 @@ public class ApplicationConfiguration implements Serializable {
         this.parent = parent;
     }
 
+    public Map<String, String> getIapProductIdToItemIds() {
+        return iapProductIdToItemIds;
+    }
+
+    public void setIapProductIdToItemIds(Map<String, String> iapProductIdToItemIds) {
+        this.iapProductIdToItemIds =
+                iapProductIdToItemIds != null ? iapProductIdToItemIds : Collections.emptyMap();
+    }
+
+    public void addIapProductIdToItemIds(final String productId, final String itemId) {
+
+        if (getIapProductIdToItemIds() == null) {
+            setIapProductIdToItemIds(new HashMap<>());
+        }
+
+        getIapProductIdToItemIds().put(productId, itemId);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ApplicationConfiguration)) return false;
-
+        if (o == null || getClass() != o.getClass()) return false;
         ApplicationConfiguration that = (ApplicationConfiguration) o;
-
-        if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
-        if (getCategory() != that.getCategory()) return false;
-        if (getUniqueIdentifier() != null ? !getUniqueIdentifier().equals(that.getUniqueIdentifier()) : that.getUniqueIdentifier() != null)
-            return false;
-        return getParent() != null ? getParent().equals(that.getParent()) : that.getParent() == null;
+        return Objects.equals(getId(), that.getId()) &&
+                getCategory() == that.getCategory() &&
+                Objects.equals(getUniqueIdentifier(), that.getUniqueIdentifier()) &&
+                Objects.equals(getParent(), that.getParent()) &&
+                Objects.equals(getIapProductIdToItemIds(), that.getIapProductIdToItemIds());
     }
 
     @Override
     public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + (getCategory() != null ? getCategory().hashCode() : 0);
-        result = 31 * result + (getUniqueIdentifier() != null ? getUniqueIdentifier().hashCode() : 0);
-        result = 31 * result + (getParent() != null ? getParent().hashCode() : 0);
-        return result;
+        return Objects.hash(getId(), getCategory(), getUniqueIdentifier(), getParent(), getIapProductIdToItemIds());
     }
-
 }

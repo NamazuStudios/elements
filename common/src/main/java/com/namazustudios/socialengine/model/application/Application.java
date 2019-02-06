@@ -1,11 +1,14 @@
 package com.namazustudios.socialengine.model.application;
 
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.model.ValidationGroups.*;
 import io.swagger.annotations.ApiModel;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Represents an application.  This serves as place to house the
@@ -40,6 +43,9 @@ public class Application implements Serializable {
     private String httpDocumentationUiUrl;
 
     private String httpTunnelEndpointUrl;
+
+    @Null(groups = {Create.class})
+    private ApplicationConfiguration applicationConfiguration;
 
     /**
      * The globally-unique identifier.
@@ -168,36 +174,41 @@ public class Application implements Serializable {
         this.httpTunnelEndpointUrl = httpTunnelEndpointUrl;
     }
 
+    /**
+     * Gets the application configuration for this application, if this is available.  Otherwise null.
+     *
+     * @return the application configuration
+     */
+    public ApplicationConfiguration getApplicationConfiguration() {
+        return applicationConfiguration;
+    }
+
+    /**
+     * Sets the application configuration.
+     *
+     * @param applicationConfiguration  the application configuration
+     */
+    public void setApplicationConfiguration(ApplicationConfiguration applicationConfiguration) {
+        this.applicationConfiguration = applicationConfiguration;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Application)) return false;
-
+        if (o == null || getClass() != o.getClass()) return false;
         Application that = (Application) o;
-
-        if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
-        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
-        if (getDescription() != null ? !getDescription().equals(that.getDescription()) : that.getDescription() != null)
-            return false;
-        if (getScriptRepoUrl() != null ? !getScriptRepoUrl().equals(that.getScriptRepoUrl()) : that.getScriptRepoUrl() != null)
-            return false;
-        if (getHttpDocumentationUrl() != null ? !getHttpDocumentationUrl().equals(that.getHttpDocumentationUrl()) : that.getHttpDocumentationUrl() != null)
-            return false;
-        if (getHttpDocumentationUiUrl() != null ? !getHttpDocumentationUiUrl().equals(that.getHttpDocumentationUiUrl()) : that.getHttpDocumentationUiUrl() != null)
-            return false;
-        return getHttpTunnelEndpointUrl() != null ? getHttpTunnelEndpointUrl().equals(that.getHttpTunnelEndpointUrl()) : that.getHttpTunnelEndpointUrl() == null;
+        return Objects.equals(getId(), that.getId()) &&
+                Objects.equals(getName(), that.getName()) &&
+                Objects.equals(getDescription(), that.getDescription()) &&
+                Objects.equals(getScriptRepoUrl(), that.getScriptRepoUrl()) &&
+                Objects.equals(getHttpDocumentationUrl(), that.getHttpDocumentationUrl()) &&
+                Objects.equals(getHttpDocumentationUiUrl(), that.getHttpDocumentationUiUrl()) &&
+                Objects.equals(getHttpTunnelEndpointUrl(), that.getHttpTunnelEndpointUrl()) &&
+                Objects.equals(getApplicationConfiguration(), that.getApplicationConfiguration());
     }
 
     @Override
     public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
-        result = 31 * result + (getScriptRepoUrl() != null ? getScriptRepoUrl().hashCode() : 0);
-        result = 31 * result + (getHttpDocumentationUrl() != null ? getHttpDocumentationUrl().hashCode() : 0);
-        result = 31 * result + (getHttpDocumentationUiUrl() != null ? getHttpDocumentationUiUrl().hashCode() : 0);
-        result = 31 * result + (getHttpTunnelEndpointUrl() != null ? getHttpTunnelEndpointUrl().hashCode() : 0);
-        return result;
+        return Objects.hash(getId(), getName(), getDescription(), getScriptRepoUrl(), getHttpDocumentationUrl(), getHttpDocumentationUiUrl(), getHttpTunnelEndpointUrl(), getApplicationConfiguration());
     }
-
 }
