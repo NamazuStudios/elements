@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
+import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.IOS_APP_STORE;
 
@@ -188,23 +189,42 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
     public List<RewardIssuance> getOrCreateRewardIssuances(List<AppleIapReceipt> appleIapReceipts) {
         final List<RewardIssuance> resultRewardIssuances = new ArrayList<>();
 
+        // first, we get the application id from the current session
+        final Session session = getSession();
+
+        if (session == null) {
+            throw new NotFoundException("User has no session.");
+        }
+
+        final Application application = session.getApplication();
+
+        if (application == null) {
+            throw new InvalidDataException("Session is not associated with a valid application.");
+        }
+
+        final String applicationId = getSession().getApplication().getId();
+
+        if (applicationId == null || applicationId.length() == 0) {
+            throw new InvalidDataException("Application id associated with the session is invalid.");
+        }
+
+        // next, we look up the associated application configuration
+        IosApplicationConfiguration iosApplicationConfiguration =  getApplicationConfigurationDao()
+                .getDefaultApplicationConfigurationForApplication(
+                        applicationId,
+                        IOS_APP_STORE,
+                        IosApplicationConfiguration.class);
+
+        // for each purchase we received from the ios app...
         for (AppleIapReceipt appleIapReceipt : appleIapReceipts) {
             final String context = buildAppleIapContextString(appleIapReceipt.getOriginalTransactionIdentifier());
-            final Map<String, Object> metadata = generateMissionProgressMetadata();
+            final Map<String, Object> metadata = generateAppleIapReceiptMetadata();
 
             try {
                 final RewardIssuance resultRewardIssuance = getRewardIssuanceDao().getRewardIssuance(user, context);
                 resultRewardIssuances.add(resultRewardIssuance);
             }
             catch (NotFoundException e) {
-                // first, we get the application configuration based on the current session's application id
-                final String applicationId = getSession().getApplication().getId();
-                IosApplicationConfiguration iosApplicationConfiguration =  getApplicationConfigurationDao()
-                        .getDefaultApplicationConfigurationForApplication(
-                                applicationId,
-                                IOS_APP_STORE,
-                                IosApplicationConfiguration.class);
-
                 // now, we look up the item id related to the current receipt's product id
                 final String productId = appleIapReceipt.getProductIdentifier();
                 final Map<String, String> iapProductIdsToItemIds = iosApplicationConfiguration
@@ -239,6 +259,7 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
                 rewardIssuance.setReward(resultReward);
                 rewardIssuance.setUser(user);
+                // we hold onto the reward issuance forever so as not to duplicate an already-redeemed issuance
                 rewardIssuance.setType(PERSISTENT);
                 rewardIssuance.setContext(context);
                 rewardIssuance.setMetadata(metadata);
@@ -255,7 +276,7 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
         return resultRewardIssuances;
     }
 
-    public Map<String, Object> generateMissionProgressMetadata() {
+    public Map<String, Object> generateAppleIapReceiptMetadata() {
         final HashMap<String, Object> map = new HashMap<>();
 
         return map;
