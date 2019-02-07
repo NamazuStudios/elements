@@ -26,7 +26,8 @@ import java.util.Objects;
         @SearchableField(name = "userEmail",   path = "/user/email"),
         @SearchableField(name = "displayName", path = "/displayName"),
         @SearchableField(name = "active", path = "/active"),
-        @SearchableField(name = "lastLogin", path = "/lastLogin")
+        @SearchableField(name = "lastLogin", path = "/lastLogin"),
+        @SearchableField(name = "metadata", path = "/metadata")
     })
 @Entity(value = "profile", noClassnameStored = true)
 @Indexes({

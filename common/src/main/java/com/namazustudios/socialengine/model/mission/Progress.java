@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.profile.Profile;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
@@ -40,8 +41,8 @@ public class Progress implements Serializable {
     @ApiModelProperty("The mission")
     private ProgressMissionInfo mission;
 
-    @ApiModelProperty("List of unclaimed rewards.")
-    private List<PendingReward> pendingRewards;
+    @ApiModelProperty("List of all reward issuances that are issued but not expired, or redeemed but persistent.")
+    private List<RewardIssuance> rewardIssuances;
 
     public String getId() {
         return id;
@@ -79,12 +80,12 @@ public class Progress implements Serializable {
         this.mission = mission;
     }
 
-    public List<PendingReward> getPendingRewards() {
-        return pendingRewards;
+    public List<RewardIssuance> getRewardIssuances() {
+        return rewardIssuances;
     }
 
-    public void setPendingRewards(List<PendingReward> pendingRewards) {
-        this.pendingRewards = pendingRewards;
+    public void setRewardIssuances(List<RewardIssuance> rewardIssuances) {
+        this.rewardIssuances = rewardIssuances;
     }
 
     @Override
@@ -97,12 +98,12 @@ public class Progress implements Serializable {
                 Objects.equals(getCurrentStep(), progress.getCurrentStep()) &&
                 Objects.equals(getRemaining(), progress.getRemaining()) &&
                 Objects.equals(getMission(), progress.getMission()) &&
-                Objects.equals(getPendingRewards(), progress.getPendingRewards());
+                Objects.equals(getRewardIssuances(), progress.getRewardIssuances());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getProfile(), getCurrentStep(), getRemaining(), getMission(), getPendingRewards());
+        return Objects.hash(getId(), getProfile(), getCurrentStep(), getRemaining(), getMission(), getRewardIssuances());
     }
 
     @Override
@@ -113,7 +114,7 @@ public class Progress implements Serializable {
                 ", currentStep=" + currentStep +
                 ", remaining=" + remaining +
                 ", mission=" + mission +
-                ", pendingRewards=" + pendingRewards +
+                ", rewardIssuances=" + rewardIssuances +
                 '}';
     }
 

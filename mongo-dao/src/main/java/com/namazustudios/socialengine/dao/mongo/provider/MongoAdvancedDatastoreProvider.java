@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSession;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoMission;
-import com.namazustudios.socialengine.dao.mongo.model.mission.MongoPendingReward;
+import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuance;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgress;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
@@ -55,7 +55,7 @@ public class MongoAdvancedDatastoreProvider implements Provider<AdvancedDatastor
             MongoItem.class,
             MongoMission.class,
             MongoProgress.class,
-            MongoPendingReward.class
+            MongoRewardIssuance.class
         );
 
         final MongoClient mongoClient = mongoProvider.get();
