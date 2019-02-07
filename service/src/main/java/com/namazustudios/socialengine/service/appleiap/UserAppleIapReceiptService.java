@@ -217,59 +217,80 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
         // for each purchase we received from the ios app...
         for (AppleIapReceipt appleIapReceipt : appleIapReceipts) {
-            final String context = buildAppleIapContextString(appleIapReceipt.getOriginalTransactionId());
-            final Map<String, Object> metadata = generateAppleIapReceiptMetadata();
+            // and for each instance of the SKU they purchased...
+            for (int skuIndex = 0; skuIndex < appleIapReceipt.getQuantity(); skuIndex++) {
+                final String context = buildAppleIapContextString(
+                        appleIapReceipt.getOriginalTransactionId(),
+                        skuIndex
+                );
 
-            try {
-                final RewardIssuance resultRewardIssuance = getRewardIssuanceDao().getRewardIssuance(user, context);
-                resultRewardIssuances.add(resultRewardIssuance);
-            }
-            catch (NotFoundException e) {
-                // now, we look up the item id related to the current receipt's product id
-                final String productId = appleIapReceipt.getProductId();
-                final Map<String, String> iapProductIdsToItemIds = iosApplicationConfiguration
-                        .getIapProductIdsToItemIds();
+                final Map<String, Object> metadata = generateAppleIapReceiptMetadata();
 
-                if (iapProductIdsToItemIds == null) {
-                    throw new InvalidDataException("Application Configuration " + iosApplicationConfiguration.getId() +
-                            "has no product id -> item id mapping.");
+                try {
+                    final RewardIssuance resultRewardIssuance = getRewardIssuanceDao().getRewardIssuance(user, context);
+                    resultRewardIssuances.add(resultRewardIssuance);
+                } catch (NotFoundException e) {
+                    // now, we look up the item id related to the current receipt's product id
+                    final String productId = appleIapReceipt.getProductId();
+                    final Map<String, String> iapProductIdsToItemIds = iosApplicationConfiguration
+                            .getIapProductIdsToItemIds();
+
+                    if (iapProductIdsToItemIds == null) {
+                        throw new InvalidDataException("Application Configuration " + iosApplicationConfiguration.getId() +
+                                "has no product id -> item id mapping.");
+                    }
+                    if (!iapProductIdsToItemIds.containsKey(productId)) {
+                        throw new NotFoundException("IAP product id " + productId + " is not in the application " +
+                                "configuration " + iosApplicationConfiguration.getId() + "  product id -> item id " +
+                                "mapping.");
+                    }
+
+                    final String itemId = iapProductIdsToItemIds.get(productId);
+
+                    // we also need to look up the reward quantity for the current receipt's product id
+                    final Map<String, Integer> iapProductIdsToRewardQuantities = iosApplicationConfiguration
+                            .getIapProductIdsToRewardQuantities();
+
+                    if (iapProductIdsToRewardQuantities == null) {
+                        throw new InvalidDataException("Application Configuration " + iosApplicationConfiguration.getId() +
+                                "has no product id -> reward quantity mapping.");
+                    }
+                    if (!iapProductIdsToRewardQuantities.containsKey(productId)) {
+                        throw new NotFoundException("IAP product id " + productId + " is not in the application " +
+                                "configuration " + iosApplicationConfiguration.getId() + "  product id -> reward " +
+                                "quantity mapping.");
+                    }
+
+                    final Integer rewardQuantity = iapProductIdsToRewardQuantities.get(productId);
+
+                    // then, we get a model rep of the given item id
+                    final Item item = getItemDao().getItemByIdOrName(itemId);
+
+                    // we now have everything we need to set up and insert a new reward...
+                    final Reward reward = new Reward();
+
+                    reward.setQuantity(rewardQuantity);
+                    reward.setItem(item);
+
+                    final Reward resultReward = getRewardDao().createReward(reward);
+
+                    // once the reward is inserted, we now have everything we need to set up and insert a new issuance...
+                    final RewardIssuance rewardIssuance = new RewardIssuance();
+
+                    rewardIssuance.setReward(resultReward);
+                    rewardIssuance.setUser(user);
+                    // we hold onto the reward issuance forever so as not to duplicate an already-redeemed issuance
+                    rewardIssuance.setType(PERSISTENT);
+                    rewardIssuance.setContext(context);
+                    rewardIssuance.setMetadata(metadata);
+                    rewardIssuance.setSource(APPLE_IAP_SOURCE);
+
+                    final RewardIssuance resultRewardIssuance = getRewardIssuanceDao()
+                            .getOrCreateRewardIssuance(rewardIssuance);
+
+                    // finally, we add the inserted issuance to the list of results
+                    resultRewardIssuances.add(resultRewardIssuance);
                 }
-                if (!iapProductIdsToItemIds.containsKey(productId)) {
-                    throw new NotFoundException("IAP product id " + productId + " is not in the application " +
-                            "configuration " + iosApplicationConfiguration.getId() +  "  product id -> item id " +
-                            "mapping.");
-                }
-
-                final String itemId = iapProductIdsToItemIds.get(productId);
-
-                // then, we get a model rep of the given item id
-                final Item item = getItemDao().getItemByIdOrName(itemId);
-
-                // we now have everything we need to set up and insert a new reward...
-                final Reward reward = new Reward();
-
-                final Integer quantity = appleIapReceipt.getQuantity();
-                reward.setQuantity(quantity);
-                reward.setItem(item);
-
-                final Reward resultReward = getRewardDao().createReward(reward);
-
-                // once the reward is inserted, we now have everything we need to set up and insert a new issuance...
-                final RewardIssuance rewardIssuance = new RewardIssuance();
-
-                rewardIssuance.setReward(resultReward);
-                rewardIssuance.setUser(user);
-                // we hold onto the reward issuance forever so as not to duplicate an already-redeemed issuance
-                rewardIssuance.setType(PERSISTENT);
-                rewardIssuance.setContext(context);
-                rewardIssuance.setMetadata(metadata);
-                rewardIssuance.setSource(APPLE_IAP_SOURCE);
-
-                final RewardIssuance resultRewardIssuance = getRewardIssuanceDao()
-                        .getOrCreateRewardIssuance(rewardIssuance);
-
-                // finally, we add the inserted issuance to the list of results
-                resultRewardIssuances.add(resultRewardIssuance);
             }
         }
 

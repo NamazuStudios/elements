@@ -272,11 +272,31 @@ public class RewardIssuance implements Serializable {
         return stringBuilder.toString();
     }
 
+    /**
+     * Builds the context string for a Mission Progression-sourced reward issuance. The last elements in the context
+     * string are, respectively, the {@param progressId} and the {@param sequence} that caused the issuance.
+     *
+     * @param progressId
+     * @param sequence
+     * @return the resultant context string
+     */
     public static String buildMissionProgressContextString(String progressId, String sequence) {
         return buildContextString(SERVER_CONTEXT_PREFIX, MISSION_PROGRESS_SOURCE, progressId, sequence);
     }
 
-    public static String buildAppleIapContextString(String originalTransactionId) {
-        return buildContextString(SERVER_CONTEXT_PREFIX, APPLE_IAP_SOURCE, originalTransactionId);
+    /**
+     * Builds the context string for an Apple IAP-sourced reward issuance. The last element in the context string is
+     * a hash of the {@param originalTransactionId} as well as the {@param skuIndex}, i.e. the index of the product as
+     * enumerated in SKPayment.quantity (i.e. the "first" SKU to be redeemed, the "second" to be redeemed, etc.).
+     *
+     * @param originalTransactionId
+     * @param skuIndex
+     * @return the resultant context string
+     */
+    public static String buildAppleIapContextString(String originalTransactionId, Integer skuIndex) {
+        final int originalTransactionIdAndSkuIndexHash = Objects.hash(originalTransactionId, skuIndex);
+        final String originalTransactionIdAndSkuIndexHashString =
+                Integer.toString(originalTransactionIdAndSkuIndexHash);
+        return buildContextString(SERVER_CONTEXT_PREFIX, APPLE_IAP_SOURCE, originalTransactionIdAndSkuIndexHashString);
     }
 }

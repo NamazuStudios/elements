@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.io.Serializable;
@@ -31,6 +32,7 @@ public class AppleIapReceipt implements Serializable {
 
     @ApiModelProperty("The number of items the user purchased during the transaction (see iOS' SKPayment.quantity).")
     @NotNull(groups={Create.class, Insert.class})
+    @Min(value = 0, message = "Quantity may not be less than 0.")
     private Integer quantity;
 
     @ApiModelProperty("The product identifier of the purchased item.")

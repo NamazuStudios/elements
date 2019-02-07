@@ -11,6 +11,7 @@ package com.namazustudios.socialengine.dao.mongo.model.application;
 
         import java.util.HashMap;
         import java.util.Map;
+        import java.util.Objects;
 
 /**
  * Created by patricktwohig on 7/10/15.
@@ -58,6 +59,9 @@ public class MongoApplicationConfiguration {
     @Property
     private Map<String, String> iapProductIdsToItemIds = new HashMap<>();
 
+    @Property
+    private Map<String, Integer> iapProductIdsToRewardQuantities = new HashMap<>();
+
     public ObjectId getObjectId() {
         return objectId;
     }
@@ -104,5 +108,33 @@ public class MongoApplicationConfiguration {
 
     public void setIapProductIdsToItemIds(Map<String, String> iapProductIdsToItemIds) {
         this.iapProductIdsToItemIds = iapProductIdsToItemIds;
+    }
+
+    public Map<String, Integer> getIapProductIdsToRewardQuantities() {
+        return iapProductIdsToRewardQuantities;
+    }
+
+    public void setIapProductIdsToRewardQuantities(Map<String, Integer> iapProductIdsToRewardQuantities) {
+        this.iapProductIdsToRewardQuantities = iapProductIdsToRewardQuantities;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MongoApplicationConfiguration that = (MongoApplicationConfiguration) o;
+        return isActive() == that.isActive() &&
+                Objects.equals(getObjectId(), that.getObjectId()) &&
+                Objects.equals(getUniqueIdentifier(), that.getUniqueIdentifier()) &&
+                Objects.equals(getParent(), that.getParent()) &&
+                getCategory() == that.getCategory() &&
+                Objects.equals(getIapProductIdsToItemIds(), that.getIapProductIdsToItemIds()) &&
+                Objects.equals(getIapProductIdsToRewardQuantities(), that.getIapProductIdsToRewardQuantities());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getObjectId(), getUniqueIdentifier(), getParent(), getCategory(), isActive(),
+                getIapProductIdsToItemIds(), getIapProductIdsToRewardQuantities());
     }
 }
