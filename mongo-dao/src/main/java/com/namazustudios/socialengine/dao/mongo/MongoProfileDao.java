@@ -304,6 +304,12 @@ public class MongoProfileDao implements ProfileDao {
         updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
         updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
 
+        if (profile.getMetadata() == null) {
+            updateOperations.unset("metadata");
+        } else {
+            updateOperations.set("metadata", profile.getMetadata());
+        }
+
         final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
 
             final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
