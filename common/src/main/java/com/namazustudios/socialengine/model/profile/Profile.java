@@ -54,6 +54,10 @@ public class Profile implements Serializable {
     @ApiModelProperty("An object containing arbitrary player metadata as key-value pairs.")
     private Map<String, Object> metadata;
 
+    @Null(groups = Create.class)
+    @ApiModelProperty("The last time this profile has been logged in by the user.")
+    private long lastLogin;
+
     public String getId() {
         return id;
     }
@@ -102,12 +106,21 @@ public class Profile implements Serializable {
         this.metadata = metadata;
     }
 
+    public long getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(long lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
         if (!(object instanceof Profile)) return false;
         Profile profile = (Profile) object;
-        return Objects.equals(getId(), profile.getId()) &&
+        return  getLastLogin() == profile.getLastLogin() &&
+                Objects.equals(getId(), profile.getId()) &&
                 Objects.equals(getUser(), profile.getUser()) &&
                 Objects.equals(getApplication(), profile.getApplication()) &&
                 Objects.equals(getImageUrl(), profile.getImageUrl()) &&
@@ -117,7 +130,8 @@ public class Profile implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getUser(), getApplication(), getImageUrl(), getDisplayName(), metadata);
+        Long lastLogin = getLastLogin();    // cast to object for the hash
+        return Objects.hash(getId(), getUser(), getApplication(), getImageUrl(), getDisplayName(), lastLogin, metadata);
     }
 
     @Override
@@ -129,6 +143,7 @@ public class Profile implements Serializable {
                 ", imageUrl='" + imageUrl + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", metadata=" + metadata +
+                ", lastLogin=" + lastLogin +
                 '}';
     }
 

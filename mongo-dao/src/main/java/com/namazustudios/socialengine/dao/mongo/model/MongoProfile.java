@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplicati
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
+import java.sql.Timestamp;
 import java.util.Map;
 import java.util.Objects;
 
@@ -24,7 +25,9 @@ import java.util.Objects;
         @SearchableField(name = "userName",    path = "/user/name"),
         @SearchableField(name = "userEmail",   path = "/user/email"),
         @SearchableField(name = "displayName", path = "/displayName"),
-        @SearchableField(name = "active", path = "/active")
+        @SearchableField(name = "active", path = "/active"),
+        @SearchableField(name = "lastLogin", path = "/lastLogin"),
+        @SearchableField(name = "metadata", path = "/metadata")
     })
 @Entity(value = "profile", noClassnameStored = true)
 @Indexes({
@@ -53,6 +56,10 @@ public class MongoProfile {
 
     @Embedded
     private Map<String, Object> metadata;
+
+    @Indexed
+    @Property
+    private Timestamp lastLogin;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -110,12 +117,21 @@ public class MongoProfile {
         this.metadata = metadata;
     }
 
+    public Timestamp getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(Timestamp lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
         if (!(object instanceof MongoProfile)) return false;
         MongoProfile that = (MongoProfile) object;
         return isActive() == that.isActive() &&
+                Objects.equals(getLastLogin(), that.getLastLogin()) &&
                 Objects.equals(getObjectId(), that.getObjectId()) &&
                 Objects.equals(getUser(), that.getUser()) &&
                 Objects.equals(getApplication(), that.getApplication()) &&
@@ -126,7 +142,8 @@ public class MongoProfile {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), isActive(), getUser(), getApplication(), getImageUrl(), getDisplayName(), getMetadata());
+        return Objects.hash(getObjectId(), isActive(), getUser(), getApplication(), getImageUrl(),
+                getDisplayName(), getMetadata(), getLastLogin());
     }
 
 }

@@ -21,7 +21,7 @@ import static java.util.stream.Collectors.toSet;
         path = "/objectId",
         type = ObjectId.class,
         extractor = ObjectIdExtractor.class,
-        processors = ObjectIdProcessor.class))
+        processors = MongoInventoryItemIdProcessor.class))
 @SearchableDocument(fields = {
         @SearchableField(name = "itemName",         path = "/item/name"),
         @SearchableField(name = "itemDisplayName",  path = "/item/displayName"),

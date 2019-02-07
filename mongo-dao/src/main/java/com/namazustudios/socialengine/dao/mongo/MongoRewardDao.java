@@ -58,8 +58,6 @@ public class MongoRewardDao implements RewardDao {
 
     private MongoConcurrentUtils mongoConcurrentUtils;
 
-    private ObjectIndex objectIndex;
-
     private ValidationHelper validationHelper;
 
     @Override
@@ -98,7 +96,6 @@ public class MongoRewardDao implements RewardDao {
             throw new DuplicateException(e);
         }
 
-        getObjectIndex().index(mongoReward);
         final MongoReward fetchedMongoReward = getDatastore().get(mongoReward);
         return getDozerMapper().map(fetchedMongoReward, Reward.class);
     }
@@ -164,15 +161,6 @@ public class MongoRewardDao implements RewardDao {
     @Inject
     public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
         this.mongoConcurrentUtils = mongoConcurrentUtils;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public ValidationHelper getValidationHelper() {
