@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.dao.mongo.model;
 import org.mongodb.morphia.annotations.*;
 import org.mongodb.morphia.utils.IndexType;
 
+import java.sql.Timestamp;
+
 /**
  * Created by patricktwohig on 6/28/17.
  */
@@ -10,6 +12,7 @@ import org.mongodb.morphia.utils.IndexType;
 @Indexes({
     @Index(fields = @Field("profile")),
     @Index(fields = @Field("leaderboard")),
+    @Index(fields = @Field(value = "leaderboardEpoch", type = IndexType.DESC)),
     @Index(fields = @Field(value = "pointValue", type = IndexType.DESC))
 })
 public class MongoScore {
@@ -19,6 +22,12 @@ public class MongoScore {
 
     @Property
     private double pointValue;
+
+    @Property
+    private Timestamp creationTimestamp;
+
+    @Property
+    private long leaderboardEpoch;
 
     @Reference
     private MongoProfile profile;
@@ -40,6 +49,22 @@ public class MongoScore {
 
     public void setPointValue(double pointValue) {
         this.pointValue = pointValue;
+    }
+
+    public Timestamp getCreationTimestamp() {
+        return creationTimestamp;
+    }
+
+    public void setCreationTimestamp(Timestamp creationTimestamp) {
+        this.creationTimestamp = creationTimestamp;
+    }
+
+    public long getLeaderboardEpoch() {
+        return leaderboardEpoch;
+    }
+
+    public void setLeaderboardEpoch(long leaderboardEpoch) {
+        this.leaderboardEpoch = leaderboardEpoch;
     }
 
     public MongoProfile getProfile() {

@@ -27,7 +27,7 @@ public class ScoreResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(
-        value = "Creates a New Leaderboard",
+        value = "Creates a New Score",
         notes = "Posts a single score for the currently logged-in profile. Conceptually, this is creationg a new " +
                 "resource, however the server may opt to overwrite the existing identifier if it sees fit.")
     public Score createScore(

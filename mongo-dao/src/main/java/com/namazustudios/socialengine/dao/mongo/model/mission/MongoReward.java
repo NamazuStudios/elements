@@ -1,9 +1,8 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Property;
-import org.mongodb.morphia.annotations.Reference;
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.annotations.*;
 
 import java.util.Map;
 import java.util.Objects;
@@ -11,13 +10,13 @@ import java.util.Objects;
 /**
  * Mongo DTO for a mission step reward.
  *
- * This is NOT an entity, and is therefore not directly searchable
-
  * Created by davidjbrooks on 11/27/2018.
  */
 
-@Embedded
+@Entity(value = "reward", noClassnameStored = true)
 public class MongoReward {
+    @Id
+    private ObjectId objectId;
 
     @Reference
     private MongoItem item;
@@ -51,25 +50,35 @@ public class MongoReward {
         this.metadata = metadata;
     }
 
+    public ObjectId getObjectId() {
+        return objectId;
+    }
+
+    public void setObjectId(ObjectId objectId) {
+        this.objectId = objectId;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
         if (!(object instanceof MongoReward)) return false;
         MongoReward that = (MongoReward) object;
-        return getQuantity() == that.getQuantity() &&
+        return getObjectId() == that.getObjectId() &&
+                getQuantity() == that.getQuantity() &&
                 Objects.equals(getItem(), that.getItem()) &&
                 Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getItem(), getQuantity(), getMetadata());
+        return Objects.hash(getObjectId(), getItem(), getQuantity(), getMetadata());
     }
 
     @Override
     public String toString() {
         return "MongoReward{" +
-                "item=" + item +
+                "objectId=" + objectId +
+                ", item=" + item +
                 ", quantity=" + quantity +
                 ", metadata=" + metadata +
                 '}';

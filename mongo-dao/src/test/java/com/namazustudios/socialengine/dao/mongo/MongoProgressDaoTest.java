@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Queue;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
-import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.*;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.fill;
@@ -47,7 +47,9 @@ public class MongoProgressDaoTest  {
 
     private ProgressDao progressDao;
 
-    private PendingRewardDao pendingRewardDao;
+    private RewardIssuanceDao rewardIssuanceDao;
+
+    private RewardDao rewardDao;
 
     private Application testApplication;
 
@@ -164,7 +166,8 @@ public class MongoProgressDaoTest  {
         reward.setItem(item);
         reward.setQuantity(quantity);
         reward.addMetadata("bar", 100);
-        return reward;
+        final Reward createdReward = getRewardDao().createReward(reward);
+        return createdReward;
     }
 
     @DataProvider
@@ -198,7 +201,7 @@ public class MongoProgressDaoTest  {
         assertEquals(created.getCurrentStep(), mission.getSteps().get(0));
         assertEquals(created.getRemaining(), created.getCurrentStep().getCount());
         assertEquals(created.getRemaining(), mission.getSteps().get(0).getCount());
-        assertTrue(created.getPendingRewards().isEmpty());
+        assertTrue(created.getRewardIssuances().isEmpty());
 
         assertNotNull(created.getMission());
         assertEquals(created.getMission().getId(), mission.getId());
@@ -284,7 +287,7 @@ public class MongoProgressDaoTest  {
 
             while (progress.getRemaining() > 1) {
                 progress = getProgressDao().advanceProgress(progress, 1);
-                assertEquals(progress.getPendingRewards().size(), expectedRewards);
+                assertEquals(progress.getRewardIssuances().size(), expectedRewards);
             }
 
             progress = getProgressDao().advanceProgress(progress, 1);
@@ -297,14 +300,13 @@ public class MongoProgressDaoTest  {
 
             expectedRewards += step.getRewards().size();
 
-            assertEquals(progress.getPendingRewards().size(), expectedRewards);
+            assertEquals(progress.getRewardIssuances().size(), expectedRewards);
             if (!steps.isEmpty()) assertEquals(progress.getCurrentStep(), steps.peek());
 
-            final PendingReward pendingReward = progress.getPendingRewards().get(expectedRewards - 1);
-            assertNotNull(pendingReward.getId());
-            assertEquals(pendingReward.getStep(), step);
-            assertEquals(pendingReward.getReward(), step.getRewards().get(0));
-            assertEquals(pendingReward.getState(), PENDING);
+            final RewardIssuance rewardIssuance = progress.getRewardIssuances().get(expectedRewards - 1);
+            assertNotNull(rewardIssuance.getId());
+            assertEquals(rewardIssuance.getReward(), step.getRewards().get(0));
+            assertEquals(rewardIssuance.getState(), ISSUED);
 
         } while (!steps.isEmpty());
 
@@ -317,24 +319,23 @@ public class MongoProgressDaoTest  {
 
         final List<InventoryItem> inventoryItemList = progressPagination.getObjects()
             .stream()
-            .flatMap(progress -> progress.getPendingRewards().stream())
-            .map(pr -> getPendingRewardDao().redeem(pr))
+            .flatMap(progress -> progress.getRewardIssuances().stream())
+            .map(ri -> getRewardIssuanceDao().redeem(ri))
             .collect(toList());
 
         progressPagination.getObjects()
             .stream()
-            .flatMap(progress -> progress.getPendingRewards().stream())
-            .map(pr -> getPendingRewardDao().redeem(pr))
-            .forEach(pr -> {
+            .flatMap(progress -> progress.getRewardIssuances().stream())
+            .forEach(ri -> {
 
                 try {
-                    getPendingRewardDao().delete(pr.getId());
+                    getRewardIssuanceDao().delete(ri.getId());
                 } catch (NotFoundException nfe) {
                     // pass
                 }
 
                 try {
-                    getPendingRewardDao().getPendingReward(pr.getId());
+                    getRewardIssuanceDao().getRewardIssuance(ri.getId());
                 } catch (NotFoundException nfe) {
                     return;
                 }
@@ -345,7 +346,7 @@ public class MongoProgressDaoTest  {
 
         assertTrue(inventoryItemList.size() > 0);
         inventoryItemList.stream().forEach(ii -> getInventoryItemDao().getInventoryItem(ii.getId()));
-        progressPagination.getObjects().stream().forEach(pr -> getProgressDao().getProgress(pr.getId()));
+        progressPagination.getObjects().stream().forEach(ri -> getProgressDao().getProgress(ri.getId()));
         progressPagination.forEach(progress -> getProgressDao().deleteProgress(progress.getId()));
 
     }
@@ -464,13 +465,22 @@ public class MongoProgressDaoTest  {
         this.applicationDao = applicationDao;
     }
 
-    public PendingRewardDao getPendingRewardDao() {
-        return pendingRewardDao;
+    public RewardIssuanceDao getRewardIssuanceDao() {
+        return rewardIssuanceDao;
     }
 
     @Inject
-    public void setPendingRewardDao(PendingRewardDao pendingRewardDao) {
-        this.pendingRewardDao = pendingRewardDao;
+    public void setRewardIssuanceDao(RewardIssuanceDao rewardIssuanceDao) {
+        this.rewardIssuanceDao = rewardIssuanceDao;
+    }
+
+    public RewardDao getRewardDao() {
+        return rewardDao;
+    }
+
+    @Inject
+    public void setRewardDao(RewardDao rewardDao) {
+        this.rewardDao = rewardDao;
     }
 
 }

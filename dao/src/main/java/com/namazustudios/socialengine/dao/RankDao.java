@@ -16,9 +16,10 @@ public interface RankDao {
      * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
      * @param offset the offset in the dataset
      * @param count the number of results to return
+     * @param leaderboardEpoch the epoch timestamp
      * @return a {@link Pagination<Rank>} containing all ranks
      */
-    Pagination<Rank> getRanksForGlobal(String leaderboardNameOrId, int offset, int count);
+    Pagination<Rank> getRanksForGlobal(String leaderboardNameOrId, int offset, int count, long leaderboardEpoch);
 
     /**
      * Given the {@link Leaderboard} name or ID, this will return all {@link Rank} instances sorted in order.  This
@@ -29,9 +30,11 @@ public interface RankDao {
      * @param profileId the value of {@link Profile#getId()}
      * @param offset the offset in the dataset, may be negative
      * @param count the number of results to return
+     * @param leaderboardEpoch the epoch timestamp
      * @return a {@link Pagination<Rank>} containing all ranks
      */
-    Pagination<Rank> getRanksForGlobalRelative(String leaderboardNameOrId, String profileId, int offset, int count);
+    Pagination<Rank> getRanksForGlobalRelative(String leaderboardNameOrId, String profileId, int offset, int count,
+                                               long leaderboardEpoch);
 
     /**
      * Given the {@link Leaderboard} name or ID, this will return all {@link Rank} instances sorted in order.  This
@@ -42,9 +45,11 @@ public interface RankDao {
      * @param profileId the value of {@link Profile#getId()}
      * @param offset the offset in the dataset, may be negative
      * @param count the number of results to return
+     * @param leaderboardEpoch the epoch timestamp
      * @return a {@link Pagination<Rank>} containing all ranks
      */
-    Pagination<Rank> getRanksForFriends(String leaderboardNameOrId, Profile profileId, int offset, int count);
+    Pagination<Rank> getRanksForFriends(String leaderboardNameOrId, Profile profileId, int offset, int count,
+                                        long leaderboardEpoch);
 
     /**
      * Given the {@link Leaderboard} name or ID, this will return all {@link Rank} instances sorted in order.  This
@@ -54,11 +59,13 @@ public interface RankDao {
      * Additionally this will filter the results to only include friends of the supplied {@link Profile}.
      *
      * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
-     * @param profileId
-     *@param offset the offset in the dataset, may be negative
+     * @param profileId the value of {@link Profile#getId()}
+     * @param offset the offset in the dataset, may be negative
      * @param count the number of results to return   @return a {@link Pagination<Rank>} containing all ranks
+     * @param leaderboardEpoch the epoch timestamp
      */
-    Pagination<Rank> getRanksForFriendsRelative(String leaderboardNameOrId, Profile profileId, int offset, int count);
+    Pagination<Rank> getRanksForFriendsRelative(String leaderboardNameOrId, Profile profileId, int offset, int count,
+                                                long leaderboardEpoch);
 
 }
 

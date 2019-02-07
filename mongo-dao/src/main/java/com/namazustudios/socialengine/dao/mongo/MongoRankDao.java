@@ -38,13 +38,16 @@ public class MongoRankDao implements RankDao {
 
     @Override
     public Pagination<Rank> getRanksForGlobal(final String leaderboardNameOrId,
-                                              final int offset, final int count) {
+                                              final int offset, final int count, final long leaderboardEpoch) {
 
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
 
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
-        query.filter("leaderboard", mongoLeaderboard)
-             .order(Sort.descending("pointValue"));
+        query
+            .filter("leaderboard", mongoLeaderboard)
+            .filter("leaderboardEpoch",
+                    leaderboardEpoch > 0 ? leaderboardEpoch : mongoLeaderboard.getCurrentEpoch())
+            .order(Sort.descending("pointValue"));
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(0));
 
@@ -52,16 +55,31 @@ public class MongoRankDao implements RankDao {
 
     @Override
     public Pagination<Rank> getRanksForGlobalRelative(final String leaderboardNameOrId, final String profileId,
-                                                      final int offset, final int count) {
+                                                      final int offset, final int count, final long leaderboardEpoch) {
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profileId);
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
         final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard);
         final MongoScore mongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
 
+        final long leaderboardEpochLookup;
+
+        if (mongoLeaderboard.isEpochal()) {
+            if (leaderboardEpoch > 0) {
+                leaderboardEpochLookup = leaderboardEpoch;
+            }
+            else {
+                leaderboardEpochLookup = mongoLeaderboard.getCurrentEpoch();
+            }
+        }
+        else {
+            leaderboardEpochLookup = MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
+        }
+
         final Query<MongoScore> query = getDatastore()
             .createQuery(MongoScore.class)
             .field("leaderboard").equal(mongoLeaderboard)
+            .field("leaderboardEpoch").equal(leaderboardEpochLookup)
             .order(Sort.descending("pointValue"));
 
         final long playerRank = mongoScore == null ? 0 : query
@@ -77,7 +95,7 @@ public class MongoRankDao implements RankDao {
 
     @Override
     public Pagination<Rank> getRanksForFriends(final String leaderboardNameOrId, final Profile profileId,
-                                               final int offset, final int count) {
+                                               final int offset, final int count, final long leaderboardEpoch) {
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profileId);
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
@@ -91,10 +109,25 @@ public class MongoRankDao implements RankDao {
 
         profiles.add(mongoProfile);
 
+        final long leaderboardEpochLookup;
+
+        if (mongoLeaderboard.isEpochal()) {
+            if (leaderboardEpoch > 0) {
+                leaderboardEpochLookup = leaderboardEpoch;
+            }
+            else {
+                leaderboardEpochLookup = mongoLeaderboard.getCurrentEpoch();
+            }
+        }
+        else {
+            leaderboardEpochLookup = MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
+        }
+
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
 
         query.field("profile").in(profiles)
              .field("leaderboard").equal(mongoLeaderboard)
+             .field("leaderboardEpoch").equal(leaderboardEpochLookup)
              .order(Sort.descending("pointValue"));
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(0));
@@ -103,7 +136,7 @@ public class MongoRankDao implements RankDao {
 
     @Override
     public Pagination<Rank> getRanksForFriendsRelative(final String leaderboardNameOrId, final Profile profileId,
-                                                       final int offset, final int count) {
+                                                       final int offset, final int count, final long leaderboardEpoch) {
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profileId);
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
@@ -119,9 +152,24 @@ public class MongoRankDao implements RankDao {
 
         profiles.add(mongoProfile);
 
+        final long leaderboardEpochLookup;
+
+        if (mongoLeaderboard.isEpochal()) {
+            if (leaderboardEpoch > 0) {
+                leaderboardEpochLookup = leaderboardEpoch;
+            }
+            else {
+                leaderboardEpochLookup = mongoLeaderboard.getCurrentEpoch();
+            }
+        }
+        else {
+            leaderboardEpochLookup = MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
+        }
+
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
 
         query.field("leaderboard").equal(mongoLeaderboard)
+             .field("leaderboardEpoch").equal(leaderboardEpochLookup)
              .field("profile").in(profiles)
              .order(Sort.descending("pointValue"));
 

@@ -12,18 +12,19 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.mission.Progress;
+import com.namazustudios.socialengine.model.mission.Reward;
+import com.namazustudios.socialengine.model.mission.RewardIssuance;
 import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
-import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -31,20 +32,19 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgressId.parseOrThrowNotFoundException;
-import static com.namazustudios.socialengine.model.mission.PendingReward.State.CREATED;
-import static com.namazustudios.socialengine.model.mission.PendingReward.State.PENDING;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.*;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.Type.*;
 import static java.lang.Math.abs;
-import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
@@ -70,6 +70,8 @@ public class MongoProgressDao implements ProgressDao {
     private MongoMissionDao mongoMissionDao;
 
     private MongoProfileDao mongoProfileDao;
+
+    private MongoRewardIssuanceDao rewardIssuanceDao;
 
     @Override
     public Pagination<Progress> getProgresses(final Profile profile, final int offset, final int count,
@@ -229,7 +231,7 @@ public class MongoProgressDao implements ProgressDao {
                     first = steps.get(0);
                 }
 
-                progress.setPendingRewards(emptyList());
+                progress.setRewardIssuances(emptyList());
                 progress.setRemaining(first.getCount());
                 getValidationHelper().validateModel(first);
 
@@ -277,25 +279,6 @@ public class MongoProgressDao implements ProgressDao {
         } catch (MongoConcurrentUtils.ConflictException e) {
             throw new TooBusyException(e);
         }
-
-        final Set<ObjectId> pendingRewardIds = mongoProgress.getPendingRewards()
-            .stream()
-            .map(r -> r.getObjectId())
-            .collect(toSet());
-
-        // To finalize the advancement, we clear the expiry of hte rewards.  The rationale here is if extra orphaned
-        // pending rewards exist, then the will be eventually cleared by the database.  However, sicne the actual
-        // MongoProress tracks the object IDs we will still have a consistent view even if orphans exist.  The expiry
-        // on the MongoPending reward is just to provide a means of garbage collecting unreferenced rewards.
-        final Query<MongoPendingReward> query = getDatastore().createQuery(MongoPendingReward.class);
-        query.field("_id").hasAnyOf(pendingRewardIds);
-        query.field("state").equal(CREATED);
-
-        final UpdateOperations<MongoPendingReward> updates = getDatastore().createUpdateOperations(MongoPendingReward.class);
-        updates.unset("expires");
-        updates.set("state", PENDING);
-
-        getDatastore().update(query, updates, new UpdateOptions().multi(true).upsert(false));
 
         return getDozerMapper().map(getDatastore().get(mongoProgress), Progress.class);
 
@@ -358,22 +341,38 @@ public class MongoProgressDao implements ProgressDao {
             // Assigns the rewards from the step
 
             final MongoStep _step = step;
-            final List<MongoPendingReward> pendingRewards = step.getRewards()
+            final List<MongoRewardIssuance> rewardIssuances = step.getRewards()
                 .stream()
                 .filter(r -> r != null && r.getItem() != null)
                 .map(r -> {
-                    final MongoPendingReward pending = new MongoPendingReward();
-                    pending.setReward(r);
-                    pending.setUser(mongoUser);
-                    pending.setObjectId(new ObjectId());
-                    pending.setExpires(new Timestamp(currentTimeMillis()));
-                    pending.setState(CREATED);
-                    pending.setStep(_step);
-                    getDatastore().insert(pending);
-                    return pending;
+                    final String context = "server." + mongoProgress.getObjectId().toHexString() + "." +
+                            mongoProgress.getSequence();
+                    final MongoRewardIssuanceId mongoRewardIssuanceId =
+                            new MongoRewardIssuanceId(mongoUser.getObjectId(), r.getObjectId(), context);
+
+                    final Progress progress = getDozerMapper().map(mongoProgress, Progress.class);
+                    final Step __step = getDozerMapper().map(_step, Step.class);
+                    final Reward reward = getDozerMapper().map(r, Reward.class);
+                    final User user = getDozerMapper().map(mongoUser, User.class);
+                    final Map<String, Object> metadata = generateMissionProgressMetadata(progress, __step);
+
+                    final RewardIssuance issuance = new RewardIssuance();
+                    issuance.setReward(reward);
+                    issuance.setUser(user);
+                    issuance.setType(PERSISTENT);
+                    issuance.setSource(MISSION_PROGRESS_SOURCE);
+                    issuance.setContext(context);
+                    issuance.setMetadata(metadata);
+
+                    final RewardIssuance createdRewardIssuance = getRewardIssuanceDao().getOrCreateRewardIssuance(issuance);
+
+                    final MongoRewardIssuance mongoRewardIssuance =
+                            getDozerMapper().map(createdRewardIssuance, MongoRewardIssuance.class);
+
+                    return mongoRewardIssuance;
                 }).collect(toList());
 
-            updates.push("pendingRewards", pendingRewards);
+            updates.push("rewardIssuances", rewardIssuances);
             actionsToApply -= remaining;
 
             // Increments the completed steps and applies to the remaining actions to apply.  We keep
@@ -395,6 +394,16 @@ public class MongoProgressDao implements ProgressDao {
         updates.inc("sequence", completedSteps);
         updates.set("remaining", step == null ? 0 : step.getCount() - actionsToApply);
 
+    }
+
+    public Map<String, Object> generateMissionProgressMetadata(Progress progress, Step step) {
+        final HashMap<String, Object> map = new HashMap<>();
+        final Map stepMap = getDozerMapper().map(step, Map.class);
+
+        map.put(MISSION_PROGRESS_PROGRESS_KEY, progress.getId());
+        map.put(MISSION_PROGRESS_STEP_KEY, stepMap);
+
+        return map;
     }
 
     public AdvancedDatastore getDatastore() {
@@ -477,6 +486,15 @@ public class MongoProgressDao implements ProgressDao {
     @Inject
     public void setMongoProfileDao(MongoProfileDao mongoProfileDao) {
         this.mongoProfileDao = mongoProfileDao;
+    }
+
+    public MongoRewardIssuanceDao getRewardIssuanceDao() {
+        return rewardIssuanceDao;
+    }
+
+    @Inject
+    public void setRewardIssuanceDao(MongoRewardIssuanceDao rewardIssuanceDao) {
+        this.rewardIssuanceDao = rewardIssuanceDao;
     }
 
 }
