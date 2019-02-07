@@ -3,13 +3,15 @@ package com.namazustudios.socialengine.dao.mongo.model;
 import org.mongodb.morphia.annotations.*;
 
 import java.sql.Timestamp;
+import java.util.Date;
+import java.util.Objects;
 
 
 @Entity(value = "apple_iap_receipt", noClassnameStored = true)
 public class MongoAppleIapReceipt {
 
     @Id
-    private String originalTransactionIdentifier;
+    private String originalTransactionId;
 
     @Indexed
     @Reference
@@ -22,20 +24,20 @@ public class MongoAppleIapReceipt {
     private int quantity;
 
     @Property
-    private String productIdentifier;
+    private String productId;
 
     @Property
-    private String bundleIdentifier;
+    private String bundleId;
 
     @Property
-    private Timestamp originalPurchaseTimestamp;
+    private Date originalPurchaseDate;
 
-    public String getOriginalTransactionIdentifier() {
-        return originalTransactionIdentifier;
+    public String getOriginalTransactionId() {
+        return originalTransactionId;
     }
 
-    public void setOriginalTransactionIdentifier(String originalTransactionIdentifier) {
-        this.originalTransactionIdentifier = originalTransactionIdentifier;
+    public void setOriginalTransactionId(String originalTransactionId) {
+        this.originalTransactionId = originalTransactionId;
     }
 
     public MongoUser getUser() {
@@ -62,71 +64,59 @@ public class MongoAppleIapReceipt {
         this.quantity = quantity;
     }
 
-    public String getProductIdentifier() {
-        return productIdentifier;
+    public String getProductId() {
+        return productId;
     }
 
-    public void setProductIdentifier(String productIdentifier) {
-        this.productIdentifier = productIdentifier;
+    public void setProductId(String productId) {
+        this.productId = productId;
     }
 
-    public String getBundleIdentifier() {
-        return bundleIdentifier;
+    public String getBundleId() {
+        return bundleId;
     }
 
-    public void setBundleIdentifier(String bundleIdentifier) {
-        this.bundleIdentifier = bundleIdentifier;
+    public void setBundleId(String bundleId) {
+        this.bundleId = bundleId;
     }
 
-    public Timestamp getOriginalPurchaseTimestamp() {
-        return originalPurchaseTimestamp;
+    public Date getOriginalPurchaseDate() {
+        return originalPurchaseDate;
     }
 
-    public void setOriginalPurchaseTimestamp(Timestamp originalPurchaseTimestamp) {
-        this.originalPurchaseTimestamp = originalPurchaseTimestamp;
+    public void setOriginalPurchaseDate(Date originalPurchaseDate) {
+        this.originalPurchaseDate = originalPurchaseDate;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MongoAppleIapReceipt)) return false;
-
-        MongoAppleIapReceipt appleIapReceipt = (MongoAppleIapReceipt) o;
-
-        if (getOriginalTransactionIdentifier() != appleIapReceipt.getOriginalTransactionIdentifier()) return false;
-        if (getUser() != null ? !getUser().equals(appleIapReceipt.getUser()) : appleIapReceipt.getUser() != null) return false;
-        if (getReceiptData() != null ? !getReceiptData().equals(appleIapReceipt.getReceiptData()) : appleIapReceipt.getReceiptData() != null) return false;
-        if (getProductIdentifier() != null ? !getProductIdentifier().equals(appleIapReceipt.getProductIdentifier()) : appleIapReceipt.getProductIdentifier() != null) return false;
-        if (getBundleIdentifier() != null ? !getBundleIdentifier().equals(appleIapReceipt.getBundleIdentifier()) : appleIapReceipt.getBundleIdentifier() != null) return false;
-        if (getQuantity() != appleIapReceipt.getQuantity()) return false;
-        if (getOriginalPurchaseTimestamp() != null ? !getOriginalPurchaseTimestamp().equals(appleIapReceipt.getOriginalPurchaseTimestamp()) : appleIapReceipt.getOriginalPurchaseTimestamp() != null) return false;
-
-        return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MongoAppleIapReceipt that = (MongoAppleIapReceipt) o;
+        return getQuantity() == that.getQuantity() &&
+                Objects.equals(getOriginalTransactionId(), that.getOriginalTransactionId()) &&
+                Objects.equals(getUser(), that.getUser()) &&
+                Objects.equals(getReceiptData(), that.getReceiptData()) &&
+                Objects.equals(getProductId(), that.getProductId()) &&
+                Objects.equals(getBundleId(), that.getBundleId()) &&
+                Objects.equals(getOriginalPurchaseDate(), that.getOriginalPurchaseDate());
     }
 
     @Override
     public int hashCode() {
-        int result = (getOriginalTransactionIdentifier() != null ? getOriginalTransactionIdentifier().hashCode() : 0);
-        result = 31 * result + (getUser() != null ? getUser().hashCode() : 0);
-        result = 31 * result + (getReceiptData() != null ? getReceiptData().hashCode() : 0);
-        result = 31 * result + getQuantity();
-        result = 31 * result + (getProductIdentifier() != null ? getProductIdentifier().hashCode() : 0);
-        result = 31 * result + (getBundleIdentifier() != null ? getBundleIdentifier().hashCode() : 0);
-        result = 31 * result + (getOriginalPurchaseTimestamp() != null ? getOriginalPurchaseTimestamp().hashCode() : 0);
-        return result;
+        return Objects.hash(getOriginalTransactionId(), getUser(), getReceiptData(), getQuantity(), getProductId(), getBundleId(), getOriginalPurchaseDate());
     }
 
     @Override
     public String toString() {
-        return "MongoMission{" +
-                ", originalTransactionIdentifier='" + originalTransactionIdentifier + '\'' +
-                ", user='" + user + '\'' +
+        return "MongoAppleIapReceipt{" +
+                "originalTransactionId='" + originalTransactionId + '\'' +
+                ", user=" + user +
                 ", receiptData='" + receiptData + '\'' +
-                ", quantity='" + quantity + '\'' +
-                ", productIdentifier='" + productIdentifier + '\'' +
-                ", bundleIdentifier='" + bundleIdentifier + '\'' +
-                ", originalPurchaseTimestamp='" + originalPurchaseTimestamp + '\'' +
+                ", quantity=" + quantity +
+                ", productId='" + productId + '\'' +
+                ", bundleId='" + bundleId + '\'' +
+                ", originalPurchaseDate=" + originalPurchaseDate +
                 '}';
     }
-
 }

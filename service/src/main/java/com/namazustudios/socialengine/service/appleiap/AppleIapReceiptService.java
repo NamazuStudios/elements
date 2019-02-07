@@ -29,10 +29,10 @@ public interface AppleIapReceiptService {
      * Gets the receipt with the id, or throws a {@link NotFoundException} if the
      * receipt can't be found.
      *
-     * @param originalTransactionIdentifier the original apple transaction id
+     * @param originalTransactionId the original apple transaction id
      * @return the {@link AppleIapReceipt} that was requested, never null
      */
-    AppleIapReceipt getAppleIapReceipt(String originalTransactionIdentifier);
+    AppleIapReceipt getAppleIapReceipt(String originalTransactionId);
 
     /**
      * Finds a receipt in the db, or creates a new one if necessary.
@@ -48,9 +48,9 @@ public interface AppleIapReceiptService {
     /**
      * Deletes an existing receipt.
      *
-     * @param originalTransactionIdentifier the original apple transaction id
+     * @param originalTransactionId the original apple transaction id
      */
-    void deleteAppleIapReceipt(String originalTransactionIdentifier);
+    void deleteAppleIapReceipt(String originalTransactionId);
 
     /**
      * Verifies the given base64-encoded receiptData string against the Apple servers in the given environment.

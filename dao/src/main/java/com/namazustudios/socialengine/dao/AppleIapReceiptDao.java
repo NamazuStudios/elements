@@ -12,8 +12,8 @@ import com.namazustudios.socialengine.rt.annotation.Expose;
 import java.util.Set;
 
 @Expose(modules = {
-        "namazu.elements.dao.apple_iap_receipt",
-        "namazu.socialengine.dao.apple_iap_receipt",
+        "namazu.elements.dao.appleiapreceipt",
+        "namazu.socialengine.dao.appleiapreceipt",
 })
 public interface AppleIapReceiptDao {
 
@@ -31,10 +31,10 @@ public interface AppleIapReceiptDao {
      * Gets the receipt with the id, or throws a {@link NotFoundException} if the
      * receipt can't be found.
      *
-     * @param originalTransactionIdentifier the original apple transaction id
+     * @param originalTransactionId the original apple transaction id
      * @return the {@link AppleIapReceipt} that was requested, never null
      */
-    AppleIapReceipt getAppleIapReceipt(String originalTransactionIdentifier);
+    AppleIapReceipt getAppleIapReceipt(String originalTransactionId);
 
     /**
      * Creates a new receipt.
@@ -50,8 +50,8 @@ public interface AppleIapReceiptDao {
     /**
      * Deletes an existing receipt.
      *
-     * @param originalTransactionIdentifier the original apple transaction id
+     * @param originalTransactionId the original apple transaction id
      */
-    void deleteAppleIapReceipt(String originalTransactionIdentifier);
+    void deleteAppleIapReceipt(String originalTransactionId);
 
 }

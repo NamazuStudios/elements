@@ -73,19 +73,19 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
     }
 
     @Override
-    public AppleIapReceipt getAppleIapReceipt(String originalTransactionIdentifier) {
-        if (isEmpty(nullToEmpty(originalTransactionIdentifier).trim())) {
-            throw new NotFoundException("Unable to find apple iap receipt with an id of " + originalTransactionIdentifier);
+    public AppleIapReceipt getAppleIapReceipt(String originalTransactionId) {
+        if (isEmpty(nullToEmpty(originalTransactionId).trim())) {
+            throw new NotFoundException("Unable to find apple iap receipt with an id of " + originalTransactionId);
         }
 
         final Query<MongoAppleIapReceipt> receiptQuery = getDatastore().createQuery(MongoAppleIapReceipt.class);
 
-        receiptQuery.criteria("_id").equal(originalTransactionIdentifier);
+        receiptQuery.criteria("_id").equal(originalTransactionId);
 
         final MongoAppleIapReceipt mongoAppleIapReceipt = receiptQuery.get();
 
         if(null == mongoAppleIapReceipt) {
-            throw new NotFoundException("Unable to find apple iap receipt with an id of " + originalTransactionIdentifier);
+            throw new NotFoundException("Unable to find apple iap receipt with an id of " + originalTransactionId);
         }
 
         return getDozerMapper().map(mongoAppleIapReceipt, AppleIapReceipt.class);
@@ -96,7 +96,7 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
         getValidationHelper().validateModel(appleIapReceipt, Insert.class);
 
         try {
-            AppleIapReceipt resultAppleIapReceipt = getAppleIapReceipt(appleIapReceipt.getOriginalTransactionIdentifier());
+            AppleIapReceipt resultAppleIapReceipt = getAppleIapReceipt(appleIapReceipt.getOriginalTransactionId());
             return resultAppleIapReceipt;
         }
         catch (NotFoundException e) {
@@ -118,11 +118,11 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
     }
 
     @Override
-    public void deleteAppleIapReceipt(String originalTransactionIdentifier) {
-        final WriteResult writeResult = getDatastore().delete(MongoAppleIapReceipt.class, originalTransactionIdentifier);
+    public void deleteAppleIapReceipt(String originalTransactionId) {
+        final WriteResult writeResult = getDatastore().delete(MongoAppleIapReceipt.class, originalTransactionId);
 
         if (writeResult.getN() == 0) {
-            throw new NotFoundException("Apple IAP Receipt not found: " + originalTransactionIdentifier);
+            throw new NotFoundException("Apple IAP Receipt not found: " + originalTransactionId);
         }
     }
 

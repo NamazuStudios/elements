@@ -37,7 +37,7 @@ public class ApplicationConfiguration implements Serializable {
 
     @ApiModelProperty("A mapping of IAP product identifiers to Item ids in the db")
     // iap product ids to item ids
-    private Map<String, String> iapProductIdToItemIds;
+    private Map<String, String> iapProductIdsToItemIds;
 
     /**
      * Gets the actual profile ID.
@@ -111,22 +111,21 @@ public class ApplicationConfiguration implements Serializable {
         this.parent = parent;
     }
 
-    public Map<String, String> getIapProductIdToItemIds() {
-        return iapProductIdToItemIds;
+    public Map<String, String> getIapProductIdsToItemIds() {
+        return iapProductIdsToItemIds;
     }
 
-    public void setIapProductIdToItemIds(Map<String, String> iapProductIdToItemIds) {
-        this.iapProductIdToItemIds =
-                iapProductIdToItemIds != null ? iapProductIdToItemIds : Collections.emptyMap();
+    public void setIapProductIdsToItemIds(Map<String, String> iapProductIdsToItemIds) {
+        this.iapProductIdsToItemIds = iapProductIdsToItemIds;
     }
 
     public void addIapProductIdToItemIds(final String productId, final String itemId) {
 
-        if (getIapProductIdToItemIds() == null) {
-            setIapProductIdToItemIds(new HashMap<>());
+        if (getIapProductIdsToItemIds() == null) {
+            setIapProductIdsToItemIds(new HashMap<>());
         }
 
-        getIapProductIdToItemIds().put(productId, itemId);
+        getIapProductIdsToItemIds().put(productId, itemId);
     }
 
     @Override
@@ -138,11 +137,11 @@ public class ApplicationConfiguration implements Serializable {
                 getCategory() == that.getCategory() &&
                 Objects.equals(getUniqueIdentifier(), that.getUniqueIdentifier()) &&
                 Objects.equals(getParent(), that.getParent()) &&
-                Objects.equals(getIapProductIdToItemIds(), that.getIapProductIdToItemIds());
+                Objects.equals(getIapProductIdsToItemIds(), that.getIapProductIdsToItemIds());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getCategory(), getUniqueIdentifier(), getParent(), getIapProductIdToItemIds());
+        return Objects.hash(getId(), getCategory(), getUniqueIdentifier(), getParent(), getIapProductIdsToItemIds());
     }
 }

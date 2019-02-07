@@ -7,14 +7,13 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.IOS_APP_STORE;
 
 import com.namazustudios.socialengine.model.application.IosApplicationConfiguration;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.mission.Reward;
 import com.namazustudios.socialengine.model.mission.RewardIssuance;
-import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker;
 import com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker.AppleIapVerifyReceiptEnvironment;
 import com.namazustudios.socialengine.service.appleiap.client.model.AppleIapGrandUnifiedReceipt;
@@ -27,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.APPLE_IAP_SOURCE;
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.Type.PERSISTENT;
@@ -34,9 +34,9 @@ import static com.namazustudios.socialengine.model.mission.RewardIssuance.buildA
 
 public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
-    private Session session;
-
     private User user;
+
+    private Supplier<Profile> currentProfileSupplier;
 
     private AppleIapReceiptDao appleIapReceiptDao;
 
@@ -124,13 +124,13 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
         this.applicationConfigurationDao = applicationConfigurationDao;
     }
 
-    public Session getSession() {
-        return session;
+    public Supplier<Profile> getCurrentProfileSupplier() {
+        return currentProfileSupplier;
     }
 
     @Inject
-    public void setSession(Session session) {
-        this.session = session;
+    public void setCurrentProfileSupplier(Supplier<Profile> currentProfileSupplier) {
+        this.currentProfileSupplier = currentProfileSupplier;
     }
 
     @Override
@@ -139,8 +139,8 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
     }
 
     @Override
-    public AppleIapReceipt getAppleIapReceipt(String originalTransactionIdentifier) {
-        return appleIapReceiptDao.getAppleIapReceipt(originalTransactionIdentifier);
+    public AppleIapReceipt getAppleIapReceipt(String originalTransactionId) {
+        return appleIapReceiptDao.getAppleIapReceipt(originalTransactionId);
     }
 
     @Override
@@ -149,8 +149,8 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
     }
 
     @Override
-    public void deleteAppleIapReceipt(String originalTransactionIdentifier) {
-        appleIapReceiptDao.deleteAppleIapReceipt(originalTransactionIdentifier);
+    public void deleteAppleIapReceipt(String originalTransactionId) {
+        appleIapReceiptDao.deleteAppleIapReceipt(originalTransactionId);
     }
 
     @Override
@@ -170,10 +170,11 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
                     appleIapGrandUnifiedReceipt.getInApp()) {
                 // map the grand unified receipt and the purchase entities into a single model for db insertion
                 final AppleIapReceipt appleIapReceipt = getDozerMapper().map(appleIapGrandUnifiedReceipt, AppleIapReceipt.class);
-                getDozerMapper().map(appleIapReceipt, appleIapGrandUnifiedReceiptPurchase);
+                getDozerMapper().map(appleIapGrandUnifiedReceiptPurchase, appleIapReceipt);
 
-                // manually add the receipt data to the model
+                // manually add the receipt data and user to the model
                 appleIapReceipt.setReceiptData(receiptData);
+                appleIapReceipt.setUser(getUser());
 
                 // perform insertion/retrieval
                 final AppleIapReceipt resultAppleIapReceipt = getOrCreateAppleIapReceipt(appleIapReceipt);
@@ -189,23 +190,22 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
     public List<RewardIssuance> getOrCreateRewardIssuances(List<AppleIapReceipt> appleIapReceipts) {
         final List<RewardIssuance> resultRewardIssuances = new ArrayList<>();
 
-        // first, we get the application id from the current session
-        final Session session = getSession();
+        final Profile profile = getCurrentProfileSupplier().get();
 
-        if (session == null) {
-            throw new NotFoundException("User has no session.");
+        if (profile == null) {
+            throw new NotFoundException("User has no profile.");
         }
 
-        final Application application = session.getApplication();
+        final Application application = profile.getApplication();
 
         if (application == null) {
-            throw new InvalidDataException("Session is not associated with a valid application.");
+            throw new InvalidDataException("Profile is not associated with a valid application.");
         }
 
-        final String applicationId = getSession().getApplication().getId();
+        final String applicationId = application.getId();
 
         if (applicationId == null || applicationId.length() == 0) {
-            throw new InvalidDataException("Application id associated with the session is invalid.");
+            throw new InvalidDataException("Application id associated with the profile is invalid.");
         }
 
         // next, we look up the associated application configuration
@@ -217,7 +217,7 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
         // for each purchase we received from the ios app...
         for (AppleIapReceipt appleIapReceipt : appleIapReceipts) {
-            final String context = buildAppleIapContextString(appleIapReceipt.getOriginalTransactionIdentifier());
+            final String context = buildAppleIapContextString(appleIapReceipt.getOriginalTransactionId());
             final Map<String, Object> metadata = generateAppleIapReceiptMetadata();
 
             try {
@@ -226,9 +226,9 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
             }
             catch (NotFoundException e) {
                 // now, we look up the item id related to the current receipt's product id
-                final String productId = appleIapReceipt.getProductIdentifier();
+                final String productId = appleIapReceipt.getProductId();
                 final Map<String, String> iapProductIdsToItemIds = iosApplicationConfiguration
-                        .getIapProductIdToItemIds();
+                        .getIapProductIdsToItemIds();
 
                 if (iapProductIdsToItemIds == null) {
                     throw new InvalidDataException("Application Configuration " + iosApplicationConfiguration.getId() +

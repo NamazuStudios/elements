@@ -44,16 +44,17 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             Class<T> type) {
         final MongoApplication parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        final Query<T> query = getDatastore().createQuery(type);
-        query.and(
-            query.criteria("parent").equal(parent),
-            query.criteria("category").equal(configurationCategory)
-        );
+        final Query<MongoApplicationConfiguration> query =
+                getDatastore().createQuery(MongoApplicationConfiguration.class);
+        query.field("parent").equal(parent);
+        query.field("category").equal(configurationCategory);
 
-        return query
+        List<T> applicationConfigurations = query
             .asList().stream()
-            .map(ac -> getBeanMapper().map(ac, type))
+            .map(mac -> getBeanMapper().map(mac, type))
             .collect(Collectors.toList());
+
+        return applicationConfigurations;
     }
 
     @Override

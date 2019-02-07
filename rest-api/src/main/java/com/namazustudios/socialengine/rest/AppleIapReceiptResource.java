@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rest;
 
+import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
 import com.namazustudios.socialengine.model.appleiapreceipt.CreateAppleIapReceipt;
 import com.namazustudios.socialengine.model.appleiapreceipt.CreateAppleIapReceipt.CreateAppleIapReceiptEnvironment;
@@ -22,7 +23,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
      description = "A REST interface where Apple IAP receipts are POSTed for the purposes of generating " +
              "RewardIssuances.",
      authorizations = {@Authorization(SESSION_SECRET)})
-@Path("appleiap")
+@Path("ios")
 public class AppleIapReceiptResource {
 
     private AppleIapReceiptService appleIapReceiptService;
@@ -30,11 +31,12 @@ public class AppleIapReceiptResource {
     private ValidationHelper validationHelper;
 
     @POST
+    @Path("receipt")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Upload Apple IAP Receipt. Returns a list of RewardIssuances, which may contain already-" +
             "redeemed issuances.")
     public List<RewardIssuance> uploadAppleIapReceipt(final CreateAppleIapReceipt createAppleIapReceipt) {
-        getValidationHelper().validateModel(createAppleIapReceipt, CreateAppleIapReceipt.class);
+        getValidationHelper().validateModel(createAppleIapReceipt, Create.class);
         final String receiptData = createAppleIapReceipt.getReceiptData();
 
         final CreateAppleIapReceiptEnvironment createAppleIapReceiptEnvironment =
@@ -51,7 +53,7 @@ public class AppleIapReceiptResource {
                 appleIapVerifyReceiptEnvironment = AppleIapVerifyReceiptEnvironment.SANDBOX;
                 break;
         }
-        
+
         final List<AppleIapReceipt> resultAppleIapReceipts = getAppleIapReceiptService()
                 .verifyAndCreateAppleIapReceiptsIfNeeded(appleIapVerifyReceiptEnvironment, receiptData);
 

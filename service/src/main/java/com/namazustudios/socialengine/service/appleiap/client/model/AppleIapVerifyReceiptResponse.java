@@ -8,7 +8,7 @@ import java.util.*;
 public class AppleIapVerifyReceiptResponse {
     private Integer status;
 
-    private AppleIapGrandUnifiedReceipt appleIapGrandUnifiedReceipt;
+    private AppleIapGrandUnifiedReceipt receipt;
 
     public Integer getStatus() {
         return status;
@@ -18,12 +18,12 @@ public class AppleIapVerifyReceiptResponse {
         this.status = status;
     }
 
-    public AppleIapGrandUnifiedReceipt getAppleIapGrandUnifiedReceipt() {
-        return appleIapGrandUnifiedReceipt;
+    public AppleIapGrandUnifiedReceipt getReceipt() {
+        return receipt;
     }
 
-    public void setAppleIapGrandUnifiedReceipt(AppleIapGrandUnifiedReceipt appleIapGrandUnifiedReceipt) {
-        this.appleIapGrandUnifiedReceipt = appleIapGrandUnifiedReceipt;
+    public void setReceipt(AppleIapGrandUnifiedReceipt receipt) {
+        this.receipt = receipt;
     }
 
     @Override
@@ -32,19 +32,19 @@ public class AppleIapVerifyReceiptResponse {
         if (o == null || getClass() != o.getClass()) return false;
         AppleIapVerifyReceiptResponse that = (AppleIapVerifyReceiptResponse) o;
         return Objects.equals(getStatus(), that.getStatus()) &&
-                Objects.equals(getAppleIapGrandUnifiedReceipt(), that.getAppleIapGrandUnifiedReceipt());
+                Objects.equals(getReceipt(), that.getReceipt());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getStatus(), getAppleIapGrandUnifiedReceipt());
+        return Objects.hash(getStatus(), getReceipt());
     }
 
     @Override
     public String toString() {
-        return "AppleIapReceiptResponse{" +
+        return "AppleIapVerifyReceiptResponse{" +
                 "status=" + status +
-                ", appleIapGrandUnifiedReceipt=" + appleIapGrandUnifiedReceipt +
+                ", receipt=" + receipt +
                 '}';
     }
 }

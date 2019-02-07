@@ -56,7 +56,7 @@ public interface ApplicationConfigurationDao {
                 getApplicationConfigurationsForApplication(applicationNameOrId, configurationCategory, type);
 
         if (applicationConfigurationList.isEmpty()) {
-            throw new ApplicationConfigurationNotFoundException("No " + configurationCategory.toString() + " configuration for " + applicationNameOrId);
+            throw new ApplicationConfigurationNotFoundException("No " + configurationCategory.toString() + " configuration for application name/id: " + applicationNameOrId);
         } else if (applicationConfigurationList.size() > 1) {
             throw new NotificationConfigurationException(
                     applicationConfigurationList.size() + " " + configurationCategory.toString() +

@@ -276,7 +276,7 @@ public class RewardIssuance implements Serializable {
         return buildContextString(SERVER_CONTEXT_PREFIX, MISSION_PROGRESS_SOURCE, progressId, sequence);
     }
 
-    public static String buildAppleIapContextString(String originalTransactionIdentifier) {
-        return buildContextString(SERVER_CONTEXT_PREFIX, APPLE_IAP_SOURCE, originalTransactionIdentifier);
+    public static String buildAppleIapContextString(String originalTransactionId) {
+        return buildContextString(SERVER_CONTEXT_PREFIX, APPLE_IAP_SOURCE, originalTransactionId);
     }
 }

@@ -224,7 +224,11 @@ public class AppleIapGrandUnifiedReceiptPurchase {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getQuantity(), getProductId(), getTransactionId(), getOriginalTransactionId(), getPurchaseDate(), getOriginalPurchaseDate(), getExpiresDate(), getExpirationIntent(), isInBillingRetryPeriod, isTrialPeriod, isInIntroOfferPeriod, getCancellationDate(), getCancellationReason(), getAppItemId(), getVersionExternalIdentifier(), getWebOrderLineItemId(), getAutoRenewStatus(), getAutoRenewProductId(), getPriceConsentStatus());
+        return Objects.hash(getQuantity(), getProductId(), getTransactionId(), getOriginalTransactionId(),
+                getPurchaseDate(), getOriginalPurchaseDate(), getExpiresDate(), getExpirationIntent(),
+                isInBillingRetryPeriod, isTrialPeriod, isInIntroOfferPeriod, getCancellationDate(),
+                getCancellationReason(), getAppItemId(), getVersionExternalIdentifier(), getWebOrderLineItemId(),
+                getAutoRenewStatus(), getAutoRenewProductId(), getPriceConsentStatus());
     }
 
     @Override
