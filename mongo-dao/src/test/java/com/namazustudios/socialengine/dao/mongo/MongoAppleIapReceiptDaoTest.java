@@ -1,18 +1,9 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.*;
-import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
-import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
-import com.namazustudios.socialengine.model.goods.Item;
-import com.namazustudios.socialengine.model.inventory.InventoryItem;
-import com.namazustudios.socialengine.model.mission.RewardIssuance;
-import com.namazustudios.socialengine.model.mission.Reward;
-import org.bson.types.ObjectId;
 import org.testng.ITestContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -22,16 +13,8 @@ import org.testng.annotations.Test;
 import javax.inject.Inject;
 
 import java.util.Date;
-import java.util.List;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
-import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.*;
-import static com.namazustudios.socialengine.model.mission.RewardIssuance.Type.*;
-import static java.lang.System.currentTimeMillis;
-import static java.util.Arrays.fill;
-import static java.util.stream.Collectors.reducing;
-import static java.util.stream.Collectors.toSet;
-import static java.util.stream.Stream.of;
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
@@ -143,7 +126,7 @@ public class MongoAppleIapReceiptDaoTest {
             // this is the expected result
         }
     }
-    
+
     public UserDao getUserDao() {
         return userDao;
     }
