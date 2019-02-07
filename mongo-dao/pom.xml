@@ -116,6 +116,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.zeromq</groupId>
+            <artifactId>jeromq</artifactId>
+            <version>${jeromq.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.bval</groupId>
             <artifactId>bval-guice</artifactId>
             <version>${bval.guice.version}</version>

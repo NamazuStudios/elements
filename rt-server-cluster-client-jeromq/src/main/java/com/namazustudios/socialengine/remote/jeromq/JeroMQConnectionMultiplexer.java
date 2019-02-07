@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.jeromq.*;
 import com.namazustudios.socialengine.rt.remote.RoutingHeader;
+import com.namazustudios.socialengine.rt.util.SyncWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.*;
@@ -11,6 +12,7 @@ import org.zeromq.*;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND;
@@ -50,7 +52,8 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
     @Override
     public void start() {
 
-        final Thread thread = new Thread(new Multiplexer());
+        final Multiplexer multiplexer = new Multiplexer();
+        final Thread thread = new Thread(multiplexer);
 
         thread.setDaemon(true);
         thread.setName(JeroMQConnectionMultiplexer.class.getSimpleName());
@@ -58,6 +61,7 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
         if (multiplexerThread.compareAndSet(null, thread)) {
             thread.start();
+            multiplexer.waitForConnect();
         } else {
             throw new IllegalStateException("Multiplexer already started.");
         }
@@ -152,6 +156,12 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
     private class Multiplexer implements Runnable {
 
+        private final SyncWait<Void> connectSyncWait = new SyncWait<Void>(logger);
+
+        public void waitForConnect() {
+            connectSyncWait.get();
+        }
+
         @Override
         public void run() {
 
@@ -162,12 +172,20 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
                  final RoutingTable frontends = new RoutingTable(context, poller, uuid -> bind(context, uuid));
                  final MonitorThread monitorThread = new MonitorThread(getClass().getSimpleName(), logger, context, backend.socket())) {
 
-                monitorThread.start();
-                backend.socket().connect(getConnectAddress());
-                control.socket().bind(getControlAddress());
+                final int backendIndex;
+                final int controlIndex;
 
-                final int backendIndex = poller.register(backend.socket(), POLLIN | POLLERR);
-                final int controlIndex = poller.register(control.socket(), POLLIN | POLLERR);
+                try {
+                    monitorThread.start();
+                    backend.socket().connect(getConnectAddress());
+                    control.socket().bind(getControlAddress());
+                    backendIndex = poller.register(backend.socket(), POLLIN | POLLERR);
+                    controlIndex = poller.register(control.socket(), POLLIN | POLLERR);
+                    connectSyncWait.getResultConsumer().accept(null);
+                } catch (Exception ex) {
+                    connectSyncWait.getErrorConsumer().accept(ex);
+                    return;
+                }
 
                 while (!interrupted()) {
 
