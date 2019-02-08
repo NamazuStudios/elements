@@ -136,7 +136,8 @@ public class MongoGooglePlayIapReceipt {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getOrderId(), getUser(), getProductId(), getPurchaseToken(), getConsumptionState(), getDeveloperPayload(), getKind(), getPurchaseState(), getPurchaseTimeMillis(), getPurchaseType());
+        return Objects.hash(getOrderId(), getUser(), getProductId(), getPurchaseToken(), getConsumptionState(),
+                getDeveloperPayload(), getKind(), getPurchaseState(), getPurchaseTimeMillis(), getPurchaseType());
     }
 
     @Override

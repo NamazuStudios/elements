@@ -134,7 +134,8 @@ public class GooglePlayIapReceipt implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getOrderId(), getProductId(), getPurchaseToken(), getConsumptionState(), getDeveloperPayload(), getKind(), getPurchaseState(), getPurchaseTimeMillis(), getPurchaseType());
+        return Objects.hash(getOrderId(), getProductId(), getPurchaseToken(), getConsumptionState(),
+                getDeveloperPayload(), getKind(), getPurchaseState(), getPurchaseTimeMillis(), getPurchaseType());
     }
 
     @Override
