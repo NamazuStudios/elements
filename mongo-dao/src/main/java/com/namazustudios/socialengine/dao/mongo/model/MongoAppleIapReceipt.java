@@ -1,12 +1,17 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
+import com.namazustudios.elements.fts.annotation.SearchableDocument;
+import com.namazustudios.elements.fts.annotation.SearchableField;
+import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import org.mongodb.morphia.annotations.*;
 
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Objects;
 
-
+@SearchableIdentity(
+        @SearchableField(name = "originalTransactionId", path = "/originalTransactionId", type = String.class)
+)
+@SearchableDocument()
 @Entity(value = "apple_iap_receipt", noClassnameStored = true)
 public class MongoAppleIapReceipt {
 
