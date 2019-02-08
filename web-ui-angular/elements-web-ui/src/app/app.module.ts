@@ -32,7 +32,8 @@ import { MatchmakingApplicationConfigurationDialogComponent } from './matchmakin
 import { GameOnApplicationConfigurationDialogComponent } from './game-on-application-configuration-dialog/game-on-application-configuration-dialog.component';
 import { GameOnPrizeDialogComponent } from './game-on-prize-dialog/game-on-prize-dialog.component';
 import { GameOnPrizesListComponent } from './game-on-prizes-list/game-on-prizes-list.component';
-import { ItemsListComponent } from './items-list/items-list.component'
+import { ItemsListComponent } from './items-list/items-list.component';
+import { ItemDialogComponent } from './item-dialog/item-dialog.component'
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -66,7 +67,8 @@ export function initialize(configService: ConfigService) {
     GameOnApplicationConfigurationDialogComponent,
     GameOnPrizesListComponent,
     GameOnPrizeDialogComponent,
-    ItemsListComponent
+    ItemsListComponent,
+    ItemDialogComponent
   ],
   imports: [
     BrowserModule,
