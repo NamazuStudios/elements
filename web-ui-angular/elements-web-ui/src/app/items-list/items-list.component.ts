@@ -8,6 +8,8 @@ import {AlertService} from '../alert.service';
 import {ConfirmationDialogService} from '../confirmation-dialog/confirmation-dialog.service';
 import {fromEvent} from 'rxjs';
 import {debounceTime, distinctUntilChanged, filter, tap} from 'rxjs/operators';
+import {ItemViewModel} from '../models/item-view-model';
+import {ItemDialogComponent} from '../item-dialog/item-dialog.component';
 
 @Component({
   selector: 'app-digital-goods-list',
@@ -99,7 +101,7 @@ export class ItemsListComponent implements OnInit, AfterViewInit {
 
   deleteSelectedItems(){
     this.dialogService
-      .confirm('Confirm Dialog', `Are you sure you want to delete the ${this.selection.selected.length} selected item${this.selection.selected.length==1 ? '' : 's'}?`)
+      .confirm('Confirm Dialog', `Are you sure you want to delete the ${this.selection.selected.length} selected item${this.selection.selected.length == 1 ? '' : 's'}?`)
       .pipe(filter(r => r))
       .subscribe(res => {
         this.selection.selected.forEach(row => this.doDeleteItem(row));
