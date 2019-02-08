@@ -9,6 +9,7 @@ import { map as __map, filter as __filter } from 'rxjs/operators';
 
 import { PaginationItem } from '../models/pagination-item';
 import { Item } from '../models/item';
+import {Http} from '@angular/http';
 @Injectable({
   providedIn: 'root',
 })
@@ -204,6 +205,44 @@ class ItemsService extends BaseService {
    */
   updateItem(params: ItemsService.UpdateItemParams): Observable<Item> {
     return this.updateItemResponse(params).pipe(
+      __map(_r => _r.body)
+    );
+  }
+
+  /**
+   * Deletes a specific item known to the server.
+   * @param nameOrId undefined
+   */
+  deleteItemResponse(nameOrId: string): Observable<StrictHttpResponse<void>> {
+    let __params = this.newParams();
+    let __headers = new HttpHeaders();
+    let __body: any = null;
+
+    let req = new HttpRequest<any>(
+      "DELETE",
+      this.rootUrl + `/item/${nameOrId}`,
+      __body,
+      {
+        headers: __headers,
+        params: __params,
+        responseType: 'text'
+      }
+    );
+
+    return this.http.request<any>(req).pipe(
+      __filter(_r => _r instanceof HttpResponse),
+      __map((_r: HttpResponse<any>) => {
+        return _r.clone({ body: null}) as StrictHttpResponse<void>
+      })
+    );
+  }
+
+  /**
+   * Deletes a specific item known to the server.
+   * @param nameOrId undefined
+   */
+  deleteItem(nameOrId: string): Observable<void> {
+    return this.deleteItemResponse(nameOrId).pipe(
       __map(_r => _r.body)
     );
   }
