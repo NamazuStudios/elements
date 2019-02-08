@@ -15,6 +15,7 @@
     <modules>
         <module>services-dev</module>
         <module>standalone-dev</module>
+        <module>ui-dev</module>
         <module>namazu-socialengine-ui</module>
         <module>namazu-socialengine-api</module>
         <module>namazu-socialengine-setup</module>
