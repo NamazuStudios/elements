@@ -20,7 +20,7 @@ import { ConfirmationDialogComponent } from './confirmation-dialog/confirmation-
 import { AuthenticationService } from "./authentication.service";
 import { AlertService } from "./alert.service";
 import {ApiErrorInterceptor} from "./api-error.interceptor";
-import {MaterialModule} from "./material.module";
+import {MaterialModule} from "./material/material.module";
 import {ConfirmationDialogService} from "./confirmation-dialog/confirmation-dialog.service";
 import {ApplicationDialogComponent} from "./application-dialog/application-dialog.component";
 import { UserDialogComponent } from './user-dialog/user-dialog.component';
@@ -31,7 +31,8 @@ import {ConfigService} from "./config.service";
 import { MatchmakingApplicationConfigurationDialogComponent } from './matchmaking-application-configuration-dialog/matchmaking-application-configuration-dialog.component';
 import { GameOnApplicationConfigurationDialogComponent } from './game-on-application-configuration-dialog/game-on-application-configuration-dialog.component';
 import { GameOnPrizeDialogComponent } from './game-on-prize-dialog/game-on-prize-dialog.component';
-import { GameOnPrizesListComponent } from './game-on-prizes-list/game-on-prizes-list.component'
+import { GameOnPrizesListComponent } from './game-on-prizes-list/game-on-prizes-list.component';
+import { DigitalGoodsListComponent } from './digital-goods-list/digital-goods-list.component'
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -64,7 +65,8 @@ export function initialize(configService: ConfigService) {
     MatchmakingApplicationConfigurationDialogComponent,
     GameOnApplicationConfigurationDialogComponent,
     GameOnPrizesListComponent,
-    GameOnPrizeDialogComponent
+    GameOnPrizeDialogComponent,
+    DigitalGoodsListComponent
   ],
   imports: [
     BrowserModule,
