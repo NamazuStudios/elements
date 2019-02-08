@@ -5,7 +5,6 @@ import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import org.mongodb.morphia.annotations.*;
 
-import java.util.Date;
 import java.util.Objects;
 
 @SearchableIdentity(

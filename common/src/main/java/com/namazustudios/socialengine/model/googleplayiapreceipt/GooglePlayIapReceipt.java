@@ -1,12 +1,8 @@
 package com.namazustudios.socialengine.model.googleplayiapreceipt;
 
-import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.ValidationGroups.Create;
-import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.*;
