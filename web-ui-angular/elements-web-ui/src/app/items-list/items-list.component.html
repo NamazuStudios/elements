@@ -28,26 +28,21 @@
     </ng-container>
 
     <ng-container matColumnDef="id">
-      <mat-header-cell *matHeaderCellDef>Username</mat-header-cell>
-      <mat-cell *matCellDef="let user">{{user.id}}</mat-cell>
+      <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
+      <mat-cell *matCellDef="let item">{{item.id}}</mat-cell>
     </ng-container>
 
-    <ng-container matColumnDef="email">
-      <mat-header-cell *matHeaderCellDef>Email Address</mat-header-cell>
-      <mat-cell *matCellDef="let user">{{user.email}}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="level">
-      <mat-header-cell *matHeaderCellDef>Access Level</mat-header-cell>
-      <mat-cell *matCellDef="let user">{{user.level}}</mat-cell>
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+      <mat-cell *matCellDef="let item">{{item.name}}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="actions">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
-      <mat-cell *matCellDef="let user">
-        <button mat-raised-button color="primary" (click)="editUser(user)">Edit</button>
+      <mat-cell *matCellDef="let item">
+        <button mat-raised-button color="primary" (click)="editItem(item)">Edit</button>
         &nbsp;
-        <button mat-raised-button color="primary" (click)="deleteUser(user)">Delete</button>
+        <button mat-raised-button color="primary" (click)="deleteItem(item)">Delete</button>
       </mat-cell>
     </ng-container>
 
