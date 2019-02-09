@@ -9,6 +9,10 @@
         <mat-error *ngIf="itemForm.controls.name.hasError('pattern')">Name must consist only of alphanumeric characters</mat-error>
       </mat-form-field>
       <mat-form-field>
+        <input matInput placeholder="Display Name" name="displayName" formControlName="displayName">
+        <mat-error *ngIf=""itemForm.controls.name.hasError('required')">Display name is required</mat-error>
+      </mat-form-field>
+      <mat-form-field>
         <input matInput placeholder="Description" name="description" formControlName="description" >
       </mat-form-field>
     </div>
