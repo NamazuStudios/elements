@@ -175,6 +175,7 @@ class ItemsService extends BaseService {
     let __body: any = null;
 
     __body = params.body;
+    __body.id = params.identifier; // API expects to see id in path AND in request body
     let req = new HttpRequest<any>(
       'PUT',
       this.rootUrl + `/item/${params.identifier}`,
@@ -183,7 +184,8 @@ class ItemsService extends BaseService {
         headers: __headers,
         params: __params,
         responseType: 'json'
-      });
+      }
+    );
 
     return this.http.request<any>(req).pipe(
       __filter(_r => _r instanceof HttpResponse),
