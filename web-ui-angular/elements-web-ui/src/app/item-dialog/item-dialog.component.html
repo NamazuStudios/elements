@@ -10,7 +10,7 @@
       </mat-form-field>
       <mat-form-field>
         <input matInput placeholder="Display Name" name="displayName" formControlName="displayName">
-        <mat-error *ngIf=""itemForm.controls.name.hasError('required')">Display name is required</mat-error>
+        <mat-error *ngIf="itemForm.controls.name.hasError('required')">Display name is required</mat-error>
       </mat-form-field>
       <mat-form-field>
         <input matInput placeholder="Description" name="description" formControlName="description" >
