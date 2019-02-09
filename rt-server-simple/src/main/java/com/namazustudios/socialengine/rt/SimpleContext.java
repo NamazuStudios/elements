@@ -48,27 +48,53 @@ public class SimpleContext implements Context {
         getIndexContext().start();
         getHandlerContext().start();
         getManifestLoader().loadAndRunIfNecessary();
-        StartupManifest startupManifest = getManifestLoader().getStartupManifest();
-        for (final StartupModule startupModule : startupManifest.getModulesByName().values()) {
-            String module = startupModule.getModule();
+        runStartupManifest();
+    }
 
+    private void runStartupManifest() {
+
+        final StartupManifest startupManifest = getManifestLoader().getStartupManifest();
+
+        if (startupManifest == null) {
+            logger.info("No startup Resources to run.  Skipping.");
+            return;
+        } else if (startupManifest.getModulesByName() == null) {
+            logger.info("No startup modules specified in manifest.  Skipping.");
+            return;
+        }
+
+        for (final Map.Entry<String, StartupModule> entry : startupManifest.getModulesByName().entrySet()) {
+
+            final StartupModule startupModule = entry.getValue();
+
+            if (startupModule == null) {
+                logger.info("Startup module '{}' specifies no operation.  Skipping.", entry.getKey());
+                continue;
+            }
+
+            final String module = entry.getKey();
             final Map<String, StartupOperation> startupOperationsByName = startupModule.getOperationsByName();
 
             for (final StartupOperation startupOperation : startupOperationsByName.values()) {
-                String method = startupOperation.getMethod();
+
+                final String method = startupOperation.getMethod();
+                logger.info("Executing startup operation {}: {}.{}", startupOperation.getName(), module, method);
+
                 final Consumer<Throwable> failure = ex -> {
-                    logger.error("Startup exception caught for lua module: {}, lua method: {}.", module, method, ex);
+                    logger.error("Startup exception caught for module: {}, method: {}.", module, method, ex);
                 };
 
                 final Consumer<Object> success = result -> {
+                    logger.info("Startup operation '{}: {}.{}': Success.", startupOperation.getName(), module, method);
                 };
 
                 // unused for now
                 final SimpleAttributes attributes = new SimpleAttributes();
-
                 getHandlerContext().invokeRetainedHandlerAsync(success, failure, attributes, module, method);
+
             }
         }
+
     }
 
     @Override
