@@ -13,7 +13,7 @@ import {ItemDialogComponent} from '../item-dialog/item-dialog.component';
 
 @Component({
   selector: 'app-digital-goods-list',
-  templateUrl: './items-list.html',
+  templateUrl: './items-list.component.html',
   styleUrls: ['./items-list.component.css']
 })
 export class ItemsListComponent implements OnInit, AfterViewInit {
