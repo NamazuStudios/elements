@@ -53,6 +53,11 @@ public enum  ErrorCode {
     NOT_IMPLEMENTED,
 
     /**
+     * An external resource failed to behave ideally.
+     */
+    EXTERNAL_RESOURCE_FAILED,
+
+    /**
      * Some other exception.
      */
     UNKNOWN

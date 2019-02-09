@@ -7,6 +7,10 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Ties the {@link Application} model to one of its associated profiles as represented by the {@link ConfigurationCategory}
@@ -24,12 +28,23 @@ public class ApplicationConfiguration implements Serializable {
     @ApiModelProperty("The category for the application configuration.")
     private ConfigurationCategory category;
 
-    @ApiModelProperty("The application-configuration specific uinique ID.  (Varies by ConfigurationCategory)")
+    @ApiModelProperty("The application-configuration specific unique ID.  (Varies by ConfigurationCategory)")
     private String uniqueIdentifier;
 
     @ApiModelProperty("The parent application owning this configuration.")
     @NotNull
     private Application parent;
+
+    @ApiModelProperty("A mapping of IAP product ids to Item ids in the db. E.g. if we have a productId " +
+            "'pack_10_coins' representing 'Pack of 10 Coins', and we have itemId 'a1b2c3' for the Coin Item in the " +
+            "db, then we should have a kv-pair of 'pack_10_coins': 'a1b2c3'.")
+    // iap product ids to item ids
+    private Map<String, String> iapProductIdsToItemIds;
+
+    @ApiModelProperty("A mapping of IAP product ids in the db to the quantity set when creating a Reward. E.g. for " +
+            "a productId 'pack_10_coins' representing 'Pack of 10 Coins', we should have a kv-pair of " +
+            "'pack_10_coins': 10 .")
+    private Map<String, Integer> iapProductIdsToRewardQuantities;
 
     /**
      * Gets the actual profile ID.
@@ -103,27 +118,68 @@ public class ApplicationConfiguration implements Serializable {
         this.parent = parent;
     }
 
+    public Map<String, String> getIapProductIdsToItemIds() {
+        return iapProductIdsToItemIds;
+    }
+
+    public void setIapProductIdsToItemIds(Map<String, String> iapProductIdsToItemIds) {
+        this.iapProductIdsToItemIds = iapProductIdsToItemIds;
+    }
+
+    public Map<String, Integer> getIapProductIdsToRewardQuantities() {
+        return iapProductIdsToRewardQuantities;
+    }
+
+    public void setIapProductIdsToRewardQuantities(Map<String, Integer> iapProductIdsToRewardQuantities) {
+        this.iapProductIdsToRewardQuantities = iapProductIdsToRewardQuantities;
+    }
+
+    public void addIapProductIdToItemId(final String productId, final String itemId) {
+
+        if (getIapProductIdsToItemIds() == null) {
+            setIapProductIdsToItemIds(new HashMap<>());
+        }
+
+        getIapProductIdsToItemIds().put(productId, itemId);
+    }
+
+    public void addIapProductIdToRewardQuantity(final String productId, final Integer rewardQuantity) {
+
+        if (getIapProductIdsToRewardQuantities() == null) {
+            setIapProductIdsToRewardQuantities(new HashMap<>());
+        }
+
+        getIapProductIdsToRewardQuantities().put(productId, rewardQuantity);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ApplicationConfiguration)) return false;
-
+        if (o == null || getClass() != o.getClass()) return false;
         ApplicationConfiguration that = (ApplicationConfiguration) o;
-
-        if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
-        if (getCategory() != that.getCategory()) return false;
-        if (getUniqueIdentifier() != null ? !getUniqueIdentifier().equals(that.getUniqueIdentifier()) : that.getUniqueIdentifier() != null)
-            return false;
-        return getParent() != null ? getParent().equals(that.getParent()) : that.getParent() == null;
+        return Objects.equals(getId(), that.getId()) &&
+                getCategory() == that.getCategory() &&
+                Objects.equals(getUniqueIdentifier(), that.getUniqueIdentifier()) &&
+                Objects.equals(getParent(), that.getParent()) &&
+                Objects.equals(getIapProductIdsToItemIds(), that.getIapProductIdsToItemIds()) &&
+                Objects.equals(getIapProductIdsToRewardQuantities(), that.getIapProductIdsToRewardQuantities());
     }
 
     @Override
     public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + (getCategory() != null ? getCategory().hashCode() : 0);
-        result = 31 * result + (getUniqueIdentifier() != null ? getUniqueIdentifier().hashCode() : 0);
-        result = 31 * result + (getParent() != null ? getParent().hashCode() : 0);
-        return result;
+        return Objects.hash(getId(), getCategory(), getUniqueIdentifier(), getParent(), getIapProductIdsToItemIds(),
+                getIapProductIdsToRewardQuantities());
     }
 
+    @Override
+    public String toString() {
+        return "ApplicationConfiguration{" +
+                "id='" + id + '\'' +
+                ", category=" + category +
+                ", uniqueIdentifier='" + uniqueIdentifier + '\'' +
+                ", parent=" + parent +
+                ", iapProductIdsToItemIds=" + iapProductIdsToItemIds +
+                ", iapProductIdsToRewardQuantities=" + iapProductIdsToRewardQuantities +
+                '}';
+    }
 }

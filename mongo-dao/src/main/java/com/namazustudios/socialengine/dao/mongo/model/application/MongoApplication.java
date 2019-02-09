@@ -8,6 +8,8 @@ import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
+import java.util.Objects;
+
 /**
  * Created by patricktwohig on 7/10/15.
  */
@@ -80,23 +82,16 @@ public class MongoApplication {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MongoApplication)) return false;
-
+        if (o == null || getClass() != o.getClass()) return false;
         MongoApplication that = (MongoApplication) o;
-
-        if (isActive() != that.isActive()) return false;
-        if (getObjectId() != null ? !getObjectId().equals(that.getObjectId()) : that.getObjectId() != null)
-            return false;
-        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
-        return getDescription() != null ? getDescription().equals(that.getDescription()) : that.getDescription() == null;
+        return isActive() == that.isActive() &&
+                Objects.equals(getObjectId(), that.getObjectId()) &&
+                Objects.equals(getName(), that.getName()) &&
+                Objects.equals(getDescription(), that.getDescription());
     }
 
     @Override
     public int hashCode() {
-        int result = getObjectId() != null ? getObjectId().hashCode() : 0;
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
-        result = 31 * result + (isActive() ? 1 : 0);
-        return result;
+        return Objects.hash(getObjectId(), getName(), getDescription(), isActive());
     }
 }

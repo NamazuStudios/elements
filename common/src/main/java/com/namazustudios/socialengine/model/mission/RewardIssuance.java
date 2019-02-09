@@ -18,7 +18,10 @@ import java.util.Objects;
 @ApiModel(description = "Represents a Reward that has been issued but has not yet been claimed by the user.  The " +
                         "reward is assigned a unique ID to ensure that it may not have been applied more than once.")
 public class RewardIssuance implements Serializable {
+    public static final String SERVER_CONTEXT_PREFIX = "SERVER";
+    public static final String CONTEXT_SEPARATOR = ".";
     public static final String MISSION_PROGRESS_SOURCE = "MISSION_PROGRESS";
+    public static final String APPLE_IAP_SOURCE = "APPLE_IAP";
 
     public static final String MISSION_PROGRESS_PROGRESS_KEY = "progress";
     public static final String MISSION_PROGRESS_STEP_KEY = "step";
@@ -254,5 +257,46 @@ public class RewardIssuance implements Serializable {
          * will be created.
          */
         NON_PERSISTENT
+    }
+
+    public static String buildContextString(Object ... contextComponents) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < contextComponents.length; i++) {
+            Object contextComponent = contextComponents[i];
+            stringBuilder.append(contextComponent.toString());
+            if (i < contextComponents.length - 1) {
+                stringBuilder.append(CONTEXT_SEPARATOR);
+            }
+        }
+
+        return stringBuilder.toString();
+    }
+
+    /**
+     * Builds the context string for a Mission Progression-sourced reward issuance. The last elements in the context
+     * string are, respectively, the {@param progressId} and the {@param sequence} that caused the issuance.
+     *
+     * @param progressId
+     * @param sequence
+     * @return the resultant context string
+     */
+    public static String buildMissionProgressContextString(String progressId, String sequence) {
+        return buildContextString(SERVER_CONTEXT_PREFIX, MISSION_PROGRESS_SOURCE, progressId, sequence);
+    }
+
+    /**
+     * Builds the context string for an Apple IAP-sourced reward issuance. The last element in the context string is
+     * a hash of the {@param originalTransactionId} as well as the {@param skuIndex}, i.e. the index of the product as
+     * enumerated in SKPayment.quantity (i.e. the "first" SKU to be redeemed, the "second" to be redeemed, etc.).
+     *
+     * @param originalTransactionId
+     * @param skuIndex
+     * @return the resultant context string
+     */
+    public static String buildAppleIapContextString(String originalTransactionId, Integer skuIndex) {
+        final int originalTransactionIdAndSkuIndexHash = Objects.hash(originalTransactionId, skuIndex);
+        final String originalTransactionIdAndSkuIndexHashString =
+                Integer.toString(originalTransactionIdAndSkuIndexHash);
+        return buildContextString(SERVER_CONTEXT_PREFIX, APPLE_IAP_SOURCE, originalTransactionIdAndSkuIndexHashString);
     }
 }
