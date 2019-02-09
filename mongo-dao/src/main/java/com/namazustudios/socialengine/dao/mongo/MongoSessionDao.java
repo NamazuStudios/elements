@@ -151,8 +151,7 @@ public class MongoSessionDao implements SessionDao {
         mongoSession.setSessionId(sessionId);
 
         getDatastore().save(mongoSession);
-
-        updateProfileLastLogin(session.getProfile().getId());
+        if (session.getProfile() != null) updateProfileLastLogin(session.getProfile().getId());
 
         final SessionCreation sessionCreation = new SessionCreation();
         sessionCreation.setSessionSecret(mongoSessionSecret.getSessionSecret());
