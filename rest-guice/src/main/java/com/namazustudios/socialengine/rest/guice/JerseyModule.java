@@ -157,6 +157,7 @@ public abstract class JerseyModule extends ServletModule {
         bind(ApplicationConfigurationResource.class);
         bind(PSNApplicationConfigurationResource.class);
         bind(ItemResource.class);
+        bind(AppleIapReceiptResource.class);
         return this;
     }
 

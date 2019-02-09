@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.model.application;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Represents the application profile and any associated metadata, such as APNS certificate

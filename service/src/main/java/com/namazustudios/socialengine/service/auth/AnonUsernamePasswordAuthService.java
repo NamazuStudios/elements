@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
@@ -64,6 +65,12 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
 
         session.setUser(user);
         session.setProfile(profile);
+
+        final Application application = profile.getApplication();
+
+        if (application != null) {
+            session.setApplication(application);
+        }
 
         final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
         session.setExpiry(expiry);

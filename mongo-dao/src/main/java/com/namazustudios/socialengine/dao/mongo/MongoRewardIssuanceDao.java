@@ -70,6 +70,26 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         return getDozerMapper().map(mongoRewardIssuance, RewardIssuance.class);
     }
 
+    @Override
+    public RewardIssuance getRewardIssuance(final User user, final String context) {
+        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
+        final Query<MongoRewardIssuance> query = getDatastore().createQuery(MongoRewardIssuance.class);
+
+        query.field("user").equal(mongoUser);
+        query.field("context").equal(context);
+
+        final List<MongoRewardIssuance> mongoRewardIssuances = query.asList();
+
+        if (mongoRewardIssuances != null && !mongoRewardIssuances.isEmpty()) {
+            final MongoRewardIssuance mongoRewardIssuance = mongoRewardIssuances.get(0);
+            return getDozerMapper().map(mongoRewardIssuance, RewardIssuance.class);
+        }
+        else {
+            throw new NotFoundException("Unable to find reward issuance with user: " +
+                    mongoUser.getObjectId().toHexString() + "and context: " + context);
+        }
+    }
+
     public MongoRewardIssuance getMongoRewardIssuance(final String id) {
         if (isEmpty(nullToEmpty(id).trim())) {
             throw new NotFoundException("Unable to find reward issuance with an id " + id);

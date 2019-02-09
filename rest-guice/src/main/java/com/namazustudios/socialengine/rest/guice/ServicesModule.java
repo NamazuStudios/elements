@@ -1,12 +1,13 @@
 package com.namazustudios.socialengine.rest.guice;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.PrivateModule;
 import com.google.inject.servlet.ServletScopes;
 import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.security.PasswordGenerator;
 import com.namazustudios.socialengine.security.SecureRandomPasswordGenerator;
 import com.namazustudios.socialengine.service.*;
+import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptService;
+import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptServiceProvider;
 import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.*;
 import com.namazustudios.socialengine.service.friend.FacebookFriendServiceProvider;
@@ -181,6 +182,10 @@ public class ServicesModule extends PrivateModule {
                 .toProvider(FacebookAuthServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
+        bind(AppleIapReceiptService.class)
+                .toProvider(AppleIapReceiptServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
         bind(SessionService.class).to(AnonSessionService.class);
         bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
 
@@ -225,8 +230,7 @@ public class ServicesModule extends PrivateModule {
         expose(FacebookAuthService.class);
         expose(VersionService.class);
         expose(SessionService.class);
-
-
+        expose(AppleIapReceiptService.class);
     }
 
 }
