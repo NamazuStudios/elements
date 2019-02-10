@@ -345,8 +345,9 @@ public class MongoProgressDao implements ProgressDao {
                 .stream()
                 .filter(r -> r != null && r.getItem() != null)
                 .map(r -> {
-                    final String context = "server." + mongoProgress.getObjectId().toHexString() + "." +
-                            mongoProgress.getSequence();
+                    final String context = buildMissionProgressContextString(
+                            mongoProgress.getObjectId().toHexString(),
+                            Integer.toString(mongoProgress.getSequence()));
                     final MongoRewardIssuanceId mongoRewardIssuanceId =
                             new MongoRewardIssuanceId(mongoUser.getObjectId(), r.getObjectId(), context);
 

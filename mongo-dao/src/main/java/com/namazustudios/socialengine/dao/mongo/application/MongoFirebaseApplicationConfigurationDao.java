@@ -24,7 +24,8 @@ import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.FIREBASE;
 
-public class MongoFirebaseApplicationConfigurationDao implements FirebaseApplicationConfigurationDao {
+public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationConfigurationDao
+        implements FirebaseApplicationConfigurationDao {
 
     private ObjectIndex objectIndex;
 
@@ -104,24 +105,6 @@ public class MongoFirebaseApplicationConfigurationDao implements FirebaseApplica
         }
 
         return getBeanMapper().map(mongoFirebaseApplicationConfiguration, FirebaseApplicationConfiguration.class);
-
-    }
-
-    @Override
-    public List<FirebaseApplicationConfiguration> getFirebaseApplicationConfigurationsForApplication(final String applicationNameOrId) {
-
-        final MongoApplication parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
-
-        final Query<MongoFirebaseApplicationConfiguration> query = getDatastore().createQuery(MongoFirebaseApplicationConfiguration.class);
-        query.and(
-            query.criteria("parent").equal(parent),
-            query.criteria("category").equal(FIREBASE)
-        );
-
-        return query
-            .asList().stream()
-            .map(fac -> getBeanMapper().map(fac, FirebaseApplicationConfiguration.class))
-            .collect(Collectors.toList());
 
     }
 

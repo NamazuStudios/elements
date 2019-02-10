@@ -24,11 +24,19 @@ public interface RewardIssuanceDao {
     /**
      * Fetches the instance of {@link RewardIssuance}.
      *
-     * @param id the id of hte {@link RewardIssuance} as specified by {@link RewardIssuance#getId()}.
+     * @param id the id of the {@link RewardIssuance} as specified by {@link RewardIssuance#getId()}.
      *
-     * @return the pending reward
+     * @return the reward issuance
      */
     RewardIssuance getRewardIssuance(String id);
+
+    /**
+     * Fetches the reward issuance for the given user and context.
+     * @param user
+     * @param context
+     * @return the reward issuance
+     */
+    RewardIssuance getRewardIssuance(User user, String context);
 
     /**
      * Gets all reward issuances.
