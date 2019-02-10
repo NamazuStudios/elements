@@ -124,6 +124,7 @@ export class ItemsListComponent implements OnInit, AfterViewInit {
 
   addItem() {
     this.showDialog(true, new ItemViewModel(), result => {
+      console.log(result);
       this.itemsService.createItem(result).subscribe(r => {
           this.refresh();
         },

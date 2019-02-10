@@ -92,6 +92,8 @@ class ItemsService extends BaseService {
     let __body: any = null;
     __body = body;
 
+    console.log(body);
+    console.log(__body);
     let req = new HttpRequest<any>(
       'POST',
       this.rootUrl + `/item`,
@@ -100,8 +102,10 @@ class ItemsService extends BaseService {
         headers: __headers,
         params: __params,
         responseType: 'json'
-      });
+      }
+    );
 
+    console.log(req);
     return this.http.request<any>(req).pipe(
       __filter(_r => _r instanceof HttpResponse),
       __map((_r: HttpResponse<any>) => {
@@ -187,6 +191,8 @@ class ItemsService extends BaseService {
         responseType: 'json'
       }
     );
+
+    console.log(req);
 
     return this.http.request<any>(req).pipe(
       __filter(_r => _r instanceof HttpResponse),
