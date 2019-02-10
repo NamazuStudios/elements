@@ -91,6 +91,7 @@ class ItemsService extends BaseService {
     let __headers = new HttpHeaders();
     let __body: any = null;
     __body = body;
+
     let req = new HttpRequest<any>(
       'POST',
       this.rootUrl + `/item`,
@@ -175,7 +176,7 @@ class ItemsService extends BaseService {
     let __body: any = null;
 
     __body = params.body;
-    __body.id = params.identifier; // API expects to see id in path AND in request body
+    __body.id = params.identifier;
     let req = new HttpRequest<any>(
       'PUT',
       this.rootUrl + `/item/${params.identifier}`,

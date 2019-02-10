@@ -132,8 +132,8 @@ export class ItemsListComponent implements OnInit, AfterViewInit {
   }
 
   editItem(item) {
-    this.showDialog(false, item, result => {
-      this.itemsService.updateItem({ identifier: item.id, body: result }).subscribe(r => {
+    this.showDialog(false, item, res => {
+      this.itemsService.updateItem({ identifier: item.id, body: res }).subscribe(r => {
           this.refresh();
         },
         error => this.alertService.error(error));

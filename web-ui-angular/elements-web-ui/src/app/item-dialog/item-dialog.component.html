@@ -26,15 +26,15 @@
             {{tag}}
             <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
           </mat-chip>
+          <input formControlName="tags" name="tags" placeholder="Add tags..." [matChipInputFor]="itemsTagList"
+                 [matChipInputSeparatorKeyCodes]="separatorKeyCodes" (matChipInputTokenEnd)="addTag($event)" [matChipInputAddOnBlur]="addOnBlur">
         </mat-chip-list>
-        <input formControlName="tags" name="tags" placeholder="Item tags..." [matChipInputFor]="itemsTagList"
-               [matChipInputSeparatorKeyCodes]="separatorKeyCodes" (matChipInputTokenEnd)="addTag($event)" [matChipInputAddOnBlur]="addOnBlur">
       </mat-form-field>
     </div>
   </form>
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-button (click)="dialogRef.close(itemForm.value)" [disabled]="!itemForm.valid">OK</button>
-  <button type="button" mat-raised-button (click)="dialogRef.close()">Cancel</button>
+  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!itemForm.valid">OK</button>
+  <button type="button" mat-raised-button (click)="close()">Cancel</button>
 </div>

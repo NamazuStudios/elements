@@ -22,7 +22,7 @@ export class ItemDialogComponent implements OnInit {
     name: [ this.data.item.name, [Validators.required, Validators.pattern('^[a-zA-Z0-9]+$') ]],
     displayName: [ this.data.item.displayName, [Validators.required]],
     description: [ this.data.item.description ],
-    tags: [ this.data.item.tags ]
+    tags: []
   });
 
   addTag(event: MatChipInputEvent): void {
@@ -30,13 +30,39 @@ export class ItemDialogComponent implements OnInit {
     const value = event.value;
 
     if ((value || '').trim()) {
+      if (this.data.item.tags == undefined) { this.data.item.tags = []; }
       this.data.item.tags.push(value);
     }
 
     if (input) {
       input.value = '';
     }
-    console.log(this.data.item.tags);
+  }
+
+  remove(tag: string): void {
+    const index = this.data.item.tags.indexOf(tag);
+
+    if (index >= 0) {
+      this.data.item.tags.splice(index, 1);
+    }
+  }
+
+  /*
+  * Can't just call dialogRef.close(itemForm.value) since it doesn't accurately
+  * capture changes to item tags so we need to explicitly attach the entire tag
+  * array to the itemForm, overwriting the initial tags value
+  */
+  close(saveChanges: boolean): void {
+    if (!saveChanges) {
+      this.dialogRef.close();
+      return;
+    }
+
+    const formData = this.itemForm.value;
+    if (this.data.item.tags !== undefined) {
+      formData.tags = this.data.item.tags;
+    }
+    this.dialogRef.close(formData);
   }
 
   ngOnInit() {
