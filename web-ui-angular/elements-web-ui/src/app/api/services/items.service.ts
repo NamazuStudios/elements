@@ -106,6 +106,9 @@ class ItemsService extends BaseService {
     );
 
     console.log(req);
+
+    // TODO: FIGURE OUT WHAT THE FUCK IS HAPPENING HERE
+
     return this.http.request<any>(req).pipe(
       __filter(_r => _r instanceof HttpResponse),
       __map((_r: HttpResponse<any>) => {
