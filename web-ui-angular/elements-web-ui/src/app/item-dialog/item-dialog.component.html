@@ -20,6 +20,16 @@
       <mat-form-field>
         <input matInput placeholder="Description" name="description" formControlName="description" >
       </mat-form-field>
+      <mat-form-field>
+        <mat-chip-list #itemsTagList>
+          <mat-chip *ngFor="let tag of data.item.tags" [selectable]="selectable" [removable]="removable" (removed)="remove(tag)">
+            {{tag}}
+            <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+          </mat-chip>
+        </mat-chip-list>
+        <input formControlName="tags" name="tags" placeholder="Item tags..." [matChipInputFor]="itemsTagList"
+               [matChipInputSeparatorKeyCodes]="separatorKeyCodes" (matChipInputTokenEnd)="addTag($event)" [matChipInputAddOnBlur]="addOnBlur">
+      </mat-form-field>
     </div>
   </form>
 </div>
