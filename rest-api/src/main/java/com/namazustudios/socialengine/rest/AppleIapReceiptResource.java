@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
 import com.namazustudios.socialengine.model.appleiapreceipt.CreateAppleIapReceipt;
 import com.namazustudios.socialengine.model.appleiapreceipt.CreateAppleIapReceipt.CreateAppleIapReceiptEnvironment;
-import com.namazustudios.socialengine.model.mission.RewardIssuance;
+import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptService;
 import com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker.AppleIapVerifyReceiptEnvironment;
 import com.namazustudios.socialengine.util.ValidationHelper;

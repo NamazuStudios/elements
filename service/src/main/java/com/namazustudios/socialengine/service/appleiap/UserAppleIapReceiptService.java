@@ -11,8 +11,8 @@ import static com.namazustudios.socialengine.model.application.ConfigurationCate
 
 import com.namazustudios.socialengine.model.application.IosApplicationConfiguration;
 import com.namazustudios.socialengine.model.goods.Item;
-import com.namazustudios.socialengine.model.mission.Reward;
-import com.namazustudios.socialengine.model.mission.RewardIssuance;
+import com.namazustudios.socialengine.model.reward.Reward;
+import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker;
 import com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker.AppleIapVerifyReceiptEnvironment;
@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import static com.namazustudios.socialengine.model.mission.RewardIssuance.APPLE_IAP_SOURCE;
-import static com.namazustudios.socialengine.model.mission.RewardIssuance.Type.PERSISTENT;
-import static com.namazustudios.socialengine.model.mission.RewardIssuance.buildAppleIapContextString;
+import static com.namazustudios.socialengine.model.reward.RewardIssuance.APPLE_IAP_SOURCE;
+import static com.namazustudios.socialengine.model.reward.RewardIssuance.Type.PERSISTENT;
+import static com.namazustudios.socialengine.model.reward.RewardIssuance.buildAppleIapContextString;
 
 public class UserAppleIapReceiptService implements AppleIapReceiptService {
 

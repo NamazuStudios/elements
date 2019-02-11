@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModelProperty;
 

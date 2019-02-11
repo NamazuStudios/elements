@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.dao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
-import com.namazustudios.socialengine.model.mission.Reward;
+import com.namazustudios.socialengine.model.reward.Reward;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 
 import java.util.Set;

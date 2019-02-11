@@ -17,22 +17,18 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
-import com.namazustudios.socialengine.model.mission.RewardIssuance;
-import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.*;
-import static com.namazustudios.socialengine.model.mission.RewardIssuance.Type.*;
+import com.namazustudios.socialengine.model.reward.RewardIssuance;
+import static com.namazustudios.socialengine.model.reward.RewardIssuance.State.*;
+import static com.namazustudios.socialengine.model.reward.RewardIssuance.Type.*;
 import com.namazustudios.socialengine.util.ValidationHelper;
-import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.omg.CosNaming.NamingContextPackage.NotFound;
 
 import javax.inject.Inject;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -41,9 +37,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.dao.InventoryItemDao.SIMPLE_PRIORITY;
 import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuanceId.parseOrThrowNotFoundException;
 import static java.lang.System.currentTimeMillis;
-import static java.util.Collections.emptySet;
 import static java.util.UUID.randomUUID;
-import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoRewardIssuanceDao implements RewardIssuanceDao {

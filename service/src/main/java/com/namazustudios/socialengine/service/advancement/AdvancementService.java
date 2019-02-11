@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.service.advancement;
 import com.namazustudios.socialengine.model.advancement.Advancement;
 import com.namazustudios.socialengine.model.mission.Mission;
 import com.namazustudios.socialengine.model.mission.Progress;
-import com.namazustudios.socialengine.model.mission.Reward;
+import com.namazustudios.socialengine.model.reward.Reward;
 import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;

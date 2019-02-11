@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Queue;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
-import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.*;
+import static com.namazustudios.socialengine.model.reward.RewardIssuance.State.*;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.fill;
