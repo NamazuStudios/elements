@@ -35,7 +35,7 @@ public class MongoGooglePlayIapReceipt {
 
     private long purchaseTimeMillis;
 
-    private int purchaseType;
+    private Integer purchaseType;
 
     public String getOrderId() {
         return orderId;
@@ -109,11 +109,11 @@ public class MongoGooglePlayIapReceipt {
         this.purchaseTimeMillis = purchaseTimeMillis;
     }
 
-    public int getPurchaseType() {
+    public Integer getPurchaseType() {
         return purchaseType;
     }
 
-    public void setPurchaseType(int purchaseType) {
+    public void setPurchaseType(Integer purchaseType) {
         this.purchaseType = purchaseType;
     }
 

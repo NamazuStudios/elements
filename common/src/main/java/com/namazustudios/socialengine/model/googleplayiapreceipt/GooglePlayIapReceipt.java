@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.googleplayiapreceipt;
 
+import com.namazustudios.socialengine.model.User;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -10,10 +11,16 @@ import java.util.*;
 @ApiModel(description = "Representation of a validated Google Play in-app purchase. " +
         "See: https://developers.google.com/android-publisher/api-ref/purchases/products.")
 public class GooglePlayIapReceipt implements Serializable {
+    final public static int PURCHASE_STATE_PURCHASED = 0;
+    final public static int PURCHASE_STATE_CANCELED = 1;
+
     @ApiModelProperty("The order id associated with the purchase of the inapp product. This is assumed to be unique " +
             "and is therefore used as the unique key for the receipt in the db.")
     @NotNull
     private String orderId;
+
+    @ApiModelProperty("The user submitting the IAP.")
+    private User user;
 
     @ApiModelProperty("The product id purchased by the user.")
     @NotNull
@@ -50,6 +57,14 @@ public class GooglePlayIapReceipt implements Serializable {
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getProductId() {
@@ -122,6 +137,7 @@ public class GooglePlayIapReceipt implements Serializable {
         if (o == null || getClass() != o.getClass()) return false;
         GooglePlayIapReceipt that = (GooglePlayIapReceipt) o;
         return Objects.equals(getOrderId(), that.getOrderId()) &&
+                Objects.equals(getUser(), that.getUser()) &&
                 Objects.equals(getProductId(), that.getProductId()) &&
                 Objects.equals(getPurchaseToken(), that.getPurchaseToken()) &&
                 Objects.equals(getConsumptionState(), that.getConsumptionState()) &&
@@ -134,7 +150,7 @@ public class GooglePlayIapReceipt implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getOrderId(), getProductId(), getPurchaseToken(), getConsumptionState(),
+        return Objects.hash(getOrderId(), getUser(), getProductId(), getPurchaseToken(), getConsumptionState(),
                 getDeveloperPayload(), getKind(), getPurchaseState(), getPurchaseTimeMillis(), getPurchaseType());
     }
 
@@ -142,6 +158,7 @@ public class GooglePlayIapReceipt implements Serializable {
     public String toString() {
         return "GooglePlayIapReceipt{" +
                 "orderId='" + orderId + '\'' +
+                ", user=" + user +
                 ", productId='" + productId + '\'' +
                 ", purchaseToken='" + purchaseToken + '\'' +
                 ", consumptionState=" + consumptionState +

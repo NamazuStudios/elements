@@ -51,16 +51,17 @@ public interface GooglePlayIapReceiptService {
     void deleteGooglePlayIapReceipt(String orderId);
 
     /**
-     * If no existing record is found, verifies the given product id and purchase token against the Google Play servers
-     * and inserts the receipt data into the database. Otherwise, immediately returns the found db record.
+     * Verifies the given purchase data against the Google Play purchase validation services.
      *
+     * @param packageName the package name of the application, e.g. `com.namazustudios.example_app`.
      * @param productId the product id purchased by the user, e.g. `com.namazustudios.example_app.pack_10_coins`.
-     * @param token the token issued to the user upon successful Google Play purchase transaction
-     * @return the {@link GooglePlayIapReceipt} as it was written into the database, or the existing database record
+     * @param purchaseToken the token issued to the user upon successful Google Play purchase transaction.
+     * @return the {@link GooglePlayIapReceipt} as it was written into the database, or the existing database record.
      */
-    List<GooglePlayIapReceipt> verifyAndCreateGooglePlayIapReceiptIfNeeded(
+    GooglePlayIapReceipt verifyAndCreateGooglePlayIapReceiptIfNeeded(
+            String packageName,
             String productId,
-            String token);
+            String purchaseToken);
 
     /**
      * Gets or creates a {@link RewardIssuance} in the db for the given {@link GooglePlayIapReceipt}.
@@ -68,5 +69,5 @@ public interface GooglePlayIapReceiptService {
      * @param googlePlayIapReceipt
      * @return
      */
-    List<RewardIssuance> getOrCreateRewardIssuance(GooglePlayIapReceipt googlePlayIapReceipt);
+    RewardIssuance getOrCreateRewardIssuance(GooglePlayIapReceipt googlePlayIapReceipt);
 }

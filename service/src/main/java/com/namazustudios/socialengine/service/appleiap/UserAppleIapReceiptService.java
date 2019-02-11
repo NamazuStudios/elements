@@ -232,36 +232,10 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
                 } catch (NotFoundException e) {
                     // now, we look up the item id related to the current receipt's product id
                     final String productId = appleIapReceipt.getProductId();
-                    final Map<String, String> iapProductIdsToItemIds = iosApplicationConfiguration
-                            .getIapProductIdsToItemIds();
 
-                    if (iapProductIdsToItemIds == null) {
-                        throw new InvalidDataException("Application Configuration " + iosApplicationConfiguration.getId() +
-                                "has no product id -> item id mapping.");
-                    }
-                    if (!iapProductIdsToItemIds.containsKey(productId)) {
-                        throw new NotFoundException("IAP product id " + productId + " is not in the application " +
-                                "configuration " + iosApplicationConfiguration.getId() + "  product id -> item id " +
-                                "mapping.");
-                    }
+                    final String itemId = iosApplicationConfiguration.getItemIdForProductId(productId);
 
-                    final String itemId = iapProductIdsToItemIds.get(productId);
-
-                    // we also need to look up the reward quantity for the current receipt's product id
-                    final Map<String, Integer> iapProductIdsToRewardQuantities = iosApplicationConfiguration
-                            .getIapProductIdsToRewardQuantities();
-
-                    if (iapProductIdsToRewardQuantities == null) {
-                        throw new InvalidDataException("Application Configuration " + iosApplicationConfiguration.getId() +
-                                "has no product id -> reward quantity mapping.");
-                    }
-                    if (!iapProductIdsToRewardQuantities.containsKey(productId)) {
-                        throw new NotFoundException("IAP product id " + productId + " is not in the application " +
-                                "configuration " + iosApplicationConfiguration.getId() + "  product id -> reward " +
-                                "quantity mapping.");
-                    }
-
-                    final Integer rewardQuantity = iapProductIdsToRewardQuantities.get(productId);
+                    final Integer rewardQuantity = iosApplicationConfiguration.getQuantityForProductId(productId);
 
                     // then, we get a model rep of the given item id
                     final Item item = getItemDao().getItemByIdOrName(itemId);

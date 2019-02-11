@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.model.application;
 
+import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -181,5 +183,37 @@ public class ApplicationConfiguration implements Serializable {
                 ", iapProductIdsToItemIds=" + iapProductIdsToItemIds +
                 ", iapProductIdsToRewardQuantities=" + iapProductIdsToRewardQuantities +
                 '}';
+    }
+
+    public String getItemIdForProductId(String productId) {
+        final Map<String, String> iapProductIdsToItemIds = getIapProductIdsToItemIds();
+
+        if (iapProductIdsToItemIds == null) {
+            throw new InvalidDataException("Application Configuration " + getId() +
+                    "has no product id -> item id mapping.");
+        }
+        if (!iapProductIdsToItemIds.containsKey(productId)) {
+            throw new NotFoundException("IAP product id " + productId + " is not in the application " +
+                    "configuration " + getId() + "  product id -> item id " +
+                    "mapping.");
+        }
+
+        return iapProductIdsToItemIds.get(productId);
+    }
+
+    public Integer getQuantityForProductId(String productId) {
+        final Map<String, Integer> iapProductIdsToRewardQuantities = getIapProductIdsToRewardQuantities();
+
+        if (iapProductIdsToRewardQuantities == null) {
+            throw new InvalidDataException("Application Configuration " + getId() +
+                    "has no product id -> reward quantity mapping.");
+        }
+        if (!iapProductIdsToRewardQuantities.containsKey(productId)) {
+            throw new NotFoundException("IAP product id " + productId + " is not in the application " +
+                    "configuration " + getId() + "  product id -> reward " +
+                    "quantity mapping.");
+        }
+
+        return iapProductIdsToRewardQuantities.get(productId);
     }
 }

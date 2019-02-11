@@ -9,6 +9,8 @@ import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.mission.*;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.reward.Reward;
+import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;

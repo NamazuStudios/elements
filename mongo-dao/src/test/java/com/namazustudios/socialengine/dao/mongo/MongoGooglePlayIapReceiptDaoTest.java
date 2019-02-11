@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.googleplayiapreceipt.GooglePlayIapReceipt;
+import static com.namazustudios.socialengine.model.googleplayiapreceipt.GooglePlayIapReceipt.PURCHASE_STATE_PURCHASED;
 import org.testng.ITestContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -15,6 +16,7 @@ import javax.inject.Inject;
 import java.util.Date;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
+import static java.lang.System.currentTimeMillis;
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
@@ -43,19 +45,21 @@ public class MongoGooglePlayIapReceiptDaoTest {
         final int invocation = testContext.getAllTestMethods()[0].getCurrentInvocationCount();
 
         final GooglePlayIapReceipt googlePlayIapReceipt = new GooglePlayIapReceipt();
-        googlePlayIapReceipt.setOriginalTransactionId("id." + invocation);
+        googlePlayIapReceipt.setOrderId("orderId." + invocation);
         googlePlayIapReceipt.setUser(testUser);
-        googlePlayIapReceipt.setReceiptData("receiptData." + invocation);
-        googlePlayIapReceipt.setQuantity(invocation + 1);
+        googlePlayIapReceipt.setPurchaseToken("purchaseToken." + invocation);
         googlePlayIapReceipt.setProductId("productId." + invocation);
-        googlePlayIapReceipt.setBundleId("com.namazustudios.test_app");
-        googlePlayIapReceipt.setOriginalPurchaseDate(new Date());
+        googlePlayIapReceipt.setConsumptionState(0);
+        googlePlayIapReceipt.setDeveloperPayload("custom_payload" + invocation);
+        googlePlayIapReceipt.setKind("androidpublisher#productPurchase");
+        googlePlayIapReceipt.setPurchaseState(PURCHASE_STATE_PURCHASED);
+        googlePlayIapReceipt.setPurchaseTimeMillis(currentTimeMillis());
 
         final GooglePlayIapReceipt resultGooglePlayIapReceipt =
                 getGooglePlayIapReceiptDao().getOrCreateGooglePlayIapReceipt(googlePlayIapReceipt);
 
         assertNotNull(resultGooglePlayIapReceipt);
-        // the AppleIapReceipt is keyed by the originalTransactionId and no other params are dynamically generated, so
+        // the GooglePlayIapReceipt is keyed by the orderId and no other params are dynamically generated, so
         // we can just check for POJO equality
         assertEquals(googlePlayIapReceipt, resultGooglePlayIapReceipt);
     }
@@ -95,18 +99,21 @@ public class MongoGooglePlayIapReceiptDaoTest {
     @Test(dataProvider = "getGooglePlayIapReceipts", dependsOnMethods = "testCreateGooglePlayIapReceipt")
     public void testDisallowedUpsertForGetOrCreateGooglePlayIapReceipt(
             final GooglePlayIapReceipt googlePlayIapReceipt) {
-        final GooglePlayIapReceipt newAppleIapReceipt = new GooglePlayIapReceipt();
+        final GooglePlayIapReceipt newGooglePlayIapReceipt = new GooglePlayIapReceipt();
         // attempt to overwrite according to the original transaction id key
-        newAppleIapReceipt.setOrderId(googlePlayIapReceipt.getOrderId());
-        newAppleIapReceipt.setUser(testUser);
-        newAppleIapReceipt.setReceiptData("receiptData." + -1);
-        newAppleIapReceipt.setQuantity(1);
-        newAppleIapReceipt.setProductId("productId." + -1);
-        newAppleIapReceipt.setBundleId("com.namazustudios.test_app");
-        newAppleIapReceipt.setOriginalPurchaseDate(new Date());
+        newGooglePlayIapReceipt.setOrderId(googlePlayIapReceipt.getOrderId());
+        newGooglePlayIapReceipt.setUser(testUser);
+
+        newGooglePlayIapReceipt.setPurchaseToken("purchaseToken." + -1);
+        newGooglePlayIapReceipt.setProductId("productId." + -1);
+        newGooglePlayIapReceipt.setConsumptionState(0);
+        newGooglePlayIapReceipt.setDeveloperPayload("custom_payload" + -1);
+        newGooglePlayIapReceipt.setKind("androidpublisher#productPurchase");
+        newGooglePlayIapReceipt.setPurchaseState(PURCHASE_STATE_PURCHASED);
+        newGooglePlayIapReceipt.setPurchaseTimeMillis(currentTimeMillis());
 
         final GooglePlayIapReceipt resultGooglePlayIapReceipt =
-                getGooglePlayIapReceiptDao().getOrCreateGooglePlayIapReceipt(newAppleIapReceipt);
+                getGooglePlayIapReceiptDao().getOrCreateGooglePlayIapReceipt(newGooglePlayIapReceipt);
 
         assertEquals(resultGooglePlayIapReceipt.getOrderId(), googlePlayIapReceipt.getOrderId());
     }
