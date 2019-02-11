@@ -58,15 +58,15 @@ public interface GooglePlayIapReceiptService {
      * @param token the token issued to the user upon successful Google Play purchase transaction
      * @return the {@link GooglePlayIapReceipt} as it was written into the database, or the existing database record
      */
-    List<GooglePlayIapReceipt> verifyAndCreateGooglePlayIapReceiptsIfNeeded(
+    List<GooglePlayIapReceipt> verifyAndCreateGooglePlayIapReceiptIfNeeded(
             String productId,
             String token);
 
     /**
-     * Gets or creates a {@link RewardIssuance} in the db for each given {@link GooglePlayIapReceipt}.
+     * Gets or creates a {@link RewardIssuance} in the db for the given {@link GooglePlayIapReceipt}.
      *
-     * @param googlePlayIapReceipts
+     * @param googlePlayIapReceipt
      * @return
      */
-    List<RewardIssuance> getOrCreateRewardIssuances(List<GooglePlayIapReceipt> googlePlayIapReceipts);
+    List<RewardIssuance> getOrCreateRewardIssuance(GooglePlayIapReceipt googlePlayIapReceipt);
 }

@@ -22,6 +22,7 @@ public class RewardIssuance implements Serializable {
     public static final String CONTEXT_SEPARATOR = ".";
     public static final String MISSION_PROGRESS_SOURCE = "MISSION_PROGRESS";
     public static final String APPLE_IAP_SOURCE = "APPLE_IAP";
+    public static final String GOOGLE_PLAY_IAP_SOURCE = "GOOGLE_PLAY_IAP";
 
     public static final String MISSION_PROGRESS_PROGRESS_KEY = "progress";
     public static final String MISSION_PROGRESS_STEP_KEY = "step";
@@ -294,9 +295,24 @@ public class RewardIssuance implements Serializable {
      * @return the resultant context string
      */
     public static String buildAppleIapContextString(String originalTransactionId, Integer skuOrdinal) {
-        final int originalTransactionIdAndSkuIndexHash = Objects.hash(originalTransactionId, skuOrdinal);
-        final String originalTransactionIdAndSkuIndexHashString =
-                Integer.toString(originalTransactionIdAndSkuIndexHash);
-        return buildContextString(SERVER_CONTEXT_PREFIX, APPLE_IAP_SOURCE, originalTransactionIdAndSkuIndexHashString);
+        final int originalTransactionIdAndSkuOrdinalHash = Objects.hash(originalTransactionId, skuOrdinal);
+        final String originalTransactionIdAndSkuOrdinalHashString =
+                Integer.toString(originalTransactionIdAndSkuOrdinalHash);
+        return buildContextString(
+                SERVER_CONTEXT_PREFIX,
+                APPLE_IAP_SOURCE,
+                originalTransactionIdAndSkuOrdinalHashString
+        );
+    }
+
+    /**
+     * Builds the context string for a Google Play-sourced reward issuance. The last element in the context string is
+     * the orderId issued by the Google Play services, presumed to be universally unique.
+     *
+     * @param orderId
+     * @return the resultant context string
+     */
+    public static String buildGooglePlayIapContextString(String orderId) {
+        return buildContextString(SERVER_CONTEXT_PREFIX, GOOGLE_PLAY_IAP_SOURCE, orderId);
     }
 }
