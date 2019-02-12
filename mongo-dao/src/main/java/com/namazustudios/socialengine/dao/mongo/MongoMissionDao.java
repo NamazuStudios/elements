@@ -62,7 +62,7 @@ public class MongoMissionDao implements MissionDao {
 
     @Override
     public Pagination<Mission> getMissions(int offset, int count, Set<String> tags)  {
-        MongoStep
+
         final Query<MongoMission> query = getDatastore().createQuery(MongoMission.class);
 
         if (tags != null && !tags.isEmpty()) {
