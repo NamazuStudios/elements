@@ -13,6 +13,8 @@ import com.namazustudios.socialengine.service.auth.*;
 import com.namazustudios.socialengine.service.friend.FacebookFriendServiceProvider;
 import com.namazustudios.socialengine.service.gameon.*;
 import com.namazustudios.socialengine.service.goods.ItemServiceProvider;
+import com.namazustudios.socialengine.service.googleplayiap.GooglePlayIapReceiptService;
+import com.namazustudios.socialengine.service.googleplayiap.GooglePlayIapReceiptServiceProvider;
 import com.namazustudios.socialengine.service.inventory.SimpleInventoryItemService;
 import com.namazustudios.socialengine.service.inventory.SimpleInventoryItemServiceProvider;
 import com.namazustudios.socialengine.service.leaderboard.LeaderboardServiceProvider;
@@ -186,6 +188,10 @@ public class ServicesModule extends PrivateModule {
                 .toProvider(AppleIapReceiptServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
+        bind(GooglePlayIapReceiptService.class)
+                .toProvider(GooglePlayIapReceiptServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
         bind(SessionService.class).to(AnonSessionService.class);
         bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
 
@@ -231,6 +237,7 @@ public class ServicesModule extends PrivateModule {
         expose(VersionService.class);
         expose(SessionService.class);
         expose(AppleIapReceiptService.class);
+        expose(GooglePlayIapReceiptService.class);
     }
 
 }
