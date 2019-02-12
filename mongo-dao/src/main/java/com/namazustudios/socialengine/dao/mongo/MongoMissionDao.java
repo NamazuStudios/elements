@@ -214,6 +214,10 @@ public class MongoMissionDao implements MissionDao {
     }
 
     private MongoReward checkReward(final MongoReward mongoReward) {
+        final MongoItem mongoItem = mongoReward.getItem();
+        final MongoItem refreshedMongoItem = getMongoItemDao().refresh(mongoItem);
+        mongoReward.setItem(refreshedMongoItem);
+
         final MongoReward resultMongoReward;
 
         // if the reward does not have an id...
@@ -227,10 +231,6 @@ public class MongoMissionDao implements MissionDao {
             // so retrieve from the db instead
             resultMongoReward = getDatastore().get(MongoReward.class, mongoReward.getObjectId());
         }
-
-        final MongoItem mongoItem = resultMongoReward.getItem();
-        final MongoItem refreshedMongoItem = getMongoItemDao().refresh(mongoItem);
-        mongoReward.setItem(refreshedMongoItem);
 
         return resultMongoReward;
     }
