@@ -102,7 +102,7 @@ class ItemsService extends BaseService {
         responseType: 'json'
       }
     );
-    
+
     return this.http.request<any>(req).pipe(
       __filter(_r => {
         //console.log(_r);
