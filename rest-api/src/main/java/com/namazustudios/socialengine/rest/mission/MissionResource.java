@@ -20,7 +20,7 @@ import static java.util.Collections.emptySet;
 
 @Path("mission")
 @Api(value = "Missions",
-        description = "Manages missions, steps and rewards",
+        description = "Manages missions and steps",
         authorizations = {@Authorization(SESSION_SECRET)})
 @Produces(MediaType.APPLICATION_JSON)
 public class MissionResource {

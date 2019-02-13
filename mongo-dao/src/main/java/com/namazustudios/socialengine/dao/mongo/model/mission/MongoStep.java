@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo.model.mission;
 
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Property;
+import org.mongodb.morphia.annotations.Reference;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +30,7 @@ public class MongoStep {
     @Property
     private int count;
 
-    @Embedded
+    @Reference
     private List<MongoReward> rewards;
 
     @Property
