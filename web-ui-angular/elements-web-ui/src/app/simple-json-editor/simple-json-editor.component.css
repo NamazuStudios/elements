@@ -1,0 +1,15 @@
+.metadata-row {
+  display: flex;
+  justify-content: left;
+}
+
+mat-form-field {
+  flex-grow: 1;
+  margin-right: 0px;
+}
+
+.key-field {
+  flex-grow: 0;
+  width: 240px;
+  margin-right: 60px;
+}

@@ -1,7 +1,7 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatChipInputEvent, MatDialogRef} from '@angular/material';
-import {ENTER, COMMA, TAB} from '@angular/cdk/keycodes';
+import {ENTER, COMMA} from '@angular/cdk/keycodes';
 
 @Component({
   selector: 'app-item-dialog',
@@ -12,7 +12,7 @@ export class ItemDialogComponent implements OnInit {
   selectable = true;
   removable = true;
   addOnBlur = true;
-  readonly separatorKeyCodes: number[] = [ENTER, TAB, COMMA];
+  readonly separatorKeyCodes: number[] = [ENTER, COMMA];
 
   constructor(public dialogRef: MatDialogRef<ItemDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
@@ -53,6 +53,7 @@ export class ItemDialogComponent implements OnInit {
   * array to the itemForm, overwriting the initial tags value
   */
   close(saveChanges: boolean): void {
+    console.log(this.data.item);
     if (!saveChanges) {
       this.dialogRef.close();
       return;
@@ -61,6 +62,9 @@ export class ItemDialogComponent implements OnInit {
     const formData = this.itemForm.value;
     if (this.data.item.tags !== undefined) {
       formData.tags = this.data.item.tags;
+    }
+    if (this.data.item.metadata !== undefined) {
+      formData.metadata = this.data.item.metadata;
     }
     this.dialogRef.close(formData);
   }

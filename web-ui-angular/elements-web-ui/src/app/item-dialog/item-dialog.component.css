@@ -3,10 +3,6 @@
   flex-direction: column;
 }
 
-.item-form-container > * {
-  width: 100%;
-}
-
 .item-form-row {
   display: flex;
   width: 100%;
@@ -26,4 +22,13 @@ h1 {
   width: 100%;
   display: flex;
   justify-content: space-between;
+}
+
+.card-header {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+mat-card {
+  margin-bottom: 5px;
 }

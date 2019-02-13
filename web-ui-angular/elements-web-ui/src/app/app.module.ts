@@ -33,7 +33,8 @@ import { GameOnApplicationConfigurationDialogComponent } from './game-on-applica
 import { GameOnPrizeDialogComponent } from './game-on-prize-dialog/game-on-prize-dialog.component';
 import { GameOnPrizesListComponent } from './game-on-prizes-list/game-on-prizes-list.component';
 import { ItemsListComponent } from './items-list/items-list.component';
-import { ItemDialogComponent } from './item-dialog/item-dialog.component'
+import { ItemDialogComponent } from './item-dialog/item-dialog.component';
+import { SimpleJsonEditorComponent } from './simple-json-editor/simple-json-editor.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -70,7 +71,8 @@ export function initialize(configService: ConfigService) {
     GameOnPrizesListComponent,
     GameOnPrizeDialogComponent,
     ItemsListComponent,
-    ItemDialogComponent
+    ItemDialogComponent,
+    SimpleJsonEditorComponent,
   ],
   imports: [
     BrowserModule,
