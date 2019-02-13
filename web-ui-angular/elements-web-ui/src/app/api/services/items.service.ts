@@ -102,11 +102,7 @@ class ItemsService extends BaseService {
         responseType: 'json'
       }
     );
-
-    console.log(req);
-
-    // TODO: Figure out what the actual FUCK is happening here :'(
-
+    
     return this.http.request<any>(req).pipe(
       __filter(_r => {
         //console.log(_r);
