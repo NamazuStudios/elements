@@ -23,6 +23,8 @@ export class SimpleJsonEditorComponent implements OnInit {
   }
 
   addMetadata(key, value) {
+    if (!key || !value) return;
+
     if (this.dataHolder.metadata === undefined) {
       this.dataHolder.metadata = {};
     }
@@ -30,5 +32,9 @@ export class SimpleJsonEditorComponent implements OnInit {
 
     this.metadataForm.reset();
     this.newKeyRef.nativeElement.focus();
+  }
+
+  removeDataAtKey(key) {
+    delete this.dataHolder.metadata[key];
   }
 }

@@ -6,6 +6,7 @@
     <mat-form-field>
       <input matInput placeholder="Metadata value" name="value" value="{{datum.value}}">
     </mat-form-field>
+    <button type="button" mat-raised-button color="primary" (click)="removeDataAtKey(datum.key)">-</button>
   </div>
   <div class="metadata-row">
     <mat-form-field class="key-field">
@@ -14,5 +15,6 @@
     <mat-form-field>
       <input matInput #newValue placeholder="Metadata value" name="newvalue" formControlName="newValue" (keyup.enter)="addMetadata(newKey.value, newValue.value)">
     </mat-form-field>
+    <button class="add-button" type="button" (click)="addMetadata(newKey.value, newValue.value)" [disabled]="!metadataForm.valid">+</button>
   </div>
 </form>
