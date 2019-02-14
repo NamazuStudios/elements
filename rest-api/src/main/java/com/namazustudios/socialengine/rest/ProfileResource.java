@@ -43,11 +43,21 @@ public class ProfileResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Search Profiles",
             notes = "Searches all users in the system and returning the metadata for all matches against " +
-                    "the given search filter.")
+                    "the given search filter. Optionally provide `before` and `after` params to specify a time range" +
+                    " [`after`, `before`] for last-logged-in profiles matching in that range (inclusive). If `before`" +
+                    " is not specified (or a negative number is provided) but `after` is valid, the query will return " +
+                    "all records successive to the given `after` timestamp. Similarly, if `after` is not specified " +
+                    "(or a negative number is provided) but `before` is valid, the query will return all records " +
+                    "preceding the given `before` timestamp. Note that search and time range parameters currently " +
+                    "cannot be combined in the same query.")
     public Pagination<Profile> getProfiles(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
-            @QueryParam("search") final String search) {
+            @QueryParam("search") final String search,
+            @QueryParam("before") @DefaultValue("-1") final long beforeTimestamp,
+            @QueryParam("after") @DefaultValue("-1") final long afterTimestamp) {
+        // Note: afterTimestamp => lower bound of time range, beforeTimestamp => upper bound of time range, i.e.:
+        // [afterTimestamp, beforeTimestamp]
 
         if (offset < 0) {
             throw new InvalidParameterException("Offset must have positive value.");
@@ -57,12 +67,21 @@ public class ProfileResource {
             throw new InvalidParameterException("Count must have positive value.");
         }
 
+
+        if (beforeTimestamp >= 0 && afterTimestamp >= 0 && afterTimestamp > beforeTimestamp) {
+            throw new InvalidParameterException("Invalid range: afterTimestamp should be less than or " +
+                    "equal to beforeTimestamp.");
+        }
+
         final String query = nullToEmpty(search).trim();
 
-        return query.isEmpty() ?
-                getProfileService().getProfiles(offset, count) :
-                getProfileService().getProfiles(offset, count, search);
+        if ((beforeTimestamp >= 0 || afterTimestamp >= 0) && !query.isEmpty()) {
+            throw new InvalidParameterException("Time range and search parameters may not be combined.");
+        }
 
+        return query.isEmpty() ?
+                getProfileService().getProfiles(offset, count, afterTimestamp, beforeTimestamp) :
+                getProfileService().getProfiles(offset, count, search);
     }
 
     @GET

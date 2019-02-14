@@ -25,14 +25,17 @@ public class UserProfileService implements ProfileService {
     private Supplier<Profile> currentProfileSupplier;
 
     @Override
-    public Pagination<Profile> getProfiles(int offset, int count) {
+    public Pagination<Profile> getProfiles(int offset, int count, long lowerBoundTimestamp, long upperBoundTimestamp) {
         return getProfileDao()
-            .getActiveProfiles(offset, count)
+            .getActiveProfiles(offset, count, lowerBoundTimestamp, upperBoundTimestamp)
             .transform(this::redactPrivateInformation);
     }
 
     @Override
-    public Pagination<Profile> getProfiles(int offset, int count, String search) {
+    public Pagination<Profile> getProfiles(
+            int offset,
+            int count,
+            String search) {
         return getProfileDao()
             .getActiveProfiles(offset, count, search)
             .transform(this::redactPrivateInformation);
