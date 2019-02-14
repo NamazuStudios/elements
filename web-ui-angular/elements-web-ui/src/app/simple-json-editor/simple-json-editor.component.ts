@@ -32,9 +32,12 @@ export class SimpleJsonEditorComponent implements OnInit {
 
     // attempt to extract a number; on failure, keep as string
     const attemptNum: number = Number(value);
-    if (!isNaN(attemptNum)) { value = attemptNum; }
-
-    this.dataHolder.metadata[key] = value;
+    console.log(attemptNum);
+    if (!isNaN(attemptNum)) {
+      this.dataHolder.metadata[key] = attemptNum;
+    } else {
+      this.dataHolder.metadata[key] = value;
+    }
 
     this.metadataForm.reset();
     this.newKeyRef.nativeElement.focus();
