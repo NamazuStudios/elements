@@ -27,6 +27,8 @@ h1 {
 .card-header {
   font-size: 18px;
   font-weight: 500;
+
+  align-items: center;
 }
 
 mat-card {

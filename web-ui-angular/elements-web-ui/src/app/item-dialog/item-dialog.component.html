@@ -1,6 +1,5 @@
 <h1 mat-dialog-title>
   {{data.isNew ? "New" : "Edit"}} Item
-  <a mat-button>Advanced...</a>
 </h1>
 
 <div mat-dialog-content>
@@ -32,15 +31,17 @@
       </mat-form-field>
       <h1 class="card-header">
         Edit Item Metadata
+        <button type="button" mat-button (click)="toggleAdvancedEditor()" [disabled]="!isJSONValid"><span *ngIf="showAdvanced">Simplified...</span><span *ngIf="!showAdvanced">Advanced...</span></button>
       </h1>
       <mat-card>
-        <app-simple-json-editor [dataHolder]="data.item"></app-simple-json-editor>
+        <app-simple-json-editor *ngIf="!showAdvanced" [dataHolder]="data.item"></app-simple-json-editor>
+        <json-editor *ngIf="showAdvanced" [options]="editorOptions" [data]="data.item.metadata"></json-editor>
       </mat-card>
     </div>
   </form>
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!itemForm.valid">OK</button>
+  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!itemForm.valid || !isJSONValid">OK</button>
   <button type="button" mat-raised-button (click)="close()">Cancel</button>
 </div>

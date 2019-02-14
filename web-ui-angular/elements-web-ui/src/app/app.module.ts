@@ -35,6 +35,7 @@ import { GameOnPrizesListComponent } from './game-on-prizes-list/game-on-prizes-
 import { ItemsListComponent } from './items-list/items-list.component';
 import { ItemDialogComponent } from './item-dialog/item-dialog.component';
 import { SimpleJsonEditorComponent } from './simple-json-editor/simple-json-editor.component';
+import {NgJsonEditorModule} from 'ang-jsoneditor';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -83,7 +84,8 @@ export function initialize(configService: ConfigService) {
     FlexLayoutModule,
     ReactiveFormsModule,
     MaterialModule,
-    routing
+    routing,
+    NgJsonEditorModule
   ],
   providers: [
     ConfigService,

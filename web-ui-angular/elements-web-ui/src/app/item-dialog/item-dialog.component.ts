@@ -1,7 +1,8 @@
-import {Component, Inject, OnInit} from '@angular/core';
+import {Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatChipInputEvent, MatDialogRef} from '@angular/material';
 import {ENTER, COMMA} from '@angular/cdk/keycodes';
+import {JsonEditorOptions, JsonEditorComponent} from 'ang-jsoneditor';
 
 @Component({
   selector: 'app-item-dialog',
@@ -9,14 +10,22 @@ import {ENTER, COMMA} from '@angular/cdk/keycodes';
   styleUrls: ['./item-dialog.component.css']
 })
 export class ItemDialogComponent implements OnInit {
-  selectable = true;
-  removable = true;
-  addOnBlur = true;
-  readonly separatorKeyCodes: number[] = [ENTER, COMMA];
 
   constructor(public dialogRef: MatDialogRef<ItemDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
-              private formBuilder: FormBuilder) { }
+              private formBuilder: FormBuilder) {
+    this.editorOptions = new JsonEditorOptions();
+    this.initEditorOptions(this.editorOptions);
+  }
+  @ViewChild(JsonEditorComponent) editor: JsonEditorComponent;
+
+  isJSONValid = true;
+  selectable = true;
+  removable = true;
+  addOnBlur = true;
+  showAdvanced = false;
+  public editorOptions: JsonEditorOptions;
+  readonly separatorKeyCodes: number[] = [ENTER, COMMA];
 
   itemForm = this.formBuilder.group({
     name: [ this.data.item.name, [Validators.required, Validators.pattern('^[a-zA-Z0-9]+$') ]],
@@ -24,6 +33,37 @@ export class ItemDialogComponent implements OnInit {
     description: [ this.data.item.description ],
     tags: []
   });
+
+  initEditorOptions(opts: JsonEditorOptions) {
+    opts.modes = ['code', 'text', 'view'];
+    opts.mode = 'code';
+    opts.onChange = () => {
+      // prevent metadata saving if invalid JSON entered
+      try {
+        // .get() throws exception if invalid JSON found
+        this.editor.get();
+        this.isJSONValid = true;
+      } catch(err) {
+        console.error("Caught error");
+        this.isJSONValid = false;
+      }
+    };
+  }
+
+  toggleAdvancedEditor() {
+    // update metadata JSON if leaving advanced editor
+    if(this.showAdvanced) {
+      try {
+        this.data.item.metadata = this.editor.get();
+        this.isJSONValid = true;
+      } catch(err) {
+        // bad JSON...don't let them leave the advanced editor!
+        this.isJSONValid = false;
+        return;
+      }
+    }
+    this.showAdvanced = !this.showAdvanced;
+  }
 
   addTag(event: MatChipInputEvent): void {
     const input = event.input;
