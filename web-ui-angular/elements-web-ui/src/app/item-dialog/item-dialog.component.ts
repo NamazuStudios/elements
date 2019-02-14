@@ -37,31 +37,27 @@ export class ItemDialogComponent implements OnInit {
   initEditorOptions(opts: JsonEditorOptions) {
     opts.modes = ['code', 'text', 'view'];
     opts.mode = 'code';
-    opts.onChange = () => {
-      // prevent metadata saving if invalid JSON entered
-      try {
-        // .get() throws exception if invalid JSON found
-        this.editor.get();
-        this.isJSONValid = true;
-      } catch(err) {
-        this.isJSONValid = false;
-      }
-    };
+    opts.onChange = () => this.validateMetadata(false);
   }
 
   toggleAdvancedEditor() {
     // update metadata JSON if leaving advanced editor
     if(this.showAdvanced) {
-      try {
-        this.data.item.metadata = this.editor.get();
-        this.isJSONValid = true;
-      } catch(err) {
-        // bad JSON...don't let them leave the advanced editor!
-        this.isJSONValid = false;
-        return;
-      }
+      this.validateMetadata(true);
     }
     this.showAdvanced = !this.showAdvanced;
+  }
+
+  validateMetadata(andUpdate: boolean) {
+    try {
+      const editorContents = this.editor.get();
+      if (andUpdate) { this.data.item.metadata = editorContents; }
+      this.isJSONValid = true;
+    } catch (err) {
+      // bad JSON detected...don't let them leave the advanced editor!
+      this.isJSONValid = false;
+      return;
+    }
   }
 
   addTag(event: MatChipInputEvent): void {
@@ -96,6 +92,8 @@ export class ItemDialogComponent implements OnInit {
       this.dialogRef.close();
       return;
     }
+
+    this.validateMetadata(true);
 
     const formData = this.itemForm.value;
     if (this.data.item.tags !== undefined) {
