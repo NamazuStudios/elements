@@ -23,11 +23,16 @@ export class SimpleJsonEditorComponent implements OnInit {
   }
 
   addMetadata(key, value) {
-    if (!key || !value) return;
+    if (!key || !value) { return; }
 
     if (this.dataHolder.metadata === undefined) {
       this.dataHolder.metadata = {};
     }
+
+    // attempt to extract a number; on failure, keep as string
+    const attemptNum: number = Number(value);
+    if (!isNaN(attemptNum)) { value = attemptNum; }
+
     this.dataHolder.metadata[key] = value;
 
     this.metadataForm.reset();
