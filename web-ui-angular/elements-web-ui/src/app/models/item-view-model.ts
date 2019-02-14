@@ -6,5 +6,5 @@ export class ItemViewModel implements Item {
   id: string;
   tags: Array<string>;
   displayName: string;
-  metadata: {[key: string]: string};
+  metadata: {[key: string]: any};
 }

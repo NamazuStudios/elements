@@ -5,5 +5,5 @@ export interface Item {
   tags?: Array<string>;
   displayName: string;
   description: string;
-  metadata?: {[key: string]: string};
+  metadata?: {[key: string]: any};
 }
