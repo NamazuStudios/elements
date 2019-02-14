@@ -1,4 +1,4 @@
-<form [formGroup]="metadataForm">
+<form #metadataScroll [formGroup]="metadataForm">
   <div class="metadata-row" *ngFor="let datum of dataHolder.metadata | keyvalue">
     <mat-form-field class="key-field">
       <input matInput placeholder="Metadata key" name="key" value="{{datum.key}}">

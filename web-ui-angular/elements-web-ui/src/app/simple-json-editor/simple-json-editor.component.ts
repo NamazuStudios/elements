@@ -11,6 +11,7 @@ export class SimpleJsonEditorComponent implements OnInit {
   dataHolder: any;
 
   @ViewChild(`newKey`) newKeyRef: ElementRef;
+  @ViewChild(`metadataScroll`) metaScrollRef: ElementRef;
 
   constructor(private formBuilder: FormBuilder) { }
 
@@ -37,6 +38,9 @@ export class SimpleJsonEditorComponent implements OnInit {
 
     this.metadataForm.reset();
     this.newKeyRef.nativeElement.focus();
+
+    // async'd to delay scrolling until after metadata element added to UI
+    setTimeout(() => this.metaScrollRef.nativeElement.scrollIntoView(false));
   }
 
   removeDataAtKey(key) {
