@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.Type.PERSISTENT;
+
 public class UserRewardIssuanceService implements RewardIssuanceService {
     private User user;
 
@@ -67,8 +69,10 @@ public class UserRewardIssuanceService implements RewardIssuanceService {
             InventoryItem resultInventoryItem = getRewardIssuanceDao().redeem(rewardIssuance);
             rewardIssuanceResult.setInventoryItem(resultInventoryItem);
 
-            RewardIssuance resultRewardIssuance = getRewardIssuanceDao().getRewardIssuance(rewardIssuance.getId());
-            rewardIssuanceResult.setRewardIssuance(resultRewardIssuance);
+            if (rewardIssuance.getType() == PERSISTENT) {
+                RewardIssuance resultRewardIssuance = getRewardIssuanceDao().getRewardIssuance(rewardIssuance.getId());
+                rewardIssuanceResult.setRewardIssuance(resultRewardIssuance);
+            }
         }
         catch (Exception e) {
             rewardIssuanceResult.setErrorDetails(e.toString());
