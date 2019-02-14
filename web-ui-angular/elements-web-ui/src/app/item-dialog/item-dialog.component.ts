@@ -44,7 +44,6 @@ export class ItemDialogComponent implements OnInit {
         this.editor.get();
         this.isJSONValid = true;
       } catch(err) {
-        console.error("Caught error");
         this.isJSONValid = false;
       }
     };
@@ -93,7 +92,6 @@ export class ItemDialogComponent implements OnInit {
   * array to the itemForm, overwriting the initial tags value
   */
   close(saveChanges: boolean): void {
-    console.log(this.data.item);
     if (!saveChanges) {
       this.dialogRef.close();
       return;
