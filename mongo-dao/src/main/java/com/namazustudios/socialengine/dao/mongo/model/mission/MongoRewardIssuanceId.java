@@ -37,9 +37,14 @@ public class MongoRewardIssuanceId {
     public MongoRewardIssuanceId() {}
 
     public MongoRewardIssuanceId(final String hexString) {
+        if (hexString.getBytes().length < 2) {
+            throw new IllegalArgumentException("Provided RewardIssuance is too short.");
+        }
 
         final byte [] bytes = Base64.getDecoder().decode(hexString);
-        if (bytes.length <= (OBJECT_ID_LENGTH * 2)) throw new IllegalArgumentException();
+        if (bytes.length <= (OBJECT_ID_LENGTH * 2)) {
+            throw new IllegalArgumentException("Provided RewardIssuance id is too short.");
+        }
 
         final byte[] objectIdBytes = new byte[OBJECT_ID_LENGTH];
 

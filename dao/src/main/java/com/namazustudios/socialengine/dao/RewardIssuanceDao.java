@@ -54,7 +54,7 @@ public interface RewardIssuanceDao {
      *
      * @param offset the offset
      * @param count the count
-     * @param states if non-empty, will include the requested states.  Otehrwise all states will be included.
+     * @param states if non-empty, will include the requested states.  Otherwise all states will be included.
      * @return a {@link Pagination} of {@link RewardIssuance}
      */
     Pagination<RewardIssuance> getRewardIssuances(User user, int offset, int count, Set<State> states);
