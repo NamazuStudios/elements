@@ -15,6 +15,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.mission.Mission;
+import com.namazustudios.socialengine.model.mission.Reward;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -56,6 +57,8 @@ public class MongoMissionDao implements MissionDao {
     private MongoDBUtils mongoDBUtils;
 
     private MongoItemDao mongoItemDao;
+
+    private MongoRewardDao mongoRewardDao;
 
     @Override
     public Pagination<Mission> getMissions(int offset, int count, Set<String> tags)  {
@@ -211,19 +214,25 @@ public class MongoMissionDao implements MissionDao {
     }
 
     private MongoReward checkReward(final MongoReward mongoReward) {
-
         final MongoItem mongoItem = mongoReward.getItem();
-        final Integer quantity = mongoReward.getQuantity();
-
-        if (quantity == null) throw new InvalidDataException("Reward quantity not specified.");
-        if (quantity <  0) throw new InvalidDataException("Reward quantity must be positive.");
-        if (mongoItem == null) throw new InvalidDataException("Reward items must be specified.");
-
         final MongoItem refreshedMongoItem = getMongoItemDao().refresh(mongoItem);
         mongoReward.setItem(refreshedMongoItem);
 
-        return mongoReward;
+        final MongoReward resultMongoReward;
 
+        // if the reward does not have an id...
+        if (mongoReward.getObjectId() == null) {
+            final Reward reward = getDozerMapper().map(mongoReward, Reward.class);
+            // then insert the received data to the db (and rely on dao object validation)
+            final Reward resultReward = getMongoRewardDao().createReward(reward);
+            resultMongoReward = getDozerMapper().map(resultReward, MongoReward.class);
+        }
+        else {  // otherwise, we received an id
+            // so retrieve from the db instead
+            resultMongoReward = getDatastore().get(MongoReward.class, mongoReward.getObjectId());
+        }
+
+        return resultMongoReward;
     }
 
     @Override
@@ -306,4 +315,12 @@ public class MongoMissionDao implements MissionDao {
         this.mongoItemDao = mongoItemDao;
     }
 
+    public MongoRewardDao getMongoRewardDao() {
+        return mongoRewardDao;
+    }
+
+    @Inject
+    public void setMongoRewardDao(MongoRewardDao mongoRewardDao) {
+        this.mongoRewardDao = mongoRewardDao;
+    }
 }

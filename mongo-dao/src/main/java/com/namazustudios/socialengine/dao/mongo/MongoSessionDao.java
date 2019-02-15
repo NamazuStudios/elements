@@ -130,7 +130,9 @@ public class MongoSessionDao implements SessionDao {
 
         } else {
             final MongoSession mongoSession = getDatastore().get(MongoSession.class, sessionId);
-            updateProfileLastLogin(mongoSession.getProfile().getObjectId().toString());
+            if (mongoSession.getProfile() != null) {
+                updateProfileLastLogin(mongoSession.getProfile().getObjectId().toString());
+            }
             return getMapper().map(mongoSession, Session.class);
         }
 

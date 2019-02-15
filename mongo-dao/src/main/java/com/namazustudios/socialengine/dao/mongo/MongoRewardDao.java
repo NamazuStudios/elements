@@ -102,7 +102,15 @@ public class MongoRewardDao implements RewardDao {
 
     @Override
     public void delete(String id) {
-        final WriteResult writeResult = getDatastore().delete(MongoReward.class, id);
+        final ObjectId objectId;
+
+        try {
+            objectId = new ObjectId(id);
+        } catch (IllegalArgumentException ex) {
+            throw new NotFoundException();
+        }
+
+        final WriteResult writeResult = getDatastore().delete(MongoReward.class, objectId);
 
         if (writeResult.getN() == 0) {
             throw new NotFoundException("Reward not found: " + id);
