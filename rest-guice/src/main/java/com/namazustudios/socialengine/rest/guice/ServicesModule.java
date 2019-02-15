@@ -29,6 +29,8 @@ import com.namazustudios.socialengine.service.progress.ProgressService;
 import com.namazustudios.socialengine.service.progress.ProgressServiceProvider;
 import com.namazustudios.socialengine.service.reward.RewardService;
 import com.namazustudios.socialengine.service.reward.RewardServiceProvider;
+import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceService;
+import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
@@ -188,6 +190,10 @@ public class ServicesModule extends PrivateModule {
                 .toProvider(RewardServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
+        bind(RewardIssuanceService.class)
+                .toProvider(RewardIssuanceServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
         bind(AppleIapReceiptService.class)
                 .toProvider(AppleIapReceiptServiceProvider.class)
                 .in(ServletScopes.REQUEST);
@@ -237,6 +243,7 @@ public class ServicesModule extends PrivateModule {
         expose(VersionService.class);
         expose(SessionService.class);
         expose(RewardService.class);
+        expose(RewardIssuanceService.class);
         expose(AppleIapReceiptService.class);
     }
 

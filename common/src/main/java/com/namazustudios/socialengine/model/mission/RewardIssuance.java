@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.goods.Item;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -45,10 +44,10 @@ public class RewardIssuance implements Serializable {
     private State state;
 
     @ApiModelProperty("The Item to be issued upon redemption.")
-    private Item rewardItem;
+    private Item item;
 
     @ApiModelProperty("The amount of Items to be set/added to the InventoryItem upon redemption.")
-    private Integer rewardItemQuantity;
+    private Integer itemQuantity;
 
     @NotNull(groups = {Create.class, Insert.class})
     @Null(groups = {Update.class})
@@ -110,20 +109,20 @@ public class RewardIssuance implements Serializable {
         this.user = user;
     }
 
-    public Item getRewardItem() {
-        return rewardItem;
+    public Item getItem() {
+        return item;
     }
 
-    public void setRewardItem(Item rewardItem) {
-        this.rewardItem = rewardItem;
+    public void setItem(Item item) {
+        this.item = item;
     }
 
-    public Integer getRewardItemQuantity() {
-        return rewardItemQuantity;
+    public Integer getItemQuantity() {
+        return itemQuantity;
     }
 
-    public void setRewardItemQuantity(Integer rewardItemQuantity) {
-        this.rewardItemQuantity = rewardItemQuantity;
+    public void setItemQuantity(Integer itemQuantity) {
+        this.itemQuantity = itemQuantity;
     }
 
     public State getState() {
@@ -201,8 +200,8 @@ public class RewardIssuance implements Serializable {
         return Objects.equals(getId(), that.getId()) &&
                 Objects.equals(getUser(), that.getUser()) &&
                 getState() == that.getState() &&
-                Objects.equals(getRewardItem(), that.getRewardItem()) &&
-                Objects.equals(getRewardItemQuantity(), that.getRewardItemQuantity()) &&
+                Objects.equals(getItem(), that.getItem()) &&
+                Objects.equals(getItemQuantity(), that.getItemQuantity()) &&
                 Objects.equals(getContext(), that.getContext()) &&
                 getType() == that.getType() &&
                 Objects.equals(getSource(), that.getSource()) &&
@@ -213,7 +212,7 @@ public class RewardIssuance implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getUser(), getState(), getRewardItem(), getRewardItemQuantity(),
+        return Objects.hash(getId(), getUser(), getState(), getItem(), getItemQuantity(),
                 getContext(), getType(), getSource(), getMetadata(), getExpirationTimestamp(),
                 getUuid());
     }
@@ -224,8 +223,8 @@ public class RewardIssuance implements Serializable {
                 "id='" + id + '\'' +
                 ", user=" + user +
                 ", state=" + state +
-                ", rewardItem=" + rewardItem +
-                ", rewardItemQuantity=" + rewardItemQuantity +
+                ", item=" + item +
+                ", itemQuantity=" + itemQuantity +
                 ", context='" + context + '\'' +
                 ", type=" + type +
                 ", source='" + source + '\'' +

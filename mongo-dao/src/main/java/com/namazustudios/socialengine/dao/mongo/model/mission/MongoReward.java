@@ -13,7 +13,7 @@ import java.util.Objects;
  * Created by davidjbrooks on 11/27/2018.
  */
 
-@Entity(value = "reward", noClassnameStored = true)
+@Embedded
 public class MongoReward {
     @Id
     private ObjectId objectId;

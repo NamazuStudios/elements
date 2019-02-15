@@ -44,15 +44,14 @@ public class MongoRewardIssuanceId {
     private String context;
 
     public MongoRewardIssuanceId(final String hexString) {
-
         if (hexString.getBytes().length < 2) {
-            throw new InvalidDataException("MongoRewardIssuanceId hex string is too short.");
+            throw new IllegalArgumentException("Provided RewardIssuance id is too short.");
         }
 
         final byte [] bytes = Base64.getDecoder().decode(hexString);
 
         if (bytes.length <= CONTEXT_BYTE_START_POSITION) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Provided RewardIssuance id is too short.");
         }
 
         final byte[] userIdBytes = new byte[USER_ID_LENGTH];
