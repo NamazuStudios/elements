@@ -18,8 +18,6 @@ import java.util.Objects;
  */
 @ApiModel
 public class Reward implements Serializable {
-    private String id;
-
     @NotNull
     @ApiModelProperty("The Item that constitutes the reward")
     private Item item;
@@ -63,14 +61,6 @@ public class Reward implements Serializable {
 
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -89,8 +79,7 @@ public class Reward implements Serializable {
     @Override
     public String toString() {
         return "Reward{" +
-                "id=" + id +
-                ", item=" + item +
+                "item=" + item +
                 ", quantity=" + quantity +
                 ", metadata=" + metadata +
                 '}';

@@ -15,15 +15,13 @@ import java.util.Objects;
 
 @Embedded
 public class MongoReward {
-    @Id
-    private ObjectId objectId;
-
     @Reference
     private MongoItem item;
 
     @Property
     private int quantity;
 
+    @Property
     private Map<String, Object> metadata;
 
     public MongoItem getItem() {
@@ -50,35 +48,25 @@ public class MongoReward {
         this.metadata = metadata;
     }
 
-    public ObjectId getObjectId() {
-        return objectId;
-    }
-
-    public void setObjectId(ObjectId objectId) {
-        this.objectId = objectId;
-    }
-
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
         if (!(object instanceof MongoReward)) return false;
         MongoReward that = (MongoReward) object;
-        return getObjectId() == that.getObjectId() &&
-                getQuantity() == that.getQuantity() &&
+        return getQuantity() == that.getQuantity() &&
                 Objects.equals(getItem(), that.getItem()) &&
                 Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getItem(), getQuantity(), getMetadata());
+        return Objects.hash(getItem(), getQuantity(), getMetadata());
     }
 
     @Override
     public String toString() {
         return "MongoReward{" +
-                "objectId=" + objectId +
-                ", item=" + item +
+                "item=" + item +
                 ", quantity=" + quantity +
                 ", metadata=" + metadata +
                 '}';

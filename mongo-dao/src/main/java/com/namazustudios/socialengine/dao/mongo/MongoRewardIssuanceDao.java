@@ -49,8 +49,6 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
     private MongoUserDao mongoUserDao;
 
-    private MongoRewardDao mongoRewardDao;
-
     private MongoItemDao mongoItemDao;
 
     private MongoConcurrentUtils mongoConcurrentUtils;
@@ -363,15 +361,6 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
     public MongoItemDao getMongoItemDao() {
         return mongoItemDao;
-    }
-
-    @Inject
-    public void setMongoRewardDao(MongoRewardDao mongoRewardDao) {
-        this.mongoRewardDao = mongoRewardDao;
-    }
-
-    public MongoRewardDao getMongoRewardDao() {
-        return mongoRewardDao;
     }
 
     @Inject

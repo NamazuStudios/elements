@@ -15,6 +15,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
+import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.mission.Reward;
 import com.namazustudios.socialengine.model.mission.RewardIssuance;
@@ -348,8 +349,13 @@ public class MongoProgressDao implements ProgressDao {
                     final String context = buildMissionProgressContextString(
                             mongoProgress.getObjectId().toHexString(),
                             Integer.toString(mongoProgress.getSequence()));
-                    final MongoRewardIssuanceId mongoRewardIssuanceId =
-                            new MongoRewardIssuanceId(mongoUser.getObjectId(), r.getObjectId(), context);
+
+                    final MongoRewardIssuanceId mongoRewardIssuanceId = new MongoRewardIssuanceId(
+                            mongoUser.getObjectId(),
+                            r.getItem().getObjectId(),
+                            r.getQuantity(),
+                            context
+                    );
 
                     final Progress progress = getDozerMapper().map(mongoProgress, Progress.class);
                     final Step __step = getDozerMapper().map(_step, Step.class);
@@ -358,7 +364,8 @@ public class MongoProgressDao implements ProgressDao {
                     final Map<String, Object> metadata = generateMissionProgressMetadata(progress, __step);
 
                     final RewardIssuance issuance = new RewardIssuance();
-                    issuance.setReward(reward);
+                    issuance.setItem(reward.getItem());
+                    issuance.setItemQuantity(reward.getQuantity());
                     issuance.setUser(user);
                     issuance.setType(PERSISTENT);
                     issuance.setSource(MISSION_PROGRESS_SOURCE);

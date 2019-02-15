@@ -38,13 +38,7 @@ public class UserRewardIssuanceService implements RewardIssuanceService {
 
     @Override
     public RewardIssuanceResult redeemRewardIssuance(String id) {
-        RewardIssuance rewardIssuance = getRewardIssuanceDao().getRewardIssuance(id);
-        return doRedeem(rewardIssuance);
-    }
-
-    @Override
-    public RewardIssuanceResult redeemRewardIssuance(RewardIssuance rewardIssuance) {
-        return doRedeem(rewardIssuance);
+        return doRedeem(id);
     }
 
     @Override
@@ -55,17 +49,17 @@ public class UserRewardIssuanceService implements RewardIssuanceService {
 
         return rewardIssuanceIds
                 .stream()
-                .map(rii -> getRewardIssuanceDao().getRewardIssuance(rii))
-                .map(ri -> doRedeem(ri))
+                .map(rii -> doRedeem(rii))
                 .collect(Collectors.toList());
     }
 
-    private RewardIssuanceResult doRedeem(RewardIssuance rewardIssuance) {
+    private RewardIssuanceResult doRedeem(String rewardIssuanceId) {
         final RewardIssuanceResult rewardIssuanceResult = new RewardIssuanceResult();
 
-        rewardIssuanceResult.setRewardIssuanceId(rewardIssuance.getId());
+        rewardIssuanceResult.setRewardIssuanceId(rewardIssuanceId);
 
         try {
+            RewardIssuance rewardIssuance = getRewardIssuanceDao().getRewardIssuance(rewardIssuanceId);
             InventoryItem resultInventoryItem = getRewardIssuanceDao().redeem(rewardIssuance);
             rewardIssuanceResult.setInventoryItem(resultInventoryItem);
 

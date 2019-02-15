@@ -34,14 +34,6 @@ public interface RewardIssuanceService {
     RewardIssuanceResult redeemRewardIssuance(String id);
 
     /**
-     * Redeems the given {@link RewardIssuance}.
-     *
-     * @param rewardIssuance
-     * @return the updated reward issuance
-     */
-    RewardIssuanceResult redeemRewardIssuance(RewardIssuance rewardIssuance);
-
-    /**
      * Redeems the given list of {@param rewardIssuanceIds} for {@link RewardIssuance}s.
      *
      * @param rewardIssuanceIds

@@ -43,6 +43,8 @@ public class MongoRewardIssuanceId {
     @Property
     private String context;
 
+    public MongoRewardIssuanceId() {}
+
     public MongoRewardIssuanceId(final String hexString) {
         if (hexString.getBytes().length < 2) {
             throw new IllegalArgumentException("Provided RewardIssuance id is too short.");
