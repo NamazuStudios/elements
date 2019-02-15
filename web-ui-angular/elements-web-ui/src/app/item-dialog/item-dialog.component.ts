@@ -37,6 +37,7 @@ export class ItemDialogComponent implements OnInit {
   initEditorOptions(opts: JsonEditorOptions) {
     opts.modes = ['code', 'text', 'view'];
     opts.mode = 'code';
+    opts.schema = {};
     opts.onChange = () => this.validateMetadata(false);
   }
 
@@ -51,6 +52,7 @@ export class ItemDialogComponent implements OnInit {
   validateMetadata(andUpdate: boolean) {
     try {
       const editorContents = this.editor.get();
+      console.log(editorContents);
       if (andUpdate) { this.data.item.metadata = editorContents; }
       this.isJSONValid = true;
     } catch (err) {
@@ -102,6 +104,7 @@ export class ItemDialogComponent implements OnInit {
     if (this.data.item.metadata !== undefined) {
       formData.metadata = this.data.item.metadata;
     }
+    console.log(formData);
     this.dialogRef.close(formData);
   }
 

@@ -180,8 +180,10 @@ class ItemsService extends BaseService {
     let __headers = new HttpHeaders();
     let __body: any = null;
 
+    console.log(params);
     __body = params.body;
     __body.id = params.identifier;
+    console.log(__body);
     let req = new HttpRequest<any>(
       'PUT',
       this.rootUrl + `/item/${params.identifier}`,
@@ -192,7 +194,7 @@ class ItemsService extends BaseService {
         responseType: 'json'
       }
     );
-
+    console.log(req);
     return this.http.request<any>(req).pipe(
       __filter(_r => _r instanceof HttpResponse),
       __map((_r: HttpResponse<any>) => {
@@ -212,6 +214,7 @@ class ItemsService extends BaseService {
    * @return successful operation
    */
   updateItem(params: ItemsService.UpdateItemParams): Observable<Item> {
+    console.log(params);
     return this.updateItemResponse(params).pipe(
       __map(_r => _r.body)
     );
