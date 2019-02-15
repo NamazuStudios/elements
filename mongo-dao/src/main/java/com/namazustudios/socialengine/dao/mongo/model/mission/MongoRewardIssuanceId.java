@@ -1,10 +1,13 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
+import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -15,13 +18,16 @@ import static java.lang.System.arraycopy;
 @Embedded
 public class MongoRewardIssuanceId {
 
-    private static final int USER_ID_INDEX = 0;
+    private static final int USER_ID_LENGTH = 12;
+    private static final int USER_ID_START_POSITION = 0;
 
-    private static final int REWARD_ID_INDEX = 1;
+    private static final int ITEM_ID_LENGTH = 12;
+    private static final int ITEM_ID_START_POSITION = USER_ID_START_POSITION + USER_ID_LENGTH;
 
-    private static final int CONTEXT_INDEX = 2;
+    private static final int ITEM_QUANTITY_LENGTH = 4;
+    private static final int ITEM_QUANTITY_START_POSITION = ITEM_ID_START_POSITION + ITEM_ID_LENGTH;
 
-    private static final int OBJECT_ID_LENGTH = 12;
+    private static final int CONTEXT_BYTE_START_POSITION = ITEM_QUANTITY_START_POSITION + ITEM_QUANTITY_LENGTH;
 
     private static final Charset CONTEXT_CHARSET = StandardCharsets.UTF_8;
 
@@ -29,51 +35,70 @@ public class MongoRewardIssuanceId {
     private ObjectId userId;
 
     @Property
-    private ObjectId rewardId;
+    private ObjectId itemId;
+
+    @Property
+    private int itemQuantity;
 
     @Property
     private String context;
 
-    public MongoRewardIssuanceId() {}
-
     public MongoRewardIssuanceId(final String hexString) {
 
+        if (hexString.getBytes().length < 2) {
+            throw new InvalidDataException("MongoRewardIssuanceId hex string is too short.");
+        }
+
         final byte [] bytes = Base64.getDecoder().decode(hexString);
-        if (bytes.length <= (OBJECT_ID_LENGTH * 2)) throw new IllegalArgumentException();
 
-        final byte[] objectIdBytes = new byte[OBJECT_ID_LENGTH];
+        if (bytes.length <= CONTEXT_BYTE_START_POSITION) {
+            throw new IllegalArgumentException();
+        }
 
-        final int contextByteLength = bytes.length - OBJECT_ID_LENGTH * CONTEXT_INDEX;
+        final byte[] userIdBytes = new byte[USER_ID_LENGTH];
+        arraycopy(bytes, USER_ID_START_POSITION, userIdBytes, 0, USER_ID_LENGTH);
+        userId = new ObjectId(userIdBytes);
 
-        arraycopy(bytes, OBJECT_ID_LENGTH * USER_ID_INDEX, objectIdBytes, 0, objectIdBytes.length);
-        userId = new ObjectId(objectIdBytes);
+        final byte[] itemIdBytes = new byte[ITEM_ID_LENGTH];
+        arraycopy(bytes, ITEM_ID_START_POSITION, itemIdBytes, 0, ITEM_ID_LENGTH);
+        itemId = new ObjectId(itemIdBytes);
 
-        arraycopy(bytes, OBJECT_ID_LENGTH * REWARD_ID_INDEX, objectIdBytes, 0, objectIdBytes.length);
-        rewardId = new ObjectId(objectIdBytes);
+        final byte[] itemQuantityBytes = new byte[ITEM_QUANTITY_LENGTH];
+        arraycopy(bytes, ITEM_QUANTITY_START_POSITION, itemQuantityBytes, 0, ITEM_QUANTITY_LENGTH);
+        itemQuantity = ByteBuffer.wrap(itemQuantityBytes).getInt();
+
+        final int contextByteLength = bytes.length - CONTEXT_BYTE_START_POSITION;
 
         final byte[] contextBytes = new byte[contextByteLength];
-
-        arraycopy(bytes, OBJECT_ID_LENGTH * CONTEXT_INDEX,  contextBytes,
-                0, contextByteLength);
-
+        arraycopy(bytes, CONTEXT_BYTE_START_POSITION, contextBytes, 0, contextByteLength);
         context = new String(contextBytes, CONTEXT_CHARSET);
     }
 
     public MongoRewardIssuanceId(final MongoUser mongoUser,
-                                 final MongoReward mongoReward,
+                                 final MongoItem mongoItem,
+                                 final int itemQuantity,
                                  final String context) {
-        this(mongoUser.getObjectId(), mongoReward.getObjectId(), context);
+        this(mongoUser.getObjectId(), mongoItem.getObjectId(), itemQuantity, context);
     }
 
-    public MongoRewardIssuanceId(final ObjectId userId, final ObjectId rewardId, final String context) {
+    public MongoRewardIssuanceId(
+            final ObjectId userId,
+            final ObjectId itemId,
+            final int itemQuantity,
+            final String context
+    ) {
         this.userId = userId;
-        this.rewardId = rewardId;
-        if (userId == null || rewardId == null || context == null) {
+        this.itemId = itemId;
+        if (userId == null || itemId == null || context == null) {
             throw new IllegalArgumentException("Must specify both ids as well as context.");
         }
 
         if (context.length() == 0) {
-            throw new IllegalArgumentException("context must not be empty.");
+            throw new IllegalArgumentException("Context must not be empty.");
+        }
+
+        if (itemQuantity < 0) {
+            throw new IllegalArgumentException("Item Quantity must be non-negative.");
         }
 
         this.context = context;
@@ -81,16 +106,19 @@ public class MongoRewardIssuanceId {
 
     public byte[] toByteArray() {
 
-        final byte[] userIdBytes = userId.toByteArray();
-        final byte[] rewardIdBytes = rewardId.toByteArray();
-        final byte[] contextBytes = context.getBytes(CONTEXT_CHARSET);
-        final byte[] bytes = new byte[OBJECT_ID_LENGTH * 2 + contextBytes.length];
+        final byte[] userIdBytes = getUserId().toByteArray();
+        final byte[] itemIdBytes = getItemId().toByteArray();
+        final byte[] itemQuantityBytes = ByteBuffer.allocate(4).putInt(getItemQuantity()).array();
+        final byte[] contextBytes = getContext().getBytes(CONTEXT_CHARSET);
 
-        arraycopy(userIdBytes, 0, bytes, OBJECT_ID_LENGTH * USER_ID_INDEX, userIdBytes.length);
-        arraycopy(rewardIdBytes, 0, bytes, OBJECT_ID_LENGTH * REWARD_ID_INDEX, rewardIdBytes.length);
-        arraycopy(contextBytes, 0, bytes, OBJECT_ID_LENGTH * CONTEXT_INDEX, contextBytes.length);
+        final byte[] destinationBytes = new byte[CONTEXT_BYTE_START_POSITION + contextBytes.length];
 
-        return bytes;
+        arraycopy(userIdBytes, 0, destinationBytes, USER_ID_START_POSITION, USER_ID_LENGTH);
+        arraycopy(itemIdBytes, 0, destinationBytes, ITEM_ID_START_POSITION, ITEM_ID_LENGTH);
+        arraycopy(itemQuantityBytes, 0, destinationBytes, ITEM_QUANTITY_START_POSITION, ITEM_QUANTITY_LENGTH);
+        arraycopy(contextBytes, 0, destinationBytes, CONTEXT_BYTE_START_POSITION, contextBytes.length);
+
+        return destinationBytes;
 
     }
 
@@ -107,12 +135,20 @@ public class MongoRewardIssuanceId {
         this.userId = userId;
     }
 
-    public ObjectId getRewardId() {
-        return rewardId;
+    public ObjectId getItemId() {
+        return itemId;
     }
 
-    public void setRewardId(ObjectId rewardId) {
-        this.rewardId = rewardId;
+    public void setItemId(ObjectId itemId) {
+        this.itemId = itemId;
+    }
+
+    public int getItemQuantity() {
+        return itemQuantity;
+    }
+
+    public void setItemQuantity(int itemQuantity) {
+        this.itemQuantity = itemQuantity;
     }
 
     public String getContext() {
@@ -124,26 +160,28 @@ public class MongoRewardIssuanceId {
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof MongoRewardIssuanceId)) return false;
-        MongoRewardIssuanceId that = (MongoRewardIssuanceId) object;
-        return Objects.equals(getUserId(), that.getUserId()) &&
-                Objects.equals(getRewardId(), that.getRewardId()) &&
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MongoRewardIssuanceId that = (MongoRewardIssuanceId) o;
+        return getItemQuantity() == that.getItemQuantity() &&
+                Objects.equals(getUserId(), that.getUserId()) &&
+                Objects.equals(getItemId(), that.getItemId()) &&
                 Objects.equals(getContext(), that.getContext());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getUserId(), getRewardId(), getContext());
+        return Objects.hash(getUserId(), getItemId(), getItemQuantity(), getContext());
     }
 
     @Override
     public String toString() {
         return "MongoRewardIssuanceId{" +
                 "userId=" + userId +
-                ", rewardId=" + rewardId +
-                ", context=" + context +
+                ", itemId=" + itemId +
+                ", itemQuantity=" + itemQuantity +
+                ", context='" + context + '\'' +
                 '}';
     }
 

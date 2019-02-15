@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
+import com.namazustudios.socialengine.model.goods.Item;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -43,8 +44,11 @@ public class RewardIssuance implements Serializable {
             "process.")
     private State state;
 
-    @ApiModelProperty("The reward to issue when this issuance is redeemed.")
-    private Reward reward;
+    @ApiModelProperty("The Item to be issued upon redemption.")
+    private Item rewardItem;
+
+    @ApiModelProperty("The amount of Items to be set/added to the InventoryItem upon redemption.")
+    private Integer rewardItemQuantity;
 
     @NotNull(groups = {Create.class, Insert.class})
     @Null(groups = {Update.class})
@@ -106,12 +110,20 @@ public class RewardIssuance implements Serializable {
         this.user = user;
     }
 
-    public Reward getReward() {
-        return reward;
+    public Item getRewardItem() {
+        return rewardItem;
     }
 
-    public void setReward(Reward reward) {
-        this.reward = reward;
+    public void setRewardItem(Item rewardItem) {
+        this.rewardItem = rewardItem;
+    }
+
+    public Integer getRewardItemQuantity() {
+        return rewardItemQuantity;
+    }
+
+    public void setRewardItemQuantity(Integer rewardItemQuantity) {
+        this.rewardItemQuantity = rewardItemQuantity;
     }
 
     public State getState() {
@@ -182,17 +194,18 @@ public class RewardIssuance implements Serializable {
 
 
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof RewardIssuance)) return false;
-        RewardIssuance that = (RewardIssuance) object;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RewardIssuance that = (RewardIssuance) o;
         return Objects.equals(getId(), that.getId()) &&
                 Objects.equals(getUser(), that.getUser()) &&
                 getState() == that.getState() &&
-                Objects.equals(getReward(), that.getReward()) &&
+                Objects.equals(getRewardItem(), that.getRewardItem()) &&
+                Objects.equals(getRewardItemQuantity(), that.getRewardItemQuantity()) &&
                 Objects.equals(getContext(), that.getContext()) &&
-                Objects.equals(getSource(), that.getSource()) &&
                 getType() == that.getType() &&
+                Objects.equals(getSource(), that.getSource()) &&
                 Objects.equals(getMetadata(), that.getMetadata()) &&
                 Objects.equals(getExpirationTimestamp(), that.getExpirationTimestamp()) &&
                 Objects.equals(getUuid(), that.getUuid());
@@ -200,8 +213,9 @@ public class RewardIssuance implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getUser(), getState(), getReward(), getContext(),
-                getSource(), getType(), getMetadata(), getExpirationTimestamp(), getUuid());
+        return Objects.hash(getId(), getUser(), getState(), getRewardItem(), getRewardItemQuantity(),
+                getContext(), getType(), getSource(), getMetadata(), getExpirationTimestamp(),
+                getUuid());
     }
 
     @Override
@@ -210,13 +224,14 @@ public class RewardIssuance implements Serializable {
                 "id='" + id + '\'' +
                 ", user=" + user +
                 ", state=" + state +
-                ", reward=" + reward +
-                ", context=" + context +
-                ", source=" + source +
+                ", rewardItem=" + rewardItem +
+                ", rewardItemQuantity=" + rewardItemQuantity +
+                ", context='" + context + '\'' +
                 ", type=" + type +
+                ", source='" + source + '\'' +
                 ", metadata=" + metadata +
                 ", expirationTimestamp=" + expirationTimestamp +
-                ", uuid=" + uuid +
+                ", uuid='" + uuid + '\'' +
                 '}';
     }
 
@@ -232,9 +247,10 @@ public class RewardIssuance implements Serializable {
          * Type, then, after a successful redemption, the MongoRewardIssuanceDao will immediately attempt
          * to delete the RewardIssuance.
          *
-         * TODO: since we cannot guarantee the reward issuance to a user and deleting a PERSISTENT RewardIssuance since
-         * TODO: mongo does not support transactions, we may need some scheduled cleanup process to clear them out
-         * TODO: (setting a new expiration date will not work since that likewise cannot be done atomically).
+         * TODO: since we cannot guarantee that we will both successfully redeem a NON_PERSISTENT RewardIssuance and
+         * TODO: successfully delete it since mongo does not support transactions, we may need some scheduled cleanup
+         * TODO: process to clear them out (setting a new expiration date will not work since that
+         * TODO: likewise cannot be done atomically).
          *
          */
         REDEEMED
