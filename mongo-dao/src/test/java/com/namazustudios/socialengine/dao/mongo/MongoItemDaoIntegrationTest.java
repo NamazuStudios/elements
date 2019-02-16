@@ -52,6 +52,13 @@ public class MongoItemDaoIntegrationTest {
         assertEquals(byId, createdItem);
     }
 
+    @Test
+    public void testCreateAndNonStringMetadataValue() {
+        Item item = createMockItem();
+        Item createdItem = itemDao.createItem(item);
+        assertEquals(createdItem.getMetadata().get("hamCount"), Integer.valueOf(2000000));
+    }
+
     @Test(expectedExceptions = NotFoundException.class)
     public void testGetItemByIdNotFound() {
         itemDao.getItemByIdOrName(new ObjectId().toHexString());
@@ -132,6 +139,7 @@ public class MongoItemDaoIntegrationTest {
     private Item createMockItem() {
         Map<String, Object> mockMetadata = new HashMap<>();
         mockMetadata.put("ham", "eggs");
+        mockMetadata.put("hamCount", 2000000);  // test non-string insertion/retrieval
 
         Item item = new Item();
         item.setName("foo_item");
