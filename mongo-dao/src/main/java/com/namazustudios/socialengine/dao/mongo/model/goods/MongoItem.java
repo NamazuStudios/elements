@@ -43,7 +43,7 @@ public class MongoItem {
     private String description;
 
     @Property
-    private Map<String, String> metadata = new HashMap<>();
+    private Map<String, Object> metadata = new HashMap<>();
 
     @Indexed
     @Property
@@ -81,11 +81,11 @@ public class MongoItem {
         this.description = description;
     }
 
-    public Map<String, String> getMetadata() {
+    public Map<String, Object> getMetadata() {
         return metadata;
     }
 
-    public void setMetadata(Map<String, String> metadata) {
+    public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
     }
 
