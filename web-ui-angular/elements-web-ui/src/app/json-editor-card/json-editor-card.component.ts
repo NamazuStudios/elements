@@ -24,13 +24,22 @@ export class JsonEditorCardComponent implements OnInit {
   initEditorOptions(opts: JsonEditorOptions) {
     opts.modes = ['code', 'text', 'view'];
     opts.mode = 'code';
-    opts.schema = {};
+    opts.schema = {
+      'properties': {
+        'testProp': {
+          'type': 'integer'
+        }
+      },
+      'additionalProperties': {
+        'type': ['string', 'number']
+      }
+    };
     opts.onChange = () => this.validateMetadata(false);
   }
 
   toggleAdvancedEditor() {
     // update metadata JSON if leaving advanced editor
-    if(this.showAdvanced) {
+    if (this.showAdvanced) {
       this.validateMetadata(true);
     }
     this.showAdvanced = !this.showAdvanced;
