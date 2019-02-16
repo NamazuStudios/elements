@@ -21,7 +21,6 @@ export class ItemDialogComponent implements OnInit {
   selectable = true;
   removable = true;
   addOnBlur = true;
-  public editorOptions: JsonEditorOptions;
   readonly separatorKeyCodes: number[] = [ENTER, COMMA];
 
   itemForm = this.formBuilder.group({
@@ -64,7 +63,7 @@ export class ItemDialogComponent implements OnInit {
       return;
     }
 
-    this.validateMetadata(true);
+    this.editorCard.validateMetadata(true);
 
     const formData = this.itemForm.value;
     if (this.data.item.tags !== undefined) {

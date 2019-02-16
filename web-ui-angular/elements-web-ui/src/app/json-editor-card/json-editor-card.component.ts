@@ -9,11 +9,12 @@ import {JsonEditorComponent, JsonEditorOptions} from 'ang-jsoneditor';
 export class JsonEditorCardComponent implements OnInit {
   @ViewChild(JsonEditorComponent) editor: JsonEditorComponent;
 
-  @Input() data: any;
+  @Input() editTarget: any;
   @Input() topic: string;
 
   showAdvanced = false;
-  isJSONValid = true;
+  public isJSONValid = true;
+  public editorOptions: JsonEditorOptions;
 
   constructor() {
     this.editorOptions = new JsonEditorOptions();
@@ -39,7 +40,7 @@ export class JsonEditorCardComponent implements OnInit {
     try {
       const editorContents = this.editor.get();
       console.log(editorContents);
-      if (andUpdate) { this.data.item.metadata = editorContents; }
+      if (andUpdate) { this.editTarget.metadata = editorContents; }
       this.isJSONValid = true;
     } catch (err) {
       // bad JSON detected...don't let them leave the advanced editor!
