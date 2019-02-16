@@ -3,6 +3,7 @@ import {FormBuilder, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatChipInputEvent, MatDialogRef} from '@angular/material';
 import {ENTER, COMMA} from '@angular/cdk/keycodes';
 import {JsonEditorOptions, JsonEditorComponent} from 'ang-jsoneditor';
+import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
 
 @Component({
   selector: 'app-item-dialog',
@@ -13,17 +14,13 @@ export class ItemDialogComponent implements OnInit {
 
   constructor(public dialogRef: MatDialogRef<ItemDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
-              private formBuilder: FormBuilder) {
-    this.editorOptions = new JsonEditorOptions();
-    this.initEditorOptions(this.editorOptions);
-  }
-  @ViewChild(JsonEditorComponent) editor: JsonEditorComponent;
+              private formBuilder: FormBuilder) { }
 
-  isJSONValid = true;
+  @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
+
   selectable = true;
   removable = true;
   addOnBlur = true;
-  showAdvanced = false;
   public editorOptions: JsonEditorOptions;
   readonly separatorKeyCodes: number[] = [ENTER, COMMA];
 
@@ -33,34 +30,6 @@ export class ItemDialogComponent implements OnInit {
     description: [ this.data.item.description ],
     tags: []
   });
-
-  initEditorOptions(opts: JsonEditorOptions) {
-    opts.modes = ['code', 'text', 'view'];
-    opts.mode = 'code';
-    opts.schema = {};
-    opts.onChange = () => this.validateMetadata(false);
-  }
-
-  toggleAdvancedEditor() {
-    // update metadata JSON if leaving advanced editor
-    if(this.showAdvanced) {
-      this.validateMetadata(true);
-    }
-    this.showAdvanced = !this.showAdvanced;
-  }
-
-  validateMetadata(andUpdate: boolean) {
-    try {
-      const editorContents = this.editor.get();
-      console.log(editorContents);
-      if (andUpdate) { this.data.item.metadata = editorContents; }
-      this.isJSONValid = true;
-    } catch (err) {
-      // bad JSON detected...don't let them leave the advanced editor!
-      this.isJSONValid = false;
-      return;
-    }
-  }
 
   addTag(event: MatChipInputEvent): void {
     const input = event.input;

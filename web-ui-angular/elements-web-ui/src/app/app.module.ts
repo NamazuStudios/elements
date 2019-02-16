@@ -36,6 +36,7 @@ import { ItemsListComponent } from './items-list/items-list.component';
 import { ItemDialogComponent } from './item-dialog/item-dialog.component';
 import { SimpleJsonEditorComponent } from './simple-json-editor/simple-json-editor.component';
 import {NgJsonEditorModule} from 'ang-jsoneditor';
+import { JsonEditorCardComponent } from './json-editor-card/json-editor-card.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -74,6 +75,7 @@ export function initialize(configService: ConfigService) {
     ItemsListComponent,
     ItemDialogComponent,
     SimpleJsonEditorComponent,
+    JsonEditorCardComponent,
   ],
   imports: [
     BrowserModule,
