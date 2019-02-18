@@ -49,8 +49,6 @@ public class MongoProgressDaoTest  {
 
     private RewardIssuanceDao rewardIssuanceDao;
 
-    private RewardDao rewardDao;
-
     private Application testApplication;
 
     private Item testFiniteItem;
@@ -166,8 +164,7 @@ public class MongoProgressDaoTest  {
         reward.setItem(item);
         reward.setQuantity(quantity);
         reward.addMetadata("bar", 100);
-        final Reward createdReward = getRewardDao().createReward(reward);
-        return createdReward;
+        return reward;
     }
 
     @DataProvider
@@ -305,7 +302,8 @@ public class MongoProgressDaoTest  {
 
             final RewardIssuance rewardIssuance = progress.getRewardIssuances().get(expectedRewards - 1);
             assertNotNull(rewardIssuance.getId());
-            assertEquals(rewardIssuance.getReward(), step.getRewards().get(0));
+            assertEquals(rewardIssuance.getItem(), step.getRewards().get(0).getItem());
+            assertEquals(rewardIssuance.getItemQuantity(), step.getRewards().get(0).getQuantity());
             assertEquals(rewardIssuance.getState(), ISSUED);
 
         } while (!steps.isEmpty());
@@ -472,15 +470,6 @@ public class MongoProgressDaoTest  {
     @Inject
     public void setRewardIssuanceDao(RewardIssuanceDao rewardIssuanceDao) {
         this.rewardIssuanceDao = rewardIssuanceDao;
-    }
-
-    public RewardDao getRewardDao() {
-        return rewardDao;
-    }
-
-    @Inject
-    public void setRewardDao(RewardDao rewardDao) {
-        this.rewardDao = rewardDao;
     }
 
 }

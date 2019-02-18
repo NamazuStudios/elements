@@ -46,8 +46,6 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
     private RewardIssuanceDao rewardIssuanceDao;
 
-    private RewardDao rewardDao;
-
     private ItemDao itemDao;
 
     private ApplicationConfigurationDao applicationConfigurationDao;
@@ -95,15 +93,6 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
     @Inject
     public void setRewardIssuanceDao(RewardIssuanceDao rewardIssuanceDao) {
         this.rewardIssuanceDao = rewardIssuanceDao;
-    }
-
-    public RewardDao getRewardDao() {
-        return rewardDao;
-    }
-
-    @Inject
-    public void setRewardDao(RewardDao rewardDao) {
-        this.rewardDao = rewardDao;
     }
 
     public ItemDao getItemDao() {
@@ -266,18 +255,11 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
                     // then, we get a model rep of the given item id
                     final Item item = getItemDao().getItemByIdOrName(itemId);
 
-                    // we now have everything we need to set up and insert a new reward...
-                    final Reward reward = new Reward();
-
-                    reward.setQuantity(rewardQuantity);
-                    reward.setItem(item);
-
-                    final Reward resultReward = getRewardDao().createReward(reward);
-
-                    // once the reward is inserted, we now have everything we need to set up and insert a new issuance...
+                    // we now have everything we need to set up and insert a new issuance...
                     final RewardIssuance rewardIssuance = new RewardIssuance();
 
-                    rewardIssuance.setReward(resultReward);
+                    rewardIssuance.setItem(item);
+                    rewardIssuance.setItemQuantity(rewardQuantity);
                     rewardIssuance.setUser(user);
                     // we hold onto the reward issuance forever so as not to duplicate an already-redeemed issuance
                     rewardIssuance.setType(PERSISTENT);

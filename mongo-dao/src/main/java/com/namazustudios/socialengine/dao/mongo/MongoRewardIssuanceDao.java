@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
-import com.namazustudios.socialengine.dao.mongo.model.mission.MongoReward;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuance;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuanceId;
 import com.namazustudios.socialengine.exception.*;
@@ -21,18 +20,14 @@ import com.namazustudios.socialengine.model.mission.RewardIssuance;
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.*;
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.Type.*;
 import com.namazustudios.socialengine.util.ValidationHelper;
-import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.omg.CosNaming.NamingContextPackage.NotFound;
 
 import javax.inject.Inject;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -41,9 +36,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.dao.InventoryItemDao.SIMPLE_PRIORITY;
 import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuanceId.parseOrThrowNotFoundException;
 import static java.lang.System.currentTimeMillis;
-import static java.util.Collections.emptySet;
 import static java.util.UUID.randomUUID;
-import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoRewardIssuanceDao implements RewardIssuanceDao {
@@ -55,8 +48,6 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     private AdvancedDatastore datastore;
 
     private MongoUserDao mongoUserDao;
-
-    private MongoRewardDao mongoRewardDao;
 
     private MongoItemDao mongoItemDao;
 
@@ -134,10 +125,15 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     @Override
     public RewardIssuance getOrCreateRewardIssuance(final RewardIssuance rewardIssuance) {
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(rewardIssuance.getUser().getId());
-        final MongoReward mongoReward = getMongoRewardDao().getMongoReward(rewardIssuance.getReward().getId());
+        final MongoItem mongoItem = getMongoItemDao().getMongoItemByNameOrId(rewardIssuance.getItem().getId());
         final String context = rewardIssuance.getContext();
         final MongoRewardIssuanceId mongoRewardIssuanceId =
-                new MongoRewardIssuanceId(mongoUser.getObjectId(), mongoReward.getObjectId(), context);
+                new MongoRewardIssuanceId(
+                        mongoUser.getObjectId(),
+                        mongoItem.getObjectId(),
+                        rewardIssuance.getItemQuantity(),
+                        context
+                );
 
         try {
             final MongoRewardIssuance existingIssuance = getMongoRewardIssuance(mongoRewardIssuanceId);
@@ -246,7 +242,7 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         final UpdateOperations<MongoInventoryItem> updates = getDatastore().createUpdateOperations(MongoInventoryItem.class);
 
         final MongoUser mongoUser = mongoRewardIssuance.getUser();
-        final MongoItem mongoItem = mongoRewardIssuance.getReward().getItem();
+        final MongoItem mongoItem = mongoRewardIssuance.getItem();
         final MongoInventoryItemId mongoInventoryItemId = new MongoInventoryItemId(mongoUser, mongoItem, SIMPLE_PRIORITY);
 
         updates.set("version", randomUUID().toString());
@@ -263,7 +259,7 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
             updates.set("_id", mongoInventoryItemId);
             updates.set("user", mongoUser);
             updates.set("item", mongoItem);
-            updates.set("quantity", rewardIssuance.getReward().getQuantity());
+            updates.set("quantity", rewardIssuance.getItemQuantity());
             updates.addToSet("rewardIssuanceUuids", mongoRewardIssuance.getUuid());
         }
         else {
@@ -277,7 +273,7 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
                                     .map(ri -> false).findFirst().orElse(true);
 
             if (add) {
-                updates.inc("quantity", mongoRewardIssuance.getReward().getQuantity());
+                updates.inc("quantity", mongoRewardIssuance.getItemQuantity());
                 updates.addToSet("rewardIssuanceUuids", mongoRewardIssuance.getUuid());
             }
 
@@ -365,15 +361,6 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
     public MongoItemDao getMongoItemDao() {
         return mongoItemDao;
-    }
-
-    @Inject
-    public void setMongoRewardDao(MongoRewardDao mongoRewardDao) {
-        this.mongoRewardDao = mongoRewardDao;
-    }
-
-    public MongoRewardDao getMongoRewardDao() {
-        return mongoRewardDao;
     }
 
     @Inject
