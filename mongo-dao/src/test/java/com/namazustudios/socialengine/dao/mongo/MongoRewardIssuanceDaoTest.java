@@ -19,7 +19,13 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import static com.namazustudios.socialengine.model.User.Level.USER;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.State;
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.*;
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.Type.*;
 import static java.lang.System.currentTimeMillis;
@@ -228,7 +234,7 @@ public class MongoRewardIssuanceDaoTest {
     @DataProvider
     public Object[][] getIssuedPersistentRewardIssuances() {
         final Object[][] objects = getRewardIssuanceDao()
-            .getRewardIssuances(testUser, 0, 20, of(ISSUED).collect(toSet()))
+            .getRewardIssuances(testUser, 0, 20, of(ISSUED).collect(toSet()), null)
             .getObjects()
             .stream()
             .filter(ri -> PERSISTENT.equals(ri.getType()))
@@ -241,7 +247,7 @@ public class MongoRewardIssuanceDaoTest {
     @DataProvider
     public Object[][] getRedeemedPersistentRewardIssuances() {
         final Object[][] objects = getRewardIssuanceDao()
-                .getRewardIssuances(testUser, 0, 20, of(REDEEMED).collect(toSet()))
+                .getRewardIssuances(testUser, 0, 20, of(REDEEMED).collect(toSet()), null)
                 .getObjects()
                 .stream()
                 .filter(ri -> PERSISTENT.equals(ri.getType()))
@@ -254,10 +260,22 @@ public class MongoRewardIssuanceDaoTest {
     @DataProvider
     public Object[][] getIssuedNonPersistentRewardIssuances() {
         final Object[][] objects = getRewardIssuanceDao()
-                .getRewardIssuances(testUser, 0, 20, of(ISSUED).collect(toSet()))
+                .getRewardIssuances(testUser, 0, 20, of(ISSUED).collect(toSet()), null)
                 .getObjects()
                 .stream()
                 .filter(ri -> NON_PERSISTENT.equals(ri.getType()))
+                .map(pr -> new Object[]{pr})
+                .toArray(Object[][]::new);
+        assertTrue(objects.length > 0);
+        return objects;
+    }
+
+    @DataProvider
+    public Object[][] getAllRewardIssuances() {
+        final Object[][] objects = getRewardIssuanceDao()
+                .getRewardIssuances(testUser, 0, 50, null, null)
+                .getObjects()
+                .stream()
                 .map(pr -> new Object[]{pr})
                 .toArray(Object[][]::new);
         assertTrue(objects.length > 0);
@@ -340,6 +358,175 @@ public class MongoRewardIssuanceDaoTest {
         }
     }
 
+    @Test(dataProvider = "getAllRewardIssuances",
+            dependsOnMethods = {"testRedeemPersistent", "testAlreadyRedeemedPersistent", "testRedeemNonPersistent"})
+    public void deleteIssuances(final RewardIssuance rewardIssuance) {
+        getRewardIssuanceDao().delete(rewardIssuance.getId());
+    }
+
+    @Test(dependsOnMethods = {"deleteIssuances"})
+    public void testGetByStatesAndTags() {
+        final int creationCount = 12;
+        final int issuedCount = 10; // indices 0-9 will be issued, 10 and 11 will be redeemed
+        final int redeemedCount = 2;
+        final int evenCount = 6;
+        final int oddCount = 6;
+        final int issuedEvenCount = 5;
+        final int issuedOddCount = 5;
+        final int redeemedEvenCount = 1;
+        final int redeemedOddCount = 1;
+
+        for (int i=0; i < creationCount; i++) {
+            final RewardIssuance rewardIssuance = new RewardIssuance();
+
+            rewardIssuance.setUser(testUser);
+            rewardIssuance.setItem(testItem);
+            rewardIssuance.setItemQuantity(5);
+            rewardIssuance.setContext("server.test.states_and_tags."+i);
+
+            rewardIssuance.setState(ISSUED);
+
+            rewardIssuance.setType(PERSISTENT);
+
+            Set<String> tags = new HashSet<>();
+            if (i %2 == 0) {
+                tags.add("even");
+            }
+            else {
+                tags.add("odd");
+            }
+
+            tags.add("tag"+i);
+
+            rewardIssuance.setTags(tags);
+
+            final RewardIssuance createdRewardIssuance =
+                    getRewardIssuanceDao().getOrCreateRewardIssuance(rewardIssuance);
+
+            assertNotNull(createdRewardIssuance);
+            assertEquals(createdRewardIssuance.getTags(), rewardIssuance.getTags());
+
+            if (i %2 == 0) {
+                assertTrue(createdRewardIssuance.getTags().contains("even"));
+                assertFalse(createdRewardIssuance.getTags().contains("odd"));
+            }
+            else {
+                assertTrue(createdRewardIssuance.getTags().contains("odd"));
+                assertFalse(createdRewardIssuance.getTags().contains("even"));
+            }
+            assertTrue(createdRewardIssuance.getTags().contains("tag"+i));
+
+            // we need to manually redeem the last two issuances to set their state as REDEEMED (creation always forces
+            // ISSUED state before insertion)
+            if (i >= issuedCount) {
+                getRewardIssuanceDao().redeem(createdRewardIssuance);
+            }
+        }
+
+        final Set<State> combinedStates = new HashSet<>();
+        combinedStates.add(ISSUED);
+        combinedStates.add(REDEEMED);
+
+        // States-only tests
+        final List<RewardIssuance> combinedStatesIssuances =
+                getRewardIssuanceDao().getRewardIssuances(testUser,0, 50, combinedStates, null)
+                .getObjects();
+        assertEquals(combinedStatesIssuances.size(), creationCount);
+        final Set<State> combinedStatesRetrieved = combinedStatesIssuances.stream().map(ri -> ri.getState()).collect(Collectors.toSet());
+        assertEquals(combinedStatesRetrieved, combinedStates);
+
+        final List<RewardIssuance> issuedStatesIssuances =
+                getRewardIssuanceDao().getRewardIssuances(testUser,0, 50, of(ISSUED).collect(toSet()), null)
+                        .getObjects();
+        assertEquals(issuedStatesIssuances.size(), issuedCount);
+        final Set<State> issuedStates = issuedStatesIssuances.stream().map(ri -> ri.getState()).collect(Collectors.toSet());
+        assertTrue(issuedStates.contains(ISSUED));
+        assertEquals(issuedStates.size(), 1);
+
+        final List<RewardIssuance> redeemedStatesIssuances =
+                getRewardIssuanceDao().getRewardIssuances(testUser,0, 50, of(REDEEMED).collect(toSet()), null)
+                        .getObjects();
+        assertEquals(redeemedStatesIssuances.size(), redeemedCount);
+        final Set<State> redeemedStates = redeemedStatesIssuances.stream().map(ri -> ri.getState()).collect(Collectors.toSet());
+        assertTrue(redeemedStates.contains(REDEEMED));
+        assertEquals(redeemedStates.size(), 1);
+
+
+        // Tags-only tests
+        for (int i=0; i < creationCount; i++) {
+            final List<RewardIssuance> currentCountTagIssuances =
+                    getRewardIssuanceDao().getRewardIssuances(testUser,0, 50, null, of("tag"+i).collect(toSet()))
+                            .getObjects();
+            assertEquals(currentCountTagIssuances.size(), 1);
+        }
+
+        final Set<String> combinedEvenOddTags = new HashSet<>();
+        combinedEvenOddTags.add("even");
+        combinedEvenOddTags.add("odd");
+        final List<RewardIssuance> combinedEvenOddTagIssuances =
+                getRewardIssuanceDao().getRewardIssuances(testUser,0, 50, null, combinedEvenOddTags)
+                        .getObjects();
+        assertTrue(combinedEvenOddTagIssuances.size() == (evenCount + oddCount));
+        final long combinedEvenCount = combinedEvenOddTagIssuances.stream().filter(ri -> ri.getTags().contains("even")).count();
+        assertEquals(combinedEvenCount, evenCount);
+        final long combinedOddCount = combinedEvenOddTagIssuances.stream().filter(ri -> ri.getTags().contains("odd")).count();
+        assertEquals(combinedOddCount, oddCount);
+        for (int i=0; i<evenCount+oddCount; i++) {
+            final int lambdaI = i;
+            final long currentOrdinalCount = combinedEvenOddTagIssuances.stream().filter(ri -> ri.getTags().contains("tag"+lambdaI)).count();
+            assertEquals(currentOrdinalCount, 1);
+        }
+
+        final List<RewardIssuance> evenTagIssuances =
+                getRewardIssuanceDao().getRewardIssuances(testUser,0, 50, null, of("even").collect(toSet()))
+                        .getObjects();
+        assertEquals(evenTagIssuances.size(), evenCount);
+
+        final Set<String> evenTagContexts = evenTagIssuances.stream().map(ri -> ri.getContext()).collect(Collectors.toSet());
+        for (int i=0; i<creationCount; i++) {
+            if (i %2 == 0) {
+                assertTrue(evenTagContexts.contains("server.test.states_and_tags."+i));
+            }
+        }
+
+        final List<RewardIssuance> oddTagIssuances =
+                getRewardIssuanceDao().getRewardIssuances(testUser,0, 50, null, of("odd").collect(toSet()))
+                        .getObjects();
+        assertTrue(oddTagIssuances.size() == evenCount);
+        final Set<String> oddTagContexts = oddTagIssuances.stream().map(ri -> ri.getContext()).collect(Collectors.toSet());
+        for (int i=0; i<creationCount; i++) {
+            if (i %2 != 0) {
+                assertTrue(oddTagContexts.contains("server.test.states_and_tags."+i));
+            }
+        }
+
+        final List<RewardIssuance> nonexistentTagIssuances =
+                getRewardIssuanceDao().getRewardIssuances(testUser,0, 50, null, of("none").collect(toSet()))
+                        .getObjects();
+        assertEquals(nonexistentTagIssuances.size(), 0);
+
+
+        // States+tags tests
+        final List<RewardIssuance> issuedEvenIssuances =
+                getRewardIssuanceDao().getRewardIssuances(testUser,0, 50, of(ISSUED).collect(toSet()), of("even").collect(toSet()))
+                        .getObjects();
+        assertEquals(issuedEvenIssuances.size(), issuedEvenCount);
+
+        final List<RewardIssuance> issuedOddIssuances =
+                getRewardIssuanceDao().getRewardIssuances(testUser,0, 50, of(ISSUED).collect(toSet()), of("odd").collect(toSet()))
+                        .getObjects();
+        assertEquals(issuedOddIssuances.size(), issuedEvenCount);
+
+        final List<RewardIssuance> redeemedEvenIssuances =
+                getRewardIssuanceDao().getRewardIssuances(testUser,0, 50, of(REDEEMED).collect(toSet()), of("even").collect(toSet()))
+                        .getObjects();
+        assertEquals(redeemedEvenIssuances.size(), redeemedEvenCount);
+
+        final List<RewardIssuance> redeemedOddIssuances =
+                getRewardIssuanceDao().getRewardIssuances(testUser,0, 50, of(REDEEMED).collect(toSet()), of("odd").collect(toSet()))
+                        .getObjects();
+        assertEquals(redeemedOddIssuances.size(), redeemedEvenCount);
+    }
 
 
     public UserDao getUserDao() {
