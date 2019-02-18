@@ -39,8 +39,20 @@ public interface RewardIssuanceDao {
     RewardIssuance getRewardIssuance(User user, String context);
 
     /**
-     * Gets all reward issuances.
+     * Gets reward issuances for the given user specifying the offset, count, and set of tags.
      *
+     * @param user the user
+     * @param offset the offset
+     * @param count the count
+     * @param tags set of tags
+     * @return a {@link Pagination} of {@link RewardIssuance} objects.
+     */
+    Pagination<RewardIssuance> getRewardIssuancesByTags(final User user, int offset, int count, Set<String> tags);
+
+    /**
+     * Gets all reward issuances for a given user.
+     *
+     * @param user the user
      * @param offset the offset
      * @param count the count
      * @return a {@link Pagination} of {@link RewardIssuance}

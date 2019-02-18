@@ -8,6 +8,7 @@ import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -38,6 +39,9 @@ public class MongoRewardIssuance {
     private String source;
 
     private Map<String, Object> metadata;
+
+    @Embedded
+    private List<String> tags;
 
     @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
     private Timestamp expirationTimestamp;
@@ -125,27 +129,37 @@ public class MongoRewardIssuance {
         this.uuid = uuid;
     }
 
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
+
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof MongoRewardIssuance)) return false;
-        MongoRewardIssuance that = (MongoRewardIssuance) object;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MongoRewardIssuance that = (MongoRewardIssuance) o;
         return Objects.equals(getObjectId(), that.getObjectId()) &&
                 Objects.equals(getUser(), that.getUser()) &&
                 getState() == that.getState() &&
-                Objects.equals(getContext(), that.getContext()) &&
                 Objects.equals(getReward(), that.getReward()) &&
+                Objects.equals(getContext(), that.getContext()) &&
                 getType() == that.getType() &&
                 Objects.equals(getSource(), that.getSource()) &&
                 Objects.equals(getMetadata(), that.getMetadata()) &&
+                Objects.equals(getTags(), that.getTags()) &&
                 Objects.equals(getExpirationTimestamp(), that.getExpirationTimestamp()) &&
                 Objects.equals(getUuid(), that.getUuid());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getUser(), getState(), getContext(), getReward(),
-                getType(), getSource(), getMetadata(), getExpirationTimestamp(), getUuid());
+        return Objects.hash(getObjectId(), getUser(), getState(), getReward(), getContext(),
+                getType(), getSource(), getMetadata(), getTags(), getExpirationTimestamp(),
+                getUuid());
     }
 
     @Override
@@ -154,13 +168,14 @@ public class MongoRewardIssuance {
                 "objectId=" + objectId +
                 ", user=" + user +
                 ", state=" + state +
-                ", context=" + context +
                 ", reward=" + reward +
+                ", context='" + context + '\'' +
                 ", type=" + type +
-                ", source=" + source +
+                ", source='" + source + '\'' +
                 ", metadata=" + metadata +
+                ", tags=" + tags +
                 ", expirationTimestamp=" + expirationTimestamp +
-                ", uuid=" + uuid +
+                ", uuid='" + uuid + '\'' +
                 '}';
     }
 }
