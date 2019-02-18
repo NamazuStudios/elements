@@ -16,9 +16,11 @@ public interface ProfileService {
      *
      * @param offset the offset
      * @param count the count
+     * @param lowerBoundTimestamp
+     * @param upperBoundTimestamp
      * @return a {@link Pagination} of {@link Profile} instances
      */
-    Pagination<Profile> getProfiles(int offset, int count);
+    Pagination<Profile> getProfiles(int offset, int count, long lowerBoundTimestamp, long upperBoundTimestamp);
 
     /**
      * Lists all {@link Profile} instances, specifying a search query.

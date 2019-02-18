@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
+import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.model.mission.RewardIssuance;
 import com.namazustudios.socialengine.model.mission.RewardIssuance.Type;
 import com.namazustudios.socialengine.model.mission.RewardIssuance.State;
@@ -29,15 +30,21 @@ public class MongoRewardIssuance {
     private State state;
 
     @Reference
-    private MongoReward reward;
+    private MongoItem item;
+
+    @Property
+    private int itemQuantity;
 
     @Indexed
     private String context;
 
+    @Property
     private Type type;
 
+    @Property
     private String source;
 
+    @Embedded
     private Map<String, Object> metadata;
 
     @Embedded
@@ -65,12 +72,20 @@ public class MongoRewardIssuance {
         this.user = user;
     }
 
-    public MongoReward getReward() {
-        return reward;
+    public MongoItem getItem() {
+        return item;
     }
 
-    public void setReward(MongoReward reward) {
-        this.reward = reward;
+    public void setItem(MongoItem item) {
+        this.item = item;
+    }
+
+    public int getItemQuantity() {
+        return itemQuantity;
+    }
+
+    public void setItemQuantity(int itemQuantity) {
+        this.itemQuantity = itemQuantity;
     }
 
     public Timestamp getExpirationTimestamp() {
@@ -142,10 +157,11 @@ public class MongoRewardIssuance {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoRewardIssuance that = (MongoRewardIssuance) o;
-        return Objects.equals(getObjectId(), that.getObjectId()) &&
+        return getItemQuantity() == that.getItemQuantity() &&
+                Objects.equals(getObjectId(), that.getObjectId()) &&
                 Objects.equals(getUser(), that.getUser()) &&
                 getState() == that.getState() &&
-                Objects.equals(getReward(), that.getReward()) &&
+                Objects.equals(getItem(), that.getItem()) &&
                 Objects.equals(getContext(), that.getContext()) &&
                 getType() == that.getType() &&
                 Objects.equals(getSource(), that.getSource()) &&
@@ -157,8 +173,8 @@ public class MongoRewardIssuance {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getUser(), getState(), getReward(), getContext(),
-                getType(), getSource(), getMetadata(), getTags(), getExpirationTimestamp(),
+        return Objects.hash(getObjectId(), getUser(), getState(), getItem(), getItemQuantity(),
+                getContext(), getType(), getSource(), getMetadata(), getTags(), getExpirationTimestamp(),
                 getUuid());
     }
 
@@ -168,7 +184,8 @@ public class MongoRewardIssuance {
                 "objectId=" + objectId +
                 ", user=" + user +
                 ", state=" + state +
-                ", reward=" + reward +
+                ", item=" + item +
+                ", itemQuantity=" + itemQuantity +
                 ", context='" + context + '\'' +
                 ", type=" + type +
                 ", source='" + source + '\'' +

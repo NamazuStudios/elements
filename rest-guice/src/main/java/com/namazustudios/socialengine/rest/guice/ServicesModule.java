@@ -27,8 +27,8 @@ import com.namazustudios.socialengine.service.notification.FCMRegistrationServic
 import com.namazustudios.socialengine.service.profile.ProfileServiceProvider;
 import com.namazustudios.socialengine.service.progress.ProgressService;
 import com.namazustudios.socialengine.service.progress.ProgressServiceProvider;
-import com.namazustudios.socialengine.service.reward.RewardService;
-import com.namazustudios.socialengine.service.reward.RewardServiceProvider;
+import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceService;
+import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
@@ -184,8 +184,8 @@ public class ServicesModule extends PrivateModule {
                 .toProvider(FacebookAuthServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
-        bind(RewardService.class)
-                .toProvider(RewardServiceProvider.class)
+        bind(RewardIssuanceService.class)
+                .toProvider(RewardIssuanceServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
         bind(AppleIapReceiptService.class)
@@ -236,7 +236,7 @@ public class ServicesModule extends PrivateModule {
         expose(FacebookAuthService.class);
         expose(VersionService.class);
         expose(SessionService.class);
-        expose(RewardService.class);
+        expose(RewardIssuanceService.class);
         expose(AppleIapReceiptService.class);
     }
 

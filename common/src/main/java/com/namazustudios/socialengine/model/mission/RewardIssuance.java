@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
-import io.swagger.annotations.Api;
+import com.namazustudios.socialengine.model.goods.Item;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -44,8 +44,11 @@ public class RewardIssuance implements Serializable {
             "process.")
     private State state;
 
-    @ApiModelProperty("The reward to issue when this issuance is redeemed.")
-    private Reward reward;
+    @ApiModelProperty("The Item to be issued upon redemption.")
+    private Item item;
+
+    @ApiModelProperty("The amount of Items to be set/added to the InventoryItem upon redemption.")
+    private Integer itemQuantity;
 
     @NotNull(groups = {Create.class, Insert.class})
     @Null(groups = {Update.class})
@@ -110,12 +113,20 @@ public class RewardIssuance implements Serializable {
         this.user = user;
     }
 
-    public Reward getReward() {
-        return reward;
+    public Item getItem() {
+        return item;
     }
 
-    public void setReward(Reward reward) {
-        this.reward = reward;
+    public void setItem(Item item) {
+        this.item = item;
+    }
+
+    public Integer getItemQuantity() {
+        return itemQuantity;
+    }
+
+    public void setItemQuantity(Integer itemQuantity) {
+        this.itemQuantity = itemQuantity;
     }
 
     public State getState() {
@@ -201,7 +212,8 @@ public class RewardIssuance implements Serializable {
         return Objects.equals(getId(), that.getId()) &&
                 Objects.equals(getUser(), that.getUser()) &&
                 getState() == that.getState() &&
-                Objects.equals(getReward(), that.getReward()) &&
+                Objects.equals(getItem(), that.getItem()) &&
+                Objects.equals(getItemQuantity(), that.getItemQuantity()) &&
                 Objects.equals(getContext(), that.getContext()) &&
                 getType() == that.getType() &&
                 Objects.equals(getSource(), that.getSource()) &&
@@ -213,8 +225,8 @@ public class RewardIssuance implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getUser(), getState(), getReward(), getContext(),
-                getType(), getSource(), getMetadata(), getTags(), getExpirationTimestamp(),
+        return Objects.hash(getId(), getUser(), getState(), getItem(), getItemQuantity(),
+                getContext(), getType(), getSource(), getMetadata(), getTags(), getExpirationTimestamp(),
                 getUuid());
     }
 
@@ -224,7 +236,8 @@ public class RewardIssuance implements Serializable {
                 "id='" + id + '\'' +
                 ", user=" + user +
                 ", state=" + state +
-                ", reward=" + reward +
+                ", item=" + item +
+                ", itemQuantity=" + itemQuantity +
                 ", context='" + context + '\'' +
                 ", type=" + type +
                 ", source='" + source + '\'' +
@@ -247,9 +260,10 @@ public class RewardIssuance implements Serializable {
          * Type, then, after a successful redemption, the MongoRewardIssuanceDao will immediately attempt
          * to delete the RewardIssuance.
          *
-         * TODO: since we cannot guarantee the reward issuance to a user and deleting a PERSISTENT RewardIssuance since
-         * TODO: mongo does not support transactions, we may need some scheduled cleanup process to clear them out
-         * TODO: (setting a new expiration date will not work since that likewise cannot be done atomically).
+         * TODO: since we cannot guarantee that we will both successfully redeem a NON_PERSISTENT RewardIssuance and
+         * TODO: successfully delete it since mongo does not support transactions, we may need some scheduled cleanup
+         * TODO: process to clear them out (setting a new expiration date will not work since that
+         * TODO: likewise cannot be done atomically).
          *
          */
         REDEEMED

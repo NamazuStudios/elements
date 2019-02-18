@@ -41,8 +41,6 @@ public class MongoRewardIssuanceDaoTest {
 
     private RewardIssuanceDao rewardIssuanceDao;
 
-    private RewardDao rewardDao;
-
     private User testUser;
 
     private Item testItem;
@@ -69,18 +67,11 @@ public class MongoRewardIssuanceDaoTest {
 
     //@Test()
     public void testCreateExpiringRewardIssuance(ITestContext testContext) {
-        final Reward reward = new Reward();
-
-        reward.setQuantity(5);
-        reward.setItem(testItem);
-        reward.addMetadata("foo", "bar");
-
-        final Reward createdReward = getRewardDao().createReward(reward);
-
         final RewardIssuance rewardIssuance = new RewardIssuance();
 
         rewardIssuance.setUser(testUser);
-        rewardIssuance.setReward(createdReward);
+        rewardIssuance.setItem(testItem);
+        rewardIssuance.setItemQuantity(5);
         rewardIssuance.setContext("server.test.expires");
         rewardIssuance.setState(ISSUED);
         rewardIssuance.setType(NON_PERSISTENT);
@@ -122,18 +113,11 @@ public class MongoRewardIssuanceDaoTest {
 
     @Test()
     public void testDuplicateIssuancesForIssuedNonPersistentRewardIssuance() {
-        final Reward reward = new Reward();
-
-        reward.setQuantity(1);
-        reward.setItem(testItem);
-        reward.addMetadata("foo", "bar");
-
-        final Reward createdReward = getRewardDao().createReward(reward);
-
         final RewardIssuance rewardIssuance = new RewardIssuance();
 
         rewardIssuance.setUser(testUser);
-        rewardIssuance.setReward(createdReward);
+        rewardIssuance.setItem(testItem);
+        rewardIssuance.setItemQuantity(1);
         rewardIssuance.setContext("server.test.duplicate.issued");
         rewardIssuance.setType(NON_PERSISTENT);
         rewardIssuance.setSource("test");
@@ -143,7 +127,8 @@ public class MongoRewardIssuanceDaoTest {
         final RewardIssuance secondRewardIssuance = new RewardIssuance();
 
         secondRewardIssuance.setUser(testUser);
-        secondRewardIssuance.setReward(createdReward);
+        secondRewardIssuance.setItem(testItem);
+        secondRewardIssuance.setItemQuantity(1);
         secondRewardIssuance.setContext("server.test.duplicate.issued");
         secondRewardIssuance.setType(NON_PERSISTENT);
         secondRewardIssuance.setSource("test2");
@@ -160,18 +145,11 @@ public class MongoRewardIssuanceDaoTest {
 
     @Test()
     public void testDuplicateIssuanceForRedeemedPersistentRewardIssuance() {
-        final Reward reward = new Reward();
-
-        reward.setQuantity(1);
-        reward.setItem(testItem);
-        reward.addMetadata("foo", "bar");
-
-        final Reward createdReward = getRewardDao().createReward(reward);
-
         final RewardIssuance rewardIssuance = new RewardIssuance();
 
         rewardIssuance.setUser(testUser);
-        rewardIssuance.setReward(createdReward);
+        rewardIssuance.setItem(testItem);
+        rewardIssuance.setItemQuantity(1);
         rewardIssuance.setContext("server.test.duplicate.redeemed");
         rewardIssuance.setType(PERSISTENT);
         rewardIssuance.setSource("test");
@@ -183,7 +161,8 @@ public class MongoRewardIssuanceDaoTest {
         final RewardIssuance secondRewardIssuance = new RewardIssuance();
 
         secondRewardIssuance.setUser(testUser);
-        secondRewardIssuance.setReward(createdReward);
+        secondRewardIssuance.setItem(testItem);
+        secondRewardIssuance.setItemQuantity(1);
         secondRewardIssuance.setContext("server.test.duplicate.redeemed");
         secondRewardIssuance.setType(PERSISTENT);
         secondRewardIssuance.setSource("test2");
@@ -202,18 +181,11 @@ public class MongoRewardIssuanceDaoTest {
     public void testCreateIssuedPersistentRewardIssuance(ITestContext testContext) {
         int invocation = testContext.getAllTestMethods()[0].getCurrentInvocationCount();
 
-        final Reward reward = new Reward();
-
-        reward.setQuantity(invocation+1);
-        reward.setItem(testItem);
-        reward.addMetadata("foo", "bar" + invocation);
-
-        final Reward createdReward = getRewardDao().createReward(reward);
-
         final RewardIssuance rewardIssuance = new RewardIssuance();
 
         rewardIssuance.setUser(testUser);
-        rewardIssuance.setReward(createdReward);
+        rewardIssuance.setItem(testItem);
+        rewardIssuance.setItemQuantity(1);
         rewardIssuance.setContext("server.test.persistent." + invocation);
         rewardIssuance.setType(PERSISTENT);
         rewardIssuance.setSource("test");
@@ -221,7 +193,8 @@ public class MongoRewardIssuanceDaoTest {
         final RewardIssuance createdRewardIssuance = getRewardIssuanceDao().getOrCreateRewardIssuance(rewardIssuance);
         assertNotNull(createdRewardIssuance.getId());
         assertEquals(createdRewardIssuance.getUser(), testUser);
-        assertEquals(createdRewardIssuance.getReward(), createdReward);
+        assertEquals(createdRewardIssuance.getItem(), testItem);
+        assertEquals(createdRewardIssuance.getItemQuantity(), Integer.valueOf(1));
         assertEquals(createdRewardIssuance.getContext(), "server.test.persistent."+invocation);
         assertEquals(createdRewardIssuance.getState(), ISSUED);
         assertEquals(createdRewardIssuance.getType(), PERSISTENT);
@@ -232,18 +205,11 @@ public class MongoRewardIssuanceDaoTest {
     public void testCreateIssuedNonPersistentRewardIssuance(ITestContext testContext) {
         int invocation = testContext.getAllTestMethods()[0].getCurrentInvocationCount();
 
-        final Reward reward = new Reward();
-
-        reward.setQuantity(invocation+1);
-        reward.setItem(testItem);
-        reward.addMetadata("foo", "bar" + invocation);
-
-        final Reward createdReward = getRewardDao().createReward(reward);
-
         final RewardIssuance rewardIssuance = new RewardIssuance();
 
         rewardIssuance.setUser(testUser);
-        rewardIssuance.setReward(createdReward);
+        rewardIssuance.setItem(testItem);
+        rewardIssuance.setItemQuantity(1);
         rewardIssuance.setContext("server.test.non-persistent." + invocation);
         rewardIssuance.setType(NON_PERSISTENT);
         rewardIssuance.setSource("test");
@@ -251,7 +217,8 @@ public class MongoRewardIssuanceDaoTest {
         final RewardIssuance createdRewardIssuance = getRewardIssuanceDao().getOrCreateRewardIssuance(rewardIssuance);
         assertNotNull(createdRewardIssuance.getId());
         assertEquals(createdRewardIssuance.getUser(), testUser);
-        assertEquals(createdRewardIssuance.getReward(), createdReward);
+        assertEquals(createdRewardIssuance.getItem(), testItem);
+        assertEquals(createdRewardIssuance.getItemQuantity(), Integer.valueOf(1));
         assertEquals(createdRewardIssuance.getContext(), "server.test.non-persistent."+invocation);
         assertEquals(createdRewardIssuance.getState(), ISSUED);
         assertEquals(createdRewardIssuance.getType(), NON_PERSISTENT);
@@ -320,7 +287,7 @@ public class MongoRewardIssuanceDaoTest {
         assertEquals(inventoryItem.getUser(), testUser);
         assertEquals(inventoryItem.getItem(), testItem);
         assertEquals(inventoryItem.getPriority(), Integer.valueOf(0));
-        assertEquals(inventoryItem.getQuantity(), Integer.valueOf(existing + rewardIssuance.getReward().getQuantity()));
+        assertEquals(inventoryItem.getQuantity(), Integer.valueOf(existing + rewardIssuance.getItemQuantity()));
 
         final RewardIssuance postModified = getRewardIssuanceDao().getRewardIssuance(rewardIssuance.getId());
         assertEquals(postModified.getState(), REDEEMED);
@@ -361,7 +328,7 @@ public class MongoRewardIssuanceDaoTest {
         assertEquals(inventoryItem.getUser(), testUser);
         assertEquals(inventoryItem.getItem(), testItem);
         assertEquals(inventoryItem.getPriority(), Integer.valueOf(0));
-        assertEquals(inventoryItem.getQuantity(), Integer.valueOf(existing + rewardIssuance.getReward().getQuantity()));
+        assertEquals(inventoryItem.getQuantity(), Integer.valueOf(existing + rewardIssuance.getItemQuantity()));
 
         try {
             final RewardIssuance postModified = getRewardIssuanceDao().getRewardIssuance(rewardIssuance.getId());
@@ -411,12 +378,4 @@ public class MongoRewardIssuanceDaoTest {
         this.rewardIssuanceDao = rewardIssuanceDao;
     }
 
-    public RewardDao getRewardDao() {
-        return rewardDao;
-    }
-
-    @Inject
-    public void setRewardDao(RewardDao rewardDao) {
-        this.rewardDao = rewardDao;
-    }
 }

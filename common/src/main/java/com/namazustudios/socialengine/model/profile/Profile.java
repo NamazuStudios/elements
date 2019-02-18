@@ -54,7 +54,6 @@ public class Profile implements Serializable {
     @ApiModelProperty("An object containing arbitrary player metadata as key-value pairs.")
     private Map<String, Object> metadata;
 
-    @Null(groups = Create.class)
     @ApiModelProperty("The last time this profile has been logged in by the user.")
     private long lastLogin;
 

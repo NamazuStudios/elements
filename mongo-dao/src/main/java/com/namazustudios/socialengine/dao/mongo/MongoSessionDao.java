@@ -115,7 +115,6 @@ public class MongoSessionDao implements SessionDao {
         final UpdateResults updateResults;
         updateResults = getDatastore().update(query, updates, new UpdateOptions().multi(false).upsert(false));
 
-
         if (updateResults.getUpdatedCount() == 0) {
 
             final MongoSession mongoSession = getDatastore().get(MongoSession.class, sessionId);
