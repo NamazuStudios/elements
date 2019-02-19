@@ -71,3 +71,6 @@ export { MockSessionCreation } from './models/mock-session-creation';
 export { MockSessionRequest } from './models/mock-session-request';
 export { SessionCreation } from './models/session-creation';
 export { UsernamePasswordSessionRequest } from './models/username-password-session-request';
+export { Mission } from './models/mission';
+export { MissionStep } from './models/mission-step';
+export { Reward } from './models/reward';
