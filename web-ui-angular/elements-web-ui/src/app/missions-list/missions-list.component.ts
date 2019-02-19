@@ -13,8 +13,8 @@ import {MissionDialogComponent} from '../mission-dialog/mission-dialog.component
 
 @Component({
   selector: 'app-digital-goods-list',
-  templateUrl: './items-list.component.html',
-  styleUrls: ['./items-list.component.css']
+  templateUrl: './missions-list.component.html',
+  styleUrls: ['./missions-list.component.css']
 })
 export class MissionsListComponent implements OnInit, AfterViewInit {
   hasSelection = false;
