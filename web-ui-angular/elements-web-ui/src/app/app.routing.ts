@@ -6,6 +6,7 @@ import { UsersListComponent } from "./users-list/users-list.component";
 import { ApplicationsListComponent } from "./applications-list/applications-list.component";
 import { AuthenticationGuard } from './authentication.guard';
 import { ItemsListComponent } from './items-list/items-list.component';
+import {MissionsListComponent} from './missions-list/missions-list.component';
 
 const appRoutes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -14,6 +15,7 @@ const appRoutes: Routes = [
   // { path: 'users/:id', component: UserDetailComponent, canActivate: [AuthenticationGuard] },
   { path: 'applications', component: ApplicationsListComponent, canActivate: [AuthenticationGuard] },
   { path: 'digital-goods', component: ItemsListComponent, canActivate: [AuthenticationGuard] },
+  { path: 'missions', component: MissionsListComponent, canActive: [AuthenticationGuard] },
   // { path: 'applications/:id', component: ApplicationDetailComponent, canActivate: [AuthenticationGuard] },
   // { path: 'applications/:applicationId/configurations/:id', component: ApplicationConfigurationDetailComponent, canActivate: [AuthenticationGuard] },
   { path: '**', redirectTo: '' }
