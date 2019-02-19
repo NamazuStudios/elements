@@ -50,6 +50,7 @@ export function initialize(configService: ConfigService) {
     ApplicationDialogComponent,
     UserDialogComponent,
     ItemDialogComponent,
+    MissionDialogComponent,
     FacebookApplicationConfigurationDialogComponent,
     FirebaseApplicationConfigurationDialogComponent,
     MatchmakingApplicationConfigurationDialogComponent,
