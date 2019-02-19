@@ -16,9 +16,6 @@ import java.util.Objects;
 
 @Entity(value = "progress_pending_award", noClassnameStored = true)
 public class MongoRewardIssuance {
-
-    private static final int EXPIRY_TIME_SECONDS = 0;
-
     @Id
     private MongoRewardIssuanceId objectId;
 

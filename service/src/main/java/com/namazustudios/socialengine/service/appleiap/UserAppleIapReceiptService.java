@@ -7,6 +7,8 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
 import com.namazustudios.socialengine.model.application.Application;
+
+import static com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt.buildRewardIssuanceTags;
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.IOS_APP_STORE;
 
 import com.namazustudios.socialengine.model.application.IosApplicationConfiguration;
@@ -22,10 +24,7 @@ import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.APPLE_IAP_SOURCE;
@@ -207,10 +206,10 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
         // for each purchase we received from the ios app...
         for (AppleIapReceipt appleIapReceipt : appleIapReceipts) {
             // and for each instance of the SKU they purchased...
-            for (int skuIndex = 0; skuIndex < appleIapReceipt.getQuantity(); skuIndex++) {
+            for (int skuOrdinal = 0; skuOrdinal < appleIapReceipt.getQuantity(); skuOrdinal++) {
                 final String context = buildAppleIapContextString(
                         appleIapReceipt.getOriginalTransactionId(),
-                        skuIndex
+                        skuOrdinal
                 );
 
                 final Map<String, Object> metadata = generateAppleIapReceiptMetadata();
@@ -266,6 +265,10 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
                     rewardIssuance.setContext(context);
                     rewardIssuance.setMetadata(metadata);
                     rewardIssuance.setSource(APPLE_IAP_SOURCE);
+
+                    final Set<String> tags =
+                            buildRewardIssuanceTags(appleIapReceipt.getOriginalTransactionId(), skuOrdinal);
+                    rewardIssuance.setTags(tags);
 
                     final RewardIssuance resultRewardIssuance = getRewardIssuanceDao()
                             .getOrCreateRewardIssuance(rewardIssuance);

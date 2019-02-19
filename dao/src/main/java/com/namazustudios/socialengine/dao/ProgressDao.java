@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -19,6 +20,8 @@ import java.util.Set;
         "namazu.socialengine.dao.progress",
 })
 public interface ProgressDao {
+    String STEP_TAG_ID_PREFIX = "ID";
+    String STEP_TAG_SEPARATOR = ".";
 
     /**
      * Gets progresses specifying the user, offset and the count.
@@ -117,5 +120,4 @@ public interface ProgressDao {
      * @return all active {@link Progress} instances
      */
     Progress getProgressForProfileAndMission(Profile profile, String missionNameOrId);
-
 }

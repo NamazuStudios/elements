@@ -315,17 +315,21 @@ public class RewardIssuance implements Serializable {
 
     /**
      * Builds the context string for an Apple IAP-sourced reward issuance. The last element in the context string is
-     * a hash of the {@param originalTransactionId} as well as the {@param skuIndex}, i.e. the index of the product as
+     * a hash of the {@param originalTransactionId} as well as the {@param skuOrdinal}, i.e. the index of the product as
      * enumerated in SKPayment.quantity (i.e. the "first" SKU to be redeemed, the "second" to be redeemed, etc.).
      *
      * @param originalTransactionId
-     * @param skuIndex
+     * @param skuOrdinal
      * @return the resultant context string
      */
-    public static String buildAppleIapContextString(String originalTransactionId, Integer skuIndex) {
-        final int originalTransactionIdAndSkuIndexHash = Objects.hash(originalTransactionId, skuIndex);
-        final String originalTransactionIdAndSkuIndexHashString =
-                Integer.toString(originalTransactionIdAndSkuIndexHash);
-        return buildContextString(SERVER_CONTEXT_PREFIX, APPLE_IAP_SOURCE, originalTransactionIdAndSkuIndexHashString);
+    public static String buildAppleIapContextString(String originalTransactionId, Integer skuOrdinal) {
+        final int originalTransactionIdAndSkuOrdinalHash = Objects.hash(originalTransactionId, skuOrdinal);
+        final String originalTransactionIdAndSkuOrdinalHashString =
+                Integer.toString(originalTransactionIdAndSkuOrdinalHash);
+        return buildContextString(
+                SERVER_CONTEXT_PREFIX,
+                APPLE_IAP_SOURCE,
+                originalTransactionIdAndSkuOrdinalHashString
+        );
     }
 }

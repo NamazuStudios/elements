@@ -1,9 +1,11 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+
 import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
+import static com.namazustudios.socialengine.model.mission.Step.buildRewardIssuanceTags;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
@@ -15,15 +17,12 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.*;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.Arrays.fill;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -305,6 +304,11 @@ public class MongoProgressDaoTest  {
             assertEquals(rewardIssuance.getItem(), step.getRewards().get(0).getItem());
             assertEquals(rewardIssuance.getItemQuantity(), step.getRewards().get(0).getQuantity());
             assertEquals(rewardIssuance.getState(), ISSUED);
+
+            int stepIndex = progress.getMission().getStepIndex(step);
+            final Set<String> tags = buildRewardIssuanceTags(progress, stepIndex);
+
+            assertEquals(rewardIssuance.getTags(), tags);
 
         } while (!steps.isEmpty());
 

@@ -124,6 +124,23 @@ public class Mission {
 
     }
 
+    /**
+     * Returns the index for the given step, or -1 if not found.
+     *
+     * @param step
+     * @return index if found, or -1 if not found.
+     */
+    public int getStepIndex(Step step) {
+        for (int i=0; i<getSteps().size(); i++) {
+            final Step missionStep = getSteps().get(i);
+            if (missionStep.equals(step)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
