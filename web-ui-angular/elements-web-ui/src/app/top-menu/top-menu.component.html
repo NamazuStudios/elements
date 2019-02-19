@@ -10,6 +10,7 @@
     <mat-nav-list>
       <a mat-list-item routerLink="/users" >Users</a>
       <a mat-list-item routerLink="/applications" >Applications</a>
+      <a mat-list-item routerLink="/digital-goods">Digital Goods</a>
       <hr />
       <a mat-list-item routerLink="/login" >Logout {{this.authenticationService.currentSession?.session.user.name}}</a>
     </mat-nav-list>
@@ -33,6 +34,7 @@
 
       <a mat-button routerLink="/users" *ngIf="(this.authenticationService.isLoggedIn() | async)">Users</a>
       <a mat-button routerLink="/applications" *ngIf="(this.authenticationService.isLoggedIn() | async)">Applications</a>
+      <a mat-button routerLink="/digital-goods" *ngIf="(this.authenticationService.isLoggedIn() | async)">Digital Goods</a>
 
       <span class="fill-remaining-space"></span>
 

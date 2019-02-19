@@ -20,7 +20,7 @@ import { ConfirmationDialogComponent } from './confirmation-dialog/confirmation-
 import { AuthenticationService } from "./authentication.service";
 import { AlertService } from "./alert.service";
 import {ApiErrorInterceptor} from "./api-error.interceptor";
-import {MaterialModule} from "./material.module";
+import {MaterialModule} from "./material/material.module";
 import {ConfirmationDialogService} from "./confirmation-dialog/confirmation-dialog.service";
 import {ApplicationDialogComponent} from "./application-dialog/application-dialog.component";
 import { UserDialogComponent } from './user-dialog/user-dialog.component';
@@ -31,7 +31,12 @@ import {ConfigService} from "./config.service";
 import { MatchmakingApplicationConfigurationDialogComponent } from './matchmaking-application-configuration-dialog/matchmaking-application-configuration-dialog.component';
 import { GameOnApplicationConfigurationDialogComponent } from './game-on-application-configuration-dialog/game-on-application-configuration-dialog.component';
 import { GameOnPrizeDialogComponent } from './game-on-prize-dialog/game-on-prize-dialog.component';
-import { GameOnPrizesListComponent } from './game-on-prizes-list/game-on-prizes-list.component'
+import { GameOnPrizesListComponent } from './game-on-prizes-list/game-on-prizes-list.component';
+import { ItemsListComponent } from './items-list/items-list.component';
+import { ItemDialogComponent } from './item-dialog/item-dialog.component';
+import { SimpleJsonEditorComponent } from './simple-json-editor/simple-json-editor.component';
+import {NgJsonEditorModule} from 'ang-jsoneditor';
+import { JsonEditorCardComponent } from './json-editor-card/json-editor-card.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -42,6 +47,7 @@ export function initialize(configService: ConfigService) {
     ConfirmationDialogComponent,
     ApplicationDialogComponent,
     UserDialogComponent,
+    ItemDialogComponent,
     FacebookApplicationConfigurationDialogComponent,
     FirebaseApplicationConfigurationDialogComponent,
     MatchmakingApplicationConfigurationDialogComponent,
@@ -57,6 +63,7 @@ export function initialize(configService: ConfigService) {
     HomeComponent,
     ConfirmationDialogComponent,
     ApplicationDialogComponent,
+    ItemDialogComponent,
     UserDialogComponent,
     ApplicationConfigurationsListComponent,
     FacebookApplicationConfigurationDialogComponent,
@@ -64,7 +71,11 @@ export function initialize(configService: ConfigService) {
     MatchmakingApplicationConfigurationDialogComponent,
     GameOnApplicationConfigurationDialogComponent,
     GameOnPrizesListComponent,
-    GameOnPrizeDialogComponent
+    GameOnPrizeDialogComponent,
+    ItemsListComponent,
+    ItemDialogComponent,
+    SimpleJsonEditorComponent,
+    JsonEditorCardComponent,
   ],
   imports: [
     BrowserModule,
@@ -75,7 +86,8 @@ export function initialize(configService: ConfigService) {
     FlexLayoutModule,
     ReactiveFormsModule,
     MaterialModule,
-    routing
+    routing,
+    NgJsonEditorModule
   ],
   providers: [
     ConfigService,
