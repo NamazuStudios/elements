@@ -37,6 +37,8 @@ import { ItemDialogComponent } from './item-dialog/item-dialog.component';
 import { SimpleJsonEditorComponent } from './simple-json-editor/simple-json-editor.component';
 import {NgJsonEditorModule} from 'ang-jsoneditor';
 import { JsonEditorCardComponent } from './json-editor-card/json-editor-card.component';
+import { MissionsListComponent } from './missions-list/missions-list.component';
+import { MissionDialogComponent } from './mission-dialog/mission-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -76,6 +78,8 @@ export function initialize(configService: ConfigService) {
     ItemDialogComponent,
     SimpleJsonEditorComponent,
     JsonEditorCardComponent,
+    MissionsListComponent,
+    MissionDialogComponent,
   ],
   imports: [
     BrowserModule,
