@@ -326,7 +326,22 @@ public class MongoProgressDao implements ProgressDao {
         int remaining = mongoProgress.getRemaining();
         MongoStep step = mongoProgress.getCurrentStep();
 
+        int actionsToCount = actionsPerformed;
+        int remainingToCount = mongoProgress.getRemaining();
+        MongoStep stepToCount = mongoProgress.getCurrentStep();
+
         final MongoUser mongoUser = mongoProgress.getProfile().getUser();
+
+        int sequence = mongoProgress.getSequence();
+
+        while (stepToCount != null && actionsToCount >= remainingToCount) {
+            actionsToCount -= remainingToCount;
+            stepToCount = mongoProgress.getStepForSequence(mongoProgress.getSequence() + sequence);
+            ++sequence;
+            remainingToCount = stepToCount == null ? 0 : stepToCount.getCount();
+        }
+
+        final int _sequence = sequence;
 
         while (step != null && actionsToApply >= remaining) {
 
@@ -343,7 +358,7 @@ public class MongoProgressDao implements ProgressDao {
                 .map(r -> {
                     final String context = buildMissionProgressContextString(
                             mongoProgress.getObjectId().toHexString(),
-                            Integer.toString(mongoProgress.getSequence()));
+                            Integer.toString(_sequence));
 
                     final Progress progress = getDozerMapper().map(mongoProgress, Progress.class);
                     final Step __step = getDozerMapper().map(_step, Step.class);
@@ -351,8 +366,7 @@ public class MongoProgressDao implements ProgressDao {
                     final User user = getDozerMapper().map(mongoUser, User.class);
                     final Map<String, Object> metadata = generateMissionProgressMetadata(progress, __step);
 
-                    int stepIndex = progress.getMission().getStepIndex(__step);
-                    final Set<String> tags = buildRewardIssuanceTags(progress, stepIndex);
+                    final Set<String> tags = buildRewardIssuanceTags(progress, _sequence);
 
                     final RewardIssuance issuance = new RewardIssuance();
                     issuance.setItem(reward.getItem());
@@ -393,7 +407,6 @@ public class MongoProgressDao implements ProgressDao {
 
         updates.inc("sequence", completedSteps);
         updates.set("remaining", step == null ? 0 : step.getCount() - actionsToApply);
-
     }
 
     public Map<String, Object> generateMissionProgressMetadata(Progress progress, Step step) {

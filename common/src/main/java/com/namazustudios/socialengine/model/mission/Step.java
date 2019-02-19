@@ -89,20 +89,20 @@ public class Step implements Serializable {
 
     }
 
-    static public Set<String> buildRewardIssuanceTags(Progress progress, int stepIndex) {
+    static public Set<String> buildRewardIssuanceTags(Progress progress, int sequence) {
         final Set <String> tags = new HashSet<>();
-        tags.add(buildIdentifyingRewardIssuanceTag(progress, stepIndex));
+        tags.add(buildIdentifyingRewardIssuanceTag(progress, sequence));
 
         return tags;
     }
 
-    static public String buildIdentifyingRewardIssuanceTag(Progress progress, int stepIndex) {
+    static public String buildIdentifyingRewardIssuanceTag(Progress progress, int sequence) {
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(ID_TAG_PREFIX);
         stringBuilder.append(TAG_SEPARATOR);
         stringBuilder.append(progress.getId());
         stringBuilder.append(TAG_SEPARATOR);
-        stringBuilder.append(stepIndex);
+        stringBuilder.append(sequence);
 
         return stringBuilder.toString();
     }

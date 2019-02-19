@@ -305,8 +305,7 @@ public class MongoProgressDaoTest  {
             assertEquals(rewardIssuance.getItemQuantity(), step.getRewards().get(0).getQuantity());
             assertEquals(rewardIssuance.getState(), ISSUED);
 
-            int stepIndex = progress.getMission().getStepIndex(step);
-            final Set<String> tags = buildRewardIssuanceTags(progress, stepIndex);
+            final Set<String> tags = buildRewardIssuanceTags(progress, progress.getSequence());
 
             assertEquals(rewardIssuance.getTags(), tags);
 
