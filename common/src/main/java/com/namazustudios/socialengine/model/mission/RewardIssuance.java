@@ -11,10 +11,7 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @ApiModel(description = "Represents a Reward that has been issued but has not yet been claimed by the user.  The " +
                         "reward is assigned a unique ID to ensure that it may not have been applied more than once.")
@@ -195,13 +192,20 @@ public class RewardIssuance implements Serializable {
         this.uuid = uuid;
     }
 
-
     public Set<String> getTags() {
         return tags;
     }
 
     public void setTags(Set<String> tags) {
         this.tags = tags;
+    }
+
+    public void addTag(final String tag) {
+        if (getTags() == null) {
+            setTags(new HashSet<>());
+        }
+
+        getTags().add(tag);
     }
 
     @Override

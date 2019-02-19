@@ -195,6 +195,7 @@ public class MongoRewardIssuanceDaoTest {
         rewardIssuance.setContext("server.test.persistent." + invocation);
         rewardIssuance.setType(PERSISTENT);
         rewardIssuance.setSource("test");
+        rewardIssuance.addTag("tagTest");
 
         final RewardIssuance createdRewardIssuance = getRewardIssuanceDao().getOrCreateRewardIssuance(rewardIssuance);
         assertNotNull(createdRewardIssuance.getId());
@@ -205,6 +206,8 @@ public class MongoRewardIssuanceDaoTest {
         assertEquals(createdRewardIssuance.getState(), ISSUED);
         assertEquals(createdRewardIssuance.getType(), PERSISTENT);
         assertEquals(createdRewardIssuance.getSource(), "test");
+        assertTrue(createdRewardIssuance.getTags().contains("tagTest"));
+        assertEquals(createdRewardIssuance.getTags().size(), 1);
     }
 
     @Test(invocationCount = INVOCATION_COUNT)
