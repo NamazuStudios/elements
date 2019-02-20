@@ -12,7 +12,6 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import static com.namazustudios.socialengine.model.Taggable.buildValidatedTags;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.mission.Mission;
@@ -133,10 +132,10 @@ public class MongoMissionDao implements MissionDao {
         operations.set("displayName", mission.getDisplayName());
         operations.set("description", mission.getDescription());
 
-        final List<String> validatedTags = buildValidatedTags(mission.getTags());
+        mission.validateTags();
 
-        if (validatedTags != null) {
-            operations.set("tags", validatedTags);
+        if (mission.getTags() != null) {
+            operations.set("tags", mission.getTags());
         }
         else {
             operations.unset("tags");
@@ -188,8 +187,7 @@ public class MongoMissionDao implements MissionDao {
 
         normalize(mission);
 
-        final List<String> validatedTags = buildValidatedTags(mission.getTags());
-        mission.setTags(validatedTags);
+        mission.validateTags();
 
         final MongoMission mongoMission = checkMission(mission);
 

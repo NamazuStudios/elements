@@ -2,7 +2,9 @@ package com.namazustudios.socialengine.model;
 
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public interface Taggable {
 
@@ -10,7 +12,31 @@ public interface Taggable {
 
     void setTags(List<String> tags);
 
-    default void addTag(String tag) {
+    /**
+     * In-place validation and replacement of tags.
+     */
+    default void validateTags() {
+        List<String> validatedTags = buildValidatedTags(getTags());
+        setTags(validatedTags);
+    }
+
+    /**
+     * Validates the given list of tags and then sets them.
+     *
+     * @param tags
+     */
+    default void validateAndSetTags(List<String> tags) {
+        List<String> validatedTags = buildValidatedTags(tags);
+        setTags(validatedTags);
+    }
+
+    /**
+     * Validates the given tag and adds it to the existing list of tags. If the tags is null, then a new ArrayList is
+     * created as well.
+     *
+     * @param tag
+     */
+    default void validateAndAddTag(String tag) {
         final List<String> tags;
         if (getTags() != null) {
             tags = getTags();
@@ -21,9 +47,10 @@ public interface Taggable {
 
         final String validatedTag = buildValidatedTag(tag);
 
-        tags.add(validatedTag);
-
-        setTags(tags);
+        if (validatedTag != null) {
+            tags.add(validatedTag);
+            setTags(tags);
+        }
     }
 
     /**
@@ -58,23 +85,29 @@ public interface Taggable {
     }
 
     /**
-     * Takes in a list of tags and returns a list of validated tag strings.
+     * Takes in a list of tags and returns a list of deduplicated, validated tag strings.
      *
      * Note that the outputted list may be smaller so as not to include invalid tags, i.e.
      * outputList.size() <= inputList.size() is always true.
      *
      * @param tags
-     * @return the list of validated tags.
+     * @return the list of deduplicated, validated tags.
      */
     static List<String> buildValidatedTags(final List<String> tags) {
-        final List<String> validatedTags = new ArrayList<>();
+        if (tags == null) {
+            return null;
+        }
+
+        final Set<String> validatedTagsSet = new LinkedHashSet<>();
         for (final String tag : tags) {
             final String validatedTag = buildValidatedTag(tag);
 
             if (validatedTag != null) {
-                validatedTags.add(validatedTag);
+                validatedTagsSet.add(validatedTag);
             }
         }
+
+        final List<String> validatedTags = new ArrayList<>(validatedTagsSet);
 
         return validatedTags;
     }
