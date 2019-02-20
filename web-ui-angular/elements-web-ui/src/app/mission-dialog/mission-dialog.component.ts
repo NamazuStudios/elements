@@ -58,7 +58,7 @@ export class MissionDialogComponent implements OnInit {
   * capture changes to item tags so we need to explicitly attach the entire tag
   * array to the itemForm, overwriting the initial tags value
   */
-  close(saveChanges: boolean): void {
+  close(saveChanges?: boolean): void {
     if (!saveChanges) {
       this.dialogRef.close();
       return;
