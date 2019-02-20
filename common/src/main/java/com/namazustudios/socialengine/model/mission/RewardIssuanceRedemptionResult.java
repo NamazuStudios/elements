@@ -9,7 +9,7 @@ import java.util.Objects;
 
 @ApiModel(description = "Represents the result of a reward issuance redemption, housing either the resultant " +
         "RewardIssuance or the error details.")
-public class RewardIssuanceResult implements Serializable {
+public class RewardIssuanceRedemptionResult implements Serializable {
     @ApiModelProperty("The id as originally provided in the request.")
     private String rewardIssuanceId;
 
@@ -58,7 +58,7 @@ public class RewardIssuanceResult implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        RewardIssuanceResult that = (RewardIssuanceResult) o;
+        RewardIssuanceRedemptionResult that = (RewardIssuanceRedemptionResult) o;
         return Objects.equals(getRewardIssuanceId(), that.getRewardIssuanceId()) &&
                 Objects.equals(getRewardIssuance(), that.getRewardIssuance()) &&
                 Objects.equals(getInventoryItem(), that.getInventoryItem()) &&
@@ -72,7 +72,7 @@ public class RewardIssuanceResult implements Serializable {
 
     @Override
     public String toString() {
-        return "RewardIssuanceResult{" +
+        return "RewardIssuanceRedemptionResult{" +
                 "rewardIssuanceId='" + rewardIssuanceId + '\'' +
                 ", rewardIssuance=" + rewardIssuance +
                 ", inventoryItem=" + inventoryItem +

@@ -3,9 +3,10 @@ package com.namazustudios.socialengine.service.rewardissuance;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.mission.RewardIssuance;
 import com.namazustudios.socialengine.model.mission.RewardIssuance.State;
-import com.namazustudios.socialengine.model.mission.RewardIssuanceResult;
+import com.namazustudios.socialengine.model.mission.RewardIssuanceRedemptionResult;
 
 import java.util.List;
+import java.util.Set;
 
 public interface RewardIssuanceService {
     /**
@@ -13,31 +14,32 @@ public interface RewardIssuanceService {
      *
      * @param id the id of the {@link RewardIssuance} as specified by {@link RewardIssuance#getId()}.
      *
-     * @return the reward issuance
+     * @return the {@link RewardIssuance}.
      */
     RewardIssuance getRewardIssuance(String id);
 
     /**
-     * Fetches all {@link RewardIssuance}s for the logged-in user, filtered by the optional given {@param state}.
+     * Fetches all {@link RewardIssuance}s for the logged-in user, filtered by the optional given {@param states} and
+     * {@param tags}.
      *
      *
-     * @return pagination of reward issuances
+     * @return {@link Pagination} of {@link RewardIssuance}s.
      */
-    Pagination<RewardIssuance> getRewardIssuances(State state, int offset, int count);
+    Pagination<RewardIssuance> getRewardIssuances(int offset, int count, Set<State> states, Set<String> tags);
 
     /**
      * Redeems the given {@link RewardIssuance} by {@param id}.
      *
      * @param id
-     * @return the updated reward issuance
+     * @return the redemption {@link RewardIssuanceRedemptionResult}.
      */
-    RewardIssuanceResult redeemRewardIssuance(String id);
+    RewardIssuanceRedemptionResult redeemRewardIssuance(String id);
 
     /**
      * Redeems the given list of {@param rewardIssuanceIds} for {@link RewardIssuance}s.
      *
      * @param rewardIssuanceIds
-     * @return the updated reward issuances
+     * @return the list of redemption {@link RewardIssuanceRedemptionResult}s.
      */
-    List<RewardIssuanceResult> redeemRewardIssuances(List<String> rewardIssuanceIds);
+    List<RewardIssuanceRedemptionResult> redeemRewardIssuances(List<String> rewardIssuanceIds);
 }
