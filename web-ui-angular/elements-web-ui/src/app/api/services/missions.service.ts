@@ -195,7 +195,7 @@ export class MissionsService extends BaseService {
     let req = new HttpRequest<any>(
       'PUT',
       this.rootUrl + `/mission/${params.identifier}`,
-      __body,
+       __body,
       {
         headers: __headers,
         params: __params,
