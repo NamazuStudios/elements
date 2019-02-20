@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -119,7 +120,6 @@ public class MongoMissionDao implements MissionDao {
 
     @Override
     public Mission updateMission(final Mission mission) {
-
         getValidationHelper().validateModel(mission, Update.class);
 
         final MongoMission mongoMission = checkMission(mission);
@@ -133,7 +133,8 @@ public class MongoMissionDao implements MissionDao {
         operations.set("name", mission.getName());
         operations.set("displayName", mission.getDisplayName());
         operations.set("description", mission.getDescription());
-        operations.set("steps", mongoMission.getSteps());
+        operations.set("tags", mission.getTags());
+        operations.set("steps", mission.getSteps());
         operations.set("finalRepeatStep", mongoMission.getFinalRepeatStep());
 
         final FindAndModifyOptions options = new FindAndModifyOptions()

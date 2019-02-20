@@ -75,10 +75,10 @@ public class MissionResource {
 
     @PUT
     @Path("{missionNameOrId}")
-    @ApiOperation(value = "Updates a single Mission",
+    @ApiOperation(value = "Updates an entire single Mission",
             notes = "Supplying a mission, this will update the Mission identified by the name or ID in the path with contents " +
                     "from the passed in request body. ")
-    public Mission updateItem(final Mission updatedMission,
+    public Mission updateMission(final Mission updatedMission,
                            @PathParam("missionNameOrId") String missionNameOrId) {
         return missionService.updateMission(updatedMission);
     }

@@ -10,6 +10,7 @@ import org.mongodb.morphia.annotations.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Mongo DTO for a mission.
@@ -45,7 +46,7 @@ public class MongoMission {
     private String description;
 
     @Embedded
-    private List<String> tags;
+    private Set<String> tags;
 
     @Embedded
     private List<MongoStep> steps;
@@ -88,11 +89,11 @@ public class MongoMission {
         this.description = description;
     }
 
-    public List<String> getTags() {
+    public Set<String> getTags() {
         return tags;
     }
 
-    public void setTags(List<String> tags) {
+    public void setTags(Set<String> tags) {
         this.tags = tags;
     }
 
