@@ -35,7 +35,7 @@ public class ProgressMissionInfo implements Serializable {
     private Step finalRepeatStep;
 
     @ApiModelProperty("The tags used to categorize this mission")
-    private Set<String> tags;
+    private List<String> tags;
 
     @ApiModelProperty("The metadata for this mission")
     private Map<String, Object> metadata;
@@ -88,11 +88,11 @@ public class ProgressMissionInfo implements Serializable {
         this.finalRepeatStep = finalRepeatStep;
     }
 
-    public Set<String> getTags() {
+    public List<String> getTags() {
         return tags;
     }
 
-    public void setTags(Set<String> tags) {
+    public void setTags(List<String> tags) {
         this.tags = tags;
     }
 

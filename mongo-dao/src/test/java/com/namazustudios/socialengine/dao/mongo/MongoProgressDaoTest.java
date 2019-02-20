@@ -123,7 +123,7 @@ public class MongoProgressDaoTest  {
         testMission.setName("tally_me_banana_finite");
         testMission.setDisplayName("Tally me Banana");
         testMission.setDescription("Collect all the bananas");
-        testMission.setTags(of("finite").collect(toSet()));
+        testMission.setTags(of("finite").collect(toList()));
         testMission.setSteps(asList(
             testStep("Collect 5", "Collect 5 Bananas", 5, testFiniteItem),
             testStep("Collect 10", "Collect 10 Bananas", 10, testFiniteItem),
@@ -138,7 +138,7 @@ public class MongoProgressDaoTest  {
         testMission.setName("tally_me_banana_repeating");
         testMission.setDisplayName("Tally me Banana");
         testMission.setDescription("Collect all the bananas");
-        testMission.setTags(of("repeating").collect(toSet()));
+        testMission.setTags(of("repeating").collect(toList()));
         testMission.setSteps(asList(
             testStep("Collect 5", "Collect 5 Bananas", 5, testRepeatItem),
             testStep("Collect 10", "Collect 10 Bananas", 10, testRepeatItem),

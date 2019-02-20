@@ -46,7 +46,7 @@ public class MongoMission {
     private String description;
 
     @Embedded
-    private Set<String> tags;
+    private List<String> tags;
 
     @Embedded
     private List<MongoStep> steps;
@@ -89,11 +89,11 @@ public class MongoMission {
         this.description = description;
     }
 
-    public Set<String> getTags() {
+    public List<String> getTags() {
         return tags;
     }
 
-    public void setTags(Set<String> tags) {
+    public void setTags(List<String> tags) {
         this.tags = tags;
     }
 

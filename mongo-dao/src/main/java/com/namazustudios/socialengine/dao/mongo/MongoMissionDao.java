@@ -12,10 +12,10 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import static com.namazustudios.socialengine.model.Taggable.buildValidatedTags;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.mission.Mission;
-import com.namazustudios.socialengine.model.mission.Reward;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -29,16 +29,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.google.common.collect.Streams.concat;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Stream.of;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoMissionDao implements MissionDao {
@@ -122,6 +117,10 @@ public class MongoMissionDao implements MissionDao {
     public Mission updateMission(final Mission mission) {
         getValidationHelper().validateModel(mission, Update.class);
 
+        if ((mission.getSteps() == null || mission.getSteps().size() == 0) && mission.getFinalRepeatStep() == null) {
+            throw new InvalidDataException("At least one of Steps or finalRepeatStep must be provided.");
+        }
+
         final MongoMission mongoMission = checkMission(mission);
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(mission.getId());
@@ -133,9 +132,36 @@ public class MongoMissionDao implements MissionDao {
         operations.set("name", mission.getName());
         operations.set("displayName", mission.getDisplayName());
         operations.set("description", mission.getDescription());
-        operations.set("tags", mission.getTags());
-        operations.set("steps", mission.getSteps());
-        operations.set("finalRepeatStep", mongoMission.getFinalRepeatStep());
+
+        final List<String> validatedTags = buildValidatedTags(mission.getTags());
+
+        if (validatedTags != null) {
+            operations.set("tags", validatedTags);
+        }
+        else {
+            operations.unset("tags");
+        }
+
+        if (mission.getSteps() != null) {
+            operations.set("steps", mission.getSteps());
+        }
+        else {
+            operations.unset("steps");
+        }
+
+        if (mission.getFinalRepeatStep() != null) {
+            operations.set("finalRepeatStep", mission.getFinalRepeatStep());
+        }
+        else {
+            operations.unset("finalRepeatStep");
+        }
+
+        if (mission.getMetadata() != null) {
+            operations.set("metadata", mission.getMetadata());
+        }
+        else {
+            operations.unset("metadata");
+        }
 
         final FindAndModifyOptions options = new FindAndModifyOptions()
             .returnNew(true)
@@ -156,7 +182,14 @@ public class MongoMissionDao implements MissionDao {
 
         getValidationHelper().validateModel(mission, Insert.class);
 
+        if ((mission.getSteps() == null || mission.getSteps().size() == 0) && mission.getFinalRepeatStep() == null) {
+            throw new InvalidDataException("At least one of Steps or finalRepeatStep must be provided.");
+        }
+
         normalize(mission);
+
+        final List<String> validatedTags = buildValidatedTags(mission.getTags());
+        mission.setTags(validatedTags);
 
         final MongoMission mongoMission = checkMission(mission);
 
