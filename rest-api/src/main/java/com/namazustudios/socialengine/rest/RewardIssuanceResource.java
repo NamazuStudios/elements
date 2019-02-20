@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rest;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.mission.RewardIssuance;
 import com.namazustudios.socialengine.model.mission.RewardIssuance.State;
-import com.namazustudios.socialengine.model.mission.RewardIssuanceResult;
+import com.namazustudios.socialengine.model.mission.RewardIssuanceRedemptionResult;
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -14,6 +14,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import java.util.List;
+import java.util.Set;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
@@ -36,23 +37,24 @@ public class RewardIssuanceResource {
     @GET
     @ApiOperation(value = "Retrieves the current user's reward issuances, optionally filtered by the given state.")
     public Pagination<RewardIssuance> getRewardIssuances(
-            @QueryParam("state") final State state,
             @QueryParam("offset") @DefaultValue("0")  final int offset,
-            @QueryParam("count")  @DefaultValue("20") final int count) {
-        return getRewardIssuanceService().getRewardIssuances(state, offset, count);
+            @QueryParam("count")  @DefaultValue("20") final int count,
+            @QueryParam("states") final Set<State> states,
+            @QueryParam("tags") final Set<String> tags) {
+        return getRewardIssuanceService().getRewardIssuances(offset, count, states, tags);
     }
 
     @PUT
     @Path("{rewardIssuanceId}/redeem")
     @ApiOperation(value = "Redeems the RewardIssuance.")
-    public RewardIssuanceResult redeemRewardIssuance(@PathParam("rewardIssuanceId") String rewardIssuanceId) {
+    public RewardIssuanceRedemptionResult redeemRewardIssuance(@PathParam("rewardIssuanceId") String rewardIssuanceId) {
         return getRewardIssuanceService().redeemRewardIssuance(rewardIssuanceId);
     }
 
     @PUT
     @Path("redeem")
     @ApiOperation(value = "Redeems the given list of RewardIssuances.")
-    public List<RewardIssuanceResult> redeemRewardIssuances(final List<String> rewardIssuanceIds) {
+    public List<RewardIssuanceRedemptionResult> redeemRewardIssuances(final List<String> rewardIssuanceIds) {
         return getRewardIssuanceService().redeemRewardIssuances(rewardIssuanceIds);
     }
 

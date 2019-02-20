@@ -17,6 +17,7 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.mission.RewardIssuance;
+import static com.namazustudios.socialengine.model.mission.RewardIssuance.State;
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.*;
 import static com.namazustudios.socialengine.model.mission.RewardIssuance.Type.*;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -94,7 +95,8 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     public Pagination<RewardIssuance> getRewardIssuances(
             final User user,
             final int offset, final int count,
-            final Set<RewardIssuance.State> states) {
+            final Set<State> states,
+            final Set<String> tags) {
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
         final Query<MongoRewardIssuance> query = getDatastore().createQuery(MongoRewardIssuance.class);
@@ -103,6 +105,10 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
         if (states != null && !states.isEmpty()) {
             query.field("state").hasAnyOf(states);
+        }
+
+        if (tags != null && !tags.isEmpty()) {
+            query.field("tags").hasAnyOf(tags);
         }
 
         return getMongoDBUtils().paginationFromQuery(
@@ -319,7 +325,7 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         final WriteResult writeResult = getDatastore().delete(MongoRewardIssuance.class, mongoRewardIssuanceId);
 
         if (writeResult.getN() == 0) {
-            throw new NotFoundException("Pending Reward not found: " + mongoRewardIssuanceId);
+            throw new NotFoundException("Reward Issuance not found: " + mongoRewardIssuanceId);
         }
     }
 
