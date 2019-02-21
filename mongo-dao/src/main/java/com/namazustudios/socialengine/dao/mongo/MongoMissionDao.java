@@ -129,35 +129,35 @@ public class MongoMissionDao implements MissionDao {
         query.criteria("_id").equal(objectId);
 
         final UpdateOperations<MongoMission> operations = getDatastore().createUpdateOperations(MongoMission.class);
-        operations.set("name", mission.getName());
-        operations.set("displayName", mission.getDisplayName());
-        operations.set("description", mission.getDescription());
+        operations.set("name", mongoMission.getName());
+        operations.set("displayName", mongoMission.getDisplayName());
+        operations.set("description", mongoMission.getDescription());
 
         mission.validateTags();
 
         if (mission.getTags() != null) {
-            operations.set("tags", mission.getTags());
+            operations.set("tags", mongoMission.getTags());
         }
         else {
             operations.unset("tags");
         }
 
         if (mission.getSteps() != null) {
-            operations.set("steps", mission.getSteps());
+            operations.set("steps", mongoMission.getSteps());
         }
         else {
             operations.unset("steps");
         }
 
         if (mission.getFinalRepeatStep() != null) {
-            operations.set("finalRepeatStep", mission.getFinalRepeatStep());
+            operations.set("finalRepeatStep", mongoMission.getFinalRepeatStep());
         }
         else {
             operations.unset("finalRepeatStep");
         }
 
         if (mission.getMetadata() != null) {
-            operations.set("metadata", mission.getMetadata());
+            operations.set("metadata", mongoMission.getMetadata());
         }
         else {
             operations.unset("metadata");

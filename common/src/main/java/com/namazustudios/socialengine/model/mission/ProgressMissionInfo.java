@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.mission;
 
+import com.namazustudios.socialengine.model.Taggable;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -10,7 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class ProgressMissionInfo implements Serializable {
+public class ProgressMissionInfo implements Serializable, Taggable {
 
     @ApiModelProperty("The id of the mission")
     @NotNull

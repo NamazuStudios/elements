@@ -170,13 +170,13 @@ public class MongoItemDaoIntegrationTest {
             },
             {
                 "Case: tags have inner non alpha-numeric characters, including whitespace, replaced with _",
-                createItem("name", " displayName ", "\tdescription", Lists.newArrayList("foo!bar ", "∆delta"), new HashMap<>()),
-                createItem("name", "displayName", "description", Lists.newArrayList("foo_bar","_delta"), new HashMap<>()),
+                createItem("name", " displayName ", "\tdescription", Lists.newArrayList("foo!bar ", "\r\r\t"), new HashMap<>()),
+                createItem("name", "displayName", "description", Lists.newArrayList("foo!bar"), new HashMap<>()),
             },
             {
                 "Case: tags have upper case characters made lower case",
-                createItem("name", " displayName ", "\tdescription", Lists.newArrayList("BIG", "BANG"), new HashMap<>()),
-                createItem("name", "displayName", "description", Lists.newArrayList("big","bang"), new HashMap<>()),
+                createItem("name", " displayName ", "\tdescription", Lists.newArrayList("b\r\r\n\tig   ", "B   ang"), new HashMap<>()),
+                createItem("name", "displayName", "description", Lists.newArrayList("big","B_ang"), new HashMap<>()),
             }
         };
     }

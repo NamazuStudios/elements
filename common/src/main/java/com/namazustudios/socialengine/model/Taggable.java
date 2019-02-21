@@ -74,8 +74,8 @@ public interface Taggable {
      * • excised of any newline chars from inside the string;
      * • excised of any contiguous sequence of whitespace chars, replacing the sequence with a single underscore
      * character;
-     * • excised of any non-alpha, non-digit characters, replacing them with underscores; and
-     * • forced to all lowercase.
+     * • [TBD] excised of any non-alpha, non-digit characters, replacing them with underscores; and
+     * • [TBD] forced to all lowercase.
      *
      * If the resultant String would be the empty string, then we return null instead to signify that the given String
      * could not be validated.
@@ -89,11 +89,11 @@ public interface Taggable {
         }
 
         final String validatedTag = tag
-                .trim() // remove whitespace (and newlines) from the ends
-                .replaceAll("[\n\r]", "")   // remove all newline chars from inside the string
-                .replaceAll("\\s+", "_")    // replace any contiguous sequence of whitespace chars with a single underscore
-                .replaceAll("[^\\p{IsAlphabetic}^\\p{IsDigit}]", "_")   // only allow alphanumeric (incl. int'l)
-                .toLowerCase(); // and finally, make it lowercase
+                .trim() // remove whitespace/newlines from the ends
+                .replaceAll("[^\\S ]+", "")   // remove all whitespace/newline chars (minus space char " ") from inside the string
+                .replaceAll("\\s+", "_");   // replace any contiguous sequence of whitespace chars with a single underscore
+                //.replaceAll("[^\\p{IsAlphabetic}^\\p{IsDigit}]", "_")   // only allow alphanumeric (incl. int'l)
+                //.toLowerCase(); // and finally, make it lowercase
 
         if (validatedTag.length() == 0) {
             return null;
