@@ -95,8 +95,8 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     public Pagination<RewardIssuance> getRewardIssuances(
             final User user,
             final int offset, final int count,
-            final Set<State> states,
-            final Set<String> tags) {
+            final List<State> states,
+            final List<String> tags) {
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
         final Query<MongoRewardIssuance> query = getDatastore().createQuery(MongoRewardIssuance.class);
@@ -159,7 +159,7 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         }
 
         getValidationHelper().validateModel(rewardIssuance, ValidationGroups.Insert.class);
-
+        rewardIssuance.validateTags();
 
         final MongoRewardIssuance mongoRewardIssuance = getDozerMapper().map(rewardIssuance, MongoRewardIssuance.class);
 

@@ -71,13 +71,13 @@ public class MongoProgressDao implements ProgressDao {
 
     @Override
     public Pagination<Progress> getProgresses(final Profile profile, final int offset, final int count,
-                                              final Set<String> tags)  {
+                                              final List<String> tags)  {
         return getProgresses(profile, offset, count, tags,null);
     }
 
     @Override
     public Pagination<Progress> getProgresses(final Profile profile, final int offset, final int count,
-                                              final Set<String> tags, final String search) {
+                                              final List<String> tags, final String search) {
         if (isNotEmpty(nullToEmpty(search).trim())) {
             LOGGER.warn("getProgresss(Profile profile, int offset, int count, String query) was called with a query " +
                         "string parameter.  This field is presently ignored and will return all values");
@@ -98,13 +98,13 @@ public class MongoProgressDao implements ProgressDao {
     }
 
     @Override
-    public Pagination<Progress> getProgresses(final int offset, final int count, Set<String> tags)  {
+    public Pagination<Progress> getProgresses(final int offset, final int count, List<String> tags)  {
         return getProgresses(offset, count, tags, null);
     }
 
     @Override
     public Pagination<Progress> getProgresses(final int offset, final int count,
-                                              final Set<String> tags, final String search) {
+                                              final List<String> tags, final String search) {
 
         if (isNotEmpty(search)) {
             LOGGER.warn(" getProgresss(int offset, int count, String query) was called with a query " +
@@ -366,7 +366,7 @@ public class MongoProgressDao implements ProgressDao {
                     final User user = getDozerMapper().map(mongoUser, User.class);
                     final Map<String, Object> metadata = generateMissionProgressMetadata(progress, __step);
 
-                    final Set<String> tags = buildRewardIssuanceTags(progress, _sequence);
+                    final List<String> tags = buildRewardIssuanceTags(progress, _sequence);
 
                     final RewardIssuance issuance = new RewardIssuance();
                     issuance.setItem(reward.getItem());

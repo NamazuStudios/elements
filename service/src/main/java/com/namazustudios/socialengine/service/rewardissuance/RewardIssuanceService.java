@@ -25,7 +25,7 @@ public interface RewardIssuanceService {
      *
      * @return {@link Pagination} of {@link RewardIssuance}s.
      */
-    Pagination<RewardIssuance> getRewardIssuances(int offset, int count, Set<State> states, Set<String> tags);
+    Pagination<RewardIssuance> getRewardIssuances(int offset, int count, List<State> states, List<String> tags);
 
     /**
      * Redeems the given {@link RewardIssuance} by {@param id}.

@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -127,9 +128,9 @@ public class MongoItemDao implements ItemDao {
     }
 
     @Override
-    public Pagination<Item> getItems(final int offset, final int count, Set<String> tags, final String query) {
+    public Pagination<Item> getItems(final int offset, final int count, List<String> tags, final String query) {
         if (StringUtils.isNotEmpty(query)) {
-            LOGGER.warn(" getItems(int offset, int count, Set<String> tags, String query) was called with a query " +
+            LOGGER.warn(" getItems(int offset, int count, List<String> tags, String query) was called with a query " +
                         "string parameter.  This field is presently ignored and will return all values after filtering " +
                         "by tags");
         }
@@ -147,6 +148,7 @@ public class MongoItemDao implements ItemDao {
     @Override
     public Item updateItem(Item item) {
         validate(item);
+        normalize(item);
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(item.getId());
 
@@ -200,11 +202,7 @@ public class MongoItemDao implements ItemDao {
     private void normalize(Item item) {
         item.setDisplayName(item.getDisplayName().trim());
         item.setDescription(item.getDescription().trim());
-        item.setTags(new HashSet<>(item.getTags().stream().filter(Objects::nonNull).map(this::normalizeTag).collect(Collectors.toSet())));
-    }
-
-    private String normalizeTag(String input) {
-        return input == null ? null : input.trim().toLowerCase().replaceAll("\\W", "_");
+        item.validateTags();
     }
 
     public AdvancedDatastore getDatastore() {

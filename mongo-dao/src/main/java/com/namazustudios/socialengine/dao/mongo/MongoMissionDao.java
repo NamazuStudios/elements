@@ -54,7 +54,7 @@ public class MongoMissionDao implements MissionDao {
     private MongoItemDao mongoItemDao;
 
     @Override
-    public Pagination<Mission> getMissions(int offset, int count, Set<String> tags)  {
+    public Pagination<Mission> getMissions(int offset, int count, List<String> tags)  {
 
         final Query<MongoMission> query = getDatastore().createQuery(MongoMission.class);
 
@@ -115,6 +115,7 @@ public class MongoMissionDao implements MissionDao {
     @Override
     public Mission updateMission(final Mission mission) {
         getValidationHelper().validateModel(mission, Update.class);
+        normalize(mission);
 
         if ((mission.getSteps() == null || mission.getSteps().size() == 0) && mission.getFinalRepeatStep() == null) {
             throw new InvalidDataException("At least one of Steps or finalRepeatStep must be provided.");
@@ -186,8 +187,6 @@ public class MongoMissionDao implements MissionDao {
         }
 
         normalize(mission);
-
-        mission.validateTags();
 
         final MongoMission mongoMission = checkMission(mission);
 
@@ -264,7 +263,7 @@ public class MongoMissionDao implements MissionDao {
     }
 
     private void normalize(Mission item) {
-        // leave this stub here in case we implement some normalization logic later
+        item.validateTags();
     }
 
     public AdvancedDatastore getDatastore() {

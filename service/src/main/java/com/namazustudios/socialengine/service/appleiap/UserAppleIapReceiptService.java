@@ -266,7 +266,7 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
                     rewardIssuance.setMetadata(metadata);
                     rewardIssuance.setSource(APPLE_IAP_SOURCE);
 
-                    final Set<String> tags =
+                    final List<String> tags =
                             buildRewardIssuanceTags(appleIapReceipt.getOriginalTransactionId(), skuOrdinal);
                     rewardIssuance.setTags(tags);
 

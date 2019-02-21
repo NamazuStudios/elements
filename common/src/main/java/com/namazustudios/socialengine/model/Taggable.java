@@ -13,6 +13,29 @@ public interface Taggable {
     void setTags(List<String> tags);
 
     /**
+     * Adds a tag without performing validation of the tag string or the list of strings.
+     *
+     * @param tag
+     */
+    default void addTag(final String tag) {
+        if (tag == null) {
+            return;
+        }
+
+        final List<String> tags;
+
+        if (getTags() != null) {
+            tags = getTags();
+        }
+        else {
+            tags = new ArrayList<>();
+        }
+
+        tags.add(tag);
+        setTags(tags);
+    }
+
+    /**
      * In-place validation and replacement of tags.
      */
     default void validateTags() {
@@ -37,29 +60,22 @@ public interface Taggable {
      * @param tag
      */
     default void validateAndAddTag(String tag) {
-        final List<String> tags;
-        if (getTags() != null) {
-            tags = getTags();
-        }
-        else {
-            tags = new ArrayList<>();
-        }
-
         final String validatedTag = buildValidatedTag(tag);
 
         if (validatedTag != null) {
-            tags.add(validatedTag);
-            setTags(tags);
+            addTag(validatedTag);
         }
     }
 
     /**
      * Returns a validated version of the given tag string, ensuring that the string is:
      *
-     * • trimmed of whitespace and newlines
-     * • excised of any newline chars from inside the string
+     * • trimmed of whitespace and newlines;
+     * • excised of any newline chars from inside the string;
      * • excised of any contiguous sequence of whitespace chars, replacing the sequence with a single underscore
-     * character.
+     * character;
+     * • excised of any non-alpha, non-digit characters, replacing them with underscores; and
+     * • forced to all lowercase.
      *
      * If the resultant String would be the empty string, then we return null instead to signify that the given String
      * could not be validated.
@@ -75,7 +91,9 @@ public interface Taggable {
         final String validatedTag = tag
                 .trim() // remove whitespace (and newlines) from the ends
                 .replaceAll("[\n\r]", "")   // remove all newline chars from inside the string
-                .replaceAll("\\s+", "_");   // replace any contiguous sequence of whitespace chars with a single underscore
+                .replaceAll("\\s+", "_")    // replace any contiguous sequence of whitespace chars with a single underscore
+                .replaceAll("[^\\p{IsAlphabetic}^\\p{IsDigit}]", "_")   // only allow alphanumeric (incl. int'l)
+                .toLowerCase(); // and finally, make it lowercase
 
         if (validatedTag.length() == 0) {
             return null;

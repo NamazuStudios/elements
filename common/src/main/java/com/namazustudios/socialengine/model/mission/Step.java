@@ -89,8 +89,8 @@ public class Step implements Serializable {
 
     }
 
-    static public Set<String> buildRewardIssuanceTags(Progress progress, int sequence) {
-        final Set <String> tags = new HashSet<>();
+    static public List<String> buildRewardIssuanceTags(Progress progress, int sequence) {
+        final List <String> tags = new ArrayList<>();
         tags.add(buildIdentifyingRewardIssuanceTag(progress, sequence));
 
         return tags;

@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.mission.Mission;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Set;
 
 public class AnonMissionService implements MissionService {
@@ -19,7 +20,7 @@ public class AnonMissionService implements MissionService {
     public Mission getMissionByNameOrId(String missionNameOrId) { return missionDao.getMissionByNameOrId(missionNameOrId); }
 
     @Override
-    public Pagination<Mission> getMissions(int offset, int count, Set<String> tags) { return missionDao.getMissions(offset,count, tags); }
+    public Pagination<Mission> getMissions(int offset, int count, List<String> tags) { return missionDao.getMissions(offset,count, tags); }
 
     @Override
     public Pagination<Mission> getMissions(int offset, int count, String query)  { return missionDao.getMissions(offset, count, query); }

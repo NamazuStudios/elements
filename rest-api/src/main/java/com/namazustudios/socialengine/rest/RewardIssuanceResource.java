@@ -39,8 +39,8 @@ public class RewardIssuanceResource {
     public Pagination<RewardIssuance> getRewardIssuances(
             @QueryParam("offset") @DefaultValue("0")  final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
-            @QueryParam("states") final Set<State> states,
-            @QueryParam("tags") final Set<String> tags) {
+            @QueryParam("states") final List<State> states,
+            @QueryParam("tags") final List<String> tags) {
         return getRewardIssuanceService().getRewardIssuances(offset, count, states, tags);
     }
 
