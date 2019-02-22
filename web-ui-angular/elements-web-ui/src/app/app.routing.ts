@@ -15,7 +15,7 @@ const appRoutes: Routes = [
   // { path: 'users/:id', component: UserDetailComponent, canActivate: [AuthenticationGuard] },
   { path: 'applications', component: ApplicationsListComponent, canActivate: [AuthenticationGuard] },
   { path: 'digital-goods', component: ItemsListComponent, canActivate: [AuthenticationGuard] },
-  { path: 'missions', component: MissionsListComponent, canActive: [AuthenticationGuard] },
+  { path: 'missions', component: MissionsListComponent, canActivate: [AuthenticationGuard] },
   // { path: 'applications/:id', component: ApplicationDetailComponent, canActivate: [AuthenticationGuard] },
   // { path: 'applications/:applicationId/configurations/:id', component: ApplicationConfigurationDetailComponent, canActivate: [AuthenticationGuard] },
   { path: '**', redirectTo: '' }
