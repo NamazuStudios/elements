@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 
+import java.util.List;
 import java.util.Set;
 
 @Expose(modules = {"namazu.elements.dao.item",
@@ -39,7 +40,7 @@ public interface ItemDao {
      * @return A {@link Pagination} of all {@link Item} records within the range specified by the offset and count
      * parameters.
      */
-    Pagination<Item> getItems(int offset, int count, Set<String> tags, String query);
+    Pagination<Item> getItems(int offset, int count, List<String> tags, String query);
 
     /**
      * Updates a given Item.

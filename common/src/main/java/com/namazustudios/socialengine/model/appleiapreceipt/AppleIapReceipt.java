@@ -105,8 +105,8 @@ public class AppleIapReceipt implements Serializable {
         this.originalPurchaseDate = originalPurchaseDate;
     }
 
-    public static Set<String> buildRewardIssuanceTags(final String originalTransactionId, final int skuOrdinal) {
-        final Set <String> tags = new HashSet<>();
+    public static List<String> buildRewardIssuanceTags(final String originalTransactionId, final int skuOrdinal) {
+        final List <String> tags = new ArrayList<>();
         tags.add(buildIdentifyingRewardIssuanceTag(originalTransactionId, skuOrdinal));
 
         return tags;

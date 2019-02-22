@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.model.goods;
 
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.model.Taggable;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
@@ -16,7 +17,7 @@ import java.util.*;
  * Represents an Item that is a Digital Good.
  */
 @ApiModel
-public class Item implements Serializable {
+public class Item implements Serializable, Taggable {
 
     @Null(groups = {Create.class, Insert.class})
     private String id;
@@ -25,7 +26,7 @@ public class Item implements Serializable {
     @Pattern(regexp = Constants.Regexp.WORD_ONLY)
     private String name;
 
-    private Set<String> tags;
+    private List<String> tags;
 
     @NotNull
     private String displayName;
@@ -75,12 +76,12 @@ public class Item implements Serializable {
     }
 
     /**
-     * Get the tags for the Item.  The returned Set should be treated as immutable.
+     * Get the tags for the Item.  The returned List should be treated as immutable.
      *
-     * @return The tags for an Item, or an empty Set if the Item does not have any tags.
+     * @return The tags for an Item, or an empty List if the Item does not have any tags.
      */
-    public Set<String> getTags() {
-        return tags == null ? new HashSet<>() : new HashSet<>(tags);
+    public List<String> getTags() {
+        return tags == null ? new ArrayList<>() : new ArrayList<>(tags);
     }
 
     /**
@@ -89,7 +90,7 @@ public class Item implements Serializable {
      * @param tags
      *     The tags for the Item.
      */
-    public void setTags(Set<String> tags) {
+    public void setTags(List<String> tags) {
         this.tags = tags;
     }
 

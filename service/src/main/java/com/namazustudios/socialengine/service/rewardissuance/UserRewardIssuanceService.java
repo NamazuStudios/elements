@@ -29,8 +29,8 @@ public class UserRewardIssuanceService implements RewardIssuanceService {
     public Pagination<RewardIssuance> getRewardIssuances(
             final int offset,
             final int count,
-            final Set<State> states,
-            final Set<String> tags) {
+            final List<State> states,
+            final List<String> tags) {
         return getRewardIssuanceDao().getRewardIssuances(getUser(), offset, count, states, tags);
     }
 

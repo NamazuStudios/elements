@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.profile.Profile;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -30,12 +31,12 @@ public class UserProgressService implements ProgressService {
     }
 
     @Override
-    public Pagination<Progress> getProgresses(final int offset, final int count, final Set<String> tags) {
+    public Pagination<Progress> getProgresses(final int offset, final int count, final List<String> tags) {
         return getProgressDao().getProgresses(getCurrentProfileSupplier().get(), offset, count, tags);
     }
 
     @Override
-    public Pagination<Progress> getProgresses(final int offset, final int count, final Set<String> tags, final String query)  {
+    public Pagination<Progress> getProgresses(final int offset, final int count, final List<String> tags, final String query)  {
         return getProgressDao().getProgresses(getCurrentProfileSupplier().get(), offset, count, tags, query);
     }
 
