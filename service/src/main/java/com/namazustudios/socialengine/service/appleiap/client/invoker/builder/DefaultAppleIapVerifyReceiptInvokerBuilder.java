@@ -65,20 +65,20 @@ public class DefaultAppleIapVerifyReceiptInvokerBuilder implements Builder {
         // specify that the client should convert from snake-case JSON to camel-case POJO
         this.client.register(MapperProvider.class);
     }
+}
 
-    @Provider
-    private class MapperProvider implements ContextResolver<ObjectMapper> {
-        final ObjectMapper mapper;
+@Provider
+class MapperProvider implements ContextResolver<ObjectMapper> {
+    final ObjectMapper mapper;
 
-        public MapperProvider() {
-            mapper = new ObjectMapper();
-            mapper.setPropertyNamingStrategy(
-                    PropertyNamingStrategy.SNAKE_CASE);
-        }
+    public MapperProvider() {
+        mapper = new ObjectMapper();
+        mapper.setPropertyNamingStrategy(
+                PropertyNamingStrategy.SNAKE_CASE);
+    }
 
-        @Override
-        public ObjectMapper getContext(Class<?> cls) {
-            return mapper;
-        }
+    @Override
+    public ObjectMapper getContext(Class<?> cls) {
+        return mapper;
     }
 }

@@ -9,15 +9,13 @@ import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 
 @Entity(value = "progress_pending_award", noClassnameStored = true)
 public class MongoRewardIssuance {
-
-    private static final int EXPIRY_TIME_SECONDS = 0;
-
     @Id
     private MongoRewardIssuanceId objectId;
 
@@ -45,6 +43,9 @@ public class MongoRewardIssuance {
 
     @Embedded
     private Map<String, Object> metadata;
+
+    @Embedded
+    private List<String> tags;
 
     @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
     private Timestamp expirationTimestamp;
@@ -140,6 +141,14 @@ public class MongoRewardIssuance {
         this.uuid = uuid;
     }
 
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -154,6 +163,7 @@ public class MongoRewardIssuance {
                 getType() == that.getType() &&
                 Objects.equals(getSource(), that.getSource()) &&
                 Objects.equals(getMetadata(), that.getMetadata()) &&
+                Objects.equals(getTags(), that.getTags()) &&
                 Objects.equals(getExpirationTimestamp(), that.getExpirationTimestamp()) &&
                 Objects.equals(getUuid(), that.getUuid());
     }
@@ -161,7 +171,7 @@ public class MongoRewardIssuance {
     @Override
     public int hashCode() {
         return Objects.hash(getObjectId(), getUser(), getState(), getItem(), getItemQuantity(),
-                getContext(), getType(), getSource(), getMetadata(), getExpirationTimestamp(),
+                getContext(), getType(), getSource(), getMetadata(), getTags(), getExpirationTimestamp(),
                 getUuid());
     }
 
@@ -177,6 +187,7 @@ public class MongoRewardIssuance {
                 ", type=" + type +
                 ", source='" + source + '\'' +
                 ", metadata=" + metadata +
+                ", tags=" + tags +
                 ", expirationTimestamp=" + expirationTimestamp +
                 ", uuid='" + uuid + '\'' +
                 '}';

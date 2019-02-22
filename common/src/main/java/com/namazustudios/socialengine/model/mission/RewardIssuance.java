@@ -11,9 +11,7 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @ApiModel(description = "Represents a Reward that has been issued but has not yet been claimed by the user.  The " +
                         "reward is assigned a unique ID to ensure that it may not have been applied more than once.")
@@ -82,6 +80,9 @@ public class RewardIssuance implements Serializable {
             "source is a server-side value, then a predefined structure will always be followed that provides" +
             " additional information as to the source of the issuance (e.g. mission progress/step information).")
     private Map<String, Object> metadata;
+
+    @ApiModelProperty("The tags used to categorize this Reward Issuance.")
+    private Set<String> tags;
 
     @ApiModelProperty("Optionally define when the issuance should expire. This value may be updated to extend " +
             "when the expiration occurs. When set, this value must be greater than the current time on the server." +
@@ -191,6 +192,21 @@ public class RewardIssuance implements Serializable {
         this.uuid = uuid;
     }
 
+    public Set<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
+    }
+
+    public void addTag(final String tag) {
+        if (getTags() == null) {
+            setTags(new HashSet<>());
+        }
+
+        getTags().add(tag);
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -206,6 +222,7 @@ public class RewardIssuance implements Serializable {
                 getType() == that.getType() &&
                 Objects.equals(getSource(), that.getSource()) &&
                 Objects.equals(getMetadata(), that.getMetadata()) &&
+                Objects.equals(getTags(), that.getTags()) &&
                 Objects.equals(getExpirationTimestamp(), that.getExpirationTimestamp()) &&
                 Objects.equals(getUuid(), that.getUuid());
     }
@@ -213,7 +230,7 @@ public class RewardIssuance implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(getId(), getUser(), getState(), getItem(), getItemQuantity(),
-                getContext(), getType(), getSource(), getMetadata(), getExpirationTimestamp(),
+                getContext(), getType(), getSource(), getMetadata(), getTags(), getExpirationTimestamp(),
                 getUuid());
     }
 
@@ -229,6 +246,7 @@ public class RewardIssuance implements Serializable {
                 ", type=" + type +
                 ", source='" + source + '\'' +
                 ", metadata=" + metadata +
+                ", tags=" + tags +
                 ", expirationTimestamp=" + expirationTimestamp +
                 ", uuid='" + uuid + '\'' +
                 '}';
@@ -301,17 +319,21 @@ public class RewardIssuance implements Serializable {
 
     /**
      * Builds the context string for an Apple IAP-sourced reward issuance. The last element in the context string is
-     * a hash of the {@param originalTransactionId} as well as the {@param skuIndex}, i.e. the index of the product as
+     * a hash of the {@param originalTransactionId} as well as the {@param skuOrdinal}, i.e. the index of the product as
      * enumerated in SKPayment.quantity (i.e. the "first" SKU to be redeemed, the "second" to be redeemed, etc.).
      *
      * @param originalTransactionId
-     * @param skuIndex
+     * @param skuOrdinal
      * @return the resultant context string
      */
-    public static String buildAppleIapContextString(String originalTransactionId, Integer skuIndex) {
-        final int originalTransactionIdAndSkuIndexHash = Objects.hash(originalTransactionId, skuIndex);
-        final String originalTransactionIdAndSkuIndexHashString =
-                Integer.toString(originalTransactionIdAndSkuIndexHash);
-        return buildContextString(SERVER_CONTEXT_PREFIX, APPLE_IAP_SOURCE, originalTransactionIdAndSkuIndexHashString);
+    public static String buildAppleIapContextString(String originalTransactionId, Integer skuOrdinal) {
+        final int originalTransactionIdAndSkuOrdinalHash = Objects.hash(originalTransactionId, skuOrdinal);
+        final String originalTransactionIdAndSkuOrdinalHashString =
+                Integer.toString(originalTransactionIdAndSkuOrdinalHash);
+        return buildContextString(
+                SERVER_CONTEXT_PREFIX,
+                APPLE_IAP_SOURCE,
+                originalTransactionIdAndSkuOrdinalHashString
+        );
     }
 }

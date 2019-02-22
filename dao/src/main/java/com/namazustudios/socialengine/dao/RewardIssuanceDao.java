@@ -39,25 +39,35 @@ public interface RewardIssuanceDao {
     RewardIssuance getRewardIssuance(User user, String context);
 
     /**
-     * Gets all reward issuances.
+     * Gets all reward issuances for a given user.
      *
+     * @param user the user
      * @param offset the offset
      * @param count the count
      * @return a {@link Pagination} of {@link RewardIssuance}
      */
     default Pagination<RewardIssuance> getRewardIssuances(final User user, final int offset, final int count) {
-        return getRewardIssuances(user, offset, count, emptySet());
+        return getRewardIssuances(user, offset, count, emptySet(), emptySet());
     }
 
     /**
-     * Gets all reward issuances, specifying the {@link State}
+     * Gets all reward issuances for the given user, optionally specifying the allowable {@link State}s and/or
+     * {@param tags}.
      *
      * @param offset the offset
      * @param count the count
-     * @param states if non-empty, will include the requested states.  Otherwise all states will be included.
+     * @param states if non-empty, will include the requested states in the query. Otherwise states will be ignored in
+     *               the query.
+     * @param tags if non-empty, will include the requested set of tags in the query. Otherwise tags will be ignored in
+     *             the query.
      * @return a {@link Pagination} of {@link RewardIssuance}
      */
-    Pagination<RewardIssuance> getRewardIssuances(User user, int offset, int count, Set<State> states);
+    Pagination<RewardIssuance> getRewardIssuances(
+            User user,
+            int offset,
+            int count,
+            Set<State> states,
+            Set<String> tags);
 
     /**
      * Gets or creates an instance of {@link RewardIssuance}. If created, the issuance will be set to a
@@ -92,7 +102,7 @@ public interface RewardIssuanceDao {
     InventoryItem redeem(final RewardIssuance rewardIssuance);
 
     /**
-     * Deltes a {@link RewardIssuance} wiht the supplied id.
+     * Deltes a {@link RewardIssuance} with the supplied id.
      *
      * @param id the id
      */
