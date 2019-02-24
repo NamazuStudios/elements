@@ -33,7 +33,7 @@ public class MongoProgressMissionInfo {
 
     @Indexed
     @Property
-    private Set<String> tags;
+    private List<String> tags;
 
     @Property
     private Map<String, Object> metadata;
@@ -78,11 +78,11 @@ public class MongoProgressMissionInfo {
         this.finalRepeatStep = finalRepeatStep;
     }
 
-    public Set<String> getTags() {
+    public List<String> getTags() {
         return tags;
     }
 
-    public void setTags(Set<String> tags) {
+    public void setTags(List<String> tags) {
         this.tags = tags;
     }
 

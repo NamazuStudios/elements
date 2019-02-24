@@ -60,14 +60,14 @@ public class MongoInventoryItemDaoTest {
         testItemA.setName("item_a");
         testItemA.setDisplayName("Test Item A.");
         testItemA.setDescription("A simple test item.");
-        testItemA.setTags(of("a").collect(toSet()));
+        testItemA.setTags(of("a").collect(toList()));
         testItemA.addMetadata("key", "a");
 
         testItemB = new Item();
         testItemB.setName("item_b");
         testItemB.setDisplayName("Test Item B.");
         testItemB.setDescription("A simple test item.");
-        testItemB.setTags(of("a").collect(toSet()));
+        testItemB.setTags(of("a").collect(toList()));
         testItemB.addMetadata("key", "b");
 
         testItemA = getItemDao().createItem(testItemA);

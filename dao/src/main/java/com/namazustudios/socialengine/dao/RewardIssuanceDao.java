@@ -7,8 +7,10 @@ import com.namazustudios.socialengine.model.mission.RewardIssuance;
 import com.namazustudios.socialengine.model.mission.RewardIssuance.State;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 
+import java.util.List;
 import java.util.Set;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 
 /**
@@ -47,7 +49,7 @@ public interface RewardIssuanceDao {
      * @return a {@link Pagination} of {@link RewardIssuance}
      */
     default Pagination<RewardIssuance> getRewardIssuances(final User user, final int offset, final int count) {
-        return getRewardIssuances(user, offset, count, emptySet(), emptySet());
+        return getRewardIssuances(user, offset, count, emptyList(), emptyList());
     }
 
     /**
@@ -66,8 +68,8 @@ public interface RewardIssuanceDao {
             User user,
             int offset,
             int count,
-            Set<State> states,
-            Set<String> tags);
+            List<State> states,
+            List<String> tags);
 
     /**
      * Gets or creates an instance of {@link RewardIssuance}. If created, the issuance will be set to a

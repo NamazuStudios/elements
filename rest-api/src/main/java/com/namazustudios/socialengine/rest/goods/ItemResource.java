@@ -18,6 +18,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import java.util.List;
 import java.util.Set;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
@@ -49,7 +50,7 @@ public class ItemResource {
                 "returned.")
     public Pagination<Item> getItems(@QueryParam("offset") @DefaultValue("0") final int offset,
                                      @QueryParam("count") @DefaultValue("20") final int count,
-                                     @QueryParam("tags") final Set<String> tags,
+                                     @QueryParam("tags") final List<String> tags,
                                      @QueryParam("search") final String search) {
         return itemService.getItems(offset, count, tags, search);
     }

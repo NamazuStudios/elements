@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.service.ItemService;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Set;
 
 public class SuperuserItemService implements ItemService {
@@ -18,7 +19,7 @@ public class SuperuserItemService implements ItemService {
     }
 
     @Override
-    public Pagination<Item> getItems(int offset, int count, Set<String> tags, String query) {
+    public Pagination<Item> getItems(int offset, int count, List<String> tags, String query) {
         return itemDao.getItems(offset, count, tags, query);
     }
 

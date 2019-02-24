@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.service.progress;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.mission.Progress;
 
+import java.util.List;
 import java.util.Set;
 
 public interface ProgressService {
@@ -14,7 +15,7 @@ public interface ProgressService {
      * @param tags
      * @return the list of {@link Progress} instances
      */
-    Pagination<Progress> getProgresses(int offset, int count, Set<String> tags);
+    Pagination<Progress> getProgresses(int offset, int count, List<String> tags);
 
     /**
      * Returns a list of {@link Progress} objects.
@@ -25,7 +26,7 @@ public interface ProgressService {
      * @param query the search query
      * @return the list of {@link Progress} instances
      */
-    Pagination<Progress> getProgresses(int offset, int count, Set<String> tags, String query);
+    Pagination<Progress> getProgresses(int offset, int count, List<String> tags, String query);
 
     /**
      * Gets a progress with specified name or ID.

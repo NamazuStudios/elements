@@ -12,10 +12,12 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import java.util.List;
 import java.util.Set;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 
 @Path("mission")
@@ -46,7 +48,7 @@ public class MissionResource {
     public Pagination<Mission> getMissions(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
-            @QueryParam("tags") final Set<String> tags,
+            @QueryParam("tags") final List<String> tags,
             @QueryParam("search") final String search) {
 
         if (offset < 0) {
@@ -60,7 +62,7 @@ public class MissionResource {
         final String query = nullToEmpty(search).trim();
 
         return query.isEmpty() ?
-                getMissionService().getMissions(offset, count, tags == null ? emptySet() : tags) :
+                getMissionService().getMissions(offset, count, tags == null ? emptyList() : tags) :
                 getMissionService().getMissions(offset, count, search);
 
     }
@@ -75,10 +77,10 @@ public class MissionResource {
 
     @PUT
     @Path("{missionNameOrId}")
-    @ApiOperation(value = "Updates a single Mission",
+    @ApiOperation(value = "Updates an entire single Mission",
             notes = "Supplying a mission, this will update the Mission identified by the name or ID in the path with contents " +
                     "from the passed in request body. ")
-    public Mission updateItem(final Mission updatedMission,
+    public Mission updateMission(final Mission updatedMission,
                            @PathParam("missionNameOrId") String missionNameOrId) {
         return missionService.updateMission(updatedMission);
     }

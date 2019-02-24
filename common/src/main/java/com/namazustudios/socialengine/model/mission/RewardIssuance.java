@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.mission;
 
+import com.namazustudios.socialengine.model.Taggable;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
@@ -15,7 +16,7 @@ import java.util.*;
 
 @ApiModel(description = "Represents a Reward that has been issued but has not yet been claimed by the user.  The " +
                         "reward is assigned a unique ID to ensure that it may not have been applied more than once.")
-public class RewardIssuance implements Serializable {
+public class RewardIssuance implements Serializable, Taggable {
     public static final String SERVER_CONTEXT_PREFIX = "SERVER";
     public static final String CONTEXT_SEPARATOR = ".";
     public static final String MISSION_PROGRESS_SOURCE = "MISSION_PROGRESS";
@@ -82,7 +83,7 @@ public class RewardIssuance implements Serializable {
     private Map<String, Object> metadata;
 
     @ApiModelProperty("The tags used to categorize this Reward Issuance.")
-    private Set<String> tags;
+    private List<String> tags;
 
     @ApiModelProperty("Optionally define when the issuance should expire. This value may be updated to extend " +
             "when the expiration occurs. When set, this value must be greater than the current time on the server." +
@@ -192,17 +193,17 @@ public class RewardIssuance implements Serializable {
         this.uuid = uuid;
     }
 
-    public Set<String> getTags() {
+    public List<String> getTags() {
         return tags;
     }
 
-    public void setTags(Set<String> tags) {
+    public void setTags(List<String> tags) {
         this.tags = tags;
     }
 
     public void addTag(final String tag) {
         if (getTags() == null) {
-            setTags(new HashSet<>());
+            setTags(new ArrayList<>());
         }
 
         getTags().add(tag);
