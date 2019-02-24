@@ -1,0 +1,43 @@
+<h1 class="card-header">
+  Edit Mission Steps <button mat-raised-button color="primary" type="button" (click)="addStep()">Add Step</button>
+</h1>
+
+<form [formGroup]="stepForm">
+  <mat-card class="step-wrapper">
+    <div class="prelim-wrapper">
+      <mat-accordion [multi]="true" class="prelim-steps" cdkDropList (cdkDropListDropped)="drop($event)">
+        <mat-expansion-panel cdkDrag *ngFor="let step of mission.steps; let i = index">
+          <mat-expansion-panel-header>
+            <mat-icon cdkDragHandle>reorder</mat-icon>
+            <span class="step-num"><b>Step {{i + 1}}: </b></span>
+            <span class="step-name">{{step.displayName}}</span>
+            <span class="step-count"><b>Count:</b> {{step.count}}</span>
+          </mat-expansion-panel-header>
+        </mat-expansion-panel>
+        <mat-expansion-panel class="new-step no-drag">
+          <mat-expansion-panel-header>
+            <span class="step-num"><b>New Step</b></span>
+            <span class="step-name"></span>
+            <span class="step-count"><b>Count:</b> 0</span>
+          </mat-expansion-panel-header>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+    <mat-accordion>
+      <mat-expansion-panel class="no-drag">
+        <mat-expansion-panel-header>
+          <span class="step-num"><b>Repeat Step:</b></span>
+
+          <span class="step-name"  *ngIf="mission.finalRepeatStep">{{mission.finalRepeatStep.displayName}}</span>
+          <span class="step-name" *ngIf="!mission.finalRepeatStep">N/A</span>
+
+          <span class="step-count">
+          <b>Count:</b>
+          <span *ngIf="mission.finalRepeatStep">{{mission.finalRepeatStep.count}}</span>
+          <span *ngIf="!mission.finalRepeatStep">N/A</span>
+        </span>
+        </mat-expansion-panel-header>
+      </mat-expansion-panel>
+    </mat-accordion>
+  </mat-card>
+</form>

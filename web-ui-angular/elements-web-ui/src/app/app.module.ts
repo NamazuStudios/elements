@@ -34,11 +34,13 @@ import { GameOnPrizeDialogComponent } from './game-on-prize-dialog/game-on-prize
 import { GameOnPrizesListComponent } from './game-on-prizes-list/game-on-prizes-list.component';
 import { ItemsListComponent } from './items-list/items-list.component';
 import { ItemDialogComponent } from './item-dialog/item-dialog.component';
-import { SimpleJsonEditorComponent } from './simple-json-editor/simple-json-editor.component';
+import { SimpleJsonEditorComponent } from './json-editor-card/simple-json-editor/simple-json-editor.component';
 import {NgJsonEditorModule} from 'ang-jsoneditor';
 import { JsonEditorCardComponent } from './json-editor-card/json-editor-card.component';
 import { MissionsListComponent } from './missions-list/missions-list.component';
 import { MissionDialogComponent } from './mission-dialog/mission-dialog.component';
+import { MissionStepsCardComponent } from './mission-dialog/mission-steps-card/mission-steps-card.component';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -81,6 +83,7 @@ export function initialize(configService: ConfigService) {
     JsonEditorCardComponent,
     MissionsListComponent,
     MissionDialogComponent,
+    MissionStepsCardComponent,
   ],
   imports: [
     BrowserModule,
@@ -92,7 +95,8 @@ export function initialize(configService: ConfigService) {
     ReactiveFormsModule,
     MaterialModule,
     routing,
-    NgJsonEditorModule
+    NgJsonEditorModule,
+    DragDropModule
   ],
   providers: [
     ConfigService,
