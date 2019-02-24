@@ -2,7 +2,7 @@ import {AfterContentInit, Component, Input, OnInit} from '@angular/core';
 import {Mission} from '../../api/models/mission';
 import {MissionStepViewModel} from '../../models/mission-step-view-model';
 import {CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
-import {FormBuilder} from '@angular/forms';
+import {FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
 
 @Component({
   selector: 'app-mission-steps-card',
@@ -11,10 +11,11 @@ import {FormBuilder} from '@angular/forms';
 })
 export class MissionStepsCardComponent implements OnInit {
   @Input() mission: Mission;
+  // private stepForm: FormGroup;
 
   constructor(private formBuilder: FormBuilder) { }
 
-  stepForm = this.formBuilder.group({})
+  public stepForm = this.formBuilder.group({});
 
   drop(event: CdkDragDrop<string[]>) {
     console.log(this.mission.steps);
@@ -22,15 +23,21 @@ export class MissionStepsCardComponent implements OnInit {
   }
 
   ngOnInit() {
-    if(!this.mission.steps) {
-      this.mission.steps = [new MissionStepViewModel()];
+    if (!this.mission.steps) {
+      this.mission.steps = [];
     }
-    /*for(let i = 0; i < 5; i++) {
+    for (let i = 0; i < 5; i++) {
       this.mission.steps.push(new MissionStepViewModel());
       const newStep = this.mission.steps[i];
       newStep.count = 1;
-      newStep.description = "Description of step " + i;
-      newStep.displayName = "Step " + i;
-    }*/
+      newStep.description = 'Description of step ' + i;
+      newStep.displayName = 'Step ' + i;
+    }
+
+    for (let i = 0; i < this.mission.steps.length; i++) {
+      this.stepForm.addControl('displayName' + i, new FormControl('', Validators.required));
+      this.stepForm.addControl('description' + i, new FormControl('', Validators.required));
+      this.stepForm.addControl('count' + i, new FormControl('', Validators.required/*, Validators.pattern('^[0-9]*$')*/));
+    }
   }
 }

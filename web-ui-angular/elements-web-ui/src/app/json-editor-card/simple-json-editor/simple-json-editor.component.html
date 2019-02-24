@@ -8,6 +8,7 @@
     </mat-form-field>
     <button type="button" mat-raised-button color="primary" (click)="removeDataAtKey(datum.key)">-</button>
   </div>
+
   <div class="metadata-row">
     <mat-form-field class="key-field">
       <input matInput #newKey placeholder="Metadata key" name="newkey" formControlName="newKey" (keyup.enter)="addMetadata(newKey.value, newValue.value)">

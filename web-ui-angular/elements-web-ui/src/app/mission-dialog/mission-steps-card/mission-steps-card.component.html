@@ -13,7 +13,22 @@
             <span class="step-name">{{step.displayName}}</span>
             <span class="step-count"><b>Count:</b> {{step.count}}</span>
           </mat-expansion-panel-header>
+
+          <div class="form-row">
+            <mat-form-field>
+              <input matInput placeholder="Display name" name="displayName" formControlName="displayName{{i}}" value="{{step.displayName}}">
+            </mat-form-field>
+            <mat-form-field>
+              <input matInput placeholder="Count" name="count" formControlName="count{{i}}" value="{{step.count}}">
+            </mat-form-field>
+          </div>
+          <div class="form-row">
+            <mat-form-field>
+              <input matInput placeholder="Description" name="description" formControlName="description{{i}}" value="{{step.description}}">
+            </mat-form-field>
+          </div>
         </mat-expansion-panel>
+
         <mat-expansion-panel class="new-step no-drag">
           <mat-expansion-panel-header>
             <span class="step-num"><b>New Step</b></span>

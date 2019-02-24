@@ -6,6 +6,7 @@ import {JsonEditorOptions, JsonEditorComponent} from 'ang-jsoneditor';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
 import {Mission} from '../api/models/mission';
 import {MissionViewModel} from '../models/mission-view-model';
+import {MissionStepsCardComponent} from './mission-steps-card/mission-steps-card.component';
 
 @Component({
   selector: 'app-item-dialog',
@@ -19,6 +20,7 @@ export class MissionDialogComponent implements OnInit {
               private formBuilder: FormBuilder) { }
 
   @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
+  @ViewChild(MissionStepsCardComponent) stepsCard: MissionStepsCardComponent;
 
   selectable = true;
   removable = true;
@@ -55,7 +57,7 @@ export class MissionDialogComponent implements OnInit {
   }
 
   /*
-  * Can't just call dialogRef.close(itemForm.value) since it doesn't accurately
+  * Can't just call dialogRef.close(missionForm.value) since it doesn't accurately
   * capture changes to item tags so we need to explicitly attach the entire tag
   * array to the itemForm, overwriting the initial tags value
   */
