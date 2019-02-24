@@ -17,3 +17,14 @@
 .mission-form-row mat-form-field:last-of-type {
   margin-right: 0;
 }
+
+.card-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+
+  font-size: 18px;
+  font-weight: 500;
+
+  align-items: center;
+}
