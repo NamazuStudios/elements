@@ -5,6 +5,7 @@ import {ENTER, COMMA} from '@angular/cdk/keycodes';
 import {JsonEditorOptions, JsonEditorComponent} from 'ang-jsoneditor';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
 import {Mission} from '../api/models/mission';
+import {MissionViewModel} from '../models/mission-view-model';
 
 @Component({
   selector: 'app-item-dialog',

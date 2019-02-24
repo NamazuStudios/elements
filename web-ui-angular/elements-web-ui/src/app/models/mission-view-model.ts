@@ -1,7 +1,8 @@
 import {Mission} from '../api/models/mission';
 import {MissionStep} from '../api/models/mission-step';
+import {MissionStepViewModel} from './mission-step-view-model';
 
-export class MissionViewModel implements Mission{
+export class MissionViewModel implements Mission {
   name: string;
   description: string;
   id: string;
@@ -10,4 +11,8 @@ export class MissionViewModel implements Mission{
   metadata: {[key: string]: any};
   steps: Array<MissionStep>;
   finalRepeatStep: MissionStep;
+
+  constructor() {
+    this.steps = [];
+  }
 }
