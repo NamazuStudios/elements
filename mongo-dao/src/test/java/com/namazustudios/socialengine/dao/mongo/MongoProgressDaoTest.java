@@ -278,8 +278,6 @@ public class MongoProgressDaoTest  {
 
         int expectedRewards = 0;
 
-        final long totalRewards = steps.stream().map(s -> s.getRewards()).count();
-
         do {
 
             final Step step = steps.remove();

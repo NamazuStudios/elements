@@ -308,9 +308,11 @@ public class RewardIssuance implements Serializable, Taggable {
 
     /**
      * Builds the context string for a Mission Progression-sourced reward issuance. The last elements in the context
-     * string are, respectively, the {@param progressId} and the {@param sequence} that caused the issuance.
+     * string are, respectively, the {@param progressId}, the {@param rewardIndex} of the current reward in the
+     * {@link Step}'s list of {@link Reward}s, and the {@param sequence} that caused the issuance.
      *
      * @param progressId
+     * @param rewardIndex
      * @param sequence
      * @return the resultant context string
      */

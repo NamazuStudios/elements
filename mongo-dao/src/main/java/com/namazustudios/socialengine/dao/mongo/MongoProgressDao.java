@@ -295,7 +295,6 @@ public class MongoProgressDao implements ProgressDao {
         }
 
         final UpdateOperations<MongoProgress> updates = getDatastore().createUpdateOperations(MongoProgress.class);
-        //updates.set("version", randomUUID());
 
         if ((progress.getRemaining() - actionsPerformed) > 0) {
             updates.dec("remaining", actionsPerformed);
