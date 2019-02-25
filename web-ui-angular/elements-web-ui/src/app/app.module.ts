@@ -41,6 +41,7 @@ import { MissionsListComponent } from './missions-list/missions-list.component';
 import { MissionDialogComponent } from './mission-dialog/mission-dialog.component';
 import { MissionStepsCardComponent } from './mission-dialog/mission-steps-card/mission-steps-card.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { MissionRewardsEditorComponent } from './mission-dialog/mission-rewards-editor/mission-rewards-editor.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -84,6 +85,7 @@ export function initialize(configService: ConfigService) {
     MissionsListComponent,
     MissionDialogComponent,
     MissionStepsCardComponent,
+    MissionRewardsEditorComponent,
   ],
   imports: [
     BrowserModule,

@@ -1,0 +1,20 @@
+<form [formGroup]="rewardForm">
+  <div class="reward-row" *ngFor="let reward of rewards; let rewardIndex = index">
+    <mat-form-field>
+      <input matInput placeholder="Reward Item" name="reward{{rewardIndex}}Item" formControlName="reward{{rewardIndex}}Item" value="{{reward.item.name}}">
+    </mat-form-field>
+    <mat-form-field>
+      <input matInput placeholder="Reward Quantity" name="reward{{rewardIndex}}Ct" formControlName="reward{{rewardIndex}}Ct" value="{{reward.quantity}}">
+    </mat-form-field>
+    <button type="button" mat-raised-button color="primary">-</button>
+  </div>
+  <div class="reward-row">
+    <mat-form-field>
+      <input matInput #newRewardItem placeholder="Reward Item" name="newRewardItem" formControlName="newRewardItem">
+    </mat-form-field>
+    <mat-form-field class="no-margin">
+      <input matInput #newRewardCt placeholder="Reward Quantity" name="newRewardCt" formControlName="newRewardCt">
+    </mat-form-field>
+    <button mat-raised-button color="primary" class="add-reward-button" type="button">+</button>
+  </div>
+</form>

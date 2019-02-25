@@ -1,0 +1,28 @@
+import {Component, Input, OnInit} from '@angular/core';
+import {Reward} from '../../api/models/reward';
+import {FormBuilder} from '@angular/forms';
+
+@Component({
+  selector: 'app-mission-rewards-editor',
+  templateUrl: './mission-rewards-editor.component.html',
+  styleUrls: ['./mission-rewards-editor.component.css']
+})
+export class MissionRewardsEditorComponent implements OnInit {
+  @Input() rewards: Array<Reward>;
+
+  constructor(private formBuilder: FormBuilder) { }
+
+  public rewardForm = this.formBuilder.group({
+    newRewardItem: [],
+    newRewardCt: []
+  });
+
+  ngOnInit() {
+    this.rewards = this.rewards || [];
+    for(let i = 0; i < this.rewards.length; i++) {
+      this.rewardForm.addControl('reward' + i + 'Item');
+      this.rewardForm.addControl('reward' + i + 'Ct');
+    }
+  }
+
+}
