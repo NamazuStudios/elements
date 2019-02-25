@@ -284,6 +284,7 @@ public class MongoProgressDaoTest  {
 
             while (progress.getRemaining() > 1) {
                 progress = getProgressDao().advanceProgress(progress, 1);
+                assertEquals(progress.getRewardIssuances().size(), expectedRewards);
             }
 
             progress = getProgressDao().advanceProgress(progress, 1);
