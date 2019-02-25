@@ -14,6 +14,7 @@ export class MissionStepsCardComponent implements OnInit {
   @Input() mission: Mission;
   // private stepForm: FormGroup;
   private newStep = new MissionStepViewModel();
+  private finalStep = new MissionStepViewModel();
 
   constructor(private formBuilder: FormBuilder) { }
 
@@ -22,7 +23,12 @@ export class MissionStepsCardComponent implements OnInit {
     newCount: [],
     newDescription: [],
     newStepNewRewardItem: [],
-    newStepNewRewardCt: []
+    newStepNewRewardCt: [],
+    finalStepNewRewardCt: [],
+    finalStepNewRewardItem: [],
+    finalDisplayName: [],
+    finalCount: [],
+    finalDescription:[]
   });
 
   drop(event: CdkDragDrop<string[]>) {
