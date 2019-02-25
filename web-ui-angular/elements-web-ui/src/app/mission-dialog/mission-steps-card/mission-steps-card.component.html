@@ -29,7 +29,7 @@
 
           <h1>Edit Step Rewards</h1>
 
-          <div class="metadata-row" *ngFor="let reward of step.rewards; let rewardIndex = index">
+          <div class="reward-row" *ngFor="let reward of step.rewards; let rewardIndex = index">
             <mat-form-field>
               <input matInput placeholder="Reward Item" name="step{{i}}Reward{{rewardIndex}}Item" formControlName="step{{i}}Reward{{rewardIndex}}Item" value="{{reward.item.name}}">
             </mat-form-field>
@@ -38,12 +38,12 @@
             </mat-form-field>
             <button type="button" mat-raised-button color="primary">-</button>
           </div>
-          <div class="metadata-row">
+          <div class="reward-row-row">
             <mat-form-field>
-              <input matInput #newRewardItem placeholder="Reward Item" name="newRewardItem" formControlName="newRewardItem">
+              <input matInput #newRewardItem placeholder="Reward Item" name="newRewardItem" formControlName="step{{i}}NewRewardItem">
             </mat-form-field>
             <mat-form-field class="no-margin">
-              <input matInput #newRewardCt placeholder="Reward Quantity" name="newRewardCt" formControlName="newRewardCt">
+              <input matInput #newRewardCt placeholder="Reward Quantity" name="newRewardCt" formControlName="step{{i}}NewRewardCt">
             </mat-form-field>
             <button mat-raised-button color="primary" class="add-reward-button" type="button">+</button>
           </div>
@@ -51,12 +51,54 @@
           <app-json-editor-card [topic]="Step" [editTarget]="step.metadata || {}"></app-json-editor-card>
         </mat-expansion-panel>
 
-        <mat-expansion-panel class="new-step no-drag">
+        <mat-expansion-panel class="new-step no-drag step">
           <mat-expansion-panel-header>
             <span class="step-num"><b>New Step</b></span>
             <span class="step-name"></span>
             <span class="step-count"><b>Count:</b> 0</span>
           </mat-expansion-panel-header>
+
+          <div class="form-row">
+            <mat-form-field>
+              <input matInput placeholder="Display name" name="newDisplayName" formControlName="newDisplayName">
+            </mat-form-field>
+            <mat-form-field>
+              <input matInput placeholder="Count" name="newCount" formControlName="newCount">
+            </mat-form-field>
+          </div>
+          <div class="form-row">
+            <mat-form-field>
+              <input matInput placeholder="Description" name="newDescription" formControlName="newDescription">
+            </mat-form-field>
+          </div>
+
+          <h1>Edit Step Rewards</h1>
+
+          <div class="reward-row" *ngFor="let reward of newStep.rewards; let rewardIndex = index">
+            <mat-form-field>
+              <input matInput placeholder="Reward Item" name="newStepReward{{rewardIndex}}Item" formControlName="newStepReward{{rewardIndex}}Item" value="{{reward.item.name}}">
+            </mat-form-field>
+            <mat-form-field>
+              <input matInput placeholder="Reward Quantity" name="newStepReward{{rewardIndex}}Ct" formControlName="newStepReward{{rewardIndex}}Ct" value="{{reward.quantity}}">
+            </mat-form-field>
+            <button type="button" mat-raised-button color="primary">-</button>
+          </div>
+          <div class="reward-row">
+            <mat-form-field>
+              <input matInput #newRewardItem placeholder="Reward Item" name="newRewardItem" formControlName="newStepNewRewardItem">
+            </mat-form-field>
+            <mat-form-field class="no-margin">
+              <input matInput #newRewardCt placeholder="Reward Quantity" name="newRewardCt" formControlName="newStepNewRewardCt">
+            </mat-form-field>
+            <button mat-raised-button color="primary" class="add-reward-button" type="button">+</button>
+          </div>
+
+          <app-json-editor-card [topic]="Step" [editTarget]="newStep.metadata || {}"></app-json-editor-card>
+
+          <mat-action-row>
+            <button mat-button>Cancel</button>
+            <button mat-raised-button color="primary">Add</button>
+          </mat-action-row>
         </mat-expansion-panel>
       </mat-accordion>
     </div>

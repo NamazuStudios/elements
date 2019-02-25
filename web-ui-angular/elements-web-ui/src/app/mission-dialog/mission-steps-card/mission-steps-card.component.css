@@ -114,12 +114,12 @@ mat-form-field:last-of-type {
   font-size: 16px;
 }
 
-.metadata-row {
+.reward-row {
   display: flex;
   justify-content: left;
 }
 
-.metadata-row button {
+.reward-row button {
   box-sizing: border-box;
   min-width: 0;
   width: 42px;
