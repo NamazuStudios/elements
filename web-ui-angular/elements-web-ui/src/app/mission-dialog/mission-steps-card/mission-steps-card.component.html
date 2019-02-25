@@ -3,10 +3,9 @@
 </h1>
 
 <form [formGroup]="stepForm">
-  <mat-card class="step-wrapper">
     <div class="prelim-wrapper">
       <mat-accordion [multi]="true" class="prelim-steps" cdkDropList (cdkDropListDropped)="drop($event)">
-        <mat-expansion-panel cdkDrag *ngFor="let step of mission.steps; let i = index">
+        <mat-expansion-panel class="step" cdkDrag *ngFor="let step of mission.steps; let i = index">
           <mat-expansion-panel-header>
             <mat-icon cdkDragHandle>reorder</mat-icon>
             <span class="step-num"><b>Step {{i + 1}}: </b></span>
@@ -27,6 +26,29 @@
               <input matInput placeholder="Description" name="description" formControlName="description{{i}}" value="{{step.description}}">
             </mat-form-field>
           </div>
+
+          <h1>Edit Step Rewards</h1>
+
+          <div class="metadata-row" *ngFor="let reward of step.rewards; let rewardIndex = index">
+            <mat-form-field>
+              <input matInput placeholder="Reward Item" name="step{{i}}Reward{{rewardIndex}}Item" formControlName="step{{i}}Reward{{rewardIndex}}Item" value="{{reward.item.name}}">
+            </mat-form-field>
+            <mat-form-field>
+              <input matInput placeholder="Reward Quantity" name="step{{i}}Reward{{rewardIndex}}Ct" formControlName="step{{i}}Reward{{rewardIndex}}Ct" value="{{reward.quantity}}">
+            </mat-form-field>
+            <button type="button" mat-raised-button color="primary">-</button>
+          </div>
+          <div class="metadata-row">
+            <mat-form-field>
+              <input matInput #newRewardItem placeholder="Reward Item" name="newRewardItem" formControlName="newRewardItem">
+            </mat-form-field>
+            <mat-form-field class="no-margin">
+              <input matInput #newRewardCt placeholder="Reward Quantity" name="newRewardCt" formControlName="newRewardCt">
+            </mat-form-field>
+            <button mat-raised-button color="primary" class="add-reward-button" type="button">+</button>
+          </div>
+
+          <app-json-editor-card [topic]="Step" [editTarget]="step.metadata || {}"></app-json-editor-card>
         </mat-expansion-panel>
 
         <mat-expansion-panel class="new-step no-drag">
@@ -54,5 +76,4 @@
         </mat-expansion-panel-header>
       </mat-expansion-panel>
     </mat-accordion>
-  </mat-card>
 </form>
