@@ -295,7 +295,7 @@ public class MongoProgressDao implements ProgressDao {
         }
 
         final UpdateOperations<MongoProgress> updates = getDatastore().createUpdateOperations(MongoProgress.class);
-        updates.set("version", randomUUID());
+        //updates.set("version", randomUUID());
 
         if ((progress.getRemaining() - actionsPerformed) > 0) {
             updates.dec("remaining", actionsPerformed);
@@ -327,22 +327,7 @@ public class MongoProgressDao implements ProgressDao {
         int remaining = mongoProgress.getRemaining();
         MongoStep step = mongoProgress.getCurrentStep();
 
-        int actionsToCount = actionsPerformed;
-        int remainingToCount = mongoProgress.getRemaining();
-        MongoStep stepToCount = mongoProgress.getCurrentStep();
-
         final MongoUser mongoUser = mongoProgress.getProfile().getUser();
-
-        int sequence = mongoProgress.getSequence();
-
-        while (stepToCount != null && actionsToCount >= remainingToCount) {
-            actionsToCount -= remainingToCount;
-            stepToCount = mongoProgress.getStepForSequence(mongoProgress.getSequence() + sequence);
-            ++sequence;
-            remainingToCount = stepToCount == null ? 0 : stepToCount.getCount();
-        }
-
-        final int _sequence = sequence;
 
         while (step != null && actionsToApply >= remaining) {
 
@@ -353,21 +338,25 @@ public class MongoProgressDao implements ProgressDao {
             // Assigns the rewards from the step
 
             final MongoStep _step = step;
+            final int _completedSteps = completedSteps;
             final List<MongoRewardIssuance> rewardIssuances = step.getRewards()
                 .stream()
                 .filter(r -> r != null && r.getItem() != null)
                 .map(r -> {
-                    final String context = buildMissionProgressContextString(
-                            mongoProgress.getObjectId().toHexString(),
-                            Integer.toString(_sequence));
-
                     final Progress progress = getDozerMapper().map(mongoProgress, Progress.class);
                     final Step __step = getDozerMapper().map(_step, Step.class);
                     final Reward reward = getDozerMapper().map(r, Reward.class);
                     final User user = getDozerMapper().map(mongoUser, User.class);
                     final Map<String, Object> metadata = generateMissionProgressMetadata(progress, __step);
 
-                    final List<String> tags = buildRewardIssuanceTags(progress, _sequence);
+                    final int stepSequence = progress.getSequence() + _completedSteps;
+
+                    final String context = buildMissionProgressContextString(
+                            mongoProgress.getObjectId().toHexString(),
+                            Integer.toString(__step.getRewards().indexOf(reward)),
+                            Integer.toString(stepSequence));
+
+                    final List<String> tags = buildRewardIssuanceTags(progress, stepSequence);
 
                     final RewardIssuance issuance = new RewardIssuance();
                     issuance.setItem(reward.getItem());
@@ -387,7 +376,7 @@ public class MongoProgressDao implements ProgressDao {
                     return mongoRewardIssuance;
                 }).collect(toList());
 
-            updates.push("rewardIssuances", rewardIssuances);
+            updates.addToSet("rewardIssuances", rewardIssuances);
             actionsToApply -= remaining;
 
             // Increments the completed steps and applies to the remaining actions to apply.  We keep

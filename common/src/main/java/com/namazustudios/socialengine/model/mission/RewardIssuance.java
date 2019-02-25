@@ -314,8 +314,8 @@ public class RewardIssuance implements Serializable, Taggable {
      * @param sequence
      * @return the resultant context string
      */
-    public static String buildMissionProgressContextString(String progressId, String sequence) {
-        return buildContextString(SERVER_CONTEXT_PREFIX, MISSION_PROGRESS_SOURCE, progressId, sequence);
+    public static String buildMissionProgressContextString(String progressId, String rewardIndex, String sequence) {
+        return buildContextString(SERVER_CONTEXT_PREFIX, MISSION_PROGRESS_SOURCE, progressId, rewardIndex, sequence);
     }
 
     /**
