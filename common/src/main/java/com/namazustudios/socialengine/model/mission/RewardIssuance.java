@@ -308,16 +308,35 @@ public class RewardIssuance implements Serializable, Taggable {
 
     /**
      * Builds the context string for a Mission Progression-sourced reward issuance. The last elements in the context
-     * string are, respectively, the {@param progressId}, the {@param rewardIndex} of the current reward in the
-     * {@link Step}'s list of {@link Reward}s, and the {@param sequence} that caused the issuance.
+     * string are, respectively, the {@param progressId}, the {@param sequence} that caused the issuance, and the
+     * {@param rewardIndex} of the current reward in the {@link Step}'s list of {@link Reward}s.
      *
      * @param progressId
-     * @param rewardIndex
      * @param sequence
+     * @param rewardIndex
      * @return the resultant context string
      */
-    public static String buildMissionProgressContextString(String progressId, String rewardIndex, String sequence) {
-        return buildContextString(SERVER_CONTEXT_PREFIX, MISSION_PROGRESS_SOURCE, progressId, rewardIndex, sequence);
+    public static String buildMissionProgressContextString(String progressId, int sequence, int rewardIndex) {
+        return buildContextString(
+                SERVER_CONTEXT_PREFIX,
+                MISSION_PROGRESS_SOURCE,
+                progressId,
+                Integer.toString(sequence),
+                Integer.toString(rewardIndex));
+    }
+
+    /**
+     * Builds the context string for a Mission Progression-sourced reward issuance. The last elements in the context
+     * string are, respectively, the {@param progressId}, the {@param sequence} that caused the issuance, and the
+     * {@param rewardIndex} of the current reward in the {@link Step}'s list of {@link Reward}s.
+     *
+     * @param progressId
+     * @param sequence
+     * @param rewardIndex
+     * @return the resultant context string
+     */
+    public static String buildMissionProgressContextString(String progressId, String sequence, String rewardIndex) {
+        return buildContextString(SERVER_CONTEXT_PREFIX, MISSION_PROGRESS_SOURCE, progressId, sequence, rewardIndex);
     }
 
     /**

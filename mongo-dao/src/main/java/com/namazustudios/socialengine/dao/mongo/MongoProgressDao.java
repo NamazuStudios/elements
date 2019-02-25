@@ -352,8 +352,8 @@ public class MongoProgressDao implements ProgressDao {
 
                     final String context = buildMissionProgressContextString(
                             mongoProgress.getObjectId().toHexString(),
-                            Integer.toString(__step.getRewards().indexOf(reward)),
-                            Integer.toString(stepSequence));
+                            stepSequence,
+                            __step.getRewards().indexOf(reward));
 
                     final List<String> tags = buildRewardIssuanceTags(progress, stepSequence);
 
