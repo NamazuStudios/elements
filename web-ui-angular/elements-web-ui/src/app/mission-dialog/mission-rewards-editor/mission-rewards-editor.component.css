@@ -32,3 +32,7 @@ mat-form-field:last-of-type {
   visibility: hidden;
   display: none;
 }
+
+h1 {
+  font-size: 16px;
+}

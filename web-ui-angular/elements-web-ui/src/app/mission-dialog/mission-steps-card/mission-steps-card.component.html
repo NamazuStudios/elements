@@ -27,7 +27,7 @@
             </mat-form-field>
           </div>
 
-          <h1>Edit Step Rewards</h1>
+
 
           <div class="reward-row" *ngFor="let reward of step.rewards; let rewardIndex = index">
             <mat-form-field>
@@ -72,26 +72,7 @@
             </mat-form-field>
           </div>
 
-          <h1>Edit Step Rewards</h1>
-
-          <div class="reward-row" *ngFor="let reward of newStep.rewards; let rewardIndex = index">
-            <mat-form-field>
-              <input matInput placeholder="Reward Item" name="newStepReward{{rewardIndex}}Item" formControlName="newStepReward{{rewardIndex}}Item" value="{{reward.item.name}}">
-            </mat-form-field>
-            <mat-form-field>
-              <input matInput placeholder="Reward Quantity" name="newStepReward{{rewardIndex}}Ct" formControlName="newStepReward{{rewardIndex}}Ct" value="{{reward.quantity}}">
-            </mat-form-field>
-            <button type="button" mat-raised-button color="primary">-</button>
-          </div>
-          <div class="reward-row">
-            <mat-form-field>
-              <input matInput #newRewardItem placeholder="Reward Item" name="newRewardItem" formControlName="newStepNewRewardItem">
-            </mat-form-field>
-            <mat-form-field class="no-margin">
-              <input matInput #newRewardCt placeholder="Reward Quantity" name="newRewardCt" formControlName="newStepNewRewardCt">
-            </mat-form-field>
-            <button mat-raised-button color="primary" class="add-reward-button" type="button">+</button>
-          </div>
+          <app-mission-rewards-editor [rewards]="newStep.rewards"></app-mission-rewards-editor>
 
           <app-json-editor-card [topic]="Step" [editTarget]="newStep.metadata || {}"></app-json-editor-card>
 
@@ -130,8 +111,6 @@
             <input matInput placeholder="Description" name="finalDescription" formControlName="finalDescription" value="{{finalStep.description}}">
           </mat-form-field>
         </div>
-
-        <h1>Edit Step Rewards</h1>
 
         <app-mission-rewards-editor [rewards]="finalStep.rewards"></app-mission-rewards-editor>
 
