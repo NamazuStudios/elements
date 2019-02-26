@@ -111,7 +111,7 @@ public class ProgressMissionInfo implements Serializable, Taggable {
      * @param step
      * @return index if found, or -1 if not found.
      */
-    public int getStepIndex(Step step) {
+    public int getStepSequence(Step step) {
         for (int i=0; i<getSteps().size(); i++) {
             final Step missionStep = getSteps().get(i);
             if (missionStep.equals(step)) {
