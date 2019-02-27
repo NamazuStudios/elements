@@ -1,0 +1,3003 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+  <meta charset='utf-8'>
+  <title>TestNG reports</title>
+
+    <link type="text/css" href="testng-reports.css" rel="stylesheet" />
+    <script type="text/javascript" src="jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="testng-reports.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type='text/javascript'>
+      google.load('visualization', '1', {packages:['table']});
+      google.setOnLoadCallback(drawTable);
+      var suiteTableInitFunctions = new Array();
+      var suiteTableData = new Array();
+    </script>
+    <!--
+      <script type="text/javascript" src="jquery-ui/js/jquery-ui-1.8.16.custom.min.js"></script>
+     -->
+  </head>
+
+  <body>
+    <div class="top-banner-root">
+      <span class="top-banner-title-font">Test results</span>
+      <br/>
+      <span class="top-banner-font-1">1 suite</span>
+    </div> <!-- top-banner-root -->
+    <div class="navigator-root">
+      <div class="navigator-suite-header">
+        <span>All suites</span>
+        <a href="#" class="collapse-all-link" title="Collapse/expand all the suites">
+          <img class="collapse-all-icon" src="collapseall.gif">
+          </img> <!-- collapse-all-icon -->
+        </a> <!-- collapse-all-link -->
+      </div> <!-- navigator-suite-header -->
+      <div class="suite">
+        <div class="rounded-window">
+          <div class="suite-header light-rounded-window-top">
+            <a href="#" class="navigator-link" panel-name="suite-Command_line_suite">
+              <span class="suite-name border-passed">Command line suite</span>
+            </a> <!-- navigator-link -->
+          </div> <!-- suite-header light-rounded-window-top -->
+          <div class="navigator-suite-content">
+            <div class="suite-section-title">
+              <span>Info</span>
+            </div> <!-- suite-section-title -->
+            <div class="suite-section-content">
+              <ul>
+                <li>
+                  <a href="#" class="navigator-link " panel-name="test-xml-Command_line_suite">
+                    <span>[unset file name]</span>
+                  </a> <!-- navigator-link  -->
+                </li>
+                <li>
+                  <a href="#" class="navigator-link " panel-name="testlist-Command_line_suite">
+                    <span class="test-stats">1 test</span>
+                  </a> <!-- navigator-link  -->
+                </li>
+                <li>
+                  <a href="#" class="navigator-link " panel-name="group-Command_line_suite">
+                    <span>0 groups</span>
+                  </a> <!-- navigator-link  -->
+                </li>
+                <li>
+                  <a href="#" class="navigator-link " panel-name="times-Command_line_suite">
+                    <span>Times</span>
+                  </a> <!-- navigator-link  -->
+                </li>
+                <li>
+                  <a href="#" class="navigator-link " panel-name="reporter-Command_line_suite">
+                    <span>Reporter output</span>
+                  </a> <!-- navigator-link  -->
+                </li>
+                <li>
+                  <a href="#" class="navigator-link " panel-name="ignored-methods-Command_line_suite">
+                    <span>Ignored methods</span>
+                  </a> <!-- navigator-link  -->
+                </li>
+                <li>
+                  <a href="#" class="navigator-link " panel-name="chronological-Command_line_suite">
+                    <span>Chronological view</span>
+                  </a> <!-- navigator-link  -->
+                </li>
+              </ul>
+            </div> <!-- suite-section-content -->
+            <div class="result-section">
+              <div class="suite-section-title">
+                <span>Results</span>
+              </div> <!-- suite-section-title -->
+              <div class="suite-section-content">
+                <ul>
+                  <li>
+                    <span class="method-stats">111 methods,   111 passed</span>
+                  </li>
+                  <li>
+                    <span class="method-list-title passed">Passed methods</span>
+                    <span class="show-or-hide-methods passed">
+                      <a href="#" panel-name="suite-Command_line_suite" class="hide-methods passed suite-Command_line_suite"> (hide)</a> <!-- hide-methods passed suite-Command_line_suite -->
+                      <a href="#" panel-name="suite-Command_line_suite" class="show-methods passed suite-Command_line_suite"> (show)</a> <!-- show-methods passed suite-Command_line_suite -->
+                    </span>
+                    <div class="method-list-content passed suite-Command_line_suite">
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(null, null)">performAuthTest(null, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(html, release)">performAuthTest(html, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(null, release)">performAuthTest(null, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(playstation, null)">performAuthTest(playstation, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(nintendo, null)">performAuthTest(nintendo, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(android, release)">performAuthTest(android, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(ios, development)">performAuthTest(ios, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(pc, development)">performAuthTest(pc, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(pc, release)">performAuthTest(pc, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(pc, null)">performAuthTest(pc, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(xbox, development)">performAuthTest(xbox, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(ios, release)">performAuthTest(ios, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(null, development)">performAuthTest(null, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(xbox, release)">performAuthTest(xbox, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(mac, null)">performAuthTest(mac, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(android, development)">performAuthTest(android, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(fireos, release)">performAuthTest(fireos, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(linux, null)">performAuthTest(linux, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(playstation, release)">performAuthTest(playstation, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(mac, development)">performAuthTest(mac, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(xbox, null)">performAuthTest(xbox, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(linux, release)">performAuthTest(linux, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(html, development)">performAuthTest(html, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(nintendo, release)">performAuthTest(nintendo, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(nintendo, development)">performAuthTest(nintendo, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(playstation, development)">performAuthTest(playstation, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(html, null)">performAuthTest(html, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(ios, null)">performAuthTest(ios, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(fireos, null)">performAuthTest(fireos, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(android, null)">performAuthTest(android, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(linux, development)">performAuthTest(linux, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(fireos, development)">performAuthTest(fireos, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performAuthTest(mac, release)">performAuthTest(mac, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaResourceUnitTest" hash-for-method="performLuaTest(namazu.elements.test.auth, test_facebook_security_manifest)">performLuaTest(namazu.elements.test.auth, test_facebook_security_manifest)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performMatchClientTest">performMatchClientTest</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(ios, release)">performRefreshFailureTest(ios, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(mac, null)">performRefreshFailureTest(mac, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(playstation, null)">performRefreshFailureTest(playstation, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(linux, development)">performRefreshFailureTest(linux, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(xbox, release)">performRefreshFailureTest(xbox, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(ios, null)">performRefreshFailureTest(ios, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(html, release)">performRefreshFailureTest(html, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(playstation, development)">performRefreshFailureTest(playstation, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(pc, development)">performRefreshFailureTest(pc, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(null, development)">performRefreshFailureTest(null, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(html, development)">performRefreshFailureTest(html, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(mac, release)">performRefreshFailureTest(mac, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(pc, release)">performRefreshFailureTest(pc, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(nintendo, null)">performRefreshFailureTest(nintendo, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(ios, development)">performRefreshFailureTest(ios, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(fireos, release)">performRefreshFailureTest(fireos, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(android, null)">performRefreshFailureTest(android, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnRegistrationUnitTest" hash-for-method="performRefreshFailureTest">performRefreshFailureTest</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(android, development)">performRefreshFailureTest(android, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(playstation, release)">performRefreshFailureTest(playstation, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(xbox, development)">performRefreshFailureTest(xbox, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(linux, null)">performRefreshFailureTest(linux, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(nintendo, development)">performRefreshFailureTest(nintendo, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(fireos, development)">performRefreshFailureTest(fireos, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(mac, development)">performRefreshFailureTest(mac, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(nintendo, release)">performRefreshFailureTest(nintendo, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(fireos, null)">performRefreshFailureTest(fireos, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(android, release)">performRefreshFailureTest(android, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(pc, null)">performRefreshFailureTest(pc, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(linux, release)">performRefreshFailureTest(linux, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(xbox, null)">performRefreshFailureTest(xbox, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(null, release)">performRefreshFailureTest(null, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(null, null)">performRefreshFailureTest(null, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshFailureTest(html, null)">performRefreshFailureTest(html, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(playstation, null)">performRefreshSuccessTest(playstation, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(xbox, null)">performRefreshSuccessTest(xbox, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(mac, development)">performRefreshSuccessTest(mac, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(nintendo, null)">performRefreshSuccessTest(nintendo, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(fireos, release)">performRefreshSuccessTest(fireos, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(pc, release)">performRefreshSuccessTest(pc, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnRegistrationUnitTest" hash-for-method="performRefreshSuccessTest">performRefreshSuccessTest</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(null, null)">performRefreshSuccessTest(null, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(null, development)">performRefreshSuccessTest(null, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(linux, development)">performRefreshSuccessTest(linux, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(xbox, release)">performRefreshSuccessTest(xbox, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(xbox, development)">performRefreshSuccessTest(xbox, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(mac, release)">performRefreshSuccessTest(mac, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(mac, null)">performRefreshSuccessTest(mac, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(linux, null)">performRefreshSuccessTest(linux, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(html, release)">performRefreshSuccessTest(html, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(linux, release)">performRefreshSuccessTest(linux, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(playstation, release)">performRefreshSuccessTest(playstation, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(html, null)">performRefreshSuccessTest(html, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(fireos, null)">performRefreshSuccessTest(fireos, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(pc, null)">performRefreshSuccessTest(pc, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(html, development)">performRefreshSuccessTest(html, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(android, null)">performRefreshSuccessTest(android, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(android, development)">performRefreshSuccessTest(android, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(ios, release)">performRefreshSuccessTest(ios, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(nintendo, development)">performRefreshSuccessTest(nintendo, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(ios, development)">performRefreshSuccessTest(ios, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(android, release)">performRefreshSuccessTest(android, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(ios, null)">performRefreshSuccessTest(ios, null)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(pc, development)">performRefreshSuccessTest(pc, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(nintendo, release)">performRefreshSuccessTest(nintendo, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(null, release)">performRefreshSuccessTest(null, release)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(fireos, development)">performRefreshSuccessTest(fireos, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnSessionUnitTest" hash-for-method="performRefreshSuccessTest(playstation, development)">performRefreshSuccessTest(playstation, development)</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaAuthUnitTest" hash-for-method="testAuthenticatedUser">testAuthenticatedUser</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaAuthUnitTest" hash-for-method="testAuthenticatedUserRemote">testAuthenticatedUserRemote</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaAuthUnitTest" hash-for-method="testProfile">testProfile</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaAuthUnitTest" hash-for-method="testProfileRemote">testProfileRemote</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaAuthUnitTest" hash-for-method="testProfileUnknown">testProfileUnknown</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaNotificationIntegrationTest" hash-for-method="testSendWithBuilder">testSendWithBuilder</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaGameOnMatchUnitTest" hash-for-method="testSubmitScore">testSubmitScore</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                      <span>
+                        <img width="3%" src="passed.png"/>
+                        <a href="#" class="method navigator-link" panel-name="suite-Command_line_suite" title="com.namazustudios.socialengine.LuaAuthUnitTest" hash-for-method="testUnauthenticatedUser">testUnauthenticatedUser</a> <!-- method navigator-link -->
+                      </span>
+                      <br/>
+                    </div> <!-- method-list-content passed suite-Command_line_suite -->
+                  </li>
+                </ul>
+              </div> <!-- suite-section-content -->
+            </div> <!-- result-section -->
+          </div> <!-- navigator-suite-content -->
+        </div> <!-- rounded-window -->
+      </div> <!-- suite -->
+    </div> <!-- navigator-root -->
+    <div class="wrapper">
+      <div class="main-panel-root">
+        <div panel-name="suite-Command_line_suite" class="panel Command_line_suite">
+          <div class="suite-Command_line_suite-class-passed">
+            <div class="main-panel-header rounded-window-top">
+              <img src="passed.png"/>
+              <span class="class-name">com.namazustudios.socialengine.LuaGameOnSessionUnitTest</span>
+            </div> <!-- main-panel-header rounded-window-top -->
+            <div class="main-panel-content rounded-window-bottom">
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(null, null)">
+                  </a> <!-- performAuthTest(null, null) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(null, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(html, release)">
+                  </a> <!-- performAuthTest(html, release) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(html, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(null, release)">
+                  </a> <!-- performAuthTest(null, release) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(null, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(playstation, null)">
+                  </a> <!-- performAuthTest(playstation, null) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(playstation, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(nintendo, null)">
+                  </a> <!-- performAuthTest(nintendo, null) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(nintendo, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(android, release)">
+                  </a> <!-- performAuthTest(android, release) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(android, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(ios, development)">
+                  </a> <!-- performAuthTest(ios, development) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(ios, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(pc, development)">
+                  </a> <!-- performAuthTest(pc, development) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(pc, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(pc, release)">
+                  </a> <!-- performAuthTest(pc, release) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(pc, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(pc, null)">
+                  </a> <!-- performAuthTest(pc, null) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(pc, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(xbox, development)">
+                  </a> <!-- performAuthTest(xbox, development) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(xbox, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(ios, release)">
+                  </a> <!-- performAuthTest(ios, release) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(ios, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(null, development)">
+                  </a> <!-- performAuthTest(null, development) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(null, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(xbox, release)">
+                  </a> <!-- performAuthTest(xbox, release) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(xbox, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(mac, null)">
+                  </a> <!-- performAuthTest(mac, null) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(mac, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(android, development)">
+                  </a> <!-- performAuthTest(android, development) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(android, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(fireos, release)">
+                  </a> <!-- performAuthTest(fireos, release) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(fireos, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(linux, null)">
+                  </a> <!-- performAuthTest(linux, null) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(linux, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(playstation, release)">
+                  </a> <!-- performAuthTest(playstation, release) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(playstation, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(mac, development)">
+                  </a> <!-- performAuthTest(mac, development) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(mac, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(xbox, null)">
+                  </a> <!-- performAuthTest(xbox, null) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(xbox, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(linux, release)">
+                  </a> <!-- performAuthTest(linux, release) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(linux, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(html, development)">
+                  </a> <!-- performAuthTest(html, development) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(html, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(nintendo, release)">
+                  </a> <!-- performAuthTest(nintendo, release) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(nintendo, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(nintendo, development)">
+                  </a> <!-- performAuthTest(nintendo, development) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(nintendo, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(playstation, development)">
+                  </a> <!-- performAuthTest(playstation, development) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(playstation, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(html, null)">
+                  </a> <!-- performAuthTest(html, null) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(html, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(ios, null)">
+                  </a> <!-- performAuthTest(ios, null) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(ios, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(fireos, null)">
+                  </a> <!-- performAuthTest(fireos, null) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(fireos, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(android, null)">
+                  </a> <!-- performAuthTest(android, null) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(android, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(linux, development)">
+                  </a> <!-- performAuthTest(linux, development) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(linux, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(fireos, development)">
+                  </a> <!-- performAuthTest(fireos, development) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(fireos, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performAuthTest(mac, release)">
+                  </a> <!-- performAuthTest(mac, release) -->
+                  <span class="method-name">performAuthTest</span>
+                  <span class="parameters">(mac, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performMatchClientTest">
+                  </a> <!-- performMatchClientTest -->
+                  <span class="method-name">performMatchClientTest</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(ios, release)">
+                  </a> <!-- performRefreshFailureTest(ios, release) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(ios, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(mac, null)">
+                  </a> <!-- performRefreshFailureTest(mac, null) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(mac, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(playstation, null)">
+                  </a> <!-- performRefreshFailureTest(playstation, null) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(playstation, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(linux, development)">
+                  </a> <!-- performRefreshFailureTest(linux, development) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(linux, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(xbox, release)">
+                  </a> <!-- performRefreshFailureTest(xbox, release) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(xbox, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(ios, null)">
+                  </a> <!-- performRefreshFailureTest(ios, null) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(ios, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(html, release)">
+                  </a> <!-- performRefreshFailureTest(html, release) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(html, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(playstation, development)">
+                  </a> <!-- performRefreshFailureTest(playstation, development) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(playstation, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(pc, development)">
+                  </a> <!-- performRefreshFailureTest(pc, development) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(pc, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(null, development)">
+                  </a> <!-- performRefreshFailureTest(null, development) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(null, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(html, development)">
+                  </a> <!-- performRefreshFailureTest(html, development) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(html, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(mac, release)">
+                  </a> <!-- performRefreshFailureTest(mac, release) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(mac, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(pc, release)">
+                  </a> <!-- performRefreshFailureTest(pc, release) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(pc, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(nintendo, null)">
+                  </a> <!-- performRefreshFailureTest(nintendo, null) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(nintendo, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(ios, development)">
+                  </a> <!-- performRefreshFailureTest(ios, development) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(ios, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(fireos, release)">
+                  </a> <!-- performRefreshFailureTest(fireos, release) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(fireos, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(android, null)">
+                  </a> <!-- performRefreshFailureTest(android, null) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(android, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(android, development)">
+                  </a> <!-- performRefreshFailureTest(android, development) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(android, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(playstation, release)">
+                  </a> <!-- performRefreshFailureTest(playstation, release) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(playstation, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(xbox, development)">
+                  </a> <!-- performRefreshFailureTest(xbox, development) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(xbox, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(linux, null)">
+                  </a> <!-- performRefreshFailureTest(linux, null) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(linux, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(nintendo, development)">
+                  </a> <!-- performRefreshFailureTest(nintendo, development) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(nintendo, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(fireos, development)">
+                  </a> <!-- performRefreshFailureTest(fireos, development) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(fireos, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(mac, development)">
+                  </a> <!-- performRefreshFailureTest(mac, development) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(mac, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(nintendo, release)">
+                  </a> <!-- performRefreshFailureTest(nintendo, release) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(nintendo, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(fireos, null)">
+                  </a> <!-- performRefreshFailureTest(fireos, null) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(fireos, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(android, release)">
+                  </a> <!-- performRefreshFailureTest(android, release) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(android, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(pc, null)">
+                  </a> <!-- performRefreshFailureTest(pc, null) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(pc, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(linux, release)">
+                  </a> <!-- performRefreshFailureTest(linux, release) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(linux, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(xbox, null)">
+                  </a> <!-- performRefreshFailureTest(xbox, null) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(xbox, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(null, release)">
+                  </a> <!-- performRefreshFailureTest(null, release) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(null, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(null, null)">
+                  </a> <!-- performRefreshFailureTest(null, null) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(null, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest(html, null)">
+                  </a> <!-- performRefreshFailureTest(html, null) -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                  <span class="parameters">(html, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(playstation, null)">
+                  </a> <!-- performRefreshSuccessTest(playstation, null) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(playstation, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(xbox, null)">
+                  </a> <!-- performRefreshSuccessTest(xbox, null) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(xbox, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(mac, development)">
+                  </a> <!-- performRefreshSuccessTest(mac, development) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(mac, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(nintendo, null)">
+                  </a> <!-- performRefreshSuccessTest(nintendo, null) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(nintendo, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(fireos, release)">
+                  </a> <!-- performRefreshSuccessTest(fireos, release) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(fireos, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(pc, release)">
+                  </a> <!-- performRefreshSuccessTest(pc, release) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(pc, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(null, null)">
+                  </a> <!-- performRefreshSuccessTest(null, null) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(null, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(null, development)">
+                  </a> <!-- performRefreshSuccessTest(null, development) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(null, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(linux, development)">
+                  </a> <!-- performRefreshSuccessTest(linux, development) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(linux, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(xbox, release)">
+                  </a> <!-- performRefreshSuccessTest(xbox, release) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(xbox, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(xbox, development)">
+                  </a> <!-- performRefreshSuccessTest(xbox, development) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(xbox, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(mac, release)">
+                  </a> <!-- performRefreshSuccessTest(mac, release) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(mac, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(mac, null)">
+                  </a> <!-- performRefreshSuccessTest(mac, null) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(mac, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(linux, null)">
+                  </a> <!-- performRefreshSuccessTest(linux, null) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(linux, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(html, release)">
+                  </a> <!-- performRefreshSuccessTest(html, release) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(html, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(linux, release)">
+                  </a> <!-- performRefreshSuccessTest(linux, release) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(linux, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(playstation, release)">
+                  </a> <!-- performRefreshSuccessTest(playstation, release) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(playstation, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(html, null)">
+                  </a> <!-- performRefreshSuccessTest(html, null) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(html, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(fireos, null)">
+                  </a> <!-- performRefreshSuccessTest(fireos, null) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(fireos, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(pc, null)">
+                  </a> <!-- performRefreshSuccessTest(pc, null) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(pc, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(html, development)">
+                  </a> <!-- performRefreshSuccessTest(html, development) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(html, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(android, null)">
+                  </a> <!-- performRefreshSuccessTest(android, null) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(android, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(android, development)">
+                  </a> <!-- performRefreshSuccessTest(android, development) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(android, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(ios, release)">
+                  </a> <!-- performRefreshSuccessTest(ios, release) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(ios, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(nintendo, development)">
+                  </a> <!-- performRefreshSuccessTest(nintendo, development) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(nintendo, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(ios, development)">
+                  </a> <!-- performRefreshSuccessTest(ios, development) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(ios, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(android, release)">
+                  </a> <!-- performRefreshSuccessTest(android, release) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(android, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(ios, null)">
+                  </a> <!-- performRefreshSuccessTest(ios, null) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(ios, null)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(pc, development)">
+                  </a> <!-- performRefreshSuccessTest(pc, development) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(pc, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(nintendo, release)">
+                  </a> <!-- performRefreshSuccessTest(nintendo, release) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(nintendo, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(null, release)">
+                  </a> <!-- performRefreshSuccessTest(null, release) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(null, release)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(fireos, development)">
+                  </a> <!-- performRefreshSuccessTest(fireos, development) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(fireos, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest(playstation, development)">
+                  </a> <!-- performRefreshSuccessTest(playstation, development) -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                  <span class="parameters">(playstation, development)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+            </div> <!-- main-panel-content rounded-window-bottom -->
+          </div> <!-- suite-Command_line_suite-class-passed -->
+          <div class="suite-Command_line_suite-class-passed">
+            <div class="main-panel-header rounded-window-top">
+              <img src="passed.png"/>
+              <span class="class-name">com.namazustudios.socialengine.LuaGameOnRegistrationUnitTest</span>
+            </div> <!-- main-panel-header rounded-window-top -->
+            <div class="main-panel-content rounded-window-bottom">
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshFailureTest">
+                  </a> <!-- performRefreshFailureTest -->
+                  <span class="method-name">performRefreshFailureTest</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="performRefreshSuccessTest">
+                  </a> <!-- performRefreshSuccessTest -->
+                  <span class="method-name">performRefreshSuccessTest</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+            </div> <!-- main-panel-content rounded-window-bottom -->
+          </div> <!-- suite-Command_line_suite-class-passed -->
+          <div class="suite-Command_line_suite-class-passed">
+            <div class="main-panel-header rounded-window-top">
+              <img src="passed.png"/>
+              <span class="class-name">com.namazustudios.socialengine.LuaNotificationIntegrationTest</span>
+            </div> <!-- main-panel-header rounded-window-top -->
+            <div class="main-panel-content rounded-window-bottom">
+              <div class="method">
+                <div class="method-content">
+                  <a name="testSendWithBuilder">
+                  </a> <!-- testSendWithBuilder -->
+                  <span class="method-name">testSendWithBuilder</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+            </div> <!-- main-panel-content rounded-window-bottom -->
+          </div> <!-- suite-Command_line_suite-class-passed -->
+          <div class="suite-Command_line_suite-class-passed">
+            <div class="main-panel-header rounded-window-top">
+              <img src="passed.png"/>
+              <span class="class-name">com.namazustudios.socialengine.LuaResourceUnitTest</span>
+            </div> <!-- main-panel-header rounded-window-top -->
+            <div class="main-panel-content rounded-window-bottom">
+              <div class="method">
+                <div class="method-content">
+                  <a name="performLuaTest(namazu.elements.test.auth, test_facebook_security_manifest)">
+                  </a> <!-- performLuaTest(namazu.elements.test.auth, test_facebook_security_manifest) -->
+                  <span class="method-name">performLuaTest</span>
+                  <span class="parameters">(namazu.elements.test.auth, test_facebook_security_manifest)</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+            </div> <!-- main-panel-content rounded-window-bottom -->
+          </div> <!-- suite-Command_line_suite-class-passed -->
+          <div class="suite-Command_line_suite-class-passed">
+            <div class="main-panel-header rounded-window-top">
+              <img src="passed.png"/>
+              <span class="class-name">com.namazustudios.socialengine.LuaAuthUnitTest</span>
+            </div> <!-- main-panel-header rounded-window-top -->
+            <div class="main-panel-content rounded-window-bottom">
+              <div class="method">
+                <div class="method-content">
+                  <a name="testAuthenticatedUser">
+                  </a> <!-- testAuthenticatedUser -->
+                  <span class="method-name">testAuthenticatedUser</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="testAuthenticatedUserRemote">
+                  </a> <!-- testAuthenticatedUserRemote -->
+                  <span class="method-name">testAuthenticatedUserRemote</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="testProfile">
+                  </a> <!-- testProfile -->
+                  <span class="method-name">testProfile</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="testProfileRemote">
+                  </a> <!-- testProfileRemote -->
+                  <span class="method-name">testProfileRemote</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="testProfileUnknown">
+                  </a> <!-- testProfileUnknown -->
+                  <span class="method-name">testProfileUnknown</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+              <div class="method">
+                <div class="method-content">
+                  <a name="testUnauthenticatedUser">
+                  </a> <!-- testUnauthenticatedUser -->
+                  <span class="method-name">testUnauthenticatedUser</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+            </div> <!-- main-panel-content rounded-window-bottom -->
+          </div> <!-- suite-Command_line_suite-class-passed -->
+          <div class="suite-Command_line_suite-class-passed">
+            <div class="main-panel-header rounded-window-top">
+              <img src="passed.png"/>
+              <span class="class-name">com.namazustudios.socialengine.LuaGameOnMatchUnitTest</span>
+            </div> <!-- main-panel-header rounded-window-top -->
+            <div class="main-panel-content rounded-window-bottom">
+              <div class="method">
+                <div class="method-content">
+                  <a name="testSubmitScore">
+                  </a> <!-- testSubmitScore -->
+                  <span class="method-name">testSubmitScore</span>
+                </div> <!-- method-content -->
+              </div> <!-- method -->
+            </div> <!-- main-panel-content rounded-window-bottom -->
+          </div> <!-- suite-Command_line_suite-class-passed -->
+        </div> <!-- panel Command_line_suite -->
+        <div panel-name="test-xml-Command_line_suite" class="panel">
+          <div class="main-panel-header rounded-window-top">
+          </div> <!-- main-panel-header rounded-window-top -->
+          <div class="main-panel-content rounded-window-bottom">
+            <pre>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE suite SYSTEM &quot;http://testng.org/testng-1.0.dtd&quot;&gt;
+&lt;suite verbose=&quot;0&quot; name=&quot;Command line suite&quot;&gt;
+  &lt;test thread-count=&quot;5&quot; verbose=&quot;0&quot; name=&quot;Command line test&quot;&gt;
+    &lt;classes&gt;
+      &lt;class name=&quot;com.namazustudios.socialengine.LuaGameOnSessionUnitTest&quot;/&gt;
+      &lt;class name=&quot;com.namazustudios.socialengine.LuaAuthUnitTest&quot;/&gt;
+      &lt;class name=&quot;com.namazustudios.socialengine.LuaGameOnMatchUnitTest&quot;/&gt;
+      &lt;class name=&quot;com.namazustudios.socialengine.LuaResourceUnitTest&quot;/&gt;
+      &lt;class name=&quot;com.namazustudios.socialengine.LuaGameOnRegistrationUnitTest&quot;/&gt;
+      &lt;class name=&quot;com.namazustudios.socialengine.LuaNotificationIntegrationTest&quot;/&gt;
+    &lt;/classes&gt;
+  &lt;/test&gt; &lt;!-- Command line test --&gt;
+&lt;/suite&gt; &lt;!-- Command line suite --&gt;
+            </pre>
+          </div> <!-- main-panel-content rounded-window-bottom -->
+        </div> <!-- panel -->
+        <div panel-name="testlist-Command_line_suite" class="panel">
+          <div class="main-panel-header rounded-window-top">
+            <span class="header-content">Tests for Command line suite</span>
+          </div> <!-- main-panel-header rounded-window-top -->
+          <div class="main-panel-content rounded-window-bottom">
+            <ul>
+              <li>
+                <span class="test-name">Command line test (6 classes)</span>
+              </li>
+            </ul>
+          </div> <!-- main-panel-content rounded-window-bottom -->
+        </div> <!-- panel -->
+        <div panel-name="group-Command_line_suite" class="panel">
+          <div class="main-panel-header rounded-window-top">
+            <span class="header-content">Groups for Command line suite</span>
+          </div> <!-- main-panel-header rounded-window-top -->
+          <div class="main-panel-content rounded-window-bottom">
+          </div> <!-- main-panel-content rounded-window-bottom -->
+        </div> <!-- panel -->
+        <div panel-name="times-Command_line_suite" class="panel">
+          <div class="main-panel-header rounded-window-top">
+            <span class="header-content">Times for Command line suite</span>
+          </div> <!-- main-panel-header rounded-window-top -->
+          <div class="main-panel-content rounded-window-bottom">
+            <div class="times-div">
+              <script type="text/javascript">
+suiteTableInitFunctions.push('tableData_Command_line_suite');
+function tableData_Command_line_suite() {
+var data = new google.visualization.DataTable();
+data.addColumn('number', 'Number');
+data.addColumn('string', 'Method');
+data.addColumn('string', 'Class');
+data.addColumn('number', 'Time (ms)');
+data.addRows(111);
+data.setCell(0, 0, 0)
+data.setCell(0, 1, 'performAuthTest')
+data.setCell(0, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(0, 3, 627);
+data.setCell(1, 0, 1)
+data.setCell(1, 1, 'performAuthTest')
+data.setCell(1, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(1, 3, 72);
+data.setCell(2, 0, 2)
+data.setCell(2, 1, 'performAuthTest')
+data.setCell(2, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(2, 3, 58);
+data.setCell(3, 0, 3)
+data.setCell(3, 1, 'performAuthTest')
+data.setCell(3, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(3, 3, 56);
+data.setCell(4, 0, 4)
+data.setCell(4, 1, 'performAuthTest')
+data.setCell(4, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(4, 3, 55);
+data.setCell(5, 0, 5)
+data.setCell(5, 1, 'performAuthTest')
+data.setCell(5, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(5, 3, 54);
+data.setCell(6, 0, 6)
+data.setCell(6, 1, 'testAuthenticatedUser')
+data.setCell(6, 2, 'com.namazustudios.socialengine.LuaAuthUnitTest')
+data.setCell(6, 3, 53);
+data.setCell(7, 0, 7)
+data.setCell(7, 1, 'testAuthenticatedUserRemote')
+data.setCell(7, 2, 'com.namazustudios.socialengine.LuaAuthUnitTest')
+data.setCell(7, 3, 52);
+data.setCell(8, 0, 8)
+data.setCell(8, 1, 'performAuthTest')
+data.setCell(8, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(8, 3, 49);
+data.setCell(9, 0, 9)
+data.setCell(9, 1, 'performAuthTest')
+data.setCell(9, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(9, 3, 49);
+data.setCell(10, 0, 10)
+data.setCell(10, 1, 'performRefreshSuccessTest')
+data.setCell(10, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(10, 3, 48);
+data.setCell(11, 0, 11)
+data.setCell(11, 1, 'performAuthTest')
+data.setCell(11, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(11, 3, 48);
+data.setCell(12, 0, 12)
+data.setCell(12, 1, 'performRefreshFailureTest')
+data.setCell(12, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(12, 3, 48);
+data.setCell(13, 0, 13)
+data.setCell(13, 1, 'performRefreshSuccessTest')
+data.setCell(13, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(13, 3, 47);
+data.setCell(14, 0, 14)
+data.setCell(14, 1, 'performAuthTest')
+data.setCell(14, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(14, 3, 45);
+data.setCell(15, 0, 15)
+data.setCell(15, 1, 'performRefreshSuccessTest')
+data.setCell(15, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(15, 3, 45);
+data.setCell(16, 0, 16)
+data.setCell(16, 1, 'performAuthTest')
+data.setCell(16, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(16, 3, 44);
+data.setCell(17, 0, 17)
+data.setCell(17, 1, 'performAuthTest')
+data.setCell(17, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(17, 3, 44);
+data.setCell(18, 0, 18)
+data.setCell(18, 1, 'performAuthTest')
+data.setCell(18, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(18, 3, 43);
+data.setCell(19, 0, 19)
+data.setCell(19, 1, 'performRefreshSuccessTest')
+data.setCell(19, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(19, 3, 43);
+data.setCell(20, 0, 20)
+data.setCell(20, 1, 'performAuthTest')
+data.setCell(20, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(20, 3, 43);
+data.setCell(21, 0, 21)
+data.setCell(21, 1, 'performAuthTest')
+data.setCell(21, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(21, 3, 42);
+data.setCell(22, 0, 22)
+data.setCell(22, 1, 'performAuthTest')
+data.setCell(22, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(22, 3, 42);
+data.setCell(23, 0, 23)
+data.setCell(23, 1, 'testProfileRemote')
+data.setCell(23, 2, 'com.namazustudios.socialengine.LuaAuthUnitTest')
+data.setCell(23, 3, 41);
+data.setCell(24, 0, 24)
+data.setCell(24, 1, 'performAuthTest')
+data.setCell(24, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(24, 3, 41);
+data.setCell(25, 0, 25)
+data.setCell(25, 1, 'performAuthTest')
+data.setCell(25, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(25, 3, 41);
+data.setCell(26, 0, 26)
+data.setCell(26, 1, 'performMatchClientTest')
+data.setCell(26, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(26, 3, 41);
+data.setCell(27, 0, 27)
+data.setCell(27, 1, 'performAuthTest')
+data.setCell(27, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(27, 3, 40);
+data.setCell(28, 0, 28)
+data.setCell(28, 1, 'performAuthTest')
+data.setCell(28, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(28, 3, 40);
+data.setCell(29, 0, 29)
+data.setCell(29, 1, 'performAuthTest')
+data.setCell(29, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(29, 3, 40);
+data.setCell(30, 0, 30)
+data.setCell(30, 1, 'performAuthTest')
+data.setCell(30, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(30, 3, 40);
+data.setCell(31, 0, 31)
+data.setCell(31, 1, 'testSubmitScore')
+data.setCell(31, 2, 'com.namazustudios.socialengine.LuaGameOnMatchUnitTest')
+data.setCell(31, 3, 39);
+data.setCell(32, 0, 32)
+data.setCell(32, 1, 'performRefreshFailureTest')
+data.setCell(32, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(32, 3, 39);
+data.setCell(33, 0, 33)
+data.setCell(33, 1, 'performAuthTest')
+data.setCell(33, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(33, 3, 39);
+data.setCell(34, 0, 34)
+data.setCell(34, 1, 'performAuthTest')
+data.setCell(34, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(34, 3, 39);
+data.setCell(35, 0, 35)
+data.setCell(35, 1, 'performAuthTest')
+data.setCell(35, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(35, 3, 39);
+data.setCell(36, 0, 36)
+data.setCell(36, 1, 'performRefreshSuccessTest')
+data.setCell(36, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(36, 3, 39);
+data.setCell(37, 0, 37)
+data.setCell(37, 1, 'performAuthTest')
+data.setCell(37, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(37, 3, 38);
+data.setCell(38, 0, 38)
+data.setCell(38, 1, 'performRefreshFailureTest')
+data.setCell(38, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(38, 3, 38);
+data.setCell(39, 0, 39)
+data.setCell(39, 1, 'performRefreshSuccessTest')
+data.setCell(39, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(39, 3, 38);
+data.setCell(40, 0, 40)
+data.setCell(40, 1, 'performAuthTest')
+data.setCell(40, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(40, 3, 37);
+data.setCell(41, 0, 41)
+data.setCell(41, 1, 'performRefreshFailureTest')
+data.setCell(41, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(41, 3, 37);
+data.setCell(42, 0, 42)
+data.setCell(42, 1, 'performAuthTest')
+data.setCell(42, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(42, 3, 37);
+data.setCell(43, 0, 43)
+data.setCell(43, 1, 'performAuthTest')
+data.setCell(43, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(43, 3, 37);
+data.setCell(44, 0, 44)
+data.setCell(44, 1, 'performAuthTest')
+data.setCell(44, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(44, 3, 36);
+data.setCell(45, 0, 45)
+data.setCell(45, 1, 'performRefreshFailureTest')
+data.setCell(45, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(45, 3, 36);
+data.setCell(46, 0, 46)
+data.setCell(46, 1, 'performRefreshSuccessTest')
+data.setCell(46, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(46, 3, 36);
+data.setCell(47, 0, 47)
+data.setCell(47, 1, 'performRefreshSuccessTest')
+data.setCell(47, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(47, 3, 36);
+data.setCell(48, 0, 48)
+data.setCell(48, 1, 'performRefreshSuccessTest')
+data.setCell(48, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(48, 3, 36);
+data.setCell(49, 0, 49)
+data.setCell(49, 1, 'performAuthTest')
+data.setCell(49, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(49, 3, 36);
+data.setCell(50, 0, 50)
+data.setCell(50, 1, 'performRefreshSuccessTest')
+data.setCell(50, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(50, 3, 35);
+data.setCell(51, 0, 51)
+data.setCell(51, 1, 'performRefreshSuccessTest')
+data.setCell(51, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(51, 3, 35);
+data.setCell(52, 0, 52)
+data.setCell(52, 1, 'performRefreshSuccessTest')
+data.setCell(52, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(52, 3, 35);
+data.setCell(53, 0, 53)
+data.setCell(53, 1, 'performRefreshSuccessTest')
+data.setCell(53, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(53, 3, 35);
+data.setCell(54, 0, 54)
+data.setCell(54, 1, 'performRefreshFailureTest')
+data.setCell(54, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(54, 3, 35);
+data.setCell(55, 0, 55)
+data.setCell(55, 1, 'performRefreshSuccessTest')
+data.setCell(55, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(55, 3, 35);
+data.setCell(56, 0, 56)
+data.setCell(56, 1, 'performAuthTest')
+data.setCell(56, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(56, 3, 35);
+data.setCell(57, 0, 57)
+data.setCell(57, 1, 'performAuthTest')
+data.setCell(57, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(57, 3, 35);
+data.setCell(58, 0, 58)
+data.setCell(58, 1, 'performRefreshSuccessTest')
+data.setCell(58, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(58, 3, 35);
+data.setCell(59, 0, 59)
+data.setCell(59, 1, 'performRefreshSuccessTest')
+data.setCell(59, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(59, 3, 34);
+data.setCell(60, 0, 60)
+data.setCell(60, 1, 'performRefreshSuccessTest')
+data.setCell(60, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(60, 3, 34);
+data.setCell(61, 0, 61)
+data.setCell(61, 1, 'performRefreshSuccessTest')
+data.setCell(61, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(61, 3, 34);
+data.setCell(62, 0, 62)
+data.setCell(62, 1, 'performRefreshSuccessTest')
+data.setCell(62, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(62, 3, 34);
+data.setCell(63, 0, 63)
+data.setCell(63, 1, 'performRefreshFailureTest')
+data.setCell(63, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(63, 3, 34);
+data.setCell(64, 0, 64)
+data.setCell(64, 1, 'performRefreshSuccessTest')
+data.setCell(64, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(64, 3, 34);
+data.setCell(65, 0, 65)
+data.setCell(65, 1, 'performRefreshSuccessTest')
+data.setCell(65, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(65, 3, 34);
+data.setCell(66, 0, 66)
+data.setCell(66, 1, 'performRefreshFailureTest')
+data.setCell(66, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(66, 3, 33);
+data.setCell(67, 0, 67)
+data.setCell(67, 1, 'performRefreshSuccessTest')
+data.setCell(67, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(67, 3, 33);
+data.setCell(68, 0, 68)
+data.setCell(68, 1, 'performRefreshFailureTest')
+data.setCell(68, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(68, 3, 33);
+data.setCell(69, 0, 69)
+data.setCell(69, 1, 'performRefreshFailureTest')
+data.setCell(69, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(69, 3, 33);
+data.setCell(70, 0, 70)
+data.setCell(70, 1, 'performRefreshFailureTest')
+data.setCell(70, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(70, 3, 33);
+data.setCell(71, 0, 71)
+data.setCell(71, 1, 'performRefreshSuccessTest')
+data.setCell(71, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(71, 3, 33);
+data.setCell(72, 0, 72)
+data.setCell(72, 1, 'performRefreshFailureTest')
+data.setCell(72, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(72, 3, 33);
+data.setCell(73, 0, 73)
+data.setCell(73, 1, 'performRefreshFailureTest')
+data.setCell(73, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(73, 3, 32);
+data.setCell(74, 0, 74)
+data.setCell(74, 1, 'performRefreshFailureTest')
+data.setCell(74, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(74, 3, 32);
+data.setCell(75, 0, 75)
+data.setCell(75, 1, 'performRefreshFailureTest')
+data.setCell(75, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(75, 3, 32);
+data.setCell(76, 0, 76)
+data.setCell(76, 1, 'performRefreshSuccessTest')
+data.setCell(76, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(76, 3, 32);
+data.setCell(77, 0, 77)
+data.setCell(77, 1, 'performRefreshFailureTest')
+data.setCell(77, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(77, 3, 32);
+data.setCell(78, 0, 78)
+data.setCell(78, 1, 'performRefreshSuccessTest')
+data.setCell(78, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(78, 3, 32);
+data.setCell(79, 0, 79)
+data.setCell(79, 1, 'performRefreshFailureTest')
+data.setCell(79, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(79, 3, 32);
+data.setCell(80, 0, 80)
+data.setCell(80, 1, 'performRefreshFailureTest')
+data.setCell(80, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(80, 3, 32);
+data.setCell(81, 0, 81)
+data.setCell(81, 1, 'performRefreshSuccessTest')
+data.setCell(81, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(81, 3, 32);
+data.setCell(82, 0, 82)
+data.setCell(82, 1, 'performRefreshFailureTest')
+data.setCell(82, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(82, 3, 32);
+data.setCell(83, 0, 83)
+data.setCell(83, 1, 'performRefreshSuccessTest')
+data.setCell(83, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(83, 3, 32);
+data.setCell(84, 0, 84)
+data.setCell(84, 1, 'performRefreshSuccessTest')
+data.setCell(84, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(84, 3, 31);
+data.setCell(85, 0, 85)
+data.setCell(85, 1, 'performRefreshFailureTest')
+data.setCell(85, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(85, 3, 31);
+data.setCell(86, 0, 86)
+data.setCell(86, 1, 'performRefreshFailureTest')
+data.setCell(86, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(86, 3, 31);
+data.setCell(87, 0, 87)
+data.setCell(87, 1, 'performRefreshFailureTest')
+data.setCell(87, 2, 'com.namazustudios.socialengine.LuaGameOnRegistrationUnitTest')
+data.setCell(87, 3, 31);
+data.setCell(88, 0, 88)
+data.setCell(88, 1, 'performRefreshFailureTest')
+data.setCell(88, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(88, 3, 31);
+data.setCell(89, 0, 89)
+data.setCell(89, 1, 'performRefreshFailureTest')
+data.setCell(89, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(89, 3, 31);
+data.setCell(90, 0, 90)
+data.setCell(90, 1, 'performRefreshFailureTest')
+data.setCell(90, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(90, 3, 31);
+data.setCell(91, 0, 91)
+data.setCell(91, 1, 'performRefreshFailureTest')
+data.setCell(91, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(91, 3, 31);
+data.setCell(92, 0, 92)
+data.setCell(92, 1, 'performRefreshFailureTest')
+data.setCell(92, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(92, 3, 31);
+data.setCell(93, 0, 93)
+data.setCell(93, 1, 'performRefreshSuccessTest')
+data.setCell(93, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(93, 3, 31);
+data.setCell(94, 0, 94)
+data.setCell(94, 1, 'performRefreshFailureTest')
+data.setCell(94, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(94, 3, 30);
+data.setCell(95, 0, 95)
+data.setCell(95, 1, 'performRefreshFailureTest')
+data.setCell(95, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(95, 3, 30);
+data.setCell(96, 0, 96)
+data.setCell(96, 1, 'performRefreshFailureTest')
+data.setCell(96, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(96, 3, 30);
+data.setCell(97, 0, 97)
+data.setCell(97, 1, 'performRefreshSuccessTest')
+data.setCell(97, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(97, 3, 30);
+data.setCell(98, 0, 98)
+data.setCell(98, 1, 'performRefreshFailureTest')
+data.setCell(98, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(98, 3, 30);
+data.setCell(99, 0, 99)
+data.setCell(99, 1, 'performRefreshSuccessTest')
+data.setCell(99, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(99, 3, 30);
+data.setCell(100, 0, 100)
+data.setCell(100, 1, 'performRefreshFailureTest')
+data.setCell(100, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(100, 3, 30);
+data.setCell(101, 0, 101)
+data.setCell(101, 1, 'performRefreshSuccessTest')
+data.setCell(101, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(101, 3, 30);
+data.setCell(102, 0, 102)
+data.setCell(102, 1, 'performRefreshSuccessTest')
+data.setCell(102, 2, 'com.namazustudios.socialengine.LuaGameOnRegistrationUnitTest')
+data.setCell(102, 3, 29);
+data.setCell(103, 0, 103)
+data.setCell(103, 1, 'performRefreshFailureTest')
+data.setCell(103, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(103, 3, 29);
+data.setCell(104, 0, 104)
+data.setCell(104, 1, 'performRefreshFailureTest')
+data.setCell(104, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(104, 3, 29);
+data.setCell(105, 0, 105)
+data.setCell(105, 1, 'performRefreshSuccessTest')
+data.setCell(105, 2, 'com.namazustudios.socialengine.LuaGameOnSessionUnitTest')
+data.setCell(105, 3, 28);
+data.setCell(106, 0, 106)
+data.setCell(106, 1, 'testSendWithBuilder')
+data.setCell(106, 2, 'com.namazustudios.socialengine.LuaNotificationIntegrationTest')
+data.setCell(106, 3, 28);
+data.setCell(107, 0, 107)
+data.setCell(107, 1, 'testProfile')
+data.setCell(107, 2, 'com.namazustudios.socialengine.LuaAuthUnitTest')
+data.setCell(107, 3, 26);
+data.setCell(108, 0, 108)
+data.setCell(108, 1, 'testProfileUnknown')
+data.setCell(108, 2, 'com.namazustudios.socialengine.LuaAuthUnitTest')
+data.setCell(108, 3, 23);
+data.setCell(109, 0, 109)
+data.setCell(109, 1, 'testUnauthenticatedUser')
+data.setCell(109, 2, 'com.namazustudios.socialengine.LuaAuthUnitTest')
+data.setCell(109, 3, 22);
+data.setCell(110, 0, 110)
+data.setCell(110, 1, 'performLuaTest')
+data.setCell(110, 2, 'com.namazustudios.socialengine.LuaResourceUnitTest')
+data.setCell(110, 3, 20);
+window.suiteTableData['Command_line_suite']= { tableData: data, tableDiv: 'times-div-Command_line_suite'}
+return data;
+}
+              </script>
+              <span class="suite-total-time">Total running time: 4 seconds</span>
+              <div id="times-div-Command_line_suite">
+              </div> <!-- times-div-Command_line_suite -->
+            </div> <!-- times-div -->
+          </div> <!-- main-panel-content rounded-window-bottom -->
+        </div> <!-- panel -->
+        <div panel-name="reporter-Command_line_suite" class="panel">
+          <div class="main-panel-header rounded-window-top">
+            <span class="header-content">Reporter output for Command line suite</span>
+          </div> <!-- main-panel-header rounded-window-top -->
+          <div class="main-panel-content rounded-window-bottom">
+          </div> <!-- main-panel-content rounded-window-bottom -->
+        </div> <!-- panel -->
+        <div panel-name="ignored-methods-Command_line_suite" class="panel">
+          <div class="main-panel-header rounded-window-top">
+            <span class="header-content">0 ignored methods</span>
+          </div> <!-- main-panel-header rounded-window-top -->
+          <div class="main-panel-content rounded-window-bottom">
+          </div> <!-- main-panel-content rounded-window-bottom -->
+        </div> <!-- panel -->
+        <div panel-name="chronological-Command_line_suite" class="panel">
+          <div class="main-panel-header rounded-window-top">
+            <span class="header-content">Methods in chronological order</span>
+          </div> <!-- main-panel-header rounded-window-top -->
+          <div class="main-panel-content rounded-window-bottom">
+            <div class="chronological-class">
+              <div class="chronological-class-name">com.namazustudios.socialengine.LuaGameOnSessionUnitTest</div> <!-- chronological-class-name -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">0 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(fireos, development)</span>
+                <span class="method-start">4 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">631 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(fireos, release)</span>
+                <span class="method-start">631 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">686 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(android, development)</span>
+                <span class="method-start">686 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">758 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(android, release)</span>
+                <span class="method-start">758 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">807 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(ios, development)</span>
+                <span class="method-start">807 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">861 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(ios, release)</span>
+                <span class="method-start">861 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">905 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(pc, development)</span>
+                <span class="method-start">905 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">945 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(pc, release)</span>
+                <span class="method-start">945 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">987 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(mac, development)</span>
+                <span class="method-start">987 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1027 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(mac, release)</span>
+                <span class="method-start">1027 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1076 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(linux, development)</span>
+                <span class="method-start">1076 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1113 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(linux, release)</span>
+                <span class="method-start">1113 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1152 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(xbox, development)</span>
+                <span class="method-start">1152 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1192 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(xbox, release)</span>
+                <span class="method-start">1192 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1233 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(playstation, development)</span>
+                <span class="method-start">1233 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1273 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(playstation, release)</span>
+                <span class="method-start">1273 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1316 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(nintendo, development)</span>
+                <span class="method-start">1316 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1359 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(nintendo, release)</span>
+                <span class="method-start">1359 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1405 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(html, development)</span>
+                <span class="method-start">1405 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1446 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(html, release)</span>
+                <span class="method-start">1446 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1489 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(fireos, null)</span>
+                <span class="method-start">1490 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1526 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(android, null)</span>
+                <span class="method-start">1526 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1562 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(ios, null)</span>
+                <span class="method-start">1563 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1598 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(pc, null)</span>
+                <span class="method-start">1598 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1635 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(mac, null)</span>
+                <span class="method-start">1635 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1676 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(linux, null)</span>
+                <span class="method-start">1676 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1725 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(xbox, null)</span>
+                <span class="method-start">1725 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1767 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(playstation, null)</span>
+                <span class="method-start">1767 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1804 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(nintendo, null)</span>
+                <span class="method-start">1804 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1860 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(html, null)</span>
+                <span class="method-start">1860 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1919 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(null, development)</span>
+                <span class="method-start">1919 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1956 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(null, release)</span>
+                <span class="method-start">1956 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">1995 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performAuthTest(null, null)</span>
+                <span class="method-start">1995 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2039 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performMatchClientTest</span>
+                <span class="method-start">2039 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2081 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(fireos, development)</span>
+                <span class="method-start">2081 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2129 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(fireos, release)</span>
+                <span class="method-start">2129 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2166 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(android, development)</span>
+                <span class="method-start">2167 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2200 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(android, release)</span>
+                <span class="method-start">2200 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2235 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(ios, development)</span>
+                <span class="method-start">2235 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2268 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(ios, release)</span>
+                <span class="method-start">2268 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2300 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(pc, development)</span>
+                <span class="method-start">2301 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2332 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(pc, release)</span>
+                <span class="method-start">2332 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2370 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(mac, development)</span>
+                <span class="method-start">2371 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2402 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(mac, release)</span>
+                <span class="method-start">2402 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2434 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(linux, development)</span>
+                <span class="method-start">2434 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2464 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(linux, release)</span>
+                <span class="method-start">2464 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2496 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(xbox, development)</span>
+                <span class="method-start">2496 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2526 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(xbox, release)</span>
+                <span class="method-start">2527 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2557 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(playstation, development)</span>
+                <span class="method-start">2557 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2589 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(playstation, release)</span>
+                <span class="method-start">2589 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2620 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(nintendo, development)</span>
+                <span class="method-start">2620 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2652 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(nintendo, release)</span>
+                <span class="method-start">2652 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2685 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(html, development)</span>
+                <span class="method-start">2685 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2718 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(html, release)</span>
+                <span class="method-start">2718 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2755 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(fireos, null)</span>
+                <span class="method-start">2755 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2789 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(android, null)</span>
+                <span class="method-start">2790 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2823 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(ios, null)</span>
+                <span class="method-start">2823 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2855 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(pc, null)</span>
+                <span class="method-start">2855 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2886 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(mac, null)</span>
+                <span class="method-start">2886 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2917 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(linux, null)</span>
+                <span class="method-start">2918 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2947 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(xbox, null)</span>
+                <span class="method-start">2947 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">2978 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(playstation, null)</span>
+                <span class="method-start">2978 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3011 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(nintendo, null)</span>
+                <span class="method-start">3011 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3050 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(html, null)</span>
+                <span class="method-start">3050 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3084 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(null, development)</span>
+                <span class="method-start">3084 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3115 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(null, release)</span>
+                <span class="method-start">3115 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3144 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest(null, null)</span>
+                <span class="method-start">3144 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3176 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(fireos, development)</span>
+                <span class="method-start">3177 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3212 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(fireos, release)</span>
+                <span class="method-start">3213 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3241 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(android, development)</span>
+                <span class="method-start">3241 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3275 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(android, release)</span>
+                <span class="method-start">3276 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3308 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(ios, development)</span>
+                <span class="method-start">3308 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3342 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(ios, release)</span>
+                <span class="method-start">3342 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3377 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(pc, development)</span>
+                <span class="method-start">3377 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3411 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(pc, release)</span>
+                <span class="method-start">3411 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3445 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(mac, development)</span>
+                <span class="method-start">3445 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3480 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(mac, release)</span>
+                <span class="method-start">3480 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3513 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(linux, development)</span>
+                <span class="method-start">3513 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3556 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(linux, release)</span>
+                <span class="method-start">3556 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3588 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(xbox, development)</span>
+                <span class="method-start">3588 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3624 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(xbox, release)</span>
+                <span class="method-start">3624 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3658 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(playstation, development)</span>
+                <span class="method-start">3659 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3691 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(playstation, release)</span>
+                <span class="method-start">3692 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3740 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(nintendo, development)</span>
+                <span class="method-start">3740 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3785 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(nintendo, release)</span>
+                <span class="method-start">3785 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3824 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(html, development)</span>
+                <span class="method-start">3824 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3860 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(html, release)</span>
+                <span class="method-start">3860 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3896 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(fireos, null)</span>
+                <span class="method-start">3896 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3932 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(android, null)</span>
+                <span class="method-start">3932 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">3970 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(ios, null)</span>
+                <span class="method-start">3970 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">4002 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(pc, null)</span>
+                <span class="method-start">4002 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">4032 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(mac, null)</span>
+                <span class="method-start">4032 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">4081 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(linux, null)</span>
+                <span class="method-start">4081 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">4118 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(xbox, null)</span>
+                <span class="method-start">4118 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">4153 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(playstation, null)</span>
+                <span class="method-start">4153 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">4184 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(nintendo, null)</span>
+                <span class="method-start">4184 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">4218 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(html, null)</span>
+                <span class="method-start">4218 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">4248 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(null, development)</span>
+                <span class="method-start">4248 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">4278 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(null, release)</span>
+                <span class="method-start">4278 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">4311 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest(null, null)</span>
+                <span class="method-start">4311 ms</span>
+              </div> <!-- test-method -->
+            </div> <!-- chronological-class -->
+            <div class="chronological-class">
+              <div class="chronological-class-name">com.namazustudios.socialengine.LuaAuthUnitTest</div> <!-- chronological-class-name -->
+              <div class="test-method">
+                <span class="method-name">testAuthenticatedUser</span>
+                <span class="method-start">4346 ms</span>
+              </div> <!-- test-method -->
+              <div class="test-method">
+                <span class="method-name">testAuthenticatedUserRemote</span>
+                <span class="method-start">4399 ms</span>
+              </div> <!-- test-method -->
+              <div class="test-method">
+                <span class="method-name">testProfile</span>
+                <span class="method-start">4451 ms</span>
+              </div> <!-- test-method -->
+              <div class="test-method">
+                <span class="method-name">testProfileRemote</span>
+                <span class="method-start">4477 ms</span>
+              </div> <!-- test-method -->
+              <div class="test-method">
+                <span class="method-name">testProfileUnknown</span>
+                <span class="method-start">4518 ms</span>
+              </div> <!-- test-method -->
+              <div class="test-method">
+                <span class="method-name">testUnauthenticatedUser</span>
+                <span class="method-start">4541 ms</span>
+              </div> <!-- test-method -->
+            </div> <!-- chronological-class -->
+            <div class="chronological-class">
+              <div class="chronological-class-name">com.namazustudios.socialengine.LuaGameOnMatchUnitTest</div> <!-- chronological-class-name -->
+              <div class="test-method">
+                <span class="method-name">testSubmitScore</span>
+                <span class="method-start">4563 ms</span>
+              </div> <!-- test-method -->
+            </div> <!-- chronological-class -->
+            <div class="chronological-class">
+              <div class="chronological-class-name">com.namazustudios.socialengine.LuaResourceUnitTest</div> <!-- chronological-class-name -->
+              <div class="test-method">
+                <span class="method-name">performLuaTest(namazu.elements.test.auth, test_facebook_security_manifest)</span>
+                <span class="method-start">4603 ms</span>
+              </div> <!-- test-method -->
+            </div> <!-- chronological-class -->
+            <div class="chronological-class">
+              <div class="chronological-class-name">com.namazustudios.socialengine.LuaGameOnRegistrationUnitTest</div> <!-- chronological-class-name -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">4623 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshFailureTest</span>
+                <span class="method-start">4623 ms</span>
+              </div> <!-- test-method -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">4654 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">performRefreshSuccessTest</span>
+                <span class="method-start">4654 ms</span>
+              </div> <!-- test-method -->
+            </div> <!-- chronological-class -->
+            <div class="chronological-class">
+              <div class="chronological-class-name">com.namazustudios.socialengine.LuaNotificationIntegrationTest</div> <!-- chronological-class-name -->
+              <div class="configuration-method before">
+                <span class="method-name">resetMocks</span>
+                <span class="method-start">4684 ms</span>
+              </div> <!-- configuration-method before -->
+              <div class="test-method">
+                <span class="method-name">testSendWithBuilder</span>
+                <span class="method-start">4684 ms</span>
+              </div> <!-- test-method -->
+          </div> <!-- main-panel-content rounded-window-bottom -->
+        </div> <!-- panel -->
+      </div> <!-- main-panel-root -->
+    </div> <!-- wrapper -->
+  </body>
+</html>

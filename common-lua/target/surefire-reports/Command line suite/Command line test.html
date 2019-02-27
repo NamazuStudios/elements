@@ -1,0 +1,634 @@
+<html>
+<head>
+<title>TestNG:  Command line test</title>
+<link href="../testng.css" rel="stylesheet" type="text/css" />
+<link href="../my-testng.css" rel="stylesheet" type="text/css" />
+
+<style type="text/css">
+.log { display: none;} 
+.stack-trace { display: none;} 
+</style>
+<script type="text/javascript">
+<!--
+function flip(e) {
+  current = e.style.display;
+  if (current == 'block') {
+    e.style.display = 'none';
+    return 0;
+  }
+  else {
+    e.style.display = 'block';
+    return 1;
+  }
+}
+
+function toggleBox(szDivId, elem, msg1, msg2)
+{
+  var res = -1;  if (document.getElementById) {
+    res = flip(document.getElementById(szDivId));
+  }
+  else if (document.all) {
+    // this is the way old msie versions work
+    res = flip(document.all[szDivId]);
+  }
+  if(elem) {
+    if(res == 0) elem.innerHTML = msg1; else elem.innerHTML = msg2;
+  }
+
+}
+
+function toggleAllBoxes() {
+  if (document.getElementsByTagName) {
+    d = document.getElementsByTagName('div');
+    for (i = 0; i < d.length; i++) {
+      if (d[i].className == 'log') {
+        flip(d[i]);
+      }
+    }
+  }
+}
+
+// -->
+</script>
+
+</head>
+<body>
+<h2 align='center'>Command line test</h2><table border='1' align="center">
+<tr>
+<td>Tests passed/Failed/Skipped:</td><td>111/0/0</td>
+</tr><tr>
+<td>Started on:</td><td>Mon Feb 25 15:13:25 PST 2019</td>
+</tr>
+<tr><td>Total time:</td><td>4 seconds (4735 ms)</td>
+</tr><tr>
+<td>Included groups:</td><td></td>
+</tr><tr>
+<td>Excluded groups:</td><td></td>
+</tr>
+</table><p/>
+<small><i>(Hover the method name to see the test class name)</i></small><p/>
+<table width='100%' border='1' class='invocation-passed'>
+<tr><td colspan='4' align='center'><b>PASSED TESTS</b></td></tr>
+<tr><td><b>Test method</b></td>
+<td width="30%"><b>Exception</b></td>
+<td width="10%"><b>Time (seconds)</b></td>
+<td><b>Instance</b></td>
+</tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: fireos, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: fireos, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: android, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: android, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: ios, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: ios, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: pc, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: pc, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: mac, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: mac, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: linux, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: linux, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: xbox, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: xbox, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: playstation, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: playstation, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: nintendo, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: nintendo, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: html, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: html, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: fireos, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: android, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: ios, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: pc, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: mac, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: linux, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: xbox, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: playstation, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: nintendo, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: html, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: null, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: null, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performAuthTest()'><b>performAuthTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: null, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaResourceUnitTest.performLuaTest()'><b>performLuaTest</b><br>Test class: com.namazustudios.socialengine.LuaResourceUnitTest<br>Parameters: namazu.elements.test.auth, test_facebook_security_manifest</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaResourceUnitTest@5460b754</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performMatchClientTest()'><b>performMatchClientTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: fireos, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: fireos, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: android, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: android, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: ios, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: ios, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: pc, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: pc, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: mac, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: mac, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: linux, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: linux, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: xbox, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: xbox, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: playstation, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: playstation, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: nintendo, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: nintendo, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: html, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: html, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: fireos, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: android, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: ios, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: pc, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: mac, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: linux, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: xbox, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: playstation, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: nintendo, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: html, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: null, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: null, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: null, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnRegistrationUnitTest.performRefreshFailureTest()'><b>performRefreshFailureTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnRegistrationUnitTest</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnRegistrationUnitTest@a9f023e</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: fireos, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: fireos, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: android, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: android, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: ios, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: ios, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: pc, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: pc, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: mac, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: mac, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: linux, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: linux, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: xbox, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: xbox, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: playstation, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: playstation, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: nintendo, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: nintendo, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: html, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: html, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: fireos, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: android, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: ios, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: pc, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: mac, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: linux, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: xbox, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: playstation, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: nintendo, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: html, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: null, development</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: null, release</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnSessionUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnSessionUnitTest<br>Parameters: null, null</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnSessionUnitTest@6cd64ee8</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnRegistrationUnitTest.performRefreshSuccessTest()'><b>performRefreshSuccessTest</b><br>Test class: com.namazustudios.socialengine.LuaGameOnRegistrationUnitTest</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnRegistrationUnitTest@a9f023e</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaAuthUnitTest.testAuthenticatedUser()'><b>testAuthenticatedUser</b><br>Test class: com.namazustudios.socialengine.LuaAuthUnitTest</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaAuthUnitTest@620c8641</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaAuthUnitTest.testAuthenticatedUserRemote()'><b>testAuthenticatedUserRemote</b><br>Test class: com.namazustudios.socialengine.LuaAuthUnitTest</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaAuthUnitTest@620c8641</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaAuthUnitTest.testProfile()'><b>testProfile</b><br>Test class: com.namazustudios.socialengine.LuaAuthUnitTest</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaAuthUnitTest@620c8641</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaAuthUnitTest.testProfileRemote()'><b>testProfileRemote</b><br>Test class: com.namazustudios.socialengine.LuaAuthUnitTest</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaAuthUnitTest@620c8641</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaAuthUnitTest.testProfileUnknown()'><b>testProfileUnknown</b><br>Test class: com.namazustudios.socialengine.LuaAuthUnitTest</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaAuthUnitTest@620c8641</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaNotificationIntegrationTest.testSendWithBuilder()'><b>testSendWithBuilder</b><br>Test class: com.namazustudios.socialengine.LuaNotificationIntegrationTest</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaNotificationIntegrationTest@c27a3a2</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaGameOnMatchUnitTest.testSubmitScore()'><b>testSubmitScore</b><br>Test class: com.namazustudios.socialengine.LuaGameOnMatchUnitTest</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaGameOnMatchUnitTest@2f1d0bbc</td></tr>
+<tr>
+<td title='com.namazustudios.socialengine.LuaAuthUnitTest.testUnauthenticatedUser()'><b>testUnauthenticatedUser</b><br>Test class: com.namazustudios.socialengine.LuaAuthUnitTest</td>
+<td></td>
+<td>0</td>
+<td>com.namazustudios.socialengine.LuaAuthUnitTest@620c8641</td></tr>
+</table><p>
+</body>
+</html>
