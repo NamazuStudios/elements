@@ -22,9 +22,6 @@ public class GameOnEnterMatchResponse implements Serializable {
     @ApiModelProperty("The tournament metadata that was used to create the tournament.  May be null.")
     private String metadata;
 
-    @ApiModelProperty("The Match created as part of the tournament entry.")
-    private Match match;
-
     public String getMatchId() {
         return matchId;
     }
@@ -57,14 +54,6 @@ public class GameOnEnterMatchResponse implements Serializable {
         this.metadata = metadata;
     }
 
-    public Match getMatch() {
-        return match;
-    }
-
-    public void setMatch(Match match) {
-        this.match = match;
-    }
-
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -73,13 +62,12 @@ public class GameOnEnterMatchResponse implements Serializable {
         return Objects.equals(getMatchId(), that.getMatchId()) &&
                 Objects.equals(getTournamentId(), that.getTournamentId()) &&
                 Objects.equals(getAttemptsRemaining(), that.getAttemptsRemaining()) &&
-                Objects.equals(getMetadata(), that.getMetadata()) &&
-                Objects.equals(getMatch(), that.getMatch());
+                Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getMatchId(), getTournamentId(), getAttemptsRemaining(), getMetadata(), getMatch());
+        return Objects.hash(getMatchId(), getTournamentId(), getAttemptsRemaining(), getMetadata());
     }
 
     @Override
@@ -89,7 +77,6 @@ public class GameOnEnterMatchResponse implements Serializable {
                 ", tournamentId='" + tournamentId + '\'' +
                 ", attemptsRemaining=" + attemptsRemaining +
                 ", metadata='" + metadata + '\'' +
-                ", match=" + match +
                 '}';
     }
 
