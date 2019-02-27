@@ -42,6 +42,7 @@ import { MissionDialogComponent } from './mission-dialog/mission-dialog.componen
 import { MissionStepsCardComponent } from './mission-dialog/mission-steps-card/mission-steps-card.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MissionRewardsEditorComponent } from './mission-dialog/mission-rewards-editor/mission-rewards-editor.component';
+import { itemExistsValidator } from './item-exists.directive';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();

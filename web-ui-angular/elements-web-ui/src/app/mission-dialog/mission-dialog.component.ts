@@ -2,10 +2,7 @@ import {Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatChipInputEvent, MatDialogRef} from '@angular/material';
 import {ENTER, COMMA} from '@angular/cdk/keycodes';
-import {JsonEditorOptions, JsonEditorComponent} from 'ang-jsoneditor';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
-import {Mission} from '../api/models/mission';
-import {MissionViewModel} from '../models/mission-view-model';
 import {MissionStepsCardComponent} from './mission-steps-card/mission-steps-card.component';
 
 @Component({
@@ -39,7 +36,7 @@ export class MissionDialogComponent implements OnInit {
     const value = event.value;
 
     if ((value || '').trim()) {
-      if (this.data.mission.tags == undefined) { this.data.mission.tags = []; }
+      if (this.data.mission.tags === undefined) { this.data.mission.tags = []; }
       this.data.mission.tags.push(value);
     }
 
@@ -62,21 +59,36 @@ export class MissionDialogComponent implements OnInit {
   * array to the itemForm, overwriting the initial tags value
   */
   close(saveChanges?: boolean): void {
+    // simply close editor without making any changes to data
     if (!saveChanges) {
       this.dialogRef.close();
       return;
     }
 
-    this.editorCard.validateMetadata(true);
-
+    // basic text attributes from form; used as foundation to which all other data is attached
     const formData = this.missionForm.value;
     if (this.data.mission.tags !== undefined) {
       formData.tags = this.data.mission.tags;
     }
+
+    // validates metadata and attaches it to this.data.mission
+    this.editorCard.validateMetadata(true);
+    // if metadata exists, retrieve it from the metadata editor and attach to form data
     if (this.data.mission.metadata !== undefined) {
       formData.metadata = this.data.mission.metadata;
     }
-    console.log(formData);
+
+    // TODO get steps and final repeat ste pfrom mission card
+    // mission card has reference to this.data.mission, can attach steps to it if told to
+    // this.stepsCard.validateSteps(true);
+    if (this.data.mission.steps) {
+      formData.steps = this.data.mission.steps;
+    }
+    if (this.data.mission.finalRepeatStep) {
+      formData.finalRepeatStep = this.data.mission.finalRepeatStep;
+    }
+
+    // closes the dialog and passes the complete formData to the callback
     this.dialogRef.close(formData);
   }
 

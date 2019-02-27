@@ -13,9 +13,12 @@
   <div class="reward-row">
     <mat-form-field>
       <input matInput #newRewardItem placeholder="Reward Item" name="newRewardItem" formControlName="newRewardItem">
+      <mat-error *ngIf="rewardForm.controls.newRewardItem.hasError('itemNameNotFound')">Make sure an Item exists with this name</mat-error>
+      <mat-error *ngIf="rewardForm.controls.newRewardItem.hasError('required')">Reward Item is required</mat-error>
     </mat-form-field>
     <mat-form-field class="no-margin">
       <input matInput #newRewardCt placeholder="Reward Quantity" name="newRewardCt" formControlName="newRewardCt">
+      <mat-error *ngIf="rewardForm.controls.newRewardCt.hasError('required')">Reward quantity is required</mat-error>
     </mat-form-field>
     <button mat-raised-button color="primary" class="add-reward-button" type="button">+</button>
   </div>
