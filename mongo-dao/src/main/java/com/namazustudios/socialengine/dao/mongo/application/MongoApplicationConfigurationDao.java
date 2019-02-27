@@ -36,7 +36,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     private MongoApplicationDao mongoApplicationDao;
 
     public static Class
-    getMongoApplicationConfigurationClassForConfigurationCategory(ConfigurationCategory configurationCategory) {
+    getMongoApplicationConfigurationClass(ConfigurationCategory configurationCategory) {
         final Class type;
         switch (configurationCategory) {
             case IOS_APP_STORE:
@@ -76,7 +76,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             Class<T> type) {
         final MongoApplication parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        final Class MongoType = getMongoApplicationConfigurationClassForConfigurationCategory(configurationCategory);
+        final Class MongoType = getMongoApplicationConfigurationClass(configurationCategory);
 
         final Query<MongoApplicationConfiguration> query =
                 getDatastore().createQuery(MongoType);
