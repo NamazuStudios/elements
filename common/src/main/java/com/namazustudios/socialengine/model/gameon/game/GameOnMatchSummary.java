@@ -133,7 +133,7 @@ public class GameOnMatchSummary implements Serializable {
         return matchesPerPlayer;
     }
 
-    public void P(Integer matchesPerPlayer) {
+    public void setMatchesPerPlayer(Integer matchesPerPlayer) {
         this.matchesPerPlayer = matchesPerPlayer;
     }
 
