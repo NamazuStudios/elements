@@ -2,12 +2,10 @@ package com.namazustudios.socialengine.dao.mongo.application;
 
 import com.namazustudios.socialengine.dao.ApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
-import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplicationConfiguration;
-import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
+import com.namazustudios.socialengine.dao.mongo.model.application.*;
 import com.namazustudios.socialengine.exception.BadQueryException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
-import com.namazustudios.socialengine.model.application.ConfigurationCategory;
+import com.namazustudios.socialengine.model.application.*;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -37,6 +35,40 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
 
     private MongoApplicationDao mongoApplicationDao;
 
+    public static Class
+    getMongoApplicationConfigurationClassForConfigurationCategory(ConfigurationCategory configurationCategory) {
+        final Class type;
+        switch (configurationCategory) {
+            case IOS_APP_STORE:
+                type = MongoIosApplicationConfiguration.class;
+                break;
+            case FIREBASE:
+                type = MongoFirebaseApplicationConfiguration.class;
+                break;
+            case PSN_PS4:
+            case PSN_VITA:
+                type = MongoPSNApplicationConfiguration.class;
+                break;
+            case FACEBOOK:
+                type = MongoFacebookApplicationConfiguration.class;
+                break;
+            case MATCHMAKING:
+                type = MongoMatchmakingApplicationConfiguration.class;
+                break;
+            case AMAZON_GAME_ON:
+                type = MongoGameOnApplicationConfiguration.class;
+                break;
+            case ANDROID_GOOGLE_PLAY:
+                type = MongoGooglePlayApplicationConfiguration.class;
+                break;
+            default:
+                type = MongoApplicationConfiguration.class;
+                break;
+        }
+
+        return type;
+    }
+
     @Override
     public <T extends ApplicationConfiguration> List<T> getApplicationConfigurationsForApplication(
             String applicationNameOrId,
@@ -44,8 +76,10 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             Class<T> type) {
         final MongoApplication parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
+        final Class MongoType = getMongoApplicationConfigurationClassForConfigurationCategory(configurationCategory);
+
         final Query<MongoApplicationConfiguration> query =
-                getDatastore().createQuery(MongoApplicationConfiguration.class);
+                getDatastore().createQuery(MongoType);
         query.field("parent").equal(parent);
         query.field("category").equal(configurationCategory);
 

@@ -1,10 +1,5 @@
 
-local os = require "os"
 local coroutine = require "coroutine"
-local namazu_response = require "namazu.response"
-local http_status = require "namazu.http.status"
-local pagination = require "namazu.pagination"
-
 
 local startup = {}
 
