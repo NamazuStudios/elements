@@ -156,8 +156,6 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
             final String tournamentId,
             final GameOnTournamentEnterRequest gameOnTournamentEnterRequest) {
 
-        final Profile profile = getCurrentProfileSupplier().get();
-
         final DeviceOSType deviceOSType = gameOnTournamentEnterRequest.getDeviceOSType() == null ?
                                           DeviceOSType.getDefault()                              :
                                           gameOnTournamentEnterRequest.getDeviceOSType();
@@ -165,21 +163,6 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
         final AppBuildType appBuildType = gameOnTournamentEnterRequest.getAppBuildType() == null ?
                                           AppBuildType.getDefault()                              :
                                           gameOnTournamentEnterRequest.getAppBuildType();
-
-        final Match match = gameOnTournamentEnterRequest.getMatch();
-
-        if (match == null || match.getScheme() == null) {
-            throw new InvalidDataException("Match must be specified.");
-        }
-
-        final MatchmakingApplicationConfiguration configuration = getMatchmakingApplicationConfigurationDao()
-            .getApplicationConfiguration(profile.getApplication().getId(), match.getScheme());
-
-        if (match.getPlayer() == null) {
-            match.setPlayer(profile);
-        } else if (!Objects.equals(profile, match.getPlayer())) {
-            throw new ForbiddenException("player must match current profile");
-        }
 
         final GameOnSession gameOnSession;
         gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
@@ -195,22 +178,6 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
             .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
             .build()
             .postEnterRequest(tournamentId, enterTournamentRequest);
-
-        match.setScope(response.getTournamentId());
-
-        final Map<String, Object> metadata = new HashMap<>();
-        metadata.put(MATCH_METADATA_MATCH_ID, response.getMatchId());
-        metadata.put(MATCH_METADATA_TOURNAMENT_ID, response.getTournamentId());
-        match.setMetadata(metadata);
-
-        final Match inserted = getMatchDao().createMatch(match);
-
-        final Matchmaker matchmaker = getMatchDao()
-            .getMatchmaker(configuration.getAlgorithm())
-            .withScope(response.getTournamentId());
-
-        final Match paired = getMatchServiceUtils().attempt(matchmaker, inserted, configuration);
-        response.setMatch(paired);
 
         return response;
 
