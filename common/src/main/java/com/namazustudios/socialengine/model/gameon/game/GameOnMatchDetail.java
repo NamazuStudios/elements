@@ -160,6 +160,18 @@ public class GameOnMatchDetail {
         @ApiModelProperty("The awarded prize title.")
         private String prizeTitle;
 
+        @ApiModelProperty("Date prize expires.")
+        private Long dateOfExpiration;
+
+        @ApiModelProperty("Prize description.")
+        private String description;
+
+        @ApiModelProperty("Prize icon.")
+        private String imageUrl;
+
+        @ApiModelProperty("Describes what is contained in prizeInfo (VENDOR | AMAZON_PHYSICAL).")
+        private String prizeInfoType;
+
         public String getAwardedPrizeId() {
             return awardedPrizeId;
         }
@@ -184,6 +196,38 @@ public class GameOnMatchDetail {
             this.prizeTitle = prizeTitle;
         }
 
+        public Long getDateOfExpiration() {
+            return dateOfExpiration;
+        }
+
+        public void setDateOfExpiration(Long dateOfExpiration) {
+            this.dateOfExpiration = dateOfExpiration;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public String getImageUrl() {
+            return imageUrl;
+        }
+
+        public void setImageUrl(String imageUrl) {
+            this.imageUrl = imageUrl;
+        }
+
+        public String getPrizeInfoType() {
+            return prizeInfoType;
+        }
+
+        public void setPrizeInfoType(String prizeInfoType) {
+            this.prizeInfoType = prizeInfoType;
+        }
+
         @Override
         public boolean equals(Object object) {
             if (this == object) return true;
@@ -191,12 +235,16 @@ public class GameOnMatchDetail {
             AwardedPrize that = (AwardedPrize) object;
             return Objects.equals(getAwardedPrizeId(), that.getAwardedPrizeId()) &&
                     getStatus() == that.getStatus() &&
-                    Objects.equals(getPrizeTitle(), that.getPrizeTitle());
+                    Objects.equals(getPrizeTitle(), that.getPrizeTitle()) &&
+                    Objects.equals(getDateOfExpiration(), that.getDateOfExpiration()) &&
+                    Objects.equals(getDescription(), that.getDescription()) &&
+                    Objects.equals(getImageUrl(), that.getImageUrl()) &&
+                    Objects.equals(getPrizeInfoType(), that.getPrizeInfoType());
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(getAwardedPrizeId(), getStatus(), getPrizeTitle());
+            return Objects.hash(getAwardedPrizeId(), getStatus(), getPrizeTitle(), getDateOfExpiration(), getDescription(), getImageUrl(), getDateOfExpiration());
         }
 
         @Override
@@ -205,6 +253,10 @@ public class GameOnMatchDetail {
                     "awardedPrizeId='" + awardedPrizeId + '\'' +
                     ", status=" + status +
                     ", prizeTitle='" + prizeTitle + '\'' +
+                    ", prizeTitle='" + dateOfExpiration + '\'' +
+                    ", prizeTitle='" + description + '\'' +
+                    ", prizeTitle='" + imageUrl + '\'' +
+                    ", prizeTitle='" + prizeInfoType + '\'' +
                     '}';
         }
 
