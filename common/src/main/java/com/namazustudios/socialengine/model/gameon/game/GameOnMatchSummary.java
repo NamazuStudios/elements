@@ -57,6 +57,17 @@ public class GameOnMatchSummary implements Serializable {
     @ApiModelProperty("The score type (e.g. individual).")
     private String scoreType;
 
+    @ApiModelProperty("Indicates whether the player has any UNCLAIMED, CLAIMED or FULFILLED prizes.")
+    private String prizeBundleClaimStatus;
+
+    public String getPrizeBundleClaimStatus() {
+        return prizeBundleClaimStatus;
+    }
+
+    public void setPrizeBundleClaimStatus(String prizeBundleClaimStatus) {
+        this.prizeBundleClaimStatus = prizeBundleClaimStatus;
+    }
+
     public String getMatchId() {
         return matchId;
     }
@@ -197,12 +208,13 @@ public class GameOnMatchSummary implements Serializable {
                 Objects.equals(getPlayersPerMatch(), that.getPlayersPerMatch()) &&
                 Objects.equals(getPrizeBundles(), that.getPrizeBundles()) &&
                 Objects.equals(getWinType(), that.getWinType()) &&
-                Objects.equals(getScoreType(), that.getScoreType());
+                Objects.equals(getScoreType(), that.getScoreType()) &&
+                Objects.equals(getPrizeBundleClaimStatus(), that.getPrizeBundleClaimStatus());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getMatchId(), getTournamentId(), getAttemptsRemaining(), getTitle(), getSubtitle(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getPlayerAttemptsPerMatch(), getPlayersPerMatch(), getPrizeBundles(), getWinType(), getScoreType());
+        return Objects.hash(getMatchId(), getTournamentId(), getAttemptsRemaining(), getTitle(), getSubtitle(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getPlayerAttemptsPerMatch(), getPlayersPerMatch(), getPrizeBundles(), getWinType(), getScoreType(), getPrizeBundleClaimStatus());
     }
 
     @Override
@@ -223,6 +235,7 @@ public class GameOnMatchSummary implements Serializable {
                 ", prizeBundles=" + prizeBundles +
                 ", winType=" + winType +
                 ", scoreType=" + scoreType +
+                ", prizeBundleClaimStatus=" + prizeBundleClaimStatus +
                 '}';
     }
 
