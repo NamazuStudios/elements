@@ -5,11 +5,11 @@
 -- Time: 1:59 PM
 --
 
-local attributes = require "namazu.resource.attributes"
 local ioc = require "namazu.ioc.resolver"
 
 local Application = java.require "com.namazustudios.socialengine.model.application.Application"
 local application_builder_provider = ioc:provider("com.namazustudios.socialengine.service.NotificationBuilder")
+local application_provider = ioc:provider("com.namazustudios.socialengine.model.application.Application")
 
 local notification = {}
 
@@ -23,7 +23,7 @@ local notification = {}
 -- @return a new instance of NotificationBuilder
 function notification.builder()
     local builder = application_builder_provider:get()
-    local application = attributes:getAttribute(Application.APPLICATION_ATTRIUTE)
+    local application = application_provider:get()
     return builder:application(application)
 end
 
