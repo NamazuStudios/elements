@@ -1,23 +1,23 @@
 package com.namazustudios.socialengine.model.reward;
 
+import com.namazustudios.socialengine.model.Taggable;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
-import io.swagger.annotations.Api;
+import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.model.mission.Step;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @ApiModel(description = "Represents a Reward that has been issued but has not yet been claimed by the user.  The " +
                         "reward is assigned a unique ID to ensure that it may not have been applied more than once.")
-public class RewardIssuance implements Serializable {
+public class RewardIssuance implements Serializable, Taggable {
     public static final String SERVER_CONTEXT_PREFIX = "SERVER";
     public static final String CONTEXT_SEPARATOR = ".";
     public static final String MISSION_PROGRESS_SOURCE = "MISSION_PROGRESS";
@@ -44,8 +44,11 @@ public class RewardIssuance implements Serializable {
             "process.")
     private State state;
 
-    @ApiModelProperty("The reward to issue when this issuance is redeemed.")
-    private Reward reward;
+    @ApiModelProperty("The Item to be issued upon redemption.")
+    private Item item;
+
+    @ApiModelProperty("The amount of Items to be set/added to the InventoryItem upon redemption.")
+    private Integer itemQuantity;
 
     @NotNull(groups = {Create.class, Insert.class})
     @Null(groups = {Update.class})
@@ -81,6 +84,9 @@ public class RewardIssuance implements Serializable {
             " additional information as to the source of the issuance (e.g. mission progress/step information).")
     private Map<String, Object> metadata;
 
+    @ApiModelProperty("The tags used to categorize this Reward Issuance.")
+    private List<String> tags;
+
     @ApiModelProperty("Optionally define when the issuance should expire. This value may be updated to extend " +
             "when the expiration occurs. When set, this value must be greater than the current time on the server." +
             "Note that the record may not actually be deleted for up to sixty seconds after the time noted in the" +
@@ -107,12 +113,20 @@ public class RewardIssuance implements Serializable {
         this.user = user;
     }
 
-    public Reward getReward() {
-        return reward;
+    public Item getItem() {
+        return item;
     }
 
-    public void setReward(Reward reward) {
-        this.reward = reward;
+    public void setItem(Item item) {
+        this.item = item;
+    }
+
+    public Integer getItemQuantity() {
+        return itemQuantity;
+    }
+
+    public void setItemQuantity(Integer itemQuantity) {
+        this.itemQuantity = itemQuantity;
     }
 
     public State getState() {
@@ -181,28 +195,46 @@ public class RewardIssuance implements Serializable {
         this.uuid = uuid;
     }
 
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
+
+    public void addTag(final String tag) {
+        if (getTags() == null) {
+            setTags(new ArrayList<>());
+        }
+
+        getTags().add(tag);
+    }
 
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof RewardIssuance)) return false;
-        RewardIssuance that = (RewardIssuance) object;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RewardIssuance that = (RewardIssuance) o;
         return Objects.equals(getId(), that.getId()) &&
                 Objects.equals(getUser(), that.getUser()) &&
                 getState() == that.getState() &&
-                Objects.equals(getReward(), that.getReward()) &&
+                Objects.equals(getItem(), that.getItem()) &&
+                Objects.equals(getItemQuantity(), that.getItemQuantity()) &&
                 Objects.equals(getContext(), that.getContext()) &&
-                Objects.equals(getSource(), that.getSource()) &&
                 getType() == that.getType() &&
+                Objects.equals(getSource(), that.getSource()) &&
                 Objects.equals(getMetadata(), that.getMetadata()) &&
+                Objects.equals(getTags(), that.getTags()) &&
                 Objects.equals(getExpirationTimestamp(), that.getExpirationTimestamp()) &&
                 Objects.equals(getUuid(), that.getUuid());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getUser(), getState(), getReward(), getContext(),
-                getSource(), getType(), getMetadata(), getExpirationTimestamp(), getUuid());
+        return Objects.hash(getId(), getUser(), getState(), getItem(), getItemQuantity(),
+                getContext(), getType(), getSource(), getMetadata(), getTags(), getExpirationTimestamp(),
+                getUuid());
     }
 
     @Override
@@ -211,13 +243,15 @@ public class RewardIssuance implements Serializable {
                 "id='" + id + '\'' +
                 ", user=" + user +
                 ", state=" + state +
-                ", reward=" + reward +
-                ", context=" + context +
-                ", source=" + source +
+                ", item=" + item +
+                ", itemQuantity=" + itemQuantity +
+                ", context='" + context + '\'' +
                 ", type=" + type +
+                ", source='" + source + '\'' +
                 ", metadata=" + metadata +
+                ", tags=" + tags +
                 ", expirationTimestamp=" + expirationTimestamp +
-                ", uuid=" + uuid +
+                ", uuid='" + uuid + '\'' +
                 '}';
     }
 
@@ -233,9 +267,10 @@ public class RewardIssuance implements Serializable {
          * Type, then, after a successful redemption, the MongoRewardIssuanceDao will immediately attempt
          * to delete the RewardIssuance.
          *
-         * TODO: since we cannot guarantee the reward issuance to a user and deleting a PERSISTENT RewardIssuance since
-         * TODO: mongo does not support transactions, we may need some scheduled cleanup process to clear them out
-         * TODO: (setting a new expiration date will not work since that likewise cannot be done atomically).
+         * TODO: since we cannot guarantee that we will both successfully redeem a NON_PERSISTENT RewardIssuance and
+         * TODO: successfully delete it since mongo does not support transactions, we may need some scheduled cleanup
+         * TODO: process to clear them out (setting a new expiration date will not work since that
+         * TODO: likewise cannot be done atomically).
          *
          */
         REDEEMED
@@ -275,14 +310,35 @@ public class RewardIssuance implements Serializable {
 
     /**
      * Builds the context string for a Mission Progression-sourced reward issuance. The last elements in the context
-     * string are, respectively, the {@param progressId} and the {@param sequence} that caused the issuance.
+     * string are, respectively, the {@param progressId}, the {@param sequence} that caused the issuance, and the
+     * {@param rewardIndex} of the current reward in the {@link Step}'s list of {@link Reward}s.
      *
      * @param progressId
      * @param sequence
+     * @param rewardIndex
      * @return the resultant context string
      */
-    public static String buildMissionProgressContextString(String progressId, String sequence) {
-        return buildContextString(SERVER_CONTEXT_PREFIX, MISSION_PROGRESS_SOURCE, progressId, sequence);
+    public static String buildMissionProgressContextString(String progressId, int sequence, int rewardIndex) {
+        return buildContextString(
+                SERVER_CONTEXT_PREFIX,
+                MISSION_PROGRESS_SOURCE,
+                progressId,
+                Integer.toString(sequence),
+                Integer.toString(rewardIndex));
+    }
+
+    /**
+     * Builds the context string for a Mission Progression-sourced reward issuance. The last elements in the context
+     * string are, respectively, the {@param progressId}, the {@param sequence} that caused the issuance, and the
+     * {@param rewardIndex} of the current reward in the {@link Step}'s list of {@link Reward}s.
+     *
+     * @param progressId
+     * @param sequence
+     * @param rewardIndex
+     * @return the resultant context string
+     */
+    public static String buildMissionProgressContextString(String progressId, String sequence, String rewardIndex) {
+        return buildContextString(SERVER_CONTEXT_PREFIX, MISSION_PROGRESS_SOURCE, progressId, sequence, rewardIndex);
     }
 
     /**
@@ -303,6 +359,7 @@ public class RewardIssuance implements Serializable {
                 APPLE_IAP_SOURCE,
                 originalTransactionIdAndSkuOrdinalHashString
         );
+
     }
 
     /**

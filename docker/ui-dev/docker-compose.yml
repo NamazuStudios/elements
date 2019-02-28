@@ -1,0 +1,118 @@
+
+# A docker-compose file which incorporates all necessary services that SocialEngine needs
+# to run in development mode.  This does not include and security and exposes all ports
+# the outside world such that the user may connected to the various underlying services.
+#
+# This could be used as a base for a production deployment, but deploying as-is is not
+# recommended for the above reasons.
+
+version: '3'
+services:
+
+  redis:
+    image: redis:4.0.1
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "6379:6379"
+
+  mongo:
+    image: mongo:3.4.6
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "27017:27017"
+
+  setup:
+    build:
+      context: ./setup
+    networks:
+      - socialengine
+    depends_on:
+      - mongo
+    links:
+      - mongo
+    deploy:
+      replicas: 1
+
+  api:
+    build:
+      context: ./api
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - mongo
+      - redis
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "8080:8080"
+    volumes:
+      - script-repos:/opt/socialengine/script-repos
+
+  code-serve:
+    build:
+      context: ./code-serve
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - mongo
+      - redis
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "8082:8080"
+    volumes:
+      - script-repos:/opt/socialengine/script-repos
+
+  app-serve:
+    build:
+      context: ./app-serve
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - mongo
+      - redis
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "8083:8080"
+    volumes:
+      - script-repos:/opt/socialengine/script-repos
+
+  app-node:
+    build:
+      context: ./app-node
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - mongo
+      - redis
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "28883:28883"
+    volumes:
+      - script-repos:/opt/socialengine/script-repos
+
+networks:
+  socialengine:
+
+volumes:
+  script-repos:

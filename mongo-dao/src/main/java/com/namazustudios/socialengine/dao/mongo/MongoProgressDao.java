@@ -19,6 +19,7 @@ import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.reward.Reward;
 import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import com.namazustudios.socialengine.model.mission.Step;
+import static com.namazustudios.socialengine.model.mission.Step.buildRewardIssuanceTags;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -32,10 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgressId.parseOrThrowNotFoundException;
@@ -49,7 +47,6 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @Singleton
 public class MongoProgressDao implements ProgressDao {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoProgressDao.class);
 
     private StandardQueryParser standardQueryParser;
@@ -74,13 +71,13 @@ public class MongoProgressDao implements ProgressDao {
 
     @Override
     public Pagination<Progress> getProgresses(final Profile profile, final int offset, final int count,
-                                              final Set<String> tags)  {
+                                              final List<String> tags)  {
         return getProgresses(profile, offset, count, tags,null);
     }
 
     @Override
     public Pagination<Progress> getProgresses(final Profile profile, final int offset, final int count,
-                                              final Set<String> tags, final String search) {
+                                              final List<String> tags, final String search) {
         if (isNotEmpty(nullToEmpty(search).trim())) {
             LOGGER.warn("getProgresss(Profile profile, int offset, int count, String query) was called with a query " +
                         "string parameter.  This field is presently ignored and will return all values");
@@ -101,13 +98,13 @@ public class MongoProgressDao implements ProgressDao {
     }
 
     @Override
-    public Pagination<Progress> getProgresses(final int offset, final int count, Set<String> tags)  {
+    public Pagination<Progress> getProgresses(final int offset, final int count, List<String> tags)  {
         return getProgresses(offset, count, tags, null);
     }
 
     @Override
     public Pagination<Progress> getProgresses(final int offset, final int count,
-                                              final Set<String> tags, final String search) {
+                                              final List<String> tags, final String search) {
 
         if (isNotEmpty(search)) {
             LOGGER.warn(" getProgresss(int offset, int count, String query) was called with a query " +
@@ -340,29 +337,35 @@ public class MongoProgressDao implements ProgressDao {
             // Assigns the rewards from the step
 
             final MongoStep _step = step;
+            final int _completedSteps = completedSteps;
             final List<MongoRewardIssuance> rewardIssuances = step.getRewards()
                 .stream()
                 .filter(r -> r != null && r.getItem() != null)
                 .map(r -> {
-                    final String context = buildMissionProgressContextString(
-                            mongoProgress.getObjectId().toHexString(),
-                            Integer.toString(mongoProgress.getSequence()));
-                    final MongoRewardIssuanceId mongoRewardIssuanceId =
-                            new MongoRewardIssuanceId(mongoUser.getObjectId(), r.getObjectId(), context);
-
                     final Progress progress = getDozerMapper().map(mongoProgress, Progress.class);
                     final Step __step = getDozerMapper().map(_step, Step.class);
                     final Reward reward = getDozerMapper().map(r, Reward.class);
                     final User user = getDozerMapper().map(mongoUser, User.class);
                     final Map<String, Object> metadata = generateMissionProgressMetadata(progress, __step);
 
+                    final int stepSequence = progress.getSequence() + _completedSteps;
+
+                    final String context = buildMissionProgressContextString(
+                            mongoProgress.getObjectId().toHexString(),
+                            stepSequence,
+                            __step.getRewards().indexOf(reward));
+
+                    final List<String> tags = buildRewardIssuanceTags(progress, stepSequence);
+
                     final RewardIssuance issuance = new RewardIssuance();
-                    issuance.setReward(reward);
+                    issuance.setItem(reward.getItem());
+                    issuance.setItemQuantity(reward.getQuantity());
                     issuance.setUser(user);
                     issuance.setType(PERSISTENT);
                     issuance.setSource(MISSION_PROGRESS_SOURCE);
                     issuance.setContext(context);
                     issuance.setMetadata(metadata);
+                    issuance.setTags(tags);
 
                     final RewardIssuance createdRewardIssuance = getRewardIssuanceDao().getOrCreateRewardIssuance(issuance);
 
@@ -372,7 +375,7 @@ public class MongoProgressDao implements ProgressDao {
                     return mongoRewardIssuance;
                 }).collect(toList());
 
-            updates.push("rewardIssuances", rewardIssuances);
+            updates.addToSet("rewardIssuances", rewardIssuances);
             actionsToApply -= remaining;
 
             // Increments the completed steps and applies to the remaining actions to apply.  We keep
@@ -393,11 +396,10 @@ public class MongoProgressDao implements ProgressDao {
 
         updates.inc("sequence", completedSteps);
         updates.set("remaining", step == null ? 0 : step.getCount() - actionsToApply);
-
     }
 
     public Map<String, Object> generateMissionProgressMetadata(Progress progress, Step step) {
-        final HashMap<String, Object> map = new HashMap<>();
+        final Map<String, Object> map = new HashMap<>();
         final Map stepMap = getDozerMapper().map(step, Map.class);
 
         map.put(MISSION_PROGRESS_PROGRESS_KEY, progress.getId());

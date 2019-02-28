@@ -30,13 +30,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.google.common.collect.Streams.concat;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Stream.of;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoMissionDao implements MissionDao {
@@ -58,7 +54,7 @@ public class MongoMissionDao implements MissionDao {
     private MongoItemDao mongoItemDao;
 
     @Override
-    public Pagination<Mission> getMissions(int offset, int count, Set<String> tags)  {
+    public Pagination<Mission> getMissions(int offset, int count, List<String> tags)  {
 
         final Query<MongoMission> query = getDatastore().createQuery(MongoMission.class);
 
@@ -118,8 +114,12 @@ public class MongoMissionDao implements MissionDao {
 
     @Override
     public Mission updateMission(final Mission mission) {
-
         getValidationHelper().validateModel(mission, Update.class);
+        normalize(mission);
+
+        if ((mission.getSteps() == null || mission.getSteps().size() == 0) && mission.getFinalRepeatStep() == null) {
+            throw new InvalidDataException("At least one of Steps or finalRepeatStep must be provided.");
+        }
 
         final MongoMission mongoMission = checkMission(mission);
 
@@ -129,11 +129,39 @@ public class MongoMissionDao implements MissionDao {
         query.criteria("_id").equal(objectId);
 
         final UpdateOperations<MongoMission> operations = getDatastore().createUpdateOperations(MongoMission.class);
-        operations.set("name", mission.getName());
-        operations.set("displayName", mission.getDisplayName());
-        operations.set("description", mission.getDescription());
-        operations.set("steps", mongoMission.getSteps());
-        operations.set("finalRepeatStep", mongoMission.getFinalRepeatStep());
+        operations.set("name", mongoMission.getName());
+        operations.set("displayName", mongoMission.getDisplayName());
+        operations.set("description", mongoMission.getDescription());
+
+        mission.validateTags();
+
+        if (mission.getTags() != null) {
+            operations.set("tags", mongoMission.getTags());
+        }
+        else {
+            operations.unset("tags");
+        }
+
+        if (mission.getSteps() != null) {
+            operations.set("steps", mongoMission.getSteps());
+        }
+        else {
+            operations.unset("steps");
+        }
+
+        if (mission.getFinalRepeatStep() != null) {
+            operations.set("finalRepeatStep", mongoMission.getFinalRepeatStep());
+        }
+        else {
+            operations.unset("finalRepeatStep");
+        }
+
+        if (mission.getMetadata() != null) {
+            operations.set("metadata", mongoMission.getMetadata());
+        }
+        else {
+            operations.unset("metadata");
+        }
 
         final FindAndModifyOptions options = new FindAndModifyOptions()
             .returnNew(true)
@@ -153,6 +181,10 @@ public class MongoMissionDao implements MissionDao {
     public Mission createMission(final Mission mission) {
 
         getValidationHelper().validateModel(mission, Insert.class);
+
+        if ((mission.getSteps() == null || mission.getSteps().size() == 0) && mission.getFinalRepeatStep() == null) {
+            throw new InvalidDataException("At least one of Steps or finalRepeatStep must be provided.");
+        }
 
         normalize(mission);
 
@@ -211,19 +243,11 @@ public class MongoMissionDao implements MissionDao {
     }
 
     private MongoReward checkReward(final MongoReward mongoReward) {
-
         final MongoItem mongoItem = mongoReward.getItem();
-        final Integer quantity = mongoReward.getQuantity();
-
-        if (quantity == null) throw new InvalidDataException("Reward quantity not specified.");
-        if (quantity <  0) throw new InvalidDataException("Reward quantity must be positive.");
-        if (mongoItem == null) throw new InvalidDataException("Reward items must be specified.");
-
         final MongoItem refreshedMongoItem = getMongoItemDao().refresh(mongoItem);
         mongoReward.setItem(refreshedMongoItem);
 
         return mongoReward;
-
     }
 
     @Override
@@ -239,7 +263,7 @@ public class MongoMissionDao implements MissionDao {
     }
 
     private void normalize(Mission item) {
-        // leave this stub here in case we implement some normalization logic later
+        item.validateTags();
     }
 
     public AdvancedDatastore getDatastore() {
@@ -305,5 +329,4 @@ public class MongoMissionDao implements MissionDao {
     public void setMongoItemDao(MongoItemDao mongoItemDao) {
         this.mongoItemDao = mongoItemDao;
     }
-
 }

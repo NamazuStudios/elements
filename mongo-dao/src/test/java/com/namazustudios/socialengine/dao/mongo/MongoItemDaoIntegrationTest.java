@@ -15,14 +15,12 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
+import org.testng.collections.Lists;
 
 import javax.inject.Inject;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.testng.Assert.assertEquals;
@@ -50,6 +48,13 @@ public class MongoItemDaoIntegrationTest {
         assertEquals(byName, createdItem);
         Item byId = itemDao.getItemByIdOrName(createdItem.getId());
         assertEquals(byId, createdItem);
+    }
+
+    @Test
+    public void testCreateAndNonStringMetadataValue() {
+        Item item = createMockItem();
+        Item createdItem = itemDao.createItem(item);
+        assertEquals(createdItem.getMetadata().get("hamCount"), Integer.valueOf(2000000));
     }
 
     @Test(expectedExceptions = NotFoundException.class)
@@ -93,13 +98,13 @@ public class MongoItemDaoIntegrationTest {
     @Test
     public void testGetItemsByTags() {
         int numberOfItems = 50;
-        HashSet<String> tagsToFilterBy = Sets.newHashSet("laser", "tag");
+        List<String> tagsToFilterBy = Lists.newArrayList("laser", "tag");
 
         //Add Items to collection, and track the objectIds that contain the tags we care about.
         Set<ObjectId> expectedObjectIds = new HashSet<>();
         for (int i = 0; i < numberOfItems; i++) {
             Item item = createMockItem();
-            HashSet<String> tagsForItem = new HashSet<>();
+            List<String> tagsForItem = new ArrayList<>();
             item.setName(RandomStringUtils.randomAlphabetic(30));
             if (i % 2 == 0) {
                 tagsForItem.add("laser");
@@ -132,13 +137,14 @@ public class MongoItemDaoIntegrationTest {
     private Item createMockItem() {
         Map<String, Object> mockMetadata = new HashMap<>();
         mockMetadata.put("ham", "eggs");
+        mockMetadata.put("hamCount", 2000000);  // test non-string insertion/retrieval
 
         Item item = new Item();
         item.setName("foo_item");
         item.setDisplayName("Foo");
         item.setMetadata(mockMetadata);
         item.setDescription("A Fooable Item.  Don't foo me bro");
-        item.setTags(Sets.newHashSet("barkable", "hideable"));
+        item.setTags(Lists.newArrayList("barkable", "hideable"));
         return item;
     }
 
@@ -154,28 +160,28 @@ public class MongoItemDaoIntegrationTest {
         return new Object[][] {
             {
                 "Case: displayName and description are trimmed",
-                createItem("name", " displayName\t ", "\tdescription", Sets.newHashSet(), new HashMap<>()),
-                createItem("name", "displayName", "description", Sets.newHashSet(), new HashMap<>()),
+                createItem("name", " displayName\t ", "\tdescription", Lists.newArrayList(), new HashMap<>()),
+                createItem("name", "displayName", "description", Lists.newArrayList(), new HashMap<>()),
             },
             {
                 "Case: tags are trimmed",
-                createItem("name", " displayName ", "\tdescription", Sets.newHashSet(" foo ", "\tbar\t"), new HashMap<>()),
-                createItem("name", "displayName", "description", Sets.newHashSet("foo","bar"), new HashMap<>()),
+                createItem("name", " displayName ", "\tdescription", Lists.newArrayList(" foo ", "\tbar\t"), new HashMap<>()),
+                createItem("name", "displayName", "description", Lists.newArrayList("foo","bar"), new HashMap<>()),
             },
             {
                 "Case: tags have inner non alpha-numeric characters, including whitespace, replaced with _",
-                createItem("name", " displayName ", "\tdescription", Sets.newHashSet("foo!bar ", "∆delta"), new HashMap<>()),
-                createItem("name", "displayName", "description", Sets.newHashSet("foo_bar","_delta"), new HashMap<>()),
+                createItem("name", " displayName ", "\tdescription", Lists.newArrayList("foo!bar ", "\r\r\t"), new HashMap<>()),
+                createItem("name", "displayName", "description", Lists.newArrayList("foo!bar"), new HashMap<>()),
             },
             {
                 "Case: tags have upper case characters made lower case",
-                createItem("name", " displayName ", "\tdescription", Sets.newHashSet("BIG", "BANG"), new HashMap<>()),
-                createItem("name", "displayName", "description", Sets.newHashSet("big","bang"), new HashMap<>()),
+                createItem("name", " displayName ", "\tdescription", Lists.newArrayList("b\r\r\n\tig   ", "B   ang"), new HashMap<>()),
+                createItem("name", "displayName", "description", Lists.newArrayList("big","B_ang"), new HashMap<>()),
             }
         };
     }
 
-    private Item createItem(String name, String displayName, String description, HashSet<String> tags, HashMap<String, Object> metadata) {
+    private Item createItem(String name, String displayName, String description, List<String> tags, HashMap<String, Object> metadata) {
         Item item = new Item();
         item.setName(name);
         item.setDisplayName(displayName);

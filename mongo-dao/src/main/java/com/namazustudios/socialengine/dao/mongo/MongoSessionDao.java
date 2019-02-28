@@ -115,7 +115,6 @@ public class MongoSessionDao implements SessionDao {
         final UpdateResults updateResults;
         updateResults = getDatastore().update(query, updates, new UpdateOptions().multi(false).upsert(false));
 
-
         if (updateResults.getUpdatedCount() == 0) {
 
             final MongoSession mongoSession = getDatastore().get(MongoSession.class, sessionId);
@@ -130,7 +129,9 @@ public class MongoSessionDao implements SessionDao {
 
         } else {
             final MongoSession mongoSession = getDatastore().get(MongoSession.class, sessionId);
-            updateProfileLastLogin(mongoSession.getProfile().getObjectId().toString());
+            if (mongoSession.getProfile() != null) {
+                updateProfileLastLogin(mongoSession.getProfile().getObjectId().toString());
+            }
             return getMapper().map(mongoSession, Session.class);
         }
 

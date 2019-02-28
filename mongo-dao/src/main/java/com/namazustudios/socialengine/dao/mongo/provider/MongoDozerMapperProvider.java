@@ -140,10 +140,6 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(RewardIssuance.class, MongoRewardIssuance.class)
                 .fields("id","objectId", customConverter(MongoRewardIssuanceIdConverter.class));
-
-            mapping(Reward.class, MongoReward.class)
-                .fields("id","objectId", customConverter(ObjectIdConverter.class));
-
             }
         };
 

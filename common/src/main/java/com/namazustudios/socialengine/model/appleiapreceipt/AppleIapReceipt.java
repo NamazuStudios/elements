@@ -16,6 +16,9 @@ import java.util.*;
 
 @ApiModel
 public class AppleIapReceipt implements Serializable {
+    public static final String ID_TAG_PREFIX = "ID";
+    public static final String TAG_SEPARATOR = ".";
+
     @ApiModelProperty("The original transaction identifier of the IAP. We use this as the key for the db object " +
             "as well as the {@link RewardIssuance} context. (For now, we do not persist the transaction_id, only " +
             "the original_transaction_id.)")
@@ -102,6 +105,24 @@ public class AppleIapReceipt implements Serializable {
         this.originalPurchaseDate = originalPurchaseDate;
     }
 
+    public static List<String> buildRewardIssuanceTags(final String originalTransactionId, final int skuOrdinal) {
+        final List <String> tags = new ArrayList<>();
+        tags.add(buildIdentifyingRewardIssuanceTag(originalTransactionId, skuOrdinal));
+
+        return tags;
+    }
+
+    public static String buildIdentifyingRewardIssuanceTag(final String originalTransactionId, final int skuOrdinal) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(ID_TAG_PREFIX);
+        stringBuilder.append(TAG_SEPARATOR);
+        stringBuilder.append(originalTransactionId);
+        stringBuilder.append(TAG_SEPARATOR);
+        stringBuilder.append(skuOrdinal);
+
+        return stringBuilder.toString();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -118,7 +139,8 @@ public class AppleIapReceipt implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getOriginalTransactionId(), getUser(), getReceiptData(), getQuantity(), getProductId(), getBundleId(), getOriginalPurchaseDate());
+        return Objects.hash(getOriginalTransactionId(), getUser(), getReceiptData(), getQuantity(), getProductId(),
+                getBundleId(), getOriginalPurchaseDate());
     }
 
     @Override

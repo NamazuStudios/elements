@@ -1,0 +1,16 @@
+h1 {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.card-header {
+  font-size: 18px;
+  font-weight: 500;
+
+  align-items: center;
+}
+
+mat-card {
+  margin-bottom: 5px;
+}

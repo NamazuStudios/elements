@@ -9,6 +9,8 @@ import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -19,7 +21,6 @@ import java.util.Set;
         "namazu.socialengine.dao.progress",
 })
 public interface ProgressDao {
-
     /**
      * Gets progresses specifying the user, offset and the count.
      *
@@ -29,7 +30,7 @@ public interface ProgressDao {
      * @param tags
      * @return a {@link Pagination} of {@link Progress} objects.
      */
-    Pagination<Progress> getProgresses(Profile profile, int offset, int count, Set<String> tags);
+    Pagination<Progress> getProgresses(Profile profile, int offset, int count, List<String> tags);
 
     /**
      * Gets progresses specifying the user, offset and the count, specifying a search filter.
@@ -41,7 +42,7 @@ public interface ProgressDao {
      * @param search a query to filter the results
      * @return a {@link Pagination} of {@link Progress} objects.
      */
-    Pagination<Progress> getProgresses(Profile profile, int offset, int count, Set<String> tags, String search);
+    Pagination<Progress> getProgresses(Profile profile, int offset, int count, List<String> tags, String search);
 
     /**
      * Gets progresses specifying the offset and the count.
@@ -51,7 +52,7 @@ public interface ProgressDao {
      * @param tags
      * @return a {@link Pagination} of {@link Progress} objects.
      */
-    Pagination<Progress> getProgresses(int offset, int count, Set<String> tags);
+    Pagination<Progress> getProgresses(int offset, int count, List<String> tags);
 
     /**
      * Gets progresses specifying the offset and the count, specifying a search filter.
@@ -62,7 +63,7 @@ public interface ProgressDao {
      * @param search a query to filter the results
      * @return a {@link Pagination} of {@link Progress} objects.
      */
-    Pagination<Progress> getProgresses(int offset, int count, Set<String> tags, String search);
+    Pagination<Progress> getProgresses(int offset, int count, List<String> tags, String search);
 
     /**
      * Gets the progress with the id, or throws a {@link NotFoundException} if the
@@ -117,5 +118,4 @@ public interface ProgressDao {
      * @return all active {@link Progress} instances
      */
     Progress getProgressForProfileAndMission(Profile profile, String missionNameOrId);
-
 }

@@ -21,12 +21,16 @@ public class SuperUserProfileService implements ProfileService {
     private Supplier<Profile> currentProfileSupplier;
 
     @Override
-    public Pagination<Profile> getProfiles(int offset, int count) {
-        return getProfileDao().getActiveProfiles(offset, count);
+    public Pagination<Profile> getProfiles(int offset, int count, long lowerBoundTimestamp, long upperBoundTimestamp) {
+        return getProfileDao().getActiveProfiles(offset, count, lowerBoundTimestamp, upperBoundTimestamp);
     }
 
     @Override
-    public Pagination<Profile> getProfiles(int offset, int count, String search) {
+    public Pagination<Profile> getProfiles(
+            int offset,
+            int count,
+            String search
+    ) {
         return getProfileDao().getActiveProfiles(offset, count, search);
     }
 

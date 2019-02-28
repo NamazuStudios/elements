@@ -118,7 +118,8 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
     }
 
     @Override
-    public void deleteAppleIapReceipt(String originalTransactionId) {
+    public void deleteAppleIapReceipt(final String originalTransactionId) {
+
         final WriteResult writeResult = getDatastore().delete(MongoAppleIapReceipt.class, originalTransactionId);
 
         if (writeResult.getN() == 0) {

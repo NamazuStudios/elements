@@ -14,24 +14,28 @@ import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import org.apache.lucene.document.DateTools;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.*;
+import org.apache.lucene.util.BytesRef;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.query.*;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static java.lang.System.currentTimeMillis;
 
 /**
  *
@@ -57,46 +61,82 @@ public class MongoProfileDao implements ProfileDao {
 
     private MongoConcurrentUtils mongoConcurrentUtils;
 
-    public Pagination<Profile> getActiveProfiles(final int offset, final int count) {
+    public Pagination<Profile> getActiveProfiles(
+            final int offset,
+            final int count,
+            final long lowerBoundTimestamp,
+            final long upperBoundTimestamp) {
+        final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
-        final Query<MongoProfile> query;
-        query = getDatastore().createQuery(MongoProfile.class);
+        query.and(query.criteria("active").equal(true));
 
-        query.and(
-            query.criteria("active").equal(true)
-        );
+        if (lowerBoundTimestamp >= 0 && upperBoundTimestamp >= 0 && lowerBoundTimestamp > upperBoundTimestamp) {
+            throw new IllegalArgumentException("Invalid range: upper bound should be less than or " +
+                    "equal to lower bound.");
+        }
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> {
-
-            if (!input.getUser().isActive()) {
-                input.setUser(null);
+        if (lowerBoundTimestamp >= 0) {
+            final Date lowerBoundDate;
+            if (lowerBoundTimestamp >= 0) {
+                lowerBoundDate = new Date(lowerBoundTimestamp);
+            }
+            else {
+                lowerBoundDate = new Date(0);
             }
 
-            if (!input.getApplication().isActive()) {
-                input.setApplication(null);
+            query.and(query.criteria("lastLogin").greaterThanOrEq(lowerBoundDate));
+        }
+
+        if (upperBoundTimestamp >= 0) {
+            final Date upperBoundDate;
+            if (upperBoundTimestamp >= 0) {
+                upperBoundDate = new Date(upperBoundTimestamp);
+            }
+            else {
+                upperBoundDate = new Date();
             }
 
-            return getBeanMapper().map(input, Profile.class);
+            query.and(query.criteria("lastLogin").lessThanOrEq(upperBoundDate));
+        }
 
-        });
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> transform(input));
 
     }
 
     @Override
-    public Pagination<Profile> getActiveProfiles(final int offset, final int count, final String search) {
+    public Pagination<Profile> getActiveProfiles(
+            final int offset,
+            final int count,
+            final String search) {
 
         final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
 
         try {
+            booleanQueryBuilder.add(new DocValuesFieldExistsQuery("active"), BooleanClause.Occur.FILTER);
             final Term activeTerm = new Term("active", "true");
             booleanQueryBuilder.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
-            booleanQueryBuilder.add(getStandardQueryParser().parse(search, "name"), BooleanClause.Occur.FILTER);
+
+            if (search != null && search.length() > 0) {
+                booleanQueryBuilder.add(
+                        getStandardQueryParser().parse(search, "name"),
+                        BooleanClause.Occur.FILTER
+                );
+            }
         } catch (QueryNodeException ex) {
             throw new BadQueryException(ex);
         }
 
-        return getMongoDBUtils().paginationFromSearch(MongoProfile.class, booleanQueryBuilder.build(), offset, count, this::transform);
+        return getMongoDBUtils().paginationFromSearch(
+                MongoProfile.class,
+                booleanQueryBuilder.build(),
+                offset,
+                count,
+                this::transform);
 
+    }
+
+    private static String buildDateString(long timestamp) {
+        return DateTools.dateToString(new Date(timestamp), DateTools.Resolution.MILLISECOND);
     }
 
     @Override

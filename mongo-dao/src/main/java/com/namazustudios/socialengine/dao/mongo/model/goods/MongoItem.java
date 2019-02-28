@@ -8,10 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 @SearchableIdentity(@SearchableField(
@@ -43,11 +40,11 @@ public class MongoItem {
     private String description;
 
     @Property
-    private Map<String, String> metadata = new HashMap<>();
+    private Map<String, Object> metadata = new HashMap<>();
 
     @Indexed
     @Property
-    private Set<String> tags = new HashSet<>();
+    private List<String> tags = new ArrayList<>();
 
     public ObjectId getObjectId() {
         return objectId;
@@ -81,19 +78,19 @@ public class MongoItem {
         this.description = description;
     }
 
-    public Map<String, String> getMetadata() {
+    public Map<String, Object> getMetadata() {
         return metadata;
     }
 
-    public void setMetadata(Map<String, String> metadata) {
+    public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
     }
 
-    public Set<String> getTags() {
+    public List<String> getTags() {
         return tags;
     }
 
-    public void setTags(Set<String> tags) {
+    public void setTags(List<String> tags) {
         this.tags = tags;
     }
 

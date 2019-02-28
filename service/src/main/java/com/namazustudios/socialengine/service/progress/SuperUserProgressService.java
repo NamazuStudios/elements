@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.mission.Progress;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Set;
 
 public class SuperUserProgressService implements ProgressService {
@@ -17,13 +18,13 @@ public class SuperUserProgressService implements ProgressService {
     }
 
     @Override
-    public Pagination<Progress> getProgresses(final int offset, final int count, final Set<String> tags) {
+    public Pagination<Progress> getProgresses(final int offset, final int count, final List<String> tags) {
         return getProgressDao().getProgresses(offset, count, tags);
     }
 
     @Override
     public Pagination<Progress> getProgresses(final int offset, final int count,
-                                              final Set<String> tags, final String query) {
+                                              final List<String> tags, final String query) {
         return getProgressDao().getProgresses(offset, count, tags, query);
     }
 

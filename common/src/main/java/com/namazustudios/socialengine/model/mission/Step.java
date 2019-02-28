@@ -7,10 +7,8 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+
 
 /**
  * Represents a mission step.
@@ -19,6 +17,8 @@ import java.util.Objects;
  */
 @ApiModel
 public class Step implements Serializable {
+    public static final String ID_TAG_PREFIX = "ID";
+    public static final String TAG_SEPARATOR = ".";
 
     @ApiModelProperty("The display name for the step")
     @NotNull
@@ -88,6 +88,24 @@ public class Step implements Serializable {
 
         getMetadata().put(name, value);
 
+    }
+
+    static public List<String> buildRewardIssuanceTags(Progress progress, int sequence) {
+        final List <String> tags = new ArrayList<>();
+        tags.add(buildIdentifyingRewardIssuanceTag(progress, sequence));
+
+        return tags;
+    }
+
+    static public String buildIdentifyingRewardIssuanceTag(Progress progress, int sequence) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(ID_TAG_PREFIX);
+        stringBuilder.append(TAG_SEPARATOR);
+        stringBuilder.append(progress.getId());
+        stringBuilder.append(TAG_SEPARATOR);
+        stringBuilder.append(sequence);
+
+        return stringBuilder.toString();
     }
 
     @Override

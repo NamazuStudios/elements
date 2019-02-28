@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.mission;
 
+import com.namazustudios.socialengine.model.Taggable;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -10,7 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class ProgressMissionInfo implements Serializable {
+public class ProgressMissionInfo implements Serializable, Taggable {
 
     @ApiModelProperty("The id of the mission")
     @NotNull
@@ -35,7 +36,7 @@ public class ProgressMissionInfo implements Serializable {
     private Step finalRepeatStep;
 
     @ApiModelProperty("The tags used to categorize this mission")
-    private Set<String> tags;
+    private List<String> tags;
 
     @ApiModelProperty("The metadata for this mission")
     private Map<String, Object> metadata;
@@ -88,11 +89,11 @@ public class ProgressMissionInfo implements Serializable {
         this.finalRepeatStep = finalRepeatStep;
     }
 
-    public Set<String> getTags() {
+    public List<String> getTags() {
         return tags;
     }
 
-    public void setTags(Set<String> tags) {
+    public void setTags(List<String> tags) {
         this.tags = tags;
     }
 
@@ -102,6 +103,23 @@ public class ProgressMissionInfo implements Serializable {
 
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
+    }
+
+    /**
+     * Returns the index for the given step, or -1 if not found.
+     *
+     * @param step
+     * @return index if found, or -1 if not found.
+     */
+    public int getStepSequence(Step step) {
+        for (int i=0; i<getSteps().size(); i++) {
+            final Step missionStep = getSteps().get(i);
+            if (missionStep.equals(step)) {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     @Override

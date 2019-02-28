@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
-import com.namazustudios.socialengine.dao.mongo.model.mission.MongoReward;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuance;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuanceId;
 import com.namazustudios.socialengine.exception.*;
@@ -18,6 +17,7 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.reward.RewardIssuance;
+import static com.namazustudios.socialengine.model.reward.RewardIssuance.State;
 import static com.namazustudios.socialengine.model.reward.RewardIssuance.State.*;
 import static com.namazustudios.socialengine.model.reward.RewardIssuance.Type.*;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -49,8 +49,6 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     private AdvancedDatastore datastore;
 
     private MongoUserDao mongoUserDao;
-
-    private MongoRewardDao mongoRewardDao;
 
     private MongoItemDao mongoItemDao;
 
@@ -97,7 +95,8 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     public Pagination<RewardIssuance> getRewardIssuances(
             final User user,
             final int offset, final int count,
-            final Set<RewardIssuance.State> states) {
+            final List<State> states,
+            final List<String> tags) {
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
         final Query<MongoRewardIssuance> query = getDatastore().createQuery(MongoRewardIssuance.class);
@@ -106,6 +105,10 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
         if (states != null && !states.isEmpty()) {
             query.field("state").hasAnyOf(states);
+        }
+
+        if (tags != null && !tags.isEmpty()) {
+            query.field("tags").hasAnyOf(tags);
         }
 
         return getMongoDBUtils().paginationFromQuery(
@@ -128,10 +131,15 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     @Override
     public RewardIssuance getOrCreateRewardIssuance(final RewardIssuance rewardIssuance) {
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(rewardIssuance.getUser().getId());
-        final MongoReward mongoReward = getMongoRewardDao().getMongoReward(rewardIssuance.getReward().getId());
+        final MongoItem mongoItem = getMongoItemDao().getMongoItemByNameOrId(rewardIssuance.getItem().getId());
         final String context = rewardIssuance.getContext();
         final MongoRewardIssuanceId mongoRewardIssuanceId =
-                new MongoRewardIssuanceId(mongoUser.getObjectId(), mongoReward.getObjectId(), context);
+                new MongoRewardIssuanceId(
+                        mongoUser.getObjectId(),
+                        mongoItem.getObjectId(),
+                        rewardIssuance.getItemQuantity(),
+                        context
+                );
 
         try {
             final MongoRewardIssuance existingIssuance = getMongoRewardIssuance(mongoRewardIssuanceId);
@@ -151,7 +159,7 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         }
 
         getValidationHelper().validateModel(rewardIssuance, ValidationGroups.Insert.class);
-
+        rewardIssuance.validateTags();
 
         final MongoRewardIssuance mongoRewardIssuance = getDozerMapper().map(rewardIssuance, MongoRewardIssuance.class);
 
@@ -240,7 +248,7 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         final UpdateOperations<MongoInventoryItem> updates = getDatastore().createUpdateOperations(MongoInventoryItem.class);
 
         final MongoUser mongoUser = mongoRewardIssuance.getUser();
-        final MongoItem mongoItem = mongoRewardIssuance.getReward().getItem();
+        final MongoItem mongoItem = mongoRewardIssuance.getItem();
         final MongoInventoryItemId mongoInventoryItemId = new MongoInventoryItemId(mongoUser, mongoItem, SIMPLE_PRIORITY);
 
         updates.set("version", randomUUID().toString());
@@ -257,7 +265,7 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
             updates.set("_id", mongoInventoryItemId);
             updates.set("user", mongoUser);
             updates.set("item", mongoItem);
-            updates.set("quantity", rewardIssuance.getReward().getQuantity());
+            updates.set("quantity", rewardIssuance.getItemQuantity());
             updates.addToSet("rewardIssuanceUuids", mongoRewardIssuance.getUuid());
         }
         else {
@@ -271,7 +279,7 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
                                     .map(ri -> false).findFirst().orElse(true);
 
             if (add) {
-                updates.inc("quantity", mongoRewardIssuance.getReward().getQuantity());
+                updates.inc("quantity", mongoRewardIssuance.getItemQuantity());
                 updates.addToSet("rewardIssuanceUuids", mongoRewardIssuance.getUuid());
             }
 
@@ -317,7 +325,7 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         final WriteResult writeResult = getDatastore().delete(MongoRewardIssuance.class, mongoRewardIssuanceId);
 
         if (writeResult.getN() == 0) {
-            throw new NotFoundException("Pending Reward not found: " + mongoRewardIssuanceId);
+            throw new NotFoundException("Reward Issuance not found: " + mongoRewardIssuanceId);
         }
     }
 
@@ -359,15 +367,6 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
     public MongoItemDao getMongoItemDao() {
         return mongoItemDao;
-    }
-
-    @Inject
-    public void setMongoRewardDao(MongoRewardDao mongoRewardDao) {
-        this.mongoRewardDao = mongoRewardDao;
-    }
-
-    public MongoRewardDao getMongoRewardDao() {
-        return mongoRewardDao;
     }
 
     @Inject

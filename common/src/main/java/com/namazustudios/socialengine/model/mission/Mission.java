@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.mission;
 
+import com.namazustudios.socialengine.model.Taggable;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
@@ -8,6 +9,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +21,7 @@ import java.util.Set;
  * Created by davidjbrooks on 11/23/2018.
  */
 @ApiModel
-public class Mission {
+public class Mission implements Serializable, Taggable {
 
     @ApiModelProperty("The unique ID of the mission")
     @Null(groups={Create.class, Insert.class})
@@ -39,7 +41,7 @@ public class Mission {
     private String description;
 
     @ApiModelProperty("The tags used to categorize this mission")
-    private Set<String> tags;
+    private List<String> tags;
 
     @ApiModelProperty("The steps that constitute the mission (may be null if finalRepeatStep is specified)")
     private List<Step> steps;
@@ -82,11 +84,11 @@ public class Mission {
         this.description = description;
     }
 
-    public Set<String> getTags() {
+    public List<String> getTags() {
         return tags;
     }
 
-    public void setTags(Set<String> tags) {
+    public void setTags(List<String> tags) {
         this.tags = tags;
     }
 
@@ -122,6 +124,23 @@ public class Mission {
 
         getMetadata().put(name, value);
 
+    }
+
+    /**
+     * Returns the index for the given step, or -1 if not found.
+     *
+     * @param step
+     * @return index if found, or -1 if not found.
+     */
+    public int getStepIndex(Step step) {
+        for (int i=0; i<getSteps().size(); i++) {
+            final Step missionStep = getSteps().get(i);
+            if (missionStep.equals(step)) {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     @Override

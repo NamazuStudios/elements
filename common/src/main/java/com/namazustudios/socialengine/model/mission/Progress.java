@@ -45,6 +45,10 @@ public class Progress implements Serializable {
     @ApiModelProperty("List of all reward issuances that are issued but not expired, or redeemed but persistent.")
     private List<RewardIssuance> rewardIssuances;
 
+    @ApiModelProperty("The current number of completed steps. Note that this may exceed the total number of steps, " +
+            "i.e. the final step may be repeated infinitely.")
+    private Integer sequence;
+
     public String getId() {
         return id;
     }
@@ -89,22 +93,32 @@ public class Progress implements Serializable {
         this.rewardIssuances = rewardIssuances;
     }
 
+    public Integer getSequence() {
+        return sequence;
+    }
+
+    public void setSequence(Integer sequence) {
+        this.sequence = sequence;
+    }
+
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof Progress)) return false;
-        Progress progress = (Progress) object;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Progress progress = (Progress) o;
         return Objects.equals(getId(), progress.getId()) &&
                 Objects.equals(getProfile(), progress.getProfile()) &&
                 Objects.equals(getCurrentStep(), progress.getCurrentStep()) &&
                 Objects.equals(getRemaining(), progress.getRemaining()) &&
                 Objects.equals(getMission(), progress.getMission()) &&
-                Objects.equals(getRewardIssuances(), progress.getRewardIssuances());
+                Objects.equals(getRewardIssuances(), progress.getRewardIssuances()) &&
+                Objects.equals(getSequence(), progress.getSequence());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getProfile(), getCurrentStep(), getRemaining(), getMission(), getRewardIssuances());
+        return Objects.hash(getId(), getProfile(), getCurrentStep(), getRemaining(), getMission(),
+                getRewardIssuances(), getSequence());
     }
 
     @Override
@@ -116,7 +130,7 @@ public class Progress implements Serializable {
                 ", remaining=" + remaining +
                 ", mission=" + mission +
                 ", rewardIssuances=" + rewardIssuances +
+                ", sequence=" + sequence +
                 '}';
     }
-
 }

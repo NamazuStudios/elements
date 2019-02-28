@@ -159,6 +159,7 @@ public abstract class JerseyModule extends ServletModule {
         bind(ItemResource.class);
         bind(AppleIapReceiptResource.class);
         bind(GooglePlayIapReceiptResource.class);
+        bind(RewardIssuanceResource.class);
         return this;
     }
 
