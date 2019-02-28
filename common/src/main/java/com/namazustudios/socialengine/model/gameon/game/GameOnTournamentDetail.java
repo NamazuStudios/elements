@@ -50,6 +50,15 @@ public class GameOnTournamentDetail implements Serializable {
     @ApiModelProperty("The win type (eg single or cumulative)")
     private String winType;
 
+    @ApiModelProperty("List of countries players can participate from. Value will be a list of valid ISO 3166-1 Alpha-2 country codes.")
+    private List<String> countryCodes;
+
+    @ApiModelProperty("Description for tournament.")
+    private String description;
+
+    @ApiModelProperty("The current state of the tournament.")
+    private String tournamentState;
+
     public String getTournamentId() {
         return tournamentId;
     }
@@ -154,6 +163,30 @@ public class GameOnTournamentDetail implements Serializable {
         this.winType = winType;
     }
 
+    public List<String> getCountryCodes() {
+        return countryCodes;
+    }
+
+    public void setCountryCodes(List<String> countryCodes) {
+        this.countryCodes = countryCodes;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getTournamentState() {
+        return tournamentState;
+    }
+
+    public void setTournamentState(String tournamentState) {
+        this.tournamentState = tournamentState;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -171,12 +204,15 @@ public class GameOnTournamentDetail implements Serializable {
                 Objects.equals(getPlayersPerMatch(), that.getPlayersPerMatch()) &&
                 Objects.equals(getPrizeBundles(), that.getPrizeBundles()) &&
                 Objects.equals(getScoreType(), that.getScoreType()) &&
-                Objects.equals(getWinType(), that.getWinType());
+                Objects.equals(getWinType(), that.getWinType()) &&
+                Objects.equals(getCountryCodes(), that.getCountryCodes()) &&
+                Objects.equals(getDescription(), that.getDescription()) &&
+                Objects.equals(getTournamentState(), that.getTournamentState());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getTournamentId(), getTitle(), getSubtitle(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getPlayerAttemtpsPerMatch(), getPlayersPerMatch(), getPrizeBundles(), getScoreType(), getWinType());
+        return Objects.hash(getTournamentId(), getTitle(), getSubtitle(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getPlayerAttemtpsPerMatch(), getPlayersPerMatch(), getPrizeBundles(), getScoreType(), getWinType(), getCountryCodes(), getDescription(), getTournamentState());
     }
 
     @Override
@@ -195,6 +231,9 @@ public class GameOnTournamentDetail implements Serializable {
                 ", prizeBundles=" + prizeBundles +
                 ", scoreType='" + scoreType + '\'' +
                 ", winType='" + winType + '\'' +
+                ", countryCodes='" + countryCodes + '\'' +
+                ", description='" + description + '\'' +
+                ", tournamentState='" + tournamentState + '\'' +
                 '}';
     }
 
