@@ -43,6 +43,8 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
 
     public static final String LIMIT = "limit";
 
+    public static final String CURSOR = "cursor";
+
     public static final String CURRENT_PLAYER_NEIGHBORS = "currentPlayerNeighbors";
 
     private final Client client;
@@ -143,7 +145,8 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
     @Override
     public GameOnGetMatchLeaderboardResponse getLeaderboard(final String matchId,
                                                             final Integer currentPlayerNeighbors,
-                                                            final Integer limit) {
+                                                            final Integer limit,
+                                                            final String cursor) {
 
         WebTarget target = client
             .target(BASE_API)
@@ -152,6 +155,7 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
 
         if (limit != null)                  target = target.queryParam(LIMIT, limit);
         if (currentPlayerNeighbors != null) target = target.queryParam(CURRENT_PLAYER_NEIGHBORS, currentPlayerNeighbors);
+        if (cursor != null)                 target = target.queryParam(CURSOR, cursor);
 
         final Response response = target
             .request()
