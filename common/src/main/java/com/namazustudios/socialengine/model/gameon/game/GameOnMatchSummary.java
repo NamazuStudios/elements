@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 @ApiModel(description = "Represents a GameOn Match.  Maps direcly to the Amazon GameOn APIs.  Contains slightly less" +
-                        "information than its detail counterpart.")
+        "information than its detail counterpart.")
 public class GameOnMatchSummary implements Serializable {
 
     @ApiModelProperty("The GameOn assigned match ID.")
@@ -43,13 +43,33 @@ public class GameOnMatchSummary implements Serializable {
     private Integer matchesPerPlayer;
 
     @ApiModelProperty("The number of attempts a player can make per match.")
-    private Integer playerAttemtpsPerMatch;
+    private Integer playerAttemptsPerMatch;
 
     @ApiModelProperty("The number of players per match.")
     private Integer playersPerMatch;
 
     @ApiModelProperty("The detailed listing of prize bundles.")
     private List<GameOnPrizeBundle> prizeBundles;
+
+    @ApiModelProperty("The win type (e.g. highest).")
+    private String winType;
+
+    @ApiModelProperty("The score type (e.g. individual).")
+    private String scoreType;
+
+    @ApiModelProperty("Indicates whether the player has any UNCLAIMED, CLAIMED or FULFILLED prizes.")
+    private String prizeBundleClaimStatus;
+
+    @ApiModelProperty("The current state of the tournament.")
+    private String tournamentState;
+
+    public String getPrizeBundleClaimStatus() {
+        return prizeBundleClaimStatus;
+    }
+
+    public void setPrizeBundleClaimStatus(String prizeBundleClaimStatus) {
+        this.prizeBundleClaimStatus = prizeBundleClaimStatus;
+    }
 
     public String getMatchId() {
         return matchId;
@@ -131,12 +151,12 @@ public class GameOnMatchSummary implements Serializable {
         this.matchesPerPlayer = matchesPerPlayer;
     }
 
-    public Integer getPlayerAttemtpsPerMatch() {
-        return playerAttemtpsPerMatch;
+    public Integer getPlayerAttemptsPerMatch() {
+        return playerAttemptsPerMatch;
     }
 
-    public void setPlayerAttemtpsPerMatch(Integer playerAttemtpsPerMatch) {
-        this.playerAttemtpsPerMatch = playerAttemtpsPerMatch;
+    public void setPlayerAttemptsPerMatch(Integer playerAttemptsPerMatch) {
+        this.playerAttemptsPerMatch = playerAttemptsPerMatch;
     }
 
     public Integer getPlayersPerMatch() {
@@ -155,6 +175,31 @@ public class GameOnMatchSummary implements Serializable {
         this.prizeBundles = prizeBundles;
     }
 
+
+    public String getWinType() {
+        return winType;
+    }
+
+    public void setWinType(String winType) {
+        this.winType = winType;
+    }
+
+    public String getScoreType() {
+        return scoreType;
+    }
+
+    public void setScoreType(String scoreType) {
+        this.scoreType = scoreType;
+    }
+
+    public String getTournamentState() {
+        return tournamentState;
+    }
+
+    public void setTournamentState(String tournamentState) {
+        this.tournamentState = tournamentState;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -170,14 +215,18 @@ public class GameOnMatchSummary implements Serializable {
                 Objects.equals(getDateEnd(), that.getDateEnd()) &&
                 Objects.equals(getImageUrl(), that.getImageUrl()) &&
                 Objects.equals(getMatchesPerPlayer(), that.getMatchesPerPlayer()) &&
-                Objects.equals(getPlayerAttemtpsPerMatch(), that.getPlayerAttemtpsPerMatch()) &&
+                Objects.equals(getPlayerAttemptsPerMatch(), that.getPlayerAttemptsPerMatch()) &&
                 Objects.equals(getPlayersPerMatch(), that.getPlayersPerMatch()) &&
-                Objects.equals(getPrizeBundles(), that.getPrizeBundles());
+                Objects.equals(getPrizeBundles(), that.getPrizeBundles()) &&
+                Objects.equals(getWinType(), that.getWinType()) &&
+                Objects.equals(getScoreType(), that.getScoreType()) &&
+                Objects.equals(getPrizeBundleClaimStatus(), that.getPrizeBundleClaimStatus()) &&
+                Objects.equals(getTournamentState(), that.getTournamentState());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getMatchId(), getTournamentId(), getAttemptsRemaining(), getTitle(), getSubtitle(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getPlayerAttemtpsPerMatch(), getPlayersPerMatch(), getPrizeBundles());
+        return Objects.hash(getMatchId(), getTournamentId(), getAttemptsRemaining(), getTitle(), getSubtitle(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getPlayerAttemptsPerMatch(), getPlayersPerMatch(), getPrizeBundles(), getWinType(), getScoreType(), getPrizeBundleClaimStatus(), getTournamentState());
     }
 
     @Override
@@ -193,9 +242,13 @@ public class GameOnMatchSummary implements Serializable {
                 ", dateEnd=" + dateEnd +
                 ", imageUrl='" + imageUrl + '\'' +
                 ", matchesPerPlayer=" + matchesPerPlayer +
-                ", playerAttemtpsPerMatch=" + playerAttemtpsPerMatch +
+                ", playerAttemptsPerMatch=" + playerAttemptsPerMatch +
                 ", playersPerMatch=" + playersPerMatch +
                 ", prizeBundles=" + prizeBundles +
+                ", winType=" + winType +
+                ", scoreType=" + scoreType +
+                ", prizeBundleClaimStatus=" + prizeBundleClaimStatus +
+                ", tournamentState=" + tournamentState +
                 '}';
     }
 
