@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rest.gameon.admin;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListResponse;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListRequest;
 import com.namazustudios.socialengine.model.gameon.admin.GameOnGetPrizeListResponse;
+import com.namazustudios.socialengine.model.gameon.game.GameOnGetPrizeDetailsResponse;
 import com.namazustudios.socialengine.service.GameOnAdminPrizeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

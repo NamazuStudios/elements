@@ -69,6 +69,27 @@ public class UserGameOnGamePrizeService implements GameOnGamePrizeService {
 
     }
 
+    @Override
+    public GameOnGetPrizeDetailsResponse getDetails(String prizeId, DeviceOSType deviceOSType, AppBuildType appBuildType) {
+        if (deviceOSType == null) {
+            deviceOSType = DeviceOSType.getDefault();
+        }
+
+        if (appBuildType == null) {
+            appBuildType = AppBuildType.getDefault();
+        }
+
+        final GameOnSession gameOnSession;
+        gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
+
+        return getGameOnGamePrizeInvokerBuilderProvider()
+                .get()
+                .withSession(gameOnSession)
+                .withExpirationRetry(e -> getGameOnSessionService().refreshExpiredSession(e.getExpired()))
+                .build()
+                .getDetails(prizeId);
+    }
+
     public GameOnSessionService getGameOnSessionService() {
         return gameOnSessionService;
     }
