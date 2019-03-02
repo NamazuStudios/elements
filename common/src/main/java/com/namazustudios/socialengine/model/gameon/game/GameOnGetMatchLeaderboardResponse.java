@@ -17,8 +17,16 @@ public class GameOnGetMatchLeaderboardResponse {
     @ApiModelProperty("List of leaderboard items.")
     private List<LeaderboardItem> leaderboard;
 
-    @ApiModelProperty("The neighboring leadeerboard items.")
+    @ApiModelProperty("The neighboring leaderboard items.")
     private List<LeaderboardItem> neighbors;
+
+    @ApiModelProperty("The cursor to fetch the next page of results. If this is null, then there are no more results" +
+            " to fetch. This value is dynamically computed to retrieve the cursor provided in the `next` property.")
+    private String cursor;
+
+    @ApiModelProperty("The raw next string retrieved from the GameOn service. Use the `cursor` property for " +
+            "pagination instead.")
+    private String next;
 
     public LeaderboardItem getCurrentPlayer() {
         return currentPlayer;
@@ -44,6 +52,56 @@ public class GameOnGetMatchLeaderboardResponse {
         this.neighbors = neighbors;
     }
 
+    public String getCursor() {
+        if (getNext() == null) {
+            return null;
+        }
+
+        // for now, we assume the next string is of the form:
+        // `/matches/f106bf39-adc2-4a19-8934-fdaf482738e6/leaderboard?limit=2&cursor=QHxmZWQy...`
+
+        final int questionMarkIndex = getNext().indexOf("?");
+        if (questionMarkIndex < 0) {
+            return null;
+        }
+
+        final String queryString = getNext().substring(questionMarkIndex + 1);
+        if (queryString == null || queryString.length() == 0) {
+            return null;
+        }
+
+        final String[] queryPairs = queryString.split("&");
+        if (queryPairs == null || queryPairs.length == 0) {
+            return null;
+        }
+
+        for (final String queryPair : queryPairs) {
+            if (queryPair.startsWith("cursor")) {
+                final int equalSignIndex = queryPair.indexOf("=");
+                if (equalSignIndex < 0) {
+                    return null;
+                }
+
+                final String cursorValue = queryPair.substring(equalSignIndex + 1);
+                return cursorValue;
+            }
+        }
+
+        return null;
+    }
+
+    public void setCursor(String cursor) {
+        this.cursor = cursor;
+    }
+
+    public String getNext() {
+        return next;
+    }
+
+    public void setNext(String next) {
+        this.next = next;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -56,7 +114,6 @@ public class GameOnGetMatchLeaderboardResponse {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(getCurrentPlayer(), getLeaderboard(), getNeighbors());
     }
 
@@ -101,12 +158,12 @@ public class GameOnGetMatchLeaderboardResponse {
             this.externalPlayerId = externalPlayerId;
         }
 
-        public Boolean getCurrentPlayer() {
+        public Boolean getIsCurrentPlayer() {
             return isCurrentPlayer;
         }
 
-        public void setCurrentPlayer(Boolean currentPlayer) {
-            isCurrentPlayer = currentPlayer;
+        public void setIsCurrentPlayer(Boolean isCurrentPlayer) {
+            isCurrentPlayer = isCurrentPlayer;
         }
 
         public String getPlayerName() {
@@ -133,6 +190,8 @@ public class GameOnGetMatchLeaderboardResponse {
             this.score = score;
         }
 
+
+
         @Override
         public boolean equals(Object object) {
             if (this == object) return true;
@@ -140,7 +199,7 @@ public class GameOnGetMatchLeaderboardResponse {
             LeaderboardItem that = (LeaderboardItem) object;
             return Objects.equals(getProfile(), that.getProfile()) &&
                     Objects.equals(getExternalPlayerId(), that.getExternalPlayerId()) &&
-                    Objects.equals(getCurrentPlayer(), that.getCurrentPlayer()) &&
+                    Objects.equals(getIsCurrentPlayer(), that.getIsCurrentPlayer()) &&
                     Objects.equals(getPlayerName(), that.getPlayerName()) &&
                     Objects.equals(getRank(), that.getRank()) &&
                     Objects.equals(getScore(), that.getScore());

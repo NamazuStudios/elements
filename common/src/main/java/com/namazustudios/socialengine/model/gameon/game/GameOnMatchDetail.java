@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Objects;
 
 @ApiModel(description = "Represents a GameOn Match.  Maps direclty to the Amazon GameOn APIs.  Contains slightly more" +
-                        "information than its summary counterpart.")
+        "information than its summary counterpart.")
 public class GameOnMatchDetail {
 
     @ApiModelProperty("The GameOn assigned match ID.")
@@ -34,6 +34,9 @@ public class GameOnMatchDetail {
 
     @ApiModelProperty("The date the score was submitted.")
     private Long scoreDate;
+
+    @ApiModelProperty("Remaining number of attempts if the player is already in the match.")
+    private Integer attemptsRemaining;
 
     public String getMatchId() {
         return matchId;
@@ -99,6 +102,14 @@ public class GameOnMatchDetail {
         this.scoreDate = scoreDate;
     }
 
+    public Integer getAttemptsRemaining() {
+        return attemptsRemaining;
+    }
+
+    public void setAttemptsRemaining(Integer attemptsRemaining) {
+        this.attemptsRemaining = attemptsRemaining;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -111,13 +122,14 @@ public class GameOnMatchDetail {
                 Objects.equals(getLastScore(), that.getLastScore()) &&
                 Objects.equals(getLastScoreDate(), that.getLastScoreDate()) &&
                 Objects.equals(getScore(), that.getScore()) &&
-                Objects.equals(getScoreDate(), that.getScoreDate());
+                Objects.equals(getScoreDate(), that.getScoreDate()) &&
+                Objects.equals(getAttemptsRemaining(), that.getAttemptsRemaining());
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(getMatchId(), getTournamentDetails(), getAwardedPrizes(), getCanEnter(), getLastScore(), getLastScoreDate(), getScore(), getScoreDate());
+        return Objects.hash(getMatchId(), getTournamentDetails(), getAwardedPrizes(), getCanEnter(), getLastScore(), getLastScoreDate(), getScore(), getScoreDate(), getAttemptsRemaining());
     }
 
     @Override
@@ -131,11 +143,12 @@ public class GameOnMatchDetail {
                 ", lastScoreDate=" + lastScoreDate +
                 ", score=" + score +
                 ", scoreDate=" + scoreDate +
+                ", attemptsRemaining=" + attemptsRemaining +
                 '}';
     }
 
     @ApiModel(description = "The awarded prize model.  See: " +
-              "https://developer.amazon.com/docs/gameon/game-api-ref.html#getmatchdetailsresponse_awardedprize")
+            "https://developer.amazon.com/docs/gameon/game-api-ref.html#getmatchdetailsresponse_awardedprize")
     public static class AwardedPrize {
 
         @ApiModelProperty("The awarded prize ID")
@@ -146,6 +159,18 @@ public class GameOnMatchDetail {
 
         @ApiModelProperty("The awarded prize title.")
         private String prizeTitle;
+
+        @ApiModelProperty("Date prize expires.")
+        private Long dateOfExpiration;
+
+        @ApiModelProperty("Prize description.")
+        private String description;
+
+        @ApiModelProperty("Prize icon.")
+        private String imageUrl;
+
+        @ApiModelProperty("Describes what is contained in prizeInfo (VENDOR | AMAZON_PHYSICAL).")
+        private String prizeInfoType;
 
         public String getAwardedPrizeId() {
             return awardedPrizeId;
@@ -171,6 +196,38 @@ public class GameOnMatchDetail {
             this.prizeTitle = prizeTitle;
         }
 
+        public Long getDateOfExpiration() {
+            return dateOfExpiration;
+        }
+
+        public void setDateOfExpiration(Long dateOfExpiration) {
+            this.dateOfExpiration = dateOfExpiration;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public String getImageUrl() {
+            return imageUrl;
+        }
+
+        public void setImageUrl(String imageUrl) {
+            this.imageUrl = imageUrl;
+        }
+
+        public String getPrizeInfoType() {
+            return prizeInfoType;
+        }
+
+        public void setPrizeInfoType(String prizeInfoType) {
+            this.prizeInfoType = prizeInfoType;
+        }
+
         @Override
         public boolean equals(Object object) {
             if (this == object) return true;
@@ -178,12 +235,16 @@ public class GameOnMatchDetail {
             AwardedPrize that = (AwardedPrize) object;
             return Objects.equals(getAwardedPrizeId(), that.getAwardedPrizeId()) &&
                     getStatus() == that.getStatus() &&
-                    Objects.equals(getPrizeTitle(), that.getPrizeTitle());
+                    Objects.equals(getPrizeTitle(), that.getPrizeTitle()) &&
+                    Objects.equals(getDateOfExpiration(), that.getDateOfExpiration()) &&
+                    Objects.equals(getDescription(), that.getDescription()) &&
+                    Objects.equals(getImageUrl(), that.getImageUrl()) &&
+                    Objects.equals(getPrizeInfoType(), that.getPrizeInfoType());
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(getAwardedPrizeId(), getStatus(), getPrizeTitle());
+            return Objects.hash(getAwardedPrizeId(), getStatus(), getPrizeTitle(), getDateOfExpiration(), getDescription(), getImageUrl(), getDateOfExpiration());
         }
 
         @Override
@@ -192,13 +253,17 @@ public class GameOnMatchDetail {
                     "awardedPrizeId='" + awardedPrizeId + '\'' +
                     ", status=" + status +
                     ", prizeTitle='" + prizeTitle + '\'' +
+                    ", prizeTitle='" + dateOfExpiration + '\'' +
+                    ", prizeTitle='" + description + '\'' +
+                    ", prizeTitle='" + imageUrl + '\'' +
+                    ", prizeTitle='" + prizeInfoType + '\'' +
                     '}';
         }
 
     }
 
     @ApiModel(description = "The awarded prize status. See: " +
-                "https://developer.amazon.com/docs/gameon/game-api-ref.html#getmatchlistresponse_match")
+            "https://developer.amazon.com/docs/gameon/game-api-ref.html#getmatchlistresponse_match")
     public enum AwardedPrizeStatus {
 
         /**

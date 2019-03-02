@@ -18,6 +18,7 @@ public class GameOnGamePrizeServiceProvider implements Provider<GameOnGamePrizeS
     @Override
     public GameOnGamePrizeService get() {
         switch (getUser().getLevel()) {
+            case SUPERUSER:
             case USER:    return getUserGameOnGamePrizeServiceProvider().get();
             default:      return forbidden(GameOnGamePrizeService.class);
         }
