@@ -193,13 +193,20 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         operations.set("quantity", quantity);
         operations.set("version", randomUUID().toString());
 
+        final MongoInventoryItem mongoInventoryItem = getDatastore().get(MongoInventoryItem.class, objectId);
+
+        if (mongoInventoryItem == null) {
+            operations.set("user", mongoUser);
+            operations.set("item", mongoItem);
+        }
+
         final FindAndModifyOptions options = new FindAndModifyOptions()
                 .returnNew(true)
                 .writeConcern(WriteConcern.ACKNOWLEDGED)
                 .upsert(true);
 
-        final MongoInventoryItem mongoInventoryItem = getDatastore().findAndModify(query, operations, options);
-        return getDozerMapper().map(mongoInventoryItem, InventoryItem.class);
+        final MongoInventoryItem resultMongoInventoryItem = getDatastore().findAndModify(query, operations, options);
+        return getDozerMapper().map(resultMongoInventoryItem, InventoryItem.class);
 
     }
 
