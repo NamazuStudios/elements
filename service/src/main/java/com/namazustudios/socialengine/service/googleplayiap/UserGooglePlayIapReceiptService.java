@@ -189,7 +189,7 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
                     .execute();
         }
         catch (Exception e) {
-            logger.error("Communication with the Google Play services was not successful: {}", e);
+            logger.error("Communication with the Google Play services was not successful: ", e);
             throw new InternalException("Communication with the Google Play services was not successful. Please refer" +
                     " to server logs for more information.");
         }
