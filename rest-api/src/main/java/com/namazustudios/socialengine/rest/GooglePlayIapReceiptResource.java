@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rest;
 
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.googleplayiapreceipt.CreateGooglePlayIapReceipt;
 import com.namazustudios.socialengine.model.googleplayiapreceipt.GooglePlayIapReceipt;
@@ -44,6 +45,18 @@ public class GooglePlayIapReceiptResource {
         final String packageName = createGooglePlayIapReceipt.getPackageName();
         final String productId = createGooglePlayIapReceipt.getProductId();
         final String purchaseToken = createGooglePlayIapReceipt.getPurchaseToken();
+
+        if (packageName.length() == 0) {
+            throw new InvalidDataException("Package Name must not be the empty string.");
+        }
+
+        if (productId.length() == 0) {
+            throw new InvalidDataException("Product Id must not be the empty string.");
+        }
+
+        if (purchaseToken.length() == 0) {
+            throw new InvalidDataException("Purchase Token must not be the empty string.");
+        }
 
         final GooglePlayIapReceipt resultGooglePlayIapReceipt = getGooglePlayIapReceiptService()
                 .verifyAndCreateGooglePlayIapReceiptIfNeeded(packageName, productId, purchaseToken);
