@@ -23,8 +23,7 @@ import static com.namazustudios.socialengine.model.User.Level.USER;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.of;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
+import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoInventoryItemDaoTest {
@@ -43,8 +42,10 @@ public class MongoInventoryItemDaoTest {
 
     private Item testItemB;
 
+    private Item testItemInsertOnUpdateQuantity;
+
     @BeforeClass
-    public void setupTetItems() {
+    public void setupTestItems() {
 
         testUserA = new User();
         testUserA.setName("testy.mctesterson.2");
@@ -70,8 +71,16 @@ public class MongoInventoryItemDaoTest {
         testItemB.setTags(of("a").collect(toList()));
         testItemB.addMetadata("key", "b");
 
+        testItemInsertOnUpdateQuantity = new Item();
+        testItemInsertOnUpdateQuantity.setName("item_testItemInsertOnUpdateQuantity");
+        testItemInsertOnUpdateQuantity.setDisplayName("Test Item testItemInsertOnUpdateQuantity.");
+        testItemInsertOnUpdateQuantity.setDescription("A simple test item.");
+        testItemInsertOnUpdateQuantity.setTags(of("testItemInsertOnUpdateQuantity").collect(toList()));
+        testItemInsertOnUpdateQuantity.addMetadata("key", "testItemInsertOnUpdateQuantity");
+
         testItemA = getItemDao().createItem(testItemA);
         testItemB = getItemDao().createItem(testItemB);
+        testItemInsertOnUpdateQuantity = getItemDao().createItem(testItemInsertOnUpdateQuantity);
         testUserA = getUserDao().createOrReactivateUser(testUserA);
         testUserB = getUserDao().createOrReactivateUser(testUserB);
     }
@@ -184,6 +193,15 @@ public class MongoInventoryItemDaoTest {
     }
 
     @Test(dependsOnMethods = "testSetInventoryItemById", dataProvider = "getUsersAndPriorities")
+    public void testCreateInventoryItemByNameAndQuantity(final User user, final int priority) {
+        final InventoryItem inventoryItem = getInventoryItemDao().setQuantityForItem(user, testItemInsertOnUpdateQuantity.getName(), priority, 25);
+        assertNotNull(inventoryItem.getId());
+        assertEquals(inventoryItem.getUser(), user);
+        assertEquals(inventoryItem.getItem(), testItemInsertOnUpdateQuantity);
+        assertEquals(inventoryItem.getQuantity(), Integer.valueOf(25));
+    }
+
+    @Test(dependsOnMethods = "testCreateInventoryItemByNameAndQuantity", dataProvider = "getUsersAndPriorities")
     public void testSetInventoryItemByName(final User user, final int priority) {
         final InventoryItem inventoryItem = getInventoryItemDao().getInventoryItemByItemNameOrId(user, testItemA.getName(), priority);
         final InventoryItem adjustedInventoryItem = getInventoryItemDao().setQuantityForItem(user, testItemA.getName(), priority, 0);
