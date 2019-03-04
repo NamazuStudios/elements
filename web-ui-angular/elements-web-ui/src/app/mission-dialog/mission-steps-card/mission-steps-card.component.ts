@@ -12,8 +12,8 @@ import {MissionStepViewModel} from '../../models/mission-step-view-model';
 export class MissionStepsCardComponent implements OnInit {
   @Input() mission: Mission;
   // private stepForm: FormGroup;
-  private newStep = new MissionStepViewModel();
-  private finalStep = new MissionStepViewModel();
+  public newStep = new MissionStepViewModel();
+  public finalStep = new MissionStepViewModel();
   public isFinalStepValid;
   public isStepsValid;
 
