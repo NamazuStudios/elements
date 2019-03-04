@@ -118,7 +118,8 @@ public class UserGameOnMatchService implements GameOnMatchService {
             final DeviceOSType deviceOSType, final AppBuildType appBuildType,
             final String matchId,
             final Integer currentPlayerNeighbors,
-            final Integer limit) {
+            final Integer limit,
+            final String cursor) {
 
         final GameOnSession gameOnSession;
         gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
@@ -128,13 +129,11 @@ public class UserGameOnMatchService implements GameOnMatchService {
                 .withSession(gameOnSession)
                 .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
                 .build()
-                .getLeaderboard(matchId, currentPlayerNeighbors, limit);
+                .getLeaderboard(matchId, currentPlayerNeighbors, limit, cursor);
 
         fillInProfile(response.getCurrentPlayer());
         fillInProfiles(response.getNeighbors());
         fillInProfiles(response.getLeaderboard());
-
-        // TODO Rework "Next" URL.  We need to know exactly what "next" is, however.
 
         return response;
     }

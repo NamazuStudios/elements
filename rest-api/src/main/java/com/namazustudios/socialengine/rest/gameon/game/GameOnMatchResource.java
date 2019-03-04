@@ -127,11 +127,14 @@ public class GameOnMatchResource {
             final Integer currentPlayerNeighbors,
 
             @QueryParam("limit")
-            final Integer limit) {
+            final Integer limit,
+
+            @QueryParam("cursor")
+            final String cursor) {
 
         return getGameOnMatchService().getLeaderboard(
             deviceOSType, appBuildType,
-            matchId, currentPlayerNeighbors, limit);
+            matchId, currentPlayerNeighbors, limit, cursor);
 
     }
 

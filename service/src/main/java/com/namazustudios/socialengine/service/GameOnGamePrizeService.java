@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.service;
 
-import com.namazustudios.socialengine.model.gameon.game.GameOnClaimPrizeListRequest;
-import com.namazustudios.socialengine.model.gameon.game.GameOnClaimPrizeListResponse;
-import com.namazustudios.socialengine.model.gameon.game.GameOnFulfillPrizeRequest;
-import com.namazustudios.socialengine.model.gameon.game.GameOnFulfillPrizeListResponse;
+import com.namazustudios.socialengine.model.gameon.game.*;
 
 /**
  * Provides interaction with GameOn for prizes from the User/Player perspective.
@@ -25,5 +22,13 @@ public interface GameOnGamePrizeService {
      * @return an instance of {@link GameOnFulfillPrizeListResponse}
      */
     GameOnFulfillPrizeListResponse fulfill(GameOnFulfillPrizeRequest gameOnFulfillPrizeRequest);
+
+    /**
+     * Gets prize details for the given {@param prizeId}.
+     *
+     * @param prizeId
+     * @return
+     */
+    GameOnGetPrizeDetailsResponse getDetails(String prizeId, DeviceOSType deviceOSType, AppBuildType appBuildType);
 
 }

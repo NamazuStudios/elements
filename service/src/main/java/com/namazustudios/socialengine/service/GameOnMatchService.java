@@ -56,9 +56,11 @@ public interface GameOnMatchService {
      * @param matchId the game-on match id
      * @param currentPlayerNeighbors the number of current neighbors to request
      * @param limit the limit to fetch
+     * @param cursor the cursor from which to fetch the next page
      * @return the {@link GameOnGetMatchLeaderboardResponse}
      */
     GameOnGetMatchLeaderboardResponse getLeaderboard(DeviceOSType deviceOSType, AppBuildType appBuildType,
-                                                     String matchId, Integer currentPlayerNeighbors, Integer limit);
+                                                     String matchId, Integer currentPlayerNeighbors, Integer limit,
+                                                     String cursor);
 
 }

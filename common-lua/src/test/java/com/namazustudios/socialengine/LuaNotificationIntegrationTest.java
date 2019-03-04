@@ -28,6 +28,8 @@ public class LuaNotificationIntegrationTest {
 
     private NotificationBuilder mockNotificationBuilder;
 
+    private Application application;
+
     @BeforeMethod
     public void resetMocks() {
         reset(getMockNotificationBuilder());
@@ -37,16 +39,9 @@ public class LuaNotificationIntegrationTest {
     public void testSendWithBuilder() throws Exception {
 
         final Profile mockProfile = new Profile();
-        final Application mockApplication = new Application();
-
-        mockApplication.setId(randomUUID().toString());
-        mockApplication.setName("Test App");
-        mockProfile.setApplication(mockApplication);
-        mockProfile.setDisplayName("Testy McTesterson");
 
         final Attributes attributes = new SimpleAttributes.Builder()
             .setAttribute(Profile.PROFILE_ATTRIBUTE, mockProfile)
-            .setAttribute(Application.APPLICATION_ATTRIUTE, mockApplication)
             .build();
 
         final Notification mockNotification = mock(Notification.class);
@@ -63,7 +58,7 @@ public class LuaNotificationIntegrationTest {
         verify(mockNotification, times(1)).send();
         verify(getMockNotificationBuilder(), times(1)).title(eq("Hello World!"));
         verify(getMockNotificationBuilder(), times(1)).message(eq("Hello World!"));
-        verify(getMockNotificationBuilder(), times(1)).application(eq(mockApplication));
+        verify(getMockNotificationBuilder(), times(1)).application(eq(getApplication()));
         verify(getMockNotificationBuilder(), times(1)).recipient(eq(mockProfile));
         verify(getMockNotificationBuilder(), times(1)).add(eq("single"), eq("property"));
 
@@ -100,6 +95,15 @@ public class LuaNotificationIntegrationTest {
     @Inject
     public void setMockNotificationBuilder(NotificationBuilder mockNotificationBuilder) {
         this.mockNotificationBuilder = mockNotificationBuilder;
+    }
+
+    public Application getApplication() {
+        return application;
+    }
+
+    @Inject
+    public void setApplication(Application application) {
+        this.application = application;
     }
 
 }
