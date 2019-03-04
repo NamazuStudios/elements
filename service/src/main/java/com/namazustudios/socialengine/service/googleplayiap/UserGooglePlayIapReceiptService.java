@@ -50,8 +50,6 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
 
     private GooglePlayIapReceiptDao googlePlayIapReceiptDao;
 
-    //private Provider<AppleIapVerifyReceiptInvoker.Builder> appleIapVerifyReceiptInvokerBuilderProvider;
-
     private Mapper dozerMapper;
 
     private final ObjectMapper objectMapper;
