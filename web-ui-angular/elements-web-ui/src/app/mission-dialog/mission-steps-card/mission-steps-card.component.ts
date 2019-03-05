@@ -1,8 +1,9 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, Input, OnInit, ViewChild} from '@angular/core';
 import {Mission} from '../../api/models/mission';
 import {CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
 import {FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
 import {MissionStepViewModel} from '../../models/mission-step-view-model';
+import {MissionRewardsEditorComponent} from '../mission-rewards-editor/mission-rewards-editor.component';
 
 @Component({
   selector: 'app-mission-steps-card',
@@ -11,7 +12,8 @@ import {MissionStepViewModel} from '../../models/mission-step-view-model';
 })
 export class MissionStepsCardComponent implements OnInit {
   @Input() mission: Mission;
-  // TODO connect rewardForm to card component to set disabled on add button
+  @ViewChild('newStepsRewards') newStepRewards: MissionRewardsEditorComponent;
+
   // private stepForm: FormGroup;
   public newStep = new MissionStepViewModel();
   public finalStep = new MissionStepViewModel();
@@ -27,7 +29,7 @@ export class MissionStepsCardComponent implements OnInit {
     moveItemInArray(this.mission.steps, event.previousIndex, event.currentIndex);
   }
 
-  // TODO verify existence of reward item, attach newStep to mission, create new MissionStep instance for newStep
+  // TODO attach newStep to mission, create new MissionStep instance for newStep
   addStepToMission() {
 
     this.clearNewStepForm();
