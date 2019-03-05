@@ -3,6 +3,7 @@ import {Reward} from '../../api/models/reward';
 import {FormBuilder, FormControl, Validators} from '@angular/forms';
 import {ItemsService} from '../../api/services/items.service';
 import {ItemExistsValidator} from '../../item-exists-validator';
+import {Item} from '../../api/models/item';
 
 @Component({
   selector: 'app-mission-rewards-editor',
@@ -21,9 +22,18 @@ export class MissionRewardsEditorComponent implements OnInit {
     newRewardCt: ['', [Validators.required]]
   });
 
-  // TODO check validity of item name, attach to rewards array, clear form fields
-  public addReward(itemName: String, itemCt: number) {
-    // check if form valid
+  public addReward(itemName: string, itemCt: number) {
+    // get item specified by form
+    this.itemsService.getItemByIdentifier(itemName).subscribe((item: Item) => {
+      // add to rewards item-array
+      this.rewards.push({
+        item: item,
+        quantity: itemCt
+      });
+
+      // clear form fields
+      this.rewardForm.reset();
+    });
   }
 
   ngOnInit() {
