@@ -26,19 +26,21 @@ export class MissionStepsCardComponent implements OnInit {
     moveItemInArray(this.mission.steps, event.previousIndex, event.currentIndex);
   }
 
-  // TODO verify existence of reward item
+  // TODO verify existence of reward item, attach newStep to mission, create new MissionStep instance for newStep, clear form
   addStep() {
 
   }
 
   ngOnInit() {
+    if (this.mission.finalRepeatStep) this.finalStep = this.mission.finalRepeatStep;
+
     this.stepForm = this.formBuilder.group({
       newDisplayName: ['', [Validators.required]],
       newCount: ['', [Validators.required]],
       newDescription: ['', [Validators.required]],
-      finalDisplayName: [ this.mission.finalRepeatStep.displayName, [Validators.required]],
-      finalCount: [this.mission.finalRepeatStep.count, [Validators.required]],
-      finalDescription: [this.mission.finalRepeatStep.description, [Validators.required]]
+      finalDisplayName: [ this.finalStep.displayName, [Validators.required]],
+      finalCount: [this.finalStep.count, [Validators.required]],
+      finalDescription: [this.finalStep.description, [Validators.required]]
     });
 
     if (this.mission.steps) {
