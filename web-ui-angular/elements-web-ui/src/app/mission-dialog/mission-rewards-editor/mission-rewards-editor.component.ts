@@ -1,8 +1,8 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {Reward} from '../../api/models/reward';
 import {FormBuilder, FormControl, Validators} from '@angular/forms';
-import {itemExistsValidator} from '../../item-exists.directive';
 import {ItemsService} from '../../api/services/items.service';
+import {ItemExistsValidator} from '../../item-exists-validator';
 
 @Component({
   selector: 'app-mission-rewards-editor',
@@ -12,10 +12,12 @@ import {ItemsService} from '../../api/services/items.service';
 export class MissionRewardsEditorComponent implements OnInit {
   @Input() rewards: Array<Reward>;
 
-  constructor(private formBuilder: FormBuilder, private itemsService: ItemsService) { }
+  constructor(private formBuilder: FormBuilder, private itemsService: ItemsService) {}
+
+  private itemExistsValidator = new ItemExistsValidator(this.itemsService);
 
   public rewardForm = this.formBuilder.group({
-    newRewardItem: ['', [Validators.required], [itemExistsValidator(this.itemsService)]],
+    newRewardItem: ['', [Validators.required], [this.itemExistsValidator.validate]],
     newRewardCt: ['', [Validators.required]]
   });
 
