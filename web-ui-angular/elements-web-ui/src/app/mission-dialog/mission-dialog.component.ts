@@ -36,7 +36,7 @@ export class MissionDialogComponent implements OnInit {
     const value = event.value;
 
     if ((value || '').trim()) {
-      if (this.data.mission.tags === undefined) { this.data.mission.tags = []; }
+      if (!this.data.mission.tags) { this.data.mission.tags = []; }
       this.data.mission.tags.push(value);
     }
 
@@ -80,7 +80,6 @@ export class MissionDialogComponent implements OnInit {
 
     // TODO get steps and final repeat ste pfrom mission card
     // mission card has reference to this.data.mission, can attach steps to it if told to
-    // this.stepsCard.validateSteps(true);
     if (this.data.mission.steps) {
       formData.steps = this.data.mission.steps;
     }
