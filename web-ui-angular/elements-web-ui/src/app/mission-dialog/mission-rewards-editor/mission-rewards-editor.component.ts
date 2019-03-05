@@ -19,10 +19,13 @@ export class MissionRewardsEditorComponent implements OnInit {
 
   public rewardForm = this.formBuilder.group({
     newRewardItem: ['', [Validators.required], [this.itemExistsValidator.validate]],
-    newRewardCt: ['', [Validators.required]]
+    newRewardCt: ['', [Validators.required, Validators.pattern('^[0-9]+$')]]
   });
 
   public addReward(itemName: string, itemCt: number) {
+    // block request if form not valid
+    if (!this.rewardForm.valid) return;
+
     // get item specified by form
     this.itemsService.getItemByIdentifier(itemName).subscribe((item: Item) => {
       // add to rewards item-array
