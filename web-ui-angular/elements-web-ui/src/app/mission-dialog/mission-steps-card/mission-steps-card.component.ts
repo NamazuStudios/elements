@@ -11,6 +11,7 @@ import {MissionStepViewModel} from '../../models/mission-step-view-model';
 })
 export class MissionStepsCardComponent implements OnInit {
   @Input() mission: Mission;
+  // TODO connect rewardForm to card component to set disabled on add button
   // private stepForm: FormGroup;
   public newStep = new MissionStepViewModel();
   public finalStep = new MissionStepViewModel();
@@ -26,8 +27,14 @@ export class MissionStepsCardComponent implements OnInit {
     moveItemInArray(this.mission.steps, event.previousIndex, event.currentIndex);
   }
 
-  // TODO verify existence of reward item, attach newStep to mission, create new MissionStep instance for newStep, clear form
-  addStep() {
+  // TODO verify existence of reward item, attach newStep to mission, create new MissionStep instance for newStep
+  addStepToMission() {
+
+    this.clearNewStepForm();
+  }
+
+  // TODO clear step form, reward form, metadata
+  clearNewStepForm() {
 
   }
 
