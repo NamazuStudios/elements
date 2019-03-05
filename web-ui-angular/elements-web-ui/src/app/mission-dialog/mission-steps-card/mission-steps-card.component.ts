@@ -17,7 +17,6 @@ export class MissionStepsCardComponent implements OnInit {
   // private stepForm: FormGroup;
   public newStep = new MissionStepViewModel();
   public finalStep = new MissionStepViewModel();
-  public isNewStepValid = true;
   public isFinalStepValid;
   public isStepsValid;
 
@@ -54,14 +53,15 @@ export class MissionStepsCardComponent implements OnInit {
 
     this.mission.steps.push(this.newStep);
 
-    this.newStep = new MissionStepViewModel();
-
     this.clearNewStepForm();
+
+    this.newStep = new MissionStepViewModel();
   }
 
   // TODO clear step form, reward form, metadata
   clearNewStepForm() {
-
+    this.newStepForm.reset();
+    this.newStepRewards.rewardForm.reset();
   }
 
   addExistingStepControl(index: number) {
