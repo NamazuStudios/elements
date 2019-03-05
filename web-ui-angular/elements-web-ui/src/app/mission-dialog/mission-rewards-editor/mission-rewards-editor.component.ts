@@ -41,8 +41,9 @@ export class MissionRewardsEditorComponent implements OnInit {
         quantity: itemCt
       });
 
-      // focus on new name field
+      // focus or blur on new name field?
       this.newItemField.nativeElement.focus();
+      this.newItemField.nativeElement.blur();
 
       // clear form fields
       this.rewardForm.reset();
