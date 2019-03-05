@@ -35,7 +35,7 @@ export class ItemDialogComponent implements OnInit {
     const value = event.value;
 
     if ((value || '').trim()) {
-      if (this.data.item.tags == undefined) { this.data.item.tags = []; }
+      if (!this.data.item.tags) { this.data.item.tags = []; }
       this.data.item.tags.push(value);
     }
 

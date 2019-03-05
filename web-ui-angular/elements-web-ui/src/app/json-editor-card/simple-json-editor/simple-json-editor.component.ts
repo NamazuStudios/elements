@@ -26,7 +26,7 @@ export class SimpleJsonEditorComponent implements OnInit {
   addMetadata(key, value) {
     if (!key || !value) { return; }
 
-    if (this.dataHolder.metadata === undefined) {
+    if (!this.dataHolder.metadata) {
       this.dataHolder.metadata = {};
     }
 
