@@ -6,5 +6,5 @@ export class MissionStepViewModel implements MissionStep {
   description: string;
   count: number;
   rewards: Array<Reward>;
-  metadata: {[key: string]: any};
+  metadata?: {[key: string]: any};
 }
