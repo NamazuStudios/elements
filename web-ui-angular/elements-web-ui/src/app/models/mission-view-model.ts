@@ -14,5 +14,7 @@ export class MissionViewModel implements Mission {
 
   constructor() {
     this.steps = [];
+    this.tags = [];
+    this.metadata = {};
   }
 }
