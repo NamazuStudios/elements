@@ -44,6 +44,17 @@ export class MissionStepsCardComponent implements OnInit {
 
   // TODO attach newStep to mission, create new MissionStep instance for newStep
   addStepToMission() {
+    // add form controls
+    this.addExistingStepControl(this.mission.steps.length);
+
+    const formData = this.newStepForm.value;
+    this.newStep.description = formData.newDescription;
+    this.newStep.count = formData.newCount;
+    this.newStep.displayName = formData.newDisplayName;
+
+    this.mission.steps.push(this.newStep);
+
+    this.newStep = new MissionStepViewModel();
 
     this.clearNewStepForm();
   }
@@ -53,16 +64,20 @@ export class MissionStepsCardComponent implements OnInit {
 
   }
 
+  addExistingStepControl(index: number) {
+    this.existingStepForm.addControl('displayName' + index, new FormControl('', Validators.required));
+    this.existingStepForm.addControl('description' + index, new FormControl('', Validators.required));
+    this.existingStepForm.addControl('count' + index, new FormControl('', [Validators.required, Validators.pattern('^[0-9]*$')]));
+    this.existingStepForm.addControl('step' + index + 'NewRewardItem', new FormControl('', Validators.pattern('^[a-zA-Z0-9]*$')));
+    this.existingStepForm.addControl('step' + index + 'NewRewardCt', new FormControl('', Validators.pattern('^[0-9]*$')));
+  }
+
   ngOnInit() {
     if (this.mission.finalRepeatStep) { this.finalStep = this.mission.finalRepeatStep; }
 
     if (this.mission.steps) {
       for (let i = 0; i < this.mission.steps.length; i++) {
-        this.stepForm.addControl('displayName' + i, new FormControl('', Validators.required));
-        this.stepForm.addControl('description' + i, new FormControl('', Validators.required));
-        this.stepForm.addControl('count' + i, new FormControl('', Validators.required/*, Validators.pattern('^[0-9]*$')*/));
-        this.stepForm.addControl('step' + i + 'NewRewardItem', new FormControl('', Validators.pattern('^[a-zA-Z0-9]*$')));
-        this.stepForm.addControl('step' + i + 'NewRewardCt', new FormControl('', Validators.pattern('^[0-9]*$')));
+        this.addExistingStepControl(i);
       }
     }
   }
