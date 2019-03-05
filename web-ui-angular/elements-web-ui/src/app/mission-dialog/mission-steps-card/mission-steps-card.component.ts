@@ -17,12 +17,25 @@ export class MissionStepsCardComponent implements OnInit {
   // private stepForm: FormGroup;
   public newStep = new MissionStepViewModel();
   public finalStep = new MissionStepViewModel();
+  public isNewStepValid = true;
   public isFinalStepValid;
   public isStepsValid;
 
   constructor(private formBuilder: FormBuilder) { }
 
-  public stepForm = this.formBuilder.group({});
+  public newStepForm = this.formBuilder.group({
+    newDisplayName: ['', [Validators.required]],
+    newCount: ['', [Validators.required]],
+    newDescription: ['', [Validators.required]],
+  });
+
+  public existingStepForm = this.formBuilder.group({});
+
+  public finalStepForm = this.formBuilder.group({
+    finalDisplayName: [ this.finalStep.displayName],
+    finalCount: [this.finalStep.count, [Validators.required]],
+    finalDescription: [this.finalStep.description]
+  });
 
   drop(event: CdkDragDrop<string[]>) {
     console.log(this.mission.steps);
@@ -41,16 +54,7 @@ export class MissionStepsCardComponent implements OnInit {
   }
 
   ngOnInit() {
-    if (this.mission.finalRepeatStep) this.finalStep = this.mission.finalRepeatStep;
-
-    this.stepForm = this.formBuilder.group({
-      newDisplayName: ['', [Validators.required]],
-      newCount: ['', [Validators.required]],
-      newDescription: ['', [Validators.required]],
-      finalDisplayName: [ this.finalStep.displayName, [Validators.required]],
-      finalCount: [this.finalStep.count, [Validators.required]],
-      finalDescription: [this.finalStep.description, [Validators.required]]
-    });
+    if (this.mission.finalRepeatStep) { this.finalStep = this.mission.finalRepeatStep; }
 
     if (this.mission.steps) {
       for (let i = 0; i < this.mission.steps.length; i++) {

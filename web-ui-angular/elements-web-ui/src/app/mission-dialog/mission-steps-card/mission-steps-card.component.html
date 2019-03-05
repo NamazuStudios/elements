@@ -2,101 +2,104 @@
   Edit Mission Steps
 </h1>
 
-<form [formGroup]="stepForm">
-    <div class="prelim-wrapper">
-      <mat-accordion [multi]="true" class="prelim-steps" cdkDropList (cdkDropListDropped)="drop($event)">
-        <mat-expansion-panel class="step" cdkDrag *ngFor="let step of mission.steps; let i = index">
-          <mat-expansion-panel-header>
-            <mat-icon cdkDragHandle>reorder</mat-icon>
-            <span class="step-num"><b>Step {{i + 1}}: </b></span>
-            <span class="step-name">{{step.displayName}}</span>
-            <span class="step-count"><b>Count:</b> {{step.count}}</span>
-          </mat-expansion-panel-header>
-
-          <div class="form-row">
-            <mat-form-field>
-              <input matInput placeholder="Display name" name="displayName" formControlName="displayName{{i}}" value="{{step.displayName}}">
-            </mat-form-field>
-            <mat-form-field>
-              <input matInput placeholder="Count" name="count" formControlName="count{{i}}" value="{{step.count}}">
-            </mat-form-field>
-          </div>
-          <div class="form-row">
-            <mat-form-field>
-              <input matInput placeholder="Description" name="description" formControlName="description{{i}}" value="{{step.description}}">
-            </mat-form-field>
-          </div>
-
-          <app-mission-rewards-editor [rewards]="step.rewards"></app-mission-rewards-editor>
-
-          <app-json-editor-card topic="Step" [editTarget]="step.metadata || {}"></app-json-editor-card>
-        </mat-expansion-panel>
-
-        <mat-expansion-panel class="new-step no-drag step" [expanded]="!(mission.steps.length > 0)">
-          <mat-expansion-panel-header>
-            <span class="step-num"><b>New Step</b></span>
-            <span class="step-name"></span>
-            <span class="step-count"><b>Count:</b> 0</span>
-          </mat-expansion-panel-header>
-
-          <div class="form-row">
-            <mat-form-field>
-              <input matInput placeholder="Display name" name="newDisplayName" formControlName="newDisplayName">
-            </mat-form-field>
-            <mat-form-field>
-              <input matInput placeholder="Count" name="newCount" formControlName="newCount">
-            </mat-form-field>
-          </div>
-          <div class="form-row">
-            <mat-form-field>
-              <input matInput placeholder="Description" name="newDescription" formControlName="newDescription">
-            </mat-form-field>
-          </div>
-
-          <app-mission-rewards-editor #newStepRewards [rewards]="newStep.rewards"></app-mission-rewards-editor>
-
-          <app-json-editor-card topic="Step" [editTarget]="newStep.metadata"></app-json-editor-card>
-
-          <mat-action-row>
-            <button mat-button (click)="clearNewStepForm()">Cancel</button>
-            <button mat-raised-button color="primary" (click)="addStepToMission()" [disabled]="!newStepRewards.rewardForm.valid">Add</button>
-          </mat-action-row>
-        </mat-expansion-panel>
-      </mat-accordion>
-    </div>
-
-    <mat-accordion>
-      <mat-expansion-panel class="no-drag step">
+<div class="prelim-wrapper">
+  <mat-accordion [multi]="true" class="prelim-steps" cdkDropList (cdkDropListDropped)="drop($event)">
+    <form [formGroup]="existingStepForm">
+      <mat-expansion-panel class="step" cdkDrag *ngFor="let step of mission.steps; let i = index">
         <mat-expansion-panel-header>
-          <span class="step-num"><b>Repeat Step:</b></span>
-
-          <span class="step-name"  *ngIf="mission.finalRepeatStep">{{mission.finalRepeatStep.displayName}}</span>
-          <span class="step-name" *ngIf="!mission.finalRepeatStep">N/A</span>
-
-          <span class="step-count">
-          <b>Count:</b>
-          <span *ngIf="mission.finalRepeatStep">{{mission.finalRepeatStep.count}}</span>
-          <span *ngIf="!mission.finalRepeatStep">N/A</span>
-        </span>
+          <mat-icon cdkDragHandle>reorder</mat-icon>
+          <span class="step-num"><b>Step {{i + 1}}: </b></span>
+          <span class="step-name">{{step.displayName}}</span>
+          <span class="step-count"><b>Count:</b> {{step.count}}</span>
         </mat-expansion-panel-header>
 
         <div class="form-row">
           <mat-form-field>
-            <input matInput placeholder="Display name" name="finalDisplayName" formControlName="finalDisplayName" value="{{finalStep.displayName || ''}}">
+            <input matInput placeholder="Display name" name="displayName" formControlName="displayName{{i}}" value="{{step.displayName}}">
           </mat-form-field>
           <mat-form-field>
-            <input matInput placeholder="Count" name="finalCount" formControlName="finalCount" value="{{finalStep.count}}">
+            <input matInput placeholder="Count" name="count" formControlName="count{{i}}" value="{{step.count}}">
           </mat-form-field>
         </div>
         <div class="form-row">
           <mat-form-field>
-            <input matInput placeholder="Description" name="finalDescription" formControlName="finalDescription" value="{{finalStep.description}}">
+            <input matInput placeholder="Description" name="description" formControlName="description{{i}}" value="{{step.description}}">
           </mat-form-field>
         </div>
 
-        <app-mission-rewards-editor [rewards]="finalStep.rewards"></app-mission-rewards-editor>
+        <app-mission-rewards-editor [rewards]="step.rewards"></app-mission-rewards-editor>
 
-        <app-json-editor-card topic="Step" [editTarget]="finalStep.metadata || {}"></app-json-editor-card>
+        <app-json-editor-card topic="Step" [editTarget]="step.metadata || {}"></app-json-editor-card>
       </mat-expansion-panel>
-    </mat-accordion>
+    </form>
+
+    <form [formGroup]="newStepForm">
+      <mat-expansion-panel class="new-step no-drag step" [expanded]="!(mission.steps.length > 0)">
+        <mat-expansion-panel-header>
+          <span class="step-num"><b>New Step</b></span>
+          <span class="step-name"></span>
+          <span class="step-count"><b>Count:</b> 0</span>
+        </mat-expansion-panel-header>
+
+        <div class="form-row">
+          <mat-form-field>
+            <input matInput placeholder="Display name" name="newDisplayName" formControlName="newDisplayName">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Count" name="newCount" formControlName="newCount">
+          </mat-form-field>
+        </div>
+        <div class="form-row">
+          <mat-form-field>
+            <input matInput placeholder="Description" name="newDescription" formControlName="newDescription">
+          </mat-form-field>
+        </div>
+
+        <app-mission-rewards-editor #newStepRewards [rewards]="newStep.rewards"></app-mission-rewards-editor>
+
+        <app-json-editor-card topic="Step" [editTarget]="newStep.metadata"></app-json-editor-card>
+
+        <mat-action-row>
+          <button mat-button (click)="clearNewStepForm()">Cancel</button>
+          <button mat-raised-button color="primary" (click)="addStepToMission()" [disabled]="!(newStepForm.valid && newStep.rewards.length > 0 && existingStepForm.valid)">Add</button>
+        </mat-action-row>
+      </mat-expansion-panel>
+    </form>
+  </mat-accordion>
+</div>
+<form [formGroup]="finalStepForm">
+  <mat-accordion>
+    <mat-expansion-panel class="no-drag step">
+      <mat-expansion-panel-header>
+        <span class="step-num"><b>Repeat Step:</b></span>
+
+        <span class="step-name"  *ngIf="mission.finalRepeatStep">{{mission.finalRepeatStep.displayName}}</span>
+        <span class="step-name" *ngIf="!mission.finalRepeatStep">N/A</span>
+
+        <span class="step-count">
+          <b>Count:</b>
+          <span *ngIf="mission.finalRepeatStep">{{mission.finalRepeatStep.count}}</span>
+          <span *ngIf="!mission.finalRepeatStep">N/A</span>
+        </span>
+      </mat-expansion-panel-header>
+
+      <div class="form-row">
+        <mat-form-field>
+          <input matInput placeholder="Display name" name="finalDisplayName" formControlName="finalDisplayName" value="{{finalStep.displayName || ''}}">
+        </mat-form-field>
+        <mat-form-field>
+          <input matInput placeholder="Count" name="finalCount" formControlName="finalCount" value="{{finalStep.count}}">
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field>
+          <input matInput placeholder="Description" name="finalDescription" formControlName="finalDescription" value="{{finalStep.description}}">
+        </mat-form-field>
+      </div>
+
+      <app-mission-rewards-editor [rewards]="finalStep.rewards"></app-mission-rewards-editor>
+
+      <app-json-editor-card topic="Step" [editTarget]="finalStep.metadata || {}"></app-json-editor-card>
+    </mat-expansion-panel>
+  </mat-accordion>
 </form>
