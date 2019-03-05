@@ -16,7 +16,6 @@ export class ItemExistsValidator implements AsyncValidator {
   validate(control: AbstractControl): Promise<ValidationErrors | null> | Observable<ValidationErrors | null> {
     return this.itemsService.getItemByIdentifier(control.value).pipe(
         __map(item => {
-          console.log(item);
           return item ? null : {itemNameNotFound: {value: control.value}}; }),
         __catchError(this.handleError)
       );
