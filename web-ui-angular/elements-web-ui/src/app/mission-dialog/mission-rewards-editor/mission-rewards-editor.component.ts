@@ -19,6 +19,11 @@ export class MissionRewardsEditorComponent implements OnInit {
     newRewardCt: ['', [Validators.required]]
   });
 
+  // TODO check validity of item name, attach to rewards array, clear form fields
+  public addReward(itemName: String, itemCt: number) {
+    // check if form valid
+  }
+
   ngOnInit() {
     this.rewards = this.rewards || [];
     for(let i = 0; i < this.rewards.length; i++) {
