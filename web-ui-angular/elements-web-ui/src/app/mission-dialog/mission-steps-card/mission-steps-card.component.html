@@ -1,5 +1,5 @@
 <h1 class="card-header">
-  Edit Mission Steps <button mat-raised-button color="primary" type="button" (click)="addStep()">Add Step</button>
+  Edit Mission Steps
 </h1>
 
 <form [formGroup]="stepForm">
@@ -32,7 +32,7 @@
           <app-json-editor-card [topic]="Step" [editTarget]="step.metadata || {}"></app-json-editor-card>
         </mat-expansion-panel>
 
-        <mat-expansion-panel class="new-step no-drag step">
+        <mat-expansion-panel class="new-step no-drag step" [expanded]="!(mission.steps.length > 0)">
           <mat-expansion-panel-header>
             <span class="step-num"><b>New Step</b></span>
             <span class="step-name"></span>
@@ -96,7 +96,7 @@
 
         <app-mission-rewards-editor [rewards]="finalStep.rewards"></app-mission-rewards-editor>
 
-        <app-json-editor-card [topic]="Step" [editTarget]="finalStep.metadata || {}"></app-json-editor-card>
+        <app-json-editor-card topic="Step" [editTarget]="finalStep.metadata || {}"></app-json-editor-card>
       </mat-expansion-panel>
     </mat-accordion>
 </form>
