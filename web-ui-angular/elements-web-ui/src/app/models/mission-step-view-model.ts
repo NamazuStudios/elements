@@ -10,5 +10,6 @@ export class MissionStepViewModel implements MissionStep {
 
   constructor() {
     this.metadata = {};
+    this.rewards = [];
   };
 }
