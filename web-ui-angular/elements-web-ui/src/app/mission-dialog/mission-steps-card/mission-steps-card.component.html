@@ -59,7 +59,7 @@
 
           <mat-action-row>
             <button mat-button (click)="clearNewStepForm()">Cancel</button>
-            <button mat-raised-button color="primary" (click)="addStepToMission()" [disabled]="newStepRewards.rewardForm.valid">Add</button>
+            <button mat-raised-button color="primary" (click)="addStepToMission()" [disabled]="!newStepRewards.rewardForm.valid">Add</button>
           </mat-action-row>
         </mat-expansion-panel>
       </mat-accordion>

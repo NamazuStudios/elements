@@ -12,7 +12,7 @@ import {MissionRewardsEditorComponent} from '../mission-rewards-editor/mission-r
 })
 export class MissionStepsCardComponent implements OnInit {
   @Input() mission: Mission;
-  @ViewChild('newStepsRewards') newStepRewards: MissionRewardsEditorComponent;
+  @ViewChild('newStepRewards') newStepRewards: MissionRewardsEditorComponent;
 
   // private stepForm: FormGroup;
   public newStep = new MissionStepViewModel();
