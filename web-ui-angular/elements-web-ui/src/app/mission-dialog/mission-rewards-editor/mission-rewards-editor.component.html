@@ -17,7 +17,7 @@
       <mat-error *ngIf="rewardForm.controls.newRewardItem.hasError('required')">Reward Item is required</mat-error>
     </mat-form-field>
     <mat-form-field class="no-margin">
-      <input matInput #newRewardCt placeholder="Reward Quantity" name="newRewardCt" formControlName="newRewardCt" (keyup.enter)="addReward(newRewardItem.value, newRewardCt.value;">
+      <input matInput #newRewardCt placeholder="Reward Quantity" name="newRewardCt" formControlName="newRewardCt" (keyup.enter)="addReward(newRewardItem.value, newRewardCt.value);">
       <mat-error *ngIf="rewardForm.controls.newRewardCt.hasError('required')">Reward quantity is required</mat-error>
       <mat-error *ngIf="rewardForm.controls.newRewardCt.hasError('pattern')">Quantity must be a number</mat-error>
     </mat-form-field>
