@@ -188,8 +188,7 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         }
         catch (Exception e) {
             logger.error("Communication with the Google Play services was not successful: ", e);
-            throw new InternalException("Communication with the Google Play services was not successful. Please refer" +
-                    " to server logs for more information.");
+            throw new InternalException("Communication with the Google Play services was not successful:\n\n" + e);
         }
 
         final GooglePlayIapReceipt googlePlayIapReceipt =
@@ -197,6 +196,7 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
 
         googlePlayIapReceipt.setUser(getUser());
         googlePlayIapReceipt.setPurchaseToken(purchaseToken);
+        googlePlayIapReceipt.setProductId(productId);
 
         final GooglePlayIapReceipt resultGooglePlayIapReceipt =
                 getOrCreateGooglePlayIapReceipt(googlePlayIapReceipt);

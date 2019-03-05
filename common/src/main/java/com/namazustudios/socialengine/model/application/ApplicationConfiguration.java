@@ -185,35 +185,49 @@ public class ApplicationConfiguration implements Serializable {
                 '}';
     }
 
-    public String getItemIdForProductId(String productId) {
+    public String getItemIdForProductId(final String productId) {
         final Map<String, String> iapProductIdsToItemIds = getIapProductIdsToItemIds();
 
         if (iapProductIdsToItemIds == null) {
             throw new InvalidDataException("Application Configuration " + getId() +
                     "has no product id -> item id mapping.");
         }
-        if (!iapProductIdsToItemIds.containsKey(productId)) {
-            throw new NotFoundException("IAP product id " + productId + " is not in the application " +
+
+        // NOTE: right now we are using Mongo v3.4.6, which disallows dots and dollar signs for document field names
+        // (only allowable starting in Mongo v3.6).
+        final String cleanedProductId = productId
+                .replace(".", "_")
+                .replace("$", "_");
+
+        if (!iapProductIdsToItemIds.containsKey(cleanedProductId)) {
+            throw new NotFoundException("IAP product id " + cleanedProductId + " is not in the application " +
                     "configuration " + getId() + "  product id -> item id " +
                     "mapping.");
         }
 
-        return iapProductIdsToItemIds.get(productId);
+        return iapProductIdsToItemIds.get(cleanedProductId);
     }
 
-    public Integer getQuantityForProductId(String productId) {
+    public Integer getQuantityForProductId(final String productId) {
         final Map<String, Integer> iapProductIdsToRewardQuantities = getIapProductIdsToRewardQuantities();
 
         if (iapProductIdsToRewardQuantities == null) {
             throw new InvalidDataException("Application Configuration " + getId() +
                     "has no product id -> reward quantity mapping.");
         }
-        if (!iapProductIdsToRewardQuantities.containsKey(productId)) {
-            throw new NotFoundException("IAP product id " + productId + " is not in the application " +
+
+        // NOTE: right now we are using Mongo v3.4.6, which disallows dots and dollar signs for document field names
+        // (only allowable starting in Mongo v3.6).
+        final String cleanedProductId = productId
+                .replace(".", "_")
+                .replace("$", "_");
+
+        if (!iapProductIdsToRewardQuantities.containsKey(cleanedProductId)) {
+            throw new NotFoundException("IAP product id " + cleanedProductId + " is not in the application " +
                     "configuration " + getId() + "  product id -> reward " +
                     "quantity mapping.");
         }
 
-        return iapProductIdsToRewardQuantities.get(productId);
+        return iapProductIdsToRewardQuantities.get(cleanedProductId);
     }
 }
