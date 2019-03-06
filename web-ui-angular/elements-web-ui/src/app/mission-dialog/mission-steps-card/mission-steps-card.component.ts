@@ -51,17 +51,19 @@ export class MissionStepsCardComponent implements OnInit {
     this.newStep.count = formData.newCount;
     this.newStep.displayName = formData.newDisplayName;
 
-    this.mission.steps.push(this.newStep);
-
     this.clearNewStepForm();
 
+    this.mission.steps.push(this.newStep);
+
     this.newStep = new MissionStepViewModel();
+    this.newStepRewards.rewards = this.newStep.rewards;
   }
 
   // TODO clear step form, reward form, metadata
   clearNewStepForm() {
     this.newStepForm.reset();
-    this.newStepRewards.rewardForm.reset();
+    this.newStepRewards.newRewardForm.reset();
+    this.newStepRewards.existingRewardForm.reset();
   }
 
   addExistingStepControl(index: number) {
