@@ -61,6 +61,10 @@ export class MissionRewardsEditorComponent implements OnInit {
     });
   }
 
+  removeReward(index: number) {
+    this.rewards.splice(index, 1);
+  }
+
   ngOnInit() {
     this.rewards = this.rewards || [];
     for (let i = 0; i < this.rewards.length; i++) {
