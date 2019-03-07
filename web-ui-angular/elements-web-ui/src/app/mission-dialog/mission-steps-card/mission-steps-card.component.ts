@@ -1,7 +1,7 @@
 import {Component, Input, OnInit, ViewChild} from '@angular/core';
 import {Mission} from '../../api/models/mission';
 import {CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
-import {FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
+import {AbstractControl, FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
 import {MissionStepViewModel} from '../../models/mission-step-view-model';
 import {MissionRewardsEditorComponent} from '../mission-rewards-editor/mission-rewards-editor.component';
 
@@ -13,14 +13,11 @@ import {MissionRewardsEditorComponent} from '../mission-rewards-editor/mission-r
 export class MissionStepsCardComponent implements OnInit {
   @Input() mission: Mission;
   @ViewChild('newStepRewards') newStepRewards: MissionRewardsEditorComponent;
+  @ViewChild('finalStepRewards') finalStepRewards: MissionRewardsEditorComponent;
 
   // private stepForm: FormGroup;
   public newStep = new MissionStepViewModel();
   public finalStep = new MissionStepViewModel();
-  public isFinalStepValid;
-  public isStepsValid;
-
-  constructor(private formBuilder: FormBuilder) { }
 
   public newStepForm = this.formBuilder.group({
     newDisplayName: ['', [Validators.required]],
@@ -36,6 +33,17 @@ export class MissionStepsCardComponent implements OnInit {
     finalDescription: [this.finalStep.description]
   });
 
+  static triggerValidation(controlArray: {[key: string]: AbstractControl}) {
+    // touch each control to trigger validation
+    for (const i in controlArray) {
+      if (controlArray.hasOwnProperty(i)) {
+        controlArray[i].markAsTouched();
+      }
+    }
+  }
+
+  constructor(private formBuilder: FormBuilder) { }
+
   drop(event: CdkDragDrop<string[]>) {
     console.log(this.mission.steps);
     moveItemInArray(this.mission.steps, event.previousIndex, event.currentIndex);
@@ -45,6 +53,7 @@ export class MissionStepsCardComponent implements OnInit {
   addStepToMission() {
     // add form controls
     this.addExistingStepControl(this.mission.steps.length);
+    MissionStepsCardComponent.triggerValidation(this.existingStepForm.controls);
 
     const formData = this.newStepForm.value;
     this.newStep.description = formData.newDescription;
@@ -74,6 +83,23 @@ export class MissionStepsCardComponent implements OnInit {
     this.existingStepForm.addControl('step' + index + 'NewRewardCt', new FormControl('', Validators.pattern('^[0-9]*$')));
   }
 
+  clearFinalStepForm() {
+    this.finalStepForm.reset();
+    this.finalStepRewards.newRewardForm.reset();
+    this.finalStepRewards.existingRewardForm.reset();
+
+    this.mission.finalRepeatStep = null;
+  }
+
+  addFinalStepToMission() {
+    const formData = this.finalStepForm.value;
+    this.finalStep.description = formData.finalDescription;
+    this.finalStep.displayName = formData.finalDisplayName;
+    this.finalStep.count = formData.finalCount;
+
+    this.mission.finalRepeatStep = this.finalStep;
+  }
+
   ngOnInit() {
     if (this.mission.finalRepeatStep) { this.finalStep = this.mission.finalRepeatStep; }
 
@@ -81,6 +107,7 @@ export class MissionStepsCardComponent implements OnInit {
       for (let i = 0; i < this.mission.steps.length; i++) {
         this.addExistingStepControl(i);
       }
+      MissionStepsCardComponent.triggerValidation(this.existingStepForm.controls);
     }
   }
 }
