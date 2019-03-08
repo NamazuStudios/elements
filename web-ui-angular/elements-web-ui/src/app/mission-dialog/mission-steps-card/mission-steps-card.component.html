@@ -6,8 +6,8 @@
 </h2>
 
 <div class="prelim-wrapper">
-  <mat-accordion [multi]="true" class="prelim-steps" cdkDropList (cdkDropListDropped)="drop($event)">
-    <form [formGroup]="existingStepForm">
+  <mat-accordion [multi]="true" class="prelim-steps">
+    <form [formGroup]="existingStepForm"  cdkDropList (cdkDropListDropped)="drop($event)">
       <mat-expansion-panel class="step" cdkDrag *ngFor="let step of mission.steps; let i = index">
         <mat-expansion-panel-header>
           <mat-icon cdkDragHandle>reorder</mat-icon>
