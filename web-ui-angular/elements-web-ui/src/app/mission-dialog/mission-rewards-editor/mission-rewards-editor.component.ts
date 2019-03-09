@@ -22,56 +22,48 @@ export class MissionRewardsEditorComponent implements OnInit {
     newRewardItem: ['', [], [this.itemExistsValidator.validate]],
     newRewardCt: ['', [Validators.required, Validators.pattern('^[0-9]+$')]]
   });
+
   public existingRewardForm = this.formBuilder.group({});
 
   public addReward(itemName: string, itemCt: number) {
-    console.log("Adding reward");
     // block request if form not valid
     if (!this.newRewardForm.valid) { return console.log("Rewardform invalid"); }
-    console.log("Reward valid");
 
     // get item specified by form
     this.itemsService.getItemByIdentifier(itemName).subscribe((item: Item) => {
-      console.log("Found item");
-      // add formControl
-      this.existingRewardForm.addControl('reward' + this.rewards.length + 'Item',
-        new FormControl('', [Validators.required], [this.itemExistsValidator.validate]));
-      this.existingRewardForm.addControl('reward' + this.rewards.length + 'Ct',
-        new FormControl('', [Validators.required, Validators.pattern('^[0-9]+$')]));
-
-      console.log("Added next form control");
-
       // add to rewards item-array
       this.rewards.push({
         item: item,
         quantity: itemCt
       });
 
-      console.log("Attached to rewards item-array");
+      // add formControl
+      this.existingRewardForm.addControl('reward' + (this.rewards.length - 1) + 'Item',
+        new FormControl(this.rewards[this.rewards.length - 1].item.name, [Validators.required], [this.itemExistsValidator.validate]));
+      this.existingRewardForm.addControl('reward' + (this.rewards.length - 1) + 'Ct',
+        new FormControl(this.rewards[this.rewards.length - 1].quantity, [Validators.required, Validators.pattern('^[0-9]+$')]));
 
       // focus or blur on new name field?
       this.newItemField.nativeElement.focus();
 
-      console.log("reset focus");
-
       // clear form fields
       this.newRewardForm.reset();
-
-      console.log("Reset form fields");
     });
   }
 
   removeReward(index: number) {
-    this.rewards.splice(index, 1);
+    if(this.rewards.length > 1) {
+      this.rewards.splice(index, 1);
+    } else {
+      alert("At least one reward is required for each step. Add another reward before deleting this one.");
+    }
   }
 
   ngOnInit() {
     this.rewards = this.rewards || [];
     for (let i = 0; i < this.rewards.length; i++) {
-      //this.existingRewardForm.addControl('reward' + i + 'Item', new FormControl('', [Validators.required], [this.itemExistsValidator.validate]));
-      //this.existingRewardForm.addControl('reward' + i + 'Ct', new FormControl('', [Validators.required, Validators.pattern('^[0-9]+$')]));
-      this.existingRewardForm.addControl('reward' + i + 'Item', new FormControl('', [Validators.required], [this.itemExistsValidator.validate]));
-      this.existingRewardForm.addControl('reward' + i + 'Ct', new FormControl('', [Validators.required, Validators.pattern('^[0-9]+$')]));
+      this.existingRewardForm.addControl('reward' + i + 'Item', new FormControl(this.rewards[i].item.name, [Validators.required], [this.itemExistsValidator.validate]));
+      this.existingRewardForm.addControl('reward' + i + 'Ct', new FormControl(this.rewards[i].quantity, [Validators.required, Validators.pattern('^[0-9]+$')]));
     }
   }
 

@@ -1,4 +1,4 @@
-import {Component, Input, OnInit, ViewChild} from '@angular/core';
+import {Component, Input, OnInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
 import {Mission} from '../../api/models/mission';
 import {CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
 import {AbstractControl, FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
@@ -15,10 +15,12 @@ export class MissionStepsCardComponent implements OnInit {
   @Input() mission: Mission;
   @ViewChild('newStepRewards') newStepRewards: MissionRewardsEditorComponent;
   @ViewChild('finalStepRewards') finalStepRewards: MissionRewardsEditorComponent;
+  @ViewChildren('.existing-step-reward-editor') rewardEditors: QueryList<MissionRewardsEditorComponent>;
 
   // private stepForm: FormGroup;
   public newStep = new MissionStepViewModel();
   public finalStep = new MissionStepViewModel();
+  public isFinalStepChanged = false;
 
   public newStepForm = this.formBuilder.group({
     newDisplayName: ['', [Validators.required]],
@@ -34,16 +36,39 @@ export class MissionStepsCardComponent implements OnInit {
     finalDescription: [this.finalStep.description]
   });
 
-  static triggerValidation(controlArray: {[key: string]: AbstractControl}) {
-    // touch each control to trigger validation
-    for (const i in controlArray) {
-      if (controlArray.hasOwnProperty(i)) {
-        controlArray[i].markAsTouched();
+  constructor(private formBuilder: FormBuilder) { }
+
+  // TODO depends on validity of existingstepform, finalstepform, finalsteprewards, existingsteprewards
+
+  public stepsValid() {
+    // invalid if neither steps nor final step exist
+    if (this.mission.steps.length == 0 && !this.mission.finalRepeatStep) {
+      console.log("No steps or final step");
+      return false;
+    }
+
+    // all existing rewards must be valid
+    if (!this.rewardEditors) {
+      console.log("No reward editors");
+      return true;
+    }
+    const rewardEditors = this.rewardEditors.toArray();
+    for (let i = 0; i < rewardEditors.length; i++) {
+      const rewardEditor = rewardEditors[i];
+
+      if (!rewardEditor.existingRewardForm.valid) {
+        console.log("Invalid existing reward form");
+        console.log(rewardEditor);
+        return false;
       }
     }
-  }
 
-  constructor(private formBuilder: FormBuilder) { }
+    // all rewards on the final step must be valid
+
+    console.log("All steps valid");
+    // all validity tests passed
+    return true;
+  }
 
   drop(event: CdkDragDrop<string[]>) {
     console.log(this.mission.steps);
@@ -87,6 +112,7 @@ export class MissionStepsCardComponent implements OnInit {
     this.finalStepRewards.existingRewardForm.reset();
 
     this.mission.finalRepeatStep = null;
+    this.isFinalStepChanged = false;
   }
 
   addFinalStepToMission() {
@@ -96,6 +122,7 @@ export class MissionStepsCardComponent implements OnInit {
     this.finalStep.count = formData.finalCount;
 
     this.mission.finalRepeatStep = this.finalStep;
+    this.isFinalStepChanged = false;
   }
 
   ngOnInit() {
