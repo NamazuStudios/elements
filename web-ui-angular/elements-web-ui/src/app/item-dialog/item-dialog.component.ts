@@ -26,7 +26,7 @@ export class ItemDialogComponent implements OnInit {
   itemForm = this.formBuilder.group({
     name: [ this.data.item.name, [Validators.required, Validators.pattern('^[a-zA-Z0-9]+$') ]],
     displayName: [ this.data.item.displayName, [Validators.required]],
-    description: [ this.data.item.description ],
+    description: [ this.data.item.description, [Validators.required] ],
     tags: []
   });
 
