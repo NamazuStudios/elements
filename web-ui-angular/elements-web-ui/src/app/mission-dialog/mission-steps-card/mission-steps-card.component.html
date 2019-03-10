@@ -51,9 +51,12 @@
         <div class="form-row">
           <mat-form-field>
             <input matInput placeholder="Display name" name="newDisplayName" formControlName="newDisplayName">
+            <mat-error *ngIf="newStepForm.controls.newDisplayName.hasError('required')">Display name is required</mat-error>
           </mat-form-field>
           <mat-form-field>
             <input matInput placeholder="Count" name="newCount" formControlName="newCount">
+            <mat-error *ngIf="newStepForm.controls.newCount.hasError('required')">Count is required</mat-error>
+            <mat-error *ngIf="newStepForm.controls.newCount.hasError('pattern')">Count must be a number</mat-error>
           </mat-form-field>
         </div>
         <div class="form-row">
@@ -93,9 +96,12 @@
       <div class="form-row">
         <mat-form-field>
           <input matInput placeholder="Display name" name="finalDisplayName" formControlName="finalDisplayName" value="{{finalStep.displayName || ''}}">
+          <mat-error *ngIf="finalStepForm.controls.finalDisplayName.hasError('required')">Display name is required</mat-error>
         </mat-form-field>
         <mat-form-field>
           <input matInput placeholder="Count" name="finalCount" formControlName="finalCount" value="{{finalStep.count}}">
+          <mat-error *ngIf="finalStepForm.controls.finalCount.hasError('required')">Count is required</mat-error>
+          <mat-error *ngIf="finalStepForm.controls.finalCount.hasError('pattern')">Count must be a number</mat-error>
         </mat-form-field>
       </div>
       <div class="form-row">

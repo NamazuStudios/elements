@@ -24,16 +24,16 @@ export class MissionStepsCardComponent implements OnInit {
 
   public newStepForm = this.formBuilder.group({
     newDisplayName: ['', [Validators.required]],
-    newCount: ['', [Validators.required]],
+    newCount: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
     newDescription: ['', [Validators.required]],
   });
 
   public existingStepForm = this.formBuilder.group({});
 
   public finalStepForm = this.formBuilder.group({
-    finalDisplayName: [ this.finalStep.displayName],
-    finalCount: [this.finalStep.count, [Validators.required]],
-    finalDescription: [this.finalStep.description]
+    finalDisplayName: [ this.finalStep.displayName, [Validators.required]],
+    finalCount: [this.finalStep.count, [Validators.required, Validators.pattern('^[0-9]*$')]],
+    finalDescription: [this.finalStep.description, [Validators.required]]
   });
 
   constructor(private formBuilder: FormBuilder) { }
