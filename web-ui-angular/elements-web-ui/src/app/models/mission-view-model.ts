@@ -16,5 +16,6 @@ export class MissionViewModel implements Mission {
     this.steps = [];
     this.tags = [];
     this.metadata = {};
+    this.finalRepeatStep = new MissionStepViewModel();
   }
 }

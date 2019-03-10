@@ -62,6 +62,7 @@
         <div class="form-row">
           <mat-form-field>
             <input matInput placeholder="Description" name="newDescription" formControlName="newDescription">
+            <mat-error *ngIf="newStepForm.controls.newDescription.hasError('required')">Display name is required</mat-error>
           </mat-form-field>
         </div>
 
@@ -107,6 +108,7 @@
       <div class="form-row">
         <mat-form-field>
           <input matInput placeholder="Description" name="finalDescription" formControlName="finalDescription" value="{{finalStep.description}}" (change)="updateStep(finalStep, 'description', $event)">
+          <mat-error *ngIf="finalStepForm.controls.finalDescription.hasError('required')">Description is required</mat-error>
         </mat-form-field>
       </div>
 

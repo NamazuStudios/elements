@@ -42,8 +42,14 @@ export class MissionStepsCardComponent implements OnInit {
 
   public stepsValid() {
     // invalid if neither steps nor final step exist
-    if (this.mission.steps.length == 0 && !this.mission.finalRepeatStep) {
-      console.log("No steps or final step");
+    if (this.mission.steps.length == 0 && !(this.mission.finalRepeatStep.rewards.length > 0
+        && this.mission.finalRepeatStep.count && this.mission.finalRepeatStep.description && this.mission.finalRepeatStep.displayName)) {
+      //console.log("No steps or final step");
+      return false;
+    }
+
+    // all existing steps must be valid
+    if (!this.existingStepForm.valid) {
       return false;
     }
 
@@ -57,18 +63,13 @@ export class MissionStepsCardComponent implements OnInit {
       const rewardEditor = rewardEditors[i];
 
       if (!rewardEditor.existingRewardForm.valid) {
-        console.log("Invalid existing reward form");
-        console.log(rewardEditor);
+        //console.log("Invalid existing reward form");
+        //console.log(rewardEditor);
         return false;
       }
     }
 
-    // all existing steps must be valid
-    if (!this.existingStepForm.valid) {
-      return false;
-    }
-
-    console.log("All steps valid");
+    //console.log("All steps valid");
     // all validity tests passed
     return true;
   }
@@ -113,27 +114,9 @@ export class MissionStepsCardComponent implements OnInit {
     this.existingStepForm.addControl('count' + index, new FormControl(step.count, [Validators.required, Validators.pattern('^[0-9]*$')]));
   }
 
-  clearFinalStepForm() {
-    this.finalStepForm.reset();
-    this.finalStepRewards.newRewardForm.reset();
-    this.finalStepRewards.existingRewardForm.reset();
-
-    this.mission.finalRepeatStep = null;
-    this.isFinalStepChanged = false;
-  }
-
-  addFinalStepToMission() {
-    const formData = this.finalStepForm.value;
-    this.finalStep.description = formData.finalDescription;
-    this.finalStep.displayName = formData.finalDisplayName;
-    this.finalStep.count = formData.finalCount;
-
-    this.mission.finalRepeatStep = this.finalStep;
-    this.isFinalStepChanged = false;
-  }
-
   ngOnInit() {
     if (this.mission.finalRepeatStep) { this.finalStep = this.mission.finalRepeatStep; }
+    if (!this.mission.steps) { this.mission.steps = []; }
 
     if (this.mission.steps) {
       for (let i = 0; i < this.mission.steps.length; i++) {
