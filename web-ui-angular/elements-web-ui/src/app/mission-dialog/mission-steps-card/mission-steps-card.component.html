@@ -18,18 +18,18 @@
 
         <div class="form-row">
           <mat-form-field>
-            <input matInput placeholder="Display name" name="displayName" formControlName="displayName{{i}}" value="{{step.displayName}}">
+            <input matInput placeholder="Display name" name="displayName" formControlName="displayName{{i}}" value="{{step.displayName}}" (change)="updateStep(step, 'displayName', $event)">
             <mat-error *ngIf="existingStepForm.controls['displayName' + i].hasError('required')">Display name is required</mat-error>
           </mat-form-field>
           <mat-form-field>
-            <input matInput placeholder="Count" name="count" formControlName="count{{i}}" value="{{step.count}}">
+            <input matInput placeholder="Count" name="count" formControlName="count{{i}}" value="{{step.count}}" (change)="updateStep(step, 'count', $event)">
             <mat-error *ngIf="existingStepForm.controls['count' + i].hasError('required')">Count is required</mat-error>
             <mat-error *ngIf="existingStepForm.controls['count' + i].hasError('pattern')">Count must be a number</mat-error>
           </mat-form-field>
         </div>
         <div class="form-row">
           <mat-form-field>
-            <input matInput placeholder="Description" name="description" formControlName="description{{i}}" value="{{step.description}}">
+            <input matInput placeholder="Description" name="description" formControlName="description{{i}}" value="{{step.description}}" (change)="updateStep(step, 'description', $event)">
             <mat-error *ngIf="existingStepForm.controls['description' + i].hasError('required')">Description is required</mat-error>
           </mat-form-field>
         </div>
@@ -95,29 +95,24 @@
 
       <div class="form-row">
         <mat-form-field>
-          <input matInput placeholder="Display name" name="finalDisplayName" formControlName="finalDisplayName" value="{{finalStep.displayName || ''}}">
+          <input matInput placeholder="Display name" name="finalDisplayName" formControlName="finalDisplayName" value="{{finalStep.displayName || ''}}" (change)="updateStep(finalStep, 'displayName', $event)">
           <mat-error *ngIf="finalStepForm.controls.finalDisplayName.hasError('required')">Display name is required</mat-error>
         </mat-form-field>
         <mat-form-field>
-          <input matInput placeholder="Count" name="finalCount" formControlName="finalCount" value="{{finalStep.count}}">
+          <input matInput placeholder="Count" name="finalCount" formControlName="finalCount" value="{{finalStep.count}}" (change)="updateStep(finalStep, 'count', $event)">
           <mat-error *ngIf="finalStepForm.controls.finalCount.hasError('required')">Count is required</mat-error>
           <mat-error *ngIf="finalStepForm.controls.finalCount.hasError('pattern')">Count must be a number</mat-error>
         </mat-form-field>
       </div>
       <div class="form-row">
         <mat-form-field>
-          <input matInput placeholder="Description" name="finalDescription" formControlName="finalDescription" value="{{finalStep.description}}">
+          <input matInput placeholder="Description" name="finalDescription" formControlName="finalDescription" value="{{finalStep.description}}" (change)="updateStep(finalStep, 'description', $event)">
         </mat-form-field>
       </div>
 
       <app-mission-rewards-editor #finalStepRewards [rewards]="finalStep.rewards"></app-mission-rewards-editor>
 
       <app-json-editor-card topic="Step" [editTarget]="finalStep.metadata || {}"></app-json-editor-card>
-
-      <mat-action-row>
-        <button mat-button (click)="clearFinalStepForm()">Clear</button>
-        <button mat-raised-button color="primary" (click)="addFinalStepToMission()" [disabled]="(finalStep.rewards.length == 0 || !finalStepForm.valid)">Save</button>
-      </mat-action-row>
     </mat-expansion-panel>
   </mat-accordion>
 </form>

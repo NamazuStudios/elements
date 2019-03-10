@@ -63,11 +63,18 @@ export class MissionStepsCardComponent implements OnInit {
       }
     }
 
-    // all rewards on the final step must be valid
+    // all existing steps must be valid
+    if (!this.existingStepForm.valid) {
+      return false;
+    }
 
     console.log("All steps valid");
     // all validity tests passed
     return true;
+  }
+
+  updateStep(step: MissionStep, param: string, event: any) {
+    step[param] = event.target.value;
   }
 
   drop(event: CdkDragDrop<string[]>) {
