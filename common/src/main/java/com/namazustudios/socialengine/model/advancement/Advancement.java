@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.model.advancement;
 
 import com.namazustudios.socialengine.model.mission.Mission;
-import com.namazustudios.socialengine.model.mission.Reward;
+import com.namazustudios.socialengine.model.reward.Reward;
 import com.namazustudios.socialengine.model.mission.Step;
 
 import java.util.List;
