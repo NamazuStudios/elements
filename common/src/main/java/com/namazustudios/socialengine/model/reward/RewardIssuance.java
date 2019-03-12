@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.mission;
+package com.namazustudios.socialengine.model.reward;
 
 import com.namazustudios.socialengine.model.Taggable;
 import com.namazustudios.socialengine.model.User;
@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.model.mission.Step;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -21,6 +22,7 @@ public class RewardIssuance implements Serializable, Taggable {
     public static final String CONTEXT_SEPARATOR = ".";
     public static final String MISSION_PROGRESS_SOURCE = "MISSION_PROGRESS";
     public static final String APPLE_IAP_SOURCE = "APPLE_IAP";
+    public static final String GOOGLE_PLAY_IAP_SOURCE = "GOOGLE_PLAY_IAP";
 
     public static final String MISSION_PROGRESS_PROGRESS_KEY = "progress";
     public static final String MISSION_PROGRESS_STEP_KEY = "step";
@@ -356,12 +358,27 @@ public class RewardIssuance implements Serializable, Taggable {
             final Integer skuOrdinal
     ) {
         final int hashResult = Objects.hash(originalTransactionId, itemId, skuOrdinal);
-        final String hashResultString =
-                Integer.toString(hashResult);
+        final String hashResultString = Integer.toString(hashResult);
         return buildContextString(
                 SERVER_CONTEXT_PREFIX,
                 APPLE_IAP_SOURCE,
                 hashResultString
         );
+
+    }
+
+    /**
+     * Builds the context string for a Google Play-sourced reward issuance. The last element in the context string is
+     * the hash of the orderId issued by the Google Play services, presumed to be universally unique, as well as the
+     * itemId.
+     *
+     * @param orderId
+     * @param itemId
+     * @return the resultant context string
+     */
+    public static String buildGooglePlayIapContextString(String orderId, String itemId) {
+        final int hashResult = Objects.hash(orderId, itemId);
+        final String hashResultString = Integer.toString(hashResult);
+        return buildContextString(SERVER_CONTEXT_PREFIX, GOOGLE_PLAY_IAP_SOURCE, hashResultString);
     }
 }

@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.mission;
+package com.namazustudios.socialengine.model.reward;
 
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import io.swagger.annotations.ApiModel;

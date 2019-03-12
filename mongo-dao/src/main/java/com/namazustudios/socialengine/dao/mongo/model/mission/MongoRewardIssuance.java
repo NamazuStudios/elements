@@ -1,11 +1,9 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
+import com.namazustudios.socialengine.model.reward.RewardIssuance.Type;
+import com.namazustudios.socialengine.model.reward.RewardIssuance.State;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
-import com.namazustudios.socialengine.model.mission.RewardIssuance;
-import com.namazustudios.socialengine.model.mission.RewardIssuance.Type;
-import com.namazustudios.socialengine.model.mission.RewardIssuance.State;
-import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
 import java.sql.Timestamp;
