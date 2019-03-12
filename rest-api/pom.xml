@@ -87,6 +87,11 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-androidpublisher</artifactId>
+            <version>v3-rev61-1.25.0</version>
+        </dependency>
     </dependencies>
 
     <build>

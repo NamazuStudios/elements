@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.service.rewardissuance;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.mission.RewardIssuance;
-import com.namazustudios.socialengine.model.mission.RewardIssuance.State;
-import com.namazustudios.socialengine.model.mission.RewardIssuanceRedemptionResult;
+import com.namazustudios.socialengine.model.reward.RewardIssuance;
+import com.namazustudios.socialengine.model.reward.RewardIssuance.State;
+import com.namazustudios.socialengine.model.reward.RewardIssuanceRedemptionResult;
 
 import java.util.List;
 import java.util.Set;

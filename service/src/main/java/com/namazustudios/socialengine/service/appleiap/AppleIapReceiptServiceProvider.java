@@ -10,14 +10,14 @@ public class AppleIapReceiptServiceProvider implements Provider<AppleIapReceiptS
 
     private User user;
 
-    private Provider<UserAppleIapReceiptService> userAppleIapServiceProvider;
+    private Provider<UserAppleIapReceiptService> userAppleIapReceiptServiceProvider;
 
     @Override
     public AppleIapReceiptService get() {
         switch (getUser().getLevel()) {
             case SUPERUSER:
             case USER:
-                return getUserAppleIapServiceProvider().get();
+                return getUserAppleIapReceiptServiceProvider().get();
             default:
                 return Services.forbidden(AppleIapReceiptService.class);
        }
@@ -32,12 +32,12 @@ public class AppleIapReceiptServiceProvider implements Provider<AppleIapReceiptS
         this.user = user;
     }
 
-    public Provider<UserAppleIapReceiptService> getUserAppleIapServiceProvider() {
-        return userAppleIapServiceProvider;
+    public Provider<UserAppleIapReceiptService> getUserAppleIapReceiptServiceProvider() {
+        return userAppleIapReceiptServiceProvider;
     }
 
     @Inject
-    public void setUserAppleIapServiceProvider(Provider<UserAppleIapReceiptService> userAppleIapServiceProvider) {
-        this.userAppleIapServiceProvider = userAppleIapServiceProvider;
+    public void setUserAppleIapReceiptServiceProvider(Provider<UserAppleIapReceiptService> userAppleIapReceiptServiceProvider) {
+        this.userAppleIapReceiptServiceProvider = userAppleIapReceiptServiceProvider;
     }
 }

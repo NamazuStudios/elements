@@ -4,16 +4,15 @@ import com.namazustudios.socialengine.dao.RewardIssuanceDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
-import com.namazustudios.socialengine.model.mission.RewardIssuance;
-import com.namazustudios.socialengine.model.mission.RewardIssuance.State;
-import com.namazustudios.socialengine.model.mission.RewardIssuanceRedemptionResult;
+import com.namazustudios.socialengine.model.reward.RewardIssuance;
+import com.namazustudios.socialengine.model.reward.RewardIssuance.State;
+import com.namazustudios.socialengine.model.reward.RewardIssuanceRedemptionResult;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.namazustudios.socialengine.model.mission.RewardIssuance.Type.PERSISTENT;
+import static com.namazustudios.socialengine.model.reward.RewardIssuance.Type.PERSISTENT;
 
 public class UserRewardIssuanceService implements RewardIssuanceService {
     private User user;
