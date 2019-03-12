@@ -114,6 +114,7 @@ class UsersService extends BaseService {
 
     if (params.password != null) __params = __params.set('password', params.password.toString());
     __body = params.body;
+    console.log(params);
     let req = new HttpRequest<any>(
       'PUT',
       this.rootUrl + `/user/${params.name}`,

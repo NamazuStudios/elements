@@ -128,6 +128,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
     this.showDialog(true, new UserViewModel(), result => {
       // backend expects password to be in query params, so delete from result before attaching to body
       const password = result.password;
+      delete result.passwordConfirmation;
       delete result.password;
       this.usersService.createUser({ password: password, body: result }).subscribe(r => {
           this.refresh();
@@ -140,6 +141,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
     this.showDialog(false, user, result => {
       // backend expects password to be in query params, so delete from result before attaching to body
       const password = result.password;
+      delete result.passwordConfirmation;
       delete result.password;
       this.usersService.updateUser({ name: user.name, password: password, body: result }).subscribe(r => {
           this.refresh();
