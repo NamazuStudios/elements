@@ -125,8 +125,11 @@ export class UsersListComponent implements OnInit, AfterViewInit {
   }
 
   addUser() {
-    this.showDialog(true, new UserViewModel(),result => {
-      this.usersService.createUser({ password: result.password, body: result }).subscribe(r => {
+    this.showDialog(true, new UserViewModel(), result => {
+      // backend expects password to be in query params, so delete from result before attaching to body
+      const password = result.password;
+      delete result.password;
+      this.usersService.createUser({ password: password, body: result }).subscribe(r => {
           this.refresh();
         },
         error => this.alertService.error(error));
@@ -135,7 +138,10 @@ export class UsersListComponent implements OnInit, AfterViewInit {
 
   editUser(user) {
     this.showDialog(false, user, result => {
-      this.usersService.updateUser({ name: user.name, password: result.password, body: result }).subscribe(r => {
+      // backend expects password to be in query params, so delete from result before attaching to body
+      const password = result.password;
+      delete result.password;
+      this.usersService.updateUser({ name: user.name, password: password, body: result }).subscribe(r => {
           this.refresh();
         },
         error => this.alertService.error(error));
