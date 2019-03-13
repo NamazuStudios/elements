@@ -1,9 +1,10 @@
 import {Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
-import {MAT_DIALOG_DATA, MatChipInputEvent, MatDialogRef} from '@angular/material';
+import {MAT_DIALOG_DATA, MatChipInputEvent, MatDialogRef, MatSnackBar} from '@angular/material';
 import {ENTER, COMMA} from '@angular/cdk/keycodes';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
 import {MissionStepsCardComponent} from './mission-steps-card/mission-steps-card.component';
+import {AlertService} from '../alert.service';
 
 @Component({
   selector: 'app-item-dialog',
@@ -14,7 +15,7 @@ export class MissionDialogComponent implements OnInit {
 
   constructor(public dialogRef: MatDialogRef<MissionDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
-              private formBuilder: FormBuilder) { }
+              private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) { }
 
   @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
   @ViewChild(MissionStepsCardComponent) stepsCard: MissionStepsCardComponent;
@@ -88,10 +89,20 @@ export class MissionDialogComponent implements OnInit {
     }
 
     // closes the dialog and passes the complete formData to the callback
-    this.dialogRef.close(formData);
+    this.data.next(formData).subscribe(res => {
+      this.dialogRef.close();
+      this.data.refresher.refresh();
+    }, err => {
+      this.alertService.error(err);
+    });
   }
 
   ngOnInit() {
+    this.alertSubscription = this.alertService.getMessage().subscribe((message: any) => {
+      if(message) {
+        this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
+      }
+    });
   }
 
 }
