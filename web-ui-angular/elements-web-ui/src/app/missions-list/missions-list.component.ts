@@ -113,7 +113,7 @@ export class MissionsListComponent implements OnInit, AfterViewInit {
   showDialog(isNew: boolean, mission: Mission, next) {
     const dialogRef = this.dialog.open(MissionDialogComponent, {
       width: '900px',
-      data: { isNew: isNew, mission: mission, next: next, refresher: this }
+      data: { isNew: isNew, mission: mission }
     });
 
     dialogRef
@@ -124,13 +124,21 @@ export class MissionsListComponent implements OnInit, AfterViewInit {
 
   addMission() {
     this.showDialog(true, new MissionViewModel(), result => {
-      return this.missionsService.createMission(result);
+      console.log(result);
+      this.missionsService.createMission(result).subscribe(r => {
+          this.refresh();
+        },
+        error => this.alertService.error(error));
     });
   }
 
   editMission(mission) {
     this.showDialog(false, mission, res => {
-      return this.missionsService.updateMission({ identifier: mission.id, body: res });
+      console.log(res);
+      this.missionsService.updateMission({ identifier: mission.id, body: res }).subscribe(r => {
+          this.refresh();
+        },
+        error => this.alertService.error(error));
     });
   }
 }
