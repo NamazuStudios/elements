@@ -114,30 +114,19 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
   showDialog(isNew: boolean, application: Application, next) {
     const dialogRef = this.dialog.open(ApplicationDialogComponent, {
       width: '900px',
-      data: { isNew: isNew, application: application }
+      data: { isNew: isNew, application: application, next: next, refresher: this }
     });
-
-    dialogRef
-      .afterClosed()
-      .pipe(filter(r => r))
-      .subscribe(next);
   }
 
   addApplication() {
     this.showDialog(true, new ApplicationViewModel(),result => {
-      this.applicationsService.createApplication(result).subscribe(r => {
-          this.refresh();
-        },
-        error => this.alertService.error(error));
+      return this.applicationsService.createApplication(result);
     });
   }
 
   editApplication(application) {
     this.showDialog(false, application, result => {
-      this.applicationsService.updateApplication({ nameOrId: application.id, body: result }).subscribe(r => {
-          this.refresh();
-        },
-        error => this.alertService.error(error));
+      return this.applicationsService.updateApplication({ nameOrId: application.id, body: result });
     });
   }
 }
