@@ -1,6 +1,7 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material";
 import {AbstractControl, FormBuilder, FormControl, ValidatorFn, Validators} from "@angular/forms";
+import {AlertService} from '../alert.service';
 
 export interface UserLevel {
   key: string;
@@ -31,12 +32,24 @@ export class UserDialogComponent implements OnInit {
 
   constructor(public dialogRef: MatDialogRef<UserDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
-              private formBuilder: FormBuilder) { }
+              private formBuilder: FormBuilder, private alertService: AlertService) { }
 
   ngOnInit() {
     if(this.data.isNew) {
       this.userForm.get("password").setValidators(Validators.required);
     }
+  }
+
+  close(res: any) {
+    if (!res) {
+      this.dialogRef.close();
+      return;
+    }
+
+    this.data.next(res).subscribe(r => {
+      this.dialogRef.close();
+      this.data.refresher.refresh();
+    }, err => this.alertService.error(err));
   }
 
   passwordMatchValidator(c: AbstractControl) : { [key: string]: boolean } | null {
