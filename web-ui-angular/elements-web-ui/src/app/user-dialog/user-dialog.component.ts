@@ -1,5 +1,5 @@
 import {Component, Inject, OnInit} from '@angular/core';
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material";
+import {MAT_DIALOG_DATA, MatDialogRef, MatSnackBar} from '@angular/material';
 import {AbstractControl, FormBuilder, FormControl, ValidatorFn, Validators} from "@angular/forms";
 import {AlertService} from '../alert.service';
 
@@ -32,12 +32,17 @@ export class UserDialogComponent implements OnInit {
 
   constructor(public dialogRef: MatDialogRef<UserDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
-              private formBuilder: FormBuilder, private alertService: AlertService) { }
+              private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) { }
 
   ngOnInit() {
     if(this.data.isNew) {
       this.userForm.get("password").setValidators(Validators.required);
     }
+    this.alertSubscription = this.alertService.getMessage().subscribe((message: any) => {
+      if(message) {
+        this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
+      }
+    });
   }
 
   close(res: any) {
@@ -49,7 +54,10 @@ export class UserDialogComponent implements OnInit {
     this.data.next(res).subscribe(r => {
       this.dialogRef.close();
       this.data.refresher.refresh();
-    }, err => this.alertService.error(err));
+    }, err => {
+      console.log("Error in closing");
+      this.alertService.success(err);
+    });
   }
 
   passwordMatchValidator(c: AbstractControl) : { [key: string]: boolean } | null {

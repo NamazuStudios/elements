@@ -125,10 +125,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
       const password = result.password;
       delete result.passwordConfirmation;
       delete result.password;
-      this.usersService.createUser({ password: password, body: result }).subscribe(r => {
-          this.refresh();
-        },
-        error => this.alertService.error(error));
+      return this.usersService.createUser({ password: password, body: result });
     });
   }
 
@@ -138,10 +135,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
       const password = result.password;
       delete result.passwordConfirmation;
       delete result.password;
-      this.usersService.updateUser({ name: user.name, password: password, body: result }).subscribe(r => {
-          this.refresh();
-        },
-        error => this.alertService.error(error));
+      return this.usersService.updateUser({ name: user.name, password: password, body: result });
     });
   }
 }
