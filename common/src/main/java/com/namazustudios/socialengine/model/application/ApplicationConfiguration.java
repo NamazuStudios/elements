@@ -1,18 +1,12 @@
 package com.namazustudios.socialengine.model.application;
 
-import com.namazustudios.socialengine.exception.InvalidDataException;
-import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.exception.DuplicateException;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Ties the {@link Application} model to one of its associated profiles as represented by the {@link ConfigurationCategory}
@@ -37,16 +31,8 @@ public class ApplicationConfiguration implements Serializable {
     @NotNull
     private Application parent;
 
-    @ApiModelProperty("A mapping of IAP product ids to Item ids in the db. E.g. if we have a productId " +
-            "'pack_10_coins' representing 'Pack of 10 Coins', and we have itemId 'a1b2c3' for the Coin Item in the " +
-            "db, then we should have a kv-pair of 'pack_10_coins': 'a1b2c3'.")
-    // iap product ids to item ids
-    private Map<String, String> iapProductIdsToItemIds;
-
-    @ApiModelProperty("A mapping of IAP product ids in the db to the quantity set when creating a Reward. E.g. for " +
-            "a productId 'pack_10_coins' representing 'Pack of 10 Coins', we should have a kv-pair of " +
-            "'pack_10_coins': 10 .")
-    private Map<String, Integer> iapProductIdsToRewardQuantities;
+    @ApiModelProperty("The list of product bundles that may be rewarded upon successful IAP transactions.")
+    private List<ProductBundle> productBundles;
 
     /**
      * Gets the actual profile ID.
@@ -120,38 +106,39 @@ public class ApplicationConfiguration implements Serializable {
         this.parent = parent;
     }
 
-    public Map<String, String> getIapProductIdsToItemIds() {
-        return iapProductIdsToItemIds;
+    public List<ProductBundle> getProductBundles() {
+        return productBundles;
     }
 
-    public void setIapProductIdsToItemIds(Map<String, String> iapProductIdsToItemIds) {
-        this.iapProductIdsToItemIds = iapProductIdsToItemIds;
+    public void setProductBundles(List<ProductBundle> productBundles) {
+        this.productBundles = productBundles;
     }
 
-    public Map<String, Integer> getIapProductIdsToRewardQuantities() {
-        return iapProductIdsToRewardQuantities;
-    }
-
-    public void setIapProductIdsToRewardQuantities(Map<String, Integer> iapProductIdsToRewardQuantities) {
-        this.iapProductIdsToRewardQuantities = iapProductIdsToRewardQuantities;
-    }
-
-    public void addIapProductIdToItemId(final String productId, final String itemId) {
-
-        if (getIapProductIdsToItemIds() == null) {
-            setIapProductIdsToItemIds(new HashMap<>());
+    public ProductBundle getProductBundle(final String productId) {
+        if (getProductBundles() == null) {
+            return null;
         }
 
-        getIapProductIdsToItemIds().put(productId, itemId);
-    }
-
-    public void addIapProductIdToRewardQuantity(final String productId, final Integer rewardQuantity) {
-
-        if (getIapProductIdsToRewardQuantities() == null) {
-            setIapProductIdsToRewardQuantities(new HashMap<>());
+        for (final ProductBundle productBundle : getProductBundles()) {
+            if (Objects.equals(productBundle.getProductId(), productId)) {
+                return productBundle;
+            }
         }
 
-        getIapProductIdsToRewardQuantities().put(productId, rewardQuantity);
+        return null;
+    }
+
+    public void addProductBundle(final ProductBundle productBundle) {
+        if (getProductBundles() == null) {
+            setProductBundles(new ArrayList<>());
+        }
+
+        if (getProductBundle(productBundle.getProductId()) != null) {
+            throw new DuplicateException("ProductBundle with productId " + productBundle.getProductId() + " already exists " +
+                    "in ApplicationConfiguration " + getId());
+        }
+
+        getProductBundles().add(productBundle);
     }
 
     @Override
@@ -163,14 +150,12 @@ public class ApplicationConfiguration implements Serializable {
                 getCategory() == that.getCategory() &&
                 Objects.equals(getUniqueIdentifier(), that.getUniqueIdentifier()) &&
                 Objects.equals(getParent(), that.getParent()) &&
-                Objects.equals(getIapProductIdsToItemIds(), that.getIapProductIdsToItemIds()) &&
-                Objects.equals(getIapProductIdsToRewardQuantities(), that.getIapProductIdsToRewardQuantities());
+                Objects.equals(getProductBundles(), that.getProductBundles());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getCategory(), getUniqueIdentifier(), getParent(), getIapProductIdsToItemIds(),
-                getIapProductIdsToRewardQuantities());
+        return Objects.hash(getId(), getCategory(), getUniqueIdentifier(), getParent(), getProductBundles());
     }
 
     @Override
@@ -180,54 +165,7 @@ public class ApplicationConfiguration implements Serializable {
                 ", category=" + category +
                 ", uniqueIdentifier='" + uniqueIdentifier + '\'' +
                 ", parent=" + parent +
-                ", iapProductIdsToItemIds=" + iapProductIdsToItemIds +
-                ", iapProductIdsToRewardQuantities=" + iapProductIdsToRewardQuantities +
+                ", productBundles=" + productBundles +
                 '}';
-    }
-
-    public String getItemIdForProductId(final String productId) {
-        final Map<String, String> iapProductIdsToItemIds = getIapProductIdsToItemIds();
-
-        if (iapProductIdsToItemIds == null) {
-            throw new InvalidDataException("Application Configuration " + getId() +
-                    "has no product id -> item id mapping.");
-        }
-
-        // NOTE: right now we are using Mongo v3.4.6, which disallows dots and dollar signs for document field names
-        // (only allowable starting in Mongo v3.6).
-        final String cleanedProductId = productId
-                .replace(".", "_")
-                .replace("$", "_");
-
-        if (!iapProductIdsToItemIds.containsKey(cleanedProductId)) {
-            throw new NotFoundException("IAP product id " + cleanedProductId + " is not in the application " +
-                    "configuration " + getId() + "  product id -> item id " +
-                    "mapping.");
-        }
-
-        return iapProductIdsToItemIds.get(cleanedProductId);
-    }
-
-    public Integer getQuantityForProductId(final String productId) {
-        final Map<String, Integer> iapProductIdsToRewardQuantities = getIapProductIdsToRewardQuantities();
-
-        if (iapProductIdsToRewardQuantities == null) {
-            throw new InvalidDataException("Application Configuration " + getId() +
-                    "has no product id -> reward quantity mapping.");
-        }
-
-        // NOTE: right now we are using Mongo v3.4.6, which disallows dots and dollar signs for document field names
-        // (only allowable starting in Mongo v3.6).
-        final String cleanedProductId = productId
-                .replace(".", "_")
-                .replace("$", "_");
-
-        if (!iapProductIdsToRewardQuantities.containsKey(cleanedProductId)) {
-            throw new NotFoundException("IAP product id " + cleanedProductId + " is not in the application " +
-                    "configuration " + getId() + "  product id -> reward " +
-                    "quantity mapping.");
-        }
-
-        return iapProductIdsToRewardQuantities.get(cleanedProductId);
     }
 }

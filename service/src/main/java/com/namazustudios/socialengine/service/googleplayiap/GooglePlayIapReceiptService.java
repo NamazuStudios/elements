@@ -64,10 +64,10 @@ public interface GooglePlayIapReceiptService {
             String purchaseToken);
 
     /**
-     * Gets or creates a {@link RewardIssuance} in the db for the given {@link GooglePlayIapReceipt}.
+     * Gets or creates a list of {@link RewardIssuance}s in the db for the given {@link GooglePlayIapReceipt}.
      *
      * @param googlePlayIapReceipt
      * @return
      */
-    RewardIssuance getOrCreateRewardIssuance(GooglePlayIapReceipt googlePlayIapReceipt);
+    List<RewardIssuance> getOrCreateRewardIssuances(GooglePlayIapReceipt googlePlayIapReceipt);
 }
