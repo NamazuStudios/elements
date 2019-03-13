@@ -35,6 +35,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import static com.namazustudios.socialengine.model.googleplayiapreceipt.GooglePlayIapReceipt.PURCHASE_STATE_CANCELED;
+import static com.namazustudios.socialengine.model.googleplayiapreceipt.GooglePlayIapReceipt.buildRewardIssuanceTags;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.*;
 import java.util.function.Supplier;
@@ -236,6 +237,7 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         final String context = buildGooglePlayIapContextString(orderId, itemId);
 
         final Map<String, Object> metadata = generateGooglePlayIapReceiptMetadata();
+        final List<String> tags = buildRewardIssuanceTags(orderId);
 
         final Item item = getItemDao().getItemByIdOrName(itemId);
 
@@ -247,8 +249,10 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         // we hold onto the reward issuance forever so as not to duplicate an already-redeemed issuance
         rewardIssuance.setType(PERSISTENT);
         rewardIssuance.setContext(context);
+        rewardIssuance.setTags(tags);
         rewardIssuance.setMetadata(metadata);
         rewardIssuance.setSource(GOOGLE_PLAY_IAP_SOURCE);
+
 
         final RewardIssuance resultRewardIssuance = getRewardIssuanceDao()
                 .getOrCreateRewardIssuance(rewardIssuance);
