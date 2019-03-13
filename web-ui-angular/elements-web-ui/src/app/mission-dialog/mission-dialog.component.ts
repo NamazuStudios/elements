@@ -98,7 +98,7 @@ export class MissionDialogComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.alertSubscription = this.alertService.getMessage().subscribe((message: any) => {
+    this.alertService.getMessage().subscribe((message: any) => {
       if(message) {
         this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
       }
