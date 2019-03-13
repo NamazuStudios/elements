@@ -56,7 +56,7 @@ export class UserDialogComponent implements OnInit {
       this.data.refresher.refresh();
     }, err => {
       console.log("Error in closing");
-      this.alertService.success(err);
+      this.alertService.error(err);
     });
   }
 
