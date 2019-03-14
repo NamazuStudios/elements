@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="rest-war" type="JettyConfiguration" factoryName="Local" APPLICATION_SERVER_NAME="Jetty 9.4.5.v20170502" ALTERNATIVE_JRE_ENABLED="false">
     <option name="OPEN_IN_BROWSER" value="false" />
-    <option name="COMMON_VM_ARGUMENTS" value="-Dcom.namazustudios.socialengine.git.storage.directory=$USER_HOME$/socialengine-repos -Dcom.namazustudios.socialengine.api.url=http://127.0.0.1:8080/api/rest -Dcom.namazustudios.socialengine.cors.allowed.origins=http://localhost:8080,http://localhost:4200,http://127.0.0.1:8080,http://127.0.0.1:4200,http://localhost:4201" />
+    <option name="COMMON_VM_ARGUMENTS" value="-Dcom.namazustudios.socialengine.git.storage.directory=$PROJECT_DIR$/../socialengine-repos -Dcom.namazustudios.socialengine.api.url=http://127.0.0.1:8080/api/rest" />
     <option name="UPDATING_POLICY" value="restart-server" />
     <deployment>
       <artifact name="rest-war:war exploded">

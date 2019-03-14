@@ -10,10 +10,12 @@ import com.namazustudios.socialengine.dao.mongo.application.*;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnSessionDao;
 import com.namazustudios.socialengine.dao.mongo.match.MongoMatchDao;
+import com.namazustudios.socialengine.dao.mongo.model.MongoGooglePlayIapReceipt;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoAdvancedDatastoreProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoMatchmakerFunctionProvider;
 import com.namazustudios.elements.fts.ObjectIndex;
+import com.namazustudios.socialengine.model.googleplayiapreceipt.GooglePlayIapReceipt;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -67,6 +69,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(ProgressDao.class).to(MongoProgressDao.class);
         bind(RewardIssuanceDao.class).to(MongoRewardIssuanceDao.class);
         bind(AppleIapReceiptDao.class).to(MongoAppleIapReceiptDao.class);
+        bind(GooglePlayIapReceiptDao.class).to(MongoGooglePlayIapReceiptDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoAdvancedDatastoreProvider.class)
@@ -116,5 +119,6 @@ public class MongoDaoModule extends PrivateModule {
         expose(ProgressDao.class);
         expose(RewardIssuanceDao.class);
         expose(AppleIapReceiptDao.class);
+        expose(GooglePlayIapReceiptDao.class);
     }
 }

@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.mission.RewardIssuance;
-import com.namazustudios.socialengine.model.mission.RewardIssuance.State;
-import com.namazustudios.socialengine.model.mission.RewardIssuanceRedemptionResult;
+import com.namazustudios.socialengine.model.reward.RewardIssuance;
+import com.namazustudios.socialengine.model.reward.RewardIssuance.State;
+import com.namazustudios.socialengine.model.reward.RewardIssuanceRedemptionResult;
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -14,7 +14,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import java.util.List;
-import java.util.Set;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 

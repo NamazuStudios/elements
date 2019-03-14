@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.mission;
 
+import com.namazustudios.socialengine.model.reward.Reward;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 

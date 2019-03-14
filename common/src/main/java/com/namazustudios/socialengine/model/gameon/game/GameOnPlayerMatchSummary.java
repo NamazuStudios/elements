@@ -38,13 +38,19 @@ public class GameOnPlayerMatchSummary implements Serializable {
     private Integer matchesPerPlayer;
 
     @ApiModelProperty("The number of attempts a player can make per match.")
-    private Integer playerAttemtpsPerMatch;
+    private Integer playerAttemptsPerMatch;
 
     @ApiModelProperty("The number of players per match.")
     private Integer playersPerMatch;
 
     @ApiModelProperty("The number of players per match.")
     private String creatorPlayerName;
+
+    @ApiModelProperty("The win type (e.g. highest).")
+    private String winType;
+
+    @ApiModelProperty("The score type (e.g. individual).")
+    private String scoreType;
 
     public String getMatchId() {
         return matchId;
@@ -126,12 +132,12 @@ public class GameOnPlayerMatchSummary implements Serializable {
         this.matchesPerPlayer = matchesPerPlayer;
     }
 
-    public Integer getPlayerAttemtpsPerMatch() {
-        return playerAttemtpsPerMatch;
+    public Integer getplayerAttemptsPerMatch() {
+        return playerAttemptsPerMatch;
     }
 
-    public void setPlayerAttemtpsPerMatch(Integer playerAttemtpsPerMatch) {
-        this.playerAttemtpsPerMatch = playerAttemtpsPerMatch;
+    public void setplayerAttemptsPerMatch(Integer playerAttemptsPerMatch) {
+        this.playerAttemptsPerMatch = playerAttemptsPerMatch;
     }
 
     public Integer getPlayersPerMatch() {
@@ -150,6 +156,23 @@ public class GameOnPlayerMatchSummary implements Serializable {
         this.creatorPlayerName = creatorPlayerName;
     }
 
+
+    public String getWinType() {
+        return winType;
+    }
+
+    public void setWinType(String winType) {
+        this.winType = winType;
+    }
+
+    public String getScoreType() {
+        return scoreType;
+    }
+
+    public void setScoreType(String scoreType) {
+        this.scoreType = scoreType;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -165,14 +188,16 @@ public class GameOnPlayerMatchSummary implements Serializable {
                 Objects.equals(getDateEnd(), that.getDateEnd()) &&
                 Objects.equals(getImageUrl(), that.getImageUrl()) &&
                 Objects.equals(getMatchesPerPlayer(), that.getMatchesPerPlayer()) &&
-                Objects.equals(getPlayerAttemtpsPerMatch(), that.getPlayerAttemtpsPerMatch()) &&
+                Objects.equals(getplayerAttemptsPerMatch(), that.getplayerAttemptsPerMatch()) &&
                 Objects.equals(getPlayersPerMatch(), that.getPlayersPerMatch()) &&
-                Objects.equals(getCreatorPlayerName(), that.getCreatorPlayerName());
+                Objects.equals(getCreatorPlayerName(), that.getCreatorPlayerName()) &&
+                Objects.equals(getWinType(), that.getWinType()) &&
+                Objects.equals(getScoreType(), that.getScoreType());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getMatchId(), getTournamentId(), getAttemptsRemaining(), getTitle(), getSubtitle(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getPlayerAttemtpsPerMatch(), getPlayersPerMatch(), getCreatorPlayerName());
+        return Objects.hash(getMatchId(), getTournamentId(), getAttemptsRemaining(), getTitle(), getSubtitle(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getplayerAttemptsPerMatch(), getPlayersPerMatch(), getCreatorPlayerName(), getWinType(), getScoreType());
     }
 
     @Override
@@ -188,9 +213,11 @@ public class GameOnPlayerMatchSummary implements Serializable {
                 ", dateEnd=" + dateEnd +
                 ", imageUrl='" + imageUrl + '\'' +
                 ", matchesPerPlayer=" + matchesPerPlayer +
-                ", playerAttemtpsPerMatch=" + playerAttemtpsPerMatch +
+                ", playerAttemptsPerMatch=" + playerAttemptsPerMatch +
                 ", playersPerMatch=" + playersPerMatch +
                 ", creatorPlayerName='" + creatorPlayerName + '\'' +
+                ", winType=" + winType +
+                ", scoreType=" + scoreType +
                 '}';
     }
 

@@ -4,6 +4,8 @@ public class ErrorResponse {
 
     private String message;
 
+    private Error error;
+
     public String getMessage() {
         return message;
     }
@@ -12,4 +14,41 @@ public class ErrorResponse {
         this.message = message;
     }
 
+    public Error getError() {
+        return error;
+    }
+
+    public void setError(Error error) {
+        this.error = error;
+    }
+
+    public static class Error {
+        int code;
+        String message;
+        String request_id;
+
+        public int getCode() {
+            return code;
+        }
+
+        public void setCode(int code) {
+            this.code = code;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public String getRequest_id() {
+            return request_id;
+        }
+
+        public void setRequest_id(String request_id) {
+            this.request_id = request_id;
+        }
+    }
 }

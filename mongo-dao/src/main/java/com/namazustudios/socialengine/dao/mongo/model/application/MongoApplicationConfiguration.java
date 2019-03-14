@@ -1,17 +1,15 @@
 package com.namazustudios.socialengine.dao.mongo.model.application;
 
-        import com.namazustudios.elements.fts.annotation.SearchableDocument;
-        import com.namazustudios.elements.fts.annotation.SearchableField;
-        import com.namazustudios.elements.fts.annotation.SearchableIdentity;
-        import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
-        import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
-        import com.namazustudios.socialengine.model.application.ConfigurationCategory;
-        import org.bson.types.ObjectId;
-        import org.mongodb.morphia.annotations.*;
+import com.namazustudios.elements.fts.annotation.SearchableDocument;
+import com.namazustudios.elements.fts.annotation.SearchableField;
+import com.namazustudios.elements.fts.annotation.SearchableIdentity;
+import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
+import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
+import com.namazustudios.socialengine.model.application.ConfigurationCategory;
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.annotations.*;
 
-        import java.util.HashMap;
-        import java.util.Map;
-        import java.util.Objects;
+import java.util.*;
 
 /**
  * Created by patricktwohig on 7/10/15.
@@ -48,6 +46,9 @@ public class MongoApplicationConfiguration {
     @Reference("parent")
     private MongoApplication parent;
 
+    @Embedded
+    private List<MongoProductBundle> productBundles = new ArrayList<>();
+
     @Indexed
     @Property("category")
     private ConfigurationCategory category;
@@ -55,12 +56,6 @@ public class MongoApplicationConfiguration {
     @Indexed
     @Property("active")
     private boolean active;
-
-    @Property
-    private Map<String, String> iapProductIdsToItemIds = new HashMap<>();
-
-    @Property
-    private Map<String, Integer> iapProductIdsToRewardQuantities = new HashMap<>();
 
     public ObjectId getObjectId() {
         return objectId;
@@ -86,6 +81,14 @@ public class MongoApplicationConfiguration {
         this.parent = parent;
     }
 
+    public List<MongoProductBundle> getProductBundles() {
+        return productBundles;
+    }
+
+    public void setProductBundles(List<MongoProductBundle> productBundles) {
+        this.productBundles = productBundles;
+    }
+
     public ConfigurationCategory getCategory() {
         return category;
     }
@@ -102,22 +105,6 @@ public class MongoApplicationConfiguration {
         this.active = active;
     }
 
-    public Map<String, String> getIapProductIdsToItemIds() {
-        return iapProductIdsToItemIds;
-    }
-
-    public void setIapProductIdsToItemIds(Map<String, String> iapProductIdsToItemIds) {
-        this.iapProductIdsToItemIds = iapProductIdsToItemIds;
-    }
-
-    public Map<String, Integer> getIapProductIdsToRewardQuantities() {
-        return iapProductIdsToRewardQuantities;
-    }
-
-    public void setIapProductIdsToRewardQuantities(Map<String, Integer> iapProductIdsToRewardQuantities) {
-        this.iapProductIdsToRewardQuantities = iapProductIdsToRewardQuantities;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -127,14 +114,13 @@ public class MongoApplicationConfiguration {
                 Objects.equals(getObjectId(), that.getObjectId()) &&
                 Objects.equals(getUniqueIdentifier(), that.getUniqueIdentifier()) &&
                 Objects.equals(getParent(), that.getParent()) &&
-                getCategory() == that.getCategory() &&
-                Objects.equals(getIapProductIdsToItemIds(), that.getIapProductIdsToItemIds()) &&
-                Objects.equals(getIapProductIdsToRewardQuantities(), that.getIapProductIdsToRewardQuantities());
+                Objects.equals(getProductBundles(), that.getProductBundles()) &&
+                getCategory() == that.getCategory();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getUniqueIdentifier(), getParent(), getCategory(), isActive(),
-                getIapProductIdsToItemIds(), getIapProductIdsToRewardQuantities());
+        return Objects.hash(getObjectId(), getUniqueIdentifier(), getParent(), getProductBundles(), getCategory(),
+                isActive());
     }
 }

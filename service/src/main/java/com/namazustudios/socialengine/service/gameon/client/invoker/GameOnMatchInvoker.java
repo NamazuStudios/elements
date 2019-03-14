@@ -16,7 +16,11 @@ public interface GameOnMatchInvoker {
     GameOnEnterMatchResponse postEnterMatch(String matchId,
                                             EnterMatchRequest enterMatchRequest);
 
-    GameOnGetMatchLeaderboardResponse getLeaderboard(String matchId, Integer currentPlayerNeighbors, Integer limit);
+    GameOnGetMatchLeaderboardResponse getLeaderboard(
+            String matchId,
+            Integer currentPlayerNeighbors,
+            Integer limit,
+            String cursor);
 
     interface Builder extends PlayerRequestBuilder<GameOnMatchInvoker> {}
 

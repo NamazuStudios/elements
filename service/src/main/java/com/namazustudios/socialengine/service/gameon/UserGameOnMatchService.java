@@ -88,9 +88,7 @@ public class UserGameOnMatchService implements GameOnMatchService {
     public GameOnEnterMatchResponse enterMatch(
             final String matchId,
             final GameOnEnterMatchRequest gameOnEnterMatchRequest) {
-
-        final Profile profile = getProfileService().getCurrentProfile();
-
+        
         final DeviceOSType deviceOSType = gameOnEnterMatchRequest.getDeviceOSType() == null ?
             DeviceOSType.getDefault()                              :
             gameOnEnterMatchRequest.getDeviceOSType();
@@ -98,17 +96,6 @@ public class UserGameOnMatchService implements GameOnMatchService {
         final AppBuildType appBuildType = gameOnEnterMatchRequest.getAppBuildType() == null ?
             AppBuildType.getDefault()                              :
             gameOnEnterMatchRequest.getAppBuildType();
-
-        final Match match = gameOnEnterMatchRequest.getMatch();
-
-        final MatchmakingApplicationConfiguration configuration = getMatchmakingApplicationConfigurationDao()
-                .getApplicationConfiguration(profile.getApplication().getId(), match.getScheme());
-
-        if (match.getPlayer() == null) {
-            match.setPlayer(profile);
-        } else if (!Objects.equals(profile, match.getPlayer())) {
-            throw new ForbiddenException("player must match current profile");
-        }
 
         final GameOnSession gameOnSession;
         gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
@@ -123,27 +110,7 @@ public class UserGameOnMatchService implements GameOnMatchService {
             .build()
             .postEnterMatch(matchId, enterMatchRequest);
 
-        // Sets the scope of the match to the tournament ID first, so the match will follow the same tournament
-        match.setScope(response.getTournamentId());
-
-        // Sets the game on specific metadata to the match
-        final Map<String, Object> metadata = new HashMap<>();
-        metadata.put(MATCH_METADATA_MATCH_ID, response.getMatchId());
-        metadata.put(MATCH_METADATA_TOURNAMENT_ID, response.getTournamentId());
-        match.setMetadata(metadata);
-
-        // Attempts the insert it into the database, assuming that works, we then reply with the match
-        final Match inserted = getMatchDao().createMatch(match);
-
-        final Matchmaker matchmaker = getMatchDao()
-                .getMatchmaker(configuration.getAlgorithm())
-                .withScope(response.getTournamentId());
-
-        final Match paired = getMatchServiceUtils().attempt(matchmaker, inserted, configuration);
-        response.setMatch(paired);
-
         return response;
-
     }
 
     @Override
@@ -151,7 +118,8 @@ public class UserGameOnMatchService implements GameOnMatchService {
             final DeviceOSType deviceOSType, final AppBuildType appBuildType,
             final String matchId,
             final Integer currentPlayerNeighbors,
-            final Integer limit) {
+            final Integer limit,
+            final String cursor) {
 
         final GameOnSession gameOnSession;
         gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
@@ -161,13 +129,11 @@ public class UserGameOnMatchService implements GameOnMatchService {
                 .withSession(gameOnSession)
                 .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
                 .build()
-                .getLeaderboard(matchId, currentPlayerNeighbors, limit);
+                .getLeaderboard(matchId, currentPlayerNeighbors, limit, cursor);
 
         fillInProfile(response.getCurrentPlayer());
         fillInProfiles(response.getNeighbors());
         fillInProfiles(response.getLeaderboard());
-
-        // TODO Rework "Next" URL.  We need to know exactly what "next" is, however.
 
         return response;
     }

@@ -6,8 +6,7 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
-import com.namazustudios.socialengine.model.mission.Mission;
-import com.namazustudios.socialengine.model.mission.RewardIssuance;
+import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker.AppleIapVerifyReceiptEnvironment;
 
 import java.util.List;
@@ -21,7 +20,7 @@ public interface AppleIapReceiptService {
      * @param user the user
      * @param offset the offset
      * @param count the count
-     * @return a {@link Pagination} of {@link Mission} objects.
+     * @return a {@link Pagination} of {@link AppleIapReceipt} objects.
      */
     Pagination<AppleIapReceipt> getAppleIapReceipts(User user, int offset, int count);
 

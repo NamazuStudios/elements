@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.gameon.GameOnPlayerTournamentNotFoundException;
 import com.namazustudios.socialengine.model.gameon.game.GameOnClaimPrizeListResponse;
 import com.namazustudios.socialengine.model.gameon.game.GameOnFulfillPrizeListResponse;
+import com.namazustudios.socialengine.model.gameon.game.GameOnGetPrizeDetailsResponse;
 import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 import com.namazustudios.socialengine.service.gameon.client.exception.PlayerSessionExpiredException;
 import com.namazustudios.socialengine.service.gameon.client.invoker.GameOnGamePrizeInvoker;
@@ -88,6 +89,23 @@ public class V1StandardSecurityGamePrizeInvoker implements GameOnGamePrizeInvoke
 
     }
 
+    @Override
+    public GameOnGetPrizeDetailsResponse getDetails(final String prizeId) {
+        final Invocation.Builder builder = client
+                .target(GameOnConstants.BASE_API)
+                .path(GameOnConstants.VERSION_V1).path(PRIZES_PATH).path(prizeId)
+                .request()
+                .header(GameOnConstants.SESSION_ID, gameOnSession.getSessionId())
+                .header(GameOnConstants.X_API_KEY, gameOnSession.getSessionApiKey());
+
+        final Response response = builder.get();
+
+        return getResponse(response, GameOnGetPrizeDetailsResponse.class, () -> {
+           final GameOnGetPrizeDetailsResponse prizeDetailsResponse = new GameOnGetPrizeDetailsResponse();
+           return prizeDetailsResponse;
+        });
+    }
+
     private <T> T getResponse(final Response response,
                               final Class<T> responseEntityTClass,
                               final Supplier<T> emptyResponseSupplier) {
@@ -100,12 +118,14 @@ public class V1StandardSecurityGamePrizeInvoker implements GameOnGamePrizeInvoke
 
         final ErrorResponse error = response.readEntity(ErrorResponse.class);
 
+        final String errorMessage = error.getMessage() != null ? error.getMessage() : error.getError().getMessage();
+
         if (FORBIDDEN.getStatusCode() == response.getStatus()) {
-            throw new ForbiddenException("Player forbidden by GameOn: " + error.getMessage());
+            throw new ForbiddenException("Player forbidden by GameOn: " + errorMessage);
         } else if (UNAUTHORIZED.getStatusCode() == response.getStatus()) {
             throw new PlayerSessionExpiredException(gameOnSession, error);
         } else {
-            throw new InternalException("Unknown exception interacting with GameOn: " + error.getMessage());
+            throw new InternalException("Unknown exception interacting with GameOn: " + errorMessage);
         }
 
     }

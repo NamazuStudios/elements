@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.model.application;
 
 import java.io.Serializable;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Represents the application profile and any associated metadata, such as APNS certificate
@@ -11,6 +13,8 @@ import java.io.Serializable;
 public class GooglePlayApplicationConfiguration extends ApplicationConfiguration implements Serializable {
 
     private String applicationId;
+
+    private Map<String, Object> jsonKey;
 
     /**
      * Gets the Application ID, as defined in Google Play (com.mycompany.app)
@@ -30,22 +34,34 @@ public class GooglePlayApplicationConfiguration extends ApplicationConfiguration
         this.applicationId = applicationId;
     }
 
+    public Map<String, Object> getJsonKey() {
+        return jsonKey;
+    }
+
+    public void setJsonKey(Map<String, Object> jsonKey) {
+        this.jsonKey = jsonKey;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof GooglePlayApplicationConfiguration)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
-
         GooglePlayApplicationConfiguration that = (GooglePlayApplicationConfiguration) o;
-
-        return getApplicationId() != null ? getApplicationId().equals(that.getApplicationId()) : that.getApplicationId() == null;
+        return Objects.equals(getApplicationId(), that.getApplicationId()) &&
+                Objects.equals(getJsonKey(), that.getJsonKey());
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (getApplicationId() != null ? getApplicationId().hashCode() : 0);
-        return result;
+        return Objects.hash(super.hashCode(), getApplicationId(), getJsonKey());
     }
 
+    @Override
+    public String toString() {
+        return "GooglePlayApplicationConfiguration{" +
+                "applicationId='" + applicationId + '\'' +
+                ", jsonKey=" + jsonKey +
+                '}';
+    }
 }

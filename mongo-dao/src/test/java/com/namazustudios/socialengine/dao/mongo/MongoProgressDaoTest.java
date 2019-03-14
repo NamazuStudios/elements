@@ -11,6 +11,8 @@ import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.mission.*;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.reward.Reward;
+import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -20,7 +22,7 @@ import javax.inject.Inject;
 import java.util.*;
 
 import static com.namazustudios.socialengine.model.User.Level.USER;
-import static com.namazustudios.socialengine.model.mission.RewardIssuance.State.*;
+import static com.namazustudios.socialengine.model.reward.RewardIssuance.State.*;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -295,29 +297,36 @@ public class MongoProgressDaoTest  {
                 assertEquals(progress.getCurrentStep().getCount(), progress.getRemaining());
             }
 
+            for (final Reward reward : step.getRewards()) {
+                // there may be more than one matching reward, e.g. if the final repeat step induces multiple issuances
+                final Set<String> matchingRewardIssuanceContexts = progress
+                        .getRewardIssuances()
+                        .stream()
+                        .filter(ri -> Objects.equals(ri.getItem(), reward.getItem()))
+                        .filter(ri -> Objects.equals(ri.getItemQuantity(), reward.getQuantity()))
+                        .filter(ri -> Objects.equals(ri.getState(), ISSUED))
+                        .map(ri -> ri.getContext())
+                        .collect(toSet());
+
+                // so just make sure we have at least one matching issuance
+                assertTrue(matchingRewardIssuanceContexts.size() > 0);
+            }
+
             expectedRewards += step.getRewards().size();
 
-            assertEquals(progress.getRewardIssuances().size(), expectedRewards);
             if (!steps.isEmpty()) assertEquals(progress.getCurrentStep(), steps.peek());
-
-            final RewardIssuance rewardIssuance = progress.getRewardIssuances().get(expectedRewards - 1);
-            assertNotNull(rewardIssuance.getId());
-            assertEquals(rewardIssuance.getItem(), step.getRewards().get(0).getItem());
-            assertEquals(rewardIssuance.getItemQuantity(), step.getRewards().get(0).getQuantity());
-            assertEquals(rewardIssuance.getState(), ISSUED);
-
-            final List<String> tags = buildRewardIssuanceTags(progress, progress.getSequence());
-
-            assertEquals(rewardIssuance.getTags(), tags);
 
         } while (!steps.isEmpty());
 
+        assertEquals(progress.getRewardIssuances().size(), expectedRewards);
     }
 
     @Test(dependsOnMethods = {"testAdvancementThroughFiniteMission", "testAdvancementThroughRepeatingMission"})
     public void testRedeem() {
 
         final Pagination<Progress> progressPagination = getProgressDao().getProgresses(testProfile, 0, 20, emptyList());
+
+        final List<Progress> progresses = progressPagination.getObjects();
 
         final List<InventoryItem> inventoryItemList = progressPagination.getObjects()
             .stream()
