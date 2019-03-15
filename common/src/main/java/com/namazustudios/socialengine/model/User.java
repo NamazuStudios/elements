@@ -224,7 +224,6 @@ public class User implements Serializable {
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
                 ", level=" + level +
                 ", active=" + active +
                 ", facebookId='" + facebookId + '\'' +
