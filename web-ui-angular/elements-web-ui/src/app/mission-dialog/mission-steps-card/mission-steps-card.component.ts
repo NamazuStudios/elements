@@ -28,6 +28,12 @@ export class MissionStepsCardComponent implements OnInit {
       return false;
     }
 
+    // invalid if final step or prelim step doesn't have rewards
+    for(let i = 0; i < this.mission.steps.length; i++) {
+      if (this.mission.steps[i].rewards.length == 0) return false;
+    }
+    if(this.mission.finalRepeatStep && this.mission.finalRepeatStep.rewards.length == 0) return false;
+
     // all existing steps must be valid
     if (!this.stepForm.valid) {
       return false;
