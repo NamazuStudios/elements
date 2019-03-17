@@ -37,7 +37,7 @@
 
         <app-mission-rewards-editor class="existing-step-reward-editor" [rewards]="step.rewards"></app-mission-rewards-editor>
 
-        <app-json-editor-card topic="Step" [editTarget]="step.metadata || {}"></app-json-editor-card>
+        <app-json-editor-card topic="Step" [editTarget]="step"></app-json-editor-card>
 
         <mat-action-row>
           <button type="button" mat-raised-button color="primary" (click)="deleteStep(i)">Delete Step</button>
