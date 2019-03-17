@@ -90,6 +90,7 @@ export class MissionDialogComponent implements OnInit {
     }
     if (this.data.mission.finalRepeatStep) {
       formData.finalRepeatStep = this.data.mission.finalRepeatStep;
+      delete formData.finalRepeatStep.isNew;
     }
 
     // closes the dialog and passes the complete formData to the callback

@@ -41,7 +41,43 @@
 
         <mat-action-row>
           <button type="button" mat-raised-button color="primary">Delete Step</button>
-          <mat-checkbox *ngIf="i == mission.steps.length - 1">Final Repeat Step</mat-checkbox>
+          <mat-checkbox (change)="toggleFinalStep($event, i)" *ngIf="i == mission.steps.length - 1 && !mission.finalRepeatStep">Final Repeat Step</mat-checkbox>
+        </mat-action-row>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel class="step" cdkDrag *ngIf="mission.finalRepeatStep">
+        <mat-expansion-panel-header>
+          <mat-icon cdkDragHandle>reorder</mat-icon>
+          <span class="step-num"><b>Final Repeat Step: </b></span>
+          <span class="step-name" *ngIf="mission.finalRepeatStep.displayName">{{mission.finalRepeatStep.displayName}}</span><span class="step-name" *ngIf="!mission.finalRepeatStep.displayName">N/A</span>
+          <span class="step-count"><b>Count:</b> <span *ngIf="mission.finalRepeatStep.count">{{mission.finalRepeatStep.count}}</span><span *ngIf="!mission.finalRepeatStep.count">N/A</span></span>
+        </mat-expansion-panel-header>
+
+        <div class="form-row">
+          <mat-form-field>
+            <input matInput placeholder="Display name" name="displayName" formControlName="finalDisplayName" value="{{mission.finalRepeatStep.displayName}}" (change)="updateStep(step, 'displayName', $event)">
+            <mat-error *ngIf="stepForm.controls['finalDisplayName'].hasError('required')">Display name is required</mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Count" name="count" formControlName="finalCount" value="{{mission.finalRepeatStep.count}}" (change)="updateStep(mission.finalRepeatStep, 'count', $event)">
+            <mat-error *ngIf="stepForm.controls['finalCount'].hasError('required')">Count is required</mat-error>
+            <mat-error *ngIf="stepForm.controls['finalCount'].hasError('pattern')">Count must be a number</mat-error>
+          </mat-form-field>
+        </div>
+        <div class="form-row">
+          <mat-form-field>
+            <input matInput placeholder="Description" name="description" formControlName="finalDescription" value="{{mission.finalRepeatStep.description}}" (change)="updateStep(mission.finalRepeatStep, 'description', $event)">
+            <mat-error *ngIf="stepForm.controls['finalDescription'].hasError('required')">Description is required</mat-error>
+          </mat-form-field>
+        </div>
+
+        <app-mission-rewards-editor class="final-step-reward-editor" [rewards]="mission.finalRepeatStep.rewards"></app-mission-rewards-editor>
+
+        <app-json-editor-card topic="Step" [editTarget]="mission.finalRepeatStep.metadata || {}"></app-json-editor-card>
+
+        <mat-action-row>
+          <button type="button" mat-raised-button color="primary">Delete Step</button>
+          <mat-checkbox (change)="toggleFinalStep($event, -1)" [checked]="true">Final Repeat Step</mat-checkbox>
         </mat-action-row>
       </mat-expansion-panel>
     </mat-accordion>

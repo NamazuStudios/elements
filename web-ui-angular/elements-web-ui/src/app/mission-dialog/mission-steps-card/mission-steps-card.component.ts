@@ -71,19 +71,63 @@ export class MissionStepsCardComponent implements OnInit {
     this.stepForm.addControl('count' + index, new FormControl(step.count, [Validators.required, Validators.pattern('^[0-9]*$')]));
   }
 
+  removeStepControl(i: number) {
+    this.stepForm.removeControl('displayName' + i);
+    this.stepForm.removeControl('description' + i);
+    this.stepForm.removeControl('count' + i);
+  }
+
+  addFinalStepControl(finalStep: MissionStep) {
+    this.stepForm.addControl('finalDisplayName', new FormControl(finalStep.displayName, Validators.required));
+    this.stepForm.addControl('finalDescription', new FormControl(finalStep.description, Validators.required));
+    this.stepForm.addControl('finalCount', new FormControl(finalStep.count, [Validators.required, Validators.pattern('^[0-9]*$')]));
+  }
+
+  removeFinalStepControl() {
+    this.stepForm.removeControl('finalDisplayName');
+    this.stepForm.removeControl('finalDescription');
+    this.stepForm.removeControl('finalCount');
+  }
+
   drop(event: CdkDragDrop<string[]>) {
     console.log(this.mission.steps);
     moveItemInArray(this.mission.steps, event.previousIndex, event.currentIndex);
   }
 
+  toggleFinalStep(event: any, stepIndex: number) {
+    if (event.checked) {
+      // remove step from steps array and set as final step
+      const finalStep = this.mission.steps.splice(stepIndex, 1)[0];
+      // remove step from stepform to preserve form validity
+      this.removeStepControl(this.mission.steps.length);
+
+      // add final step controls
+      this.addFinalStepControl(finalStep);
+      this.mission.finalRepeatStep = finalStep;
+    } else {
+      // move final step to steps array; unset final step
+      const finalStep = this.mission.finalRepeatStep;
+      delete this.mission.finalRepeatStep;
+      // remove final step controls to preserve form validity
+      this.removeFinalStepControl();
+
+      // add control to stepform to accommodate new step in array
+      this.addStepControl(this.mission.steps.length, finalStep);
+      this.mission.steps.push(finalStep);
+    }
+  }
+
   ngOnInit() {
-    if (this.mission.finalRepeatStep) { this.finalStep = this.mission.finalRepeatStep; }
     if (!this.mission.steps) { this.mission.steps = []; }
 
     if (this.mission.steps) {
       for (let i = 0; i < this.mission.steps.length; i++) {
         this.addStepControl(i, this.mission.steps[i]);
       }
+    }
+
+    if (this.mission.finalRepeatStep) {
+      this.addFinalStepControl(this.mission.finalRepeatStep);
     }
   }
 }
