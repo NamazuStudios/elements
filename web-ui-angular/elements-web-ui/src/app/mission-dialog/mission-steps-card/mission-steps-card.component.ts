@@ -65,6 +65,16 @@ export class MissionStepsCardComponent implements OnInit {
     this.mission.steps.push(newStep);
   }
 
+  deleteStep(index: number) {
+    this.mission.steps.splice(index, 1);
+    this.removeStepControl(index);
+  }
+
+  deleteFinalStep() {
+    delete this.mission.finalRepeatStep;
+    this.removeFinalStepControl();
+  }
+
   addStepControl(index: number, step: MissionStep) {
     this.stepForm.addControl('displayName' + index, new FormControl(step.displayName, Validators.required));
     this.stepForm.addControl('description' + index, new FormControl(step.description, Validators.required));

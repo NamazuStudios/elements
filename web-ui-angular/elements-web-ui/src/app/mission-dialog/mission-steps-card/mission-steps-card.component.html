@@ -40,7 +40,7 @@
         <app-json-editor-card topic="Step" [editTarget]="step.metadata || {}"></app-json-editor-card>
 
         <mat-action-row>
-          <button type="button" mat-raised-button color="primary">Delete Step</button>
+          <button type="button" mat-raised-button color="primary" (click)="deleteStep(i)">Delete Step</button>
           <mat-checkbox (change)="toggleFinalStep($event, i)" *ngIf="i == mission.steps.length - 1 && !mission.finalRepeatStep">Final Repeat Step</mat-checkbox>
         </mat-action-row>
       </mat-expansion-panel>
@@ -55,7 +55,7 @@
 
         <div class="form-row">
           <mat-form-field>
-            <input matInput placeholder="Display name" name="displayName" formControlName="finalDisplayName" value="{{mission.finalRepeatStep.displayName}}" (change)="updateStep(step, 'displayName', $event)">
+            <input matInput placeholder="Display name" name="displayName" formControlName="finalDisplayName" value="{{mission.finalRepeatStep.displayName}}" (change)="updateStep(mission.finalRepeatStep, 'displayName', $event)">
             <mat-error *ngIf="stepForm.controls['finalDisplayName'].hasError('required')">Display name is required</mat-error>
           </mat-form-field>
           <mat-form-field>
@@ -76,7 +76,7 @@
         <app-json-editor-card topic="Step" [editTarget]="mission.finalRepeatStep.metadata || {}"></app-json-editor-card>
 
         <mat-action-row>
-          <button type="button" mat-raised-button color="primary">Delete Step</button>
+          <button type="button" mat-raised-button color="primary" (click)="deleteFinalStep()">Delete Step</button>
           <mat-checkbox (change)="toggleFinalStep($event, -1)" [checked]="true">Final Repeat Step</mat-checkbox>
         </mat-action-row>
       </mat-expansion-panel>
