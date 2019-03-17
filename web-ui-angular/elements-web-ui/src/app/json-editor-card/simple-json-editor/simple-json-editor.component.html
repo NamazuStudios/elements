@@ -16,6 +16,6 @@
     <mat-form-field>
       <input matInput #newValue placeholder="Metadata value" name="newvalue" formControlName="newValue" (keyup.enter)="addMetadata(newKey.value, newValue.value)">
     </mat-form-field>
-    <button class="add-button" type="button" (click)="addMetadata(newKey.value, newValue.value)" [disabled]="!metadataForm.valid">+</button>
+    <button class="add-button" type="button" mat-raised-button color="primary" (click)="addMetadata(newKey.value, newValue.value)" [disabled]="!newKey.value || !newValue.value">+</button>
   </div>
 </form>
