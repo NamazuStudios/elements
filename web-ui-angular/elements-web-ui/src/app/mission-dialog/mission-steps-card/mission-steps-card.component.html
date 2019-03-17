@@ -1,120 +1,49 @@
 <h1 class="card-header">
   Edit Mission Steps
+  <button type="button" mat-raised-button color="primary" (click)="addStep()">Add Step</button>
 </h1>
-<h2>
-  At least one step or the final repeat step must be provided.
+<h2 *ngIf="mission.steps.length == 0 && !mission.finalRepeatStep">
+  At least one step is required.
 </h2>
 
 <div class="prelim-wrapper">
-  <mat-accordion [multi]="true" class="prelim-steps">
-    <form [formGroup]="existingStepForm"  cdkDropList (cdkDropListDropped)="drop($event)">
-      <mat-expansion-panel class="step" cdkDrag *ngFor="let step of mission.steps; let i = index">
+  <form [formGroup]="stepForm">
+    <mat-accordion [multi]="true" class="prelim-steps" cdkDropList (cdkDropListDropped)="drop($event)">
+      <mat-expansion-panel class="step" cdkDrag *ngFor="let step of mission.steps; let i = index" [expanded]="step.isNew">
         <mat-expansion-panel-header>
           <mat-icon cdkDragHandle>reorder</mat-icon>
           <span class="step-num"><b>Step {{i + 1}}: </b></span>
-          <span class="step-name">{{step.displayName}}</span>
-          <span class="step-count"><b>Count:</b> {{step.count}}</span>
+          <span class="step-name" *ngIf="step.displayName">{{step.displayName}}</span><span class="step-name" *ngIf="!step.displayName">N/A</span>
+          <span class="step-count"><b>Count:</b> <span *ngIf="step.count">{{step.count}}</span><span *ngIf="!step.count">N/A</span></span>
         </mat-expansion-panel-header>
 
         <div class="form-row">
           <mat-form-field>
             <input matInput placeholder="Display name" name="displayName" formControlName="displayName{{i}}" value="{{step.displayName}}" (change)="updateStep(step, 'displayName', $event)">
-            <mat-error *ngIf="existingStepForm.controls['displayName' + i].hasError('required')">Display name is required</mat-error>
+            <mat-error *ngIf="stepForm.controls['displayName' + i].hasError('required')">Display name is required</mat-error>
           </mat-form-field>
           <mat-form-field>
             <input matInput placeholder="Count" name="count" formControlName="count{{i}}" value="{{step.count}}" (change)="updateStep(step, 'count', $event)">
-            <mat-error *ngIf="existingStepForm.controls['count' + i].hasError('required')">Count is required</mat-error>
-            <mat-error *ngIf="existingStepForm.controls['count' + i].hasError('pattern')">Count must be a number</mat-error>
+            <mat-error *ngIf="stepForm.controls['count' + i].hasError('required')">Count is required</mat-error>
+            <mat-error *ngIf="stepForm.controls['count' + i].hasError('pattern')">Count must be a number</mat-error>
           </mat-form-field>
         </div>
         <div class="form-row">
           <mat-form-field>
             <input matInput placeholder="Description" name="description" formControlName="description{{i}}" value="{{step.description}}" (change)="updateStep(step, 'description', $event)">
-            <mat-error *ngIf="existingStepForm.controls['description' + i].hasError('required')">Description is required</mat-error>
+            <mat-error *ngIf="stepForm.controls['description' + i].hasError('required')">Description is required</mat-error>
           </mat-form-field>
         </div>
 
         <app-mission-rewards-editor class="existing-step-reward-editor" [rewards]="step.rewards"></app-mission-rewards-editor>
 
         <app-json-editor-card topic="Step" [editTarget]="step.metadata || {}"></app-json-editor-card>
-      </mat-expansion-panel>
-    </form>
-
-    <form [formGroup]="newStepForm">
-      <mat-expansion-panel class="new-step no-drag step" [expanded]="!(mission.steps.length > 0)">
-        <mat-expansion-panel-header>
-          <span class="step-num"><b>Add New Step</b></span>
-          <span class="step-name"></span>
-          <span class="step-count"><b>Count:</b> 0</span>
-        </mat-expansion-panel-header>
-
-        <div class="form-row">
-          <mat-form-field>
-            <input matInput placeholder="Display name" name="newDisplayName" formControlName="newDisplayName">
-            <mat-error *ngIf="newStepForm.controls.newDisplayName.hasError('required')">Display name is required</mat-error>
-          </mat-form-field>
-          <mat-form-field>
-            <input matInput placeholder="Count" name="newCount" formControlName="newCount">
-            <mat-error *ngIf="newStepForm.controls.newCount.hasError('required')">Count is required</mat-error>
-            <mat-error *ngIf="newStepForm.controls.newCount.hasError('pattern')">Count must be a number</mat-error>
-          </mat-form-field>
-        </div>
-        <div class="form-row">
-          <mat-form-field>
-            <input matInput placeholder="Description" name="newDescription" formControlName="newDescription">
-            <mat-error *ngIf="newStepForm.controls.newDescription.hasError('required')">Display name is required</mat-error>
-          </mat-form-field>
-        </div>
-
-        <app-mission-rewards-editor #newStepRewards [rewards]="newStep.rewards"></app-mission-rewards-editor>
-
-        <app-json-editor-card topic="Step" [editTarget]="newStep.metadata"></app-json-editor-card>
 
         <mat-action-row>
-          <button mat-button (click)="clearNewStepForm()">Cancel</button>
-          <button mat-raised-button color="primary" (click)="addStepToMission()" [disabled]="newStep.rewards.length == 0 || !existingStepForm.valid">Add</button>
+          <button type="button" mat-raised-button color="primary">Delete Step</button>
+          <mat-checkbox *ngIf="i == mission.steps.length - 1">Final Repeat Step</mat-checkbox>
         </mat-action-row>
       </mat-expansion-panel>
-    </form>
-  </mat-accordion>
+    </mat-accordion>
+  </form>
 </div>
-<form [formGroup]="finalStepForm">
-  <mat-accordion>
-    <mat-expansion-panel class="no-drag step">
-      <mat-expansion-panel-header>
-        <span class="step-num"><b>Final Repeat Step:</b></span>
-
-        <span class="step-name"  *ngIf="mission.finalRepeatStep">{{mission.finalRepeatStep.displayName}}</span>
-        <span class="step-name" *ngIf="!mission.finalRepeatStep">N/A</span>
-
-        <span class="step-count">
-          <b>Count:</b>
-          <span *ngIf="mission.finalRepeatStep">{{mission.finalRepeatStep.count}}</span>
-          <span *ngIf="!mission.finalRepeatStep">N/A</span>
-        </span>
-      </mat-expansion-panel-header>
-
-      <div class="form-row">
-        <mat-form-field>
-          <input matInput placeholder="Display name" name="finalDisplayName" formControlName="finalDisplayName" value="{{finalStep.displayName || ''}}" (change)="updateStep(finalStep, 'displayName', $event)">
-          <mat-error *ngIf="finalStepForm.controls.finalDisplayName.hasError('required')">Display name is required</mat-error>
-        </mat-form-field>
-        <mat-form-field>
-          <input matInput placeholder="Count" name="finalCount" formControlName="finalCount" value="{{finalStep.count}}" (change)="updateStep(finalStep, 'count', $event)">
-          <mat-error *ngIf="finalStepForm.controls.finalCount.hasError('required')">Count is required</mat-error>
-          <mat-error *ngIf="finalStepForm.controls.finalCount.hasError('pattern')">Count must be a number</mat-error>
-        </mat-form-field>
-      </div>
-      <div class="form-row">
-        <mat-form-field>
-          <input matInput placeholder="Description" name="finalDescription" formControlName="finalDescription" value="{{finalStep.description}}" (change)="updateStep(finalStep, 'description', $event)">
-          <mat-error *ngIf="finalStepForm.controls.finalDescription.hasError('required')">Description is required</mat-error>
-        </mat-form-field>
-      </div>
-
-      <app-mission-rewards-editor #finalStepRewards [rewards]="finalStep.rewards"></app-mission-rewards-editor>
-
-      <app-json-editor-card topic="Step" [editTarget]="finalStep.metadata || {}"></app-json-editor-card>
-    </mat-expansion-panel>
-  </mat-accordion>
-</form>

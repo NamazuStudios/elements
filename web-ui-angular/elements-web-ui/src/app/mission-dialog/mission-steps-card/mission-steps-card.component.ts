@@ -13,28 +13,9 @@ import {MissionStep} from '../../api/models/mission-step';
 })
 export class MissionStepsCardComponent implements OnInit {
   @Input() mission: Mission;
-  @ViewChild('newStepRewards') newStepRewards: MissionRewardsEditorComponent;
-  @ViewChild('finalStepRewards') finalStepRewards: MissionRewardsEditorComponent;
   @ViewChildren('.existing-step-reward-editor') rewardEditors: QueryList<MissionRewardsEditorComponent>;
 
-  // private stepForm: FormGroup;
-  public newStep = new MissionStepViewModel();
-  public finalStep = new MissionStepViewModel();
-  public isFinalStepChanged = false;
-
-  public newStepForm = this.formBuilder.group({
-    newDisplayName: ['', [Validators.required]],
-    newCount: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
-    newDescription: ['', [Validators.required]],
-  });
-
-  public existingStepForm = this.formBuilder.group({});
-
-  public finalStepForm = this.formBuilder.group({
-    finalDisplayName: [ this.finalStep.displayName, [Validators.required]],
-    finalCount: [this.finalStep.count, [Validators.required, Validators.pattern('^[0-9]*$')]],
-    finalDescription: [this.finalStep.description, [Validators.required]]
-  });
+  public stepForm = this.formBuilder.group({});
 
   constructor(private formBuilder: FormBuilder) { }
 
@@ -42,14 +23,13 @@ export class MissionStepsCardComponent implements OnInit {
 
   public stepsValid() {
     // invalid if neither steps nor final step exist
-    if (this.mission.steps.length == 0 && !(this.mission.finalRepeatStep.rewards.length > 0
-        && this.mission.finalRepeatStep.count && this.mission.finalRepeatStep.description && this.mission.finalRepeatStep.displayName)) {
+    if (this.mission.steps.length == 0 && !this.mission.finalRepeatStep) {
       //console.log("No steps or final step");
       return false;
     }
 
     // all existing steps must be valid
-    if (!this.existingStepForm.valid) {
+    if (!this.stepForm.valid) {
       return false;
     }
 
@@ -78,40 +58,22 @@ export class MissionStepsCardComponent implements OnInit {
     step[param] = event.target.value;
   }
 
+  addStep() {
+    const newStep = new MissionStepViewModel();
+    newStep.isNew = true;
+    this.addStepControl(this.mission.steps.length, newStep);
+    this.mission.steps.push(newStep);
+  }
+
+  addStepControl(index: number, step: MissionStep) {
+    this.stepForm.addControl('displayName' + index, new FormControl(step.displayName, Validators.required));
+    this.stepForm.addControl('description' + index, new FormControl(step.description, Validators.required));
+    this.stepForm.addControl('count' + index, new FormControl(step.count, [Validators.required, Validators.pattern('^[0-9]*$')]));
+  }
+
   drop(event: CdkDragDrop<string[]>) {
     console.log(this.mission.steps);
     moveItemInArray(this.mission.steps, event.previousIndex, event.currentIndex);
-  }
-
-  // TODO attach newStep to mission, create new MissionStep instance for newStep
-  addStepToMission() {
-    const formData = this.newStepForm.value;
-    this.newStep.description = formData.newDescription;
-    this.newStep.count = formData.newCount;
-    this.newStep.displayName = formData.newDisplayName;
-
-    this.clearNewStepForm();
-
-    this.mission.steps.push(this.newStep);
-
-    // add form controls
-    this.addExistingStepControl(this.mission.steps.length - 1, this.mission.steps[this.mission.steps.length - 1]);
-
-    this.newStep = new MissionStepViewModel();
-    this.newStepRewards.rewards = this.newStep.rewards;
-  }
-
-  // TODO clear step form, reward form, metadata
-  clearNewStepForm() {
-    this.newStepForm.reset();
-    this.newStepRewards.newRewardForm.reset();
-    this.newStepRewards.existingRewardForm.reset();
-  }
-
-  addExistingStepControl(index: number, step: MissionStep) {
-    this.existingStepForm.addControl('displayName' + index, new FormControl(step.displayName, Validators.required));
-    this.existingStepForm.addControl('description' + index, new FormControl(step.description, Validators.required));
-    this.existingStepForm.addControl('count' + index, new FormControl(step.count, [Validators.required, Validators.pattern('^[0-9]*$')]));
   }
 
   ngOnInit() {
@@ -120,7 +82,7 @@ export class MissionStepsCardComponent implements OnInit {
 
     if (this.mission.steps) {
       for (let i = 0; i < this.mission.steps.length; i++) {
-        this.addExistingStepControl(i, this.mission.steps[i]);
+        this.addStepControl(i, this.mission.steps[i]);
       }
     }
   }

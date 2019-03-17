@@ -19,10 +19,6 @@ form {
   margin-bottom: 25px;
 }
 
-.step-wrapper:first-child {
-  margin-bottom: 15px;
-}
-
 .prelim-wrapper {
   margin-bottom: 15px;
 }
@@ -120,24 +116,9 @@ mat-form-field:last-of-type {
   font-size: 16px;
 }
 
-.reward-row {
+mat-action-row {
   display: flex;
-  justify-content: left;
-}
-
-.reward-row button {
-  box-sizing: border-box;
-  min-width: 0;
-  width: 42px;
-  height: 42px;
-  margin-left: 10px;
-}
-
-.add-reward-button {
-  visibility: hidden;
-  display: none;
-}
-
-.no-margin {
-  margin: 0;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  align-items: center;
 }

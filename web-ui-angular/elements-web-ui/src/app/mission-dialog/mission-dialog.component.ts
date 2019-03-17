@@ -83,6 +83,10 @@ export class MissionDialogComponent implements OnInit {
     // mission card has reference to this.data.mission, can attach steps to it if told to
     if (this.data.mission.steps) {
       formData.steps = this.data.mission.steps;
+
+      for(let i = 0; i < formData.steps.length; i++) {
+        delete formData.steps[i].isNew;
+      }
     }
     if (this.data.mission.finalRepeatStep) {
       formData.finalRepeatStep = this.data.mission.finalRepeatStep;
