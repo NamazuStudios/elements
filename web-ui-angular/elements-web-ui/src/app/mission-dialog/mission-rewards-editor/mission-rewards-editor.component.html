@@ -27,6 +27,6 @@
       <mat-error *ngIf="newRewardForm.controls.newRewardCt.hasError('required')">Reward quantity is required</mat-error>
       <mat-error *ngIf="newRewardForm.controls.newRewardCt.hasError('pattern')">Quantity must be a number</mat-error>
     </mat-form-field>
-    <button mat-raised-button color="primary" class="add-reward-button" type="button">+</button>
+    <button mat-raised-button color="primary" class="add-reward-button" (click)="addReward(newRewardItem.value, newRewardCt.value)" [disabled]="!newRewardForm.valid" type="button">+</button>
   </div>
 </form>

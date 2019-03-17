@@ -28,11 +28,6 @@ mat-form-field:last-of-type {
   margin-left: 10px;
 }
 
-.add-reward-button {
-  visibility: hidden;
-  display: none;
-}
-
 h1 {
   font-size: 16px;
 }
