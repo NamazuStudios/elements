@@ -72,7 +72,6 @@ export class ItemDialogComponent implements OnInit {
     if (this.data.item.metadata !== undefined) {
       formData.metadata = this.data.item.metadata;
     }
-    console.log(formData);
     this.dialogRef.close(formData);
   }
 

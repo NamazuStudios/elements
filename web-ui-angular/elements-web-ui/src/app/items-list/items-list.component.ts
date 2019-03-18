@@ -124,7 +124,6 @@ export class ItemsListComponent implements OnInit, AfterViewInit {
 
   addItem() {
     this.showDialog(true, new ItemViewModel(), result => {
-      console.log(result);
       this.itemsService.createItem(result).subscribe(r => {
           this.refresh();
         },
@@ -134,7 +133,6 @@ export class ItemsListComponent implements OnInit, AfterViewInit {
 
   editItem(item) {
     this.showDialog(false, item, res => {
-      console.log(res);
       this.itemsService.updateItem({ identifier: item.id, body: res }).subscribe(r => {
           this.refresh();
         },
