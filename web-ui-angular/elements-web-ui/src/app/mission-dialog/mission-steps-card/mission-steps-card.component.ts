@@ -41,7 +41,7 @@ export class MissionStepsCardComponent implements OnInit {
 
     // all existing rewards must be valid
     if (!this.rewardEditors) {
-      console.log("No reward editors");
+      //console.log("No reward editors");
       return true;
     }
     const rewardEditors = this.rewardEditors.toArray();

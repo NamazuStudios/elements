@@ -32,7 +32,7 @@ export class SimpleJsonEditorComponent implements OnInit {
 
     // attempt to extract a number; on failure, keep as string
     const attemptNum: number = Number(value);
-    console.log(attemptNum);
+    //console.log(attemptNum);
     if (!isNaN(attemptNum)) {
       this.dataHolder.metadata[key] = attemptNum;
     } else {

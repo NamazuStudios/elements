@@ -27,7 +27,7 @@ export class MissionRewardsEditorComponent implements OnInit {
 
   public addReward(itemName: string, itemCt: number) {
     // block request if form not valid
-    if (!this.newRewardForm.valid) { return console.log("Rewardform invalid"); }
+    if (!this.newRewardForm.valid) { return; }
 
     // get item specified by form
     this.itemsService.getItemByIdentifier(itemName).subscribe((item: Item) => {
