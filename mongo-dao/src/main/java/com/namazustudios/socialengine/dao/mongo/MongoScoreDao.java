@@ -10,7 +10,10 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoScoreId;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.LeaderboardNotFoundException;
 import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
+import static com.namazustudios.socialengine.model.leaderboard.Leaderboard.TimeStrategyType.*;
 import com.namazustudios.socialengine.model.leaderboard.Score;
+import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.dozer.Mapper;
 import org.mongodb.morphia.Datastore;
@@ -24,6 +27,10 @@ import java.util.Date;
 
 import static java.lang.System.currentTimeMillis;
 
+@Expose(modules = {
+        "namazu.elements.dao.score",
+        "namazu.socialengine.dao.score",
+})
 public class MongoScoreDao implements ScoreDao {
 
     private Datastore datastore;
@@ -46,22 +53,46 @@ public class MongoScoreDao implements ScoreDao {
         final long leaderboardEpoch = mongoLeaderboard.getCurrentEpoch();
 
         // If the leaderboard is epochal, but the current time is less than the first epoch time...
-        if (mongoLeaderboard.isEpochal() && !mongoLeaderboard.hasStarted()) {
+        if (mongoLeaderboard.getTimeStrategyType() == EPOCHAL && !mongoLeaderboard.hasStarted()) {
             throw new LeaderboardNotFoundException("Leaderboard has not started its first epoch yet.");
         }
 
         final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard, leaderboardEpoch);
 
+        final MongoScore originalMongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
+
+        final double originalPointValue;
+
+        if (originalMongoScore != null) {
+            originalPointValue = originalMongoScore.getPointValue();
+        }
+        else {
+            originalPointValue = 0;
+        }
+
+        final double newPointValue;
+
+        switch (mongoLeaderboard.getScoreStrategyType()) {
+            case OVERWRITE_IF_GREATER:
+                newPointValue = Math.max(originalPointValue, score.getPointValue());
+                break;
+            case ACCUMULATE:
+                newPointValue = originalPointValue + score.getPointValue();
+                break;
+            default:
+                throw new IllegalStateException("Invalid score strategy type.");
+        }
+
+
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
 
-        query.field("_id").equal(mongoScoreId)
-             .field("pointValue").lessThan(score.getPointValue());
+        query.field("_id").equal(mongoScoreId);
 
         final UpdateOperations<MongoScore> updateOperations = getDatastore().createUpdateOperations(MongoScore.class);
         updateOperations.set("_id", mongoScoreId);
         updateOperations.set("profile", mongoProfile);
         updateOperations.set("leaderboard", mongoLeaderboard);
-        updateOperations.set("pointValue", score.getPointValue());
+        updateOperations.set("pointValue", newPointValue);
         updateOperations.set("leaderboardEpoch", leaderboardEpoch);
 
         // Set the timestamp to be "now" on create as well as update since an update essentially resets an existing

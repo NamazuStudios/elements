@@ -3,11 +3,13 @@ package com.namazustudios.socialengine.dao.mongo.model;
 import com.namazustudios.elements.fts.annotation.SearchableDocument;
 import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
+import static com.namazustudios.socialengine.model.leaderboard.Leaderboard.*;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.Objects;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -21,7 +23,9 @@ import static java.lang.System.currentTimeMillis;
     fields = {
         @SearchableField(name = "name", path = "/name"),
         @SearchableField(name = "title", path = "/title"),
-        @SearchableField(name = "scoreUnits",  path = "/scoreUnits")
+        @SearchableField(name = "scoreUnits",  path = "/scoreUnits"),
+        @SearchableField(name = "timeStrategyType",  path = "/timeStrategyType"),
+        @SearchableField(name = "scoreStrategyType",  path = "/scoreStrategyType"),
     })
 @Entity(value = "leaderboard", noClassnameStored = true)
 @Indexes({
@@ -34,6 +38,12 @@ public class MongoLeaderboard {
 
     @Property
     private String name;
+
+    @Property
+    private TimeStrategyType timeStrategyType;
+
+    @Property
+    private ScoreStrategyType scoreStrategyType;
 
     @Property
     private String title;
@@ -63,6 +73,22 @@ public class MongoLeaderboard {
         this.name = name;
     }
 
+    public TimeStrategyType getTimeStrategyType() {
+        return timeStrategyType;
+    }
+
+    public void setTimeStrategyType(TimeStrategyType timeStrategyType) {
+        this.timeStrategyType = timeStrategyType;
+    }
+
+    public ScoreStrategyType getScoreStrategyType() {
+        return scoreStrategyType;
+    }
+
+    public void setScoreStrategyType(ScoreStrategyType scoreStrategyType) {
+        this.scoreStrategyType = scoreStrategyType;
+    }
+
     public String getTitle() {
         return title;
     }
@@ -88,26 +114,13 @@ public class MongoLeaderboard {
     public void setEpochInterval(long epochInterval) { this.epochInterval = epochInterval; }
 
     /**
-     * Whether the leaderboard is epochal (if not, the leaderboard is considered all-time).
-     *
-     * @return whether or not the leaderboard is epochal.
-     */
-    public boolean isEpochal() {
-        if (firstEpochTimestamp == null || firstEpochTimestamp.getTime() <= 0L || epochInterval <= 0L) {
-            return false;
-        }
-        else {
-            return true;
-        }
-    }
-
-    /**
      * Whether or not the leaderboard has started its first epoch yet. If the leaderboard is not epochal, this will
      * always return false.
+     *
      * @return whether or not the leaderboard has started its first epoch yet.
      */
     public boolean hasStarted() {
-        if (!isEpochal()) {
+        if (this.timeStrategyType != TimeStrategyType.EPOCHAL) {
             return false;
         }
 
@@ -126,11 +139,11 @@ public class MongoLeaderboard {
      * Calculates the epoch's starting millis to which the given millis timestamp belongs.
      *
      * @param millis the timestamp, in milliseconds, which is being looked up.
-     * @return the epoch in millis if an epochal leaderboard and valid input, @Link MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH
+     * @return the epoch in millis if an epochal leaderboard and valid input, {@link MongoScoreId#ALL_TIME_LEADERBOARD_EPOCH}
      * if a global leaderboard, -1L if invalid input (i.e. the given millis occur before the firstEpochTimestamp).
      */
     public long getEpochForMillis(long millis) {
-        if (!isEpochal()) {
+        if (this.timeStrategyType != TimeStrategyType.EPOCHAL) {
             return MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
         }
 
@@ -150,7 +163,7 @@ public class MongoLeaderboard {
     /**
      * Calculates the epoch for the current server time.
      *
-     * @return the epoch in millis if an epochal leaderboard and valid input, @Link MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH
+     * @return the epoch in millis if an epochal leaderboard and valid input, {@link MongoScoreId#ALL_TIME_LEADERBOARD_EPOCH}
      * if a global leaderboard.
      */
     public long getCurrentEpoch() {
@@ -162,7 +175,8 @@ public class MongoLeaderboard {
      * Calculates the epoch's starting millis to which the given millis timestamp belongs.
      *
      * @param date the date being looked up.
-     * @return the epoch in millis if an epochal leaderboard and valid input, @Link MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH
+     *
+     * @return the epoch in millis if an epochal leaderboard and valid input, {@link MongoScoreId#ALL_TIME_LEADERBOARD_EPOCH}
      * if a global leaderboard, -1L if invalid input (i.e. the given date occurs before the firstEpochTimestamp).
      */
     public long getEpochForDate(Date date) {
@@ -172,28 +186,21 @@ public class MongoLeaderboard {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MongoLeaderboard)) return false;
-
+        if (o == null || getClass() != o.getClass()) return false;
         MongoLeaderboard that = (MongoLeaderboard) o;
-
-        if (getObjectId() != null ? !getObjectId().equals(that.getObjectId()) : that.getObjectId() != null)
-            return false;
-        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
-        if (getTitle() != null ? !getTitle().equals(that.getTitle()) : that.getTitle() != null) return false;
-        if (getFirstEpochTimestamp() != null ? !getFirstEpochTimestamp().equals(that.getFirstEpochTimestamp()) : that.getFirstEpochTimestamp() != null) return false;
-        if (getEpochInterval() != that.getEpochInterval()) return false;
-        return getScoreUnits() != null ? getScoreUnits().equals(that.getScoreUnits()) : that.getScoreUnits() == null;
+        return getEpochInterval() == that.getEpochInterval() &&
+                Objects.equals(getObjectId(), that.getObjectId()) &&
+                Objects.equals(getName(), that.getName()) &&
+                getTimeStrategyType() == that.getTimeStrategyType() &&
+                getScoreStrategyType() == that.getScoreStrategyType() &&
+                Objects.equals(getTitle(), that.getTitle()) &&
+                Objects.equals(getScoreUnits(), that.getScoreUnits()) &&
+                Objects.equals(getFirstEpochTimestamp(), that.getFirstEpochTimestamp());
     }
 
     @Override
     public int hashCode() {
-        int result = getObjectId() != null ? getObjectId().hashCode() : 0;
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getTitle() != null ? getTitle().hashCode() : 0);
-        result = 31 * result + (getScoreUnits() != null ? getScoreUnits().hashCode() : 0);
-        result = 31 * result + (getFirstEpochTimestamp() != null ? getFirstEpochTimestamp().hashCode() : 0);
-        result = 31 * result + (int) (getEpochInterval() ^ (getEpochInterval() >>> 32));
-        return result;
+        return Objects.hash(getObjectId(), getName(), getTimeStrategyType(), getScoreStrategyType(), getTitle(),
+                getScoreUnits(), getFirstEpochTimestamp(), getEpochInterval());
     }
-
 }

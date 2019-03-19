@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.leaderboard.Rank;
 import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.annotation.Expose;
 import org.dozer.Mapper;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
@@ -22,6 +23,10 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.stream.Collectors.toList;
 
+@Expose(modules = {
+        "namazu.elements.dao.rank",
+        "namazu.socialengine.dao.rank",
+})
 public class MongoRankDao implements RankDao {
 
     private Datastore datastore;
@@ -41,6 +46,24 @@ public class MongoRankDao implements RankDao {
                                               final int offset, final int count, final long leaderboardEpoch) {
 
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
+
+        final long leaderboardEpochLookupValue;
+
+        switch (mongoLeaderboard.getTimeStrategyType()) {
+            case ALL_TIME:
+                leaderboardEpochLookupValue = MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
+                break;
+            case EPOCHAL:
+                if (leaderboardEpoch > 0) {
+                    leaderboardEpochLookupValue = mongoLeaderboard.getEpochForMillis(leaderboardEpoch);
+                }
+                else {
+                    leaderboardEpochLookupValue = mongoLeaderboard.getCurrentEpoch();
+                }
+                break;
+            default:
+                throw new IllegalStateException("Invalid time strategy type.");
+        }
 
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
         query
@@ -62,24 +85,28 @@ public class MongoRankDao implements RankDao {
         final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard);
         final MongoScore mongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
 
-        final long leaderboardEpochLookup;
+        final long leaderboardEpochLookupValue;
 
-        if (mongoLeaderboard.isEpochal()) {
-            if (leaderboardEpoch > 0) {
-                leaderboardEpochLookup = leaderboardEpoch;
-            }
-            else {
-                leaderboardEpochLookup = mongoLeaderboard.getCurrentEpoch();
-            }
-        }
-        else {
-            leaderboardEpochLookup = MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
+        switch (mongoLeaderboard.getTimeStrategyType()) {
+            case ALL_TIME:
+                leaderboardEpochLookupValue = MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
+                break;
+            case EPOCHAL:
+                if (leaderboardEpoch > 0) {
+                    leaderboardEpochLookupValue = mongoLeaderboard.getEpochForMillis(leaderboardEpoch);
+                }
+                else {
+                    leaderboardEpochLookupValue = mongoLeaderboard.getCurrentEpoch();
+                }
+                break;
+            default:
+                throw new IllegalStateException("Invalid time strategy type.");
         }
 
         final Query<MongoScore> query = getDatastore()
             .createQuery(MongoScore.class)
             .field("leaderboard").equal(mongoLeaderboard)
-            .field("leaderboardEpoch").equal(leaderboardEpochLookup)
+            .field("leaderboardEpoch").equal(leaderboardEpochLookupValue)
             .order(Sort.descending("pointValue"));
 
         final long playerRank = mongoScore == null ? 0 : query
@@ -111,23 +138,29 @@ public class MongoRankDao implements RankDao {
 
         final long leaderboardEpochLookup;
 
-        if (mongoLeaderboard.isEpochal()) {
-            if (leaderboardEpoch > 0) {
-                leaderboardEpochLookup = leaderboardEpoch;
-            }
-            else {
-                leaderboardEpochLookup = mongoLeaderboard.getCurrentEpoch();
-            }
-        }
-        else {
-            leaderboardEpochLookup = MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
+        final long leaderboardEpochLookupValue;
+
+        switch (mongoLeaderboard.getTimeStrategyType()) {
+            case ALL_TIME:
+                leaderboardEpochLookupValue = MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
+                break;
+            case EPOCHAL:
+                if (leaderboardEpoch > 0) {
+                    leaderboardEpochLookupValue = mongoLeaderboard.getEpochForMillis(leaderboardEpoch);
+                }
+                else {
+                    leaderboardEpochLookupValue = mongoLeaderboard.getCurrentEpoch();
+                }
+                break;
+            default:
+                throw new IllegalStateException("Invalid time strategy type.");
         }
 
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
 
         query.field("profile").in(profiles)
              .field("leaderboard").equal(mongoLeaderboard)
-             .field("leaderboardEpoch").equal(leaderboardEpochLookup)
+             .field("leaderboardEpoch").equal(leaderboardEpochLookupValue)
              .order(Sort.descending("pointValue"));
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(0));
@@ -152,24 +185,28 @@ public class MongoRankDao implements RankDao {
 
         profiles.add(mongoProfile);
 
-        final long leaderboardEpochLookup;
+        final long leaderboardEpochLookupValue;
 
-        if (mongoLeaderboard.isEpochal()) {
-            if (leaderboardEpoch > 0) {
-                leaderboardEpochLookup = leaderboardEpoch;
-            }
-            else {
-                leaderboardEpochLookup = mongoLeaderboard.getCurrentEpoch();
-            }
-        }
-        else {
-            leaderboardEpochLookup = MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
+        switch (mongoLeaderboard.getTimeStrategyType()) {
+            case ALL_TIME:
+                leaderboardEpochLookupValue = MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
+                break;
+            case EPOCHAL:
+                if (leaderboardEpoch > 0) {
+                    leaderboardEpochLookupValue = mongoLeaderboard.getEpochForMillis(leaderboardEpoch);
+                }
+                else {
+                    leaderboardEpochLookupValue = mongoLeaderboard.getCurrentEpoch();
+                }
+                break;
+            default:
+                throw new IllegalStateException("Invalid time strategy type.");
         }
 
         final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
 
         query.field("leaderboard").equal(mongoLeaderboard)
-             .field("leaderboardEpoch").equal(leaderboardEpochLookup)
+             .field("leaderboardEpoch").equal(leaderboardEpochLookupValue)
              .field("profile").in(profiles)
              .order(Sort.descending("pointValue"));
 
