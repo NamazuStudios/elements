@@ -53,13 +53,13 @@ public class MongoLeaderboardDao implements LeaderboardDao {
         switch (leaderboard.getTimeStrategyType()) {
             case ALL_TIME:
                 if (leaderboard.getFirstEpochTimestamp() != null || leaderboard.getEpochInterval() != null) {
-                    throw new InvalidDataException("firstEpochTimestamp and getEpochInterval should not be provided " +
+                    throw new InvalidDataException("firstEpochTimestamp and epochInterval should not be provided " +
                             "for an ALL_TIME time strategy.");
                 }
                 break;
             case EPOCHAL:
                 if (leaderboard.getFirstEpochTimestamp() == null || leaderboard.getEpochInterval() == null) {
-                    throw new InvalidDataException("firstEpochTimestamp and getEpochInterval must both be provided " +
+                    throw new InvalidDataException("firstEpochTimestamp and epochInterval must both be provided " +
                             "for an EPOCHAL time strategy.");
                 }
                 break;
