@@ -4,10 +4,15 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
 import com.namazustudios.socialengine.model.leaderboard.Rank;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.annotation.Expose;
 
 /**
  * Provides access to {@link Rank} instances stored in the database, correlating and filtering data as necessary.
  */
+@Expose(modules = {
+        "namazu.elements.dao.rank",
+        "namazu.socialengine.dao.rank",
+})
 public interface RankDao {
 
     /**

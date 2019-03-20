@@ -27,10 +27,6 @@ import java.util.Date;
 
 import static java.lang.System.currentTimeMillis;
 
-@Expose(modules = {
-        "namazu.elements.dao.score",
-        "namazu.socialengine.dao.score",
-})
 public class MongoScoreDao implements ScoreDao {
 
     private Datastore datastore;

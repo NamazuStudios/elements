@@ -23,10 +23,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.stream.Collectors.toList;
 
-@Expose(modules = {
-        "namazu.elements.dao.rank",
-        "namazu.socialengine.dao.rank",
-})
 public class MongoRankDao implements RankDao {
 
     private Datastore datastore;

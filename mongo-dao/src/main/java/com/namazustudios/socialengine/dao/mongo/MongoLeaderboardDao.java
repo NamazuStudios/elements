@@ -27,10 +27,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 
-@Expose(modules = {
-        "namazu.elements.dao.leaderboard",
-        "namazu.socialengine.dao.leaderboard",
-})
 public class MongoLeaderboardDao implements LeaderboardDao {
 
     private ValidationHelper validationHelper;
