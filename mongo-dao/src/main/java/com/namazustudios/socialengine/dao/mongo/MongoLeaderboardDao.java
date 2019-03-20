@@ -63,6 +63,16 @@ public class MongoLeaderboardDao implements LeaderboardDao {
                 break;
         }
 
+        try {
+            final Leaderboard existingLeaderboard = getLeaderboard(leaderboard.getName());
+            if (existingLeaderboard != null) {
+                throw new DuplicateException("Leaderboard with the given name already exists");
+            }
+        }
+        catch (NotFoundException e) {
+
+        }
+
         final MongoLeaderboard mongoLeaderboard = getBeanMapper().map(leaderboard, MongoLeaderboard.class);
 
         try {

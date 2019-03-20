@@ -37,6 +37,7 @@ public class MongoLeaderboard {
     private ObjectId objectId;
 
     @Property
+    @Indexed(options = @IndexOptions(unique = true))
     private String name;
 
     @Property
