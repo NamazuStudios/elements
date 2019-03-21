@@ -49,13 +49,13 @@ public class EnumModuleBuiltin<T extends Enum<T>> implements Builtin {
             final Module module = luaState.checkJavaObject(2, Module.class);
             logger.debug("Loading module {} - {}", name, module.getChunkName());
 
+            // build a lua table of the form {enumElement.toString(): enumElement}
             luaState.setTop(0);
             luaState.newTable();
 
             for (final Enum<T> enumValue : enumClass.getEnumConstants()) {
-                final int enumValueOrdinal = enumValue.ordinal();
                 final String enumValueString = enumValue.toString();
-                luaState.pushInteger(enumValueOrdinal);
+                luaState.pushJavaObject(enumValue);
                 luaState.setField(-2, enumValueString);
             }
 
