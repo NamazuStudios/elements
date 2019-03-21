@@ -1,8 +1,6 @@
 package com.namazustudios.socialengine.model.leaderboard;
 
-import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposeEnum;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -146,7 +144,7 @@ public class Leaderboard {
     }
 
     @ExposeEnum(modules={
-            "com.namazustudios.socialengine.model.leaderboard.timestrategytype"
+            "com.namazustudios.socialengine.model.leaderboard.Leaderboard.TimeStrategyType"
     })
     public enum TimeStrategyType {
         /**
@@ -161,7 +159,7 @@ public class Leaderboard {
     }
 
     @ExposeEnum(modules={
-            "com.namazustudios.socialengine.model.leaderboard.scorestrategytype"
+            "com.namazustudios.socialengine.model.leaderboard.Leaderboard.ScoreStrategyType"
     })
     public enum ScoreStrategyType {
         /**
