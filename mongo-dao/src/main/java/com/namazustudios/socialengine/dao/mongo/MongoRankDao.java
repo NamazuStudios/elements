@@ -75,7 +75,7 @@ public class MongoRankDao implements RankDao {
 
     @Override
     public Pagination<Rank> getRanksForGlobalRelative(final String leaderboardNameOrId, final String profileId,
-                                                      final int offset, final int count, final long leaderboardEpoch) {
+                                                      final int count, final long leaderboardEpoch) {
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profileId);
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
@@ -112,9 +112,8 @@ public class MongoRankDao implements RankDao {
             .field("pointValue").greaterThan(mongoScore.getPointValue())
             .count();
 
-        // if adjustedOffset is greater than totalrecords - count, set offset to totalrecords - count
-        final long adjustedOffset = min(max(0, offset + playerRank), query.count() - count);
-        return getMongoDBUtils().paginationFromQuery(query, (int) adjustedOffset, count, new Counter(adjustedOffset));
+        final long offset = Math.max(0, playerRank - count/2);
+        return getMongoDBUtils().paginationFromQuery(query, (int) offset, count, new Counter(offset));
 
     }
 
@@ -163,7 +162,6 @@ public class MongoRankDao implements RankDao {
 
         final long adjustedOffset = max(0, offset);
         return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(adjustedOffset));
-
     }
 
     @Override

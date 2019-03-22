@@ -28,9 +28,9 @@ public class UserRankService implements RankService {
 
     @Override
     public Pagination<Rank> getRanksForGlobalRelative(final String leaderboardNameOrId, final String profileId,
-                                                      final int offset, final int count, final long leaderboardEpoch) {
+                                                      final int count, final long leaderboardEpoch) {
         return getRankDao()
-            .getRanksForGlobalRelative(leaderboardNameOrId, profileId, offset, count, leaderboardEpoch)
+            .getRanksForGlobalRelative(leaderboardNameOrId, profileId, count, leaderboardEpoch)
             .transform(this::redactPrivateInfo);
     }
 
