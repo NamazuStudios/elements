@@ -1,8 +1,10 @@
 package com.namazustudios.socialengine.service.application;
 
 import com.namazustudios.socialengine.dao.ApplicationConfigurationDao;
+import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
+import com.namazustudios.socialengine.model.application.ProductBundle;
 import com.namazustudios.socialengine.service.ApplicationConfigurationService;
 
 import javax.inject.Inject;
@@ -22,6 +24,12 @@ public class AnonApplicationConfigurationService implements ApplicationConfigura
     @Override
     public Pagination<ApplicationConfiguration> getApplicationProfiles(String applicationNameOrId, int offset, int count, String search) {
         return getApplicationConfigurationDao().getActiveApplicationConfigurations(applicationNameOrId, offset, count, search);
+    }
+
+    @Override
+    public ApplicationConfiguration updateProductBundle(final String applicationConfigurationId,
+                                                        final ProductBundle productBundle) {
+        throw new ForbiddenException("Unprivileged requests are unable to update product bundles.");
     }
 
     public ApplicationConfigurationDao getApplicationConfigurationDao() {

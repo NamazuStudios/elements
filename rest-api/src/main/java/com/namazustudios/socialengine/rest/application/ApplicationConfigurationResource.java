@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rest.application;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
+import com.namazustudios.socialengine.model.application.ProductBundle;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.ApplicationConfigurationService;
 import io.swagger.annotations.Api;
@@ -56,6 +57,20 @@ public class ApplicationConfigurationResource {
             getApplicationConfigurationService().getApplicationProfiles(applicationNameOrId, offset, count, search);
 
     }
+
+    @PUT
+    @Path("{applicationConfigurationId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Updates the ProductBundle",
+                  notes = "Updates the ProductBundle for the given ApplicationConfiguration")
+    public ApplicationConfiguration updateProductBundleForApplicationConfiguration(
+            @PathParam("applicationConfigurationId") final String applicationConfigurationId,
+            final ProductBundle productBundle
+    ) {
+
+    }
+
+
 
     public ApplicationConfigurationService getApplicationConfigurationService() {
         return applicationConfigurationService;
