@@ -2,8 +2,11 @@ package com.namazustudios.socialengine.dao.mongo.application;
 
 import com.namazustudios.socialengine.dao.ApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
+import com.namazustudios.socialengine.dao.mongo.MongoItemDao;
 import com.namazustudios.socialengine.dao.mongo.model.application.*;
+import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.exception.BadQueryException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.*;
 import org.apache.lucene.index.Term;
@@ -12,11 +15,15 @@ import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
+import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,6 +41,10 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     private AdvancedDatastore datastore;
 
     private MongoApplicationDao mongoApplicationDao;
+
+    private MongoItemDao mongoItemDao;
+
+    private Mapper dozerMapper;
 
     public static Class
     getMongoApplicationConfigurationClass(ConfigurationCategory configurationCategory) {
@@ -136,6 +147,51 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
 
     }
 
+    @Override
+    public ApplicationConfiguration updateProductBundles(final String applicationConfigurationId,
+                                                 final List<ProductBundle> productBundles) {
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(applicationConfigurationId);
+
+        final Query<MongoApplicationConfiguration> query =
+                getDatastore().createQuery(MongoApplicationConfiguration.class);
+        query.field("_id").equal(objectId);
+
+        final UpdateOperations<MongoApplicationConfiguration> operations =
+                getDatastore().createUpdateOperations(MongoApplicationConfiguration.class);
+
+        // make sure to convert any item name strings to item id strings
+        for (ProductBundle productBundle : productBundles) {
+            for (ProductBundleReward productBundleReward : productBundle.getProductBundleRewards()) {
+                final String itemNameOrId = productBundleReward.getItemId();
+                final MongoItem mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
+                if (mongoItem == null) {
+                    throw new NotFoundException("Item with name/id: " + itemNameOrId + " not found.");
+                }
+                productBundleReward.setItemId(mongoItem.getObjectId().toHexString());
+            }
+        }
+
+        final List<MongoProductBundle> mongoProductBundles = productBundles
+                .stream()
+                .map(pb -> getDozerMapper().map(pb, MongoProductBundle.class))
+                .collect(Collectors.toList());
+
+        operations.set("productBundles", mongoProductBundles);
+
+        final FindAndModifyOptions options = new FindAndModifyOptions()
+                .returnNew(true)
+                .upsert(false);
+
+        final MongoApplicationConfiguration resultMongoApplicationConfiguration =
+                getDatastore().findAndModify(query, operations, options);
+
+        if (resultMongoApplicationConfiguration == null) {
+            throw new NotFoundException("Application Configuration with id: " + applicationConfigurationId + "not found.");
+        }
+
+        return getDozerMapper().map(resultMongoApplicationConfiguration, ApplicationConfiguration.class);
+    }
+
     public StandardQueryParser getStandardQueryParser() {
         return standardQueryParser;
     }
@@ -172,6 +228,15 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         this.mongoApplicationDao = mongoApplicationDao;
     }
 
+    public MongoItemDao getMongoItemDao() {
+        return mongoItemDao;
+    }
+
+    @Inject
+    public void setMongoItemDao(MongoItemDao mongoItemDao) {
+        this.mongoItemDao = mongoItemDao;
+    }
+
     public Mapper getBeanMapper() {
         return beanMapper;
     }
@@ -181,4 +246,12 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         this.beanMapper = beanMapper;
     }
 
+    public Mapper getDozerMapper() {
+        return dozerMapper;
+    }
+
+    @Inject
+    public void setDozerMapper(Mapper dozerMapper) {
+        this.dozerMapper = dozerMapper;
+    }
 }

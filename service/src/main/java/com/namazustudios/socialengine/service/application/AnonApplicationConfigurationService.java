@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.model.application.ProductBundle;
 import com.namazustudios.socialengine.service.ApplicationConfigurationService;
 
 import javax.inject.Inject;
+import java.util.List;
 
 /**
  * Created by patricktwohig on 6/26/17.
@@ -27,8 +28,8 @@ public class AnonApplicationConfigurationService implements ApplicationConfigura
     }
 
     @Override
-    public ApplicationConfiguration updateProductBundle(final String applicationConfigurationId,
-                                                        final ProductBundle productBundle) {
+    public ApplicationConfiguration updateProductBundles(final String applicationConfigurationId,
+                                                        final List<ProductBundle> productBundles) {
         throw new ForbiddenException("Unprivileged requests are unable to update product bundles.");
     }
 

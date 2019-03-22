@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.model.application.ProductBundle;
 import com.namazustudios.socialengine.service.ApplicationConfigurationService;
 
 import javax.inject.Inject;
+import java.util.List;
 
 /**
  * Created by patricktwohig on 7/13/15.
@@ -28,9 +29,9 @@ public class SuperUserApplicationConfigurationService implements ApplicationConf
     }
 
     @Override
-    public ApplicationConfiguration updateProductBundle(final String applicationConfigurationId,
-                                                 final ProductBundle productBundle) {
-        
+    public ApplicationConfiguration updateProductBundles(final String applicationConfigurationId,
+                                                 final List<ProductBundle> productBundles) {
+        return applicationConfigurationDao.updateProductBundles(applicationConfigurationId, productBundles);
     }
 
 }

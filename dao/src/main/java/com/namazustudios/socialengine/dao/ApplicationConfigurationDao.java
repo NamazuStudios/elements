@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.dao;
 import com.namazustudios.socialengine.exception.notification.NotificationConfigurationException;
 import com.namazustudios.socialengine.exception.notification.applicationconfiguration.ApplicationConfigurationNotFoundException;
 import com.namazustudios.socialengine.model.application.ConfigurationCategory;
+import com.namazustudios.socialengine.model.application.ProductBundle;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
@@ -76,5 +77,15 @@ public interface ApplicationConfigurationDao {
             String applicationNameOrId,
             ConfigurationCategory configurationCategory,
             Class<T> type);
+
+    /**
+     * Sets the ProductBundle for the given application configuration id.
+     *
+     * @param applicationConfigurationId
+     * @param productBundle
+     * @return
+     */
+    ApplicationConfiguration updateProductBundles(final String applicationConfigurationId,
+                                                 final List<ProductBundle> productBundle);
 
 }

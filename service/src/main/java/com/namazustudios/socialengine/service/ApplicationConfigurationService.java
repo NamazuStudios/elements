@@ -5,6 +5,8 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.ProductBundle;
 
+import java.util.List;
+
 /**
  * Manages the lifecycle of the various {@link ApplicationConfiguration} instances.
  *
@@ -38,7 +40,7 @@ public interface ApplicationConfigurationService {
                                                                 final int offset, final int count,
                                                                 final String search);
 
-    ApplicationConfiguration updateProductBundle(final String applicationConfigurationId,
-                                                 final ProductBundle productBundle);
+    ApplicationConfiguration updateProductBundles(final String applicationConfigurationId,
+                                                 final List<ProductBundle> productBundles);
 
 }
