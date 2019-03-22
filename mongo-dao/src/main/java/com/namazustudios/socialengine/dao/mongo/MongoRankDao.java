@@ -68,7 +68,8 @@ public class MongoRankDao implements RankDao {
                     leaderboardEpoch > 0 ? leaderboardEpoch : mongoLeaderboard.getCurrentEpoch())
             .order(Sort.descending("pointValue"));
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(0));
+        final long adjustedOffset = max(0, offset);
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(adjustedOffset));
 
     }
 
@@ -78,8 +79,6 @@ public class MongoRankDao implements RankDao {
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profileId);
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
-        final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard);
-        final MongoScore mongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
 
         final long leaderboardEpochLookupValue;
 
@@ -98,6 +97,9 @@ public class MongoRankDao implements RankDao {
             default:
                 throw new IllegalStateException("Invalid time strategy type.");
         }
+
+        final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard, leaderboardEpochLookupValue);
+        final MongoScore mongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
 
         final Query<MongoScore> query = getDatastore()
             .createQuery(MongoScore.class)
@@ -159,7 +161,8 @@ public class MongoRankDao implements RankDao {
              .field("leaderboardEpoch").equal(leaderboardEpochLookupValue)
              .order(Sort.descending("pointValue"));
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(0));
+        final long adjustedOffset = max(0, offset);
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(adjustedOffset));
 
     }
 
