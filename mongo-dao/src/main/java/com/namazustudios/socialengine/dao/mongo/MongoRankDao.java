@@ -68,18 +68,17 @@ public class MongoRankDao implements RankDao {
                     leaderboardEpoch > 0 ? leaderboardEpoch : mongoLeaderboard.getCurrentEpoch())
             .order(Sort.descending("pointValue"));
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(0));
+        final long adjustedOffset = max(0, offset);
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(adjustedOffset));
 
     }
 
     @Override
     public Pagination<Rank> getRanksForGlobalRelative(final String leaderboardNameOrId, final String profileId,
-                                                      final int offset, final int count, final long leaderboardEpoch) {
+                                                      final int count, final long leaderboardEpoch) {
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profileId);
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
-        final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard);
-        final MongoScore mongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
 
         final long leaderboardEpochLookupValue;
 
@@ -99,6 +98,9 @@ public class MongoRankDao implements RankDao {
                 throw new IllegalStateException("Invalid time strategy type.");
         }
 
+        final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard, leaderboardEpochLookupValue);
+        final MongoScore mongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
+
         final Query<MongoScore> query = getDatastore()
             .createQuery(MongoScore.class)
             .field("leaderboard").equal(mongoLeaderboard)
@@ -110,9 +112,8 @@ public class MongoRankDao implements RankDao {
             .field("pointValue").greaterThan(mongoScore.getPointValue())
             .count();
 
-        // if adjustedOffset is greater than totalrecords - count, set offset to totalrecords - count
-        final long adjustedOffset = min(max(0, offset + playerRank), query.count() - count);
-        return getMongoDBUtils().paginationFromQuery(query, (int) adjustedOffset, count, new Counter(adjustedOffset));
+        final long offset = Math.max(0, playerRank - count/2);
+        return getMongoDBUtils().paginationFromQuery(query, (int) offset, count, new Counter(offset));
 
     }
 
@@ -159,8 +160,8 @@ public class MongoRankDao implements RankDao {
              .field("leaderboardEpoch").equal(leaderboardEpochLookupValue)
              .order(Sort.descending("pointValue"));
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(0));
-
+        final long adjustedOffset = max(0, offset);
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(adjustedOffset));
     }
 
     @Override

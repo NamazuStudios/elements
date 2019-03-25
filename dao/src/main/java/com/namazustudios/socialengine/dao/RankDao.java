@@ -33,12 +33,11 @@ public interface RankDao {
      *
      * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
      * @param profileId the value of {@link Profile#getId()}
-     * @param offset the offset in the dataset, may be negative
      * @param count the number of results to return
      * @param leaderboardEpoch the epoch timestamp
      * @return a {@link Pagination<Rank>} containing all ranks
      */
-    Pagination<Rank> getRanksForGlobalRelative(String leaderboardNameOrId, String profileId, int offset, int count,
+    Pagination<Rank> getRanksForGlobalRelative(String leaderboardNameOrId, String profileId, int count,
                                                long leaderboardEpoch);
 
     /**

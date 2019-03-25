@@ -123,7 +123,7 @@ public class RankResource {
 
         return !relative ?
             getRankService().getRanksForGlobal(leaderboardNameOrId, offset, count, leaderboardEpoch) :
-            getRankService().getRanksForGlobalRelative(leaderboardNameOrId, profileIdTrimmed, offset, count,
+            getRankService().getRanksForGlobalRelative(leaderboardNameOrId, profileIdTrimmed, count,
                     leaderboardEpoch);
 
     }
