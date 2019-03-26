@@ -26,7 +26,7 @@ export class ItemDialogComponent implements OnInit {
   itemForm = this.formBuilder.group({
     name: [ this.data.item.name, [Validators.required, Validators.pattern('^[a-zA-Z0-9]+$') ]],
     displayName: [ this.data.item.displayName, [Validators.required]],
-    description: [ this.data.item.description ],
+    description: [ this.data.item.description, [Validators.required] ],
     tags: []
   });
 
@@ -35,7 +35,7 @@ export class ItemDialogComponent implements OnInit {
     const value = event.value;
 
     if ((value || '').trim()) {
-      if (this.data.item.tags == undefined) { this.data.item.tags = []; }
+      if (!this.data.item.tags) { this.data.item.tags = []; }
       this.data.item.tags.push(value);
     }
 
@@ -72,7 +72,6 @@ export class ItemDialogComponent implements OnInit {
     if (this.data.item.metadata !== undefined) {
       formData.metadata = this.data.item.metadata;
     }
-    console.log(formData);
     this.dialogRef.close(formData);
   }
 
