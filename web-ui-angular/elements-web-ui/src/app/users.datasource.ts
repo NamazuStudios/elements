@@ -31,7 +31,7 @@ export class UsersDataSource implements DataSource<User> {
     this.loadingSubject.next(true);
 
     // add search when ready
-    this.usersService.getUsers({ offset: offset, count: count })
+    this.usersService.getUsers({ offset: offset, count: count, search: search })
       .pipe(
         catchError(() => of({ objects: [], total: 0 })),
         finalize(() => this.loadingSubject.next(false)))
