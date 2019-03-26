@@ -119,13 +119,19 @@ export class ItemsListComponent implements OnInit, AfterViewInit {
 
   addItem() {
     this.showDialog(true, new ItemViewModel(), result => {
-      return this.itemsService.createItem(result);
+      this.itemsService.createItem(result).subscribe(r => {
+          this.refresh();
+        },
+        error => this.alertService.error(error));
     });
   }
 
   editItem(item) {
     this.showDialog(false, item, res => {
-      return this.itemsService.updateItem({ identifier: item.id, body: res });
+      this.itemsService.updateItem({ identifier: item.id, body: res }).subscribe(r => {
+          this.refresh();
+        },
+        error => this.alertService.error(error));
     });
   }
 }

@@ -19,6 +19,8 @@ import com.namazustudios.socialengine.model.application.Application;
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.ANDROID_GOOGLE_PLAY;
 
 import com.namazustudios.socialengine.model.application.GooglePlayApplicationConfiguration;
+import com.namazustudios.socialengine.model.application.ProductBundle;
+import com.namazustudios.socialengine.model.application.ProductBundleReward;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.googleplayiapreceipt.GooglePlayIapReceipt;
 import com.namazustudios.socialengine.model.reward.Reward;
@@ -33,6 +35,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import static com.namazustudios.socialengine.model.googleplayiapreceipt.GooglePlayIapReceipt.PURCHASE_STATE_CANCELED;
+import static com.namazustudios.socialengine.model.googleplayiapreceipt.GooglePlayIapReceipt.buildRewardIssuanceTags;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.*;
 import java.util.function.Supplier;
@@ -205,7 +208,7 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
     }
 
     @Override
-    public RewardIssuance getOrCreateRewardIssuance(GooglePlayIapReceipt googlePlayIapReceipt) {
+    public List<RewardIssuance> getOrCreateRewardIssuances(GooglePlayIapReceipt googlePlayIapReceipt) {
         if (PURCHASE_STATE_CANCELED == googlePlayIapReceipt.getPurchaseState()) {
             throw new InvalidDataException("Google Play purchase marked as canceled in purchaseState.");
         }
@@ -213,41 +216,48 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         GooglePlayApplicationConfiguration googlePlayApplicationConfiguration =
                 getGooglePlayApplicationConfiguration();
 
-        final String context = buildGooglePlayIapContextString(googlePlayIapReceipt.getOrderId());
+        final String productId = googlePlayIapReceipt.getProductId();
+
+        final ProductBundle productBundle = googlePlayApplicationConfiguration.getProductBundle(productId);
+
+        final List<RewardIssuance> rewardIssuances = new ArrayList<>();
+
+        for (ProductBundleReward productBundleReward : productBundle.getProductBundleRewards()) {
+            final RewardIssuance resultRewardIssuance = getOrCreateRewardIssuance(
+                    googlePlayIapReceipt.getOrderId(),
+                    productBundleReward.getItemId(),
+                    productBundleReward.getQuantity());
+            rewardIssuances.add(resultRewardIssuance);
+        }
+
+        return rewardIssuances;
+    }
+
+    private RewardIssuance getOrCreateRewardIssuance(String orderId, String itemId, Integer quantity) {
+        final String context = buildGooglePlayIapContextString(orderId, itemId);
 
         final Map<String, Object> metadata = generateGooglePlayIapReceiptMetadata();
+        final List<String> tags = buildRewardIssuanceTags(orderId);
 
-        try {
-            final RewardIssuance resultRewardIssuance = getRewardIssuanceDao().getRewardIssuance(getUser(), context);
-            return resultRewardIssuance;
-        }
-        catch (NotFoundException e) {
-            final String productId = googlePlayIapReceipt.getProductId();
+        final Item item = getItemDao().getItemByIdOrName(itemId);
 
-            final String itemId = googlePlayApplicationConfiguration.getItemIdForProductId(productId);
+        final RewardIssuance rewardIssuance = new RewardIssuance();
 
-            final Integer itemQuantity = googlePlayApplicationConfiguration.getQuantityForProductId(productId);
+        rewardIssuance.setItem(item);
+        rewardIssuance.setItemQuantity(quantity);
+        rewardIssuance.setUser(user);
+        // we hold onto the reward issuance forever so as not to duplicate an already-redeemed issuance
+        rewardIssuance.setType(PERSISTENT);
+        rewardIssuance.setContext(context);
+        rewardIssuance.setTags(tags);
+        rewardIssuance.setMetadata(metadata);
+        rewardIssuance.setSource(GOOGLE_PLAY_IAP_SOURCE);
 
-            // then, we get a model rep of the given item id
-            final Item item = getItemDao().getItemByIdOrName(itemId);
 
-            // we now have everything we need to set up and insert a new reward issuance...
-            final RewardIssuance rewardIssuance = new RewardIssuance();
+        final RewardIssuance resultRewardIssuance = getRewardIssuanceDao()
+                .getOrCreateRewardIssuance(rewardIssuance);
 
-            rewardIssuance.setItem(item);
-            rewardIssuance.setItemQuantity(itemQuantity);
-            rewardIssuance.setUser(user);
-            // we hold onto the reward issuance forever so as not to duplicate an already-redeemed issuance
-            rewardIssuance.setType(PERSISTENT);
-            rewardIssuance.setContext(context);
-            rewardIssuance.setMetadata(metadata);
-            rewardIssuance.setSource(GOOGLE_PLAY_IAP_SOURCE);
-
-            final RewardIssuance resultRewardIssuance = getRewardIssuanceDao()
-                    .getOrCreateRewardIssuance(rewardIssuance);
-
-            return resultRewardIssuance;
-        }
+        return resultRewardIssuance;
     }
 
     public Map<String, Object> generateGooglePlayIapReceiptMetadata() {

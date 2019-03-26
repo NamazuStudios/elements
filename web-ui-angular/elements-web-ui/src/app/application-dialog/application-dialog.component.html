@@ -20,9 +20,8 @@
       </div>
     </div>
   </form>
+  <app-application-configurations-list [applicationNameOrId]="data.application.id" *ngIf="(!data.isNew)"></app-application-configurations-list>
 </div>
-
-<app-application-configurations-list [applicationNameOrId]="data.application.id" *ngIf="(!data.isNew)"></app-application-configurations-list>
 
 <div mat-dialog-actions>
   <button type="button" mat-raised-button (click)="close(applicationForm.value)" [disabled]="!applicationForm.valid">OK</button>

@@ -21,6 +21,7 @@ export { GameOnSessionService } from './services/game-on-session.service';
 export { GameOnEntryService } from './services/game-on-entry.service';
 export { GameOnTournamentService } from './services/game-on-tournament.service';
 export { ItemsService } from './services/items.service';
+export { MissionsService } from './services/missions.service';
 export { LeaderboardsService } from './services/leaderboards.service';
 export { RankingService } from './services/ranking.service';
 export { ScoresService } from './services/scores.service';

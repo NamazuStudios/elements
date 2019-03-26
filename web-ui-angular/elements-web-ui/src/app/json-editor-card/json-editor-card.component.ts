@@ -47,8 +47,9 @@ export class JsonEditorCardComponent implements OnInit {
 
   validateMetadata(andUpdate: boolean) {
     try {
+      // editor.get() throws error if JSON invalid
       const editorContents = this.editor.get();
-      console.log(editorContents);
+
       if (andUpdate) { this.editTarget.metadata = editorContents; }
       this.isJSONValid = true;
     } catch (err) {

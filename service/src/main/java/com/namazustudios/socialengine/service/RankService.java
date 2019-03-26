@@ -28,12 +28,11 @@ public interface RankService {
      *
      * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
      * @param profileId the value of {@link Profile#getId()}
-     * @param offset the offset
      * @param count the count
      * @param leaderboardEpoch the epoch timestamp
      * @return the {@link Pagination<Rank>}
      */
-    Pagination<Rank> getRanksForGlobalRelative(String leaderboardNameOrId, String profileId, int offset, int count,
+    Pagination<Rank> getRanksForGlobalRelative(String leaderboardNameOrId, String profileId, int count,
                                                long leaderboardEpoch);
 
     /**

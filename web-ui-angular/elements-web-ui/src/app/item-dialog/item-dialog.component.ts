@@ -27,7 +27,7 @@ export class ItemDialogComponent implements OnInit {
   itemForm = this.formBuilder.group({
     name: [ this.data.item.name, [Validators.required, Validators.pattern('^[a-zA-Z0-9]+$') ]],
     displayName: [ this.data.item.displayName, [Validators.required]],
-    description: [ this.data.item.description ],
+    description: [ this.data.item.description, [Validators.required] ],
     tags: []
   });
 
@@ -36,7 +36,7 @@ export class ItemDialogComponent implements OnInit {
     const value = event.value;
 
     if ((value || '').trim()) {
-      if (this.data.item.tags == undefined) { this.data.item.tags = []; }
+      if (!this.data.item.tags) { this.data.item.tags = []; }
       this.data.item.tags.push(value);
     }
 
@@ -83,7 +83,7 @@ export class ItemDialogComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.alertSubscription = this.alertService.getMessage().subscribe((message: any) => {
+    this.alertService.getMessage().subscribe((message: any) => {
       if(message) {
         this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
       }

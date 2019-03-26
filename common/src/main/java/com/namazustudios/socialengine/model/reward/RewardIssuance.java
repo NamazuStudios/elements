@@ -343,33 +343,42 @@ public class RewardIssuance implements Serializable, Taggable {
 
     /**
      * Builds the context string for an Apple IAP-sourced reward issuance. The last element in the context string is
-     * a hash of the {@param originalTransactionId} as well as the {@param skuOrdinal}, i.e. the index of the product as
-     * enumerated in SKPayment.quantity (i.e. the "first" SKU to be redeemed, the "second" to be redeemed, etc.).
+     * a hash of the {@param originalTransactionId}, the {@param itemId}, as well as the {@param skuOrdinal},
+     * i.e. the index of the product as enumerated in SKPayment.quantity (i.e. the "first" SKU to be redeemed, the
+     * "second" to be redeemed, etc.).
      *
      * @param originalTransactionId
+     * @param itemId
      * @param skuOrdinal
      * @return the resultant context string
      */
-    public static String buildAppleIapContextString(String originalTransactionId, Integer skuOrdinal) {
-        final int originalTransactionIdAndSkuOrdinalHash = Objects.hash(originalTransactionId, skuOrdinal);
-        final String originalTransactionIdAndSkuOrdinalHashString =
-                Integer.toString(originalTransactionIdAndSkuOrdinalHash);
+    public static String buildAppleIapContextString(
+            final String originalTransactionId,
+            final String itemId,
+            final Integer skuOrdinal
+    ) {
+        final int hashResult = Objects.hash(originalTransactionId, itemId, skuOrdinal);
+        final String hashResultString = Integer.toString(hashResult);
         return buildContextString(
                 SERVER_CONTEXT_PREFIX,
                 APPLE_IAP_SOURCE,
-                originalTransactionIdAndSkuOrdinalHashString
+                hashResultString
         );
 
     }
 
     /**
      * Builds the context string for a Google Play-sourced reward issuance. The last element in the context string is
-     * the orderId issued by the Google Play services, presumed to be universally unique.
+     * the hash of the orderId issued by the Google Play services, presumed to be universally unique, as well as the
+     * itemId.
      *
      * @param orderId
+     * @param itemId
      * @return the resultant context string
      */
-    public static String buildGooglePlayIapContextString(String orderId) {
-        return buildContextString(SERVER_CONTEXT_PREFIX, GOOGLE_PLAY_IAP_SOURCE, orderId);
+    public static String buildGooglePlayIapContextString(String orderId, String itemId) {
+        final int hashResult = Objects.hash(orderId, itemId);
+        final String hashResultString = Integer.toString(hashResult);
+        return buildContextString(SERVER_CONTEXT_PREFIX, GOOGLE_PLAY_IAP_SOURCE, hashResultString);
     }
 }

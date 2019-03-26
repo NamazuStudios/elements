@@ -26,13 +26,13 @@ export class SimpleJsonEditorComponent implements OnInit {
   addMetadata(key, value) {
     if (!key || !value) { return; }
 
-    if (this.dataHolder.metadata === undefined) {
+    if (!this.dataHolder.metadata) {
       this.dataHolder.metadata = {};
     }
 
     // attempt to extract a number; on failure, keep as string
     const attemptNum: number = Number(value);
-    console.log(attemptNum);
+    //console.log(attemptNum);
     if (!isNaN(attemptNum)) {
       this.dataHolder.metadata[key] = attemptNum;
     } else {

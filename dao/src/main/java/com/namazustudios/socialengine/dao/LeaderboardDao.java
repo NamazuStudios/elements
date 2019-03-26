@@ -3,10 +3,15 @@ package com.namazustudios.socialengine.dao;
 import com.namazustudios.socialengine.exception.LeaderboardNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
+import com.namazustudios.socialengine.rt.annotation.Expose;
 
 /**
  * Provides CRUD operations for Leaderboard instances in the database.
  */
+@Expose(modules = {
+        "namazu.elements.dao.leaderboard",
+        "namazu.socialengine.dao.leaderboard",
+})
 public interface LeaderboardDao {
 
     /**
