@@ -29,7 +29,7 @@ export class MissionsDatasource implements DataSource<Mission> {
     this.loadingSubject.next(true);
 
     // add search when ready
-    this.missionsService.getMissions({offset: offset, count: count})
+    this.missionsService.getMissions({offset: offset, count: count, search: search})
       .pipe(
         catchError(() => of({objects: [], total: 0})),
         finalize(() => this.loadingSubject.next(false)))
