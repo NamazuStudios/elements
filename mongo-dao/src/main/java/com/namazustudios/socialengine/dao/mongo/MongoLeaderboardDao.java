@@ -9,6 +9,10 @@ import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
+import static com.namazustudios.socialengine.model.leaderboard.Leaderboard.TimeStrategyType.*;
+import static com.namazustudios.socialengine.model.leaderboard.Leaderboard.ScoreStrategyType.*;
+
+import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -42,11 +46,31 @@ public class MongoLeaderboardDao implements LeaderboardDao {
 
         getValidationHelper().validateModel(leaderboard, ValidationGroups.Create.class);
 
-        // Manually validate that, if either a non-null firstEpochTimestamp or epochInterval is provided, then the
-        // other value must likewise be non-null
-        if ((leaderboard.getFirstEpochTimestamp() != null && leaderboard.getEpochInterval() == null) ||
-                (leaderboard.getEpochInterval() != null && leaderboard.getFirstEpochTimestamp() == null)) {
-            throw new BadParameterCombinationException("firstEpochTimestamp and getEpochInterval must be provided together.");
+        switch (leaderboard.getTimeStrategyType()) {
+            case ALL_TIME:
+                if (leaderboard.getFirstEpochTimestamp() != null || leaderboard.getEpochInterval() != null) {
+                    throw new InvalidDataException("firstEpochTimestamp and epochInterval should not be provided " +
+                            "for an ALL_TIME time strategy.");
+                }
+                break;
+            case EPOCHAL:
+                if (leaderboard.getFirstEpochTimestamp() == null || leaderboard.getEpochInterval() == null) {
+                    throw new InvalidDataException("firstEpochTimestamp and epochInterval must both be provided " +
+                            "for an EPOCHAL time strategy.");
+                }
+                break;
+            default:
+                break;
+        }
+
+        try {
+            final Leaderboard existingLeaderboard = getLeaderboard(leaderboard.getName());
+            if (existingLeaderboard != null) {
+                throw new DuplicateException("Leaderboard with the given name already exists");
+            }
+        }
+        catch (NotFoundException e) {
+
         }
 
         final MongoLeaderboard mongoLeaderboard = getBeanMapper().map(leaderboard, MongoLeaderboard.class);

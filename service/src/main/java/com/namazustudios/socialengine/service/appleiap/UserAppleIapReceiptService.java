@@ -12,6 +12,8 @@ import static com.namazustudios.socialengine.model.appleiapreceipt.AppleIapRecei
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.IOS_APP_STORE;
 
 import com.namazustudios.socialengine.model.application.IosApplicationConfiguration;
+import com.namazustudios.socialengine.model.application.ProductBundle;
+import com.namazustudios.socialengine.model.application.ProductBundleReward;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.reward.Reward;
 import com.namazustudios.socialengine.model.reward.RewardIssuance;
@@ -204,50 +206,26 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
                         IosApplicationConfiguration.class);
 
         // for each purchase we received from the ios app...
-        for (AppleIapReceipt appleIapReceipt : appleIapReceipts) {
-            // and for each instance of the SKU they purchased...
-            for (int skuOrdinal = 0; skuOrdinal < appleIapReceipt.getQuantity(); skuOrdinal++) {
-                final String context = buildAppleIapContextString(
-                        appleIapReceipt.getOriginalTransactionId(),
-                        skuOrdinal
-                );
+        for (final AppleIapReceipt appleIapReceipt : appleIapReceipts) {
+            final String productId = appleIapReceipt.getProductId();
+            final ProductBundle productBundle = iosApplicationConfiguration.getProductBundle(productId);
 
-                final Map<String, Object> metadata = generateAppleIapReceiptMetadata();
+            if (productBundle == null) {
+                throw new InvalidDataException("ApplicationConfiguration " + iosApplicationConfiguration.getId() +
+                        "has no ProductBundle for productId " + productId);
+            }
 
-                try {
-                    final RewardIssuance resultRewardIssuance = getRewardIssuanceDao().getRewardIssuance(user, context);
-                    resultRewardIssuances.add(resultRewardIssuance);
-                } catch (NotFoundException e) {
-                    // now, we look up the item id related to the current receipt's product id
-                    final String productId = appleIapReceipt.getProductId();
+            // for each reward in the product bundle...
+            for (final ProductBundleReward productBundleReward : productBundle.getProductBundleRewards()) {
+                // and for each instance of the SKU they purchased...
+                for (int skuOrdinal = 0; skuOrdinal < appleIapReceipt.getQuantity(); skuOrdinal++) {
+                    final RewardIssuance resultRewardIssuance = getOrCreateRewardIssuance(
+                            appleIapReceipt.getOriginalTransactionId(),
+                            productBundleReward.getItemId(),
+                            productBundleReward.getQuantity(),
+                            skuOrdinal
+                    );
 
-                    final String itemId = iosApplicationConfiguration.getItemIdForProductId(productId);
-
-                    final Integer rewardQuantity = iosApplicationConfiguration.getQuantityForProductId(productId);
-
-                    // then, we get a model rep of the given item id
-                    final Item item = getItemDao().getItemByIdOrName(itemId);
-
-                    // we now have everything we need to set up and insert a new issuance...
-                    final RewardIssuance rewardIssuance = new RewardIssuance();
-
-                    rewardIssuance.setItem(item);
-                    rewardIssuance.setItemQuantity(rewardQuantity);
-                    rewardIssuance.setUser(user);
-                    // we hold onto the reward issuance forever so as not to duplicate an already-redeemed issuance
-                    rewardIssuance.setType(PERSISTENT);
-                    rewardIssuance.setContext(context);
-                    rewardIssuance.setMetadata(metadata);
-                    rewardIssuance.setSource(APPLE_IAP_SOURCE);
-
-                    final List<String> tags =
-                            buildRewardIssuanceTags(appleIapReceipt.getOriginalTransactionId(), skuOrdinal);
-                    rewardIssuance.setTags(tags);
-
-                    final RewardIssuance resultRewardIssuance = getRewardIssuanceDao()
-                            .getOrCreateRewardIssuance(rewardIssuance);
-
-                    // finally, we add the inserted issuance to the list of results
                     resultRewardIssuances.add(resultRewardIssuance);
                 }
             }
@@ -255,6 +233,38 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
         return resultRewardIssuances;
     }
+
+    private RewardIssuance getOrCreateRewardIssuance(
+            String originalTransactionId,
+            String itemId,
+            Integer quantity,
+            Integer skuOrdinal
+    ) {
+        final String context = buildAppleIapContextString(originalTransactionId, itemId, skuOrdinal);
+
+        final Item item = getItemDao().getItemByIdOrName(itemId);
+
+        final Map<String, Object> metadata = generateAppleIapReceiptMetadata();
+
+        final RewardIssuance rewardIssuance = new RewardIssuance();
+
+        rewardIssuance.setItem(item);
+        rewardIssuance.setItemQuantity(quantity);
+        rewardIssuance.setUser(user);
+        // we hold onto the reward issuance forever so as not to duplicate an already-redeemed issuance
+        rewardIssuance.setType(PERSISTENT);
+        rewardIssuance.setContext(context);
+        rewardIssuance.setMetadata(metadata);
+        rewardIssuance.setSource(APPLE_IAP_SOURCE);
+
+        final List<String> tags = buildRewardIssuanceTags(originalTransactionId, skuOrdinal);
+        rewardIssuance.setTags(tags);
+
+        final RewardIssuance resultRewardIssuance = getRewardIssuanceDao().getOrCreateRewardIssuance(rewardIssuance);
+
+        return resultRewardIssuance;
+    }
+
 
     public Map<String, Object> generateAppleIapReceiptMetadata() {
         final HashMap<String, Object> map = new HashMap<>();

@@ -3,11 +3,17 @@ package com.namazustudios.socialengine.dao;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
 import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.annotation.Expose;
 
 /**
  * Manipulates instances of {@link Score} within the database.
  *
  */
+
+@Expose(modules = {
+        "namazu.elements.dao.score",
+        "namazu.socialengine.dao.score",
+})
 public interface ScoreDao {
 
     /**

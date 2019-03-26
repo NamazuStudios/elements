@@ -15,6 +15,8 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import java.util.List;
+
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
 @Api(value = "Google Play IAPs",
@@ -37,8 +39,8 @@ public class GooglePlayIapReceiptResource {
     @Path("purchase")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Upload Google Play IAP Receipt data (package name, product id and Google Play-issued " +
-            "purchase token). Returns a RewardIssuance, which may be already redeemed.")
-    public RewardIssuance uploadGooglePlayIapPurchase(
+            "purchase token). Returns a list of RewardIssuances, some or all of which may be already redeemed.")
+    public List<RewardIssuance> uploadGooglePlayIapPurchase(
             final CreateGooglePlayIapReceipt createGooglePlayIapReceipt
     ) {
         getValidationHelper().validateModel(createGooglePlayIapReceipt, Create.class);
@@ -61,10 +63,10 @@ public class GooglePlayIapReceiptResource {
         final GooglePlayIapReceipt resultGooglePlayIapReceipt = getGooglePlayIapReceiptService()
                 .verifyAndCreateGooglePlayIapReceiptIfNeeded(packageName, productId, purchaseToken);
 
-        final RewardIssuance resultRewardIssuance = getGooglePlayIapReceiptService()
-                .getOrCreateRewardIssuance(resultGooglePlayIapReceipt);
+        final List<RewardIssuance> resultRewardIssuances = getGooglePlayIapReceiptService()
+                .getOrCreateRewardIssuances(resultGooglePlayIapReceipt);
 
-        return resultRewardIssuance;
+        return resultRewardIssuances;
     }
 
     public GooglePlayIapReceiptService getGooglePlayIapReceiptService() {

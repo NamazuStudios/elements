@@ -11,6 +11,9 @@ import java.util.*;
 @ApiModel(description = "Representation of a validated Google Play in-app purchase. " +
         "See: https://developers.google.com/android-publisher/api-ref/purchases/products.")
 public class GooglePlayIapReceipt implements Serializable {
+    public static final String ID_TAG_PREFIX = "ID";
+    public static final String TAG_SEPARATOR = ".";
+
     final public static int PURCHASE_STATE_PURCHASED = 0;
     final public static int PURCHASE_STATE_CANCELED = 1;
 
@@ -130,6 +133,23 @@ public class GooglePlayIapReceipt implements Serializable {
     public void setPurchaseType(Integer purchaseType) {
         this.purchaseType = purchaseType;
     }
+
+    public static List<String> buildRewardIssuanceTags(final String orderId) {
+        final List <String> tags = new ArrayList<>();
+        tags.add(buildIdentifyingRewardIssuanceTag(orderId));
+
+        return tags;
+    }
+
+    public static String buildIdentifyingRewardIssuanceTag(final String orderId) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(ID_TAG_PREFIX);
+        stringBuilder.append(TAG_SEPARATOR);
+        stringBuilder.append(orderId);
+
+        return stringBuilder.toString();
+    }
+
 
     @Override
     public boolean equals(Object o) {
