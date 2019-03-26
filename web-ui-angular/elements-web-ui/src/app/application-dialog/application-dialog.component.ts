@@ -1,6 +1,7 @@
 import {Component, Inject, OnInit} from '@angular/core';
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material";
+import {MAT_DIALOG_DATA, MatDialogRef, MatSnackBar} from '@angular/material';
 import {FormBuilder, FormControl, Validators} from "@angular/forms";
+import {AlertService} from '../alert.service';
 
 @Component({
   selector: 'app-application-dialog',
@@ -17,8 +18,27 @@ export class ApplicationDialogComponent implements OnInit {
 
   constructor(public dialogRef: MatDialogRef<ApplicationDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
-              private formBuilder: FormBuilder) { }
+              private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) { }
 
   ngOnInit() {
+    this.alertService.getMessage().subscribe((message: any) => {
+      if(message) {
+        this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
+      }
+    });
+  }
+
+  close(res: any) {
+    if (!res) {
+      this.dialogRef.close();
+      return;
+    }
+
+    this.data.next(res).subscribe(r => {
+      this.dialogRef.close();
+      this.data.refresher.refresh();
+    }, err => {
+      this.alertService.error(err);
+    });
   }
 }
