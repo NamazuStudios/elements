@@ -38,7 +38,7 @@ export class UserDialogComponent implements OnInit {
     if(this.data.isNew) {
       this.userForm.get("password").setValidators(Validators.required);
     }
-    this.alertSubscription = this.alertService.getMessage().subscribe((message: any) => {
+    this.alertService.getMessage().subscribe((message: any) => {
       if(message) {
         this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
       }
