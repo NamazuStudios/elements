@@ -1,9 +1,10 @@
 import {Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
-import {MAT_DIALOG_DATA, MatChipInputEvent, MatDialogRef} from '@angular/material';
+import {MAT_DIALOG_DATA, MatChipInputEvent, MatDialogRef, MatSnackBar} from '@angular/material';
 import {ENTER, COMMA} from '@angular/cdk/keycodes';
 import {JsonEditorOptions, JsonEditorComponent} from 'ang-jsoneditor';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
+import {AlertService} from '../alert.service';
 
 @Component({
   selector: 'app-item-dialog',
@@ -14,7 +15,7 @@ export class ItemDialogComponent implements OnInit {
 
   constructor(public dialogRef: MatDialogRef<ItemDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
-              private formBuilder: FormBuilder) { }
+              private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) { }
 
   @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
 
@@ -26,7 +27,7 @@ export class ItemDialogComponent implements OnInit {
   itemForm = this.formBuilder.group({
     name: [ this.data.item.name, [Validators.required, Validators.pattern('^[a-zA-Z0-9]+$') ]],
     displayName: [ this.data.item.displayName, [Validators.required]],
-    description: [ this.data.item.description ],
+    description: [ this.data.item.description, [Validators.required] ],
     tags: []
   });
 
@@ -35,7 +36,7 @@ export class ItemDialogComponent implements OnInit {
     const value = event.value;
 
     if ((value || '').trim()) {
-      if (this.data.item.tags == undefined) { this.data.item.tags = []; }
+      if (!this.data.item.tags) { this.data.item.tags = []; }
       this.data.item.tags.push(value);
     }
 
@@ -72,11 +73,21 @@ export class ItemDialogComponent implements OnInit {
     if (this.data.item.metadata !== undefined) {
       formData.metadata = this.data.item.metadata;
     }
-    console.log(formData);
-    this.dialogRef.close(formData);
+
+    this.data.next(formData).subscribe(r => {
+      this.dialogRef.close();
+      this.data.refresher.refresh();
+    }, err => {
+      this.alertService.error(err);
+    });
   }
 
   ngOnInit() {
+    this.alertService.getMessage().subscribe((message: any) => {
+      if(message) {
+        this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
+      }
+    });
   }
 
 }

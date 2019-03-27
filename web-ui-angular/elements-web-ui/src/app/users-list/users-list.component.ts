@@ -115,30 +115,27 @@ export class UsersListComponent implements OnInit, AfterViewInit {
   showDialog(isNew: boolean, user: User, next) {
     const dialogRef = this.dialog.open(UserDialogComponent, {
       width: '500px',
-      data: { isNew: isNew, user: user }
+      data: { isNew: isNew, user: user, next: next, refresher: this }
     });
-
-    dialogRef
-      .afterClosed()
-      .pipe(filter(r => r))
-      .subscribe(next);
   }
 
   addUser() {
-    this.showDialog(true, new UserViewModel(),result => {
-      this.usersService.createUser({ password: result.password, body: result }).subscribe(r => {
-          this.refresh();
-        },
-        error => this.alertService.error(error));
+    this.showDialog(true, new UserViewModel(), result => {
+      // backend expects password to be in query params, so delete from result before attaching to body
+      const password = result.password;
+      delete result.passwordConfirmation;
+      delete result.password;
+      return this.usersService.createUser({ password: password, body: result });
     });
   }
 
   editUser(user) {
     this.showDialog(false, user, result => {
-      this.usersService.updateUser({ name: user.name, password: result.password, body: result }).subscribe(r => {
-          this.refresh();
-        },
-        error => this.alertService.error(error));
+      // backend expects password to be in query params, so delete from result before attaching to body
+      const password = result.password;
+      delete result.passwordConfirmation;
+      delete result.password;
+      return this.usersService.updateUser({ name: user.name, password: password, body: result });
     });
   }
 }
