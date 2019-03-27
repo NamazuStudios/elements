@@ -60,7 +60,9 @@ export function initialize(configService: ConfigService) {
     FirebaseApplicationConfigurationDialogComponent,
     MatchmakingApplicationConfigurationDialogComponent,
     GameOnApplicationConfigurationDialogComponent,
-    GameOnPrizeDialogComponent
+    GameOnPrizeDialogComponent,
+    IosApplicationConfigurationDialogComponent,
+    AndroidGooglePlayConfigurationDialogComponent
   ],
   declarations: [
     AppComponent,
