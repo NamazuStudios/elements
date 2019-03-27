@@ -17,6 +17,8 @@ import {FirebaseApplicationConfigurationDialogComponent} from "../firebase-appli
 import {MatchmakingApplicationConfigurationDialogComponent} from "../matchmaking-application-configuration-dialog/matchmaking-application-configuration-dialog.component";
 import {MatchmakingApplicationConfigurationService} from "../api/services/matchmaking-application-configuration.service";
 import {GameOnApplicationConfigurationDialogComponent} from "../game-on-application-configuration-dialog/game-on-application-configuration-dialog.component";
+import {IosApplicationConfigurationDialogComponent} from '../ios-application-configuration-dialog/ios-application-configuration-dialog.component';
+import {AndroidGooglePlayConfigurationDialogComponent} from '../android-google-play-configuration-dialog/android-google-play-configuration-dialog.component';
 
 @Component({
   selector: 'app-application-configurations-list',
@@ -194,6 +196,18 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
               this.refresh();
             },
             error => this.alertService.error(error));
+        });
+
+        break;
+      case 'IOS_APP_STORE':
+        this.showDialog(true, IosApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
+          // TODO
+        });
+
+        break;
+      case 'ANDROID_GOOGLE_PLAY':
+        this.showDialog(true, AndroidGooglePlayConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
+          // TODO
         });
 
         break;
