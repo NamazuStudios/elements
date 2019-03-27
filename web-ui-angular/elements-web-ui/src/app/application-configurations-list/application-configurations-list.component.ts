@@ -149,9 +149,9 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
       });
   }
 
-  showDialog(isNew: boolean, dialog: any, applicationConfiguration: any, next) {
+  showDialog(isNew: boolean, dialog: any, applicationConfiguration: any, next, isBundleDialog: boolean = false) {
     const dialogRef = this.dialog.open(dialog, {
-      width: '500px',
+      width: isBundleDialog ? '900px' : '500px',
       data: { isNew: isNew, applicationConfiguration: applicationConfiguration }
     });
 
@@ -202,13 +202,13 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
       case 'IOS_APP_STORE':
         this.showDialog(true, IosApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
           // TODO
-        });
+        }, true);
 
         break;
       case 'ANDROID_GOOGLE_PLAY':
         this.showDialog(true, AndroidGooglePlayConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
           // TODO
-        });
+        }, true);
 
         break;
     }
