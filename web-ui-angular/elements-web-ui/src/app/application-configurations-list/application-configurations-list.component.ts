@@ -19,6 +19,7 @@ import {MatchmakingApplicationConfigurationService} from "../api/services/matchm
 import {GameOnApplicationConfigurationDialogComponent} from "../game-on-application-configuration-dialog/game-on-application-configuration-dialog.component";
 import {IosApplicationConfigurationDialogComponent} from '../ios-application-configuration-dialog/ios-application-configuration-dialog.component';
 import {AndroidGooglePlayConfigurationDialogComponent} from '../android-google-play-configuration-dialog/android-google-play-configuration-dialog.component';
+import {IOSApplicationConfigurationService} from '../api/services/iosapplication-configuration.service';
 
 @Component({
   selector: 'app-application-configurations-list',
@@ -44,7 +45,8 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
               public dialog: MatDialog,
               private facebookApplicationConfigurationService: FacebookApplicationConfigurationService,
               private firebaseApplicationConfigurationService: FirebaseApplicationConfigurationService,
-              private matchmakingApplicationConfigurationService: MatchmakingApplicationConfigurationService) { }
+              private matchmakingApplicationConfigurationService: MatchmakingApplicationConfigurationService,
+              private iosApplicationConfigurationService: IOSApplicationConfigurationService) { }
 
   ngOnInit() {
     this.selection = new SelectionModel<ApplicationConfiguration>(true, []);
@@ -201,7 +203,10 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
         break;
       case 'IOS_APP_STORE':
         this.showDialog(true, IosApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
-          // TODO
+          this.iosApplicationConfigurationService.createIosApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
+            this.refresh();
+          },
+            error => this.alertService.error(error));
         }, true);
 
         break;
