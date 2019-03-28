@@ -45,7 +45,7 @@ export class UserDialogComponent implements OnInit {
     });
   }
 
-  close(res: any) {
+  close(res?: any) {
     if (!res) {
       this.dialogRef.close();
       return;
