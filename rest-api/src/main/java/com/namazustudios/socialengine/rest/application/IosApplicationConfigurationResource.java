@@ -20,10 +20,10 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
  */
 @Api(
     value = "iOS Application Configuration",
-    description = "Operations for the management of ApplictionConfigurations for iOS Applications.",
+    description = "Operations for the management of ApplicationConfigurations for iOS Applications.",
     authorizations = {@Authorization(SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration/ios")
-public class IoSApplicationConfigurationResource {
+public class IosApplicationConfigurationResource {
 
     private IosApplicationConfigurationService iosApplicationConfigurationService;
 
