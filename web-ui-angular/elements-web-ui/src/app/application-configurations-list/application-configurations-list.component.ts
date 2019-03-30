@@ -271,7 +271,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
                 this.refresh();
               },
                 error => this.alertService.error(error));
-            });
+            }, true);
           });
 
         break;
