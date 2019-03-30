@@ -11,7 +11,7 @@
 
   <button mat-raised-button color="primary" disabled>Delete Product Bundle</button>
 
-  <mat-table class="productBundle-table mat-elevation-z8" [dataSource]="dataSource">
+  <mat-table class="productBundle-table mat-elevation-z8" [dataSource]="productBundles">
 
     <ng-container matColumnDef="select">
       <mat-header-cell fxFlex="75px" *matHeaderCellDef>
@@ -24,25 +24,25 @@
 
     <ng-container matColumnDef="id">
       <mat-header-cell *matHeaderCellDef>Product Id</mat-header-cell>
-      <mat-cell *matCellDef></mat-cell>
+      <mat-cell *matCellDef="let productBundle">{{productBundle.productId}}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="displayName">
       <mat-header-cell *matHeaderCellDef>Display Name</mat-header-cell>
-      <mat-cell *matCellDef></mat-cell>
+      <mat-cell *matCellDef="let productBundle">{{productBundle.displayName}}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="display">
       <mat-header-cell *matHeaderCellDef>Display</mat-header-cell>
-      <mat-cell *matCellDef></mat-cell>
+      <mat-cell *matCellDef="let productBundle">{{productBundle.display}}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="actions">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
-      <mat-cell *matCellDef="let applicationConfiguration">
-        <button mat-raised-button color="primary">Edit</button>
+      <mat-cell *matCellDef="let productBundle">
+        <button mat-raised-button color="primary" (click)="editProductBundle(productBundle)">Edit</button>
         &nbsp;
-        <button mat-raised-button color="primary">Delete</button>
+        <button mat-raised-button color="primary" (click)="deleteProductBundle(productBundle)">Delete</button>
       </mat-cell>
     </ng-container>
 

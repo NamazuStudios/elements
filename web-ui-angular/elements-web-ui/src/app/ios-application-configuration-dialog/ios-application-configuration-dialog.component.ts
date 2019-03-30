@@ -1,5 +1,6 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material';
+import {ProductBundle} from '../api/models/product-bundle';
 
 @Component({
   selector: 'app-ios-application-configuration-dialog',
@@ -7,11 +8,11 @@ import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material';
   styleUrls: ['./ios-application-configuration-dialog.component.css']
 })
 export class IosApplicationConfigurationDialogComponent implements OnInit {
-  private productBundles: ProductBundle[];
+  private productBundles: Array<ProductBundle>;
 
   constructor(public dialogRef: MatDialogRef<IosApplicationConfigurationDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any) {
-    console.log(data);
+    this.productBundles = this.data.applicationConfiguration.productBundles;
   }
 
   ngOnInit() {
