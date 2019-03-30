@@ -45,6 +45,7 @@ import { MissionRewardsEditorComponent } from './mission-dialog/mission-rewards-
 import { IosApplicationConfigurationDialogComponent } from './ios-application-configuration-dialog/ios-application-configuration-dialog.component';
 import { AndroidGooglePlayConfigurationDialogComponent } from './android-google-play-configuration-dialog/android-google-play-configuration-dialog.component';
 import { ProductBundleListComponent } from './product-bundle-list/product-bundle-list.component';
+import { ProductBundleEditorComponent } from './product-bundle-editor/product-bundle-editor.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -63,7 +64,8 @@ export function initialize(configService: ConfigService) {
     GameOnApplicationConfigurationDialogComponent,
     GameOnPrizeDialogComponent,
     IosApplicationConfigurationDialogComponent,
-    AndroidGooglePlayConfigurationDialogComponent
+    AndroidGooglePlayConfigurationDialogComponent,
+    ProductBundleEditorComponent
   ],
   declarations: [
     AppComponent,
@@ -94,6 +96,7 @@ export function initialize(configService: ConfigService) {
     IosApplicationConfigurationDialogComponent,
     AndroidGooglePlayConfigurationDialogComponent,
     ProductBundleListComponent,
+    ProductBundleEditorComponent,
   ],
   imports: [
     BrowserModule,
