@@ -9,7 +9,9 @@ import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material';
 export class IosApplicationConfigurationDialogComponent implements OnInit {
 
   constructor(public dialogRef: MatDialogRef<IosApplicationConfigurationDialogComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: any) { }
+              @Inject(MAT_DIALOG_DATA) public data: any) {
+    console.log(data);
+  }
 
   ngOnInit() {
   }
