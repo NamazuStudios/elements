@@ -1,6 +1,7 @@
-import {Component, Inject, OnInit} from '@angular/core';
+import {Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material';
 import {FormBuilder, Validators} from '@angular/forms';
+import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
 
 @Component({
   selector: 'app-product-bundle-editor',
@@ -8,6 +9,8 @@ import {FormBuilder, Validators} from '@angular/forms';
   styleUrls: ['./product-bundle-editor.component.css']
 })
 export class ProductBundleEditorComponent implements OnInit {
+  @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
+
   productBundleForm = this.formBuilder.group({
     productId: [this.data.productBundle.productId, [Validators.required]],
     displayName: [this.data.productBundle.displayName, [Validators.required]],
@@ -19,6 +22,10 @@ export class ProductBundleEditorComponent implements OnInit {
               private formBuilder: FormBuilder) { }
 
   ngOnInit() {
+  }
+
+  close(saveChanges: boolean = false) {
+    this.dialogRef.close();
   }
 
 }

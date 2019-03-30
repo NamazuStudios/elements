@@ -32,7 +32,7 @@ export class ProductBundleListComponent implements OnInit {
 
   showDialog(isNew: boolean, dialog: any, productBundle: ProductBundle, next) {
     const dialogRef = this.dialog.open(dialog, {
-      width: '900px',
+      width: '600px',
       data: { isNew: isNew, productBundle: productBundle }
     });
 
