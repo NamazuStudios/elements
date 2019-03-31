@@ -7,7 +7,7 @@ export interface ProductBundle {
   display: boolean;
 }
 
-interface ProductBundleReward {
+export interface ProductBundleReward {
   itemId: string;
   quantity: number;
 }

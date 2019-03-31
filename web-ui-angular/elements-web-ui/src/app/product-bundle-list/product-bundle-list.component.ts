@@ -5,6 +5,7 @@ import {filter} from 'rxjs/operators';
 import {ConfirmationDialogService} from '../confirmation-dialog/confirmation-dialog.service';
 import {MatDialog} from '@angular/material';
 import {ProductBundleEditorComponent} from '../product-bundle-editor/product-bundle-editor.component';
+import {ProductBundleViewModel} from '../models/product-bundle-view-model';
 
 @Component({
   selector: 'app-product-bundle-list',
@@ -32,6 +33,19 @@ export class ProductBundleListComponent implements OnInit {
 
   deleteProductBundle(productBundle: ProductBundle) {
 
+  }
+
+  addProductBundle() {
+    const newBundle = new ProductBundleViewModel();
+    this.showDialog(true, ProductBundleEditorComponent, newBundle, res => {
+      for (const prop in res) {
+        if (res.hasOwnProperty(prop)) {
+          newBundle[prop] = res[prop];
+        }
+      }
+
+      this.productBundles.push(newBundle);
+    });
   }
 
   showDialog(isNew: boolean, dialog: any, productBundle: ProductBundle, next) {
