@@ -3,7 +3,7 @@ import {ApplicationConfigurationsDataSource} from '../application-configuration.
 import {ProductBundle} from '../api/models/product-bundle';
 import {filter} from 'rxjs/operators';
 import {ConfirmationDialogService} from '../confirmation-dialog/confirmation-dialog.service';
-import {MatDialog} from '@angular/material';
+import {MatDialog, MatTableDataSource} from '@angular/material';
 import {ProductBundleEditorComponent} from '../product-bundle-editor/product-bundle-editor.component';
 import {ProductBundleViewModel} from '../models/product-bundle-view-model';
 
@@ -15,11 +15,13 @@ import {ProductBundleViewModel} from '../models/product-bundle-view-model';
 export class ProductBundleListComponent implements OnInit {
   @Input() productBundles: Array<ProductBundle>;
 
-  dataSource: ApplicationConfigurationsDataSource;
+  tableDataSource: MatTableDataSource
   displayedColumns = ["select", "id", "displayName", "display", "actions"];
 
   constructor(private dialogService: ConfirmationDialogService,
-              public dialog: MatDialog) { }
+              public dialog: MatDialog) {
+    this.tableDataSource = new MatTableDataSource();
+  }
 
   editProductBundle(productBundle: ProductBundle) {
     this.showDialog(false, ProductBundleEditorComponent, productBundle, res => {
@@ -43,8 +45,8 @@ export class ProductBundleListComponent implements OnInit {
           newBundle[prop] = res[prop];
         }
       }
-
       this.productBundles.push(newBundle);
+      this.tableDataSource.data = this.productBundles;
     });
   }
 
@@ -56,6 +58,7 @@ export class ProductBundleListComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.tableDataSource.data = this.productBundles;
   }
 
 }
