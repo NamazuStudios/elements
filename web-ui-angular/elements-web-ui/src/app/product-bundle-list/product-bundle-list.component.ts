@@ -22,7 +22,11 @@ export class ProductBundleListComponent implements OnInit {
 
   editProductBundle(productBundle: ProductBundle) {
     this.showDialog(false, ProductBundleEditorComponent, productBundle, res => {
-
+      for (const prop in res) {
+        if (res.hasOwnProperty(prop)) {
+          productBundle[prop] = res[prop];
+        }
+      }
     });
   }
 
@@ -33,7 +37,7 @@ export class ProductBundleListComponent implements OnInit {
   showDialog(isNew: boolean, dialog: any, productBundle: ProductBundle, next) {
     const dialogRef = this.dialog.open(dialog, {
       width: '800px',
-      data: { isNew: isNew, productBundle: productBundle }
+      data: { isNew: isNew, productBundle: productBundle, next: next }
     });
 
     dialogRef

@@ -25,6 +25,17 @@ export class ProductBundleEditorComponent implements OnInit {
   }
 
   close(saveChanges: boolean = false) {
+    if (!saveChanges) {
+      this.dialogRef.close();
+      return;
+    }
+
+    const formData = this.productBundleForm.value;
+    if (this.data.productBundle !== undefined) {
+      formData.metadata = this.data.productBundle.metadata;
+    }
+
+    this.data.next(formData);
     this.dialogRef.close();
   }
 
