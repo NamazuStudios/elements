@@ -112,7 +112,7 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
   }
 
   showDialog(isNew: boolean, application: Application, next) {
-    const dialogRef = this.dialog.open(ApplicationDialogComponent, {
+    this.dialog.open(ApplicationDialogComponent, {
       width: '900px',
       data: { isNew: isNew, application: application, next: next, refresher: this }
     });

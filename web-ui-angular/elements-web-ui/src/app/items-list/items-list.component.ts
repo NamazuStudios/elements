@@ -111,7 +111,7 @@ export class ItemsListComponent implements OnInit, AfterViewInit {
   }
 
   showDialog(isNew: boolean, item: Item, next) {
-    const dialogRef = this.dialog.open(ItemDialogComponent, {
+    this.dialog.open(ItemDialogComponent, {
       width: '900px',
       data: { isNew: isNew, item: item, next: next, refresher: this }
     });

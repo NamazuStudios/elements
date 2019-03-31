@@ -36,7 +36,7 @@ export class ProductBundleEditorComponent implements OnInit {
     }
 
     this.data.next(formData);
-    this.dialogRef.close();
+    this.dialogRef.close(formData);
   }
 
 }

@@ -152,15 +152,10 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
   }
 
   showDialog(isNew: boolean, dialog: any, applicationConfiguration: any, next, isBundleDialog: boolean = false) {
-    const dialogRef = this.dialog.open(dialog, {
+    this.dialog.open(dialog, {
       width: isBundleDialog ? '900px' : '500px',
-      data: { isNew: isNew, applicationConfiguration: applicationConfiguration }
+      data: { isNew: isNew, applicationConfiguration: applicationConfiguration, next: next, refresher: this }
     });
-
-    dialogRef
-      .afterClosed()
-      .pipe(filter(r => r))
-      .subscribe(next);
   }
 
   addApplicationConfiguration(category: string) {
@@ -267,10 +262,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
         this.iosApplicationConfigurationService.getIosApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id })
           .subscribe(applicationConfiguration => {
             this.showDialog(false, IosApplicationConfigurationDialogComponent, applicationConfiguration, result => {
-              this.iosApplicationConfigurationService.updateApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id, body: result }).subscribe(r => {
-                this.refresh();
-              },
-                error => this.alertService.error(error));
+              return this.iosApplicationConfigurationService.updateApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id, body: result });
             }, true);
           });
 

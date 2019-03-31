@@ -111,15 +111,10 @@ export class MissionsListComponent implements OnInit, AfterViewInit {
   }
 
   showDialog(isNew: boolean, mission: Mission, next) {
-    const dialogRef = this.dialog.open(MissionDialogComponent, {
+    this.dialog.open(MissionDialogComponent, {
       width: '900px',
       data: { isNew: isNew, mission: mission, next: next, refresher: this }
     });
-
-    dialogRef
-      .afterClosed()
-      .pipe(filter(r => r))
-      .subscribe(next);
   }
 
   addMission() {

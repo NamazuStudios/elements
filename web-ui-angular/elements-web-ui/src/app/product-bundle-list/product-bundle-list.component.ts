@@ -35,15 +35,10 @@ export class ProductBundleListComponent implements OnInit {
   }
 
   showDialog(isNew: boolean, dialog: any, productBundle: ProductBundle, next) {
-    const dialogRef = this.dialog.open(dialog, {
+    this.dialog.open(dialog, {
       width: '800px',
       data: { isNew: isNew, productBundle: productBundle, next: next }
     });
-
-    dialogRef
-      .afterClosed()
-      .pipe(filter(r => r))
-      .subscribe(next);
   }
 
   ngOnInit() {
