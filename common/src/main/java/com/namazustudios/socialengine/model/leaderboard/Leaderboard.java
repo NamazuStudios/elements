@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.model.leaderboard;
 
-import io.swagger.annotations.Api;
+import com.namazustudios.socialengine.rt.annotation.ExposeEnum;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -143,6 +143,9 @@ public class Leaderboard {
                 '}';
     }
 
+    @ExposeEnum(modules={
+            "com.namazustudios.socialengine.model.leaderboard.Leaderboard.TimeStrategyType"
+    })
     public enum TimeStrategyType {
         /**
          * The leaderboard continues without resetting values at some time interval.
@@ -155,6 +158,9 @@ public class Leaderboard {
         EPOCHAL,
     }
 
+    @ExposeEnum(modules={
+            "com.namazustudios.socialengine.model.leaderboard.Leaderboard.ScoreStrategyType"
+    })
     public enum ScoreStrategyType {
         /**
          * When a new score value is provided, `MAX(old_score, new_score)` will be persisted to the store.
