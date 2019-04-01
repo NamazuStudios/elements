@@ -17,7 +17,7 @@ public class EnumModuleBuiltin<T extends Enum<T>> implements Builtin {
 
     private final String moduleName;
 
-    public EnumModuleBuiltin(@NotNull Class<T> enumClass, @NotNull final String moduleName) {
+    public EnumModuleBuiltin(Class<T> enumClass, final String moduleName) {
         this.enumClass = enumClass;
         this.moduleName = moduleName;
     }
