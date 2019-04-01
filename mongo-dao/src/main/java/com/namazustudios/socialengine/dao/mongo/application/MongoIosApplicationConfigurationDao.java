@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.application;
 
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoProductBundle;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.IosApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
@@ -17,6 +18,9 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.IOS_APP_STORE;
 
@@ -64,6 +68,16 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         updateOperations.set("active", true);
         updateOperations.set( "category", iosApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
+
+        if (iosApplicationConfiguration.getProductBundles() != null &&
+                iosApplicationConfiguration.getProductBundles().size() > 0) {
+            final List<MongoProductBundle> mongoProductBundles = iosApplicationConfiguration
+                    .getProductBundles()
+                    .stream()
+                    .map(pb -> getBeanMapper().map(pb, MongoProductBundle.class))
+                    .collect(Collectors.toList());
+            updateOperations.set("productBundles", mongoProductBundles);
+        }
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
             .returnNew(true)
@@ -141,8 +155,21 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         updateOperations = getDatastore().createUpdateOperations(MongoIosApplicationConfiguration.class);
 
         updateOperations.set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim());
-        updateOperations.set( "category", iosApplicationConfiguration.getCategory());
+        updateOperations.set("category", iosApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
+
+        if (iosApplicationConfiguration.getProductBundles() != null &&
+                iosApplicationConfiguration.getProductBundles().size() > 0) {
+            final List<MongoProductBundle> mongoProductBundles = iosApplicationConfiguration
+                    .getProductBundles()
+                    .stream()
+                    .map(pb -> getBeanMapper().map(pb, MongoProductBundle.class))
+                    .collect(Collectors.toList());
+            updateOperations.set("productBundles", mongoProductBundles);
+        }
+        else {
+            updateOperations.unset("productBundles");
+        }
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
             .returnNew(true)
@@ -156,8 +183,8 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
             throw new NotFoundException("profile with ID not found: " + applicationProfileNameOrId);
         }
 
-        getObjectIndex().index(iosApplicationConfiguration);
-        return getBeanMapper().map(iosApplicationConfiguration, IosApplicationConfiguration.class);
+        getObjectIndex().index(mongoIosApplicationProfile);
+        return getBeanMapper().map(mongoIosApplicationProfile, IosApplicationConfiguration.class);
 
     }
 

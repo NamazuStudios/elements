@@ -34,6 +34,7 @@
               <option name="path" value="modules/flight-recorder.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
+              <option name="active" value="true" />
               <option name="path" value="modules/jmx.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
@@ -374,6 +375,7 @@
               <option name="path" value="modules/flight-recorder.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
+              <option name="active" value="true" />
               <option name="path" value="modules/jmx.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
@@ -695,7 +697,7 @@
         </option>
       </data>
     </server-settings>
-    <predefined_log_file id="Jetty" enabled="true" />
+    <predefined_log_file enabled="true" id="Jetty" />
     <ConfigurationWrapper VM_VAR="" RunnerId="Cover">
       <option name="USE_ENV_VARIABLES" value="true" />
       <STARTUP>
@@ -741,7 +743,8 @@
         <option name="PROGRAM_PARAMETERS" value="" />
       </SHUTDOWN>
     </ConfigurationWrapper>
-    <method>
+    <method v="2">
+      <option name="Make" enabled="true" />
       <option name="BuildArtifacts" enabled="true">
         <artifact name="rest-war:war exploded" />
       </option>

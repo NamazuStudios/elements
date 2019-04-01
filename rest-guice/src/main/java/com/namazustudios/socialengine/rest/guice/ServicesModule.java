@@ -94,6 +94,14 @@ public class ServicesModule extends PrivateModule {
                 .toProvider(ManifestServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
+        bind(IosApplicationConfigurationService.class)
+                .toProvider(IosApplicationConfigurationServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
+        bind(GooglePlayApplicationConfigurationService.class)
+                .toProvider(GooglePlayApplicationConfigurationServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
         bind(MatchmakingApplicationConfigurationService.class)
                 .toProvider(MatchmakingConfigurationServiceProvider.class)
                 .in(ServletScopes.REQUEST);
@@ -215,11 +223,13 @@ public class ServicesModule extends PrivateModule {
         expose(ApplicationConfigurationService.class);
         expose(PSNApplicationConfigurationService.class);
         expose(FacebookApplicationConfigurationService.class);
+        expose(MatchmakingApplicationConfigurationService.class);
+        expose(FirebaseApplicationConfigurationService.class);
+        expose(IosApplicationConfigurationService.class);
+        expose(GooglePlayApplicationConfigurationService.class);
         expose(ProfileService.class);
         expose(MatchService.class);
         expose(ManifestService.class);
-        expose(MatchmakingApplicationConfigurationService.class);
-        expose(FirebaseApplicationConfigurationService.class);
         expose(FCMRegistrationService.class);
         expose(ScoreService.class);
         expose(RankService.class);
