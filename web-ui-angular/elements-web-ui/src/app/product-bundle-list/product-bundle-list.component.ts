@@ -15,7 +15,7 @@ import {ProductBundleViewModel} from '../models/product-bundle-view-model';
 export class ProductBundleListComponent implements OnInit {
   @Input() productBundles: Array<ProductBundle>;
 
-  tableDataSource: MatTableDataSource
+  tableDataSource: MatTableDataSource<ProductBundle>;
   displayedColumns = ["select", "id", "displayName", "display", "actions"];
 
   constructor(private dialogService: ConfirmationDialogService,
