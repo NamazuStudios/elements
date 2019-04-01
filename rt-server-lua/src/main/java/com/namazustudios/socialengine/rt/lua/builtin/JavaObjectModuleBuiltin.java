@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.lua.builtin;
 import com.google.common.base.Function;
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.JavaReflector;
-import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.persist.Persistence;
@@ -69,7 +68,7 @@ public class JavaObjectModuleBuiltin implements Builtin {
     @Override
     public JavaFunction getLoader() {
         return luaState -> {
-            final JavaReflector javaReflector = makeJavaRelfector();
+            final JavaReflector javaReflector = makeJavaReflector();
             luaState.pushJavaObjectRaw(javaReflector);
             return 1;
         };
@@ -81,7 +80,7 @@ public class JavaObjectModuleBuiltin implements Builtin {
         final String type = mangle(JavaObjectModuleBuiltin.class, moduleName);
 
         persistence.addCustomUnpersistence(type, l -> {
-            l.pushJavaObject(makeJavaRelfector());
+            l.pushJavaObject(makeJavaReflector());
             return 1;
         });
 
@@ -94,7 +93,7 @@ public class JavaObjectModuleBuiltin implements Builtin {
 
     }
 
-    private JavaReflector makeJavaRelfector() {
+    private JavaReflector makeJavaReflector() {
 
         final Object object = provider.get();
 
