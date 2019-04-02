@@ -10,14 +10,14 @@ import {AlertService} from '../alert.service';
   styleUrls: ['./ios-application-configuration-dialog.component.css']
 })
 export class IosApplicationConfigurationDialogComponent implements OnInit {
-  private productBundles: Array<ProductBundle>;
+  public productBundles: Array<ProductBundle>;
 
   constructor(public dialogRef: MatDialogRef<IosApplicationConfigurationDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any, private alertService: AlertService, private snackBar: MatSnackBar) {
     this.productBundles = this.data.applicationConfiguration.productBundles;
   }
 
-  close(saveChanges: boolean) {
+  close(saveChanges: boolean = false) {
     if (!saveChanges) {
       this.dialogRef.close();
       return;
