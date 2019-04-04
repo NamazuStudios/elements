@@ -1,11 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
 import com.namazustudios.socialengine.jnlua.JavaFunction;
-import com.namazustudios.socialengine.rt.ResponseCode;
-import com.namazustudios.socialengine.rt.exception.BaseException;
-import com.namazustudios.socialengine.rt.lua.LogAssist;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
-import com.sun.istack.internal.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +12,7 @@ public class EnumModuleBuiltin<T extends Enum<T>> implements Builtin {
 
     private final String moduleName;
 
-    public EnumModuleBuiltin(@NotNull Class<T> enumClass, @NotNull final String moduleName) {
+    public EnumModuleBuiltin(Class<T> enumClass, final String moduleName) {
         this.enumClass = enumClass;
         this.moduleName = moduleName;
     }
