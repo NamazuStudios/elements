@@ -26,7 +26,7 @@ public class UnitTestModule extends AbstractModule {
 
     public <T> void mock(final Class<T> type) {
         // TODO Effectively, mocking is disabled for now.  We will have to address this in a better way later.
-        if (types.add(type)) {
+        if (!type.isEnum() && types.add(type)) {
             final T mock = unimplemented(type);
             logger.info("Adding unimplemented mock for {}", type.getName());
             bindings.add(() -> bind(type).toInstance(mock));
