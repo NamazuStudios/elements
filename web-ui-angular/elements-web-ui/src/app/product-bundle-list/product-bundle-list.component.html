@@ -9,16 +9,23 @@
 
   <button mat-raised-button color="primary" (click)="addProductBundle()">Add Product Bundle</button>
 
-  <button mat-raised-button color="primary" (click)="deleteSelectedProductBundles()" [disabled]="!hasSelection">Delete Product Bundle</button>
+  <button mat-raised-button color="primary" (click)="deleteSelectedProductBundles()" [disabled]="!selection.hasValue()">Delete Selected Bundle{{selection.selected.length > 1 ? 's' : ''}}</button>
 
   <mat-table class="productBundle-table mat-elevation-z8" [dataSource]="tableDataSource">
 
     <ng-container matColumnDef="select">
       <mat-header-cell fxFlex="75px" *matHeaderCellDef>
-        <mat-checkbox></mat-checkbox>
+        <mat-checkbox (change)="$event ? masterToggle() : null"
+        [checked]="selection.hasValue() && isAllSelected()"
+        [indeterminate]="selection.hasValue() && !isAllSelected()">
+
+        </mat-checkbox>
       </mat-header-cell>
       <mat-cell fxFlex="75px" *matCellDef="let row">
-        <mat-checkbox></mat-checkbox>
+        <mat-checkbox (click)="$event.stopPropagation()"
+                      (change)="$event ? selection.toggle(row) : null"
+                      [checked]="selection.isSelected(row)">
+        </mat-checkbox>
       </mat-cell>
     </ng-container>
 

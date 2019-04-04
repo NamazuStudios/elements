@@ -1,4 +1,4 @@
-import {Component, Input, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, Input, OnInit, ViewChild} from '@angular/core';
 import {ApplicationConfigurationsDataSource} from '../application-configuration.datasource';
 import {ProductBundle} from '../api/models/product-bundle';
 import {filter} from 'rxjs/operators';
@@ -13,7 +13,7 @@ import {SelectionModel} from '@angular/cdk/collections';
   templateUrl: './product-bundle-list.component.html',
   styleUrls: ['./product-bundle-list.component.css']
 })
-export class ProductBundleListComponent implements OnInit {
+export class ProductBundleListComponent implements OnInit, AfterViewInit {
   @Input() productBundles: Array<ProductBundle>;
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
@@ -21,6 +21,7 @@ export class ProductBundleListComponent implements OnInit {
   tableDataSource: MatTableDataSource<ProductBundle>;
   displayedColumns = ["select", "id", "displayName", "display", "actions"];
   selection: SelectionModel<ProductBundle>;
+  hasSelection = false;
 
   constructor(private dialogService: ConfirmationDialogService,
               public dialog: MatDialog) {
@@ -31,6 +32,24 @@ export class ProductBundleListComponent implements OnInit {
     this.selection = new SelectionModel<ProductBundle>(true, []);
     this.refreshDataSource();
     this.paginator.pageSize = 10;
+    this.paginator.length = this.productBundles.length;
+    this.tableDataSource.paginator = this.paginator;
+  }
+
+  ngAfterViewInit() {
+
+  }
+
+  isAllSelected() {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.productBundles.length;
+    return numRows === numSelected;
+  }
+
+  masterToggle() {
+    this.isAllSelected() ?
+      this.selection.clear() :
+      this.productBundles.forEach(row => this.selection.select(row));
   }
 
   editProductBundle(productBundle: ProductBundle) {
@@ -50,6 +69,7 @@ export class ProductBundleListComponent implements OnInit {
       .subscribe(res => {
         this.selection.selected.forEach(row => this.doDeleteProductBundle(row));
         this.selection.clear();
+        this.refreshDataSource();
       });
   }
 
@@ -60,7 +80,7 @@ export class ProductBundleListComponent implements OnInit {
       .subscribe(res => {
         this.doDeleteProductBundle(productBundle);
         this.refreshDataSource();
-      })
+      });
   }
 
   doDeleteProductBundle(productBundle: ProductBundle) {
