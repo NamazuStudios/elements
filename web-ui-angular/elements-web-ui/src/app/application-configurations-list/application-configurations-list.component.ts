@@ -136,6 +136,9 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
           error => this.alertService.error(error));
 
         break;
+      case 'IOS_APP_STORE':
+        this.iosApplicationConfigurationService.deleteIosApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => {},
+          error => this.alertService.error(error));
     }
 
   }
@@ -152,10 +155,12 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
   }
 
   showDialog(isNew: boolean, dialog: any, applicationConfiguration: any, next, isBundleDialog: boolean = false) {
-    this.dialog.open(dialog, {
+    const dialogRef = this.dialog.open(dialog, {
       width: isBundleDialog ? '900px' : '500px',
       data: { isNew: isNew, applicationConfiguration: applicationConfiguration, next: next, refresher: this }
     });
+
+    dialogRef.afterClosed().pipe(filter(r => r)).subscribe(next);
   }
 
   addApplicationConfiguration(category: string) {
@@ -198,7 +203,10 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
         break;
       case 'IOS_APP_STORE':
         this.showDialog(true, IosApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
-          return this.iosApplicationConfigurationService.createIosApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result });
+          this.iosApplicationConfigurationService.createIosApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
+            this.refresh();
+          },
+            err => this.alertService.error(err));
         }, true);
 
         break;
