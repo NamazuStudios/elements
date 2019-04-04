@@ -13,7 +13,7 @@ import java.util.Set;
 import static java.util.stream.Collectors.toList;
 
 /**
- * Contains all {@link Node} instances for several {@Link Node} instances and manages their life cycles therein.  This
+ * Contains all {@link Node} instances for several {@link Node} instances and manages their life cycles therein.  This
  * imposes the additional requirement of providing some form of {@link ConnectionDemultiplexer} to route internal
  * requests.
  */
