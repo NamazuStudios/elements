@@ -206,7 +206,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
           this.iosApplicationConfigurationService.createIosApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
             this.refresh();
           },
-            err => this.alertService.error(err));
+            error => this.alertService.error(error));
         }, true);
 
         break;
@@ -267,7 +267,10 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
         this.iosApplicationConfigurationService.getIosApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id })
           .subscribe(applicationConfiguration => {
             this.showDialog(false, IosApplicationConfigurationDialogComponent, applicationConfiguration, result => {
-              return this.iosApplicationConfigurationService.updateApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id, body: result });
+              this.iosApplicationConfigurationService.updateApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id, body: result }).subscribe(r => {
+                  this.refresh();
+                },
+              error => this.alertService.error(error));
             }, true);
           });
 
