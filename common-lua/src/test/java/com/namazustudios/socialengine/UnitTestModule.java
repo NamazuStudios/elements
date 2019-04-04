@@ -65,7 +65,7 @@ public class UnitTestModule extends AbstractModule {
         }
 
         public <T> void mock(final Class<T> type) {
-            if (types.add(type)) {
+            if (!type.isEnum() && types.add(type)) {
                 final T mock = Mockito.mock(type);
                 bind(mock, type);
             }
