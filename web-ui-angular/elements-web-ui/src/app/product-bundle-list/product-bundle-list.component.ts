@@ -43,9 +43,19 @@ export class ProductBundleListComponent implements OnInit {
     });
   }
 
+  deleteSelectedProductBundles() {
+    this.dialogService
+      .confirm('Confirm Dialog', `Are you sure you want to delete the ${this.selection.selected.length} selected product bundle${this.selection.selected.length == 1 ? '' : 's'}?`)
+      .pipe(filter(r => r))
+      .subscribe(res => {
+        this.selection.selected.forEach(row => this.doDeleteProductBundle(row));
+        this.selection.clear();
+      });
+  }
+
   deleteProductBundle(productBundle: ProductBundle) {
     this.dialogService
-      .confirm('Confirm Dialog', 'Are you sure you want to delete this application configuration?')
+      .confirm('Confirm Dialog', `Are you sure you want to delete the product bundle '${productBundle.displayName}'?`)
       .pipe(filter(r => r))
       .subscribe(res => {
         this.doDeleteProductBundle(productBundle);
