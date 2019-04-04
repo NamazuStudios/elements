@@ -34,7 +34,8 @@ export class ProductBundleListComponent implements OnInit {
   }
 
   deleteProductBundle(productBundle: ProductBundle) {
-
+    this.productBundles.splice(this.productBundles.indexOf(productBundle), 1);
+    this.tableDataSource.data = this.productBundles;
   }
 
   addProductBundle() {
