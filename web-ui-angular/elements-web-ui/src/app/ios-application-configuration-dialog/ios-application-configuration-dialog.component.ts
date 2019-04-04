@@ -32,12 +32,7 @@ export class IosApplicationConfigurationDialogComponent implements OnInit {
 
     const formData = this.appIdForm.value;
     formData.productBundles = this.productBundles;
-    this.data.next(formData).subscribe(r => {
-      this.dialogRef.close();
-      this.data.refresher.refresh();
-    }, err => {
-      this.alertService.error(err);
-    });
+    this.dialogRef.close(formData);
   }
 
   ngOnInit() {
