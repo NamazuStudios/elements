@@ -1,11 +1,12 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, Input, OnInit, ViewChild} from '@angular/core';
 import {ApplicationConfigurationsDataSource} from '../application-configuration.datasource';
 import {ProductBundle} from '../api/models/product-bundle';
 import {filter} from 'rxjs/operators';
 import {ConfirmationDialogService} from '../confirmation-dialog/confirmation-dialog.service';
-import {MatDialog, MatTableDataSource} from '@angular/material';
+import {MatDialog, MatPaginator, MatTableDataSource} from '@angular/material';
 import {ProductBundleEditorComponent} from '../product-bundle-editor/product-bundle-editor.component';
 import {ProductBundleViewModel} from '../models/product-bundle-view-model';
+import {SelectionModel} from '@angular/cdk/collections';
 
 @Component({
   selector: 'app-product-bundle-list',
@@ -15,12 +16,21 @@ import {ProductBundleViewModel} from '../models/product-bundle-view-model';
 export class ProductBundleListComponent implements OnInit {
   @Input() productBundles: Array<ProductBundle>;
 
+  @ViewChild(MatPaginator) paginator: MatPaginator;
+
   tableDataSource: MatTableDataSource<ProductBundle>;
   displayedColumns = ["select", "id", "displayName", "display", "actions"];
+  selection: SelectionModel<ProductBundle>;
 
   constructor(private dialogService: ConfirmationDialogService,
               public dialog: MatDialog) {
     this.tableDataSource = new MatTableDataSource();
+  }
+
+  ngOnInit() {
+    this.selection = new SelectionModel<ProductBundle>(true, []);
+    this.refreshDataSource();
+    this.paginator.pageSize = 10;
   }
 
   editProductBundle(productBundle: ProductBundle) {
@@ -34,7 +44,20 @@ export class ProductBundleListComponent implements OnInit {
   }
 
   deleteProductBundle(productBundle: ProductBundle) {
+    this.dialogService
+      .confirm('Confirm Dialog', 'Are you sure you want to delete this application configuration?')
+      .pipe(filter(r => r))
+      .subscribe(res => {
+        this.doDeleteProductBundle(productBundle);
+        this.refreshDataSource();
+      })
+  }
+
+  doDeleteProductBundle(productBundle: ProductBundle) {
     this.productBundles.splice(this.productBundles.indexOf(productBundle), 1);
+  }
+
+  refreshDataSource() {
     this.tableDataSource.data = this.productBundles;
   }
 
@@ -47,7 +70,7 @@ export class ProductBundleListComponent implements OnInit {
         }
       }
       this.productBundles.push(newBundle);
-      this.tableDataSource.data = this.productBundles;
+      this.refreshDataSource();
     });
   }
 
@@ -56,10 +79,6 @@ export class ProductBundleListComponent implements OnInit {
       width: '800px',
       data: { isNew: isNew, productBundle: productBundle, next: next }
     });
-  }
-
-  ngOnInit() {
-    this.tableDataSource.data = this.productBundles;
   }
 
 }
