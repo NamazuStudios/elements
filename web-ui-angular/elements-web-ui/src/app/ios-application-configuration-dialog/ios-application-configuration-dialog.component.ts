@@ -1,7 +1,7 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialogRef, MatSnackBar} from '@angular/material';
 import {ProductBundle} from '../api/models/product-bundle';
-import {FormBuilder} from '@angular/forms';
+import {Form, FormBuilder, Validators} from '@angular/forms';
 import {AlertService} from '../alert.service';
 
 @Component({
@@ -12,8 +12,15 @@ import {AlertService} from '../alert.service';
 export class IosApplicationConfigurationDialogComponent implements OnInit {
   public productBundles: Array<ProductBundle>;
 
-  constructor(public dialogRef: MatDialogRef<IosApplicationConfigurationDialogComponent>,
+  appIdForm = this.formBuilder.group({
+    applicationId: [this.data.applicationConfiguration.applicationId, [Validators.required]],
+    category: ['IOS_APP_STORE'],
+    parent: [this.data.applicationConfiguration.parent]
+  });
+
+  constructor(public dialogRef: MatDialogRef<IosApplicationConfigurationDialogComponent>, private formBuilder: FormBuilder,
               @Inject(MAT_DIALOG_DATA) public data: any, private alertService: AlertService, private snackBar: MatSnackBar) {
+    this.data.applicationConfiguration.productBundles = this.data.applicationConfiguration.productBundles || [];
     this.productBundles = this.data.applicationConfiguration.productBundles;
   }
 
@@ -23,7 +30,9 @@ export class IosApplicationConfigurationDialogComponent implements OnInit {
       return;
     }
 
-    this.data.next(this.data.applicationConfiguration).subscribe(r => {
+    const formData = this.appIdForm.value;
+    formData.productBundles = this.productBundles;
+    this.data.next(formData).subscribe(r => {
       this.dialogRef.close();
       this.data.refresher.refresh();
     }, err => {

@@ -198,10 +198,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
         break;
       case 'IOS_APP_STORE':
         this.showDialog(true, IosApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
-          this.iosApplicationConfigurationService.createIosApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
-            this.refresh();
-          },
-            error => this.alertService.error(error));
+          return this.iosApplicationConfigurationService.createIosApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result });
         }, true);
 
         break;
