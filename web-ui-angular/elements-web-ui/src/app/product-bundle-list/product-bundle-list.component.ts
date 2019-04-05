@@ -104,6 +104,10 @@ export class ProductBundleListComponent implements OnInit, AfterViewInit {
     });
   }
 
+  applyFilter(filterString: string) {
+    this.tableDataSource.filter = filterString.trim().toLowerCase();
+  }
+
   showDialog(isNew: boolean, dialog: any, productBundle: ProductBundle, next) {
     this.dialog.open(dialog, {
       width: '800px',

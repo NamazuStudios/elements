@@ -4,7 +4,7 @@
   </div>-->
 
   <mat-form-field>
-    <input matInput placeholder="Search" #input>
+    <input matInput placeholder="Search" (keyup)="applyFilter($event.target.value)">
   </mat-form-field>
 
   <button mat-raised-button color="primary" (click)="addProductBundle()">Add Product Bundle</button>
