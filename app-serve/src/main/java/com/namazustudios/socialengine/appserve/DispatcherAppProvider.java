@@ -197,5 +197,4 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     public void setConnectionMultiplexer(ConnectionMultiplexer connectionMultiplexer) {
         this.connectionMultiplexer = connectionMultiplexer;
     }
-
 }

@@ -1,5 +1,6 @@
-    package com.namazustudios.socialengine.remote.jeromq;
+package com.namazustudios.socialengine.remote.jeromq;
 
+import com.namazustudios.socialengine.remote.jeromq.srv.SrvMonitor;
 import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.jeromq.*;
@@ -48,6 +49,8 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
     private String connectAddress;
 
     private final String controlAddress = format("inproc://%s.control", randomUUID());
+
+    private SrvMonitor srvMonitor;
 
     @Override
     public void start() {
@@ -152,6 +155,15 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
     public String getControlAddress() {
         return controlAddress;
+    }
+
+    public SrvMonitor getSrvMonitor() {
+        return srvMonitor;
+    }
+
+    @Inject
+    public void setSrvMonitor(SrvMonitor srvMonitor) {
+        this.srvMonitor = srvMonitor;
     }
 
     private class Multiplexer implements Runnable {
