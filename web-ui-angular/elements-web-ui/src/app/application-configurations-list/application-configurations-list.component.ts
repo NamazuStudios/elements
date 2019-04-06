@@ -280,6 +280,18 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
           });
 
         break;
+      case 'ANDROID_GOOGLE_PLAY':
+        this.googlePlayApplicationConfigurationServe.getGooglePlayApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id })
+          .subscribe(applicationConfiguration => {
+            this.showDialog(false, AndroidGooglePlayConfigurationDialogComponent, applicationConfiguration, result => {
+              this.googlePlayApplicationConfigurationServe.updateApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id, body: result }).subscribe(r => {
+                  this.refresh();
+                },
+                error => this.alertService.error(error));
+            }, true);
+          });
+
+        break;
     }
   }
 }
