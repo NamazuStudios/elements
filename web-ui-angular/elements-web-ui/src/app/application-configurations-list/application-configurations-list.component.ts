@@ -48,7 +48,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
               private firebaseApplicationConfigurationService: FirebaseApplicationConfigurationService,
               private matchmakingApplicationConfigurationService: MatchmakingApplicationConfigurationService,
               private iosApplicationConfigurationService: IOSApplicationConfigurationService,
-              private googlePlayApplicationConfigurationServe: GooglePlayApplicationConfigurationService) { }
+              private googlePlayApplicationConfigurationService: GooglePlayApplicationConfigurationService) { }
 
   ngOnInit() {
     this.selection = new SelectionModel<ApplicationConfiguration>(true, []);
@@ -141,6 +141,13 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
       case 'IOS_APP_STORE':
         this.iosApplicationConfigurationService.deleteIosApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => {},
           error => this.alertService.error(error));
+
+        break;
+      case 'ANDROID_GOOGLE_PLAY':
+        this.googlePlayApplicationConfigurationService.deleteGooglePlayApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => {},
+          error => this.alertService.error(error));
+
+        break;
     }
 
   }
@@ -214,7 +221,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
         break;
       case 'ANDROID_GOOGLE_PLAY':
         this.showDialog(true, AndroidGooglePlayConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
-          this.googlePlayApplicationConfigurationServe.createGooglePlayApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, body: result}).subscribe(r => {
+          this.googlePlayApplicationConfigurationService.createGooglePlayApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, body: result}).subscribe(r => {
             this.refresh();
           },
             error => this.alertService.error(error));
@@ -281,10 +288,10 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
 
         break;
       case 'ANDROID_GOOGLE_PLAY':
-        this.googlePlayApplicationConfigurationServe.getGooglePlayApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id })
+        this.googlePlayApplicationConfigurationService.getGooglePlayApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id })
           .subscribe(applicationConfiguration => {
             this.showDialog(false, AndroidGooglePlayConfigurationDialogComponent, applicationConfiguration, result => {
-              this.googlePlayApplicationConfigurationServe.updateApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id, body: result }).subscribe(r => {
+              this.googlePlayApplicationConfigurationService.updateApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id, body: result }).subscribe(r => {
                   this.refresh();
                 },
                 error => this.alertService.error(error));
