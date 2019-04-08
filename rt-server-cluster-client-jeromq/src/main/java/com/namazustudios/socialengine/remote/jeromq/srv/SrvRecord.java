@@ -101,6 +101,10 @@ public class SrvRecord {
         this.ttl = ttl;
     }
 
+    public SrvUniqueIdentifier getUniqueIdentifier() {
+        return new SrvUniqueIdentifier(getHost(), getPort());
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

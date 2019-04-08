@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.remote.jeromq.srv.SrvMonitor;
+import com.namazustudios.socialengine.remote.jeromq.srv.SrvRecord;
+import com.namazustudios.socialengine.remote.jeromq.srv.SrvUniqueIdentifier;
 import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.jeromq.*;
@@ -39,14 +41,19 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
     private static final Logger logger = LoggerFactory.getLogger(JeroMQConnectionMultiplexer.class);
 
     public static final String CONNECT_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.connectAddress";
+    public static final String APPLICATION_NODE_FQDN = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.applicationNodeFqdn";
 
     private final AtomicReference<Thread> multiplexerThread = new AtomicReference<>();
+
+    private final Map<SrvUniqueIdentifier, AtomicReference<Thread>> atomicMultiplexerThreads = new HashMap<>();
 
     private Routing routing;
 
     private ZContext zContext;
 
     private String connectAddress;
+
+    private String applicationNodeFqdn;
 
     private final String controlAddress = format("inproc://%s.control", randomUUID());
 
@@ -68,6 +75,10 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
         } else {
             throw new IllegalStateException("Multiplexer already started.");
         }
+
+    }
+
+    private void setupSrvMonitor() {
 
     }
 
@@ -151,6 +162,15 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
     @Inject
     public void setConnectAddress(@Named(CONNECT_ADDR) String connectAddress) {
         this.connectAddress = connectAddress;
+    }
+
+    public String getApplicationNodeFqdn() {
+        return applicationNodeFqdn;
+    }
+
+    @Inject
+    public void setApplicationNodeFqdn(@Named(APPLICATION_NODE_FQDN) String applicationNodeFqdn) {
+        this.applicationNodeFqdn = applicationNodeFqdn;
     }
 
     public String getControlAddress() {

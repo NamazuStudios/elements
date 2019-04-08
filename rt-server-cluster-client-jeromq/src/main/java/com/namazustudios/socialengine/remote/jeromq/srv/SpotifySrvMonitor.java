@@ -25,6 +25,7 @@ public class SpotifySrvMonitor implements SrvMonitor, ErrorHandler, ChangeNotifi
     private ChangeNotifier<LookupResult> notifier;
 
 
+    @Override
     public void start(final String fqdn) {
         if (monitoring) {
             throw new IllegalStateException("SpotifySrvMonitor is already started.");
@@ -46,7 +47,26 @@ public class SpotifySrvMonitor implements SrvMonitor, ErrorHandler, ChangeNotifi
 
             this.watcher = null;
         }
+    }
 
+    @Override
+    public void stop() {
+        if (!monitoring) {
+            throw new IllegalStateException("SpotifySrvMonitor has not been started.");
+        }
+
+        if (notifier != null) {
+            notifier.close();
+        }
+
+        monitoring = false;
+        fqdn = null;
+        watcher = null;
+        notifier = null;
+        srvRecords.clear();
+        srvCreationListeners.clear();
+        srvUpdateListeners.clear();
+        srvDeletionListeners.clear();
     }
 
     private DnsSrvWatcher<LookupResult> createSpotifyWatcher() {
@@ -120,15 +140,6 @@ public class SpotifySrvMonitor implements SrvMonitor, ErrorHandler, ChangeNotifi
 
     @Override
     public void handle(String fqdn, DnsException exception) {
-    }
-
-    public void stop() {
-        if (!monitoring) {
-            throw new IllegalStateException("SpotifySrvMonitor has not been started.");
-        }
-
-        monitoring = false;
-        this.fqdn = null;
     }
 
     public void registerOnCreatedSrvRecordListener(Consumer<SrvRecord> consumer) {
