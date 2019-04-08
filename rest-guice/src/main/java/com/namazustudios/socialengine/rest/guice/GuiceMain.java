@@ -14,8 +14,7 @@ import com.namazustudios.socialengine.dao.rt.guice.RTGitApplicationModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTDaoModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
-import com.namazustudios.socialengine.remote.jeromq.srv.SrvMonitor;
-import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
+import com.namazustudios.socialengine.rt.MultiplexedConnectionsManager;
 import com.namazustudios.socialengine.service.firebase.guice.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNotificationFactoryModule;
 import com.namazustudios.socialengine.service.notification.guice.NotificationServiceModule;
@@ -43,8 +42,8 @@ public class GuiceMain extends GuiceServletContextListener {
         super.contextInitialized(servletContextEvent);
         servletContext.setAttribute(GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME, injector);
 
-        final ConnectionMultiplexer connectionMultiplexer = injector.getInstance(ConnectionMultiplexer.class);
-        connectionMultiplexer.start();
+        final MultiplexedConnectionsManager multiplexedConnectionsManager = injector.getInstance(MultiplexedConnectionsManager.class);
+        multiplexedConnectionsManager.start();
 
     }
 
@@ -53,8 +52,8 @@ public class GuiceMain extends GuiceServletContextListener {
 
         super.contextDestroyed(servletContextEvent);
 
-        final ConnectionMultiplexer connectionMultiplexer = injector.getInstance(ConnectionMultiplexer.class);
-        connectionMultiplexer.stop();
+        final MultiplexedConnectionsManager multiplexedConnectionsManager = injector.getInstance(MultiplexedConnectionsManager.class);
+        multiplexedConnectionsManager.stop();
 
         servletContext.removeAttribute(GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME);
         servletContext = null;

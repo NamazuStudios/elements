@@ -3,9 +3,9 @@ package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer;
-import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer;
+import com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionsManager;
 import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
-import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
+import com.namazustudios.socialengine.rt.MultiplexedConnectionsManager;
 import com.namazustudios.socialengine.rt.jeromq.Connection;
 import com.namazustudios.socialengine.rt.jeromq.Routing;
 import org.slf4j.Logger;
@@ -54,7 +54,7 @@ public class JeroMQMuxDemuxIntegrationTest {
 
     private ZContext master;
 
-    private ConnectionMultiplexer connectionMultiplexer;
+    private MultiplexedConnectionsManager multiplexedConnectionsManager;
 
     private ConnectionDemultiplexer connectionDemultiplexer;
 
@@ -67,7 +67,7 @@ public class JeroMQMuxDemuxIntegrationTest {
         final Injector muxInjector = createInjector(new MuxerModule());
         final Injector demuxInjector = createInjector(new DemuxerModule());
 
-        connectionMultiplexer = muxInjector.getInstance(ConnectionMultiplexer.class);
+        multiplexedConnectionsManager = muxInjector.getInstance(MultiplexedConnectionsManager.class);
         connectionDemultiplexer = demuxInjector.getInstance(ConnectionDemultiplexer.class);
 
         echoer = new Thread(() -> {
@@ -122,10 +122,10 @@ public class JeroMQMuxDemuxIntegrationTest {
 
         echoer.start();
 
-        connectionMultiplexer.start();
+        multiplexedConnectionsManager.start();
         connectionDemultiplexer.start();
 
-        DESTINATION_IDS.forEach(connectionMultiplexer::open);
+        DESTINATION_IDS.forEach(multiplexedConnectionsManager::open);
         DESTINATION_IDS.forEach(connectionDemultiplexer::open);
 
     }
@@ -133,7 +133,7 @@ public class JeroMQMuxDemuxIntegrationTest {
     @AfterClass
     public void teardown() throws Exception {
         connectionDemultiplexer.stop();
-        connectionMultiplexer.stop();
+        multiplexedConnectionsManager.stop();
         echoer.interrupt();
         echoer.join();
     }
@@ -199,10 +199,10 @@ public class JeroMQMuxDemuxIntegrationTest {
             bind(ZContext.class).toInstance(master);
 
             bind(String.class)
-                .annotatedWith(named(JeroMQConnectionMultiplexer.CONNECT_ADDR))
+                .annotatedWith(named(JeroMQMultiplexedConnectionsManager.CONNECT_ADDR))
                 .toInstance(CONNECTION_ADDRESS);
 
-            bind(ConnectionMultiplexer.class).to(JeroMQConnectionMultiplexer.class).asEagerSingleton();
+            bind(MultiplexedConnectionsManager.class).to(JeroMQMultiplexedConnectionsManager.class).asEagerSingleton();
 
         }
 

@@ -3,11 +3,9 @@ package com.namazustudios.socialengine.dao.rt.guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
+import com.namazustudios.socialengine.rt.MultiplexedConnectionsManager;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.ClusterClientContextModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -18,7 +16,7 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
 
     private Provider<Injector> injectorProvider;
 
-    private Provider<ConnectionMultiplexer> connectionMultiplexerProvider;
+    private Provider<MultiplexedConnectionsManager> connectionMultiplexerProvider;
 
     private Provider<ApplicationDao> applicationDaoProvider;
 
@@ -29,9 +27,9 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
             final ApplicationDao applicationDao = getApplicationDaoProvider().get();
             final Application application = applicationDao.getActiveApplication(applicationId);
 
-            final ConnectionMultiplexer connectionMultiplexer = getConnectionMultiplexerProvider().get();
-            final UUID nodeUuid = connectionMultiplexer.getDestinationUUIDForNodeId(application.getId());
-            final String connectAddress = connectionMultiplexer.getConnectAddress(nodeUuid);
+            final MultiplexedConnectionsManager multiplexedConnectionsManager = getConnectionMultiplexerProvider().get();
+            final UUID nodeUuid = multiplexedConnectionsManager.getDestinationUUIDForNodeId(application.getId());
+            final String connectAddress = multiplexedConnectionsManager.getConnectAddress(nodeUuid);
 
             final JeroMQClientModule jeroMQClientModule = new JeroMQClientModule()
                 .withConnectAddress(connectAddress);
@@ -43,7 +41,7 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
             final Context context = contextInjector.getInstance(Context.class);
 
             context.start();
-            connectionMultiplexer.open(nodeUuid);
+            multiplexedConnectionsManager.open(nodeUuid);
 
             return context;
 
@@ -59,12 +57,12 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
         this.injectorProvider = injectorProvider;
     }
 
-    public Provider<ConnectionMultiplexer> getConnectionMultiplexerProvider() {
+    public Provider<MultiplexedConnectionsManager> getConnectionMultiplexerProvider() {
         return connectionMultiplexerProvider;
     }
 
     @Inject
-    public void setConnectionMultiplexerProvider(Provider<ConnectionMultiplexer> connectionMultiplexerProvider) {
+    public void setConnectionMultiplexerProvider(Provider<MultiplexedConnectionsManager> connectionMultiplexerProvider) {
         this.connectionMultiplexerProvider = connectionMultiplexerProvider;
     }
 

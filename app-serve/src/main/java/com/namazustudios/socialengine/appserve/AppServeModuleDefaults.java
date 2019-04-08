@@ -1,15 +1,14 @@
 package com.namazustudios.socialengine.appserve;
 
 import com.namazustudios.socialengine.config.ModuleDefaults;
-import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.Constants;
 import com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool;
 
 import java.util.Properties;
 
 import static com.namazustudios.socialengine.Constants.*;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.APPLICATION_NODE_FQDN;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.CONNECT_ADDR;
+import static com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionsManager.APPLICATION_NODE_FQDN;
+import static com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionsManager.CONNECT_ADDR;
 import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.*;
 
 public class AppServeModuleDefaults implements ModuleDefaults {
