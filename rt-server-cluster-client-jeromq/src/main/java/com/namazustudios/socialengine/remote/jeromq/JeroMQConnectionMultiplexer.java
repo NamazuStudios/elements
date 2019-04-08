@@ -10,12 +10,12 @@ import com.namazustudios.socialengine.rt.remote.RoutingHeader;
 import com.namazustudios.socialengine.rt.util.SyncWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xbill.DNS.SRVRecord;
 import org.zeromq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND;
@@ -43,9 +43,7 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
     public static final String CONNECT_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.connectAddress";
     public static final String APPLICATION_NODE_FQDN = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.applicationNodeFqdn";
 
-    private final AtomicReference<Thread> multiplexerThread = new AtomicReference<>();
-
-    private final Map<SrvUniqueIdentifier, AtomicReference<Thread>> atomicMultiplexerThreads = new HashMap<>();
+    private final Map<SrvUniqueIdentifier, AtomicReference<Thread>> atomicMultiplexedConnectionManagerThreads = new HashMap<>();
 
     private Routing routing;
 
@@ -62,44 +60,117 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
     @Override
     public void start() {
 
-        final Multiplexer multiplexer = new Multiplexer();
-        final Thread thread = new Thread(multiplexer);
+        setupAndStartSrvMonitor();
 
-        thread.setDaemon(true);
-        thread.setName(JeroMQConnectionMultiplexer.class.getSimpleName());
-        thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
+    }
 
-        if (multiplexerThread.compareAndSet(null, thread)) {
-            thread.start();
-            multiplexer.waitForConnect();
-        } else {
-            throw new IllegalStateException("Multiplexer already started.");
+    private void setupAndStartSrvMonitor() {
+
+        srvMonitor.registerOnCreatedSrvRecordListener((SrvRecord srvRecord) -> {
+            logger.info("Detected App Node SRV record creation: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+            final boolean didStart = createAndStartMultiplexedConnectionManagerIfNecessary(srvRecord.getUniqueIdentifier());
+
+            if (didStart) {
+                logger.info("Successfully started MultiplexedConnectionManager for SRV record: host={} port={}",
+                        srvRecord.getHost(), srvRecord.getPort());
+            }
+            else {
+                logger.info("Failed to start MultiplexedConnectionManager for SRV record: host={} port={}",
+                        srvRecord.getHost(), srvRecord.getPort());
+            }
+        });
+
+        srvMonitor.registerOnUpdatedSrvRecordListener((SrvRecord srvRecord) -> {
+            // for now, ignore updates
+        });
+
+        srvMonitor.registerOnDeletedSrvRecordListener((SrvRecord srvRecord) -> {
+            logger.info("Detected App Node SRV record deletion: host={} port={}",
+                    srvRecord.getHost(), srvRecord.getPort());
+            stopAndDeleteMultiplexedConnectionManagerIfPossible(srvRecord.getUniqueIdentifier());
+        });
+
+        logger.info("Starting SRV record monitor for FQDN: {}...", applicationNodeFqdn);
+        final boolean didStart = srvMonitor.start(applicationNodeFqdn);
+
+        if (didStart) {
+            logger.info("Successfully started SRV record monitor for FQDN: {}", applicationNodeFqdn);
+        }
+        else {
+            throw new IllegalStateException("Failed to start SRV record monitor for FQDN: " + applicationNodeFqdn);
         }
 
     }
 
-    private void setupSrvMonitor() {
+    private boolean createAndStartMultiplexedConnectionManagerIfNecessary(SrvUniqueIdentifier srvUniqueIdentifier) {
 
+        if (atomicMultiplexedConnectionManagerThreads.containsKey(srvUniqueIdentifier)) {
+            return true;
+        }
+
+        final AtomicReference<Thread> atomicThreadReference = new AtomicReference<>();
+
+        final MultiplexedConnectionManager multiplexedConnectionManager = new MultiplexedConnectionManager();
+        final Thread multiplexedConnectionManagerThread = new Thread(multiplexedConnectionManager);
+
+        multiplexedConnectionManagerThread.setDaemon(true);
+        multiplexedConnectionManagerThread.setName(JeroMQConnectionMultiplexer.class.getSimpleName());
+        multiplexedConnectionManagerThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
+
+        if (atomicThreadReference.compareAndSet(null, multiplexedConnectionManagerThread)) {
+            multiplexedConnectionManagerThread.start();
+            multiplexedConnectionManager.waitForConnect();
+            atomicMultiplexedConnectionManagerThreads.put(srvUniqueIdentifier, atomicThreadReference);
+
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    private void stopAndDeleteMultiplexedConnectionManagerIfPossible(SrvUniqueIdentifier srvUniqueIdentifier) {
+        final boolean didStop = stopMultiplexedConnectionManagerIfPossible(srvUniqueIdentifier);
+
+        if (didStop) {
+            atomicMultiplexedConnectionManagerThreads.remove(srvUniqueIdentifier);
+        }
+    }
+
+    private boolean stopMultiplexedConnectionManagerIfPossible(SrvUniqueIdentifier srvUniqueIdentifier) {
+        if (!atomicMultiplexedConnectionManagerThreads.containsKey(srvUniqueIdentifier)) {
+            return true;
+        }
+
+        final AtomicReference<Thread> atomicThreadReference = atomicMultiplexedConnectionManagerThreads.get(srvUniqueIdentifier);
+
+        final Thread multiplexedConnectionManagerThread = atomicThreadReference.get();
+
+        if (atomicThreadReference.compareAndSet(multiplexedConnectionManagerThread, null)) {
+            multiplexedConnectionManagerThread.interrupt();
+
+            try {
+                multiplexedConnectionManagerThread.join();
+                return true;
+            }
+            catch (InterruptedException e) {
+                return false;
+            }
+        }
+        else {
+            return false;
+        }
     }
 
     @Override
     public void stop() {
 
-        final Thread thread = multiplexerThread.get();
+        atomicMultiplexedConnectionManagerThreads
+                .keySet()
+                .stream()
+                .forEach(this::stopMultiplexedConnectionManagerIfPossible);
 
-        if (multiplexerThread.compareAndSet(thread, null)) {
-
-            thread.interrupt();
-
-            try {
-                thread.join();
-            } catch (InterruptedException ex) {
-                throw new InternalException("Interrupted while shutting down the connection router.", ex);
-            }
-
-        } else {
-            throw new IllegalStateException("Multiplexer already started.");
-        }
+        atomicMultiplexedConnectionManagerThreads.clear();
 
     }
 
@@ -186,7 +257,10 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
         this.srvMonitor = srvMonitor;
     }
 
-    private class Multiplexer implements Runnable {
+    /**
+     * Threaded manager for a multiplexed ZMQ connection.
+     */
+    private class MultiplexedConnectionManager implements Runnable {
 
         private final SyncWait<Void> connectSyncWait = new SyncWait<Void>(logger);
 

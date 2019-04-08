@@ -24,9 +24,7 @@ public class SpotifySrvMonitor implements SrvMonitor, ErrorHandler, ChangeNotifi
     private DnsSrvWatcher<LookupResult> watcher;
     private ChangeNotifier<LookupResult> notifier;
 
-
-    @Override
-    public void start(final String fqdn) {
+    public boolean start(final String fqdn) {
         if (monitoring) {
             throw new IllegalStateException("SpotifySrvMonitor is already started.");
         }
@@ -42,14 +40,34 @@ public class SpotifySrvMonitor implements SrvMonitor, ErrorHandler, ChangeNotifi
             this.fqdn = fqdn;
 
             monitoring = true;
+
+            return true;
         }
         catch (DnsException e) {
-
             this.watcher = null;
+            this.notifier = null;
+            monitoring = false;
+
+            return false;
         }
     }
 
-    @Override
+    private DnsSrvWatcher<LookupResult> createSpotifyWatcher() {
+        DnsSrvResolver resolver = DnsSrvResolvers.newBuilder()
+                .cachingLookups(true)
+                .retainingDataOnFailures(true)  // TODO: we may erroneously assume torn-down instances still exist b/c of this,
+                                                // TODO: not sure how often a failure may occur or what exactly Spotify defines as a failure
+                .dnsLookupTimeoutMillis(1000)   // TODO: load this from params
+                .build();
+
+        DnsSrvWatcher<LookupResult> watcher = DnsSrvWatchers.newBuilder(resolver)
+                .polling(1, TimeUnit.SECONDS)   // TODO: load this from params
+                .withErrorHandler(this)
+                .build();
+
+        return watcher;
+    }
+
     public void stop() {
         if (!monitoring) {
             throw new IllegalStateException("SpotifySrvMonitor has not been started.");
@@ -67,20 +85,6 @@ public class SpotifySrvMonitor implements SrvMonitor, ErrorHandler, ChangeNotifi
         srvCreationListeners.clear();
         srvUpdateListeners.clear();
         srvDeletionListeners.clear();
-    }
-
-    private DnsSrvWatcher<LookupResult> createSpotifyWatcher() {
-        DnsSrvResolver resolver = DnsSrvResolvers.newBuilder()
-                .cachingLookups(true)
-                .dnsLookupTimeoutMillis(1000)   // TODO: load this from params
-                .build();
-
-        DnsSrvWatcher<LookupResult> watcher = DnsSrvWatchers.newBuilder(resolver)
-                .polling(1, TimeUnit.SECONDS)   // TODO: load this from params
-                .withErrorHandler(this)
-                .build();
-
-        return watcher;
     }
 
     @Override

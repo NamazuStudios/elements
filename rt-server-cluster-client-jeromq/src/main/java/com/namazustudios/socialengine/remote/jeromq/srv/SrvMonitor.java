@@ -6,11 +6,13 @@ import java.util.function.Consumer;
 public interface SrvMonitor {
 
     /**
-     * Begins monitoring for SRV records that match the given fqdn.
+     * Begins monitoring for SRV records that match the given FQDN.
      *
      * @param fqdn the fully-qualified domain name, should be of the form `_service._proto.name.`.
+     *
+     * @return true if monitoring started successfully, false otherwise.
      */
-    void start(final String fqdn);
+    boolean start(final String fqdn);
 
     void stop();
 
