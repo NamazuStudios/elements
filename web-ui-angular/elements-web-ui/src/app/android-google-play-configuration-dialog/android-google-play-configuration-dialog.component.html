@@ -4,9 +4,11 @@
   <form [formGroup]="appInfoForm">
     <mat-form-field>
       <input matInput placeholder="Application ID" name="applicationId" formControlName="applicationId">
+      <mat-error *ngIf="appInfoForm.controls.applicationId.hasError('required')">Application ID is required</mat-error>
     </mat-form-field>
     <mat-form-field>
       <input matInput placeholder="JSON Key" name="jsonKey" formControlName="jsonKey">
+      <mat-error *ngIf="appInfoForm.controls.jsonKey.hasError('required')">JSON Key is required</mat-error>
     </mat-form-field>
   </form>
 
