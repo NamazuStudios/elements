@@ -11,6 +11,8 @@ import org.zeromq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -94,6 +96,20 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
 
         if (atomicMultiplexedConnectionThreads.containsKey(srvUniqueIdentifier)) {
             return true;
+        }
+
+        try {
+            String localHost = InetAddress.getLocalHost().getHostName();
+            if (!localHost.endsWith(".")) {
+                localHost = localHost + ".";
+            }
+
+            if (srvUniqueIdentifier.getHost().equals(localHost)) {
+                return false;
+            }
+        }
+        catch (UnknownHostException e) {
+            // TODO: determine best strategy to handle this
         }
 
         final AtomicReference<Thread> atomicThreadReference = new AtomicReference<>();
