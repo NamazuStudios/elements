@@ -15,7 +15,7 @@ export class AndroidGooglePlayConfigurationDialogComponent implements OnInit {
   appInfoForm = this.formBuilder.group({
     applicationId: [this.data.applicationConfiguration.applicationId, [Validators.required]],
     jsonKey: [this.data.applicationConfiguration.jsonKey, [Validators.required]],
-    category: ['IOS_APP_STORE'],
+    category: ['ANDROID_GOOGLE_PLAY'],
     parent: [this.data.applicationConfiguration.parent]
   });
 
@@ -33,6 +33,13 @@ export class AndroidGooglePlayConfigurationDialogComponent implements OnInit {
 
     const formData = this.appInfoForm.value;
     formData.productBundles = this.productBundles;
+    try {
+      formData.jsonKey = JSON.parse(formData.jsonKey);
+    } catch (e) {
+      this.alertService.error(e);
+      return;
+    }
+
     this.dialogRef.close(formData);
   }
 
