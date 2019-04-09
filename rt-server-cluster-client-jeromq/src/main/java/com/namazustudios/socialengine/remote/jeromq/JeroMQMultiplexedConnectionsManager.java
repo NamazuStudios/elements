@@ -98,9 +98,12 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
 
         final AtomicReference<Thread> atomicThreadReference = new AtomicReference<>();
 
-        final String
+        final String connectAddress = buildConnectAddress(srvUniqueIdentifier);
+        if (connectAddress == null) {
+            return false;
+        }
 
-        final JeroMQMultiplexedConnection multiplexedConnection = new JeroMQMultiplexedConnection();
+        final JeroMQMultiplexedConnection multiplexedConnection = new JeroMQMultiplexedConnection(connectAddress, controlAddress);
         final Thread multiplexedConnectionManagerThread = new Thread(multiplexedConnection);
 
         multiplexedConnectionManagerThread.setDaemon(true);
@@ -117,6 +120,19 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
             return false;
         }
 
+    }
+
+    private static String buildConnectAddress(SrvUniqueIdentifier srvUniqueIdentifier) {
+        final String host = srvUniqueIdentifier.getHost();
+        final int port = srvUniqueIdentifier.getPort();
+
+        if (host == null || host.length() == 0 || port < 0) {
+            return null;
+        }
+
+        final String connectAddress = "tcp://" + host.substring(0, host.length() - 1) + ":" + port;
+
+        return connectAddress;
     }
 
     private void stopAndDeleteMultiplexedConnectionManagerIfPossible(SrvUniqueIdentifier srvUniqueIdentifier) {
