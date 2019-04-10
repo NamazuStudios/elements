@@ -53,10 +53,10 @@ export class SimpleJsonEditorComponent implements OnInit {
     if(!isEdit) {
       this.metadataForm.reset();
       this.newKeyRef.nativeElement.focus();
-    }
 
-    // async'd to delay scrolling until after metadata element added to UI
-    setTimeout(() => this.metaScrollRef.nativeElement.scrollIntoView(false));
+      // async'd to delay scrolling until after metadata element added to UI
+      setTimeout(() => this.metaScrollRef.nativeElement.scrollIntoView(false));
+    }
   }
 
   removeDataAtKey(key) {
