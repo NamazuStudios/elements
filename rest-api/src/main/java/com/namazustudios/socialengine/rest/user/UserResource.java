@@ -88,13 +88,22 @@ public class UserResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates a User",
                   notes = "Supplying the user object, this will update the user with the new information supplied " +
-                          "in the body of the request.  Optionally, the user's password may be provided.")
+                          "in the body of the request.  Optionally, the user's password may be provided in the User " +
+                          "object.")
     public User updateUser(final User user,
-                           @PathParam("name") String name,
-                           @QueryParam("password") String password) {
+                           @PathParam("name") String name) {
 
         getValidationHelper().validateModel(user);
+
+        // Manually check if id is present: we should not include @NotNull in the model as it may interfere with e.g.
+        // user creation where id is not possible to be provided.
+        if (user.getId() == null) {
+            throw new InvalidDataException("id must be provided in the User object.");
+        }
+
         name = Strings.nullToEmpty(name).trim();
+
+        String password = user.getPassword();
         password = Strings.nullToEmpty(password).trim();
 
         if (user.getName() == null) {
@@ -103,8 +112,6 @@ public class UserResource {
 
         if (Strings.isNullOrEmpty(name)) {
             throw new NotFoundException("User not found.");
-        } else if (!(Objects.equals(user.getName(), name) || Objects.equals(user.getEmail(), name))) {
-            throw new InvalidDataException("User name does not match the path.");
         }
 
         if (Strings.isNullOrEmpty(password)) {
@@ -119,10 +126,13 @@ public class UserResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Creates a User",
                   notes = "Supplying the user object, this will update the user with the new information supplied " +
-                          "in the body of the request.  Optionally, the user's password may be provided.")
-    public User createUser(final User user, @QueryParam("password") String password) {
+                          "in the body of the request.  Optionally, the user's password may be provided in the User " +
+                          "object.")
+    public User createUser(final User user) {
 
         getValidationHelper().validateModel(user);
+
+        String password = user.getPassword();
         password = Strings.nullToEmpty(password).trim();
 
         if (password.isEmpty()){
