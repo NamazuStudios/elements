@@ -124,7 +124,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
       // backend expects password to be in query params, so delete from result before attaching to body
       const password = result.password;
       delete result.passwordConfirmation;
-      delete result.password;
+      //delete result.password;
       return this.usersService.createUser({ password: password, body: result });
     });
   }
@@ -134,8 +134,8 @@ export class UsersListComponent implements OnInit, AfterViewInit {
       // backend expects password to be in query params, so delete from result before attaching to body
       const password = result.password;
       delete result.passwordConfirmation;
-      delete result.password;
-      return this.usersService.updateUser({ name: user.name, password: password, body: result });
+      //delete result.password;
+      return this.usersService.updateUser({name: user.name, password: password, body: result});
     });
   }
 }
