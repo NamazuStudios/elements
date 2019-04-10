@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.rt.remote.PackedUUID;
 import javolution.io.Struct;
 
 /**
- * Used to control the routes stored within a {@link RoutingTable}.
+ * Used to control the routes stored within a {@link InprocChannelTable}.
  */
 public class RoutingCommand extends Struct {
 
@@ -13,10 +13,12 @@ public class RoutingCommand extends Struct {
      */
     public final Enum32<Action> action = new Enum32<>(Action.values());
 
+    public final UTF8String backendAddress = new UTF8String(128);
+
     /**
-     * The destination {@link java.util.UUID} to control
+     * The inprocIdentifier {@link java.util.UUID} to control
      */
-    public final PackedUUID destination = inner(new PackedUUID());
+    public final PackedUUID inprocIdentifier = inner(new PackedUUID());
 
     /**
      * A list of actions which can be performed.
@@ -24,14 +26,24 @@ public class RoutingCommand extends Struct {
     public enum Action {
 
         /**
-         * Adds a connection to the multiplexer
+         * Adds a backend (tcp) connection to the multiplexer
          */
-        OPEN,
+        OPEN_BACKEND,
 
         /**
-         * Removes a connection from the multiplexer
+         * Removes a backend (tcp) connection from the multiplexer
          */
-        CLOSE
+        CLOSE_BACKEND,
+
+        /**
+         * Adds an inproc connection to the multiplexer
+         */
+        OPEN_INPROC,
+
+        /**
+         * Removes an inproc connection from the multiplexer
+         */
+        CLOSE_INPROC,
 
     }
 

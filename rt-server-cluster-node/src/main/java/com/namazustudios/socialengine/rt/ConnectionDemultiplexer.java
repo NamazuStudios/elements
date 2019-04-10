@@ -25,7 +25,7 @@ public interface ConnectionDemultiplexer extends MultiplexSupport {
     void stop();
 
     /**
-     * Gets the bind address for the destination with the supplied {@link UUID}.
+     * Gets the bind address for the inprocIdentifier with the supplied {@link UUID}.
      *
      * @param uuid the uuid
      * @return the connect address

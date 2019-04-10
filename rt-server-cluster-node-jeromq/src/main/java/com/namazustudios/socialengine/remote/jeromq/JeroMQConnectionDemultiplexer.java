@@ -20,8 +20,8 @@ import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandTy
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.jeromq.JeroMQSocketHost.send;
-import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.CLOSE;
-import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.OPEN;
+import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.CLOSE_INPROC;
+import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.OPEN_INPROC;
 import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.CONTINUE;
 import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
@@ -109,16 +109,16 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
     @Override
     public void open(UUID destination) {
         final RoutingCommand command = new RoutingCommand();
-        command.action.set(OPEN);
-        command.destination.set(destination);
+        command.action.set(OPEN_INPROC);
+        command.inprocIdentifier.set(destination);
         issue(command);
     }
 
     @Override
     public void close(UUID destination) {
         final RoutingCommand command = new RoutingCommand();
-        command.action.set(CLOSE);
-        command.destination.set(destination);
+        command.action.set(CLOSE_INPROC);
+        command.inprocIdentifier.set(destination);
         issue(command);
     }
 
@@ -189,7 +189,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
                  final ZMQ.Poller poller = context.createPoller(1);
                  final Connection frontend = from(context, c -> c.createSocket(ROUTER));
                  final Connection control = from(context, c -> c.createSocket(REP));
-                 final RoutingTable backends = new RoutingTable(context, poller, uuid -> connect(context, uuid));
+                 final InprocChannelTable backends = new InprocChannelTable(context, poller, uuid -> connect(context, uuid));
                  final MonitorThread monitorThread = new MonitorThread(getClass().getSimpleName(), logger, context, frontend.socket())) {
 
                 monitorThread.start();
@@ -256,13 +256,13 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
             return socket;
         }
 
-        private void sendToBackend(final ZMQ.Socket frontend, final RoutingTable backends) {
+        private void sendToBackend(final ZMQ.Socket frontend, final InprocChannelTable backends) {
 
             final ZMsg msg = recvMsg(frontend);
             final RoutingHeader incomingRoutingHeader = getRouting().stripRoutingHeader(msg);
 
             if (incomingRoutingHeader.status.get() == CONTINUE) {
-                if (backends.hasDestination(incomingRoutingHeader.destination.get())) {
+                if (backends.hasInprocIdentifier(incomingRoutingHeader.inprocIdentifier.get())) {
                     sendOrDrop(incomingRoutingHeader, backends, msg);
                 } else {
                     sendDeadRoute(incomingRoutingHeader, backends, msg);
@@ -273,24 +273,24 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
         }
 
-        private void sendToFrontend(final int index, final ZMQ.Socket frontend, final RoutingTable backends) {
+        private void sendToFrontend(final int index, final ZMQ.Socket frontend, final InprocChannelTable backends) {
 
             final ZMQ.Socket socket = backends.getPoller().getSocket(index);
             final ZMsg msg = recvMsg(socket);
-            final UUID destination = backends.getDestination(index);
+            final UUID destination = backends.getInprocIdentifier(index);
 
             final RoutingHeader routingHeader = new RoutingHeader();
             routingHeader.status.set(CONTINUE);
-            routingHeader.destination.set(destination);
+            routingHeader.inprocIdentifier.set(destination);
             getRouting().insertRoutingHeader(msg, routingHeader);
 
             msg.send(frontend);
 
         }
 
-        private void sendDeadRoute(final RoutingHeader incomingRoutingHeader, final RoutingTable backends, final ZMsg msg) {
+        private void sendDeadRoute(final RoutingHeader incomingRoutingHeader, final InprocChannelTable backends, final ZMsg msg) {
 
-            final ZMQ.Socket socket = backends.getSocket(incomingRoutingHeader.destination.get());
+            final ZMQ.Socket socket = backends.getSocket(incomingRoutingHeader.inprocIdentifier.get());
 
             if (socket == null) {
                 return;
@@ -298,7 +298,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
             final RoutingHeader outgoingRoutingHeader = new RoutingHeader();
             outgoingRoutingHeader.status.set(RoutingHeader.Status.DEAD);
-            outgoingRoutingHeader.destination.set(incomingRoutingHeader.destination.get());
+            outgoingRoutingHeader.inprocIdentifier.set(incomingRoutingHeader.inprocIdentifier.get());
 
             final byte[] outgoingRoutingHeaderBytes = new byte[outgoingRoutingHeader.size()];
             outgoingRoutingHeader.getByteBuffer().get(outgoingRoutingHeaderBytes);
@@ -311,9 +311,9 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         }
 
         private void sendOrDrop(final RoutingHeader incomingRoutingHeader,
-                                final RoutingTable backends,
+                                final InprocChannelTable backends,
                                 final ZMsg msg) {
-            final int index = backends.open(incomingRoutingHeader.destination.get());
+            final int index = backends.open(incomingRoutingHeader.inprocIdentifier.get());
             final ZMQ.Socket socket = backends.getPoller().getSocket(index);
             sendOrDrop(socket, msg);
         }
@@ -330,7 +330,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
             }
         }
 
-        private void handleControlMessage(final ZMQ.Socket control, final RoutingTable backends) {
+        private void handleControlMessage(final ZMQ.Socket control, final InprocChannelTable backends) {
             final ZMsg msg = ZMsg.recvMsg(control);
             final CommandPreamble preamble = new CommandPreamble();
 

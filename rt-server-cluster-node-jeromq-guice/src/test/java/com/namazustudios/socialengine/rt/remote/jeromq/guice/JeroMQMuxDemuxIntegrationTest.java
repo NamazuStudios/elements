@@ -47,7 +47,7 @@ public class JeroMQMuxDemuxIntegrationTest {
     public static final String CONNECTION_ADDRESS = "inproc://test-connection";
 
     public static List<String> DESTINATION_IDS = unmodifiableList(range(0, 15)
-        .mapToObj(value -> format("test-destination-%d", value))
+        .mapToObj(value -> format("test-inprocIdentifier-%d", value))
         .collect(toList()));
 
     private Thread echoer;

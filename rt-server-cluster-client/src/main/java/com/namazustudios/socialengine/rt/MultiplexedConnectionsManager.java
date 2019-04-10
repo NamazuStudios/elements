@@ -23,7 +23,7 @@ public interface MultiplexedConnectionsManager extends MultiplexSupport {
     void stop();
 
     /**
-     * Gets the connect address for the destination with the supplied {@link UUID}.
+     * Gets the connect address for the inprocIdentifier with the supplied {@link UUID}.
      *
      * @param uuid the uuid
      * @return the connect address

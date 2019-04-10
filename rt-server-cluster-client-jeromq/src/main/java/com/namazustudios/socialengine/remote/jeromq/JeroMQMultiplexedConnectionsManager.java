@@ -215,16 +215,16 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
     @Override
     public void open(UUID destination) {
         final RoutingCommand command = new RoutingCommand();
-        command.action.set(OPEN);
-        command.destination.set(destination);
+        command.action.set(OPEN_INPROC);
+        command.inprocIdentifier.set(destination);
         issue(command);
     }
 
     @Override
     public void close(UUID destination) {
         final RoutingCommand command = new RoutingCommand();
-        command.action.set(CLOSE);
-        command.destination.set(destination);
+        command.action.set(CLOSE_INPROC);
+        command.inprocIdentifier.set(destination);
         issue(command);
     }
 

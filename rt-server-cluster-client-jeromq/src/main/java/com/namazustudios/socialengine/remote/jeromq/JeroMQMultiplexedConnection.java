@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.*;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import java.util.*;
 
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_RESPONSE;
@@ -57,20 +56,19 @@ public class JeroMQMultiplexedConnection implements Runnable {
 
         try (final ZContext context = shadow(zContext);
              final ZMQ.Poller poller = context.createPoller(0);
-             //final Connection backend = from(context, c -> c.createSocket(DEALER));
+             final BackendChannelTable backendChannelTable = new BackendChannelTable(
+                     context,
+                     poller,
+                     backendAddress -> bind(context, backendAddress),
+                     inprocIdentifier -> bind(context, inprocIdentifier)
+             );
              final Connection control = from(context, c -> c.createSocket(PULL));
-             //final RoutingTable frontends = new RoutingTable(context, poller, uuid -> bind(context, uuid));
-             final RoutingTable routingTable = new RoutingTable(context, poller, uuid -> bind(context, uuid));
-             final MonitorThread monitorThread = new MonitorThread(getClass().getSimpleName(), logger, context, backend.socket())) {
+             ) {
 
-            final int backendIndex;
             final int controlIndex;
 
             try {
-                monitorThread.start();
-                backend.socket().connect(connectAddress);
                 control.socket().bind(controlAddress);
-                backendIndex = poller.register(backend.socket(), POLLIN | POLLERR);
                 controlIndex = poller.register(control.socket(), POLLIN | POLLERR);
                 connectSyncWait.getResultConsumer().accept(null);
             } catch (Exception ex) {
@@ -91,8 +89,13 @@ public class JeroMQMultiplexedConnection implements Runnable {
                     final boolean error = poller.pollerr(index);
 
                     if (input) {
+                        final ZMQ.Socket socket = poller.getSocket(index);
+                        final ZMsg msg = recvMsg(socket);
+
+
+
                         if (index == backendIndex) {
-                            sendToFrontend(poller, index, frontends);
+                            sendToInprocChannel(poller, index, frontends);
                         } else if (index == controlIndex) {
                             handleControlMessage(control.socket(), frontends);
                         } else {
@@ -110,24 +113,27 @@ public class JeroMQMultiplexedConnection implements Runnable {
 
     }
 
-    private ZMQ.Socket bind(final ZContext context, final UUID uuid) {
-        final ZMQ.Socket socket = context.createSocket(ROUTER);
-        final String bindAddress = getRouting().getMultiplexedAddressForDestinationId(uuid);
-        socket.setRouterMandatory(true);
-        socket.bind(bindAddress);
-        return socket;
+    private ZMQ.Socket bind(final ZContext context, final String backendAddress) {
+        final ZMQ.Socket backendSocket = context.createSocket(DEALER);
+        backendSocket.connect(backendAddress);
+        return backendSocket;
     }
 
-    private void sendToFrontend(final ZMQ.Poller poller, final int index, final RoutingTable frontends) {
-        final ZMQ.Socket socket = poller.getSocket(index);
-        final ZMsg msg = recvMsg(socket);
+    private ZMQ.Socket bind(final ZContext context, final UUID inprocIdentifier) {
+        final ZMQ.Socket inprocSocket = context.createSocket(ROUTER);
+        final String bindAddress = getRouting().getMultiplexedAddressForDestinationId(inprocIdentifier);
+        inprocSocket.setRouterMandatory(true);
+        inprocSocket.bind(bindAddress);
+        return inprocSocket;
+    }
 
+    private void sendToInprocChannel(final ZMsg msg, final BackendChannelTable backendChannelTable) {
         final RoutingHeader routingHeader = getRouting().stripRoutingHeader(msg);
 
         if (routingHeader.status.get() == CONTINUE) {
 
-            final UUID destination = routingHeader.destination.get();
-            final ZMQ.Socket frontend = frontends.getSocket(destination);
+            final UUID inprocIdentifier = routingHeader.inprocIdentifier.get();
+            final ZMQ.Socket frontend = frontends.getSocket(inprocIdentifier);
 
             try {
                 msg.send(frontend);
@@ -140,28 +146,28 @@ public class JeroMQMultiplexedConnection implements Runnable {
             }
 
         } else {
-            logger.error("Received {} route for destination {}", routingHeader.status.get(), routingHeader.destination.get());
+            logger.error("Received {} route for inprocIdentifier {}", routingHeader.status.get(), routingHeader.inprocIdentifier.get());
         }
 
     }
 
     private void sendToBackend(final ZMQ.Poller poller, final int index,
-                               final RoutingTable frontends, final ZMQ.Socket backend) {
+                               final InprocChannelTable frontends, final ZMQ.Socket backend) {
 
         final ZMQ.Socket socket = poller.getSocket(index);
         final ZMsg msg = recvMsg(socket);
-        final UUID destination = frontends.getDestination(index);
+        final UUID inprocIdentifier = frontends.getInprocIdentifier(index);
 
         final RoutingHeader routingHeader = new RoutingHeader();
         routingHeader.status.set(CONTINUE);
-        routingHeader.destination.set(destination);
+        routingHeader.inprocIdentifier.set(inprocIdentifier);
 
         getRouting().insertRoutingHeader(msg, routingHeader);
         msg.send(backend);
 
     }
 
-    private void handleControlMessage(final ZMQ.Socket control, final RoutingTable frontends) {
+    private void handleControlMessage(final ZMQ.Socket control, final InprocChannelTable frontends) {
 
         final ZMsg msg = ZMsg.recvMsg(control);
         final CommandPreamble preamble = new CommandPreamble();

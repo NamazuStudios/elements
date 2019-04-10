@@ -6,31 +6,31 @@ public interface MultiplexSupport {
 
     /**
      * Makes a type 3 named {@link UUID} from the supplied node id using the appropriate charset encoding.  The returned
-     * {@link UUID} can then be used to assign destination routes using {@link #open(UUID)}.
+     * {@link UUID} can then be used to assign inprocIdentifier routes using {@link #open(UUID)}.
      *
-     * @param destinationNodeId the destination node id
-     * @return the {@link UUID} of the destination
+     * @param destinationNodeId the inprocIdentifier node id
+     * @return the {@link UUID} of the inprocIdentifier
      */
     UUID getDestinationUUIDForNodeId(String destinationNodeId);
 
     /**
-     * Adds a {@link UUID} for a particular destination.
+     * Adds a {@link UUID} for a particular inprocIdentifier.
      *
-     * @param destination the {@link UUID} destination
+     * @param destination the {@link UUID} inprocIdentifier
      */
     void open(UUID destination);
 
     /**
-     * Removes {@link UUID} for a particular destination.
+     * Removes {@link UUID} for a particular inprocIdentifier.
      *
-     * @param destination the {@link UUID} destination
+     * @param destination the {@link UUID} inprocIdentifier
      */
     void close(UUID destination);
 
     /**
-     * Opens a route to the supplied destination node ID.
+     * Opens a route to the supplied inprocIdentifier node ID.
      *
-     * @param destinationNodeId the destination node id
+     * @param destinationNodeId the inprocIdentifier node id
      */
     default void open(final String destinationNodeId) {
         final UUID destination = getDestinationUUIDForNodeId(destinationNodeId);
@@ -38,9 +38,9 @@ public interface MultiplexSupport {
     }
 
     /**
-     * Closes a route to the supplied destination node ID.
+     * Closes a route to the supplied inprocIdentifier node ID.
      *
-     * @param destinationNodeId the destination node id
+     * @param destinationNodeId the inprocIdentifier node id
      */
     default void close(final String destinationNodeId) {
         final UUID destination = getDestinationUUIDForNodeId(destinationNodeId);
