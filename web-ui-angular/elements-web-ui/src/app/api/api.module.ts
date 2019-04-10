@@ -34,6 +34,7 @@ import { FacebookSessionService } from './services/facebook-session.service';
 import { MockSessionsService } from './services/mock-sessions.service';
 import { SessionAndLoginService } from './services/session-and-login.service';
 import { UsernamePasswordSessionService } from './services/username-password-session.service';
+import { MissionsService } from './services/missions.service';
 
 /**
  * Provider for all Api services, plus ApiConfiguration
@@ -78,7 +79,8 @@ import { UsernamePasswordSessionService } from './services/username-password-ses
     FacebookSessionService,
     MockSessionsService,
     SessionAndLoginService,
-    UsernamePasswordSessionService
+    UsernamePasswordSessionService,
+    MissionsService
   ],
 })
 export class ApiModule { }

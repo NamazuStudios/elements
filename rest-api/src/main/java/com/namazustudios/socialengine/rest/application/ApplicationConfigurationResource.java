@@ -1,8 +1,10 @@
 package com.namazustudios.socialengine.rest.application;
 
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
+import com.namazustudios.socialengine.model.application.ProductBundle;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.ApplicationConfigurationService;
 import io.swagger.annotations.Api;
@@ -10,8 +12,11 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+
+import java.util.List;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
@@ -56,6 +61,26 @@ public class ApplicationConfigurationResource {
             getApplicationConfigurationService().getApplicationProfiles(applicationNameOrId, offset, count, search);
 
     }
+
+    @PUT
+    @Path("{applicationConfigurationId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Updates the ProductBundle",
+                  notes = "Updates the ProductBundle for the given ApplicationConfiguration")
+    public ApplicationConfiguration updateProductBundleForApplicationConfiguration(
+            @PathParam("applicationConfigurationId") final String applicationConfigurationId,
+            final List<ProductBundle> productBundles
+    ) {
+        if (productBundles == null || productBundles.size() == 0) {
+            throw new InvalidParameterException("ProductBundles must not be empty.");
+        }
+
+        final ApplicationConfiguration applicationConfiguration =
+                getApplicationConfigurationService().updateProductBundles(applicationConfigurationId, productBundles);
+        return applicationConfiguration;
+    }
+
+
 
     public ApplicationConfigurationService getApplicationConfigurationService() {
         return applicationConfigurationService;

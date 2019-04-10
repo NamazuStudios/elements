@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.application;
 
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoProductBundle;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.GooglePlayApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
@@ -18,12 +19,15 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.ANDROID_GOOGLE_PLAY;
 
 /**
  * Created by patricktwohig on 5/25/17.
  */
-public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayApplicationConfigurationDao {
+public class MongoGooglePlayApplicationConfigurationDao implements GooglePlayApplicationConfigurationDao {
 
     private ObjectIndex objectIndex;
 
@@ -64,6 +68,20 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
         updateOperations.set("active", true);
         updateOperations.set( "category", googlePlayApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
+
+        if (googlePlayApplicationConfiguration.getProductBundles() != null &&
+                googlePlayApplicationConfiguration.getProductBundles().size() > 0) {
+            final List<MongoProductBundle> mongoProductBundles = googlePlayApplicationConfiguration
+                    .getProductBundles()
+                    .stream()
+                    .map(pb -> getBeanMapper().map(pb, MongoProductBundle.class))
+                    .collect(Collectors.toList());
+            updateOperations.set("productBundles", mongoProductBundles);
+        }
+
+        if (googlePlayApplicationConfiguration.getJsonKey() != null) {
+            updateOperations.set("jsonKey", googlePlayApplicationConfiguration.getJsonKey());
+        }
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
             .returnNew(true)
@@ -142,6 +160,26 @@ public class MongoGoogePlayApplicationConfigurationDao implements GooglePlayAppl
         updateOperations.set("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId().trim());
         updateOperations.set( "category", googlePlayApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
+
+        if (googlePlayApplicationConfiguration.getProductBundles() != null &&
+                googlePlayApplicationConfiguration.getProductBundles().size() > 0) {
+            final List<MongoProductBundle> mongoProductBundles = googlePlayApplicationConfiguration
+                    .getProductBundles()
+                    .stream()
+                    .map(pb -> getBeanMapper().map(pb, MongoProductBundle.class))
+                    .collect(Collectors.toList());
+            updateOperations.set("productBundles", mongoProductBundles);
+        }
+        else {
+            updateOperations.unset("productBundles");
+        }
+
+        if (googlePlayApplicationConfiguration.getJsonKey() != null) {
+            updateOperations.set("jsonKey", googlePlayApplicationConfiguration.getJsonKey());
+        }
+        else {
+            updateOperations.unset("jsonKey");
+        }
 
         final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
                 .returnNew(true)

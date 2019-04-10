@@ -1,0 +1,27 @@
+.missions-list {
+  margin: 0 auto;
+}
+
+.spinner-container {
+  left:50%;
+  top:50%;
+  margin-left:-50px;
+  margin-top:-50px;
+  height: 100px;
+  width: 100px;
+  position: fixed;
+}
+
+.spinner-container mat-spinner {
+  margin: 0px auto 0 auto;
+}
+
+.mat-column-select {
+  overflow: initial;
+}
+
+button,
+input[type=button] {
+  margin-left:8px;
+  margin-right:8px;
+}

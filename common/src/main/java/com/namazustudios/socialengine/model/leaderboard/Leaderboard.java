@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.leaderboard;
 
+import com.namazustudios.socialengine.rt.annotation.ExposeEnum;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -8,6 +9,7 @@ import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.util.Objects;
 
 @ApiModel
 public class Leaderboard {
@@ -16,8 +18,16 @@ public class Leaderboard {
     private String id;
 
     @NotNull
-    @ApiModelProperty("The unique-name of the leaderboard.  This must be unique across all leaderboards.")
+    @ApiModelProperty("The name of the leaderboard.  This must be unique across all leaderboards.")
     private String name;
+
+    @NotNull
+    @ApiModelProperty("The time strategy for the leaderboard. Current options are ALL_TIME and EPOCHAL.")
+    private TimeStrategyType timeStrategyType;
+
+    @NotNull
+    @ApiModelProperty("The score strategy for the leaderboard. Current options are OVERWRITE_IF_GREATER and ACCUMULATE.")
+    private ScoreStrategyType scoreStrategyType;
 
     @NotNull
     @ApiModelProperty("The user-presentable name or title for for the leaderboard.")
@@ -57,6 +67,22 @@ public class Leaderboard {
         this.name = name;
     }
 
+    public TimeStrategyType getTimeStrategyType() {
+        return timeStrategyType;
+    }
+
+    public void setTimeStrategyType(TimeStrategyType timeStrategyType) {
+        this.timeStrategyType = timeStrategyType;
+    }
+
+    public ScoreStrategyType getScoreStrategyType() {
+        return scoreStrategyType;
+    }
+
+    public void setScoreStrategyType(ScoreStrategyType scoreStrategyType) {
+        this.scoreStrategyType = scoreStrategyType;
+    }
+
     public String getTitle() {
         return title;
     }
@@ -85,27 +111,22 @@ public class Leaderboard {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Leaderboard)) return false;
-
+        if (o == null || getClass() != o.getClass()) return false;
         Leaderboard that = (Leaderboard) o;
-
-        if (getId() != null ? !getId().equals(that.getId()) : that.getId() != null) return false;
-        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
-        if (getTitle() != null ? !getTitle().equals(that.getTitle()) : that.getTitle() != null) return false;
-        if (getFirstEpochTimestamp() != null ? !getFirstEpochTimestamp().equals(that.getFirstEpochTimestamp()) : that.getFirstEpochTimestamp() != null) return false;
-        if (getEpochInterval() != null ? !getEpochInterval().equals(that.getEpochInterval()) : that.getEpochInterval() != null) return false;
-        return getScoreUnits() != null ? getScoreUnits().equals(that.getScoreUnits()) : that.getScoreUnits() == null;
+        return Objects.equals(getId(), that.getId()) &&
+                Objects.equals(getName(), that.getName()) &&
+                getTimeStrategyType() == that.getTimeStrategyType() &&
+                getScoreStrategyType() == that.getScoreStrategyType() &&
+                Objects.equals(getTitle(), that.getTitle()) &&
+                Objects.equals(getScoreUnits(), that.getScoreUnits()) &&
+                Objects.equals(getFirstEpochTimestamp(), that.getFirstEpochTimestamp()) &&
+                Objects.equals(getEpochInterval(), that.getEpochInterval());
     }
 
     @Override
     public int hashCode() {
-        int result = getId() != null ? getId().hashCode() : 0;
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getTitle() != null ? getTitle().hashCode() : 0);
-        result = 31 * result + (getScoreUnits() != null ? getScoreUnits().hashCode() : 0);
-        result = 31 * result + (getFirstEpochTimestamp() != null ? getFirstEpochTimestamp().hashCode() : 0);
-        result = 31 * result + (getEpochInterval() != null ? getEpochInterval().hashCode() : 0);
-        return result;
+        return Objects.hash(getId(), getName(), getTimeStrategyType(), getScoreStrategyType(), getTitle(),
+                getScoreUnits(), getFirstEpochTimestamp(), getEpochInterval());
     }
 
     @Override
@@ -113,11 +134,43 @@ public class Leaderboard {
         return "Leaderboard{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
+                ", timeStrategyType=" + timeStrategyType +
+                ", scoreStrategyType=" + scoreStrategyType +
                 ", title='" + title + '\'' +
                 ", scoreUnits='" + scoreUnits + '\'' +
-                ", firstEpochTimestamp='" + firstEpochTimestamp + '\'' +
-                ", epochInterval='" + epochInterval + '\'' +
+                ", firstEpochTimestamp=" + firstEpochTimestamp +
+                ", epochInterval=" + epochInterval +
                 '}';
+    }
+
+    @ExposeEnum(modules={
+            "com.namazustudios.socialengine.model.leaderboard.Leaderboard.TimeStrategyType"
+    })
+    public enum TimeStrategyType {
+        /**
+         * The leaderboard continues without resetting values at some time interval.
+         */
+        ALL_TIME,
+
+        /**
+         * The leaderboard score values are reset at some given time interval.
+         */
+        EPOCHAL,
+    }
+
+    @ExposeEnum(modules={
+            "com.namazustudios.socialengine.model.leaderboard.Leaderboard.ScoreStrategyType"
+    })
+    public enum ScoreStrategyType {
+        /**
+         * When a new score value is provided, `MAX(old_score, new_score)` will be persisted to the store.
+         */
+        OVERWRITE_IF_GREATER,
+
+        /**
+         * When a new score value is provided, `old_score+new_score` will be persisted to the store.
+         */
+        ACCUMULATE,
     }
 
 }

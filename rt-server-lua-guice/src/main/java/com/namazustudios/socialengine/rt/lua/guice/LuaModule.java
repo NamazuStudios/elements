@@ -7,9 +7,11 @@ import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposeEnum;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
 import com.namazustudios.socialengine.rt.lua.LuaResourceLoader;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
+import com.namazustudios.socialengine.rt.lua.builtin.EnumModuleBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.JavaObjectModuleBuiltin;
 import org.reflections.Reflections;
 
@@ -107,19 +109,29 @@ public class LuaModule extends PrivateModule {
     }
 
     /**
-     * Scans for the {@link Expose} annotation to enable any extensions exposed to Lua.
+     * Scans for the {@link Expose} and {@link ExposeEnum} annotations to enable any extensions exposed to Lua.
      *
      * @return this instance
      */
     public LuaModule enableJavaExtensions(final String packageName) {
 
         final Reflections reflections = new Reflections(packageName, getClass().getClassLoader());
+
+        // set up the exposed Java classes
         final Set<Class<?>> classSet = reflections.getTypesAnnotatedWith(Expose.class);
 
         classSet.stream()
             .filter(cls -> cls.getAnnotation(Expose.class) != null)
             .collect(Collectors.toMap(cls -> cls.getAnnotation(Expose.class), identity()))
             .forEach((expose, type) -> bindModuleBuiltin(type).toModulesNamed(expose.modules()));
+
+        // set up the exposed Java Enum classes
+        final Set<Class<?>> enumClassSet = reflections.getTypesAnnotatedWith(ExposeEnum.class);
+
+        enumClassSet.stream()
+                .filter(cls -> cls.getAnnotation(ExposeEnum.class) != null)
+                .collect(Collectors.toMap(cls -> cls.getAnnotation(ExposeEnum.class), identity()))
+                .forEach((exposeEnum, type) -> bindEnumModuleBuiltin(type).toModulesNamed(exposeEnum.modules()));
 
         return this;
 
@@ -154,6 +166,20 @@ public class LuaModule extends PrivateModule {
             for (final String moduleName : moduleNames) {
                 visitors.accept(moduleName, (Class<Object>) cls);
                 builtinMultibinder.addBinding().toProvider(() -> new JavaObjectModuleBuiltin(moduleName, provider));
+            }
+
+            return this;
+
+        };
+
+    }
+
+    public ModuleBinding bindEnumModuleBuiltin(final Class cls) {
+        return moduleNames -> {
+
+            for (final String moduleName : moduleNames) {
+                visitors.accept(moduleName, (Class<Object>) cls);
+                builtinMultibinder.addBinding().toProvider(() -> new EnumModuleBuiltin<>(cls, moduleName));
             }
 
             return this;

@@ -115,13 +115,8 @@ export class UsersListComponent implements OnInit, AfterViewInit {
   showDialog(isNew: boolean, user: User, next) {
     const dialogRef = this.dialog.open(UserDialogComponent, {
       width: '500px',
-      data: { isNew: isNew, user: user }
+      data: { isNew: isNew, user: user, next: next, refresher: this }
     });
-
-    dialogRef
-      .afterClosed()
-      .pipe(filter(r => r))
-      .subscribe(next);
   }
 
   addUser() {
@@ -147,6 +142,5 @@ export class UsersListComponent implements OnInit, AfterViewInit {
           this.refresh();
         },
         error => this.alertService.error(error));
-    });
   }
 }

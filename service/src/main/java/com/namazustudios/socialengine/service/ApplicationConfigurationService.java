@@ -3,6 +3,9 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
+import com.namazustudios.socialengine.model.application.ProductBundle;
+
+import java.util.List;
 
 /**
  * Manages the lifecycle of the various {@link ApplicationConfiguration} instances.
@@ -36,5 +39,8 @@ public interface ApplicationConfigurationService {
     Pagination<ApplicationConfiguration> getApplicationProfiles(final String applicationNameOrId,
                                                                 final int offset, final int count,
                                                                 final String search);
+
+    ApplicationConfiguration updateProductBundles(final String applicationConfigurationId,
+                                                 final List<ProductBundle> productBundles);
 
 }

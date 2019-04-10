@@ -29,7 +29,7 @@ export class ItemsDatasource implements DataSource<Item> {
     this.loadingSubject.next(true);
 
     // add search when ready
-    this.itemsService.getItems({offset: offset, count: count})
+    this.itemsService.getItems({offset: offset, count: count, search: search})
       .pipe(
         catchError(() => of({objects: [], total: 0})),
         finalize(() => this.loadingSubject.next(false)))
