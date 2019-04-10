@@ -20,9 +20,9 @@ export class MissionDialogComponent implements OnInit {
   @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
   @ViewChild(MissionStepsCardComponent) stepsCard: MissionStepsCardComponent;
 
-  originalMetadata = JSON.parse(JSON.stringify(this.data.mission.metadata));
-  originalSteps = JSON.parse(JSON.stringify(this.data.mission.steps));
-  originalFinalStep = JSON.parse(JSON.stringify(this.data.mission.finalRepeatStep));
+  originalMetadata = JSON.parse(JSON.stringify(this.data.mission.metadata || {}));
+  originalSteps = JSON.parse(JSON.stringify(this.data.mission.steps || []));
+  originalFinalStep = JSON.parse(JSON.stringify(this.data.mission.finalRepeatStep || null));
 
   selectable = true;
   removable = true;
