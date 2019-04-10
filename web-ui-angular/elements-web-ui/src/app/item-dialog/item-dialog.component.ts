@@ -13,10 +13,6 @@ import {AlertService} from '../alert.service';
 })
 export class ItemDialogComponent implements OnInit {
 
-  constructor(public dialogRef: MatDialogRef<ItemDialogComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: any,
-              private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) { }
-
   @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
 
   selectable = true;
@@ -24,12 +20,20 @@ export class ItemDialogComponent implements OnInit {
   addOnBlur = true;
   readonly separatorKeyCodes: number[] = [ENTER, COMMA];
 
+  originalMetadata = JSON.parse(JSON.stringify(this.data.item.metadata));
+
   itemForm = this.formBuilder.group({
     name: [ this.data.item.name, [Validators.required, Validators.pattern('^[a-zA-Z0-9]+$') ]],
     displayName: [ this.data.item.displayName, [Validators.required]],
     description: [ this.data.item.description, [Validators.required] ],
     tags: []
   });
+
+  constructor(public dialogRef: MatDialogRef<ItemDialogComponent>,
+              @Inject(MAT_DIALOG_DATA) public data: any,
+              private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) {
+    console.log(this.originalMetadata);
+  }
 
   addTag(event: MatChipInputEvent): void {
     const input = event.input;
@@ -60,6 +64,7 @@ export class ItemDialogComponent implements OnInit {
   */
   close(saveChanges?: boolean): void {
     if (!saveChanges) {
+      this.data.item.metadata = this.originalMetadata;
       this.dialogRef.close();
       return;
     }
