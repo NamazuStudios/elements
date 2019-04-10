@@ -20,7 +20,7 @@ export class ItemDialogComponent implements OnInit {
   addOnBlur = true;
   readonly separatorKeyCodes: number[] = [ENTER, COMMA];
 
-  originalMetadata = JSON.parse(JSON.stringify(this.data.item.metadata));
+  originalMetadata = JSON.parse(JSON.stringify(this.data.item.metadata || {}));
 
   itemForm = this.formBuilder.group({
     name: [ this.data.item.name, [Validators.required, Validators.pattern('^[a-zA-Z0-9]+$') ]],
