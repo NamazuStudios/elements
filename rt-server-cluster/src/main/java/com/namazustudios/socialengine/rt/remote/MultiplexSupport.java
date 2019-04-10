@@ -47,4 +47,8 @@ public interface MultiplexSupport {
         close(destination);
     }
 
+    void connect(final String connectAddress);
+
+    void disconnect(final String connectAddress);
+
 }

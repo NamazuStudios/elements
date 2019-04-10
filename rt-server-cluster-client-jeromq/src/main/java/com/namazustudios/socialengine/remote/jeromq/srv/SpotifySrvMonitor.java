@@ -41,6 +41,18 @@ public class SpotifySrvMonitor implements SrvMonitor, ErrorHandler, ChangeNotifi
 
             monitoring = true;
 
+            new java.util.Timer().schedule(
+                    new java.util.TimerTask() {
+                        @Override
+                        public void run() {
+//                            final SrvRecord srvRecord = new SrvRecord("appnode.tcp.namazustudios.com.", 28883, 10, 10, 10);
+                            final SrvRecord srvRecord = new SrvRecord("localhost.", 28883, 10, 10, 10);
+                            notifyCreationListeners(srvRecord);
+                        }
+                    },
+                    5000
+            );
+
             return true;
         }
         catch (DnsException e) {

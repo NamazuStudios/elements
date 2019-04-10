@@ -13,14 +13,16 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND;
+import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.*;
+import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.JeroMQSocketHost.send;
-import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.CLOSE;
-import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.OPEN;
+import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.*;
+import static com.namazustudios.socialengine.rt.jeromq.ConnectCommand.Action.*;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static org.zeromq.ZContext.shadow;
@@ -33,13 +35,11 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
     public static final String CONNECT_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.connectAddress";
     public static final String APPLICATION_NODE_FQDN = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.applicationNodeFqdn";
 
-    private final Map<SrvUniqueIdentifier, AtomicReference<Thread>> atomicMultiplexedConnectionThreads = new HashMap<>();
+    private final AtomicReference<Thread> atomicMultiplexedConnectionThread = new AtomicReference<>();
 
     private Routing routing;
 
     private ZContext zContext;
-
-    private String connectAddress;
 
     private String applicationNodeFqdn;
 
@@ -50,34 +50,62 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
     @Override
     public void start() {
 
+        setupAndStartMultiplexedConnection();
         setupAndStartSrvMonitor();
 
+    }
+
+    private void setupAndStartMultiplexedConnection() {
+        final JeroMQMultiplexedConnection multiplexedConnection = new JeroMQMultiplexedConnection(
+                controlAddress,
+                getzContext(),
+                getRouting()
+        );
+        final Thread multiplexedConnectionManagerThread = new Thread(multiplexedConnection);
+
+        multiplexedConnectionManagerThread.setDaemon(true);
+        multiplexedConnectionManagerThread.setName(JeroMQMultiplexedConnectionsManager.class.getSimpleName());
+        multiplexedConnectionManagerThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
+
+        if (atomicMultiplexedConnectionThread.compareAndSet(null, multiplexedConnectionManagerThread)) {
+            multiplexedConnectionManagerThread.start();
+            multiplexedConnection.waitForConnect();
+        } else {
+            throw new IllegalStateException("Failed to set up multiplexed connection.");
+        }
     }
 
     private void setupAndStartSrvMonitor() {
 
         srvMonitor.registerOnCreatedSrvRecordListener((SrvRecord srvRecord) -> {
             logger.info("Detected App Node SRV record creation: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-            final boolean didStart = createAndStartMultiplexedConnectionManagerIfNecessary(srvRecord.getUniqueIdentifier());
+            final boolean didIssueCommand = connectToBackend(srvRecord.getUniqueIdentifier());
 
-            if (didStart) {
-                logger.info("Successfully started MultiplexedConnectionManager for SRV record: host={} port={}",
-                        srvRecord.getHost(), srvRecord.getPort());
+            if (didIssueCommand) {
+                logger.info("Successfully issued connect command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
             }
             else {
-                logger.info("Failed to start MultiplexedConnectionManager for SRV record: host={} port={}",
-                        srvRecord.getHost(), srvRecord.getPort());
+                logger.info("Failed to issue connect command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
             }
         });
 
         srvMonitor.registerOnUpdatedSrvRecordListener((SrvRecord srvRecord) -> {
             // for now, ignore updates
+            logger.info("Detected App Node SRV record update: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
         });
 
         srvMonitor.registerOnDeletedSrvRecordListener((SrvRecord srvRecord) -> {
             logger.info("Detected App Node SRV record deletion: host={} port={}",
                     srvRecord.getHost(), srvRecord.getPort());
-            stopAndDeleteMultiplexedConnectionManagerIfPossible(srvRecord.getUniqueIdentifier());
+
+            final boolean didIssueCommand = disconnectFromBackend(srvRecord.getUniqueIdentifier());
+
+            if (didIssueCommand) {
+                logger.info("Successfully issued disconnect command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+            }
+            else {
+                logger.info("Failed to issue disconnect command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+            }
         });
 
         logger.info("Starting SRV record monitor for FQDN: {}...", applicationNodeFqdn);
@@ -92,12 +120,8 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
 
     }
 
-    private boolean createAndStartMultiplexedConnectionManagerIfNecessary(SrvUniqueIdentifier srvUniqueIdentifier) {
-
-        if (atomicMultiplexedConnectionThreads.containsKey(srvUniqueIdentifier)) {
-            return true;
-        }
-
+    private boolean connectToBackend(SrvUniqueIdentifier srvUniqueIdentifier) {
+        // skip over the local instance's SRV record
         try {
             String localHost = InetAddress.getLocalHost().getHostName();
             if (!localHost.endsWith(".")) {
@@ -112,30 +136,14 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
             // TODO: determine best strategy to handle this
         }
 
-        final AtomicReference<Thread> atomicThreadReference = new AtomicReference<>();
-
         final String connectAddress = buildConnectAddress(srvUniqueIdentifier);
         if (connectAddress == null) {
             return false;
         }
 
-        final JeroMQMultiplexedConnection multiplexedConnection = new JeroMQMultiplexedConnection(connectAddress, controlAddress);
-        final Thread multiplexedConnectionManagerThread = new Thread(multiplexedConnection);
+        connect(connectAddress);
 
-        multiplexedConnectionManagerThread.setDaemon(true);
-        multiplexedConnectionManagerThread.setName(JeroMQMultiplexedConnectionsManager.class.getSimpleName());
-        multiplexedConnectionManagerThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
-
-        if (atomicThreadReference.compareAndSet(null, multiplexedConnectionManagerThread)) {
-            multiplexedConnectionManagerThread.start();
-            multiplexedConnection.waitForConnect();
-            atomicMultiplexedConnectionThreads.put(srvUniqueIdentifier, atomicThreadReference);
-
-            return true;
-        } else {
-            return false;
-        }
-
+        return true;
     }
 
     private static String buildConnectAddress(SrvUniqueIdentifier srvUniqueIdentifier) {
@@ -151,48 +159,46 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
         return connectAddress;
     }
 
-    private void stopAndDeleteMultiplexedConnectionManagerIfPossible(SrvUniqueIdentifier srvUniqueIdentifier) {
-        final boolean didStop = stopMultiplexedConnectionManagerIfPossible(srvUniqueIdentifier);
+    private boolean disconnectFromBackend(SrvUniqueIdentifier srvUniqueIdentifier) {
+        // skip over the local instance's SRV record
+        try {
+            String localHost = InetAddress.getLocalHost().getHostName();
+            if (!localHost.endsWith(".")) {
+                localHost = localHost + ".";
+            }
 
-        if (didStop) {
-            atomicMultiplexedConnectionThreads.remove(srvUniqueIdentifier);
-        }
-    }
-
-    private boolean stopMultiplexedConnectionManagerIfPossible(SrvUniqueIdentifier srvUniqueIdentifier) {
-        if (!atomicMultiplexedConnectionThreads.containsKey(srvUniqueIdentifier)) {
-            return true;
-        }
-
-        final AtomicReference<Thread> atomicThreadReference = atomicMultiplexedConnectionThreads.get(srvUniqueIdentifier);
-
-        final Thread multiplexedConnectionManagerThread = atomicThreadReference.get();
-
-        if (atomicThreadReference.compareAndSet(multiplexedConnectionManagerThread, null)) {
-            multiplexedConnectionManagerThread.interrupt();
-
-            try {
-                multiplexedConnectionManagerThread.join();
+            if (srvUniqueIdentifier.getHost().equals(localHost)) {
                 return true;
             }
-            catch (InterruptedException e) {
-                return false;
-            }
         }
-        else {
+        catch (UnknownHostException e) {
+            // TODO: determine best strategy to handle this
+        }
+
+        final String connectAddress = buildConnectAddress(srvUniqueIdentifier);
+        if (connectAddress == null) {
             return false;
         }
+
+        disconnect(connectAddress);
+
+        return true;
     }
 
     @Override
     public void stop() {
 
-        atomicMultiplexedConnectionThreads
-                .keySet()
-                .stream()
-                .forEach(this::stopMultiplexedConnectionManagerIfPossible);
+        final Thread multiplexedConnectionManagerThread = atomicMultiplexedConnectionThread.get();
 
-        atomicMultiplexedConnectionThreads.clear();
+        if (atomicMultiplexedConnectionThread.compareAndSet(multiplexedConnectionManagerThread, null)) {
+            multiplexedConnectionManagerThread.interrupt();
+
+            try {
+                multiplexedConnectionManagerThread.join();
+            } catch (InterruptedException e) {
+
+            }
+        }
 
     }
 
@@ -222,11 +228,35 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
         issue(command);
     }
 
+    @Override
+    public void connect(final String connectAddress) {
+        final ConnectCommand command = new ConnectCommand();
+        command.action.set(CONNECT);
+        command.connectAddress.set(connectAddress);
+        issue(command);
+    }
+
+    @Override
+    public void disconnect(final String connectAddress) {
+        final ConnectCommand command = new ConnectCommand();
+        command.action.set(DISCONNECT);
+        command.connectAddress.set(connectAddress);
+        issue(command);
+    }
+
+    private void issue(final ConnectCommand command) {
+        issue(CONNECT_COMMAND, command.getByteBuffer());
+    }
+
     private void issue(final RoutingCommand command) {
+        issue(ROUTING_COMMAND, command.getByteBuffer());
+    }
+
+    private void issue(final CommandType commandType, final ByteBuffer byteBuffer) {
         try (final ZContext context = shadow(getzContext());
              final Connection connection = from(context, c -> c.createSocket(PUSH))) {
             connection.socket().connect(getControlAddress());
-            send(connection.socket(), ROUTING_COMMAND, command.getByteBuffer());
+            send(connection.socket(), commandType, byteBuffer);
         }
     }
 
@@ -246,15 +276,6 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
     @Inject
     public void setzContext(ZContext zContext) {
         this.zContext = zContext;
-    }
-
-    public String getConnectAddress() {
-        return connectAddress;
-    }
-
-    @Inject
-    public void setConnectAddress(@Named(CONNECT_ADDR) String connectAddress) {
-        this.connectAddress = connectAddress;
     }
 
     public String getApplicationNodeFqdn() {

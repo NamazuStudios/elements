@@ -17,7 +17,7 @@ import static org.zeromq.ZMQ.Poller.POLLIN;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 
 /**
- * Tracks routing information by tracking indices in a {@link org.zeromq.ZMQ.Poller} instance an {@link UUID} instances
+ * Tracks routing information by tracking inprocDestinations in a {@link org.zeromq.ZMQ.Poller} instance an {@link UUID} instances
  * which ultimately map to node identifiers.
  *
  * This class is not thread safe.
@@ -26,9 +26,9 @@ public class RoutingTable implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(RoutingTable.class);
 
-    private final Map<Integer, UUID> indices = new LinkedHashMap<>();
+    private final Map<Integer, UUID> inprocDestinations = new LinkedHashMap<>();
 
-    private final Map<UUID, Integer> reverse = new LinkedHashMap<>();
+    private final Map<UUID, Integer> reverseInprocDestinations = new LinkedHashMap<>();
 
     private final ZContext zContext;
 
@@ -77,7 +77,7 @@ public class RoutingTable implements AutoCloseable {
     @Override
     public void close() {
 
-        final List<Exception> exceptionList = indices.keySet().stream().map(frontend -> {
+        final List<Exception> exceptionList = inprocDestinations.keySet().stream().map(frontend -> {
 
             final ZMQ.Socket socket = getPoller().getSocket(frontend);
 
@@ -99,8 +99,8 @@ public class RoutingTable implements AutoCloseable {
 
         }).filter(e -> e != null).collect(Collectors.toList());
 
-        indices.clear();
-        reverse.clear();
+        inprocDestinations.clear();
+        reverseInprocDestinations.clear();
 
         if (!exceptionList.isEmpty()) {
             throw new MultiException(exceptionList);
@@ -116,9 +116,9 @@ public class RoutingTable implements AutoCloseable {
      */
     public void close(final int index) {
 
-        final UUID uuid = indices.remove(index);
+        final UUID uuid = inprocDestinations.remove(index);
 
-        if (uuid != null && reverse.remove(uuid) != null) {
+        if (uuid != null && reverseInprocDestinations.remove(uuid) != null) {
             final ZMQ.Socket socket = getPoller().getSocket(index);
             close(socket);
         }
@@ -133,9 +133,9 @@ public class RoutingTable implements AutoCloseable {
      */
     public void close(final UUID uuid) {
 
-        final Integer index = reverse.remove(uuid);
+        final Integer index = reverseInprocDestinations.remove(uuid);
 
-        if (index != null && indices.remove(uuid) != null) {
+        if (index != null && inprocDestinations.remove(uuid) != null) {
             final ZMQ.Socket socket = getPoller().getSocket(index);
             close(socket);
         }
@@ -166,7 +166,7 @@ public class RoutingTable implements AutoCloseable {
      * @return the {@link org.zeromq.ZMQ.Socket} instance.
      */
     public ZMQ.Socket getSocket(UUID destination) {
-        final Integer index = reverse.get(destination);
+        final Integer index = reverseInprocDestinations.get(destination);
         return index == null ? null : getPoller().getSocket(index);
     }
 
@@ -178,7 +178,7 @@ public class RoutingTable implements AutoCloseable {
      * @return the {@link UUID}
      */
     public UUID getDestination(final int index) {
-        return indices.get(index);
+        return inprocDestinations.get(index);
     }
 
     /**
@@ -189,7 +189,7 @@ public class RoutingTable implements AutoCloseable {
      * @return true if it exists, false otherwise
      */
     public boolean hasDestination(final UUID uuid) {
-        return reverse.containsKey(uuid);
+        return reverseInprocDestinations.containsKey(uuid);
     }
 
     /**
@@ -200,10 +200,10 @@ public class RoutingTable implements AutoCloseable {
      * @return the index of the {@link org.zeromq.ZMQ.Poller}
      */
     public int open(final UUID destination) {
-        return reverse.computeIfAbsent(destination, d -> {
+        return reverseInprocDestinations.computeIfAbsent(destination, d -> {
             final ZMQ.Socket socket = connector.apply(destination);
             final int index = getPoller().register(socket, POLLIN | POLLERR);
-            indices.put(index, destination);
+            inprocDestinations.put(index, destination);
             return index;
         });
     }

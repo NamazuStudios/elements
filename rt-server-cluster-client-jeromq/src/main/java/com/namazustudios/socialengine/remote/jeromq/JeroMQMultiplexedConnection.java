@@ -34,17 +34,18 @@ public class JeroMQMultiplexedConnection implements Runnable {
 
     private final SyncWait<Void> connectSyncWait = new SyncWait<Void>(logger);
 
-    private final String connectAddress;
-
     private final String controlAddress;
 
-    private Routing routing;
+    private volatile Routing routing;
 
-    private ZContext zContext;
+    private volatile ZContext zContext;
 
-    public JeroMQMultiplexedConnection(final String connectAddress, final String controlAddress) {
-        this.connectAddress = connectAddress;
+    public JeroMQMultiplexedConnection(final String controlAddress,
+                                       final ZContext zContext,
+                                       final Routing routing) {
         this.controlAddress = controlAddress;
+        this.zContext = zContext;
+        this.routing = routing;
     }
 
     public void waitForConnect() {
@@ -56,9 +57,10 @@ public class JeroMQMultiplexedConnection implements Runnable {
 
         try (final ZContext context = shadow(zContext);
              final ZMQ.Poller poller = context.createPoller(0);
-             final Connection backend = from(context, c -> c.createSocket(DEALER));
+             //final Connection backend = from(context, c -> c.createSocket(DEALER));
              final Connection control = from(context, c -> c.createSocket(PULL));
-             final RoutingTable frontends = new RoutingTable(context, poller, uuid -> bind(context, uuid));
+             //final RoutingTable frontends = new RoutingTable(context, poller, uuid -> bind(context, uuid));
+             final RoutingTable routingTable = new RoutingTable(context, poller, uuid -> bind(context, uuid));
              final MonitorThread monitorThread = new MonitorThread(getClass().getSimpleName(), logger, context, backend.socket())) {
 
             final int backendIndex;
