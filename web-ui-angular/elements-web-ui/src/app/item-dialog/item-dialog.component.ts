@@ -31,9 +31,7 @@ export class ItemDialogComponent implements OnInit {
 
   constructor(public dialogRef: MatDialogRef<ItemDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
-              private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) {
-    console.log(this.originalMetadata);
-  }
+              private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) {}
 
   addTag(event: MatChipInputEvent): void {
     const input = event.input;
