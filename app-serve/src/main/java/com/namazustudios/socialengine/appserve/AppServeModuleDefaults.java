@@ -7,8 +7,8 @@ import com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool;
 import java.util.Properties;
 
 import static com.namazustudios.socialengine.Constants.*;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionsManager.APPLICATION_NODE_FQDN;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionsManager.CONNECT_ADDR;
+import static com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionManager.APPLICATION_NODE_FQDN;
+import static com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionManager.CONNECT_ADDR;
 import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.*;
 
 public class AppServeModuleDefaults implements ModuleDefaults {

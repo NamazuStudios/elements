@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
@@ -39,7 +38,7 @@ public class MultiNodeContainer implements AutoCloseable {
             exceptionList.add(ex);
         }
 
-        getNodeSet().forEach(node -> getConnectionDemultiplexer().open(node.getId()));
+        getNodeSet().forEach(node -> getConnectionDemultiplexer().openInprocChannel(node.getId()));
 
         exceptionList.addAll(getNodeSet().parallelStream().map(node -> {
             try {

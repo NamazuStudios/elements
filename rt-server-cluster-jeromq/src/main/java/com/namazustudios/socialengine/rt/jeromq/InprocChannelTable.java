@@ -41,7 +41,7 @@ public class InprocChannelTable implements AutoCloseable {
      * {@link InprocChannelTable} requires the user specify a {@link Function<UUID, org.zeromq.ZMQ.Socket>} which will handle
      * the details of opening a new connection.
      *
-     * The supplied {@link org.zeromq.ZMQ.Poller} is not owned by this instance and will not close it when it is closed.
+     * The supplied {@link org.zeromq.ZMQ.Poller} is not owned by this instance and will not closeInprocChannel it when it is closed.
      *
      * @param zContext the context
      * @param poller the {@link org.zeromq.ZMQ.Poller} which will manage the underlying sockets
@@ -129,7 +129,7 @@ public class InprocChannelTable implements AutoCloseable {
      * Closes the {@link org.zeromq.ZMQ.Socket} associated with the supplied {@link UUID} and removes all information
      * from the internal table.
      *
-     * @param uuid the uuid to close
+     * @param uuid the uuid to closeInprocChannel
      */
     public void close(final UUID uuid) {
 
@@ -150,7 +150,7 @@ public class InprocChannelTable implements AutoCloseable {
             try {
                 socket.close();
             } catch (Exception ex) {
-                logger.error("Unable to close socket.", ex);
+                logger.error("Unable to closeInprocChannel socket.", ex);
             } finally {
                 getzContext().destroySocket(socket);
             }
@@ -165,7 +165,7 @@ public class InprocChannelTable implements AutoCloseable {
      *
      * @return the {@link org.zeromq.ZMQ.Socket} instance.
      */
-    public ZMQ.Socket getSocket(UUID inprocIdentifier) {
+    public ZMQ.Socket getInprocSocket(UUID inprocIdentifier) {
         final Integer inprocSocketHandle = inprocIdentifiersToSocketHandles.get(inprocIdentifier);
         return inprocSocketHandle == null ? null : getPoller().getSocket(inprocSocketHandle);
     }
@@ -216,22 +216,6 @@ public class InprocChannelTable implements AutoCloseable {
             inprocSocketHandlesToIdentifiers.put(inprocSocketHandle, inprocIdentifier);
             return inprocSocketHandle;
         });
-    }
-
-    /**
-     * Processes the supplied {@link RoutingCommand} and applies changes to the internals of this {@link InprocChannelTable}.
-     *
-     * @param command the command to process.
-     */
-    public void process(final RoutingCommand command) {
-        switch (command.action.get()) {
-            case OPEN_INPROC:
-                open(command.inprocIdentifier.get());
-                return;
-            case CLOSE_INPROC:
-                close(command.inprocIdentifier.get());
-                return;
-        }
     }
 
 }

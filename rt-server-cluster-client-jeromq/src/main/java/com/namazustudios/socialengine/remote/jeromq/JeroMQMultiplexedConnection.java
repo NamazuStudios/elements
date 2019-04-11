@@ -65,11 +65,11 @@ public class JeroMQMultiplexedConnection implements Runnable {
              final Connection control = from(context, c -> c.createSocket(PULL));
              ) {
 
-            final int controlIndex;
+            final int controlSocketHandle;
 
             try {
                 control.socket().bind(controlAddress);
-                controlIndex = poller.register(control.socket(), POLLIN | POLLERR);
+                controlSocketHandle = poller.register(control.socket(), POLLIN | POLLERR);
                 connectSyncWait.getResultConsumer().accept(null);
             } catch (Exception ex) {
                 connectSyncWait.getErrorConsumer().accept(ex);
@@ -83,28 +83,32 @@ public class JeroMQMultiplexedConnection implements Runnable {
                     break;
                 }
 
-                range(0, poller.getNext()).filter(index -> poller.getItem(index) != null).forEach(index -> {
+                range(0, poller.getNext())
+                        .filter(socketHandle -> poller.getItem(socketHandle) != null)
+                        .forEach(socketHandle -> {
+                            final boolean input = poller.pollin(socketHandle);
+                            final boolean error = poller.pollerr(socketHandle);
 
-                    final boolean input = poller.pollin(index);
-                    final boolean error = poller.pollerr(index);
+                            if (input) {
+                                final ZMQ.Socket socket = poller.getSocket(socketHandle);
+                                final ZMsg msg = recvMsg(socket);
 
-                    if (input) {
-                        final ZMQ.Socket socket = poller.getSocket(index);
-                        final ZMsg msg = recvMsg(socket);
+                                if (socketHandle == controlSocketHandle) {  // if we recv on the control socket
+                                    handleControlMessage(msg, socket, backendChannelTable);
+                                }
+                                else if (backendChannelTable.hasBackendSocketHandle(socketHandle)) {    // if we recv on a backend socket
+                                    sendToInprocChannel(msg, backendChannelTable);
+                                }
+                                else if (backendChannelTable.hasInprocSocketHandle(socketHandle)) { // if we recv on an inproc socket
+                                    sendToBackendChannel(msg, socketHandle, backendChannelTable);
+                                }
+                                else {
+                                    logger.warn("Unknown poller state.  Dropping message.");
+                                }
 
-
-
-                        if (index == backendIndex) {
-                            sendToInprocChannel(poller, index, frontends);
-                        } else if (index == controlIndex) {
-                            handleControlMessage(control.socket(), frontends);
-                        } else {
-                            sendToBackend(poller, index, frontends, backend.socket());
-                        }
-                    } else if (error) {
-                        throw new InternalException("Poller error on socket: " + poller.getSocket(index));
-                    }
-
+                            } else if (error) {
+                                throw new InternalException("Poller error on socket: " + poller.getSocket(socketHandle));
+                            }
                 });
 
             }
@@ -132,11 +136,22 @@ public class JeroMQMultiplexedConnection implements Runnable {
 
         if (routingHeader.status.get() == CONTINUE) {
 
+            final String backendAddress = routingHeader.backendAddress.get();
             final UUID inprocIdentifier = routingHeader.inprocIdentifier.get();
-            final ZMQ.Socket frontend = frontends.getSocket(inprocIdentifier);
+
+            if (backendAddress == null || inprocIdentifier == null) {
+                logger.warn("Bad routing header format (missing backendAddress and/or inprocIdentifier).  Dropping message.");
+            }
+
+            final ZMQ.Socket inprocSocket = backendChannelTable.getInprocSocket(backendAddress, inprocIdentifier);
+
+            if (inprocSocket == null) {
+                logger.warn("Host unreachable.  Dropping message.");
+                return;
+            }
 
             try {
-                msg.send(frontend);
+                msg.send(inprocSocket);
             } catch (ZMQException ex) {
                 if (ex.getErrorCode() == EHOSTUNREACH) {
                     logger.warn("Host unreachable.  Dropping message.");
@@ -151,37 +166,38 @@ public class JeroMQMultiplexedConnection implements Runnable {
 
     }
 
-    private void sendToBackend(final ZMQ.Poller poller, final int index,
-                               final InprocChannelTable frontends, final ZMQ.Socket backend) {
-
-        final ZMQ.Socket socket = poller.getSocket(index);
-        final ZMsg msg = recvMsg(socket);
-        final UUID inprocIdentifier = frontends.getInprocIdentifier(index);
+    private void sendToBackendChannel(final ZMsg msg, final int inprocSocketHandle, final BackendChannelTable backendChannelTable) {
+        final int backendSocketHandle = backendChannelTable.getBackendSocketHandleForInprocSocketHandle(inprocSocketHandle);
+        final String backendAddress = backendChannelTable.getBackendAddressForInprocSocketHandle(inprocSocketHandle);
+        final UUID inprocIdentifier = backendChannelTable.getInprocIdentifier(backendSocketHandle, inprocSocketHandle);
 
         final RoutingHeader routingHeader = new RoutingHeader();
         routingHeader.status.set(CONTINUE);
+        routingHeader.backendAddress.set(backendAddress);
         routingHeader.inprocIdentifier.set(inprocIdentifier);
 
         getRouting().insertRoutingHeader(msg, routingHeader);
-        msg.send(backend);
+
+        final ZMQ.Socket backendSocket = backendChannelTable.getBackendSocket(backendAddress);
+
+        msg.send(backendSocket);
 
     }
 
-    private void handleControlMessage(final ZMQ.Socket control, final InprocChannelTable frontends) {
+    private void handleControlMessage(final ZMsg msg, final ZMQ.Socket controlSocket, final BackendChannelTable backendChannelTable) {
 
-        final ZMsg msg = ZMsg.recvMsg(control);
         final CommandPreamble preamble = new CommandPreamble();
 
         preamble.getByteBuffer().put(msg.pop().getData());
 
         switch(preamble.commandType.get()) {
             case STATUS_REQUEST:
-                send(control, STATUS_RESPONSE, new StatusResponse().getByteBuffer());
+                send(controlSocket, STATUS_RESPONSE, new StatusResponse().getByteBuffer());
                 break;
             case ROUTING_COMMAND:
                 final RoutingCommand command = new RoutingCommand();
                 command.getByteBuffer().put(msg.pop().getData());
-                frontends.process(command);
+                backendChannelTable.process(command);
                 break;
             default:
                 logger.error("Unexpected command: {}", preamble.commandType.get());

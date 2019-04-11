@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.dao.ManifestDao;
 import com.namazustudios.socialengine.dao.rt.DefaultContextFactory;
 import com.namazustudios.socialengine.dao.rt.RTManifestDao;
-import com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionsManager;
+import com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionManager;
 import com.namazustudios.socialengine.remote.jeromq.srv.SpotifySrvMonitor;
 import com.namazustudios.socialengine.remote.jeromq.srv.SrvMonitor;
 import com.namazustudios.socialengine.rt.MultiplexedConnectionsManager;
@@ -24,7 +24,7 @@ public class RTDaoModule extends AbstractModule {
     protected void configure() {
         bind(ManifestDao.class).to(RTManifestDao.class).asEagerSingleton();
         bind(ZContext.class).asEagerSingleton();
-        bind(MultiplexedConnectionsManager.class).to(JeroMQMultiplexedConnectionsManager.class).asEagerSingleton();
+        bind(MultiplexedConnectionsManager.class).to(JeroMQMultiplexedConnectionManager.class).asEagerSingleton();
         bind(SrvMonitor.class).to(SpotifySrvMonitor.class).asEagerSingleton();
         bind(ContextFactory.class).to(DefaultContextFactory.class).asEagerSingleton();
         bind(new TypeLiteral<Function<String, Context>>(){}).toProvider(RTContextProvider.class);

@@ -6,49 +6,49 @@ public interface MultiplexSupport {
 
     /**
      * Makes a type 3 named {@link UUID} from the supplied node id using the appropriate charset encoding.  The returned
-     * {@link UUID} can then be used to assign inprocIdentifier routes using {@link #open(UUID)}.
+     * {@link UUID} can then be used to assign inprocIdentifier routes using {@link #openInprocChannel(String,UUID)}.
      *
-     * @param destinationNodeId the inprocIdentifier node id
+     * @param nodeIdentifier the node id
      * @return the {@link UUID} of the inprocIdentifier
      */
-    UUID getDestinationUUIDForNodeId(String destinationNodeId);
+    UUID getInprocIdentifierForNodeIdentifier(String nodeIdentifier);
 
     /**
      * Adds a {@link UUID} for a particular inprocIdentifier.
      *
-     * @param destination the {@link UUID} inprocIdentifier
+     * @param inprocIdentifier the {@link UUID} inprocIdentifier
      */
-    void open(UUID destination);
+    void openInprocChannel(final String backendAddress, UUID inprocIdentifier);
 
     /**
      * Removes {@link UUID} for a particular inprocIdentifier.
      *
-     * @param destination the {@link UUID} inprocIdentifier
+     * @param inprocIdentifier the {@link UUID} inprocIdentifier
      */
-    void close(UUID destination);
+    void closeInprocChannel(final String backendAddress, UUID inprocIdentifier);
 
     /**
      * Opens a route to the supplied inprocIdentifier node ID.
      *
-     * @param destinationNodeId the inprocIdentifier node id
+     * @param nodeIdentifier the inproc's node id
      */
-    default void open(final String destinationNodeId) {
-        final UUID destination = getDestinationUUIDForNodeId(destinationNodeId);
-        open(destination);
+    default void openInprocChannel(final String backendAddress, final String nodeIdentifier) {
+        final UUID inprocIdentifier = getInprocIdentifierForNodeIdentifier(nodeIdentifier);
+        openInprocChannel(backendAddress, inprocIdentifier);
     }
 
     /**
      * Closes a route to the supplied inprocIdentifier node ID.
      *
-     * @param destinationNodeId the inprocIdentifier node id
+     * @param nodeIdentifier the inproc's node id
      */
-    default void close(final String destinationNodeId) {
-        final UUID destination = getDestinationUUIDForNodeId(destinationNodeId);
-        close(destination);
+    default void closeInprocChannel(final String backendAddress, final String nodeIdentifier) {
+        final UUID inprocIdentifier = getInprocIdentifierForNodeIdentifier(nodeIdentifier);
+        closeInprocChannel(backendAddress, inprocIdentifier);
     }
 
-    void connect(final String connectAddress);
+    void openBackendChannel(final String backendAddress);
 
-    void disconnect(final String connectAddress);
+    void closeBackendChannel(final String backendAddress);
 
 }

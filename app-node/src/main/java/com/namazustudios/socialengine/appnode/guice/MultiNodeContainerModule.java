@@ -71,7 +71,7 @@ public class MultiNodeContainerModule extends AbstractModule {
                         return null;
                     }
 
-                    final UUID uuid = connectionDemultiplexer.getDestinationUUIDForNodeId(application.getId());
+                    final UUID uuid = connectionDemultiplexer.getInprocIdentifierForNodeIdentifier(application.getId());
                     final String bindAddress = connectionDemultiplexer.getBindAddress(uuid);
 
                     final JeroMQNodeModule nodeModule = new JeroMQNodeModule()

@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.remote.jeromq;
 import com.namazustudios.socialengine.remote.jeromq.srv.SrvMonitor;
 import com.namazustudios.socialengine.remote.jeromq.srv.SrvRecord;
 import com.namazustudios.socialengine.remote.jeromq.srv.SrvUniqueIdentifier;
-import com.namazustudios.socialengine.rt.MultiplexedConnectionsManager;
+import com.namazustudios.socialengine.rt.MultiplexedConnectionManager;
 import com.namazustudios.socialengine.rt.jeromq.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,15 +22,14 @@ import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandTy
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.JeroMQSocketHost.send;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.*;
-import static com.namazustudios.socialengine.rt.jeromq.ConnectCommand.Action.*;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static org.zeromq.ZContext.shadow;
 import static org.zeromq.ZMQ.*;
 
-public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectionsManager {
+public class JeroMQMultiplexedConnectionManager implements MultiplexedConnectionManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(JeroMQMultiplexedConnectionsManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQMultiplexedConnectionManager.class);
 
     public static final String CONNECT_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.connectAddress";
     public static final String APPLICATION_NODE_FQDN = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.applicationNodeFqdn";
@@ -64,7 +63,7 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
         final Thread multiplexedConnectionManagerThread = new Thread(multiplexedConnection);
 
         multiplexedConnectionManagerThread.setDaemon(true);
-        multiplexedConnectionManagerThread.setName(JeroMQMultiplexedConnectionsManager.class.getSimpleName());
+        multiplexedConnectionManagerThread.setName(JeroMQMultiplexedConnectionManager.class.getSimpleName());
         multiplexedConnectionManagerThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
 
         if (atomicMultiplexedConnectionThread.compareAndSet(null, multiplexedConnectionManagerThread)) {
@@ -82,10 +81,10 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
             final boolean didIssueCommand = connectToBackend(srvRecord.getUniqueIdentifier());
 
             if (didIssueCommand) {
-                logger.info("Successfully issued connect command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+                logger.info("Successfully issued open backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
             }
             else {
-                logger.info("Failed to issue connect command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+                logger.info("Failed to issue open backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
             }
         });
 
@@ -101,10 +100,10 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
             final boolean didIssueCommand = disconnectFromBackend(srvRecord.getUniqueIdentifier());
 
             if (didIssueCommand) {
-                logger.info("Successfully issued disconnect command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+                logger.info("Successfully issued close backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
             }
             else {
-                logger.info("Failed to issue disconnect command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+                logger.info("Failed to issue close backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
             }
         });
 
@@ -120,8 +119,18 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
 
     }
 
-    private boolean connectToBackend(SrvUniqueIdentifier srvUniqueIdentifier) {
-        // skip over the local instance's SRV record
+    private boolean connectToBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
+        final String backendAddress = buildBackendAddress(srvUniqueIdentifier);
+        if (backendAddress == null) {
+            return false;
+        }
+
+        openBackendChannel(backendAddress);
+
+        return true;
+    }
+
+    private static boolean isLocalhost(final SrvUniqueIdentifier srvUniqueIdentifier) {
         try {
             String localHost = InetAddress.getLocalHost().getHostName();
             if (!localHost.endsWith(".")) {
@@ -131,22 +140,17 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
             if (srvUniqueIdentifier.getHost().equals(localHost)) {
                 return false;
             }
+            else {
+                return true;
+            }
         }
         catch (UnknownHostException e) {
             // TODO: determine best strategy to handle this
-        }
-
-        final String connectAddress = buildConnectAddress(srvUniqueIdentifier);
-        if (connectAddress == null) {
             return false;
         }
-
-        connect(connectAddress);
-
-        return true;
     }
 
-    private static String buildConnectAddress(SrvUniqueIdentifier srvUniqueIdentifier) {
+    private static String buildBackendAddress(final SrvUniqueIdentifier srvUniqueIdentifier) {
         final String host = srvUniqueIdentifier.getHost();
         final int port = srvUniqueIdentifier.getPort();
 
@@ -154,33 +158,18 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
             return null;
         }
 
-        final String connectAddress = "tcp://" + host.substring(0, host.length() - 1) + ":" + port;
+        final String backendAddress = "tcp://" + host.substring(0, host.length() - 1) + ":" + port;
 
-        return connectAddress;
+        return backendAddress;
     }
 
-    private boolean disconnectFromBackend(SrvUniqueIdentifier srvUniqueIdentifier) {
-        // skip over the local instance's SRV record
-        try {
-            String localHost = InetAddress.getLocalHost().getHostName();
-            if (!localHost.endsWith(".")) {
-                localHost = localHost + ".";
-            }
-
-            if (srvUniqueIdentifier.getHost().equals(localHost)) {
-                return true;
-            }
-        }
-        catch (UnknownHostException e) {
-            // TODO: determine best strategy to handle this
-        }
-
-        final String connectAddress = buildConnectAddress(srvUniqueIdentifier);
+    private boolean disconnectFromBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
+        final String connectAddress = buildBackendAddress(srvUniqueIdentifier);
         if (connectAddress == null) {
             return false;
         }
 
-        disconnect(connectAddress);
+        closeBackendChannel(connectAddress);
 
         return true;
     }
@@ -203,49 +192,47 @@ public class JeroMQMultiplexedConnectionsManager implements MultiplexedConnectio
     }
 
     @Override
-    public UUID getDestinationUUIDForNodeId(String destinationNodeId) {
+    public UUID getInprocIdentifierForNodeIdentifier(final String destinationNodeId) {
         return getRouting().getDestinationId(destinationNodeId);
     }
 
     @Override
-    public String getConnectAddress(UUID uuid) {
-        return getRouting().getMultiplexedAddressForDestinationId(uuid);
+    public String getInprocConnectAddress(final UUID inprocIdentifier) {
+        return getRouting().getMultiplexedAddressForDestinationId(inprocIdentifier);
     }
 
     @Override
-    public void open(UUID destination) {
+    public void openInprocChannel(final String backendAddress, final UUID inprocIdentifier) {
         final RoutingCommand command = new RoutingCommand();
         command.action.set(OPEN_INPROC);
-        command.inprocIdentifier.set(destination);
+        command.backendAddress.set(backendAddress);
+        command.inprocIdentifier.set(inprocIdentifier);
         issue(command);
     }
 
     @Override
-    public void close(UUID destination) {
+    public void closeInprocChannel(final String backendAddress, final UUID inprocIdentifier) {
         final RoutingCommand command = new RoutingCommand();
         command.action.set(CLOSE_INPROC);
-        command.inprocIdentifier.set(destination);
+        command.backendAddress.set(backendAddress);
+        command.inprocIdentifier.set(inprocIdentifier);
         issue(command);
     }
 
     @Override
-    public void connect(final String connectAddress) {
-        final ConnectCommand command = new ConnectCommand();
-        command.action.set(CONNECT);
-        command.connectAddress.set(connectAddress);
+    public void openBackendChannel(final String backendAddress) {
+        final RoutingCommand command = new RoutingCommand();
+        command.action.set(OPEN_BACKEND);
+        command.backendAddress.set(backendAddress);
         issue(command);
     }
 
     @Override
-    public void disconnect(final String connectAddress) {
-        final ConnectCommand command = new ConnectCommand();
-        command.action.set(DISCONNECT);
-        command.connectAddress.set(connectAddress);
+    public void closeBackendChannel(final String backendAddress) {
+        final RoutingCommand command = new RoutingCommand();
+        command.action.set(CLOSE_BACKEND);
+        command.backendAddress.set(backendAddress);
         issue(command);
-    }
-
-    private void issue(final ConnectCommand command) {
-        issue(CONNECT_COMMAND, command.getByteBuffer());
     }
 
     private void issue(final RoutingCommand command) {

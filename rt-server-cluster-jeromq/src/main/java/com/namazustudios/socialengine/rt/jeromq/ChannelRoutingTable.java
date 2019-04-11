@@ -15,21 +15,23 @@ import java.util.stream.Collectors;
 import static org.zeromq.ZMQ.Poller.POLLIN;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 
-public class BackendChannelTable implements AutoCloseable {
+public class ChannelRoutingTable implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(InprocChannelTable.class);
 
-    private final Map<Integer, String> backendSocketHandlesToAddresses = new LinkedHashMap<>();
-
-    private final Map<String, Integer> backendAddressesToSocketHandles = new LinkedHashMap<>();
-
-    private final Map<String, InprocChannelTable> backendAddressesToInprocChannelTables = new LinkedHashMap<>();
-
     private final Map<String, MonitorThread> backendAddressesToMonitorThreads = new LinkedHashMap<>();
 
-    private final Map<Integer, Integer> inprocSocketHandlesToBackendSocketHandles = new LinkedHashMap<>();
+    private final Map<Integer, String> backendSocketHandlesToAddresses = new LinkedHashMap<>();
+    private final Map<String, Integer> backendAddressesToSocketHandles = new LinkedHashMap<>();
 
+    private final Map<Integer, UUID> inprocSocketHandlesToIdentifiers = new LinkedHashMap<>();
+    private final Map<UUID, Integer> inprocIdentifiersToSocketHandles = new LinkedHashMap<>();
+
+    private final Map<Integer, Integer> inprocSocketHandlesToBackendSocketHandles = new LinkedHashMap<>();
     private final Map<Integer, String> inprocSocketHandlesToBackendAddresses = new LinkedHashMap<>();
+
+    private final Map<UUID, String> inprocIdentifiersToBackendAddresses = new HashMap<>();
+    private final Map<String, Set<UUID>> backendAddressesToInprocIdentifiers = new HashMap<>();
 
     private final ZContext zContext;
 
@@ -39,7 +41,7 @@ public class BackendChannelTable implements AutoCloseable {
 
     private final Function<UUID, ZMQ.Socket> inprocConnector;
 
-    public BackendChannelTable(
+    public ChannelRoutingTable(
             final ZContext zContext,
             final ZMQ.Poller poller,
             final Function<String, ZMQ.Socket> backendConnector,

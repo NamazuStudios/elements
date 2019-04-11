@@ -101,10 +101,10 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     private Injector injectorFor(final Application application) {
         return applicationInjectorMap.computeIfAbsent(application.getId(), k -> {
 
-            final UUID uuid = getMultiplexedConnectionsManager().getDestinationUUIDForNodeId(application.getId());
-            getMultiplexedConnectionsManager().open(application.getId());
+            final UUID uuid = getMultiplexedConnectionsManager().getInprocIdentifierForNodeIdentifier(application.getId());
+            getMultiplexedConnectionsManager().openInprocChannel(application.getId());
 
-            final String connectAddress = getMultiplexedConnectionsManager().getConnectAddress(uuid);
+            final String connectAddress = getMultiplexedConnectionsManager().getInprocConnectAddress(uuid);
 
             final File codeDirectory = getGitLoader().getCodeDirectory(application);
             final DispatcherModule dispatcherModule = new DispatcherModule(codeDirectory);

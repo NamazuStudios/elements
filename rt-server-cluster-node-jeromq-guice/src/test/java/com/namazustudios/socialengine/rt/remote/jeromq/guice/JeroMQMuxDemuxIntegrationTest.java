@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer;
-import com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionsManager;
+import com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionManager;
 import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
 import com.namazustudios.socialengine.rt.MultiplexedConnectionsManager;
 import com.namazustudios.socialengine.rt.jeromq.Connection;
@@ -125,8 +125,8 @@ public class JeroMQMuxDemuxIntegrationTest {
         multiplexedConnectionsManager.start();
         connectionDemultiplexer.start();
 
-        DESTINATION_IDS.forEach(multiplexedConnectionsManager::open);
-        DESTINATION_IDS.forEach(connectionDemultiplexer::open);
+        DESTINATION_IDS.forEach(multiplexedConnectionsManager::openInprocChannel);
+        DESTINATION_IDS.forEach(connectionDemultiplexer::openInprocChannel);
 
     }
 
@@ -161,7 +161,7 @@ public class JeroMQMuxDemuxIntegrationTest {
 
             final int index = poller.register(connection.socket(), POLLIN | POLLERR);
             final boolean connected = connection.socket().connect(multiplexedAddress);
-            assertTrue(connected, "Failed to connect.");
+            assertTrue(connected, "Failed to openBackendChannel.");
 
             final ZMsg request = new ZMsg();
             request.push(uuid.toString());
@@ -199,10 +199,10 @@ public class JeroMQMuxDemuxIntegrationTest {
             bind(ZContext.class).toInstance(master);
 
             bind(String.class)
-                .annotatedWith(named(JeroMQMultiplexedConnectionsManager.CONNECT_ADDR))
+                .annotatedWith(named(JeroMQMultiplexedConnectionManager.CONNECT_ADDR))
                 .toInstance(CONNECTION_ADDRESS);
 
-            bind(MultiplexedConnectionsManager.class).to(JeroMQMultiplexedConnectionsManager.class).asEagerSingleton();
+            bind(MultiplexedConnectionsManager.class).to(JeroMQMultiplexedConnectionManager.class).asEagerSingleton();
 
         }
 

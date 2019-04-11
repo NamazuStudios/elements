@@ -32,7 +32,7 @@ public interface GitLoader {
      * Opens a {@link Git} instance for the supplied {@link Application} which can be used to manipulate the various
      * files within the repository.  When call returns the supplied {@link Git} instance will be closed.
      *
-     * @param  application the {@link Application} for which to open a {@link Git} instance
+     * @param  application the {@link Application} for which to openInprocChannel a {@link Git} instance
      * @param gitConsumer consumes an instance of {@link Git} which will be used to perform the desired actions
      */
     void performInGit(final Application application, final BiConsumer<Git, Function<Path, OutputStream>> gitConsumer);

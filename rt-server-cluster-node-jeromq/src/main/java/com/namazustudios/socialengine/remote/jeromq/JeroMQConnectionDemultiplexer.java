@@ -102,12 +102,12 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
     }
 
     @Override
-    public UUID getDestinationUUIDForNodeId(String destinationNodeId) {
+    public UUID getInprocIdentifierForNodeIdentifier(String destinationNodeId) {
         return getRouting().getDestinationId(destinationNodeId);
     }
 
     @Override
-    public void open(UUID destination) {
+    public void openInprocChannel(UUID destination) {
         final RoutingCommand command = new RoutingCommand();
         command.action.set(OPEN_INPROC);
         command.inprocIdentifier.set(destination);
@@ -115,7 +115,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
     }
 
     @Override
-    public void close(UUID destination) {
+    public void closeInprocChannel(UUID destination) {
         final RoutingCommand command = new RoutingCommand();
         command.action.set(CLOSE_INPROC);
         command.inprocIdentifier.set(destination);
@@ -290,7 +290,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
         private void sendDeadRoute(final RoutingHeader incomingRoutingHeader, final InprocChannelTable backends, final ZMsg msg) {
 
-            final ZMQ.Socket socket = backends.getSocket(incomingRoutingHeader.inprocIdentifier.get());
+            final ZMQ.Socket socket = backends.getInprocSocket(incomingRoutingHeader.inprocIdentifier.get());
 
             if (socket == null) {
                 return;
