@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @ApiModel(description = "Maps to the response from a GameOn Tournament object from the AWS GameOn API.")
@@ -60,6 +61,9 @@ public class GameOnTournamentSummary implements Serializable {
 
     @ApiModelProperty("The types of participants that will be in the tournament (e.g. individual, team).")
     private String participantType;
+
+    @ApiModelProperty("The metadata of the tournament - text for any additional information (e.g. Rules, Disclaimers, etc.)")
+    private String metadata;
 
     public String getTournamentId() {
         return tournamentId;
@@ -173,6 +177,13 @@ public class GameOnTournamentSummary implements Serializable {
 
     public void setParticipantType(String participantType) { this.participantType = participantType; }
 
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
+    }
 
     @Override
     public boolean equals(Object object) {
@@ -195,7 +206,8 @@ public class GameOnTournamentSummary implements Serializable {
                 Objects.equals(getHasAccessKey(), that.getHasAccessKey()) &&
                 Objects.equals(getScoreType(), that.getScoreType()) &&
                 Objects.equals(getTournamentState(), that.getTournamentState()) &&
-                Objects.equals(getParticipantType(), that.getParticipantType());
+                Objects.equals(getParticipantType(), that.getParticipantType()) &&
+                Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
@@ -203,7 +215,7 @@ public class GameOnTournamentSummary implements Serializable {
         return Objects.hash(getTournamentId(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(),
                 getMatchesPerPlayer(), getPlayerAttemptsPerMatch(), getPlayersPerMatch(), getPrizeBundles(), getTitle(),
                 getSubtitle(), getWinType(), getDescription(), getHasAccessKey(), getScoreType(),
-                getTournamentState(), getParticipantType());
+                getTournamentState(), getParticipantType(), getMetadata());
     }
 
     @Override
@@ -226,6 +238,7 @@ public class GameOnTournamentSummary implements Serializable {
                 ", scoreType='" + scoreType + '\'' +
                 ", tournamentState='" + tournamentState + '\'' +
                 ", participantType='" + participantType + '\'' +
+                ", metadata='" + metadata + '\'' +
                 '}';
     }
 
