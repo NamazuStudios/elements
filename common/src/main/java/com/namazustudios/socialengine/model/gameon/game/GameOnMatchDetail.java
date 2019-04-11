@@ -114,11 +114,11 @@ public class GameOnMatchDetail {
         this.attemptsRemaining = attemptsRemaining;
     }
 
-    public Map<String, String> getMetadata() {
+    public String getMetadata() {
         return metadata;
     }
 
-    public void setMetadata(Map<String, String> metadata) {
+    public void setMetadata(String metadata) {
         this.metadata = metadata;
     }
 
