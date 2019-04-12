@@ -63,7 +63,7 @@ public class ChannelRoutingTable implements AutoCloseable {
 
     private ZMQ.Socket bindInprocSocket(final ZContext context, final UUID inprocIdentifier) {
         final ZMQ.Socket inprocSocket = context.createSocket(ROUTER);
-        final String bindAddress = getRouting().getMultiplexedAddressForDestinationId(inprocIdentifier);
+        final String bindAddress = RouteRepresentationUtil.buildMultiplexedInprocAddress(inprocIdentifier);
         inprocSocket.setRouterMandatory(true);
         inprocSocket.bind(bindAddress);
         return inprocSocket;

@@ -31,8 +31,6 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQMultiplexedConnectionRunnable.class);
 
-    private final SyncWait<Void> connectSyncWait = new SyncWait<Void>(logger);
-
     private final String controlAddress;
 
     private volatile ZContext zContext;
@@ -55,7 +53,7 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
              final BackendChannelTable backendChannelTable = new BackendChannelTable(
                      context,
                      poller,
-                     backendAddress -> bind(context, backendAddress),
+                     backendAddress -> connect(context, backendAddress),
                      inprocIdentifier -> bind(context, inprocIdentifier)
              );
              final Connection control = from(context, c -> c.createSocket(PULL));
@@ -113,7 +111,7 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
 
     }
 
-    private ZMQ.Socket bind(final ZContext context, final String backendAddress) {
+    private ZMQ.Socket connect(final ZContext context, final String backendAddress) {
         final ZMQ.Socket backendSocket = context.createSocket(DEALER);
         backendSocket.connect(backendAddress);
         return backendSocket;
@@ -199,14 +197,5 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
                 logger.error("Unexpected command: {}", preamble.commandType.get());
         }
 
-    }
-
-    public ZContext getzContext() {
-        return zContext;
-    }
-
-    @Inject
-    public void setzContext(ZContext zContext) {
-        this.zContext = zContext;
     }
 }

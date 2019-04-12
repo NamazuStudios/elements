@@ -27,9 +27,9 @@ import static java.util.UUID.randomUUID;
 import static org.zeromq.ZContext.shadow;
 import static org.zeromq.ZMQ.*;
 
-public class JeroMQMultiplexedConnectionManager implements MultiplexedConnectionManager {
+public class JeroMQMultiplexedConnectionService implements MultiplexedConnectionManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(JeroMQMultiplexedConnectionManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQMultiplexedConnectionService.class);
 
     public static final String CONNECT_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.connectAddress";
     public static final String APPLICATION_NODE_FQDN = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.applicationNodeFqdn";
@@ -60,7 +60,7 @@ public class JeroMQMultiplexedConnectionManager implements MultiplexedConnection
         final Thread multiplexedConnectionThread = new Thread(multiplexedConnectionRunnable);
 
         multiplexedConnectionThread.setDaemon(true);
-        multiplexedConnectionThread.setName(JeroMQMultiplexedConnectionManager.class.getSimpleName());
+        multiplexedConnectionThread.setName(JeroMQMultiplexedConnectionService.class.getSimpleName());
         multiplexedConnectionThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
 
         if (atomicMultiplexedConnectionThread.compareAndSet(null, multiplexedConnectionThread)) {

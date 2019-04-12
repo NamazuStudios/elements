@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer;
-import com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionManager;
+import com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionService;
 import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
 import com.namazustudios.socialengine.rt.MultiplexedConnectionsManager;
 import com.namazustudios.socialengine.rt.jeromq.Connection;
@@ -199,10 +199,10 @@ public class JeroMQMuxDemuxIntegrationTest {
             bind(ZContext.class).toInstance(master);
 
             bind(String.class)
-                .annotatedWith(named(JeroMQMultiplexedConnectionManager.CONNECT_ADDR))
+                .annotatedWith(named(JeroMQMultiplexedConnectionService.CONNECT_ADDR))
                 .toInstance(CONNECTION_ADDRESS);
 
-            bind(MultiplexedConnectionsManager.class).to(JeroMQMultiplexedConnectionManager.class).asEagerSingleton();
+            bind(MultiplexedConnectionsManager.class).to(JeroMQMultiplexedConnectionService.class).asEagerSingleton();
 
         }
 
