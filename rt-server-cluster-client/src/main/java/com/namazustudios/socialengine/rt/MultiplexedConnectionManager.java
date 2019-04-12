@@ -11,7 +11,7 @@ public interface MultiplexedConnectionManager extends MultiplexSupport {
 
     /**
      * Starts this {@link MultiplexedConnectionManager} and begins monitoring for SRV records, thereby identifying
-     * app node instances in the network to which the manager should openBackendChannel.
+     * app node instances in the network to which the manager should issueOpenBackendChannelCommand.
      */
     void start();
 
@@ -23,10 +23,10 @@ public interface MultiplexedConnectionManager extends MultiplexSupport {
     void stop();
 
     /**
-     * Gets the openBackendChannel address for the inproc with the supplied {@link UUID}.
+     * Gets the issueOpenBackendChannelCommand address for the inproc with the supplied {@link UUID}.
      *
      * @param inprocIdentifier the uuid
-     * @return the openBackendChannel address
+     * @return the issueOpenBackendChannelCommand address
      */
     String getInprocConnectAddress(final UUID inprocIdentifier);
 

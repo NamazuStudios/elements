@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
-import com.namazustudios.socialengine.rt.jeromq.Identity;
+import com.namazustudios.socialengine.rt.jeromq.IdentityUtil;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
+import static com.namazustudios.socialengine.rt.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.MessageType.INVOCATION_ERROR;
 import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
@@ -59,7 +59,7 @@ public class JeroMQNode implements Node {
 
     private String name;
 
-    private Identity identity;
+    private IdentityUtil identityUtil;
 
     private ZContext zContext;
 
@@ -125,13 +125,13 @@ public class JeroMQNode implements Node {
 
     }
 
-    public Identity getIdentity() {
-        return identity;
+    public IdentityUtil getIdentityUtil() {
+        return identityUtil;
     }
 
     @Inject
-    public void setIdentity(Identity identity) {
-        this.identity = identity;
+    public void setIdentityUtil(IdentityUtil identityUtil) {
+        this.identityUtil = identityUtil;
     }
 
     public ZContext getzContext() {
@@ -333,7 +333,7 @@ public class JeroMQNode implements Node {
 
         private void dispatchMethodInvocation(final ZMsg msg) {
 
-            final ZMsg identity = getIdentity().popIdentity(msg);
+            final ZMsg identity = IdentityUtil.popIdentity(msg);
 
             final AtomicReference<Invocation> invocationAtomicReference = new AtomicReference<>();
 

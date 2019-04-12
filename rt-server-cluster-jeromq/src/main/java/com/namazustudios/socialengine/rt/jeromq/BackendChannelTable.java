@@ -139,7 +139,7 @@ public class BackendChannelTable implements AutoCloseable {
             try {
                 backendSocket.close();
             } catch (Exception ex) {
-                logger.error("Unable to closeInprocChannel socket.", ex);
+                logger.error("Unable to issueCloseInprocChannelCommand socket.", ex);
             } finally {
                 getzContext().destroySocket(backendSocket);
             }

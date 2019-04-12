@@ -18,7 +18,7 @@ import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandTy
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND_ACK;
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_RESPONSE;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
-import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
+import static com.namazustudios.socialengine.rt.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.jeromq.JeroMQSocketHost.send;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.CLOSE_INPROC;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.OPEN_INPROC;
@@ -42,9 +42,9 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
     public static final String CONTROL_BIND_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.controlBindAddress";
 
-    private Routing routing;
+    private RouteRepresentationUtil routeRepresentationUtil;
 
-    private Identity identity;
+    private IdentityUtil identityUtil;
 
     private ZContext zContext;
 
@@ -98,12 +98,12 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
     @Override
     public String getBindAddress(UUID uuid) {
-        return getRouting().getDemultiplexedAddressForDestinationId(uuid);
+        return RouteRepresentationUtil.buildDemultiplexedInprocAddress(uuid);
     }
 
     @Override
     public UUID getInprocIdentifierForNodeIdentifier(String destinationNodeId) {
-        return getRouting().getDestinationId(destinationNodeId);
+        return RouteRepresentationUtil.getInprocIdentifier(destinationNodeId);
     }
 
     @Override
@@ -131,22 +131,22 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         }
     }
 
-    public Identity getIdentity() {
-        return identity;
+    public IdentityUtil getIdentityUtil() {
+        return identityUtil;
     }
 
     @Inject
-    public void setIdentity(Identity identity) {
-        this.identity = identity;
+    public void setIdentityUtil(IdentityUtil identityUtil) {
+        this.identityUtil = identityUtil;
     }
 
-    public Routing getRouting() {
-        return routing;
+    public RouteRepresentationUtil getRouteRepresentationUtil() {
+        return routeRepresentationUtil;
     }
 
     @Inject
-    public void setRouting(Routing routing) {
-        this.routing = routing;
+    public void setRouteRepresentationUtil(RouteRepresentationUtil routeRepresentationUtil) {
+        this.routeRepresentationUtil = routeRepresentationUtil;
     }
 
     public ZContext getzContext() {
@@ -250,7 +250,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
         private ZMQ.Socket connect(final ZContext context, final UUID destinationId) {
             final ZMQ.Socket socket = context.createSocket(ZMQ.DEALER);
-            final String routeAddress = getRouting().getDemultiplexedAddressForDestinationId(destinationId);
+            final String routeAddress = RouteRepresentationUtil.buildDemultiplexedInprocAddress(destinationId);
             logger.info("Connecting to {} through {}", destinationId, routeAddress);
             socket.connect(routeAddress);
             return socket;
@@ -259,7 +259,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
         private void sendToBackend(final ZMQ.Socket frontend, final InprocChannelTable backends) {
 
             final ZMsg msg = recvMsg(frontend);
-            final RoutingHeader incomingRoutingHeader = getRouting().stripRoutingHeader(msg);
+            final RoutingHeader incomingRoutingHeader = RouteRepresentationUtil.getAndStripRoutingHeader(msg);
 
             if (incomingRoutingHeader.status.get() == CONTINUE) {
                 if (backends.hasInprocIdentifier(incomingRoutingHeader.inprocIdentifier.get())) {
@@ -282,7 +282,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
             final RoutingHeader routingHeader = new RoutingHeader();
             routingHeader.status.set(CONTINUE);
             routingHeader.inprocIdentifier.set(destination);
-            getRouting().insertRoutingHeader(msg, routingHeader);
+            RouteRepresentationUtil.insertRoutingHeader(msg, routingHeader);
 
             msg.send(frontend);
 
@@ -303,7 +303,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
             final byte[] outgoingRoutingHeaderBytes = new byte[outgoingRoutingHeader.size()];
             outgoingRoutingHeader.getByteBuffer().get(outgoingRoutingHeaderBytes);
 
-            final ZMsg response = getIdentity().popIdentity(msg);
+            final ZMsg response = IdentityUtil.popIdentity(msg);
             response.add(EMPTY_DELIMITER);
             response.add(outgoingRoutingHeaderBytes);
             sendOrDrop(socket, msg);

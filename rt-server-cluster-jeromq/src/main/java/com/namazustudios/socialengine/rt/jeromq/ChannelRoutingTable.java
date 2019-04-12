@@ -12,8 +12,10 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static org.zeromq.ZMQ.DEALER;
 import static org.zeromq.ZMQ.Poller.POLLIN;
 import static org.zeromq.ZMQ.Poller.POLLERR;
+import static org.zeromq.ZMQ.ROUTER;
 
 public class ChannelRoutingTable implements AutoCloseable {
 
@@ -37,20 +39,12 @@ public class ChannelRoutingTable implements AutoCloseable {
 
     private final ZMQ.Poller poller;
 
-    private final Function<String, ZMQ.Socket> backendConnector;
-
-    private final Function<UUID, ZMQ.Socket> inprocConnector;
-
     public ChannelRoutingTable(
             final ZContext zContext,
-            final ZMQ.Poller poller,
-            final Function<String, ZMQ.Socket> backendConnector,
-            final Function<UUID, ZMQ.Socket> inprocConnector
+            final ZMQ.Poller poller
     ) {
         this.zContext = zContext;
         this.poller = poller;
-        this.backendConnector = backendConnector;
-        this.inprocConnector = inprocConnector;
     }
 
     public ZContext getzContext() {
@@ -59,6 +53,20 @@ public class ChannelRoutingTable implements AutoCloseable {
 
     public ZMQ.Poller getPoller() {
         return poller;
+    }
+
+    private ZMQ.Socket connectToBackendAddress(final ZContext context, final String backendAddress) {
+        final ZMQ.Socket backendSocket = context.createSocket(DEALER);
+        backendSocket.connect(backendAddress);
+        return backendSocket;
+    }
+
+    private ZMQ.Socket bindInprocSocket(final ZContext context, final UUID inprocIdentifier) {
+        final ZMQ.Socket inprocSocket = context.createSocket(ROUTER);
+        final String bindAddress = getRouting().getMultiplexedAddressForDestinationId(inprocIdentifier);
+        inprocSocket.setRouterMandatory(true);
+        inprocSocket.bind(bindAddress);
+        return inprocSocket;
     }
 
     @Override
@@ -141,7 +149,7 @@ public class ChannelRoutingTable implements AutoCloseable {
             try {
                 backendSocket.close();
             } catch (Exception ex) {
-                logger.error("Unable to closeInprocChannel socket.", ex);
+                logger.error("Unable to issueCloseInprocChannelCommand socket.", ex);
             } finally {
                 getzContext().destroySocket(backendSocket);
             }

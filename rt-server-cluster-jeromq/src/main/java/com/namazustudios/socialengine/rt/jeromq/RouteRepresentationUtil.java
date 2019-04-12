@@ -12,24 +12,32 @@ import static java.lang.String.format;
 import static java.util.UUID.nameUUIDFromBytes;
 
 /**
- * Used to generate various URLs for internal routing of messages.
+ * Used to generate various URL strings for internal routing of messages.
  */
-public class Routing {
+public class RouteRepresentationUtil {
 
     private static final Charset UTF_8 = Charset.forName("UTF-8");
 
-    private Identity identity;
+    public static String buildBackendAddress(final String host, final int port) {
+        if (host == null || host.length() == 0 || port < 0) {
+            return null;
+        }
+
+        final String backendAddress = "tcp://" + host.substring(0, host.length() - 1) + ":" + port;
+
+        return backendAddress;
+    }
 
     /**
-     * Gets a route {@link UUID} for the supplied id.  The expected id corresponds to the unique id of the node This is
-     * used to abbreviate potentially long unique IDs over the network and guarantee a fixed-length identifier for the
-     * route.
+     * Gets a route {@link UUID} for the supplied id string representation.  The expected id corresponds to the unique
+     * id of the node This is used to abbreviate potentially long unique IDs over the network and guarantee a
+     * fixed-length identifier for the route.
      *
-     * @param destinationNodeId the node's ID
+     * @param inprocIdentifierString the node's ID
      * @return a {@link UUID} based on the application id
      */
-    public UUID getDestinationId(final String destinationNodeId) {
-        return nameUUIDFromBytes(destinationNodeId.getBytes(UTF_8));
+    public static UUID getInprocIdentifier(final String inprocIdentifierString) {
+        return nameUUIDFromBytes(inprocIdentifierString.getBytes(UTF_8));
     }
 
     /**
@@ -38,8 +46,8 @@ public class Routing {
      *
      * Returns the {@link String} representing the internal route address.
      **/
-    public String getMultiplexedAddressForDestinationId(final UUID destinationId) {
-        return format("inproc://multiplex-%s", destinationId);
+    public static String buildMultiplexedInprocAddress(final UUID inprocIdentifier) {
+        return format("inproc://multiplex-%s", inprocIdentifier);
     }
 
     /**
@@ -48,7 +56,7 @@ public class Routing {
      *
      * Returns the {@link String} representing the internal route address.
      **/
-    public String getDemultiplexedAddressForDestinationId(final UUID destinationId) {
+    public static String buildDemultiplexedInprocAddress(final UUID destinationId) {
         return format("inproc://demultiplex-%s", destinationId);
     }
 
@@ -58,9 +66,9 @@ public class Routing {
      * @param msg the message from which to strip routing information
      * @return the {@link RoutingHeader} contained in the message
      */
-    public RoutingHeader stripRoutingHeader(final ZMsg msg) {
+    public static RoutingHeader getAndStripRoutingHeader(final ZMsg msg) {
 
-        final ZMsg identity = getIdentity().popIdentity(msg);
+        final ZMsg identity = IdentityUtil.popIdentity(msg);
 
         if (msg.isEmpty()) {
             throw new MalformedMessageException("Message missing delimiter frame or no data follows delimiter.");
@@ -68,38 +76,29 @@ public class Routing {
 
         final RoutingHeader routingHeader = new RoutingHeader();
         routingHeader.getByteBuffer().put(msg.pop().getData());
-        getIdentity().pushIdentity(msg, identity);
+        IdentityUtil.pushIdentity(msg, identity);
 
         return routingHeader;
 
     }
 
     /**
-     * Provided the {@link ZMsg}, this will insert the {@link RoutingHeader} after the identity and before the message
+     * Provided the {@link ZMsg}, this will insert the {@link RoutingHeader} after the identityUtil and before the message
      * contents.
      *
      * @param msg the message to receive the routing information
      * @param routingHeader the routing information to insert
      */
-    public void insertRoutingHeader(final ZMsg msg, final RoutingHeader routingHeader) {
+    public static void insertRoutingHeader(final ZMsg msg, final RoutingHeader routingHeader) {
 
-        final ZMsg identity = getIdentity().popIdentity(msg);
+        final ZMsg identity = IdentityUtil.popIdentity(msg);
 
         final byte[] routingHeaderBytes = new byte[routingHeader.size()];
         routingHeader.getByteBuffer().get(routingHeaderBytes);
 
         msg.push(routingHeaderBytes);
-        getIdentity().pushIdentity(msg, identity);
+        IdentityUtil.pushIdentity(msg, identity);
 
-    }
-
-    public Identity getIdentity() {
-        return identity;
-    }
-
-    @Inject
-    public void setIdentity(Identity identity) {
-        this.identity = identity;
     }
 
 }

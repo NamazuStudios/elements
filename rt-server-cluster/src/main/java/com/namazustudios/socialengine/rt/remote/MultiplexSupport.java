@@ -6,7 +6,7 @@ public interface MultiplexSupport {
 
     /**
      * Makes a type 3 named {@link UUID} from the supplied node id using the appropriate charset encoding.  The returned
-     * {@link UUID} can then be used to assign inprocIdentifier routes using {@link #openInprocChannel(String,UUID)}.
+     * {@link UUID} can then be used to assign inprocIdentifier routes using {@link #issueOpenInprocChannelCommand(String,UUID)}.
      *
      * @param nodeIdentifier the node id
      * @return the {@link UUID} of the inprocIdentifier
@@ -18,23 +18,23 @@ public interface MultiplexSupport {
      *
      * @param inprocIdentifier the {@link UUID} inprocIdentifier
      */
-    void openInprocChannel(final String backendAddress, UUID inprocIdentifier);
+    void issueOpenInprocChannelCommand(final String backendAddress, UUID inprocIdentifier);
 
     /**
      * Removes {@link UUID} for a particular inprocIdentifier.
      *
      * @param inprocIdentifier the {@link UUID} inprocIdentifier
      */
-    void closeInprocChannel(final String backendAddress, UUID inprocIdentifier);
+    void issueCloseInprocChannelCommand(final String backendAddress, UUID inprocIdentifier);
 
     /**
      * Opens a route to the supplied inprocIdentifier node ID.
      *
      * @param nodeIdentifier the inproc's node id
      */
-    default void openInprocChannel(final String backendAddress, final String nodeIdentifier) {
+    default void issueOpenInprocChannelCommand(final String backendAddress, final String nodeIdentifier) {
         final UUID inprocIdentifier = getInprocIdentifierForNodeIdentifier(nodeIdentifier);
-        openInprocChannel(backendAddress, inprocIdentifier);
+        issueOpenInprocChannelCommand(backendAddress, inprocIdentifier);
     }
 
     /**
@@ -42,13 +42,13 @@ public interface MultiplexSupport {
      *
      * @param nodeIdentifier the inproc's node id
      */
-    default void closeInprocChannel(final String backendAddress, final String nodeIdentifier) {
+    default void issueCloseInprocChannelCommand(final String backendAddress, final String nodeIdentifier) {
         final UUID inprocIdentifier = getInprocIdentifierForNodeIdentifier(nodeIdentifier);
-        closeInprocChannel(backendAddress, inprocIdentifier);
+        issueCloseInprocChannelCommand(backendAddress, inprocIdentifier);
     }
 
-    void openBackendChannel(final String backendAddress);
+    void issueOpenBackendChannelCommand(final String backendAddress);
 
-    void closeBackendChannel(final String backendAddress);
+    void issueCloseBackendChannelCommand(final String backendAddress);
 
 }

@@ -27,24 +27,20 @@ import static zmq.ZError.EHOSTUNREACH;
 /**
  * Threaded manager for a multiplexed ZMQ connection.
  */
-public class JeroMQMultiplexedConnection implements Runnable {
+public class JeroMQMultiplexedConnectionRunnable implements Runnable {
 
-    private static final Logger logger = LoggerFactory.getLogger(JeroMQMultiplexedConnection.class);
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQMultiplexedConnectionRunnable.class);
 
     private final SyncWait<Void> connectSyncWait = new SyncWait<Void>(logger);
 
     private final String controlAddress;
 
-    private volatile Routing routing;
-
     private volatile ZContext zContext;
 
-    public JeroMQMultiplexedConnection(final String controlAddress,
-                                       final ZContext zContext,
-                                       final Routing routing) {
+    public JeroMQMultiplexedConnectionRunnable(final String controlAddress,
+                                               final ZContext zContext) {
         this.controlAddress = controlAddress;
         this.zContext = zContext;
-        this.routing = routing;
     }
 
     public void waitForConnect() {
@@ -125,14 +121,14 @@ public class JeroMQMultiplexedConnection implements Runnable {
 
     private ZMQ.Socket bind(final ZContext context, final UUID inprocIdentifier) {
         final ZMQ.Socket inprocSocket = context.createSocket(ROUTER);
-        final String bindAddress = getRouting().getMultiplexedAddressForDestinationId(inprocIdentifier);
+        final String bindAddress = RouteRepresentationUtil.buildMultiplexedInprocAddress(inprocIdentifier);
         inprocSocket.setRouterMandatory(true);
         inprocSocket.bind(bindAddress);
         return inprocSocket;
     }
 
     private void sendToInprocChannel(final ZMsg msg, final BackendChannelTable backendChannelTable) {
-        final RoutingHeader routingHeader = getRouting().stripRoutingHeader(msg);
+        final RoutingHeader routingHeader = RouteRepresentationUtil.getAndStripRoutingHeader(msg);
 
         if (routingHeader.status.get() == CONTINUE) {
 
@@ -140,7 +136,7 @@ public class JeroMQMultiplexedConnection implements Runnable {
             final UUID inprocIdentifier = routingHeader.inprocIdentifier.get();
 
             if (backendAddress == null || inprocIdentifier == null) {
-                logger.warn("Bad routing header format (missing backendAddress and/or inprocIdentifier).  Dropping message.");
+                logger.warn("Bad routeRepresentationUtil header format (missing backendAddress and/or inprocIdentifier).  Dropping message.");
             }
 
             final ZMQ.Socket inprocSocket = backendChannelTable.getInprocSocket(backendAddress, inprocIdentifier);
@@ -176,7 +172,7 @@ public class JeroMQMultiplexedConnection implements Runnable {
         routingHeader.backendAddress.set(backendAddress);
         routingHeader.inprocIdentifier.set(inprocIdentifier);
 
-        getRouting().insertRoutingHeader(msg, routingHeader);
+        RouteRepresentationUtil.insertRoutingHeader(msg, routingHeader);
 
         final ZMQ.Socket backendSocket = backendChannelTable.getBackendSocket(backendAddress);
 
@@ -203,15 +199,6 @@ public class JeroMQMultiplexedConnection implements Runnable {
                 logger.error("Unexpected command: {}", preamble.commandType.get());
         }
 
-    }
-
-    public Routing getRouting() {
-        return routing;
-    }
-
-    @Inject
-    public void setRouting(Routing routing) {
-        this.routing = routing;
     }
 
     public ZContext getzContext() {

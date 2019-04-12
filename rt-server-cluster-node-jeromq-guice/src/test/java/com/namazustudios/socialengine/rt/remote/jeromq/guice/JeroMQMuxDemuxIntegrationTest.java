@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionM
 import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
 import com.namazustudios.socialengine.rt.MultiplexedConnectionsManager;
 import com.namazustudios.socialengine.rt.jeromq.Connection;
-import com.namazustudios.socialengine.rt.jeromq.Routing;
+import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -25,7 +25,7 @@ import java.util.concurrent.ExecutionException;
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
-import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
+import static com.namazustudios.socialengine.rt.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
 import static java.util.Collections.unmodifiableList;
@@ -63,7 +63,7 @@ public class JeroMQMuxDemuxIntegrationTest {
 
         master = new ZContext();
 
-        final Routing routing = new Routing();
+        final RouteRepresentationUtil routeRepresentationUtil = new RouteRepresentationUtil();
         final Injector muxInjector = createInjector(new MuxerModule());
         final Injector demuxInjector = createInjector(new DemuxerModule());
 
@@ -73,8 +73,8 @@ public class JeroMQMuxDemuxIntegrationTest {
         echoer = new Thread(() -> {
 
             final List<ZMQ.Socket> socketList = DESTINATION_IDS.stream()
-                .map(routing::getDestinationId)
-                .map(routing::getDemultiplexedAddressForDestinationId)
+                .map(RouteRepresentationUtil::getInprocIdentifier)
+                .map(RouteRepresentationUtil::buildDemultiplexedInprocAddress)
                 .map(addr -> {
                     final ZMQ.Socket socket = master.createSocket(ZMQ.ROUTER);
                     socket.setRouterMandatory(true);
@@ -139,14 +139,14 @@ public class JeroMQMuxDemuxIntegrationTest {
     }
 
     @DataProvider(parallel = true)
-    public Object[][] destinationIdDataSupplier() {
+    public static Object[][] destinationIdDataSupplier() {
 
-        final Routing routing = new Routing();
+        final RouteRepresentationUtil routeRepresentationUtil = new RouteRepresentationUtil();
 
         return DESTINATION_IDS
             .stream()
-            .map(id -> routing.getDestinationId(id))
-            .map(uuid -> new Object[]{routing.getMultiplexedAddressForDestinationId(uuid)})
+            .map(id -> RouteRepresentationUtil.getInprocIdentifier(id))
+            .map(uuid -> new Object[]{RouteRepresentationUtil.buildMultiplexedInprocAddress(uuid)})
             .toArray(Object[][]::new);
 
     }
@@ -161,7 +161,7 @@ public class JeroMQMuxDemuxIntegrationTest {
 
             final int index = poller.register(connection.socket(), POLLIN | POLLERR);
             final boolean connected = connection.socket().connect(multiplexedAddress);
-            assertTrue(connected, "Failed to openBackendChannel.");
+            assertTrue(connected, "Failed to issueOpenBackendChannelCommand.");
 
             final ZMsg request = new ZMsg();
             request.push(uuid.toString());

@@ -36,8 +36,6 @@ public class JeroMQMultiplexedConnectionManager implements MultiplexedConnection
 
     private final AtomicReference<Thread> atomicMultiplexedConnectionThread = new AtomicReference<>();
 
-    private Routing routing;
-
     private ZContext zContext;
 
     private String applicationNodeFqdn;
@@ -55,20 +53,19 @@ public class JeroMQMultiplexedConnectionManager implements MultiplexedConnection
     }
 
     private void setupAndStartMultiplexedConnection() {
-        final JeroMQMultiplexedConnection multiplexedConnection = new JeroMQMultiplexedConnection(
+        final JeroMQMultiplexedConnectionRunnable multiplexedConnectionRunnable = new JeroMQMultiplexedConnectionRunnable(
                 controlAddress,
-                getzContext(),
-                getRouting()
+                getzContext()
         );
-        final Thread multiplexedConnectionManagerThread = new Thread(multiplexedConnection);
+        final Thread multiplexedConnectionThread = new Thread(multiplexedConnectionRunnable);
 
-        multiplexedConnectionManagerThread.setDaemon(true);
-        multiplexedConnectionManagerThread.setName(JeroMQMultiplexedConnectionManager.class.getSimpleName());
-        multiplexedConnectionManagerThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
+        multiplexedConnectionThread.setDaemon(true);
+        multiplexedConnectionThread.setName(JeroMQMultiplexedConnectionManager.class.getSimpleName());
+        multiplexedConnectionThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
 
-        if (atomicMultiplexedConnectionThread.compareAndSet(null, multiplexedConnectionManagerThread)) {
-            multiplexedConnectionManagerThread.start();
-            multiplexedConnection.waitForConnect();
+        if (atomicMultiplexedConnectionThread.compareAndSet(null, multiplexedConnectionThread)) {
+            multiplexedConnectionThread.start();
+            multiplexedConnectionRunnable.waitForConnect();
         } else {
             throw new IllegalStateException("Failed to set up multiplexed connection.");
         }
@@ -120,12 +117,15 @@ public class JeroMQMultiplexedConnectionManager implements MultiplexedConnection
     }
 
     private boolean connectToBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
-        final String backendAddress = buildBackendAddress(srvUniqueIdentifier);
+        final String backendAddress = RouteRepresentationUtil.buildBackendAddress(
+                srvUniqueIdentifier.getHost(),
+                srvUniqueIdentifier.getPort());
+
         if (backendAddress == null) {
             return false;
         }
 
-        openBackendChannel(backendAddress);
+        issueOpenBackendChannelCommand(backendAddress);
 
         return true;
     }
@@ -150,26 +150,18 @@ public class JeroMQMultiplexedConnectionManager implements MultiplexedConnection
         }
     }
 
-    private static String buildBackendAddress(final SrvUniqueIdentifier srvUniqueIdentifier) {
-        final String host = srvUniqueIdentifier.getHost();
-        final int port = srvUniqueIdentifier.getPort();
 
-        if (host == null || host.length() == 0 || port < 0) {
-            return null;
-        }
-
-        final String backendAddress = "tcp://" + host.substring(0, host.length() - 1) + ":" + port;
-
-        return backendAddress;
-    }
 
     private boolean disconnectFromBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
-        final String connectAddress = buildBackendAddress(srvUniqueIdentifier);
-        if (connectAddress == null) {
+        final String backendAddress = RouteRepresentationUtil.buildBackendAddress(
+                srvUniqueIdentifier.getHost(),
+                srvUniqueIdentifier.getPort());
+
+        if (backendAddress == null) {
             return false;
         }
 
-        closeBackendChannel(connectAddress);
+        issueCloseBackendChannelCommand(backendAddress);
 
         return true;
     }
@@ -193,67 +185,58 @@ public class JeroMQMultiplexedConnectionManager implements MultiplexedConnection
 
     @Override
     public UUID getInprocIdentifierForNodeIdentifier(final String destinationNodeId) {
-        return getRouting().getDestinationId(destinationNodeId);
+        return RouteRepresentationUtil.getInprocIdentifier(destinationNodeId);
     }
 
     @Override
     public String getInprocConnectAddress(final UUID inprocIdentifier) {
-        return getRouting().getMultiplexedAddressForDestinationId(inprocIdentifier);
+        return RouteRepresentationUtil.buildMultiplexedInprocAddress(inprocIdentifier);
     }
 
     @Override
-    public void openInprocChannel(final String backendAddress, final UUID inprocIdentifier) {
+    public void issueOpenInprocChannelCommand(final String backendAddress, final UUID inprocIdentifier) {
         final RoutingCommand command = new RoutingCommand();
         command.action.set(OPEN_INPROC);
         command.backendAddress.set(backendAddress);
         command.inprocIdentifier.set(inprocIdentifier);
-        issue(command);
+        issueRoutingCommand(command);
     }
 
     @Override
-    public void closeInprocChannel(final String backendAddress, final UUID inprocIdentifier) {
+    public void issueCloseInprocChannelCommand(final String backendAddress, final UUID inprocIdentifier) {
         final RoutingCommand command = new RoutingCommand();
         command.action.set(CLOSE_INPROC);
         command.backendAddress.set(backendAddress);
         command.inprocIdentifier.set(inprocIdentifier);
-        issue(command);
+        issueRoutingCommand(command);
     }
 
     @Override
-    public void openBackendChannel(final String backendAddress) {
+    public void issueOpenBackendChannelCommand(final String backendAddress) {
         final RoutingCommand command = new RoutingCommand();
         command.action.set(OPEN_BACKEND);
         command.backendAddress.set(backendAddress);
-        issue(command);
+        issueRoutingCommand(command);
     }
 
     @Override
-    public void closeBackendChannel(final String backendAddress) {
+    public void issueCloseBackendChannelCommand(final String backendAddress) {
         final RoutingCommand command = new RoutingCommand();
         command.action.set(CLOSE_BACKEND);
         command.backendAddress.set(backendAddress);
-        issue(command);
+        issueRoutingCommand(command);
     }
 
-    private void issue(final RoutingCommand command) {
-        issue(ROUTING_COMMAND, command.getByteBuffer());
+    private void issueRoutingCommand(final RoutingCommand command) {
+        issueCommand(ROUTING_COMMAND, command.getByteBuffer());
     }
 
-    private void issue(final CommandType commandType, final ByteBuffer byteBuffer) {
+    private void issueCommand(final CommandType commandType, final ByteBuffer byteBuffer) {
         try (final ZContext context = shadow(getzContext());
              final Connection connection = from(context, c -> c.createSocket(PUSH))) {
             connection.socket().connect(getControlAddress());
             send(connection.socket(), commandType, byteBuffer);
         }
-    }
-
-    public Routing getRouting() {
-        return routing;
-    }
-
-    @Inject
-    public void setRouting(Routing routing) {
-        this.routing = routing;
     }
 
     public ZContext getzContext() {

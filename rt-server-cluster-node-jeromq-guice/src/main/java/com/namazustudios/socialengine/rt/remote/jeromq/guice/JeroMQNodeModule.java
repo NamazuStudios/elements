@@ -6,7 +6,6 @@ import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool;
-import com.namazustudios.socialengine.rt.jeromq.Identity;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.*;
@@ -79,7 +78,7 @@ public class JeroMQNodeModule extends PrivateModule {
     /**
      * Specifies the minimum number of connections to keep active, even if the timeout has expired.
      *
-     * @param minimumConnections the minimum number of connections to keep openInprocChannel
+     * @param minimumConnections the minimum number of connections to keep issueOpenInprocChannelCommand
      * @return this instance
      */
     public JeroMQNodeModule withMinimumConnections(final int minimumConnections) {
@@ -92,7 +91,7 @@ public class JeroMQNodeModule extends PrivateModule {
     /**
      * Specifies the maximum number of connections to keep active, even if the timeout has expired.
      *
-     * @param maximumConnections the minimum number of connections to keep openInprocChannel
+     * @param maximumConnections the minimum number of connections to keep issueOpenInprocChannelCommand
      * @return this instance
      */
     public JeroMQNodeModule withMaximumConnections(int maximumConnections) {
