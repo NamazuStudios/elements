@@ -62,8 +62,8 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
     }
 
     private void handleControlMessage(
-            final ZMsg msg,
             final int socketHandle,
+            final ZMsg msg,
             final JeroMQConnectionsManager connectionsManager
     ) {
         logger.info("Recv control msg");

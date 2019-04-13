@@ -88,7 +88,7 @@ public class JeroMQConnectionsManager {
 
                             final MessageHandler messageHandler = messageHandlers.get(socketHandle);
 
-                            messageHandler.accept(msg, socketHandle, this);
+                            messageHandler.accept(socketHandle, msg, this);
                         }
                         else if (didReceiveError) {
                             throw new InternalException(
@@ -107,9 +107,9 @@ public class JeroMQConnectionsManager {
 
 
     /**
-     * Creates a DEALER socket, connects it to the given ZMQ address, registers it into the poller, and returns the
-     * resultant socket handle in the poller. The provided message handler will also be registered and called whenever
-     * a ZMsg is received on the resultant socket.
+     * Creates a socket of the given type, connects it to the given ZMQ address, registers it into the poller, and
+     * returns the resultant socket handle in the poller. The provided message handler will also be registered and
+     * called whenever a ZMsg is received on the resultant socket.
      *
      * @param address the ZMQ address to which we wish to connect
      * @param socketType the type of ZMQ socket to open (e.g. DEALER)
@@ -139,9 +139,11 @@ public class JeroMQConnectionsManager {
     }
 
     /**
-     * Creates a ROUTER socket, binds it to the given ZMQ address, registers it into the poller, and returns the
-     * resultant socket handle in the poller. The provided message handler will also be registered and called whenever
-     * a ZMsg is received on the resultant socket.
+     * Creates a socket of the given type, binds it to the given ZMQ address, registers it into the poller, and returns
+     * the resultant socket handle in the poller. The provided message handler will also be registered and called
+     * whenever a ZMsg is received on the resultant socket.
+     *
+     * Note: if the socketType is ROUTER, then we will perform `socket.setRouterMandatory(true)`.
      *
      * @param address the ZMQ address to which we wish to connect
      * @param socketType the type of ZMQ socket to open (e.g. ROUTER, PULL)
@@ -175,7 +177,7 @@ public class JeroMQConnectionsManager {
         return socketHandle;
     }
 
-    public boolean sendMsgToSocketHandle(final ZMsg msg, final int socketHandle) {
+    public boolean sendMsgToSocketHandle(final int socketHandle, final ZMsg msg) {
         final Socket socket = poller.getSocket(socketHandle);
 
         if (socket == null) {
@@ -208,9 +210,9 @@ public class JeroMQConnectionsManager {
         default SetupHandler andThen(SetupHandler after) {
             Objects.requireNonNull(after);
 
-            return (c) -> {
-                accept(c);
-                after.accept(c);
+            return (a) -> {
+                accept(a);
+                after.accept(a);
             };
         }
     }
@@ -218,15 +220,15 @@ public class JeroMQConnectionsManager {
     @FunctionalInterface
     public interface MessageHandler {
 
-        void accept(ZMsg zmsg, int socketHandle, JeroMQConnectionsManager connectionsManager);
+        void accept(int socketHandle, ZMsg msg, JeroMQConnectionsManager connectionsManager);
 
 
         default MessageHandler andThen(MessageHandler after) {
             Objects.requireNonNull(after);
 
-            return (z, s, c) -> {
-                accept(z, s, c);
-                after.accept(z, s, c);
+            return (a, b, c) -> {
+                accept(a, b, c);
+                after.accept(a, b, c);
             };
         }
     }
