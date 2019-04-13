@@ -4,11 +4,8 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.*;
-import sun.plugin2.message.Message;
 
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import static java.lang.Thread.interrupted;
 import static java.util.stream.IntStream.range;
