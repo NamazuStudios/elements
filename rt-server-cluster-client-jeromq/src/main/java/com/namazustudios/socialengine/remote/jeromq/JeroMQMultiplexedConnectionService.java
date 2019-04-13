@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.remote.jeromq;
 import com.namazustudios.socialengine.remote.jeromq.srv.SrvMonitor;
 import com.namazustudios.socialengine.remote.jeromq.srv.SrvRecord;
 import com.namazustudios.socialengine.remote.jeromq.srv.SrvUniqueIdentifier;
-import com.namazustudios.socialengine.rt.MultiplexedConnectionManager;
+import com.namazustudios.socialengine.rt.MultiplexedConnectionService;
 import com.namazustudios.socialengine.rt.jeromq.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +27,7 @@ import static java.util.UUID.randomUUID;
 import static org.zeromq.ZContext.shadow;
 import static org.zeromq.ZMQ.*;
 
-public class JeroMQMultiplexedConnectionService implements MultiplexedConnectionManager {
+public class JeroMQMultiplexedConnectionService implements MultiplexedConnectionService {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQMultiplexedConnectionService.class);
 
@@ -64,8 +64,10 @@ public class JeroMQMultiplexedConnectionService implements MultiplexedConnection
         multiplexedConnectionThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
 
         if (atomicMultiplexedConnectionThread.compareAndSet(null, multiplexedConnectionThread)) {
+            logger.info("Starting multiplexed thread and establishing control channel....");
             multiplexedConnectionThread.start();
-            multiplexedConnectionRunnable.waitForConnect();
+            multiplexedConnectionRunnable.blockCurrentThreadUntilControlChannelIsConnected();
+            logger.info("Successfully started multiplexed thread and established control channel.");
         } else {
             throw new IllegalStateException("Failed to set up multiplexed connection.");
         }

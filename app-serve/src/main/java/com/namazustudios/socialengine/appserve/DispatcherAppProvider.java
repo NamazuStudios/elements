@@ -5,8 +5,8 @@ import com.namazustudios.socialengine.appserve.guice.DispatcherModule;
 import com.namazustudios.socialengine.appserve.guice.VersionServletModule;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.rt.MultiplexedConnectionsManager;
 import com.namazustudios.socialengine.rt.Context;
+import com.namazustudios.socialengine.rt.MultiplexedConnectionService;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 import com.namazustudios.socialengine.rt.servlet.DispatcherServlet;
 import com.namazustudios.socialengine.service.ApplicationService;
@@ -51,7 +51,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     private GitLoader gitLoader;
 
-    private MultiplexedConnectionsManager multiplexedConnectionsManager;
+    private MultiplexedConnectionService multiplexedConnectionService;
 
     @Override
     public ContextHandler createContextHandler(final App app) throws Exception {
@@ -101,10 +101,10 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     private Injector injectorFor(final Application application) {
         return applicationInjectorMap.computeIfAbsent(application.getId(), k -> {
 
-            final UUID uuid = getMultiplexedConnectionsManager().getInprocIdentifierForNodeIdentifier(application.getId());
-            getMultiplexedConnectionsManager().openInprocChannel(application.getId());
+            final UUID uuid = getMultiplexedConnectionService().getInprocIdentifierForNodeIdentifier(application.getId());
+            getMultiplexedConnectionService().issueOpenInprocChannelCommand("", application.getId());
 
-            final String connectAddress = getMultiplexedConnectionsManager().getInprocConnectAddress(uuid);
+            final String connectAddress = getMultiplexedConnectionService().getInprocConnectAddress(uuid);
 
             final File codeDirectory = getGitLoader().getCodeDirectory(application);
             final DispatcherModule dispatcherModule = new DispatcherModule(codeDirectory);
@@ -116,7 +116,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     @Override
     protected void doStart() throws Exception {
-        getMultiplexedConnectionsManager().start();
+        getMultiplexedConnectionService().start();
 
         final App version = new App(getDeploymentManager(), this, VERSION_ORIGIN_ID);
         getDeploymentManager().addApp(version);
@@ -141,7 +141,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
             .stream()
             .map(i -> i.getInstance(Context.class))
             .forEach(this::shutdown);
-        getMultiplexedConnectionsManager().stop();
+        getMultiplexedConnectionService().stop();
     }
 
     private void shutdown(final Context context) {
@@ -188,12 +188,12 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         this.gitLoader = gitLoader;
     }
 
-    public MultiplexedConnectionsManager getMultiplexedConnectionsManager() {
-        return multiplexedConnectionsManager;
+    public MultiplexedConnectionService getMultiplexedConnectionService() {
+        return multiplexedConnectionService;
     }
 
     @Inject
-    public void setMultiplexedConnectionsManager(MultiplexedConnectionsManager multiplexedConnectionsManager) {
-        this.multiplexedConnectionsManager = multiplexedConnectionsManager;
+    public void setMultiplexedConnectionService(MultiplexedConnectionService multiplexedConnectionService) {
+        this.multiplexedConnectionService = multiplexedConnectionService;
     }
 }

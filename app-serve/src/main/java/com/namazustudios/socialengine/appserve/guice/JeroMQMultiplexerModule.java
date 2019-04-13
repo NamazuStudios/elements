@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionService;
 import com.namazustudios.socialengine.remote.jeromq.srv.SpotifySrvMonitor;
 import com.namazustudios.socialengine.remote.jeromq.srv.SrvMonitor;
-import com.namazustudios.socialengine.rt.MultiplexedConnectionsManager;
+import com.namazustudios.socialengine.rt.MultiplexedConnectionService;
 import org.zeromq.ZContext;
 
 public class JeroMQMultiplexerModule extends AbstractModule {
@@ -12,7 +12,7 @@ public class JeroMQMultiplexerModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(ZContext.class).asEagerSingleton();
-        bind(MultiplexedConnectionsManager.class).to(JeroMQMultiplexedConnectionService.class).asEagerSingleton();
+        bind(MultiplexedConnectionService.class).to(JeroMQMultiplexedConnectionService.class).asEagerSingleton();
         bind(SrvMonitor.class).to(SpotifySrvMonitor.class).asEagerSingleton();
     }
 

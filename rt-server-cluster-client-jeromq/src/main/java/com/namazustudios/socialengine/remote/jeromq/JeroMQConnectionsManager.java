@@ -1,15 +1,14 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.jeromq.*;
-import com.namazustudios.socialengine.rt.remote.RoutingHeader;
-import com.namazustudios.socialengine.rt.util.SyncWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.*;
+import sun.plugin2.message.Message;
 
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static java.lang.Thread.interrupted;
 import static java.util.stream.IntStream.range;
@@ -27,14 +26,27 @@ public class JeroMQConnectionsManager {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQConnectionsManager.class);
 
-    private final SyncWait<Void> connectSyncWait = new SyncWait<Void>(logger);
+    private final List<SetupHandler> setupHandlers = new LinkedList<>();
 
     private ZContext zContext;
 
-    private Map<Integer, BiConsumer<ZMsg, JeroMQConnectionsManager>> messageHandlers;
+    private Map<Integer, MessageHandler> messageHandlers;
 
     private Poller poller;
 
+
+    /**
+     * Registers a lambda method to be called during the setup process, after initializing the poller but before
+     * entering the thread-blocking poll loop. The lambda will be called from within the same thread as the poll loop,
+     * and should be used to issue initial commands such as manually establishing the first connections before control
+     * is handed over to any control sockets. Calling this method should be thread-safe, so long as the caller recognizes
+     * that the lambda will necessarily be called within the poll loop thread.
+     *
+     * @param setupHandler a method to be invoked on the connection poll thread.
+     */
+    public void registerSetupHandler(final SetupHandler setupHandler) {
+        setupHandlers.add(setupHandler);
+    }
 
     public void start(final ZContext zContext) {
         this.zContext = shadow(zContext);
@@ -47,14 +59,18 @@ public class JeroMQConnectionsManager {
 
         messageHandlers = new LinkedHashMap<>();
 
+        for (SetupHandler setupHandler : setupHandlers) {
+            setupHandler.accept(this);
+        }
+
         enterPollLoop();
+        onPollLoopExit();
     }
 
     private void enterPollLoop() {
         while (!interrupted()) {
             if (poller.poll(5000) < 0) {
                 logger.info("Interrupted. Exiting gracefully.");
-                onPollLoopExit();
                 break;
             }
 
@@ -69,17 +85,13 @@ public class JeroMQConnectionsManager {
                             final ZMsg msg = recvMsg(socket);
 
                             if (!messageHandlers.containsKey(socketHandle)) {
-                                logger.warn(
-                                        "Message Handler not found for socket handle {}. Dropping message.",
-                                        socketHandle
-                                );
+                                logger.warn("Message Handler not found for socket handle {}. Dropping message.", socketHandle);
                                 return;
                             }
 
-                            final BiConsumer<ZMsg, JeroMQConnectionsManager> messageHandler =
-                                    messageHandlers.get(socketHandle);
+                            final MessageHandler messageHandler = messageHandlers.get(socketHandle);
 
-                            messageHandler.accept(msg, this);
+                            messageHandler.accept(msg, socketHandle, this);
                         }
                         else if (didReceiveError) {
                             throw new InternalException(
@@ -88,10 +100,6 @@ public class JeroMQConnectionsManager {
                         }
                     });
         }
-    }
-
-    private void handleReceivedMessage(final int socketHandle, final ZMsg msg) {
-
     }
 
     private void onPollLoopExit() {
@@ -107,11 +115,14 @@ public class JeroMQConnectionsManager {
      * a ZMsg is received on the resultant socket.
      *
      * @param address the ZMQ address to which we wish to connect
+     * @param socketType the type of ZMQ socket to open (e.g. DEALER)
+     * @param messageHandler the lambda to be called whenever a msg is received on the socket
      * @return the socket handle for the connection.
      */
     public int connectToAddressAndBeginPolling(
             final String address,
-            final BiConsumer<ZMsg, JeroMQConnectionsManager> messageHandler
+            final int socketType,
+            final MessageHandler messageHandler
     ) {
         if (address == null || address.length() == 0) {
             throw new IllegalArgumentException("A valid address must be provided.");
@@ -120,10 +131,10 @@ public class JeroMQConnectionsManager {
             throw new IllegalArgumentException("A valid messageHandler must be provided.");
         }
 
-        final ZMQ.Socket dealerSocket = zContext.createSocket(DEALER);
-        dealerSocket.connect(address);
+        final ZMQ.Socket socket = zContext.createSocket(socketType);
+        socket.connect(address);
 
-        final int socketHandle = poller.register(dealerSocket, POLLIN | POLLERR);
+        final int socketHandle = poller.register(socket, POLLIN | POLLERR);
 
         messageHandlers.put(socketHandle, messageHandler);
 
@@ -135,12 +146,15 @@ public class JeroMQConnectionsManager {
      * resultant socket handle in the poller. The provided message handler will also be registered and called whenever
      * a ZMsg is received on the resultant socket.
      *
-     * @param address the ZMQ address to which we wish to bind.
+     * @param address the ZMQ address to which we wish to connect
+     * @param socketType the type of ZMQ socket to open (e.g. ROUTER, PULL)
+     * @param messageHandler the lambda to be called whenever a msg is received on the socket
      * @return the socket handle for the connection.
      */
     public int bindToAddressAndBeginPolling(
             final String address,
-            final BiConsumer<ZMsg, JeroMQConnectionsManager> messageHandler
+            final int socketType,
+            final MessageHandler messageHandler
     ) {
         if (address == null || address.length() == 0) {
             throw new IllegalArgumentException("A valid address must be provided.");
@@ -149,11 +163,15 @@ public class JeroMQConnectionsManager {
             throw new IllegalArgumentException("A valid messageHandler must be provided.");
         }
 
-        final ZMQ.Socket routerSocket = zContext.createSocket(ROUTER);
-        routerSocket.setRouterMandatory(true);
-        routerSocket.bind(address);
+        final ZMQ.Socket socket = zContext.createSocket(socketType);
 
-        final int socketHandle = poller.register(routerSocket, POLLIN | POLLERR);
+        if (socketType == ROUTER) {
+            socket.setRouterMandatory(true);
+        }
+
+        socket.bind(address);
+
+        final int socketHandle = poller.register(socket, POLLIN | POLLERR);
 
         messageHandlers.put(socketHandle, messageHandler);
 
@@ -182,5 +200,37 @@ public class JeroMQConnectionsManager {
         }
 
         return true;
+    }
+
+    @FunctionalInterface
+    public interface SetupHandler {
+
+        void accept(JeroMQConnectionsManager connectionsManager);
+
+
+        default SetupHandler andThen(SetupHandler after) {
+            Objects.requireNonNull(after);
+
+            return (c) -> {
+                accept(c);
+                after.accept(c);
+            };
+        }
+    }
+
+    @FunctionalInterface
+    public interface MessageHandler {
+
+        void accept(ZMsg zmsg, int socketHandle, JeroMQConnectionsManager connectionsManager);
+
+
+        default MessageHandler andThen(MessageHandler after) {
+            Objects.requireNonNull(after);
+
+            return (z, s, c) -> {
+                accept(z, s, c);
+                after.accept(z, s, c);
+            };
+        }
     }
 }

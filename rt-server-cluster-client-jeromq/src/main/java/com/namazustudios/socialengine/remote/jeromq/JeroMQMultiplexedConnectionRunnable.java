@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
-import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.jeromq.*;
 import com.namazustudios.socialengine.rt.remote.RoutingHeader;
 import com.namazustudios.socialengine.rt.util.SyncWait;
@@ -8,20 +7,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.*;
 
-import javax.inject.Inject;
 import java.util.*;
 
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_RESPONSE;
-import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.JeroMQSocketHost.send;
 import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.CONTINUE;
-import static java.lang.Thread.interrupted;
-import static java.util.stream.IntStream.range;
 import static org.zeromq.ZContext.shadow;
 import static org.zeromq.ZMQ.*;
-import static org.zeromq.ZMQ.Poller.POLLERR;
-import static org.zeromq.ZMQ.Poller.POLLIN;
-import static org.zeromq.ZMsg.recvMsg;
 import static zmq.ZError.EHOSTUNREACH;
 
 /**
@@ -33,7 +25,11 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
 
     private final String controlAddress;
 
-    private volatile ZContext zContext;
+    private final ZContext zContext;
+
+    private final JeroMQConnectionsManager connectionsManager = new JeroMQConnectionsManager();
+
+    private final SyncWait<Void> threadBlocker = new SyncWait<>(logger);
 
     public JeroMQMultiplexedConnectionRunnable(final String controlAddress,
                                                final ZContext zContext) {
@@ -41,88 +37,36 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
         this.zContext = zContext;
     }
 
-    public void waitForConnect() {
-        connectSyncWait.get();
+    public void blockCurrentThreadUntilControlChannelIsConnected() {
+        threadBlocker.get();
     }
 
     @Override
     public void run() {
+        try (final ZContext context = shadow(zContext)) {
 
-        try (final ZContext context = shadow(zContext);
-             final ZMQ.Poller poller = context.createPoller(0);
-             final BackendChannelTable backendChannelTable = new BackendChannelTable(
-                     context,
-                     poller,
-                     backendAddress -> connect(context, backendAddress),
-                     inprocIdentifier -> bind(context, inprocIdentifier)
-             );
-             final Connection control = from(context, c -> c.createSocket(PULL));
-             ) {
+            connectionsManager.registerSetupHandler(connectionsManager -> {
+                logger.info("Binding control socket....");
+                final int controlSocketHandle = connectionsManager.bindToAddressAndBeginPolling(
+                        controlAddress,
+                        PULL,
+                        this::handleControlMessage
+                );
+                logger.info("Successfully bound control socket to handle: {}.", controlSocketHandle);
 
-            final int controlSocketHandle;
+                threadBlocker.getResultConsumer().accept(null);
+            });
 
-            try {
-                control.socket().bind(controlAddress);
-                controlSocketHandle = poller.register(control.socket(), POLLIN | POLLERR);
-                connectSyncWait.getResultConsumer().accept(null);
-            } catch (Exception ex) {
-                connectSyncWait.getErrorConsumer().accept(ex);
-                return;
-            }
-
-            while (!interrupted()) {
-
-                if (poller.poll(5000) < 0) {
-                    logger.info("Interrupted.  Exiting gracefully.");
-                    break;
-                }
-
-                range(0, poller.getNext())
-                        .filter(socketHandle -> poller.getItem(socketHandle) != null)
-                        .forEach(socketHandle -> {
-                            final boolean input = poller.pollin(socketHandle);
-                            final boolean error = poller.pollerr(socketHandle);
-
-                            if (input) {
-                                final ZMQ.Socket socket = poller.getSocket(socketHandle);
-                                final ZMsg msg = recvMsg(socket);
-
-                                if (socketHandle == controlSocketHandle) {  // if we recv on the control socket
-                                    handleControlMessage(msg, socket, backendChannelTable);
-                                }
-                                else if (backendChannelTable.hasBackendSocketHandle(socketHandle)) {    // if we recv on a backend socket
-                                    sendToInprocChannel(msg, backendChannelTable);
-                                }
-                                else if (backendChannelTable.hasInprocSocketHandle(socketHandle)) { // if we recv on an inproc socket
-                                    sendToBackendChannel(msg, socketHandle, backendChannelTable);
-                                }
-                                else {
-                                    logger.warn("Unknown poller state.  Dropping message.");
-                                }
-
-                            } else if (error) {
-                                throw new InternalException("Poller error on socket: " + poller.getSocket(socketHandle));
-                            }
-                });
-
-            }
-
+            connectionsManager.start(context);
         }
-
     }
 
-    private ZMQ.Socket connect(final ZContext context, final String backendAddress) {
-        final ZMQ.Socket backendSocket = context.createSocket(DEALER);
-        backendSocket.connect(backendAddress);
-        return backendSocket;
-    }
-
-    private ZMQ.Socket bind(final ZContext context, final UUID inprocIdentifier) {
-        final ZMQ.Socket inprocSocket = context.createSocket(ROUTER);
-        final String bindAddress = RouteRepresentationUtil.buildMultiplexedInprocAddress(inprocIdentifier);
-        inprocSocket.setRouterMandatory(true);
-        inprocSocket.bind(bindAddress);
-        return inprocSocket;
+    private void handleControlMessage(
+            final ZMsg msg,
+            final int socketHandle,
+            final JeroMQConnectionsManager connectionsManager
+    ) {
+        logger.info("Recv control msg");
     }
 
     private void sendToInprocChannel(final ZMsg msg, final BackendChannelTable backendChannelTable) {
