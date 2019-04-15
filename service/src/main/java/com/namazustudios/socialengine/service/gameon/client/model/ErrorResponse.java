@@ -23,16 +23,16 @@ public class ErrorResponse {
     }
 
     public static class Error {
-        int code;
+        int errorCode;
         String message;
         String request_id;
 
-        public int getCode() {
-            return code;
+        public int getErrorCode() {
+            return errorCode;
         }
 
-        public void setCode(int code) {
-            this.code = code;
+        public void setErrorCode(int code) {
+            this.errorCode = code;
         }
 
         public String getMessage() {
