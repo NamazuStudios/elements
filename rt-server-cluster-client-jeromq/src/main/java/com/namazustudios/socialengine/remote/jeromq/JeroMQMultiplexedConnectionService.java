@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.*;
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
-import static com.namazustudios.socialengine.rt.jeromq.JeroMQSocketHost.send;
+import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.send;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.*;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;

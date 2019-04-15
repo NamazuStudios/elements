@@ -10,7 +10,8 @@ import org.zeromq.*;
 import java.util.*;
 
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_RESPONSE;
-import static com.namazustudios.socialengine.rt.jeromq.JeroMQSocketHost.send;
+import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.buildControlMessage;
+import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.send;
 import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.CONTINUE;
 import static org.zeromq.ZContext.shadow;
 import static org.zeromq.ZMQ.*;
@@ -27,7 +28,7 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
 
     private final ZContext zContext;
 
-    private final JeroMQConnectionsManager connectionsManager = new JeroMQConnectionsManager();
+    private final ConnectionsManager connectionsManager = new ConnectionsManager();
 
     private final SyncWait<Void> threadBlocker = new SyncWait<>(logger);
 
@@ -43,14 +44,15 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
 
     @Override
     public void run() {
-        try (final ZContext context = shadow(zContext)) {
+        try (final ZContext context = shadow(zContext);
+        final MessageHandler messageHandler = new MessageHandler()) {
 
             connectionsManager.registerSetupHandler(connectionsManager -> {
                 logger.info("Binding control socket....");
                 final int controlSocketHandle = connectionsManager.bindToAddressAndBeginPolling(
                         controlAddress,
                         PULL,
-                        this::handleControlMessage
+                        messageHandler::handleControlMessage
                 );
                 logger.info("Successfully bound control socket to handle: {}.", controlSocketHandle);
 
@@ -61,13 +63,7 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
         }
     }
 
-    private void handleControlMessage(
-            final int socketHandle,
-            final ZMsg msg,
-            final JeroMQConnectionsManager connectionsManager
-    ) {
-        logger.info("Recv control msg");
-    }
+
 
     private void sendToInprocChannel(final ZMsg msg, final BackendChannelTable backendChannelTable) {
         final RoutingHeader routingHeader = RouteRepresentationUtil.getAndStripRoutingHeader(msg);

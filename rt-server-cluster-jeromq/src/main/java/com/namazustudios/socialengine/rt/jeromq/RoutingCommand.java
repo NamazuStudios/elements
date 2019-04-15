@@ -13,10 +13,17 @@ public class RoutingCommand extends Struct {
      */
     public final Enum32<Action> action = new Enum32<>(Action.values());
 
+    /**
+     * The backendAddress destination. This should be non-null if action is {@link Action#OPEN_BACKEND} or
+     * {@link Action#CLOSE_BACKEND}, and it will be ignored if the action is {@link Action#OPEN_INPROC} or
+     * {@link Action#CLOSE_INPROC}.
+     */
     public final UTF8String backendAddress = new UTF8String(128);
 
     /**
-     * The inprocIdentifier {@link java.util.UUID} to control
+     * The inprocIdentifier {@link java.util.UUID} to control. This should be non-null if action is
+     * {@link Action#OPEN_INPROC} or {@link Action#CLOSE_INPROC}, and it will be ignored if the action is
+     * {@link Action#OPEN_BACKEND} or {@link Action#CLOSE_BACKEND}.
      */
     public final PackedUUID inprocIdentifier = inner(new PackedUUID());
 

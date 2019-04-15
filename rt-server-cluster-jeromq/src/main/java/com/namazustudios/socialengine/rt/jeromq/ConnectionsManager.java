@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.remote.jeromq;
+package com.namazustudios.socialengine.rt.jeromq;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
@@ -19,9 +19,9 @@ import static zmq.ZError.EHOSTUNREACH;
  * Encapsulates the ZMQ Poller and all socket operations (open, close, send, recv). This is not thread-safe and is
  * meant to be accessed from within the multiplexed connection runnable thread.
  */
-public class JeroMQConnectionsManager {
+public class ConnectionsManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(JeroMQConnectionsManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(ConnectionsManager.class);
 
     private final List<SetupHandler> setupHandlers = new LinkedList<>();
 
@@ -158,6 +158,7 @@ public class JeroMQConnectionsManager {
         if (address == null || address.length() == 0) {
             throw new IllegalArgumentException("A valid address must be provided.");
         }
+
         if (messageHandler == null) {
             throw new IllegalArgumentException("A valid messageHandler must be provided.");
         }
@@ -204,7 +205,7 @@ public class JeroMQConnectionsManager {
     @FunctionalInterface
     public interface SetupHandler {
 
-        void accept(JeroMQConnectionsManager connectionsManager);
+        void accept(ConnectionsManager connectionsManager);
 
 
         default SetupHandler andThen(SetupHandler after) {
@@ -220,7 +221,7 @@ public class JeroMQConnectionsManager {
     @FunctionalInterface
     public interface MessageHandler {
 
-        void accept(int socketHandle, ZMsg msg, JeroMQConnectionsManager connectionsManager);
+        void accept(int socketHandle, ZMsg msg, ConnectionsManager connectionsManager);
 
 
         default MessageHandler andThen(MessageHandler after) {

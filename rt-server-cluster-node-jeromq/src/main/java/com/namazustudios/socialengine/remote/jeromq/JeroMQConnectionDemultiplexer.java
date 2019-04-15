@@ -19,7 +19,7 @@ import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandTy
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_RESPONSE;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.IdentityUtil.EMPTY_DELIMITER;
-import static com.namazustudios.socialengine.rt.jeromq.JeroMQSocketHost.send;
+import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.send;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.CLOSE_INPROC;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.OPEN_INPROC;
 import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.CONTINUE;

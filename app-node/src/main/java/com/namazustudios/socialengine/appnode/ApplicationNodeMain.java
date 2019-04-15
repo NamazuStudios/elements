@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.appnode;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.rt.jeromq.CommandPreamble;
 import com.namazustudios.socialengine.rt.jeromq.Connection;
-import com.namazustudios.socialengine.rt.jeromq.JeroMQSocketHost;
+import com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder;
 import com.namazustudios.socialengine.rt.jeromq.StatusRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,7 @@ public class ApplicationNodeMain {
                             // use default timeout
                         }
 
-                        JeroMQSocketHost.send(connection.socket(), STATUS_REQUEST,  new StatusRequest().getByteBuffer());
+                        ControlMessageBuilder.send(connection.socket(), STATUS_REQUEST,  new StatusRequest().getByteBuffer());
 
                         final ZMsg resp = ZMsg.recvMsg(connection.socket());
 
