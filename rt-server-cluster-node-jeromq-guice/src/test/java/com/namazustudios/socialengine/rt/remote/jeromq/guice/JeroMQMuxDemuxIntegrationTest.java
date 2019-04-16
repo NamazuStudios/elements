@@ -74,7 +74,7 @@ public class JeroMQMuxDemuxIntegrationTest {
 
             final List<ZMQ.Socket> socketList = DESTINATION_IDS.stream()
                 .map(RouteRepresentationUtil::getInprocIdentifier)
-                .map(RouteRepresentationUtil::buildDemultiplexedInprocAddress)
+                .map(RouteRepresentationUtil::buildConnectInprocAddress)
                 .map(addr -> {
                     final ZMQ.Socket socket = master.createSocket(ZMQ.ROUTER);
                     socket.setRouterMandatory(true);
@@ -146,7 +146,7 @@ public class JeroMQMuxDemuxIntegrationTest {
         return DESTINATION_IDS
             .stream()
             .map(id -> RouteRepresentationUtil.getInprocIdentifier(id))
-            .map(uuid -> new Object[]{RouteRepresentationUtil.buildMultiplexedInprocAddress(uuid)})
+            .map(uuid -> new Object[]{RouteRepresentationUtil.buildBindInprocAddress(uuid)})
             .toArray(Object[][]::new);
 
     }

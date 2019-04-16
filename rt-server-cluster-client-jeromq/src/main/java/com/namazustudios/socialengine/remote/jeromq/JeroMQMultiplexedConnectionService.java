@@ -192,14 +192,14 @@ public class JeroMQMultiplexedConnectionService implements MultiplexedConnection
 
     @Override
     public String getInprocConnectAddress(final UUID inprocIdentifier) {
-        return RouteRepresentationUtil.buildMultiplexedInprocAddress(inprocIdentifier);
+        return RouteRepresentationUtil.buildBindInprocAddress(inprocIdentifier);
     }
 
     @Override
     public void issueOpenInprocChannelCommand(final String backendAddress, final UUID inprocIdentifier) {
         final RoutingCommand command = new RoutingCommand();
         command.action.set(OPEN_INPROC);
-        command.backendAddress.set(backendAddress);
+        command.tcpAddress.set(backendAddress);
         command.inprocIdentifier.set(inprocIdentifier);
         issueRoutingCommand(command);
     }
@@ -208,7 +208,7 @@ public class JeroMQMultiplexedConnectionService implements MultiplexedConnection
     public void issueCloseInprocChannelCommand(final String backendAddress, final UUID inprocIdentifier) {
         final RoutingCommand command = new RoutingCommand();
         command.action.set(CLOSE_INPROC);
-        command.backendAddress.set(backendAddress);
+        command.tcpAddress.set(backendAddress);
         command.inprocIdentifier.set(inprocIdentifier);
         issueRoutingCommand(command);
     }
@@ -216,16 +216,16 @@ public class JeroMQMultiplexedConnectionService implements MultiplexedConnection
     @Override
     public void issueOpenBackendChannelCommand(final String backendAddress) {
         final RoutingCommand command = new RoutingCommand();
-        command.action.set(OPEN_BACKEND);
-        command.backendAddress.set(backendAddress);
+        command.action.set(CONNECT_TCP);
+        command.tcpAddress.set(backendAddress);
         issueRoutingCommand(command);
     }
 
     @Override
     public void issueCloseBackendChannelCommand(final String backendAddress) {
         final RoutingCommand command = new RoutingCommand();
-        command.action.set(CLOSE_BACKEND);
-        command.backendAddress.set(backendAddress);
+        command.action.set(DISCONNECT_TCP);
+        command.tcpAddress.set(backendAddress);
         issueRoutingCommand(command);
     }
 

@@ -14,16 +14,17 @@ public class RoutingCommand extends Struct {
     public final Enum32<Action> action = new Enum32<>(Action.values());
 
     /**
-     * The backendAddress destination. This should be non-null if action is {@link Action#OPEN_BACKEND} or
-     * {@link Action#CLOSE_BACKEND}, and it will be ignored if the action is {@link Action#OPEN_INPROC} or
-     * {@link Action#CLOSE_INPROC}.
+     * The tcpAddress destination. This should be non-null if action is {@link Action#CONNECT_TCP} or
+     * {@link Action#DISCONNECT_TCP}, and it will be ignored if the action is INPROC-related.
+     *
+     * TODO: split out the tcp routing commands into a separate struct to reduce inproc command transmission size.
      */
-    public final UTF8String backendAddress = new UTF8String(128);
+    public final UTF8String tcpAddress = new UTF8String(128);
 
     /**
      * The inprocIdentifier {@link java.util.UUID} to control. This should be non-null if action is
-     * {@link Action#OPEN_INPROC} or {@link Action#CLOSE_INPROC}, and it will be ignored if the action is
-     * {@link Action#OPEN_BACKEND} or {@link Action#CLOSE_BACKEND}.
+     * INPROC-related, and it will be ignored if the action is
+     * {@link Action#CONNECT_TCP} or {@link Action#DISCONNECT_TCP}.
      */
     public final PackedUUID inprocIdentifier = inner(new PackedUUID());
 
@@ -33,24 +34,34 @@ public class RoutingCommand extends Struct {
     public enum Action {
 
         /**
-         * Adds a backend (tcp) connection to the multiplexer
+         * Establishes a DEALER connection to a ROUTER tcp socket at the given {@link RoutingCommand#tcpAddress}.
          */
-        OPEN_BACKEND,
+        CONNECT_TCP,
 
         /**
-         * Removes a backend (tcp) connection from the multiplexer
+         * Ends the DEALER connection to the ROUTER tcp socket at the given {@link RoutingCommand#tcpAddress}.
          */
-        CLOSE_BACKEND,
+        DISCONNECT_TCP,
 
         /**
-         * Adds an inproc connection to the multiplexer
+         * Binds a ROUTER inproc socket with the given {@link RoutingCommand#inprocIdentifier}.
          */
-        OPEN_INPROC,
+        BIND_INPROC,
 
         /**
-         * Removes an inproc connection from the multiplexer
+         * Unbinds the ROUTER inproc socket for the given {@link RoutingCommand#inprocIdentifier}.
          */
-        CLOSE_INPROC,
+        UNBIND_INPROC,
+
+        /**
+         * Establishes a DEALER connection to a ROUTER inproc socket for the given {@link RoutingCommand#inprocIdentifier}.
+         */
+        CONNECT_INPROC,
+
+        /**
+         * Ends the DEALER connection from the ROUTER inproc socket for the given {@link RoutingCommand#inprocIdentifier}.
+         */
+        DISCONNECT_INPROC,
 
     }
 

@@ -34,16 +34,6 @@ public class CommandPreamble extends Struct {
          */
         STATUS_RESPONSE,
 
-        /**
-         * A ConnectCommand
-         */
-        CONNECT_COMMAND,
-
-        /**
-         * A ConnectCommand acknowledgement
-         */
-        CONNECT_COMMAND_ACK,
-
     }
 
 }

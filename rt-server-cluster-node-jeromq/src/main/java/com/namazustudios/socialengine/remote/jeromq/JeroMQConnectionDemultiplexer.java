@@ -98,7 +98,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
     @Override
     public String getBindAddress(UUID uuid) {
-        return RouteRepresentationUtil.buildDemultiplexedInprocAddress(uuid);
+        return RouteRepresentationUtil.buildConnectInprocAddress(uuid);
     }
 
     @Override
@@ -250,7 +250,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
         private ZMQ.Socket connect(final ZContext context, final UUID destinationId) {
             final ZMQ.Socket socket = context.createSocket(ZMQ.DEALER);
-            final String routeAddress = RouteRepresentationUtil.buildDemultiplexedInprocAddress(destinationId);
+            final String routeAddress = RouteRepresentationUtil.buildConnectInprocAddress(destinationId);
             logger.info("Connecting to {} through {}", destinationId, routeAddress);
             socket.connect(routeAddress);
             return socket;

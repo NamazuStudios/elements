@@ -46,8 +46,8 @@ public class RouteRepresentationUtil {
      *
      * Returns the {@link String} representing the internal route address.
      **/
-    public static String buildMultiplexedInprocAddress(final UUID inprocIdentifier) {
-        return format("inproc://multiplex-%s", inprocIdentifier);
+    public static String buildBindInprocAddress(final UUID inprocIdentifier) {
+        return format("inproc://bind-%s", inprocIdentifier);
     }
 
     /**
@@ -56,8 +56,8 @@ public class RouteRepresentationUtil {
      *
      * Returns the {@link String} representing the internal route address.
      **/
-    public static String buildDemultiplexedInprocAddress(final UUID destinationId) {
-        return format("inproc://demultiplex-%s", destinationId);
+    public static String buildConnectInprocAddress(final UUID inprocIdentifier) {
+        return format("inproc://connect-%s", inprocIdentifier);
     }
 
     /**

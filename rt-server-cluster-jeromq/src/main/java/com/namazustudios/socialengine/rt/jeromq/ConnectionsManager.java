@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
+import com.namazustudios.socialengine.rt.ResourceLockService;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,11 +20,13 @@ import static zmq.ZError.EHOSTUNREACH;
  * Encapsulates the ZMQ Poller and all socket operations (open, close, send, recv). This is not thread-safe and is
  * meant to be accessed from within the multiplexed connection runnable thread.
  */
-public class ConnectionsManager {
+public class ConnectionsManager implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(ConnectionsManager.class);
 
     private final List<SetupHandler> setupHandlers = new LinkedList<>();
+
+    private final Map<Integer, MonitorThread> monitorThreads = new LinkedHashMap<>();
 
     private ZContext zContext;
 
@@ -114,12 +117,14 @@ public class ConnectionsManager {
      * @param address the ZMQ address to which we wish to connect
      * @param socketType the type of ZMQ socket to open (e.g. DEALER)
      * @param messageHandler the lambda to be called whenever a msg is received on the socket
+     * @param shouldMonitor whether or not to establish a ZMonitor thread (only available for UDP/TCP conns)
      * @return the socket handle for the connection.
      */
     public int connectToAddressAndBeginPolling(
             final String address,
             final int socketType,
-            final MessageHandler messageHandler
+            final MessageHandler messageHandler,
+            final boolean shouldMonitor
     ) {
         if (address == null || address.length() == 0) {
             throw new IllegalArgumentException("A valid address must be provided.");
@@ -135,28 +140,34 @@ public class ConnectionsManager {
 
         messageHandlers.put(socketHandle, messageHandler);
 
+        if (shouldMonitor) {
+            setupAndStartMonitorThread(socketHandle);
+        }
+
         return socketHandle;
     }
 
     /**
-     * Creates a socket of the given type, binds it to the given ZMQ address, registers it into the poller, and returns
+     * Creates a socket of the given type, binds it to the given ZMQ addresses, registers it into the poller, and returns
      * the resultant socket handle in the poller. The provided message handler will also be registered and called
      * whenever a ZMsg is received on the resultant socket.
      *
      * Note: if the socketType is ROUTER, then we will perform `socket.setRouterMandatory(true)`.
      *
-     * @param address the ZMQ address to which we wish to connect
+     * @param addresses the ZMQ addresses to which we wish to connect
      * @param socketType the type of ZMQ socket to open (e.g. ROUTER, PULL)
      * @param messageHandler the lambda to be called whenever a msg is received on the socket
+     * @param shouldMonitor whether or not to establish a ZMonitor thread (only available for UDP/TCP conns)
      * @return the socket handle for the connection.
      */
-    public int bindToAddressAndBeginPolling(
-            final String address,
+    public int bindToAddressesAndBeginPolling(
+            final Set<String> addresses,
             final int socketType,
-            final MessageHandler messageHandler
+            final MessageHandler messageHandler,
+            final boolean shouldMonitor
     ) {
-        if (address == null || address.length() == 0) {
-            throw new IllegalArgumentException("A valid address must be provided.");
+        if (addresses == null || addresses.size() == 0) {
+            throw new IllegalArgumentException("At least one address must be provided.");
         }
 
         if (messageHandler == null) {
@@ -169,13 +180,59 @@ public class ConnectionsManager {
             socket.setRouterMandatory(true);
         }
 
-        socket.bind(address);
+        for (final String address : addresses) {
+            if (address == null || address.length() == 0) {
+                throw new IllegalArgumentException("A valid address must be provided.");
+            }
+
+            socket.bind(address);
+        }
 
         final int socketHandle = poller.register(socket, POLLIN | POLLERR);
 
         messageHandlers.put(socketHandle, messageHandler);
 
+        if (shouldMonitor) {
+            setupAndStartMonitorThread(socketHandle);
+        }
+
         return socketHandle;
+    }
+
+
+    public int bindToAddressAndBeginPolling(
+            final String address,
+            final int socketType,
+            final MessageHandler messageHandler,
+            final boolean shouldMonitor
+    ) {
+        final Set<String> addresses = new HashSet<>();
+        addresses.add(address);
+
+        return bindToAddressesAndBeginPolling(addresses, socketType, messageHandler, shouldMonitor);
+    }
+
+    public void closeAndDestroySocketHandle(final int socketHandle) throws Exception {
+        if (poller == null) {
+            throw new IllegalStateException("Poller not set, cannot close socket with handle: " + socketHandle);
+        }
+
+        if (zContext == null) {
+            throw new IllegalStateException("zContext not set, cannot destroy socket with handle: " + socketHandle);
+        }
+
+        final Socket socket = poller.getSocket(socketHandle);
+
+        if (socket == null) {
+            logger.warn("No socket found for handle: {}", socketHandle);
+            return;
+        }
+
+        poller.unregister(socket);
+
+        socket.close();
+
+        zContext.destroySocket(socket);
     }
 
     public boolean sendMsgToSocketHandle(final int socketHandle, final ZMsg msg) {
@@ -200,6 +257,30 @@ public class ConnectionsManager {
         }
 
         return true;
+    }
+
+    private void setupAndStartMonitorThread(final int socketHandle) {
+        final Socket socket = poller.getSocket(socketHandle);
+
+        final MonitorThread monitorThread = new MonitorThread(
+                getClass().getSimpleName(),
+                logger,
+                zContext,
+                socket
+        );
+
+        monitorThreads.put(socketHandle, monitorThread);
+
+        monitorThread.start();
+    }
+
+    @Override
+    public void close() {
+        // TODO: iterate through all registered socket handles and call closeAndDestroySocketHandle
+
+        for (final MonitorThread monitorThread : monitorThreads.values()) {
+            monitorThread.close();
+        }
     }
 
     @FunctionalInterface

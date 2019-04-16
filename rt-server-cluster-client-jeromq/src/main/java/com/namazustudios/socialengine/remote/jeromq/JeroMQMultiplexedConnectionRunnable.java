@@ -9,8 +9,8 @@ import org.zeromq.*;
 
 import java.util.*;
 
+import com.namazustudios.socialengine.rt.jeromq.MessageManager.MessageHandlerConfiguration;
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_RESPONSE;
-import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.buildControlMessage;
 import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.send;
 import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.CONTINUE;
 import static org.zeromq.ZContext.shadow;
@@ -28,8 +28,6 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
 
     private final ZContext zContext;
 
-    private final ConnectionsManager connectionsManager = new ConnectionsManager();
-
     private final SyncWait<Void> threadBlocker = new SyncWait<>(logger);
 
     public JeroMQMultiplexedConnectionRunnable(final String controlAddress,
@@ -44,18 +42,25 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
 
     @Override
     public void run() {
-        try (final ZContext context = shadow(zContext);
-        final MessageHandler messageHandler = new MessageHandler()) {
+        final MessageHandlerConfiguration messageHandlerConfiguration =
+                new MessageHandlerConfiguration(false);
 
-            connectionsManager.registerSetupHandler(connectionsManager -> {
+        try (final ZContext context = shadow(zContext);
+             final MessageManager messageManager = new MessageManager(messageHandlerConfiguration);
+             final ConnectionsManager connectionsManager = new ConnectionsManager()
+        ) {
+
+            connectionsManager.registerSetupHandler(cm -> {
                 logger.info("Binding control socket....");
-                final int controlSocketHandle = connectionsManager.bindToAddressAndBeginPolling(
+                final int controlSocketHandle = cm.bindToAddressAndBeginPolling(
                         controlAddress,
                         PULL,
-                        messageHandler::handleControlMessage
+                        messageManager::handleControlMessage,
+                        false
                 );
                 logger.info("Successfully bound control socket to handle: {}.", controlSocketHandle);
 
+                // unblock the thread
                 threadBlocker.getResultConsumer().accept(null);
             });
 
@@ -74,7 +79,7 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
             final UUID inprocIdentifier = routingHeader.inprocIdentifier.get();
 
             if (backendAddress == null || inprocIdentifier == null) {
-                logger.warn("Bad routeRepresentationUtil header format (missing backendAddress and/or inprocIdentifier).  Dropping message.");
+                logger.warn("Bad routeRepresentationUtil header format (missing tcpAddress and/or inprocIdentifier).  Dropping message.");
             }
 
             final ZMQ.Socket inprocSocket = backendChannelTable.getInprocSocket(backendAddress, inprocIdentifier);

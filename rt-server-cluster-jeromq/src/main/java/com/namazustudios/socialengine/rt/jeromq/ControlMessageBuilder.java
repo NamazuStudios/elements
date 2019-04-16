@@ -8,7 +8,7 @@ import org.zeromq.ZMsg;
 import java.nio.ByteBuffer;
 
 public interface ControlMessageBuilder {
-    static ZMsg buildControlMessage(CommandType commandType, ByteBuffer byteBuffer) {
+    static ZMsg buildControlMsg(CommandType commandType, ByteBuffer byteBuffer) {
         final CommandPreamble preamble = new CommandPreamble();
         preamble.commandType.set(commandType);
 

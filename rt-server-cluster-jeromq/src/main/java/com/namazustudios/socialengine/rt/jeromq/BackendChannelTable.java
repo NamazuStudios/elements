@@ -322,14 +322,14 @@ public class BackendChannelTable implements AutoCloseable {
      */
     public void process(final RoutingCommand command) {
         final Action action = command.action.get();
-        final String backendAddress = command.backendAddress.get();
+        final String backendAddress = command.tcpAddress.get();
         final UUID inprocIdentifier = command.inprocIdentifier.get();
 
         switch (command.action.get()) {
-            case OPEN_BACKEND:
+            case CONNECT_TCP:
                 openBackendChannel(backendAddress);
                 break;
-            case CLOSE_BACKEND:
+            case DISCONNECT_TCP:
                 closeBackendChannel(backendAddress);
                 break;
             case OPEN_INPROC:
