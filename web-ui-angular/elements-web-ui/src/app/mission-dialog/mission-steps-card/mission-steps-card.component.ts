@@ -106,7 +106,6 @@ export class MissionStepsCardComponent implements OnInit {
   }
 
   drop(event: CdkDragDrop<string[]>) {
-    console.log(this.mission.steps);
     moveItemInArray(this.mission.steps, event.previousIndex, event.currentIndex);
   }
 

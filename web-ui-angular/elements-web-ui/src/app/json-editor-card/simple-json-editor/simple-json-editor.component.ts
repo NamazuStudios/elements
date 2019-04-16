@@ -23,7 +23,18 @@ export class SimpleJsonEditorComponent implements OnInit {
   ngOnInit() {
   }
 
-  addMetadata(key, value) {
+  editMetadata(originalKey, newKey, newValue) {
+    if(newKey === originalKey) {
+      this.dataHolder.metadata[originalKey] = newValue;
+      return;
+    }
+
+    delete this.dataHolder.metadata[originalKey];
+
+    this.addMetadata(newKey, newValue, true);
+  }
+
+  addMetadata(key, value, isEdit = false) {
     if (!key || !value) { return; }
 
     if (!this.dataHolder.metadata) {
@@ -39,11 +50,13 @@ export class SimpleJsonEditorComponent implements OnInit {
       this.dataHolder.metadata[key] = value;
     }
 
-    this.metadataForm.reset();
-    this.newKeyRef.nativeElement.focus();
+    if(!isEdit) {
+      this.metadataForm.reset();
+      this.newKeyRef.nativeElement.focus();
 
-    // async'd to delay scrolling until after metadata element added to UI
-    setTimeout(() => this.metaScrollRef.nativeElement.scrollIntoView(false));
+      // async'd to delay scrolling until after metadata element added to UI
+      setTimeout(() => this.metaScrollRef.nativeElement.scrollIntoView(false));
+    }
   }
 
   removeDataAtKey(key) {
