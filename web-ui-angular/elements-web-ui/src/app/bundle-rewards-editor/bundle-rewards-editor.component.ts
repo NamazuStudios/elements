@@ -29,14 +29,11 @@ export class BundleRewardsEditorComponent implements OnInit {
   public existingRewardForm = this.formBuilder.group({});
 
   public addReward(itemName: string, itemCt: number, isUserSourced = true) {
-    console.log("Adding reward");
     // block request if form not valid
     if (!this.newRewardForm.valid && isUserSourced) { return; }
 
-    console.log("Getting reward");
     // get item specified by form
     this.itemsService.getItemByIdentifier(itemName).subscribe((item: Item) => {
-      console.log(item);
       // add to rewards item-array
       this.rewards.push({
         item: item,
@@ -72,7 +69,6 @@ export class BundleRewardsEditorComponent implements OnInit {
   }
 
   ngOnInit() {
-    console.log(this.rawRewards);
     // TODO use rewards array input to build array of populated rewards
     this.rawRewards = this.rawRewards || [];
     for (let i = 0; i < this.rawRewards.length; i++) {
