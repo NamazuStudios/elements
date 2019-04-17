@@ -24,16 +24,19 @@ export class BundleRewardsEditorComponent implements OnInit {
     newRewardCt: ['', [Validators.required, Validators.pattern('^[0-9]+$')]]
   });
 
-  public rewards: Array<Reward>;
+  public rewards: Array<Reward> = [];
 
   public existingRewardForm = this.formBuilder.group({});
 
-  public addReward(itemName: string, itemCt: number) {
+  public addReward(itemName: string, itemCt: number, isUserSourced = true) {
+    console.log("Adding reward");
     // block request if form not valid
-    if (!this.newRewardForm.valid) { return; }
+    if (!this.newRewardForm.valid && isUserSourced) { return; }
 
+    console.log("Getting reward");
     // get item specified by form
     this.itemsService.getItemByIdentifier(itemName).subscribe((item: Item) => {
+      console.log(item);
       // add to rewards item-array
       this.rewards.push({
         item: item,
@@ -46,11 +49,13 @@ export class BundleRewardsEditorComponent implements OnInit {
       this.existingRewardForm.addControl('reward' + (this.rewards.length - 1) + 'Ct',
         new FormControl(this.rewards[this.rewards.length - 1].quantity, [Validators.required, Validators.pattern('^[0-9]+$')]));
 
-      // focus or blur on new name field?
-      this.newItemField.nativeElement.focus();
+      if (isUserSourced) {
+        // focus or blur on new name field?
+        this.newItemField.nativeElement.focus();
 
-      // clear form fields
-      this.newRewardForm.reset();
+        // clear form fields
+        this.newRewardForm.reset();
+      }
     });
   }
 
@@ -67,11 +72,11 @@ export class BundleRewardsEditorComponent implements OnInit {
   }
 
   ngOnInit() {
+    console.log(this.rawRewards);
     // TODO use rewards array input to build array of populated rewards
-    this.rewards = this.rewards || [];
-    for (let i = 0; i < this.rewards.length; i++) {
-      this.existingRewardForm.addControl('reward' + i + 'Item', new FormControl(this.rewards[i].item.name, [Validators.required], [this.itemExistsValidator.validate]));
-      this.existingRewardForm.addControl('reward' + i + 'Ct', new FormControl(this.rewards[i].quantity, [Validators.required, Validators.pattern('^[0-9]+$')]));
+    this.rawRewards = this.rawRewards || [];
+    for (let i = 0; i < this.rawRewards.length; i++) {
+      this.addReward(this.rawRewards[i].itemId, this.rawRewards[i].quantity, false);
     }
   }
 

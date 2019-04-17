@@ -3,7 +3,7 @@
 <form [formGroup]="existingRewardForm">
   <div class="reward-row" *ngFor="let reward of rewards; let rewardIndex = index">
     <mat-form-field>
-      <input matInput readonly placeholder="Reward Item" name="reward{{rewardIndex}}Item" formControlName="reward{{rewardIndex}}Item" value="{{reward.itemId}}">
+      <input matInput readonly placeholder="Reward Item" name="reward{{rewardIndex}}Item" formControlName="reward{{rewardIndex}}Item" value="{{reward.item.name}}">
       <mat-error *ngIf="existingRewardForm.controls['reward' + rewardIndex + 'Item'].hasError('itemNameNotFound')">Make sure an Item exists with this name</mat-error>
       <mat-error *ngIf="existingRewardForm.controls['reward' + rewardIndex + 'Item'].hasError('required')">Reward Item is required</mat-error>
     </mat-form-field>
