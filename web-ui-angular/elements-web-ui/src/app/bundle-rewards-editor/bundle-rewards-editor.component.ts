@@ -1,14 +1,14 @@
 import {Component, ElementRef, Input, OnInit, ViewChild} from '@angular/core';
-import {Reward} from '../../api/models/reward';
+import {Reward} from '../api/models/reward';
 import {FormBuilder, FormControl, Validators} from '@angular/forms';
-import {ItemsService} from '../../api/services/items.service';
-import {ItemExistsValidator} from '../../item-exists-validator';
-import {Item} from '../../api/models/item';
+import {ItemsService} from '../api/services/items.service';
+import {ItemExistsValidator} from '../item-exists-validator';
+import {Item} from '../api/models/item';
 
 @Component({
-  selector: 'app-mission-rewards-editor',
-  templateUrl: './mission-rewards-editor.component.html',
-  styleUrls: ['./mission-rewards-editor.component.css']
+  selector: 'app-bundle-rewards-editor',
+  templateUrl: './bundle-rewards-editor.component.html',
+  styleUrls: ['./bundle-rewards-editor.component.css']
 })
 export class BundleRewardsEditorComponent implements OnInit {
   @Input() rewards: Array<Reward>;
