@@ -12,7 +12,7 @@ import {BundleReward} from '../api/models/bundle-reward';
   styleUrls: ['./bundle-rewards-editor.component.css']
 })
 export class BundleRewardsEditorComponent implements OnInit {
-  @Input() rewards: Array<BundleReward>;
+  @Input() rawRewards: Array<BundleReward>;
   @ViewChild('newRewardItem') newItemField: ElementRef;
 
   constructor(private formBuilder: FormBuilder, private itemsService: ItemsService) {}
@@ -24,6 +24,8 @@ export class BundleRewardsEditorComponent implements OnInit {
     newRewardCt: ['', [Validators.required, Validators.pattern('^[0-9]+$')]]
   });
 
+  public rewards: Array<Reward>;
+
   public existingRewardForm = this.formBuilder.group({});
 
   public addReward(itemName: string, itemCt: number) {
@@ -34,7 +36,7 @@ export class BundleRewardsEditorComponent implements OnInit {
     this.itemsService.getItemByIdentifier(itemName).subscribe((item: Item) => {
       // add to rewards item-array
       this.rewards.push({
-        itemId: item,
+        item: item,
         quantity: itemCt
       });
 
@@ -65,9 +67,10 @@ export class BundleRewardsEditorComponent implements OnInit {
   }
 
   ngOnInit() {
+    // TODO use rewards array input to build array of populated rewards
     this.rewards = this.rewards || [];
     for (let i = 0; i < this.rewards.length; i++) {
-      this.existingRewardForm.addControl('reward' + i + 'Item', new FormControl(this.rewards[i].itemId, [Validators.required], [this.itemExistsValidator.validate]));
+      this.existingRewardForm.addControl('reward' + i + 'Item', new FormControl(this.rewards[i].item.name, [Validators.required], [this.itemExistsValidator.validate]));
       this.existingRewardForm.addControl('reward' + i + 'Ct', new FormControl(this.rewards[i].quantity, [Validators.required, Validators.pattern('^[0-9]+$')]));
     }
   }
