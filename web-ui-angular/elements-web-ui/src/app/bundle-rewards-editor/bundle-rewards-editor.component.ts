@@ -4,6 +4,7 @@ import {FormBuilder, FormControl, Validators} from '@angular/forms';
 import {ItemsService} from '../api/services/items.service';
 import {ItemExistsValidator} from '../item-exists-validator';
 import {Item} from '../api/models/item';
+import {BundleReward} from '../api/models/bundle-reward';
 
 @Component({
   selector: 'app-bundle-rewards-editor',
@@ -11,7 +12,7 @@ import {Item} from '../api/models/item';
   styleUrls: ['./bundle-rewards-editor.component.css']
 })
 export class BundleRewardsEditorComponent implements OnInit {
-  @Input() rewards: Array<Reward>;
+  @Input() rewards: Array<BundleReward>;
   @ViewChild('newRewardItem') newItemField: ElementRef;
 
   constructor(private formBuilder: FormBuilder, private itemsService: ItemsService) {}
@@ -33,7 +34,7 @@ export class BundleRewardsEditorComponent implements OnInit {
     this.itemsService.getItemByIdentifier(itemName).subscribe((item: Item) => {
       // add to rewards item-array
       this.rewards.push({
-        item: item,
+        itemId: item,
         quantity: itemCt
       });
 
