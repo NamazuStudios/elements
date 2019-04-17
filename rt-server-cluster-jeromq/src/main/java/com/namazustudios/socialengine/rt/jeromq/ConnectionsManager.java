@@ -64,7 +64,6 @@ public class ConnectionsManager implements AutoCloseable {
         }
 
         enterPollLoop();
-        onPollLoopExit();
     }
 
     private void enterPollLoop() {
@@ -101,13 +100,6 @@ public class ConnectionsManager implements AutoCloseable {
                     });
         }
     }
-
-    private void onPollLoopExit() {
-        zContext = null;
-        poller = null;
-        messageHandlers = null;
-    }
-
 
     /**
      * Creates a socket of the given type, connects it to the given ZMQ address, registers it into the poller, and
@@ -233,6 +225,8 @@ public class ConnectionsManager implements AutoCloseable {
         socket.close();
 
         zContext.destroySocket(socket);
+
+        messageHandlers.remove(socketHandle);
     }
 
     public boolean sendMsgToSocketHandle(final int socketHandle, final ZMsg msg) {
@@ -276,11 +270,23 @@ public class ConnectionsManager implements AutoCloseable {
 
     @Override
     public void close() {
-        // TODO: iterate through all registered socket handles and call closeAndDestroySocketHandle
+        for (int socketHandle : messageHandlers.keySet()) {
+            try {
+                closeAndDestroySocketHandle(socketHandle);
+            }
+            catch (Exception e) {
+                logger.warn("Failed to close/destroy socket handle {}", socketHandle);
+            }
+
+        }
 
         for (final MonitorThread monitorThread : monitorThreads.values()) {
             monitorThread.close();
         }
+
+        zContext = null;
+        poller = null;
+        messageHandlers = null;
     }
 
     @FunctionalInterface

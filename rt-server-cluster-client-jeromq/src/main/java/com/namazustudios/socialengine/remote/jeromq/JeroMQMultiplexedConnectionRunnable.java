@@ -1,21 +1,15 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.jeromq.*;
-import com.namazustudios.socialengine.rt.remote.RoutingHeader;
 import com.namazustudios.socialengine.rt.util.SyncWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.*;
 
-import java.util.*;
+import com.namazustudios.socialengine.rt.jeromq.MessageManager.MessageManagerConfiguration;
 
-import com.namazustudios.socialengine.rt.jeromq.MessageManager.MessageHandlerConfiguration;
-import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_RESPONSE;
-import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.send;
-import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.CONTINUE;
 import static org.zeromq.ZContext.shadow;
 import static org.zeromq.ZMQ.*;
-import static zmq.ZError.EHOSTUNREACH;
 
 /**
  * Threaded manager for a multiplexed ZMQ connection.
@@ -42,11 +36,11 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
 
     @Override
     public void run() {
-        final MessageHandlerConfiguration messageHandlerConfiguration =
-                new MessageHandlerConfiguration(false);
+        final MessageManagerConfiguration messageManagerConfiguration =
+                new MessageManagerConfiguration(false);
 
         try (final ZContext context = shadow(zContext);
-             final MessageManager messageManager = new MessageManager(messageHandlerConfiguration);
+             final MessageManager messageManager = new MessageManager(messageManagerConfiguration);
              final ConnectionsManager connectionsManager = new ConnectionsManager()
         ) {
 
@@ -60,87 +54,13 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
                 );
                 logger.info("Successfully bound control socket to handle: {}.", controlSocketHandle);
 
+
+
                 // unblock the thread
                 threadBlocker.getResultConsumer().accept(null);
             });
 
             connectionsManager.start(context);
         }
-    }
-
-
-
-    private void sendToInprocChannel(final ZMsg msg, final BackendChannelTable backendChannelTable) {
-        final RoutingHeader routingHeader = RouteRepresentationUtil.getAndStripRoutingHeader(msg);
-
-        if (routingHeader.status.get() == CONTINUE) {
-
-            final String backendAddress = routingHeader.backendAddress.get();
-            final UUID inprocIdentifier = routingHeader.inprocIdentifier.get();
-
-            if (backendAddress == null || inprocIdentifier == null) {
-                logger.warn("Bad routeRepresentationUtil header format (missing tcpAddress and/or inprocIdentifier).  Dropping message.");
-            }
-
-            final ZMQ.Socket inprocSocket = backendChannelTable.getInprocSocket(backendAddress, inprocIdentifier);
-
-            if (inprocSocket == null) {
-                logger.warn("Host unreachable.  Dropping message.");
-                return;
-            }
-
-            try {
-                msg.send(inprocSocket);
-            } catch (ZMQException ex) {
-                if (ex.getErrorCode() == EHOSTUNREACH) {
-                    logger.warn("Host unreachable.  Dropping message.");
-                } else {
-                    throw ex;
-                }
-            }
-
-        } else {
-            logger.error("Received {} route for inprocIdentifier {}", routingHeader.status.get(), routingHeader.inprocIdentifier.get());
-        }
-
-    }
-
-    private void sendToBackendChannel(final ZMsg msg, final int inprocSocketHandle, final BackendChannelTable backendChannelTable) {
-        final int backendSocketHandle = backendChannelTable.getBackendSocketHandleForInprocSocketHandle(inprocSocketHandle);
-        final String backendAddress = backendChannelTable.getBackendAddressForInprocSocketHandle(inprocSocketHandle);
-        final UUID inprocIdentifier = backendChannelTable.getInprocIdentifier(backendSocketHandle, inprocSocketHandle);
-
-        final RoutingHeader routingHeader = new RoutingHeader();
-        routingHeader.status.set(CONTINUE);
-        routingHeader.backendAddress.set(backendAddress);
-        routingHeader.inprocIdentifier.set(inprocIdentifier);
-
-        RouteRepresentationUtil.insertRoutingHeader(msg, routingHeader);
-
-        final ZMQ.Socket backendSocket = backendChannelTable.getBackendSocket(backendAddress);
-
-        msg.send(backendSocket);
-
-    }
-
-    private void handleControlMessage(final ZMsg msg, final ZMQ.Socket controlSocket, final BackendChannelTable backendChannelTable) {
-
-        final CommandPreamble preamble = new CommandPreamble();
-
-        preamble.getByteBuffer().put(msg.pop().getData());
-
-        switch(preamble.commandType.get()) {
-            case STATUS_REQUEST:
-                send(controlSocket, STATUS_RESPONSE, new StatusResponse().getByteBuffer());
-                break;
-            case ROUTING_COMMAND:
-                final RoutingCommand command = new RoutingCommand();
-                command.getByteBuffer().put(msg.pop().getData());
-                backendChannelTable.process(command);
-                break;
-            default:
-                logger.error("Unexpected command: {}", preamble.commandType.get());
-        }
-
     }
 }

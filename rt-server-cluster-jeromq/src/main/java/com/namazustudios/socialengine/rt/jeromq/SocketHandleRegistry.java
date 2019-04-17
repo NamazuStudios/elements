@@ -5,7 +5,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+/**
+ * Maps socket handles to tcp addresses/inproc identifiers (and vice versa). Note: this is not a thread-safe module and
+ * is meant to be accessed only within a connection runnable thread.
+ */
 public class SocketHandleRegistry implements AutoCloseable {
+
+    public static final int SOCKET_HANDLE_NOT_FOUND = -1;
 
     private static final Logger logger = LoggerFactory.getLogger(SocketHandleRegistry.class);
 
@@ -14,6 +20,9 @@ public class SocketHandleRegistry implements AutoCloseable {
 
     private final Map<Integer, UUID> inprocSocketHandlesToIdentifiers = new LinkedHashMap<>();
     private final Map<UUID, Integer> inprocIdentifiersToSocketHandles = new LinkedHashMap<>();
+
+    private final Map<UUID, String> inprocIdentifiersToTcpAddresses = new LinkedHashMap<>();
+    private final Map<String, Set<UUID>> tcpAddressesToInprocIdentifiers = new LinkedHashMap<>();
 
     public boolean hasTcpAddress(final String tcpAddress) {
         return tcpAddressesToSocketHandles.containsKey(tcpAddress);
@@ -35,9 +44,33 @@ public class SocketHandleRegistry implements AutoCloseable {
         tcpAddressesToSocketHandles.remove(tcpAddress);
     }
 
-    public void registerInprocSocketHandle(final int inprocSocketHandle, final UUID inprocIdentifier) {
+    /**
+     * Registers an
+     *
+     * @param inprocSocketHandle the socket handle for the inproc connection.
+     * @param inprocIdentifier the UUID inproc identifier.
+     * @param tcpAddress the tcp address where the inproc socket lives. If null, then the inproc lives locally.
+     */
+    public void registerInprocSocketHandle(
+            final int inprocSocketHandle,
+            final String tcpAddress,
+            final UUID inprocIdentifier
+    ) {
         inprocSocketHandlesToIdentifiers.put(inprocSocketHandle, inprocIdentifier);
         inprocIdentifiersToSocketHandles.put(inprocIdentifier, inprocSocketHandle);
+
+
+        inprocIdentifiersToTcpAddresses.put(inprocIdentifier, tcpAddress);
+        final Set<UUID> inprocIdentifiers;
+        if (tcpAddressesToInprocIdentifiers.containsKey(tcpAddress)) {
+            inprocIdentifiers = tcpAddressesToInprocIdentifiers.get(tcpAddress);
+        }
+        else {
+            inprocIdentifiers = new LinkedHashSet<>();
+            tcpAddressesToInprocIdentifiers.put(tcpAddress, inprocIdentifiers);
+        }
+
+        inprocIdentifiers.add(inprocIdentifier);
     }
 
     public void unregisterInprocSocketHandle(final int inprocSocketHandle) {
@@ -45,17 +78,18 @@ public class SocketHandleRegistry implements AutoCloseable {
 
         inprocSocketHandlesToIdentifiers.remove(inprocSocketHandle);
         inprocIdentifiersToSocketHandles.remove(inprocIdentifier);
+        inprocIdentifiersToTcpAddresses.remove(inprocIdentifier);
     }
 
     /**
      * Gets the tcp socket handle for the given full tcp address.
      *
      * @param tcpAddress
-     * @return the socket handle if found, -1 otherwise.
+     * @return the socket handle if found, {@link SocketHandleRegistry#SOCKET_HANDLE_NOT_FOUND} otherwise.
      */
     public int getTcpSocketHandle(final String tcpAddress) {
         if (!tcpAddressesToSocketHandles.containsKey(tcpAddress)) {
-            return -1;
+            return SOCKET_HANDLE_NOT_FOUND;
         }
 
         final Integer tcpSocketHandle = tcpAddressesToSocketHandles.get(tcpAddress);
@@ -64,14 +98,30 @@ public class SocketHandleRegistry implements AutoCloseable {
     }
 
     /**
+     * Gets the tcp address string associated with the given socket handle, if it exists.
+     *
+     * @param socketHandle
+     * @return the {@link String} tcp address if it exists, null otherwise.
+     */
+    public String getTcpAddress(final int socketHandle) {
+        if (!tcpSocketHandlesToAddresses.containsKey(socketHandle)) {
+            return null;
+        }
+
+        final String tcpAddress = tcpSocketHandlesToAddresses.get(socketHandle);
+
+        return tcpAddress;
+    }
+
+    /**
      * Gets the inproc socket handle for the given inproc identifier.
      *
      * @param inprocIdentifier
-     * @return the socket handle if found, -1 otherwise.
+     * @return the socket handle if found, {@link SocketHandleRegistry#SOCKET_HANDLE_NOT_FOUND} otherwise.
      */
     public int getInprocSocketHandle(final UUID inprocIdentifier) {
         if (!inprocIdentifiersToSocketHandles.containsKey(inprocIdentifier)) {
-            return -1;
+            return SOCKET_HANDLE_NOT_FOUND;
         }
 
         final Integer inprocSocketHandle = inprocIdentifiersToSocketHandles.get(inprocIdentifier);
@@ -79,11 +129,46 @@ public class SocketHandleRegistry implements AutoCloseable {
         return inprocSocketHandle;
     }
 
+    /**
+     * Gets the inproc identifier associated with the given socket handle, if it exists.
+     *
+     * @param socketHandle
+     * @return the {@link UUID} inprocIdentifier if it exists, null otherwise.
+     */
+    public UUID getInprocIdentifier(final int socketHandle) {
+        if (!inprocSocketHandlesToIdentifiers.containsKey(socketHandle)) {
+            return null;
+        }
+
+        final UUID inprocIdentifier = inprocSocketHandlesToIdentifiers.get(socketHandle);
+
+        return inprocIdentifier;
+    }
+
+    /**
+     *
+     * @param inprocIdentifier
+     * @return the {@link String} tcp address if it exists, null otherwise.
+     */
+    public String getTcpAddressForInprocIdentifier(final UUID inprocIdentifier) {
+        if (!inprocIdentifiersToTcpAddresses.containsKey(inprocIdentifier)) {
+            return null;
+        }
+
+        return inprocIdentifiersToTcpAddresses.get(inprocIdentifier);
+    }
+
+
+
     @Override
     public void close() {
         tcpSocketHandlesToAddresses.clear();
         tcpAddressesToSocketHandles.clear();
+
         inprocSocketHandlesToIdentifiers.clear();
         inprocIdentifiersToSocketHandles.clear();
+
+        inprocIdentifiersToTcpAddresses.clear();
+        tcpAddressesToInprocIdentifiers.clear();
     }
 }

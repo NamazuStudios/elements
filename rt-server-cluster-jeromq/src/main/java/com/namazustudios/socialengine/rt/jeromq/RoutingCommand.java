@@ -44,14 +44,14 @@ public class RoutingCommand extends Struct {
         DISCONNECT_TCP,
 
         /**
-         * Binds a ROUTER inproc socket with the given {@link RoutingCommand#inprocIdentifier}.
+         * Binds a ROUTER tcp socket with the given {@link RoutingCommand#tcpAddress}.
          */
-        BIND_INPROC,
+        BIND_TCP,
 
         /**
-         * Unbinds the ROUTER inproc socket for the given {@link RoutingCommand#inprocIdentifier}.
+         * Unbinds the ROUTER tcp socket with the given {@link RoutingCommand#tcpAddress}.
          */
-        UNBIND_INPROC,
+        UNBIND_TCP,
 
         /**
          * Establishes a DEALER connection to a ROUTER inproc socket for the given {@link RoutingCommand#inprocIdentifier}.
@@ -62,6 +62,16 @@ public class RoutingCommand extends Struct {
          * Ends the DEALER connection from the ROUTER inproc socket for the given {@link RoutingCommand#inprocIdentifier}.
          */
         DISCONNECT_INPROC,
+
+        /**
+         * Binds a ROUTER inproc socket with the given {@link RoutingCommand#inprocIdentifier}.
+         */
+        BIND_INPROC,
+
+        /**
+         * Unbinds the ROUTER inproc socket for the given {@link RoutingCommand#inprocIdentifier}.
+         */
+        UNBIND_INPROC,
 
     }
 

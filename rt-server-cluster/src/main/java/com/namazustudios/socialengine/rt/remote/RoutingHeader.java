@@ -16,7 +16,7 @@ public class RoutingHeader extends Struct {
      */
     public final Enum32<Status> status = new Enum32<>(Status.values());
 
-    public final UTF8String backendAddress = new UTF8String(128);
+    public final UTF8String tcpAddress = new UTF8String(128);
 
     /**
      * Represents the message's final inprocIdentifier.  Typically corresponds to an ID generated from a Node id.

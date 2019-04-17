@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
 
+import com.namazustudios.socialengine.rt.remote.RoutingHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
 import java.util.UUID;
@@ -12,10 +12,9 @@ import com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action;
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND_ACK;
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_RESPONSE;
 import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.buildControlMsg;
-import static org.zeromq.ZMQ.DEALER;
-import static org.zeromq.ZMQ.Poller.POLLERR;
-import static org.zeromq.ZMQ.Poller.POLLIN;
-import static org.zeromq.ZMQ.ROUTER;
+import com.namazustudios.socialengine.rt.remote.RoutingHeader.Status;
+import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.*;
+import static org.zeromq.ZMQ.*;
 
 /**
  * Handles ZMQ messages. This is not thread-safe and is meant to be self-contained, i.e. method calls within
@@ -26,13 +25,29 @@ public class MessageManager implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(MessageManager.class);
 
-    private final MessageHandlerConfiguration messageHandlerConfiguration;
+    private final MessageManagerConfiguration messageManagerConfiguration;
 
     private final SocketHandleRegistry socketHandleRegistry = new SocketHandleRegistry();
 
-    public MessageManager(final MessageHandlerConfiguration messageHandlerConfiguration) {
-        this.messageHandlerConfiguration = messageHandlerConfiguration;
+
+
+    //================================================================================
+    //
+    // Constructor
+    //
+    //================================================================================
+
+    public MessageManager(final MessageManagerConfiguration messageManagerConfiguration) {
+        this.messageManagerConfiguration = messageManagerConfiguration;
     }
+
+
+
+    //================================================================================
+    //
+    // Handle Control Message
+    //
+    //================================================================================
 
     public void handleControlMessage(
             final int socketHandle,
@@ -52,7 +67,7 @@ public class MessageManager implements AutoCloseable {
                 break;
             case ROUTING_COMMAND:   // we have received a command to open/close another channel (inproc or backend)
                 // conditionally send back msg ack (e.g. if we are demultiplexer)
-                if (messageHandlerConfiguration.isShouldSendRoutingCommandAcknowledgement()) {
+                if (messageManagerConfiguration.isShouldSendRoutingCommandAcknowledgement()) {
                     sendRoutingCommandAcknowledgement(socketHandle, connectionsManager);
                 }
 
@@ -105,26 +120,42 @@ public class MessageManager implements AutoCloseable {
                 disconnectFromTcpAddress(tcpAddress, connectionsManager);
                 break;
             }
-            case BIND_INPROC: {
-                bindInprocSocket(inprocIdentifier, connectionsManager);
+            case BIND_TCP: {
+                bindToTcpAddress(tcpAddress, connectionsManager);
                 break;
             }
-            case UNBIND_INPROC: {
-                unbindInprocSocket(inprocIdentifier, connectionsManager);
+            case UNBIND_TCP: {
+                unbindFromTcpAddress(tcpAddress, connectionsManager);
                 break;
             }
             case CONNECT_INPROC: {
-                connectToInprocSocket(inprocIdentifier, connectionsManager);
+                connectToInprocAddress(tcpAddress, inprocIdentifier, connectionsManager);
                 break;
             }
             case DISCONNECT_INPROC: {
-                disconnectFromInprocSocket(inprocIdentifier, connectionsManager);
+                disconnectFromInprocAddress(inprocIdentifier, connectionsManager);
+                break;
+            }
+            case BIND_INPROC: {
+                bindToInprocAddress(tcpAddress, inprocIdentifier, connectionsManager);
+                break;
+            }
+            case UNBIND_INPROC: {
+                unbindFromInprocAddress(inprocIdentifier, connectionsManager);
                 break;
             }
         }
     }
 
-    private void connectToTcpAddress(
+
+
+    //================================================================================
+    //
+    // Connect/Disconnect/Bind/Unbind
+    //
+    //================================================================================
+
+    private int connectToTcpAddress(
             final String tcpAddress,
             final ConnectionsManager connectionsManager
     ) {
@@ -135,6 +166,8 @@ public class MessageManager implements AutoCloseable {
                 true
                 );
         socketHandleRegistry.registerTcpSocketHandle(socketHandle, tcpAddress);
+
+        return socketHandle;
     }
 
     private void disconnectFromTcpAddress(
@@ -155,39 +188,41 @@ public class MessageManager implements AutoCloseable {
         }
     }
 
-    private void bindInprocSocket(
-            final UUID inprocIdentifier,
+    private int bindToTcpAddress(
+            final String tcpAddress,
             final ConnectionsManager connectionsManager
     ) {
-        final String inprocAddress = RouteRepresentationUtil.buildConnectInprocAddress(inprocIdentifier);
         final int socketHandle = connectionsManager.bindToAddressAndBeginPolling(
-                inprocAddress,
-                ROUTER,
-                this::handleBoundInprocMessage,
-                false
+                tcpAddress,
+                DEALER,
+                this::handleBoundTcpMessage,
+                true
         );
-        socketHandleRegistry.registerInprocSocketHandle(socketHandle, inprocIdentifier);
+        socketHandleRegistry.registerTcpSocketHandle(socketHandle, tcpAddress);
+
+        return socketHandle;
     }
 
-    private void unbindInprocSocket(
-            final UUID inprocIdentifier,
+    private void unbindFromTcpAddress(
+            final String tcpAddress,
             final ConnectionsManager connectionsManager
     ) {
-        final int socketHandle = socketHandleRegistry.getInprocSocketHandle(inprocIdentifier);
+        final int socketHandle = socketHandleRegistry.getTcpSocketHandle(tcpAddress);
         if (socketHandle < 0) {
             return;
         }
 
         try {
             connectionsManager.closeAndDestroySocketHandle(socketHandle);
-            socketHandleRegistry.unregisterInprocSocketHandle(socketHandle);
+            socketHandleRegistry.unregisterTcpSocketHandle(socketHandle);
         }
         catch (Exception e) {
-            logger.error("Failed to close/destroy bound inproc socket handle {} with error: {}", socketHandle, e);
+            logger.error("Failed to close/destroy bound tcp socket handle {} with error: {}", socketHandle, e);
         }
     }
 
-    private void connectToInprocSocket(
+    private int connectToInprocAddress(
+            final String tcpAddress,
             final UUID inprocIdentifier,
             final ConnectionsManager connectionsManager
     ) {
@@ -198,10 +233,12 @@ public class MessageManager implements AutoCloseable {
                 this::handleConnectedInprocMessage,
                 false
         );
-        socketHandleRegistry.registerInprocSocketHandle(socketHandle, inprocIdentifier);
+        socketHandleRegistry.registerInprocSocketHandle(socketHandle, tcpAddress, inprocIdentifier);
+
+        return socketHandle;
     }
 
-    private void disconnectFromInprocSocket(
+    private void disconnectFromInprocAddress(
             final UUID inprocIdentifier,
             final ConnectionsManager connectionsManager
     ) {
@@ -219,20 +256,98 @@ public class MessageManager implements AutoCloseable {
         }
     }
 
+    private int bindToInprocAddress(
+            final String tcpAddress,
+            final UUID inprocIdentifier,
+            final ConnectionsManager connectionsManager
+    ) {
+        final String inprocAddress = RouteRepresentationUtil.buildConnectInprocAddress(inprocIdentifier);
+        final int socketHandle = connectionsManager.bindToAddressAndBeginPolling(
+                inprocAddress,
+                ROUTER,
+                this::handleBoundInprocMessage,
+                false
+        );
+        socketHandleRegistry.registerInprocSocketHandle(socketHandle, tcpAddress, inprocIdentifier);
+
+        return socketHandle;
+    }
+
+    private void unbindFromInprocAddress(
+            final UUID inprocIdentifier,
+            final ConnectionsManager connectionsManager
+    ) {
+        final int socketHandle = socketHandleRegistry.getInprocSocketHandle(inprocIdentifier);
+        if (socketHandle < 0) {
+            return;
+        }
+
+        try {
+            connectionsManager.closeAndDestroySocketHandle(socketHandle);
+            socketHandleRegistry.unregisterInprocSocketHandle(socketHandle);
+        }
+        catch (Exception e) {
+            logger.error("Failed to close/destroy bound inproc socket handle {} with error: {}", socketHandle, e);
+        }
+    }
+
+
+
+    //================================================================================
+    //
+    // Handle tcp/inproc received messages
+    //
+    //================================================================================
+
     private void handleConnectedTcpMessage(
             final int socketHandle,
             final ZMsg msg,
             final ConnectionsManager connectionsManager
     ) {
+        final RoutingHeader routingHeader = RouteRepresentationUtil.getAndStripRoutingHeader(msg);
+        final UUID inprocIdentifier = routingHeader.inprocIdentifier.get();
+        final Status status = routingHeader.status.get();
 
+        if (status == CONTINUE) {
+            final int inprocSocketHandle = socketHandleRegistry.getInprocSocketHandle(inprocIdentifier);
+
+            if (inprocSocketHandle < 0) {
+                logger.warn("Socket not established for inproc identifier {}. Dropping message.", inprocIdentifier);
+                return;
+            }
+
+            connectionsManager.sendMsgToSocketHandle(inprocSocketHandle, msg);
+        }
+        else {
+            logger.error("Failed to handle tcp conn msg with status {} for inproc identifier {}. Dropping message.",
+                    status, inprocIdentifier);
+        }
     }
 
-    private void handleBoundInprocMessage(
+    private void handleBoundTcpMessage(
             final int socketHandle,
             final ZMsg msg,
             final ConnectionsManager connectionsManager
     ) {
+        final RoutingHeader routingHeader = RouteRepresentationUtil.getAndStripRoutingHeader(msg);
+        final String tcpAddress = routingHeader.tcpAddress.get();
+        final UUID inprocIdentifier = routingHeader.inprocIdentifier.get();
+        final Status status = routingHeader.status.get();
 
+        if (status == CONTINUE) {
+            final int inprocSocketHandle;
+            if (socketHandleRegistry.hasInprocIdentifier(inprocIdentifier)) {
+                inprocSocketHandle = socketHandleRegistry.getInprocSocketHandle(inprocIdentifier);
+            }
+            else {
+                inprocSocketHandle = connectToInprocAddress(tcpAddress, inprocIdentifier, connectionsManager);
+            }
+
+            connectionsManager.sendMsgToSocketHandle(inprocSocketHandle, msg);
+        } else {
+            logger.error("Failed to handle tcp bind msg with status {} for inproc identifier {}. Dropping message.",
+                    status, inprocIdentifier);
+        }
     }
 
     private void handleConnectedInprocMessage(
@@ -240,18 +355,51 @@ public class MessageManager implements AutoCloseable {
             final ZMsg msg,
             final ConnectionsManager connectionsManager
     ) {
+        final UUID inprocIdentifier = socketHandleRegistry.getInprocIdentifier(socketHandle);
+        final String tcpAddress = socketHandleRegistry.getTcpAddressForInprocIdentifier(inprocIdentifier);
 
+        final RoutingHeader routingHeader = new RoutingHeader();
+        routingHeader.status.set(CONTINUE);
+        routingHeader.tcpAddress.set(tcpAddress);
+        routingHeader.inprocIdentifier.set(inprocIdentifier);
+        RouteRepresentationUtil.insertRoutingHeader(msg, routingHeader);
+
+        final int tcpSocketHandle = socketHandleRegistry.getTcpSocketHandle(tcpAddress);
+
+        connectionsManager.sendMsgToSocketHandle(tcpSocketHandle, msg);
     }
+
+    private void handleBoundInprocMessage(
+            final int socketHandle,
+            final ZMsg msg,
+            final ConnectionsManager connectionsManager
+    ) {
+        final UUID inprocIdentifier = socketHandleRegistry.getInprocIdentifier(socketHandle);
+        final String tcpAddress = socketHandleRegistry.getTcpAddressForInprocIdentifier(inprocIdentifier);
+
+        final RoutingHeader routingHeader = new RoutingHeader();
+        routingHeader.status.set(CONTINUE);
+        routingHeader.tcpAddress.set(tcpAddress);
+        routingHeader.inprocIdentifier.set(inprocIdentifier);
+
+        RouteRepresentationUtil.insertRoutingHeader(msg, routingHeader);
+
+        final int tcpSocketHandle = socketHandleRegistry.getTcpSocketHandle(tcpAddress);
+
+        connectionsManager.sendMsgToSocketHandle(tcpSocketHandle, msg);
+    }
+
+
 
     @Override
     public void close() {
-
+        socketHandleRegistry.close();
     }
 
-    public static final class MessageHandlerConfiguration {
+    public static final class MessageManagerConfiguration {
         private final boolean shouldSendRoutingCommandAcknowledgement;
 
-        public MessageHandlerConfiguration(final boolean shouldSendRoutingCommandAcknowledgement) {
+        public MessageManagerConfiguration(final boolean shouldSendRoutingCommandAcknowledgement) {
             this.shouldSendRoutingCommandAcknowledgement = shouldSendRoutingCommandAcknowledgement;
         }
 

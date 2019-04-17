@@ -40,6 +40,7 @@ public class JeroMQMultiplexedConnectionService implements MultiplexedConnection
 
     private String applicationNodeFqdn;
 
+    // TODO: move this to RouteRepresentationUtil, just have it generated within ConnectionsManager
     private final String controlAddress = format("inproc://%s.control", randomUUID());
 
     private SrvMonitor srvMonitor;
