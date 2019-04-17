@@ -17,6 +17,8 @@ export class ProductBundleEditorComponent implements OnInit {
     description: [this.data.productBundle.description, [Validators.required]]
   });
 
+  originalMetadata = JSON.parse(JSON.stringify(this.data.productBundle.metadata || {}));
+
   constructor(public dialogRef: MatDialogRef<ProductBundleEditorComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
               private formBuilder: FormBuilder) { }
@@ -26,6 +28,7 @@ export class ProductBundleEditorComponent implements OnInit {
 
   close(saveChanges: boolean = false) {
     if (!saveChanges) {
+      this.data.productBundle.metadata = this.originalMetadata;
       this.dialogRef.close();
       return;
     }
