@@ -30,7 +30,7 @@ end
 -- @param score the score (must be an integer)
 function match_client:submit_score(score)
 
-    print("Score " .. tostring(score))
+    log.debug("Score " .. tostring(score))
 
     local request = {
         method = "PUT",

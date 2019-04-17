@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @ApiModel(description = "Represents a GameOn Match.  Maps direcly to the Amazon GameOn APIs.  Contains slightly less" +
@@ -62,6 +63,9 @@ public class GameOnMatchSummary implements Serializable {
 
     @ApiModelProperty("The current state of the tournament.")
     private String tournamentState;
+
+    @ApiModelProperty("The metadata of the tournament - text for any additional information (e.g. Rules, Disclaimers, etc.)")
+    private String metadata;
 
     public String getPrizeBundleClaimStatus() {
         return prizeBundleClaimStatus;
@@ -200,6 +204,14 @@ public class GameOnMatchSummary implements Serializable {
         this.tournamentState = tournamentState;
     }
 
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -221,12 +233,13 @@ public class GameOnMatchSummary implements Serializable {
                 Objects.equals(getWinType(), that.getWinType()) &&
                 Objects.equals(getScoreType(), that.getScoreType()) &&
                 Objects.equals(getPrizeBundleClaimStatus(), that.getPrizeBundleClaimStatus()) &&
-                Objects.equals(getTournamentState(), that.getTournamentState());
+                Objects.equals(getTournamentState(), that.getTournamentState()) &&
+                Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getMatchId(), getTournamentId(), getAttemptsRemaining(), getTitle(), getSubtitle(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getPlayerAttemptsPerMatch(), getPlayersPerMatch(), getPrizeBundles(), getWinType(), getScoreType(), getPrizeBundleClaimStatus(), getTournamentState());
+        return Objects.hash(getMatchId(), getTournamentId(), getAttemptsRemaining(), getTitle(), getSubtitle(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getPlayerAttemptsPerMatch(), getPlayersPerMatch(), getPrizeBundles(), getWinType(), getScoreType(), getPrizeBundleClaimStatus(), getTournamentState(), getMetadata());
     }
 
     @Override
@@ -249,6 +262,7 @@ public class GameOnMatchSummary implements Serializable {
                 ", scoreType=" + scoreType +
                 ", prizeBundleClaimStatus=" + prizeBundleClaimStatus +
                 ", tournamentState=" + tournamentState +
+                ", metadata='" + metadata + '\'' +
                 '}';
     }
 

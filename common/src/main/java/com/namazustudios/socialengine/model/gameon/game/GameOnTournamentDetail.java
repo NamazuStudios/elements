@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @ApiModel(description = "A more detailed response on a particular GameOn tournament.  Contains the summary and some" +
@@ -58,6 +59,9 @@ public class GameOnTournamentDetail implements Serializable {
 
     @ApiModelProperty("The current state of the tournament.")
     private String tournamentState;
+
+    @ApiModelProperty("The metadata of the tournament - text for any additional information (e.g. Rules, Disclaimers, etc.)")
+    private String metadata;
 
     public String getTournamentId() {
         return tournamentId;
@@ -187,6 +191,14 @@ public class GameOnTournamentDetail implements Serializable {
         this.tournamentState = tournamentState;
     }
 
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -207,12 +219,13 @@ public class GameOnTournamentDetail implements Serializable {
                 Objects.equals(getWinType(), that.getWinType()) &&
                 Objects.equals(getCountryCodes(), that.getCountryCodes()) &&
                 Objects.equals(getDescription(), that.getDescription()) &&
-                Objects.equals(getTournamentState(), that.getTournamentState());
+                Objects.equals(getTournamentState(), that.getTournamentState()) &&
+                Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getTournamentId(), getTitle(), getSubtitle(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getplayerAttemptsPerMatch(), getPlayersPerMatch(), getPrizeBundles(), getScoreType(), getWinType(), getCountryCodes(), getDescription(), getTournamentState());
+        return Objects.hash(getTournamentId(), getTitle(), getSubtitle(), getCanEnter(), getDateStart(), getDateEnd(), getImageUrl(), getMatchesPerPlayer(), getplayerAttemptsPerMatch(), getPlayersPerMatch(), getPrizeBundles(), getScoreType(), getWinType(), getCountryCodes(), getDescription(), getTournamentState(), getMetadata());
     }
 
     @Override
@@ -234,6 +247,7 @@ public class GameOnTournamentDetail implements Serializable {
                 ", countryCodes='" + countryCodes + '\'' +
                 ", description='" + description + '\'' +
                 ", tournamentState='" + tournamentState + '\'' +
+                ", metadata='" + metadata + '\'' +
                 '}';
     }
 
