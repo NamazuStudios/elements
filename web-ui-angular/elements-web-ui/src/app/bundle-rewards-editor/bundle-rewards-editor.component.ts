@@ -67,7 +67,7 @@ export class BundleRewardsEditorComponent implements OnInit {
   ngOnInit() {
     this.rewards = this.rewards || [];
     for (let i = 0; i < this.rewards.length; i++) {
-      this.existingRewardForm.addControl('reward' + i + 'Item', new FormControl(this.rewards[i].item.name, [Validators.required], [this.itemExistsValidator.validate]));
+      this.existingRewardForm.addControl('reward' + i + 'Item', new FormControl(this.rewards[i].itemId, [Validators.required], [this.itemExistsValidator.validate]));
       this.existingRewardForm.addControl('reward' + i + 'Ct', new FormControl(this.rewards[i].quantity, [Validators.required, Validators.pattern('^[0-9]+$')]));
     }
   }
