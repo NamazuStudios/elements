@@ -2,6 +2,7 @@ import {Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material';
 import {FormBuilder, Validators} from '@angular/forms';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
+import {BundleRewardsEditorComponent} from '../bundle-rewards-editor/bundle-rewards-editor.component';
 
 @Component({
   selector: 'app-product-bundle-editor',
@@ -10,6 +11,7 @@ import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.comp
 })
 export class ProductBundleEditorComponent implements OnInit {
   @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
+  @ViewChild(BundleRewardsEditorComponent) bundleRewardsEditor: BundleRewardsEditorComponent;
 
   productBundleForm = this.formBuilder.group({
     productId: [this.data.productBundle.productId, [Validators.required]],
@@ -36,6 +38,8 @@ export class ProductBundleEditorComponent implements OnInit {
     const formData = this.productBundleForm.value;
     if (this.data.productBundle !== undefined) {
       formData.metadata = this.data.productBundle.metadata;
+
+      formData.productBundleRewards = this.bundleRewardsEditor.getRawRewards();
     }
 
     this.data.next(formData);

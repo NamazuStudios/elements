@@ -56,6 +56,18 @@ export class BundleRewardsEditorComponent implements OnInit {
     });
   }
 
+  public getRawRewards() {
+    const rawRewards: Array<BundleReward> = [];
+    for (let i = 0; i < this.rewards.length; i++) {
+      rawRewards.push({
+        itemId: this.rewards[i].item.id,
+        quantity: this.rewards[i].quantity
+      });
+    }
+
+    return rawRewards;
+  }
+
   removeReward(index: number) {
     if(this.rewards.length > 1) {
       this.rewards.splice(index, 1);
@@ -69,7 +81,6 @@ export class BundleRewardsEditorComponent implements OnInit {
   }
 
   ngOnInit() {
-    // TODO use rewards array input to build array of populated rewards
     this.rawRewards = this.rawRewards || [];
     for (let i = 0; i < this.rawRewards.length; i++) {
       this.addReward(this.rawRewards[i].itemId, this.rawRewards[i].quantity, false);
