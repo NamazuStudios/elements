@@ -8,7 +8,10 @@ import org.zeromq.ZMsg;
 
 import java.util.UUID;
 
+import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandPreambleFromBytes;
+import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.RoutingCommandFromBytes;
 import com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action;
+import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND_ACK;
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_RESPONSE;
 import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.buildControlMsg;
@@ -54,14 +57,15 @@ public class MessageManager implements AutoCloseable {
             final ZMsg msg,
             final ConnectionsManager connectionsManager
     ) {
+        final byte[] commandPreambleBytes = msg.pop().getData();
+        final CommandPreamble preamble = CommandPreambleFromBytes(commandPreambleBytes);
+
+        final CommandType commandType = preamble.commandType.get();
+
         // TODO: make sure to remove logs
-        logger.info("Recv control msg");
+        logger.info("Recv control msg: {}", commandType);
 
-        final CommandPreamble preamble = new CommandPreamble();
-
-        preamble.getByteBuffer().put(msg.pop().getData());
-
-        switch(preamble.commandType.get()) {
+        switch(commandType) {
             case STATUS_REQUEST:    // we received a request for current status
                 sendStatusResponse(socketHandle, connectionsManager);
                 break;
@@ -72,9 +76,10 @@ public class MessageManager implements AutoCloseable {
                 }
 
                 // so, convert the ZMsg into a RoutingCommand
-                final RoutingCommand routingCommand = new RoutingCommand();
-                routingCommand.getByteBuffer().put(msg.pop().getData());
+                final byte[] routingCommandBytes = msg.pop().getData();
+                final RoutingCommand routingCommand = RoutingCommandFromBytes(routingCommandBytes);
 
+                // and handle the formed RoutingCommand
                 handleRoutingCommand(routingCommand, connectionsManager);
                 break;
             default:
@@ -111,7 +116,13 @@ public class MessageManager implements AutoCloseable {
         final String tcpAddress = routingCommand.tcpAddress.get();
         final UUID inprocIdentifier = routingCommand.inprocIdentifier.get();
 
+        // TODO: delete this log
+        logger.info("Recv rtng cmd: {}", action);
+
         switch (action) {
+            case NO_OP: {
+                break;
+            }
             case CONNECT_TCP: {
                 connectToTcpAddress(tcpAddress, connectionsManager);
                 break;

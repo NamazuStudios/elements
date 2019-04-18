@@ -34,6 +34,12 @@ public class RoutingCommand extends Struct {
         return routingCommand;
     }
 
+    public static RoutingCommand RoutingCommandFromBytes(final byte[] bytes) {
+        final RoutingCommand routingCommand = new RoutingCommand();
+        routingCommand.getByteBuffer().put(bytes);
+        return routingCommand;
+    }
+
     /**
      * The action to perform.
      */
@@ -45,7 +51,7 @@ public class RoutingCommand extends Struct {
      *
      * TODO: split out the tcp routing commands into a separate struct to reduce inproc command transmission size.
      */
-    public final UTF8String tcpAddress = new UTF8String(128);
+    public final UTF8String tcpAddress = new UTF8String(64);
 
     /**
      * The inprocIdentifier {@link java.util.UUID} to control. This should be non-null if action is

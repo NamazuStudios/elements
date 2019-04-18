@@ -4,6 +4,12 @@ import javolution.io.Struct;
 
 public class CommandPreamble extends Struct {
 
+    public static CommandPreamble CommandPreambleFromBytes(final byte[] bytes) {
+        final CommandPreamble commandPreamble = new CommandPreamble();
+        commandPreamble.getByteBuffer().put(bytes);
+        return commandPreamble;
+    }
+
     /**
      * The command type
      */

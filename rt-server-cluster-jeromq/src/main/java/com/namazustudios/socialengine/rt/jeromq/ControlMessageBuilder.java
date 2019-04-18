@@ -8,21 +8,24 @@ import org.zeromq.ZMsg;
 import java.nio.ByteBuffer;
 
 public interface ControlMessageBuilder {
-    static ZMsg buildControlMsg(CommandType commandType, ByteBuffer byteBuffer) {
-        final CommandPreamble preamble = new CommandPreamble();
-        preamble.commandType.set(commandType);
+    static ZMsg buildControlMsg(CommandType commandType, ByteBuffer controlByteBuffer) {
+        final CommandPreamble commandPreamble = new CommandPreamble();
+        commandPreamble.commandType.set(commandType);
 
         final ZMsg msg = new ZMsg();
 
-        ByteBuffer preambleByteBuffer = preamble.getByteBuffer();
+        ByteBuffer preambleByteBuffer = commandPreamble.getByteBuffer();
+
+        preambleByteBuffer.rewind();
         byte[] preambleBytes = new byte[preambleByteBuffer.remaining()];
         preambleByteBuffer.get(preambleBytes);
 
-        byte[] commandBytes = new byte[byteBuffer.remaining()];
-        byteBuffer.get(commandBytes);
+        controlByteBuffer.rewind(); // JF: sometimes the buffer cursor is non-zero, so make sure to explicitly reset
+        byte[] controlBytes = new byte[controlByteBuffer.remaining()];
+        controlByteBuffer.get(controlBytes);
 
         msg.add(new ZFrame(preambleBytes));
-        msg.add(new ZFrame(commandBytes));
+        msg.add(new ZFrame(controlBytes));
 
         return msg;
     }
