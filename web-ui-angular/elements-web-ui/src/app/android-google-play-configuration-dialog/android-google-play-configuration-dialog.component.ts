@@ -14,7 +14,7 @@ export class AndroidGooglePlayConfigurationDialogComponent implements OnInit {
 
   appInfoForm = this.formBuilder.group({
     applicationId: [this.data.applicationConfiguration.applicationId, [Validators.required]],
-    jsonKey: [this.data.applicationConfiguration.jsonKey, [Validators.required]],
+    jsonKey: [JSON.stringify(this.data.applicationConfiguration.jsonKey), [Validators.required]],
     category: ['ANDROID_GOOGLE_PLAY'],
     parent: [this.data.applicationConfiguration.parent]
   });
