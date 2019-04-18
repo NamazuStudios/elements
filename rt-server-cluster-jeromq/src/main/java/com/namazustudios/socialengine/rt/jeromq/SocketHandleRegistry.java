@@ -11,6 +11,8 @@ import java.util.*;
  */
 public class SocketHandleRegistry implements AutoCloseable {
 
+    public static final String LOCAL_TCP_ADDRESS_REPRESENTATION = "";
+
     public static final int SOCKET_HANDLE_NOT_FOUND = -1;
 
     private static final Logger logger = LoggerFactory.getLogger(SocketHandleRegistry.class);
@@ -23,6 +25,19 @@ public class SocketHandleRegistry implements AutoCloseable {
 
     private final Map<UUID, String> inprocIdentifiersToTcpAddresses = new LinkedHashMap<>();
     private final Map<String, Set<UUID>> tcpAddressesToInprocIdentifiers = new LinkedHashMap<>();
+
+    private Set<UUID> getOrCreateInprocIdentifierSet(final String tcpAddress) {
+        final Set<UUID> inprocIdentifierSet;
+        if (tcpAddressesToInprocIdentifiers.containsKey(tcpAddress)) {
+            inprocIdentifierSet = tcpAddressesToInprocIdentifiers.get(tcpAddress);
+        }
+        else {
+            inprocIdentifierSet = new LinkedHashSet<>();
+            tcpAddressesToInprocIdentifiers.put(tcpAddress, inprocIdentifierSet);
+        }
+
+        return inprocIdentifierSet;
+    }
 
     public boolean hasTcpAddress(final String tcpAddress) {
         return tcpAddressesToSocketHandles.containsKey(tcpAddress);
@@ -49,7 +64,7 @@ public class SocketHandleRegistry implements AutoCloseable {
      *
      * @param inprocSocketHandle the socket handle for the inproc connection.
      * @param inprocIdentifier the UUID inproc identifier.
-     * @param tcpAddress the tcp address where the inproc socket lives. If null, then the inproc lives locally.
+     * @param tcpAddress the tcp address where the inproc socket lives.
      */
     public void registerInprocSocketHandle(
             final int inprocSocketHandle,
@@ -61,14 +76,7 @@ public class SocketHandleRegistry implements AutoCloseable {
 
 
         inprocIdentifiersToTcpAddresses.put(inprocIdentifier, tcpAddress);
-        final Set<UUID> inprocIdentifiers;
-        if (tcpAddressesToInprocIdentifiers.containsKey(tcpAddress)) {
-            inprocIdentifiers = tcpAddressesToInprocIdentifiers.get(tcpAddress);
-        }
-        else {
-            inprocIdentifiers = new LinkedHashSet<>();
-            tcpAddressesToInprocIdentifiers.put(tcpAddress, inprocIdentifiers);
-        }
+        final Set<UUID> inprocIdentifiers = getOrCreateInprocIdentifierSet(tcpAddress);
 
         inprocIdentifiers.add(inprocIdentifier);
     }
@@ -156,6 +164,27 @@ public class SocketHandleRegistry implements AutoCloseable {
         }
 
         return inprocIdentifiersToTcpAddresses.get(inprocIdentifier);
+    }
+
+    /**
+     * Returns all inproc identifiers that have been registered for the given {@param tcpAddress}.
+     *
+     * @param tcpAddress
+     * @return a {@link Set<UUID>} of inproc identifiers associated with the tcpAddress.
+     */
+    public Set<UUID> getInprocIdentifiersForTcpAddress(final String tcpAddress) {
+        final Set<UUID> inprocIdentifiers = getOrCreateInprocIdentifierSet(tcpAddress);
+        return inprocIdentifiers;
+    }
+
+    /**
+     * Returns all inproc identifiers that have been registered for localhost tcp.
+     *
+     * @return a {@link Set<UUID>} of inproc identifiers associated with the local tcp address.
+     */
+    public Set<UUID> getLocalTcpInprocIdentifiers() {
+        final Set<UUID> inprocIdentifiers = getOrCreateInprocIdentifierSet(LOCAL_TCP_ADDRESS_REPRESENTATION);
+        return inprocIdentifiers;
     }
 
 

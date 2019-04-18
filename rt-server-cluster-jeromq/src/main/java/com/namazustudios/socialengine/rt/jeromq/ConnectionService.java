@@ -1,20 +1,14 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
-import org.zeromq.ZContext;
-
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND;
-import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
-import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.send;
 import com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.buildRoutingCommand;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.*;
 import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.DISCONNECT_TCP;
-import static org.zeromq.ZContext.shadow;
-import static org.zeromq.ZMQ.PUSH;
 
 public interface ConnectionService {
 

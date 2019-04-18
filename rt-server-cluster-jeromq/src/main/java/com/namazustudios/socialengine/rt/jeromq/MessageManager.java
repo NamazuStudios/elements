@@ -63,7 +63,7 @@ public class MessageManager implements AutoCloseable {
         final CommandType commandType = preamble.commandType.get();
 
         // TODO: make sure to remove logs
-        logger.info("Recv control msg: {}", commandType);
+        logger.info("Recv ctrl msg: {}", commandType);
 
         switch(commandType) {
             case STATUS_REQUEST:    // we received a request for current status
@@ -117,7 +117,7 @@ public class MessageManager implements AutoCloseable {
         final UUID inprocIdentifier = routingCommand.inprocIdentifier.get();
 
         // TODO: delete this log
-        logger.info("Recv rtng cmd: {}", action);
+        logger.info("Recv rout cmd: {}", action);
 
         switch (action) {
             case NO_OP: {

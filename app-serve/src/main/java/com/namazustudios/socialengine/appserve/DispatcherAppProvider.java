@@ -106,7 +106,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
             final UUID inprocIdentifier = RouteRepresentationUtil.buildInprocIdentifierFromString(inprocIdentifierString);
 
             // TODO: change ip address here!
-            getConnectionService().issueBindInprocCommand("", inprocIdentifier);
+            getConnectionService().issueBindInprocCommand(null, inprocIdentifier);
 
             final File codeDirectory = getGitLoader().getCodeDirectory(application);
             final DispatcherModule dispatcherModule = new DispatcherModule(codeDirectory);
