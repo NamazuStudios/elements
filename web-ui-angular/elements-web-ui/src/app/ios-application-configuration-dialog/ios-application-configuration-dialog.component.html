@@ -3,7 +3,7 @@
 <div mat-dialog-content>
   <form [formGroup]="appIdForm">
     <mat-form-field>
-      <input matInput placeholder="Application ID" name="applicationId" formControlName="applicationId">
+      <input matInput placeholder="Application Configuration Name" name="applicationId" formControlName="applicationId">
       <mat-error *ngIf="appIdForm.controls.applicationId.hasError('required')">Application ID is required</mat-error>
     </mat-form-field>
   </form>
