@@ -103,7 +103,7 @@ public class JeroMQConnectionDemultiplexer implements ConnectionDemultiplexer {
 
     @Override
     public UUID getInprocIdentifierForNodeIdentifier(String destinationNodeId) {
-        return RouteRepresentationUtil.getInprocIdentifier(destinationNodeId);
+        return RouteRepresentationUtil.buildInprocIdentifierFromString(destinationNodeId);
     }
 
     @Override

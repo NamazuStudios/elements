@@ -6,7 +6,8 @@ import com.namazustudios.socialengine.appserve.guice.VersionServletModule;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.MultiplexedConnectionService;
+import com.namazustudios.socialengine.rt.jeromq.ConnectionService;
+import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 import com.namazustudios.socialengine.rt.servlet.DispatcherServlet;
 import com.namazustudios.socialengine.service.ApplicationService;
@@ -51,7 +52,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     private GitLoader gitLoader;
 
-    private MultiplexedConnectionService multiplexedConnectionService;
+    private ConnectionService connectionService;
 
     @Override
     public ContextHandler createContextHandler(final App app) throws Exception {
@@ -101,14 +102,18 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     private Injector injectorFor(final Application application) {
         return applicationInjectorMap.computeIfAbsent(application.getId(), k -> {
 
-            final UUID uuid = getMultiplexedConnectionService().getInprocIdentifierForNodeIdentifier(application.getId());
-            getMultiplexedConnectionService().issueOpenInprocChannelCommand("", application.getId());
+            final String inprocIdentifierString = application.getId();
+            final UUID inprocIdentifier = RouteRepresentationUtil.buildInprocIdentifierFromString(inprocIdentifierString);
 
-            final String connectAddress = getMultiplexedConnectionService().getInprocConnectAddress(uuid);
+            // TODO: change ip address here!
+            getConnectionService().issueBindInprocCommand("", inprocIdentifier);
 
             final File codeDirectory = getGitLoader().getCodeDirectory(application);
             final DispatcherModule dispatcherModule = new DispatcherModule(codeDirectory);
+
+            final String connectAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(inprocIdentifier);
             final JeroMQClientModule jeroMQClientModule = new JeroMQClientModule().withConnectAddress(connectAddress);
+
             return getInjector().createChildInjector(dispatcherModule, jeroMQClientModule);
 
         });
@@ -116,7 +121,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     @Override
     protected void doStart() throws Exception {
-        getMultiplexedConnectionService().start();
+        getConnectionService().start();
 
         final App version = new App(getDeploymentManager(), this, VERSION_ORIGIN_ID);
         getDeploymentManager().addApp(version);
@@ -130,7 +135,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
             final App app = new App(getDeploymentManager(), this, application.getId());
             getDeploymentManager().addApp(app);
         } catch (Exception ex) {
-            logger.error("Failed to deploy applciation {} ", application.getName(), ex);
+            logger.error("Failed to deploy application {} ", application.getName(), ex);
         }
     }
 
@@ -141,7 +146,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
             .stream()
             .map(i -> i.getInstance(Context.class))
             .forEach(this::shutdown);
-        getMultiplexedConnectionService().stop();
+        getConnectionService().stop();
     }
 
     private void shutdown(final Context context) {
@@ -188,12 +193,12 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         this.gitLoader = gitLoader;
     }
 
-    public MultiplexedConnectionService getMultiplexedConnectionService() {
-        return multiplexedConnectionService;
+    public ConnectionService getConnectionService() {
+        return connectionService;
     }
 
     @Inject
-    public void setMultiplexedConnectionService(MultiplexedConnectionService multiplexedConnectionService) {
-        this.multiplexedConnectionService = multiplexedConnectionService;
+    public void setConnectionService(ConnectionService connectionService) {
+        this.connectionService = connectionService;
     }
 }

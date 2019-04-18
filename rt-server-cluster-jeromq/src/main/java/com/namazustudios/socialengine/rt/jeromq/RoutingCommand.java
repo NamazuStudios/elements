@@ -3,10 +3,36 @@ package com.namazustudios.socialengine.rt.jeromq;
 import com.namazustudios.socialengine.rt.remote.PackedUUID;
 import javolution.io.Struct;
 
+import java.util.UUID;
+
 /**
  * Used to control the routes stored within a {@link InprocChannelTable}.
  */
 public class RoutingCommand extends Struct {
+
+    public static RoutingCommand buildRoutingCommand(
+            final Action action,
+            final String tcpAddress,
+            final UUID inprocIdentifier
+            ) {
+        if (action == null) {
+            throw new IllegalArgumentException("Action must not be null");
+        }
+
+        final RoutingCommand routingCommand = new RoutingCommand();
+
+        routingCommand.action.set(action);
+
+        if (tcpAddress != null) {
+            routingCommand.tcpAddress.set(tcpAddress);
+        }
+
+        if (inprocIdentifier != null) {
+            routingCommand.inprocIdentifier.set(inprocIdentifier);
+        }
+
+        return routingCommand;
+    }
 
     /**
      * The action to perform.
@@ -32,6 +58,11 @@ public class RoutingCommand extends Struct {
      * A list of actions which can be performed.
      */
     public enum Action {
+
+        /**
+         * Unused for now.
+         */
+        NO_OP,
 
         /**
          * Establishes a DEALER connection to a ROUTER tcp socket at the given {@link RoutingCommand#tcpAddress}.

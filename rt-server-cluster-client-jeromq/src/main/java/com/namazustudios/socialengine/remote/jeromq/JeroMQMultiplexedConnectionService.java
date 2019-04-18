@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.remote.jeromq;
 import com.namazustudios.socialengine.remote.jeromq.srv.SrvMonitor;
 import com.namazustudios.socialengine.remote.jeromq.srv.SrvRecord;
 import com.namazustudios.socialengine.remote.jeromq.srv.SrvUniqueIdentifier;
-import com.namazustudios.socialengine.rt.MultiplexedConnectionService;
 import com.namazustudios.socialengine.rt.jeromq.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,23 +10,18 @@ import org.zeromq.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.*;
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
-import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.send;
-import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.*;
+import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.buildControlMsg;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static org.zeromq.ZContext.shadow;
 import static org.zeromq.ZMQ.*;
 
-public class JeroMQMultiplexedConnectionService implements MultiplexedConnectionService {
+public class JeroMQMultiplexedConnectionService implements ConnectionService {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQMultiplexedConnectionService.class);
 
@@ -40,7 +34,6 @@ public class JeroMQMultiplexedConnectionService implements MultiplexedConnection
 
     private String applicationNodeFqdn;
 
-    // TODO: move this to RouteRepresentationUtil, just have it generated within ConnectionsManager
     private final String controlAddress = format("inproc://%s.control", randomUUID());
 
     private SrvMonitor srvMonitor;
@@ -128,32 +121,10 @@ public class JeroMQMultiplexedConnectionService implements MultiplexedConnection
             return false;
         }
 
-        issueOpenBackendChannelCommand(backendAddress);
+        issueConnectTcpCommand(backendAddress);
 
         return true;
     }
-
-    private static boolean isLocalhost(final SrvUniqueIdentifier srvUniqueIdentifier) {
-        try {
-            String localHost = InetAddress.getLocalHost().getHostName();
-            if (!localHost.endsWith(".")) {
-                localHost = localHost + ".";
-            }
-
-            if (srvUniqueIdentifier.getHost().equals(localHost)) {
-                return false;
-            }
-            else {
-                return true;
-            }
-        }
-        catch (UnknownHostException e) {
-            // TODO: determine best strategy to handle this
-            return false;
-        }
-    }
-
-
 
     private boolean disconnectFromBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
         final String backendAddress = RouteRepresentationUtil.buildBackendAddress(
@@ -164,7 +135,7 @@ public class JeroMQMultiplexedConnectionService implements MultiplexedConnection
             return false;
         }
 
-        issueCloseBackendChannelCommand(backendAddress);
+        issueDisconnectTcpCommand(backendAddress);
 
         return true;
     }
@@ -187,58 +158,14 @@ public class JeroMQMultiplexedConnectionService implements MultiplexedConnection
     }
 
     @Override
-    public UUID getInprocIdentifierForNodeIdentifier(final String destinationNodeId) {
-        return RouteRepresentationUtil.getInprocIdentifier(destinationNodeId);
-    }
-
-    @Override
-    public String getInprocConnectAddress(final UUID inprocIdentifier) {
-        return RouteRepresentationUtil.buildBindInprocAddress(inprocIdentifier);
-    }
-
-    @Override
-    public void issueOpenInprocChannelCommand(final String backendAddress, final UUID inprocIdentifier) {
-        final RoutingCommand command = new RoutingCommand();
-        command.action.set(OPEN_INPROC);
-        command.tcpAddress.set(backendAddress);
-        command.inprocIdentifier.set(inprocIdentifier);
-        issueRoutingCommand(command);
-    }
-
-    @Override
-    public void issueCloseInprocChannelCommand(final String backendAddress, final UUID inprocIdentifier) {
-        final RoutingCommand command = new RoutingCommand();
-        command.action.set(CLOSE_INPROC);
-        command.tcpAddress.set(backendAddress);
-        command.inprocIdentifier.set(inprocIdentifier);
-        issueRoutingCommand(command);
-    }
-
-    @Override
-    public void issueOpenBackendChannelCommand(final String backendAddress) {
-        final RoutingCommand command = new RoutingCommand();
-        command.action.set(CONNECT_TCP);
-        command.tcpAddress.set(backendAddress);
-        issueRoutingCommand(command);
-    }
-
-    @Override
-    public void issueCloseBackendChannelCommand(final String backendAddress) {
-        final RoutingCommand command = new RoutingCommand();
-        command.action.set(DISCONNECT_TCP);
-        command.tcpAddress.set(backendAddress);
-        issueRoutingCommand(command);
-    }
-
-    private void issueRoutingCommand(final RoutingCommand command) {
-        issueCommand(ROUTING_COMMAND, command.getByteBuffer());
-    }
-
-    private void issueCommand(final CommandType commandType, final ByteBuffer byteBuffer) {
+    public void issueCommand(final CommandType commandType, final ByteBuffer byteBuffer) {
         try (final ZContext context = shadow(getzContext());
              final Connection connection = from(context, c -> c.createSocket(PUSH))) {
             connection.socket().connect(getControlAddress());
-            send(connection.socket(), commandType, byteBuffer);
+
+            final ZMsg msg = buildControlMsg(commandType, byteBuffer);
+
+            connection.sendMessage(msg);
         }
     }
 

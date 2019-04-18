@@ -144,6 +144,10 @@ public class MessageManager implements AutoCloseable {
                 unbindFromInprocAddress(inprocIdentifier, connectionsManager);
                 break;
             }
+            default: {
+                logger.warn("Encountered unhandled routing action: {}. Dropping message.", action);
+                break;
+            }
         }
     }
 
@@ -226,7 +230,23 @@ public class MessageManager implements AutoCloseable {
             final UUID inprocIdentifier,
             final ConnectionsManager connectionsManager
     ) {
-        final String inprocAddress = RouteRepresentationUtil.buildConnectInprocAddress(inprocIdentifier);
+        final String inprocAddress;
+
+        final MessageManagerConfiguration.Strategy strategy = messageManagerConfiguration.getStrategy();
+
+        switch (strategy) {
+            case MULTIPLEX:
+                inprocAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(inprocIdentifier);
+                break;
+            case DEMULTIPLEX:
+                inprocAddress = RouteRepresentationUtil.buildDemultiplexInprocAddress(inprocIdentifier);
+                break;
+            default: {
+                logger.warn("Connect inproc: Encountered unhandled strategy in configuration: {}. Dropping message.", strategy);
+                return -1;
+            }
+        }
+
         final int socketHandle = connectionsManager.connectToAddressAndBeginPolling(
                 inprocAddress,
                 DEALER,
@@ -261,7 +281,23 @@ public class MessageManager implements AutoCloseable {
             final UUID inprocIdentifier,
             final ConnectionsManager connectionsManager
     ) {
-        final String inprocAddress = RouteRepresentationUtil.buildConnectInprocAddress(inprocIdentifier);
+        final String inprocAddress;
+
+        final MessageManagerConfiguration.Strategy strategy = messageManagerConfiguration.getStrategy();
+
+        switch (strategy) {
+            case MULTIPLEX:
+                inprocAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(inprocIdentifier);
+                break;
+            case DEMULTIPLEX:
+                inprocAddress = RouteRepresentationUtil.buildDemultiplexInprocAddress(inprocIdentifier);
+                break;
+            default: {
+                logger.warn("Bind inproc: Encountered unhandled strategy in configuration: {}. Dropping message.", strategy);
+                return -1;
+            }
+        }
+
         final int socketHandle = connectionsManager.bindToAddressAndBeginPolling(
                 inprocAddress,
                 ROUTER,
@@ -398,13 +434,28 @@ public class MessageManager implements AutoCloseable {
 
     public static final class MessageManagerConfiguration {
         private final boolean shouldSendRoutingCommandAcknowledgement;
+        private final Strategy strategy;
 
-        public MessageManagerConfiguration(final boolean shouldSendRoutingCommandAcknowledgement) {
+        public MessageManagerConfiguration(
+                final Strategy strategy,
+                final boolean shouldSendRoutingCommandAcknowledgement
+        ) {
             this.shouldSendRoutingCommandAcknowledgement = shouldSendRoutingCommandAcknowledgement;
+            this.strategy = strategy;
         }
 
         public boolean isShouldSendRoutingCommandAcknowledgement() {
             return shouldSendRoutingCommandAcknowledgement;
+        }
+
+        public Strategy getStrategy() {
+            return strategy;
+        }
+
+        public enum Strategy {
+            MULTIPLEX,
+
+            DEMULTIPLEX,
         }
     }
 }

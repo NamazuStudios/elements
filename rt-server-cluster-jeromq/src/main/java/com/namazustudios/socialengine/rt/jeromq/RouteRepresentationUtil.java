@@ -36,7 +36,7 @@ public class RouteRepresentationUtil {
      * @param inprocIdentifierString the node's ID
      * @return a {@link UUID} based on the application id
      */
-    public static UUID getInprocIdentifier(final String inprocIdentifierString) {
+    public static UUID buildInprocIdentifierFromString(final String inprocIdentifierString) {
         return nameUUIDFromBytes(inprocIdentifierString.getBytes(UTF_8));
     }
 
@@ -46,8 +46,8 @@ public class RouteRepresentationUtil {
      *
      * Returns the {@link String} representing the internal route address.
      **/
-    public static String buildBindInprocAddress(final UUID inprocIdentifier) {
-        return format("inproc://bind-%s", inprocIdentifier);
+    public static String buildMultiplexInprocAddress(final UUID inprocIdentifier) {
+        return format("inproc://multiplex-%s", inprocIdentifier);
     }
 
     /**
@@ -56,8 +56,8 @@ public class RouteRepresentationUtil {
      *
      * Returns the {@link String} representing the internal route address.
      **/
-    public static String buildConnectInprocAddress(final UUID inprocIdentifier) {
-        return format("inproc://connect-%s", inprocIdentifier);
+    public static String buildDemultiplexInprocAddress(final UUID inprocIdentifier) {
+        return format("inproc://demultiplex-%s", inprocIdentifier);
     }
 
     /**

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ.Socket;
+import org.zeromq.ZMsg;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -27,6 +28,10 @@ public interface Connection extends AutoCloseable {
      * @return the {@link Socket} instance
      */
     Socket socket();
+
+    default void sendMessage(ZMsg msg) {
+        msg.send(socket());
+    }
 
     /**
      * Closes the {@link Connection} an destroys the associated underlying {@link Socket}.

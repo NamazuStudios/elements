@@ -3,8 +3,9 @@ package com.namazustudios.socialengine.dao.rt.guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.rt.MultiplexedConnectionService;
 import com.namazustudios.socialengine.rt.Context;
+import com.namazustudios.socialengine.rt.jeromq.ConnectionService;
+import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 
 import javax.inject.Inject;
@@ -16,7 +17,7 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
 
     private Provider<Injector> injectorProvider;
 
-    private Provider<MultiplexedConnectionService> connectionMultiplexerProvider;
+    private Provider<ConnectionService> connectionServiceProvider;
 
     private Provider<ApplicationDao> applicationDaoProvider;
 
@@ -27,12 +28,13 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
             final ApplicationDao applicationDao = getApplicationDaoProvider().get();
             final Application application = applicationDao.getActiveApplication(applicationId);
 
-            final MultiplexedConnectionService multiplexedConnectionService = getConnectionMultiplexerProvider().get();
-            final UUID nodeUuid = multiplexedConnectionService.getInprocIdentifierForNodeIdentifier(application.getId());
-            final String connectAddress = multiplexedConnectionService.getInprocConnectAddress(nodeUuid);
+            final ConnectionService connectionService = getConnectionServiceProvider().get();
+
+            final UUID inprocIdentifier = RouteRepresentationUtil.buildInprocIdentifierFromString(application.getId());
+            final String inprocMultiplexAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(inprocIdentifier);
 
             final JeroMQClientModule jeroMQClientModule = new JeroMQClientModule()
-                .withConnectAddress(connectAddress);
+                .withConnectAddress(inprocMultiplexAddress);
 
             final Injector contextInjector = getInjectorProvider()
                 .get()
@@ -41,7 +43,8 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
             final Context context = contextInjector.getInstance(Context.class);
 
             context.start();
-            multiplexedConnectionService.issueOpenInprocChannelCommand("localhost", nodeUuid);
+
+            connectionService.issueConnectInprocCommand("localhost", inprocIdentifier);
 
             return context;
 
@@ -57,13 +60,13 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
         this.injectorProvider = injectorProvider;
     }
 
-    public Provider<MultiplexedConnectionService> getConnectionMultiplexerProvider() {
-        return connectionMultiplexerProvider;
+    public Provider<ConnectionService> getConnectionServiceProvider() {
+        return connectionServiceProvider;
     }
 
     @Inject
-    public void setConnectionMultiplexerProvider(Provider<MultiplexedConnectionService> connectionMultiplexerProvider) {
-        this.connectionMultiplexerProvider = connectionMultiplexerProvider;
+    public void setConnectionServiceProvider(Provider<ConnectionService> connectionServiceProvider) {
+        this.connectionServiceProvider = connectionServiceProvider;
     }
 
     public Provider<ApplicationDao> getApplicationDaoProvider() {
