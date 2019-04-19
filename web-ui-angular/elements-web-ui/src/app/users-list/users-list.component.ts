@@ -113,7 +113,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
   }
 
   showDialog(isNew: boolean, user: User, next) {
-    const dialogRef = this.dialog.open(UserDialogComponent, {
+    this.dialog.open(UserDialogComponent, {
       width: '500px',
       data: { isNew: isNew, user: user, next: next, refresher: this }
     });

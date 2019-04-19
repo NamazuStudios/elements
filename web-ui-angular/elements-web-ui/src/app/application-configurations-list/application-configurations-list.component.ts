@@ -1,22 +1,26 @@
 import {AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild} from '@angular/core';
-import {MatPaginator} from "@angular/material/paginator";
-import {debounceTime, distinctUntilChanged, filter, tap} from "rxjs/operators";
-import {fromEvent} from "rxjs";
-import {SelectionModel} from "@angular/cdk/collections";
-import {MatDialog, MatTable} from "@angular/material";
-import {AlertService} from "../alert.service";
-import {ConfirmationDialogService} from "../confirmation-dialog/confirmation-dialog.service";
-import {ApplicationConfigurationViewModel} from "../models/application-configuration-view-model";
-import {ApplicationConfiguration} from "../api/models/application-configuration";
-import {ApplicationConfigurationsDataSource} from "../application-configuration.datasource";
-import {ApplicationConfigurationsService} from "../api/services/application-configurations.service";
-import {FacebookApplicationConfigurationService} from "../api/services/facebook-application-configuration.service";
-import {FirebaseApplicationConfigurationService} from "../api/services/firebase-application-configuration.service";
-import {FacebookApplicationConfigurationDialogComponent} from "../facebook-application-configuration-dialog/facebook-application-configuration-dialog.component";
-import {FirebaseApplicationConfigurationDialogComponent} from "../firebase-application-configuration-dialog/firebase-application-configuration-dialog.component";
-import {MatchmakingApplicationConfigurationDialogComponent} from "../matchmaking-application-configuration-dialog/matchmaking-application-configuration-dialog.component";
-import {MatchmakingApplicationConfigurationService} from "../api/services/matchmaking-application-configuration.service";
-import {GameOnApplicationConfigurationDialogComponent} from "../game-on-application-configuration-dialog/game-on-application-configuration-dialog.component";
+import {MatPaginator} from '@angular/material/paginator';
+import {debounceTime, distinctUntilChanged, filter, tap} from 'rxjs/operators';
+import {fromEvent} from 'rxjs';
+import {SelectionModel} from '@angular/cdk/collections';
+import {MatDialog, MatTable} from '@angular/material';
+import {AlertService} from '../alert.service';
+import {ConfirmationDialogService} from '../confirmation-dialog/confirmation-dialog.service';
+import {ApplicationConfigurationViewModel} from '../models/application-configuration-view-model';
+import {ApplicationConfiguration} from '../api/models/application-configuration';
+import {ApplicationConfigurationsDataSource} from '../application-configuration.datasource';
+import {ApplicationConfigurationsService} from '../api/services/application-configurations.service';
+import {FacebookApplicationConfigurationService} from '../api/services/facebook-application-configuration.service';
+import {FirebaseApplicationConfigurationService} from '../api/services/firebase-application-configuration.service';
+import {FacebookApplicationConfigurationDialogComponent} from '../facebook-application-configuration-dialog/facebook-application-configuration-dialog.component';
+import {FirebaseApplicationConfigurationDialogComponent} from '../firebase-application-configuration-dialog/firebase-application-configuration-dialog.component';
+import {MatchmakingApplicationConfigurationDialogComponent} from '../matchmaking-application-configuration-dialog/matchmaking-application-configuration-dialog.component';
+import {MatchmakingApplicationConfigurationService} from '../api/services/matchmaking-application-configuration.service';
+import {GameOnApplicationConfigurationDialogComponent} from '../game-on-application-configuration-dialog/game-on-application-configuration-dialog.component';
+import {IosApplicationConfigurationDialogComponent} from '../ios-application-configuration-dialog/ios-application-configuration-dialog.component';
+import {AndroidGooglePlayConfigurationDialogComponent} from '../android-google-play-configuration-dialog/android-google-play-configuration-dialog.component';
+import {IOSApplicationConfigurationService} from '../api/services/iosapplication-configuration.service';
+import {GooglePlayApplicationConfigurationService} from '../api/services/google-play-application-configuration.service';
 
 @Component({
   selector: 'app-application-configurations-list',
@@ -29,7 +33,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
   hasSelection = false;
   selection: SelectionModel<ApplicationConfiguration>;
   dataSource: ApplicationConfigurationsDataSource;
-  displayedColumns= ["select", "id", "category", "uniqueIdentifier", "actions"];
+  displayedColumns = ['select', 'id', 'category', 'uniqueIdentifier', 'actions'];
   currentApplicationConfigurations: ApplicationConfiguration[];
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
@@ -42,7 +46,9 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
               public dialog: MatDialog,
               private facebookApplicationConfigurationService: FacebookApplicationConfigurationService,
               private firebaseApplicationConfigurationService: FirebaseApplicationConfigurationService,
-              private matchmakingApplicationConfigurationService: MatchmakingApplicationConfigurationService) { }
+              private matchmakingApplicationConfigurationService: MatchmakingApplicationConfigurationService,
+              private iosApplicationConfigurationService: IOSApplicationConfigurationService,
+              private googlePlayApplicationConfigurationService: GooglePlayApplicationConfigurationService) { }
 
   ngOnInit() {
     this.selection = new SelectionModel<ApplicationConfiguration>(true, []);
@@ -53,7 +59,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
 
   ngAfterViewInit() {
     // server-side search
-    fromEvent(this.input.nativeElement,'keyup')
+    fromEvent(this.input.nativeElement, 'keyup')
       .pipe(
         debounceTime(150),
         distinctUntilChanged(),
@@ -83,7 +89,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
         this.input.nativeElement.value,
         this.paginator.pageIndex * this.paginator.pageSize,
         this.paginator.pageSize);
-    }, delay)
+    }, delay);
   }
 
   /** Whether the number of selected elements matches the total number of rows. */
@@ -111,7 +117,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
   }
 
   doDeleteApplicationConfiguration(applicationConfiguration) {
-    switch(applicationConfiguration.category) {
+    switch (applicationConfiguration.category) {
       case 'FACEBOOK':
         this.facebookApplicationConfigurationService.deleteFacebookApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => { },
           error => this.alertService.error(error));
@@ -132,13 +138,23 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
           error => this.alertService.error(error));
 
         break;
+      case 'IOS_APP_STORE':
+        this.iosApplicationConfigurationService.deleteIosApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => {},
+          error => this.alertService.error(error));
+
+        break;
+      case 'ANDROID_GOOGLE_PLAY':
+        this.googlePlayApplicationConfigurationService.deleteGooglePlayApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => {},
+          error => this.alertService.error(error));
+
+        break;
     }
 
   }
 
-  deleteSelectedApplicationConfigurations(){
+  deleteSelectedApplicationConfigurations() {
     this.dialogService
-      .confirm('Confirm Dialog', `Are you sure you want to delete the ${this.selection.selected.length} selected application configuration${this.selection.selected.length==1 ? '' : 's'}?`)
+      .confirm('Confirm Dialog', `Are you sure you want to delete the ${this.selection.selected.length} selected application configuration${this.selection.selected.length == 1 ? '' : 's'}?`)
       .pipe(filter(r => r))
       .subscribe(res => {
         this.selection.selected.forEach(row => this.doDeleteApplicationConfiguration(row));
@@ -147,20 +163,17 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
       });
   }
 
-  showDialog(isNew: boolean, dialog: any, applicationConfiguration: any, next) {
+  showDialog(isNew: boolean, dialog: any, applicationConfiguration: any, next, isBundleDialog: boolean = false) {
     const dialogRef = this.dialog.open(dialog, {
-      width: '500px',
-      data: { isNew: isNew, applicationConfiguration: applicationConfiguration }
+      width: isBundleDialog ? '900px' : '500px',
+      data: { isNew: isNew, applicationConfiguration: applicationConfiguration, next: next, refresher: this }
     });
 
-    dialogRef
-      .afterClosed()
-      .pipe(filter(r => r))
-      .subscribe(next);
+    dialogRef.afterClosed().pipe(filter(r => r)).subscribe(next);
   }
 
   addApplicationConfiguration(category: string) {
-    switch(category) {
+    switch (category) {
       case 'FACEBOOK':
           this.showDialog(true, FacebookApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
             this.facebookApplicationConfigurationService.createFacebookApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
@@ -197,11 +210,29 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
         });
 
         break;
+      case 'IOS_APP_STORE':
+        this.showDialog(true, IosApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
+          this.iosApplicationConfigurationService.createIosApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
+            this.refresh();
+          },
+            error => this.alertService.error(error));
+        }, true);
+
+        break;
+      case 'ANDROID_GOOGLE_PLAY':
+        this.showDialog(true, AndroidGooglePlayConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
+          this.googlePlayApplicationConfigurationService.createGooglePlayApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, body: result}).subscribe(r => {
+            this.refresh();
+          },
+            error => this.alertService.error(error));
+        }, true);
+
+        break;
     }
   }
 
   editApplicationConfiguration(applicationConfiguration) {
-    switch(applicationConfiguration.category) {
+    switch (applicationConfiguration.category) {
       case 'FACEBOOK':
         this.facebookApplicationConfigurationService.getFacebookApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id})
           .subscribe(applicationConfiguration =>
@@ -242,6 +273,30 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
                 },
                 error => this.alertService.error(error));
             }));
+
+        break;
+      case 'IOS_APP_STORE':
+        this.iosApplicationConfigurationService.getIosApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id })
+          .subscribe(applicationConfiguration => {
+            this.showDialog(false, IosApplicationConfigurationDialogComponent, applicationConfiguration, result => {
+              this.iosApplicationConfigurationService.updateApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id, body: result }).subscribe(r => {
+                  this.refresh();
+                },
+              error => this.alertService.error(error));
+            }, true);
+          });
+
+        break;
+      case 'ANDROID_GOOGLE_PLAY':
+        this.googlePlayApplicationConfigurationService.getGooglePlayApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id })
+          .subscribe(applicationConfiguration => {
+            this.showDialog(false, AndroidGooglePlayConfigurationDialogComponent, applicationConfiguration, result => {
+              this.googlePlayApplicationConfigurationService.updateApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id, body: result }).subscribe(r => {
+                  this.refresh();
+                },
+                error => this.alertService.error(error));
+            }, true);
+          });
 
         break;
     }
