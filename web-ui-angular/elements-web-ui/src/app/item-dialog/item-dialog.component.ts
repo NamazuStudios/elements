@@ -23,7 +23,7 @@ export class ItemDialogComponent implements OnInit {
   originalMetadata = JSON.parse(JSON.stringify(this.data.item.metadata || {}));
 
   itemForm = this.formBuilder.group({
-    name: [ this.data.item.name, [Validators.required, Validators.pattern('^[-_.a-zA-Z0-9]+$') ]],
+    name: [ this.data.item.name, [Validators.required, Validators.pattern('^[_a-zA-Z0-9]+$') ]],
     displayName: [ this.data.item.displayName, [Validators.required]],
     description: [ this.data.item.description, [Validators.required] ],
     tags: []
