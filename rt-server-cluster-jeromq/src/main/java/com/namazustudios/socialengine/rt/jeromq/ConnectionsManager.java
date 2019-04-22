@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
-import com.namazustudios.socialengine.rt.ResourceLockService;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,13 +23,13 @@ public class ConnectionsManager implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(ConnectionsManager.class);
 
-    private final List<SetupHandler> setupHandlers = new LinkedList<>();
+    private final List<SetupConsumer> setupConsumers = new LinkedList<>();
 
     private final Map<Integer, MonitorThread> monitorThreads = new LinkedHashMap<>();
 
     private ZContext zContext;
 
-    private Map<Integer, MessageHandler> messageHandlers;
+    private Map<Integer, MessageConsumer> messageHandlers;
 
     private Poller poller;
 
@@ -42,10 +41,10 @@ public class ConnectionsManager implements AutoCloseable {
      * is handed over to any control sockets. Calling this method should be thread-safe, so long as the caller recognizes
      * that the lambda will necessarily be called within the poll loop thread.
      *
-     * @param setupHandler a method to be invoked on the connection poll thread.
+     * @param setupConsumer a method to be invoked on the connection poll thread.
      */
-    public void registerSetupHandler(final SetupHandler setupHandler) {
-        setupHandlers.add(setupHandler);
+    public void registerSetupHandler(final SetupConsumer setupConsumer) {
+        setupConsumers.add(setupConsumer);
     }
 
     public void start(final ZContext zContext) {
@@ -59,8 +58,8 @@ public class ConnectionsManager implements AutoCloseable {
 
         messageHandlers = new LinkedHashMap<>();
 
-        for (SetupHandler setupHandler : setupHandlers) {
-            setupHandler.accept(this);
+        for (SetupConsumer setupConsumer : setupConsumers) {
+            setupConsumer.accept(this);
         }
 
         enterPollLoop();
@@ -88,9 +87,9 @@ public class ConnectionsManager implements AutoCloseable {
                                 return;
                             }
 
-                            final MessageHandler messageHandler = messageHandlers.get(socketHandle);
+                            final MessageConsumer messageConsumer = messageHandlers.get(socketHandle);
 
-                            messageHandler.accept(socketHandle, msg, this);
+                            messageConsumer.accept(socketHandle, msg, this);
                         }
                         else if (didReceiveError) {
                             throw new InternalException(
@@ -108,21 +107,21 @@ public class ConnectionsManager implements AutoCloseable {
      *
      * @param address the ZMQ address to which we wish to connect
      * @param socketType the type of ZMQ socket to open (e.g. DEALER)
-     * @param messageHandler the lambda to be called whenever a msg is received on the socket
+     * @param messageConsumer the lambda to be called whenever a msg is received on the socket
      * @param shouldMonitor whether or not to establish a ZMonitor thread (only available for UDP/TCP conns)
      * @return the socket handle for the connection.
      */
     public int connectToAddressAndBeginPolling(
             final String address,
             final int socketType,
-            final MessageHandler messageHandler,
+            final MessageConsumer messageConsumer,
             final boolean shouldMonitor
     ) {
         if (address == null || address.length() == 0) {
             throw new IllegalArgumentException("A valid address must be provided.");
         }
-        if (messageHandler == null) {
-            throw new IllegalArgumentException("A valid messageHandler must be provided.");
+        if (messageConsumer == null) {
+            throw new IllegalArgumentException("A valid messageConsumer must be provided.");
         }
 
         final ZMQ.Socket socket = zContext.createSocket(socketType);
@@ -130,7 +129,7 @@ public class ConnectionsManager implements AutoCloseable {
 
         final int socketHandle = poller.register(socket, POLLIN | POLLERR);
 
-        messageHandlers.put(socketHandle, messageHandler);
+        messageHandlers.put(socketHandle, messageConsumer);
 
         if (shouldMonitor) {
             setupAndStartMonitorThread(socketHandle);
@@ -148,22 +147,22 @@ public class ConnectionsManager implements AutoCloseable {
      *
      * @param addresses the ZMQ addresses to which we wish to connect
      * @param socketType the type of ZMQ socket to open (e.g. ROUTER, PULL)
-     * @param messageHandler the lambda to be called whenever a msg is received on the socket
+     * @param messageConsumer the lambda to be called whenever a msg is received on the socket
      * @param shouldMonitor whether or not to establish a ZMonitor thread (only available for UDP/TCP conns)
      * @return the socket handle for the connection.
      */
     public int bindToAddressesAndBeginPolling(
             final Set<String> addresses,
             final int socketType,
-            final MessageHandler messageHandler,
+            final MessageConsumer messageConsumer,
             final boolean shouldMonitor
     ) {
         if (addresses == null || addresses.size() == 0) {
             throw new IllegalArgumentException("At least one address must be provided.");
         }
 
-        if (messageHandler == null) {
-            throw new IllegalArgumentException("A valid messageHandler must be provided.");
+        if (messageConsumer == null) {
+            throw new IllegalArgumentException("A valid messageConsumer must be provided.");
         }
 
         final ZMQ.Socket socket = zContext.createSocket(socketType);
@@ -182,7 +181,7 @@ public class ConnectionsManager implements AutoCloseable {
 
         final int socketHandle = poller.register(socket, POLLIN | POLLERR);
 
-        messageHandlers.put(socketHandle, messageHandler);
+        messageHandlers.put(socketHandle, messageConsumer);
 
         if (shouldMonitor) {
             setupAndStartMonitorThread(socketHandle);
@@ -195,13 +194,13 @@ public class ConnectionsManager implements AutoCloseable {
     public int bindToAddressAndBeginPolling(
             final String address,
             final int socketType,
-            final MessageHandler messageHandler,
+            final MessageConsumer messageConsumer,
             final boolean shouldMonitor
     ) {
         final Set<String> addresses = new HashSet<>();
         addresses.add(address);
 
-        return bindToAddressesAndBeginPolling(addresses, socketType, messageHandler, shouldMonitor);
+        return bindToAddressesAndBeginPolling(addresses, socketType, messageConsumer, shouldMonitor);
     }
 
     public void closeAndDestroySocketHandle(final int socketHandle) throws Exception {
@@ -290,12 +289,12 @@ public class ConnectionsManager implements AutoCloseable {
     }
 
     @FunctionalInterface
-    public interface SetupHandler {
+    public interface SetupConsumer {
 
         void accept(ConnectionsManager connectionsManager);
 
 
-        default SetupHandler andThen(SetupHandler after) {
+        default SetupConsumer andThen(SetupConsumer after) {
             Objects.requireNonNull(after);
 
             return (a) -> {
@@ -306,12 +305,12 @@ public class ConnectionsManager implements AutoCloseable {
     }
 
     @FunctionalInterface
-    public interface MessageHandler {
+    public interface MessageConsumer {
 
         void accept(int socketHandle, ZMsg msg, ConnectionsManager connectionsManager);
 
 
-        default MessageHandler andThen(MessageHandler after) {
+        default MessageConsumer andThen(MessageConsumer after) {
             Objects.requireNonNull(after);
 
             return (a, b, c) -> {

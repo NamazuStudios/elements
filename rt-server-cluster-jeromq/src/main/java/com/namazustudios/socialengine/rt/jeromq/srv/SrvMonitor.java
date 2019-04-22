@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.remote.jeromq.srv;
+package com.namazustudios.socialengine.rt.jeromq.srv;
 
 import java.util.Set;
 import java.util.function.Consumer;

@@ -22,7 +22,7 @@ public class MultiNodeContainer implements AutoCloseable {
 
     private Set<Node> nodeSet;
 
-    private ConnectionDemultiplexer connectionDemultiplexer;
+    private ConnectionService connectionService;
 
     /**
      * Attempts to start each {@link Node}, throwing an instance of {@link MultiException} if any {@link Node} fails

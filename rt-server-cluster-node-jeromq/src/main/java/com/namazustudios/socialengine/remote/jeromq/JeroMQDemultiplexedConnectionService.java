@@ -10,6 +10,7 @@ import org.zeromq.*;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.ByteBuffer;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType;
@@ -20,54 +21,61 @@ import static java.util.UUID.randomUUID;
 import static org.zeromq.ZContext.shadow;
 import static org.zeromq.ZMQ.*;
 
-public class JeroMQMultiplexedConnectionService implements ConnectionService {
+public class JeroMQDemultiplexedConnectionService implements ConnectionService {
 
-    private static final Logger logger = LoggerFactory.getLogger(JeroMQMultiplexedConnectionService.class);
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQDemultiplexedConnectionService.class);
 
+    public static final String BIND_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.bindAddress";
+    public static final String CONTROL_BIND_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.controlBindAddress";
     public static final String APPLICATION_NODE_FQDN = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.applicationNodeFqdn";
 
+    private String bindAddress;
+    private String controlBindAddress;
     private String applicationNodeFqdn;
 
-    private final AtomicReference<Thread> atomicMultiplexedConnectionThread = new AtomicReference<>();
+    private final AtomicReference<Thread> atomicDemultiplexedConnectionThread = new AtomicReference<>();
 
     private ZContext zContext;
 
     private final String controlAddress = format("inproc://%s.control", randomUUID());
 
+    // TODO: move srv monitor stuff to common location, utilized by both multiplexed and demultiplexed services
     private SrvMonitor srvMonitor;
 
     @Override
     public void start() {
-
-        setUpAndStartMultiplexedConnection();
+        setUpAndStartDemultiplexedConnection();
         setUpAndStartSrvMonitor();
-
     }
 
-    private void setUpAndStartMultiplexedConnection() {
-        final JeroMQMultiplexedConnectionRunnable multiplexedConnectionRunnable = new JeroMQMultiplexedConnectionRunnable(
-                controlAddress,
+    private void setUpAndStartDemultiplexedConnection() {
+        final Set<String> controlAddresses = new HashSet<>();
+        controlAddresses.add(controlAddress);
+        controlAddresses.add(controlBindAddress);
+        final JeroMQDemultiplexedConnectionRunnable demultiplexedConnectionRunnable = new JeroMQDemultiplexedConnectionRunnable(
+                controlAddresses,
                 getzContext()
         );
-        final Thread multiplexedConnectionThread = new Thread(multiplexedConnectionRunnable);
+        final Thread demultiplexedConnectionThread = new Thread(demultiplexedConnectionRunnable);
 
-        multiplexedConnectionThread.setDaemon(true);
-        multiplexedConnectionThread.setName(JeroMQMultiplexedConnectionService.class.getSimpleName());
-        multiplexedConnectionThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
+        demultiplexedConnectionThread.setDaemon(true);
+        demultiplexedConnectionThread.setName(JeroMQDemultiplexedConnectionService.class.getSimpleName());
+        demultiplexedConnectionThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
 
-        if (atomicMultiplexedConnectionThread.compareAndSet(null, multiplexedConnectionThread)) {
-            logger.info("Starting multiplexed thread and establishing control channel....");
-            multiplexedConnectionThread.start();
-            multiplexedConnectionRunnable.blockCurrentThreadUntilControlChannelIsConnected();
-            logger.info("Successfully started multiplexed thread and established control channel.");
+        if (atomicDemultiplexedConnectionThread.compareAndSet(null, demultiplexedConnectionThread)) {
+            logger.info("Starting demultiplexed thread and establishing control channel....");
+            demultiplexedConnectionThread.start();
+            demultiplexedConnectionRunnable.blockCurrentThreadUntilControlChannelIsConnected();
+            logger.info("Successfully started demultiplexed thread and established control channel.");
         } else {
-            throw new IllegalStateException("Failed to set up multiplexed connection.");
+            throw new IllegalStateException("Failed to set up demultiplexed connection.");
         }
     }
 
     void setUpAndStartSrvMonitor() {
 
         srvMonitor.registerOnCreatedSrvRecordListener((SrvRecord srvRecord) -> {
+            // TODO: need a way to ignore current node's SRV record
             logger.info("Detected App Node SRV record creation: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
             final boolean didIssueCommand = connectToBackend(srvRecord.getUniqueIdentifier());
 
@@ -113,15 +121,15 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
     @Override
     public void stop() {
 
-        final Thread multiplexedConnectionManagerThread = atomicMultiplexedConnectionThread.get();
+        final Thread demultiplexedConnectionManagerThread = atomicDemultiplexedConnectionThread.get();
 
-        if (atomicMultiplexedConnectionThread.compareAndSet(multiplexedConnectionManagerThread, null)) {
-            multiplexedConnectionManagerThread.interrupt();
+        if (atomicDemultiplexedConnectionThread.compareAndSet(demultiplexedConnectionManagerThread, null)) {
+            demultiplexedConnectionManagerThread.interrupt();
 
             try {
-                multiplexedConnectionManagerThread.join();
+                demultiplexedConnectionManagerThread.join();
             } catch (InterruptedException e) {
-                throw new IllegalStateException("Failed to tear down multiplexed connection.");
+                throw new IllegalStateException("Failed to tear down demultiplexed connection.");
             }
         }
 
@@ -130,12 +138,13 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
     @Override
     public void issueCommand(final CommandType commandType, final ByteBuffer byteBuffer) {
         try (final ZContext context = shadow(getzContext());
-             final Connection connection = from(context, c -> c.createSocket(PUSH))) {
+             final Connection connection = from(context, c -> c.createSocket(REQ))) {
             connection.socket().connect(getControlAddress());
 
             final ZMsg msg = buildControlMsg(commandType, byteBuffer);
 
             connection.sendMessage(msg);
+            connection.socket().recv();
         }
     }
 
@@ -148,6 +157,28 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
         this.zContext = zContext;
     }
 
+    public String getBindAddress() {
+        return bindAddress;
+    }
+
+    @Inject
+    public void setBindAddress(@Named(BIND_ADDR) String bindAddress) {
+        this.bindAddress = bindAddress;
+    }
+
+    public String getControlBindAddress() {
+        return controlBindAddress;
+    }
+
+    @Inject
+    public void setControlBindAddress(@Named(CONTROL_BIND_ADDR) String controlBindAddress) {
+        this.controlBindAddress = controlBindAddress;
+    }
+
+    public String getControlAddress() {
+        return controlAddress;
+    }
+
     public String getApplicationNodeFqdn() {
         return applicationNodeFqdn;
     }
@@ -155,10 +186,6 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
     @Inject
     public void setApplicationNodeFqdn(@Named(APPLICATION_NODE_FQDN) String applicationNodeFqdn) {
         this.applicationNodeFqdn = applicationNodeFqdn;
-    }
-
-    public String getControlAddress() {
-        return controlAddress;
     }
 
     public SrvMonitor getSrvMonitor() {

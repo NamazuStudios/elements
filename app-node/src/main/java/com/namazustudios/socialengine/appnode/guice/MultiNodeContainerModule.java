@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer;
+import com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService;
 import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
 import com.namazustudios.socialengine.rt.MultiNodeContainer;
 import com.namazustudios.socialengine.rt.Node;
@@ -35,7 +35,7 @@ public class MultiNodeContainerModule extends AbstractModule {
         bind(MultiNodeContainer.class).asEagerSingleton();
 
         bind(ConnectionDemultiplexer.class)
-            .to(JeroMQConnectionDemultiplexer.class)
+            .to(JeroMQDemultiplexedConnectionService.class)
             .asEagerSingleton();
 
         bind(new TypeLiteral<Set<Node>>(){})

@@ -6,7 +6,6 @@ import java.util.Properties;
 
 import static com.namazustudios.socialengine.Constants.GIT_STORAGE_DIRECTORY;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionService.APPLICATION_NODE_FQDN;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionService.CONNECT_ADDR;
 import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.MAX_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.MIN_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.TIMEOUT;
@@ -20,7 +19,6 @@ public class RTDaoModuleDefaults implements ModuleDefaults {
     public Properties get() {
         final Properties properties = new Properties();
         properties.put(GIT_STORAGE_DIRECTORY, "repositories");
-        properties.put(CONNECT_ADDR, "tcp://localhost:28883");
         properties.put(APPLICATION_NODE_FQDN, "appnode.tcp.namazustudios.com.");
         properties.setProperty(TIMEOUT, "60");
         properties.setProperty(MIN_CONNECTIONS, "10");

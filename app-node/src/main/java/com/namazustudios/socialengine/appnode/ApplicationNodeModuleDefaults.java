@@ -6,8 +6,8 @@ import com.namazustudios.socialengine.rt.HandlerContext;
 import java.util.Properties;
 
 import static com.namazustudios.socialengine.appnode.Constants.*;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.BIND_ADDR;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.CONTROL_BIND_ADDR;
+import static com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.BIND_ADDR;
+import static com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.CONTROL_BIND_ADDR;
 import static com.namazustudios.socialengine.rt.Constants.*;
 import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.*;
 
