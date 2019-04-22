@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.MultiException;
+import com.namazustudios.socialengine.rt.remote.ConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,12 +9,15 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.UUID.nameUUIDFromBytes;
 import static java.util.stream.Collectors.toList;
 
 /**
  * Contains all {@link Node} instances for several {@link Node} instances and manages their life cycles therein.  This
- * imposes the additional requirement of providing some form of {@link ConnectionDemultiplexer} to route internal
+ * imposes the additional requirement of providing some form of {@link ConnectionService} to route internal
  * requests.
  */
 public class MultiNodeContainer implements AutoCloseable {
@@ -33,12 +37,16 @@ public class MultiNodeContainer implements AutoCloseable {
         final List<Exception> exceptionList = new ArrayList<>();
 
         try {
-            getConnectionDemultiplexer().start();
+            getConnectionService().start();
         } catch (Exception ex) {
             exceptionList.add(ex);
         }
 
-        getNodeSet().forEach(node -> getConnectionDemultiplexer().openInprocChannel(node.getId()));
+        getNodeSet().forEach(node -> {
+            final byte[] inprocIdentifierBytes = node.getId().getBytes(UTF_8);
+            final UUID inprocIdentifier = nameUUIDFromBytes(inprocIdentifierBytes);
+            getConnectionService().issueConnectInprocCommand(null, inprocIdentifier);
+        });
 
         exceptionList.addAll(getNodeSet().parallelStream().map(node -> {
             try {
@@ -73,7 +81,7 @@ public class MultiNodeContainer implements AutoCloseable {
         }).filter(ex -> ex != null).collect(toList());
 
         try {
-            getConnectionDemultiplexer().stop();
+            getConnectionService().stop();
         } catch (Exception ex) {
             exceptionList.add(ex);
         }
@@ -93,13 +101,12 @@ public class MultiNodeContainer implements AutoCloseable {
         this.nodeSet = nodeSet;
     }
 
-    public ConnectionDemultiplexer getConnectionDemultiplexer() {
-        return connectionDemultiplexer;
+    public ConnectionService getConnectionService() {
+        return connectionService;
     }
 
     @Inject
-    public void setConnectionDemultiplexer(ConnectionDemultiplexer connectionDemultiplexer) {
-        this.connectionDemultiplexer = connectionDemultiplexer;
+    public void setConnectionService(ConnectionService connectionService) {
+        this.connectionService = connectionService;
     }
-
 }

@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.jeromq;
+package com.namazustudios.socialengine.rt.remote;
 
 import javolution.io.Struct;
 

@@ -1,19 +1,19 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
 
-import com.namazustudios.socialengine.rt.remote.RoutingHeader;
+import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMsg;
 
 import java.util.UUID;
 
-import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandPreambleFromBytes;
-import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.RoutingCommandFromBytes;
-import com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action;
-import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType;
-import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND_ACK;
-import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_RESPONSE;
+import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandPreambleFromBytes;
+import static com.namazustudios.socialengine.rt.remote.RoutingCommand.RoutingCommandFromBytes;
+import com.namazustudios.socialengine.rt.remote.RoutingCommand.Action;
+import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
+import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.ROUTING_COMMAND_ACK;
+import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.STATUS_RESPONSE;
 import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.buildControlMsg;
 import com.namazustudios.socialengine.rt.remote.RoutingHeader.Status;
 import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.*;

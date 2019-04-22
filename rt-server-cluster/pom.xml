@@ -26,6 +26,11 @@
             <artifactId>javolution-core-java</artifactId>
             <version>${javolution.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.spotify</groupId>
+            <artifactId>dns</artifactId>
+            <version>3.1.5</version>
+        </dependency>
     </dependencies>
 
     <build>

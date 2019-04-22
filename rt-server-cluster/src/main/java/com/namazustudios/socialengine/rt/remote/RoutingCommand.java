@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.jeromq;
+package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.remote.PackedUUID;
 import javolution.io.Struct;
@@ -6,7 +6,7 @@ import javolution.io.Struct;
 import java.util.UUID;
 
 /**
- * Used to control the routes stored within a {@link InprocChannelTable}.
+ * Used to control the routes stored.
  */
 public class RoutingCommand extends Struct {
 

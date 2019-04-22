@@ -1,16 +1,16 @@
-package com.namazustudios.socialengine.rt.jeromq;
+package com.namazustudios.socialengine.rt.remote;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType;
-import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND;
-import com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action;
-import com.namazustudios.socialengine.rt.jeromq.srv.SrvUniqueIdentifier;
+import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
+import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.ROUTING_COMMAND;
+import com.namazustudios.socialengine.rt.remote.RoutingCommand.Action;
+import com.namazustudios.socialengine.rt.remote.srv.SrvUniqueIdentifier;
 
-import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.buildRoutingCommand;
-import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.*;
-import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.DISCONNECT_TCP;
+import static com.namazustudios.socialengine.rt.remote.RoutingCommand.buildRoutingCommand;
+import static com.namazustudios.socialengine.rt.remote.RoutingCommand.Action.*;
+import static com.namazustudios.socialengine.rt.remote.RoutingCommand.Action.DISCONNECT_TCP;
 
 public interface ConnectionService {
 
@@ -73,33 +73,6 @@ public interface ConnectionService {
      */
     void issueCommand(final CommandType commandType, final ByteBuffer byteBuffer);
 
-
-
-    default boolean connectToBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
-        final String backendAddress = RouteRepresentationUtil.buildBackendAddress(
-                srvUniqueIdentifier.getHost(),
-                srvUniqueIdentifier.getPort());
-
-        if (backendAddress == null) {
-            return false;
-        }
-
-        issueConnectTcpCommand(backendAddress);
-
-        return true;
-    }
-
-    default boolean disconnectFromBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
-        final String backendAddress = RouteRepresentationUtil.buildBackendAddress(
-                srvUniqueIdentifier.getHost(),
-                srvUniqueIdentifier.getPort());
-
-        if (backendAddress == null) {
-            return false;
-        }
-
-        issueDisconnectTcpCommand(backendAddress);
-
-        return true;
-    }
+    boolean connectToBackend(final SrvUniqueIdentifier srvUniqueIdentifier);
+    boolean disconnectFromBackend(final SrvUniqueIdentifier srvUniqueIdentifier);
 }

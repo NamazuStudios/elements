@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.jeromq.srv;
+package com.namazustudios.socialengine.rt.remote.srv;
 
 import com.spotify.dns.*;
 

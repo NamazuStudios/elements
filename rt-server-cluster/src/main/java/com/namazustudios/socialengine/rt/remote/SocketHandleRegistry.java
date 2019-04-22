@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.jeromq;
+package com.namazustudios.socialengine.rt.remote;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

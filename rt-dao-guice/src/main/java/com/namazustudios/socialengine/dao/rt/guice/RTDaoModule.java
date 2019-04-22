@@ -7,10 +7,10 @@ import com.namazustudios.socialengine.dao.ManifestDao;
 import com.namazustudios.socialengine.dao.rt.DefaultContextFactory;
 import com.namazustudios.socialengine.dao.rt.RTManifestDao;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionService;
-import com.namazustudios.socialengine.remote.jeromq.srv.SpotifySrvMonitor;
-import com.namazustudios.socialengine.remote.jeromq.srv.SrvMonitor;
+import com.namazustudios.socialengine.rt.remote.srv.SpotifySrvMonitor;
+import com.namazustudios.socialengine.rt.remote.srv.SrvMonitor;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.jeromq.ConnectionService;
+import com.namazustudios.socialengine.rt.remote.ConnectionService;
 import org.zeromq.ZContext;
 
 import java.util.function.Function;

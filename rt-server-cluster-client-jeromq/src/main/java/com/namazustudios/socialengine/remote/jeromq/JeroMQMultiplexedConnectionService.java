@@ -1,8 +1,9 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.jeromq.*;
-import com.namazustudios.socialengine.rt.jeromq.srv.SrvMonitor;
-import com.namazustudios.socialengine.rt.jeromq.srv.SrvRecord;
+import com.namazustudios.socialengine.rt.remote.srv.SrvMonitor;
+import com.namazustudios.socialengine.rt.remote.srv.SrvRecord;
+import com.namazustudios.socialengine.rt.remote.srv.SrvUniqueIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.*;
@@ -12,7 +13,8 @@ import javax.inject.Named;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType;
+import com.namazustudios.socialengine.rt.remote.ConnectionService;
+import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.buildControlMsg;
 import static java.lang.String.format;
@@ -137,6 +139,37 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
 
             connection.sendMessage(msg);
         }
+    }
+
+    @Override
+    // TODO: make some intermediary connection service that takes care of this and srv monitor
+    public boolean connectToBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
+        final String backendAddress = RouteRepresentationUtil.buildBackendAddress(
+                srvUniqueIdentifier.getHost(),
+                srvUniqueIdentifier.getPort());
+
+        if (backendAddress == null) {
+            return false;
+        }
+
+        issueConnectTcpCommand(backendAddress);
+
+        return true;
+    }
+
+    @Override
+    public boolean disconnectFromBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
+        final String backendAddress = RouteRepresentationUtil.buildBackendAddress(
+                srvUniqueIdentifier.getHost(),
+                srvUniqueIdentifier.getPort());
+
+        if (backendAddress == null) {
+            return false;
+        }
+
+        issueDisconnectTcpCommand(backendAddress);
+
+        return true;
     }
 
     public ZContext getzContext() {

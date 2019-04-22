@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
-import com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType;
+import com.namazustudios.socialengine.rt.remote.CommandPreamble;
+import com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
