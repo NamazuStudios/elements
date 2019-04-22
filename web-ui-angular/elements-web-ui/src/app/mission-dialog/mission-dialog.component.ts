@@ -30,7 +30,7 @@ export class MissionDialogComponent implements OnInit {
   readonly separatorKeyCodes: number[] = [ENTER, COMMA];
 
   missionForm = this.formBuilder.group({
-    name: [ this.data.mission.name, [Validators.required, Validators.pattern('^[a-zA-Z0-9]+$') ]],
+    name: [ this.data.mission.name, [Validators.required, Validators.pattern('^[_a-zA-Z0-9]+$') ]],
     displayName: [ this.data.mission.displayName, [Validators.required]],
     description: [ this.data.mission.description ],
     tags: []
