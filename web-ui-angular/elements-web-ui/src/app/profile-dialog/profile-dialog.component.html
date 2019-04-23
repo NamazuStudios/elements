@@ -17,8 +17,10 @@
 
       <div class="prof-form-row">
         <h2>User Info</h2>
-        <button type="button" mat-raised-button>Select User</button>
-        <button type="button" mat-raised-button>Edit User</button>
+        <div class="user-buttons">
+          <button color="primary" type="button" mat-raised-button>Select User</button>
+          <button color="primary" type="button" mat-raised-button>Edit User</button>
+        </div>
       </div>
 
       <div class="prof-form-row">
@@ -42,6 +44,6 @@
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-butto (click)="close(true)" [disabled]="!profileForm.valid || !editorCard.isJSONValid">Save</button>
+  <button type="button" color="primary" mat-raised-button (click)="close(true)" [disabled]="!profileForm.valid || !editorCard.isJSONValid">Save</button>
   <button type="button" mat-raised-button (click)="close()">Cancel</button>
 </div>
