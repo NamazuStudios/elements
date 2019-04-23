@@ -7,7 +7,7 @@ import { ApplicationsListComponent } from "./applications-list/applications-list
 import { AuthenticationGuard } from './authentication.guard';
 import { ItemsListComponent } from './items-list/items-list.component';
 import { MissionsListComponent} from './missions-list/missions-list.component';
-import { ProfilesListComponent } from './profiles-list/profiles-list-component';
+import { ProfilesListComponent } from './profiles-list/profiles-list.component';
 
 const appRoutes: Routes = [
   { path: 'login', component: LoginComponent },

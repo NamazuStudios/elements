@@ -47,7 +47,7 @@ import { AndroidGooglePlayConfigurationDialogComponent } from './android-google-
 import { ProductBundleListComponent } from './product-bundle-list/product-bundle-list.component';
 import { ProductBundleEditorComponent } from './product-bundle-editor/product-bundle-editor.component';
 import { BundleRewardsEditorComponent } from './bundle-rewards-editor/bundle-rewards-editor.component';
-import { ProfilesListComponent } from './profiles-list/profiles-list-component';
+import { ProfilesListComponent } from './profiles-list/profiles-list.component';
 import { ProfileDialogComponent } from './profile-dialog/profile-dialog.component';
 
 export function initialize(configService: ConfigService) {

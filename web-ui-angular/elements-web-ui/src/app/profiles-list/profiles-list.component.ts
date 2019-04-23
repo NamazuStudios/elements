@@ -126,7 +126,7 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
 
   editProfile(profile) {
     this.showDialog(false, profile, result => {
-      return this.profilesService.updateProfile({ nameOrId: profile.id, body: result });
+      return this.profilesService.updateProfile({ profileId: profile.id, body: result });
     });
   }
 }
