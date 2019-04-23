@@ -1,3 +1,71 @@
-<p>
-  profiles-list-component works!
-</p>
+<div class="profiles-list">
+  <div class="spinner-container" *ngIf="dataSource.loading$ | async">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <mat-form-field>
+    <input matInput placeholder="Search profiles" #input>
+  </mat-form-field>
+
+  <button mat-raised-button color="primary" (click)="addProfile()">Add Application</button>
+  <button mat-raised-button color="primary" (click)="deleteSelectedProfiles()" [disabled]="!hasSelection">Delete Selected Profiles</button>
+
+  <mat-table class="profiles-table mat-elevation-z8" [dataSource]="dataSource" >
+
+    <ng-container matColumnDef="select">
+      <mat-header-cell fxFlex="75px" *matHeaderCellDef>
+        <mat-checkbox (change)="$event ? masterToggle() : null"
+                      [checked]="selection.hasValue() && isAllSelected()"
+                      [indeterminate]="selection.hasValue() && !isAllSelected()">
+        </mat-checkbox>
+      </mat-header-cell>
+      <mat-cell fxFlex="75px" *matCellDef="let row">
+        <mat-checkbox (click)="$event.stopPropagation()"
+                      (change)="$event ? selection.toggle(row) : null"
+                      [checked]="selection.isSelected(row)">
+        </mat-checkbox>
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="id">
+      <mat-header-cell *matHeaderCellDef>Profile ID</mat-header-cell>
+      <mat-cell *matCellDef="let profile">{{profile.id}}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef>Display Name</mat-header-cell>
+      <mat-cell *matCellDef="let profile">{{profile.displayName}}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef>User Name</mat-header-cell>
+      <mat-cell *matCellDef="let profile">{{profile.user.name}}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef>User Email</mat-header-cell>
+      <mat-cell *matCellDef="let profile">{{profile.user.email}}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef>Application</mat-header-cell>
+      <mat-cell *matCellDef="let profile">{{profile.application.name}}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <mat-header-cell *matHeaderCellDef></mat-header-cell>
+      <mat-cell *matCellDef="let profile">
+        <button mat-raised-button color="primary" (click)="editProfile(profile)">Edit</button>
+        &nbsp;
+        <button mat-raised-button color="primary" (click)="deleteProfile(profile)">Delete</button>
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+
+    <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+
+  </mat-table>
+
+  <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
+</div>
