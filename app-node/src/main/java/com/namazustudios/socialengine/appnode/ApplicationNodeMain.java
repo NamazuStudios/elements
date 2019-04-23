@@ -1,10 +1,10 @@
 package com.namazustudios.socialengine.appnode;
 
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
-import com.namazustudios.socialengine.rt.jeromq.CommandPreamble;
+import com.namazustudios.socialengine.rt.remote.CommandPreamble;
 import com.namazustudios.socialengine.rt.jeromq.Connection;
 import com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder;
-import com.namazustudios.socialengine.rt.jeromq.StatusRequest;
+import com.namazustudios.socialengine.rt.remote.StatusRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -14,7 +14,7 @@ import java.util.Properties;
 
 import static com.namazustudios.socialengine.appnode.Constants.CONTROL_REQUEST_TIMEOUT;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.CONTROL_BIND_ADDR;
-import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_REQUEST;
+import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.STATUS_REQUEST;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static java.lang.String.format;
 import static org.zeromq.ZMQ.REQ;

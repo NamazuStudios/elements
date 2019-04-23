@@ -52,7 +52,7 @@ public class RouteRepresentationUtil {
 
     /**
      * Derives a URL based address for the internal routing of requests for a particular node with the
-     * associated route {@link UUID}. This is defined as the inproc://multiplex-[destinationId].
+     * associated route {@link UUID}. This is defined as the inproc://demultiplex-[destinationId].
      *
      * Returns the {@link String} representing the internal route address.
      **/

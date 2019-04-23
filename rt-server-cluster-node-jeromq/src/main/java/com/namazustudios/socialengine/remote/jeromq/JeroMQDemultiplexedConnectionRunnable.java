@@ -52,7 +52,7 @@ public class JeroMQDemultiplexedConnectionRunnable implements Runnable {
                 logger.info("Binding control socket....");
                 final int controlSocketHandle = cm.bindToAddressesAndBeginPolling(
                         controlAddresses,
-                        PULL,
+                        REP,
                         messageManager::handleControlMessage,
                         false
                 );

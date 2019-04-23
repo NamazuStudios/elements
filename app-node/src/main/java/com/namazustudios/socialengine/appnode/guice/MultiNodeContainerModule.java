@@ -6,10 +6,13 @@ import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService;
-import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
 import com.namazustudios.socialengine.rt.MultiNodeContainer;
 import com.namazustudios.socialengine.rt.Node;
+import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
+import com.namazustudios.socialengine.rt.remote.ConnectionService;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
+import com.namazustudios.socialengine.rt.remote.srv.SpotifySrvMonitor;
+import com.namazustudios.socialengine.rt.remote.srv.SrvMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -34,8 +37,12 @@ public class MultiNodeContainerModule extends AbstractModule {
         bind(ZContext.class).asEagerSingleton();
         bind(MultiNodeContainer.class).asEagerSingleton();
 
-        bind(ConnectionDemultiplexer.class)
+        bind(ConnectionService.class)
             .to(JeroMQDemultiplexedConnectionService.class)
+            .asEagerSingleton();
+
+        bind(SrvMonitor.class)
+            .to(SpotifySrvMonitor.class)
             .asEagerSingleton();
 
         bind(new TypeLiteral<Set<Node>>(){})
@@ -49,7 +56,7 @@ public class MultiNodeContainerModule extends AbstractModule {
         final Provider<ApplicationDao> applicationDaoProvider = getProvider(ApplicationDao.class);
         final Provider<Injector> injectorProvider = getProvider(Injector.class);
         final Provider<GitLoader> gitLoaderProvider = getProvider(GitLoader.class);
-        final Provider<ConnectionDemultiplexer> connectionDemultiplexerProvider = getProvider(ConnectionDemultiplexer.class);
+        final Provider<ConnectionService> connectionServiceProvider = getProvider(ConnectionService.class);
         final Provider<File> resourcesStorageBaseDirectoryProvider = getProvider(Key.get(File.class, named(STORAGE_BASE_DIRECTORY)));
 
         return () -> {
@@ -57,7 +64,7 @@ public class MultiNodeContainerModule extends AbstractModule {
             final ApplicationDao applicationDao = applicationDaoProvider.get();
             final Injector injector = injectorProvider.get();
             final GitLoader gitLoader = gitLoaderProvider.get();
-            final ConnectionDemultiplexer connectionDemultiplexer = connectionDemultiplexerProvider.get();
+            final ConnectionService connectionService = connectionServiceProvider.get();
 
             final Set<Node> nodeSet = applicationDao.getActiveApplications().getObjects().stream()
                 .map(application -> {
@@ -71,16 +78,16 @@ public class MultiNodeContainerModule extends AbstractModule {
                         return null;
                     }
 
-                    final UUID uuid = connectionDemultiplexer.getInprocIdentifierForNodeIdentifier(application.getId());
-                    final String bindAddress = connectionDemultiplexer.getBindAddress(uuid);
+                    final UUID inprocIdentifier = RouteRepresentationUtil.buildInprocIdentifierFromString(application.getId());
+                    final String bindAddress = RouteRepresentationUtil.buildDemultiplexInprocAddress(inprocIdentifier);
 
                     final JeroMQNodeModule nodeModule = new JeroMQNodeModule()
                         .withBindAddress(bindAddress)
                         .withNodeId(application.getId())
                         .withNodeName(application.getName());
 
-                    final File storageDiretory = getStorageDirectoryForApplication(resourcesStorageBaseDirectoryProvider, application);
-                    final ApplicationModule applicationModule = new ApplicationModule(application, codeDirectory, storageDiretory);
+                    final File storageDirectory = getStorageDirectoryForApplication(resourcesStorageBaseDirectoryProvider, application);
+                    final ApplicationModule applicationModule = new ApplicationModule(application, codeDirectory, storageDirectory);
                     final Injector nodeInjector = injector.createChildInjector(applicationModule, nodeModule);
 
                     return nodeInjector.getInstance(Node.class);
