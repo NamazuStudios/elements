@@ -1,5 +1,6 @@
 .prof-form-row {
   display: flex;
+  align-items: center;
 }
 
 .prof-form-row button {
@@ -36,5 +37,9 @@ button {
 
 .user-buttons {
   display: flex;
+}
+
+#lastLogin {
+  margin: 30px 0;
 }
 
