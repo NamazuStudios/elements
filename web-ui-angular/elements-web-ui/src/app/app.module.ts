@@ -47,6 +47,7 @@ import { AndroidGooglePlayConfigurationDialogComponent } from './android-google-
 import { ProductBundleListComponent } from './product-bundle-list/product-bundle-list.component';
 import { ProductBundleEditorComponent } from './product-bundle-editor/product-bundle-editor.component';
 import { BundleRewardsEditorComponent } from './bundle-rewards-editor/bundle-rewards-editor.component';
+import { ProfileListComponent } from './profile-list/profile-list.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -99,6 +100,7 @@ export function initialize(configService: ConfigService) {
     ProductBundleListComponent,
     ProductBundleEditorComponent,
     BundleRewardsEditorComponent,
+    ProfileListComponent,
   ],
   imports: [
     BrowserModule,
