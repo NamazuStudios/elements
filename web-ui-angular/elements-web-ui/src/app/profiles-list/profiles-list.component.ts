@@ -23,6 +23,7 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
   dataSource: ProfilesDataSource;
   displayedColumns = ["select", "id", "name", "userName", "userEmail", "applicationName", "actions"];
   currentProfiles: Array<Profile> = [];
+  allApplications = [{name: "All"}];
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild('input') input: ElementRef;

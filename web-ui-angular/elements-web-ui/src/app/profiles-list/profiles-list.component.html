@@ -3,12 +3,25 @@
     <mat-spinner></mat-spinner>
   </div>
 
-  <mat-form-field>
-    <input matInput placeholder="Search profiles" #input>
-  </mat-form-field>
+  <div class="table-bar">
+    <div class="left">
+      <mat-form-field>
+        <input matInput placeholder="Search profiles" #input>
+      </mat-form-field>
 
-  <button mat-raised-button color="primary" (click)="addProfile()">Add Profile</button>
-  <button mat-raised-button color="primary" (click)="deleteSelectedProfiles()" [disabled]="!hasSelection">Delete Selected Profiles</button>
+      <button mat-raised-button color="primary" (click)="addProfile()">Add Profile</button>
+      <button mat-raised-button color="primary" (click)="deleteSelectedProfiles()" [disabled]="!hasSelection">Delete Selected Profiles</button>
+    </div>
+
+    <mat-form-field>
+      <mat-label>Application</mat-label>
+      <mat-select>
+        <mat-option *ngFor="let application of allApplications" [value]="application">
+          {{application.name}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
 
   <mat-table class="profiles-table mat-elevation-z8" [dataSource]="dataSource" >
 
