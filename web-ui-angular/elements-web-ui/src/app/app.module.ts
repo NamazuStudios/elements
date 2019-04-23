@@ -48,6 +48,7 @@ import { ProductBundleListComponent } from './product-bundle-list/product-bundle
 import { ProductBundleEditorComponent } from './product-bundle-editor/product-bundle-editor.component';
 import { BundleRewardsEditorComponent } from './bundle-rewards-editor/bundle-rewards-editor.component';
 import { ProfilesListComponent } from './profiles-list/profiles-list-component';
+import { ProfileDialogComponent } from './profile-dialog/profile-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -101,6 +102,7 @@ export function initialize(configService: ConfigService) {
     ProductBundleEditorComponent,
     BundleRewardsEditorComponent,
     ProfilesListComponent,
+    ProfileDialogComponent,
   ],
   imports: [
     BrowserModule,
