@@ -8,4 +8,9 @@ export class ProfileViewModel implements Profile {
   id: string;
   imageUrl: string;
   user: User;
+  metadata: any;
+
+  constructor() {
+
+  }
 }

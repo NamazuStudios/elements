@@ -1,3 +1,47 @@
-<p>
-  profile-dialog works!
-</p>
+<h1 mat-dialog-title>
+  {{data.isNew ? "New" : "Edit"}} Profile
+</h1>
+
+<div mat-dialog-content>
+  <form [formGroup]="profileForm">
+    <div class="prof-form-container">
+      <div class="prof-form-row">
+        <mat-form-field>
+          <input autofocus matInput placeholder="Display Name" name="displayName" formControlName="displayName">
+          <mat-error>Display name is required</mat-error>
+        </mat-form-field>
+        <mat-form-field>
+          <input matInput placeholder="Image URL" name="imageUrl" formControlName="imageUrl">
+        </mat-form-field>
+      </div>
+
+      <div class="prof-form-row">
+        <h2>User Info</h2>
+        <button type="button" mat-raised-button>Select User</button>
+        <button type="button" mat-raised-button>Edit User</button>
+      </div>
+
+      <div class="prof-form-row">
+        <mat-form-field>
+          <input matInput placeholder="Name" name="userName" formControlName="userName">
+        </mat-form-field>
+        <mat-form-field>
+          <input matInput placeholder="Email" name="userEmail" formControlName="userEmail">
+        </mat-form-field>
+      </div>
+
+      <mat-form-field>
+        <input matInput placeholder="Facebook ID" name="userFacebook" formControlName="userFacebook">
+      </mat-form-field>
+    </div>
+  </form>
+
+  <div #lastLogin>2019-04-22 23:34:05</div>
+
+  <app-json-editor-card [editTarget]="data.profile" topic="Profile"></app-json-editor-card>
+</div>
+
+<div mat-dialog-actions>
+  <button type="button" mat-raised-butto (click)="close(true)" [disabled]="!profileForm.valid || !editorCard.isJSONValid">Save</button>
+  <button type="button" mat-raised-button (click)="close()">Cancel</button>
+</div>

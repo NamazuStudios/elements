@@ -68,7 +68,8 @@ export function initialize(configService: ConfigService) {
     GameOnPrizeDialogComponent,
     IosApplicationConfigurationDialogComponent,
     AndroidGooglePlayConfigurationDialogComponent,
-    ProductBundleEditorComponent
+    ProductBundleEditorComponent,
+    ProfileDialogComponent
   ],
   declarations: [
     AppComponent,
