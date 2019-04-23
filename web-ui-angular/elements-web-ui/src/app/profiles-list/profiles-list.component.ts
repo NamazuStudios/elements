@@ -21,7 +21,7 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
   hasSelection = false;
   selection: SelectionModel<Profile>;
   dataSource: ProfilesDataSource;
-  displayedColumns = ["select", "id", "name", "actions"];
+  displayedColumns = ["select", "id", "name", "userName", "userEmail", "applicationName", "actions"];
   currentProfiles: Array<Profile> = [];
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
