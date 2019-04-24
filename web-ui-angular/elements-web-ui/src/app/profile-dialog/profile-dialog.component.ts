@@ -22,7 +22,8 @@ export class ProfileDialogComponent implements OnInit {
 
   constructor(public dialogRef: MatDialogRef<ProfileDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
-              private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) { }
+              private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) {
+  }
 
   ngOnInit() {
     this.alertService.getMessage().subscribe((message: any) => {
