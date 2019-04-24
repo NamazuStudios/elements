@@ -119,7 +119,7 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
   showDialog(isNew: boolean, profile: Profile, next) {
     this.dialog.open(ProfileDialogComponent, {
       width: '900px',
-      data: { isNew: isNew, profile: profile, next: next, refresher: this, applications: this.allApplications.length > 1 ? this.allApplications.slice(1) : [] }
+      data: { isNew: isNew, profile: profile, next: next, refresher: this, applications: this.allApplications.length > 1 ? this.allApplications.slice(1) : []}
     });
   }
 

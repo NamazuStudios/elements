@@ -23,8 +23,6 @@
         </div>
       </div>
 
-      <!--TODO add application selection dropdown-->
-
       <div class="prof-form-row">
         <mat-form-field>
           <input matInput disabled placeholder="Name" name="userName" [value]="data.profile.user ? data.profile.user.name : ''">
@@ -36,6 +34,15 @@
 
       <mat-form-field>
         <input matInput disabled placeholder="Facebook ID" name="userFacebook" [value]="data.profile.user ? data.profile.user.facebookId : ''">
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Application</mat-label>
+        <mat-select [compareWith]="compareApps" name="applicationSelect" formControlName="applicationSelect">
+          <mat-option *ngFor="let application of data.applications" [value]="application">
+            {{application.name}}
+          </mat-option>
+        </mat-select>
       </mat-form-field>
     </div>
   </form>

@@ -3,6 +3,7 @@ import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.comp
 import {MAT_DIALOG_DATA, MatDialogRef, MatSnackBar} from '@angular/material';
 import {FormBuilder, Validators} from '@angular/forms';
 import {AlertService} from '../alert.service';
+import {Application} from '../api/models/application';
 
 @Component({
   selector: 'app-profile-dialog',
@@ -18,6 +19,7 @@ export class ProfileDialogComponent implements OnInit {
   profileForm = this.formBuilder.group({
     displayName: [this.data.profile.displayName, [Validators.required]],
     imageUrl: [this.data.profile.imageUrl],
+    applicationSelect: [this.data.profile.application]
   });
 
   constructor(public dialogRef: MatDialogRef<ProfileDialogComponent>,
@@ -53,6 +55,10 @@ export class ProfileDialogComponent implements OnInit {
     }, err => {
       this.alertService.error(err);
     });
+  }
+
+  compareApps(app1, app2) {
+    return app1.name == app2.name;
   }
 
 }
