@@ -38,7 +38,7 @@
 
       <mat-form-field>
         <mat-label>Application</mat-label>
-        <mat-select [compareWith]="compareApps" name="application" formControlName="application">
+        <mat-select [disabled]="!data.isNew" [compareWith]="compareApps" name="application" formControlName="application">
           <mat-option *ngFor="let application of data.applications" [value]="application">
             {{application.name}}
           </mat-option>
