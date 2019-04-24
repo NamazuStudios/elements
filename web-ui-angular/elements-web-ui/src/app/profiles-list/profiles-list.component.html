@@ -15,7 +15,7 @@
 
     <mat-form-field>
       <mat-label>Application</mat-label>
-      <mat-select>
+      <mat-select [(value)]="allApplications[0]" (change)="filterByApplication($event.target.value)">
         <mat-option *ngFor="let application of allApplications" [value]="application">
           {{application.name}}
         </mat-option>
