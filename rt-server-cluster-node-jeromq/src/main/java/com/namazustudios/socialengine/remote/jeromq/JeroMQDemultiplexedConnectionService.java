@@ -27,9 +27,9 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQDemultiplexedConnectionService.class);
 
-    public static final String BIND_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.bindAddress";
-    public static final String CONTROL_BIND_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.controlBindAddress";
-    public static final String APPLICATION_NODE_FQDN = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.applicationNodeFqdn";
+    public static final String BIND_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.bindAddress";
+    public static final String CONTROL_BIND_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.controlBindAddress";
+    public static final String APPLICATION_NODE_FQDN = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.applicationNodeFqdn";
 
     private String bindAddress;
     private String controlBindAddress;

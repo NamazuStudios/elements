@@ -409,6 +409,7 @@ public class MessageManager implements AutoCloseable {
         routingHeader.status.set(CONTINUE);
         routingHeader.tcpAddress.set(tcpAddress);
         routingHeader.inprocIdentifier.set(inprocIdentifier);
+
         RouteRepresentationUtil.insertRoutingHeader(msg, routingHeader);
 
         final int tcpSocketHandle = socketHandleRegistry.getTcpSocketHandle(tcpAddress);

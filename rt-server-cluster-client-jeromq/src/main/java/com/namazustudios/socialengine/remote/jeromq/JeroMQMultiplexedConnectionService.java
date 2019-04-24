@@ -26,7 +26,7 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQMultiplexedConnectionService.class);
 
-    public static final String APPLICATION_NODE_FQDN = "com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer.applicationNodeFqdn";
+    public static final String APPLICATION_NODE_FQDN = "com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionService.applicationNodeFqdn";
 
     private String applicationNodeFqdn;
 
