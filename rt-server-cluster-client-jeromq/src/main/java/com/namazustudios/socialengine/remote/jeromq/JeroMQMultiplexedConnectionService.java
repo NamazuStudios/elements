@@ -67,7 +67,7 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
         }
     }
 
-    void setUpAndStartSrvMonitor() {
+    private void setUpAndStartSrvMonitor() {
 
         srvMonitor.registerOnCreatedSrvRecordListener((SrvRecord srvRecord) -> {
             logger.info("Detected App Node SRV record creation: host={} port={}", srvRecord.getHost(), srvRecord.getPort());

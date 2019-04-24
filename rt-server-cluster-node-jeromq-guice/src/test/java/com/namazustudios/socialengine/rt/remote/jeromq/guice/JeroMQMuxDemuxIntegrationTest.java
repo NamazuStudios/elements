@@ -43,7 +43,8 @@ public class JeroMQMuxDemuxIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQMuxDemuxIntegrationTest.class);
 
-    public static final String CONNECTION_ADDRESS = "inproc://test-connection";
+//    public static final String CONNECTION_ADDRESS = "inproc://test-connection";
+    public static final Integer BIND_PORT = 28883;  // TODO: need to redo this test
 
     public static List<UUID> INPROC_IDENTIFIERS = unmodifiableList(range(0, 15)
         .mapToObj(value -> RouteRepresentationUtil.buildInprocIdentifierFromString(format("test-inprocIdentifier-%d", value)))
@@ -204,9 +205,9 @@ public class JeroMQMuxDemuxIntegrationTest {
 
             bind(ZContext.class).toInstance(master);
 
-            bind(String.class)
-                .annotatedWith(named(JeroMQDemultiplexedConnectionService.BIND_ADDR))
-                .toInstance(CONNECTION_ADDRESS);
+            bind(Integer.class)
+                .annotatedWith(named(JeroMQDemultiplexedConnectionService.BIND_PORT))
+                .toInstance(BIND_PORT);
 
             bind(ConnectionService.class).to(JeroMQDemultiplexedConnectionService.class).asEagerSingleton();
 

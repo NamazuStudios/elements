@@ -27,11 +27,11 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQDemultiplexedConnectionService.class);
 
-    public static final String BIND_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.bindAddress";
+    public static final String BIND_PORT = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.bindPort";
     public static final String CONTROL_BIND_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.controlBindAddress";
     public static final String APPLICATION_NODE_FQDN = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.applicationNodeFqdn";
 
-    private String bindAddress;
+    private Integer bindPort;
     private String controlBindAddress;
     private String applicationNodeFqdn;
 
@@ -69,9 +69,19 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
             demultiplexedConnectionThread.start();
             demultiplexedConnectionRunnable.blockCurrentThreadUntilControlChannelIsConnected();
             logger.info("Successfully started demultiplexed thread and established control channel.");
+
+            // now that we have a control channel set up, immediately establish the tcp bind so other instances can talk with this app node
+            bindBackendAddress();
         } else {
             throw new IllegalStateException("Failed to set up demultiplexed connection.");
         }
+    }
+
+    private void bindBackendAddress() {
+        final String backendAddress = RouteRepresentationUtil.buildBackendAddress("*", getBindPort());
+        logger.info("Issuing bind tcp command to address: {}....", backendAddress);
+        issueBindTcpCommand(backendAddress);
+        logger.info("Successfully issued bind tcp command to address: {}....", backendAddress);
     }
 
     void setUpAndStartSrvMonitor() {
@@ -190,13 +200,13 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
         this.zContext = zContext;
     }
 
-    public String getBindAddress() {
-        return bindAddress;
+    public Integer getBindPort() {
+        return bindPort;
     }
 
     @Inject
-    public void setBindAddress(@Named(BIND_ADDR) String bindAddress) {
-        this.bindAddress = bindAddress;
+    public void setBindPort(@Named(BIND_PORT) Integer bindPort) {
+        this.bindPort = bindPort;
     }
 
     public String getControlBindAddress() {

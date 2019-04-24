@@ -23,7 +23,16 @@ public class RouteRepresentationUtil {
             return null;
         }
 
-        final String backendAddress = "tcp://" + host.substring(0, host.length() - 1) + ":" + port;
+        final String validatedHost;
+
+        if (host.endsWith(".")) {
+            validatedHost = host.substring(0, host.length() - 1);
+        }
+        else {
+            validatedHost = host;
+        }
+
+        final String backendAddress = "tcp://" + validatedHost + ":" + port;
 
         return backendAddress;
     }
