@@ -19,7 +19,7 @@ export class ProfileDialogComponent implements OnInit {
   profileForm = this.formBuilder.group({
     displayName: [this.data.profile.displayName, [Validators.required]],
     imageUrl: [this.data.profile.imageUrl],
-    applicationSelect: [this.data.profile.application]
+    application: [this.data.profile.application]
   });
 
   constructor(public dialogRef: MatDialogRef<ProfileDialogComponent>,
