@@ -11,6 +11,7 @@ import {ProfileDialogComponent} from "../profile-dialog/profile-dialog.component
 import {ProfileViewModel} from "../models/profile-view-model";
 import {Profile} from '../api/models';
 import {ProfilesService} from '../api/services/profiles.service';
+import {ApplicationsService} from '../api/services/applications.service';
 
 @Component({
   selector: 'app-profiles-list',
@@ -29,7 +30,10 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
   @ViewChild('input') input: ElementRef;
   @ViewChild(MatTable) table: MatTable<Profile>;
 
-  constructor(private profilesService: ProfilesService, private alertService: AlertService, private dialogService: ConfirmationDialogService, public dialog: MatDialog) { }
+  constructor(private profilesService: ProfilesService, private applicationsService: ApplicationsService, private alertService: AlertService,
+              private dialogService: ConfirmationDialogService, public dialog: MatDialog) {
+    this.applicationsService.getApplications({}).subscribe(res => this.allApplications = this.allApplications.concat(res.objects));
+  }
 
   ngOnInit() {
     this.selection = new SelectionModel<Profile>(true, []);
@@ -129,5 +133,11 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
     this.showDialog(false, profile, result => {
       return this.profilesService.updateProfile({ profileId: profile.id, body: result });
     });
+  }
+
+  filterByApplication(application) {
+    if (application.name == "All") {
+
+    }
   }
 }
