@@ -18,9 +18,6 @@ export class ProfileDialogComponent implements OnInit {
   profileForm = this.formBuilder.group({
     displayName: [this.data.profile.displayName, [Validators.required]],
     imageUrl: [this.data.profile.imageUrl],
-    userName: [this.data.profile.user ? this.data.profile.user.name : ""],
-    userEmail: [this.data.profile.user ? this.data.profile.user.email : ""],
-    userFacebook: [this.data.profile.user ? this.data.profile.user.facebookId : ""]
   });
 
   constructor(public dialogRef: MatDialogRef<ProfileDialogComponent>,

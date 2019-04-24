@@ -27,15 +27,15 @@
 
       <div class="prof-form-row">
         <mat-form-field>
-          <input matInput placeholder="Name" name="userName" formControlName="userName">
+          <input matInput disabled placeholder="Name" name="userName" [value]="data.profile.user ? data.profile.user.name : ''">
         </mat-form-field>
         <mat-form-field>
-          <input matInput placeholder="Email" name="userEmail" formControlName="userEmail">
+          <input matInput disabled placeholder="Email" name="userEmail" [value]="data.profile.user ? data.profile.user.email : ''">
         </mat-form-field>
       </div>
 
       <mat-form-field>
-        <input matInput placeholder="Facebook ID" name="userFacebook" formControlName="userFacebook">
+        <input matInput disabled placeholder="Facebook ID" name="userFacebook" [value]="data.profile.user ? data.profile.user.facebookId : ''">
       </mat-form-field>
     </div>
   </form>
