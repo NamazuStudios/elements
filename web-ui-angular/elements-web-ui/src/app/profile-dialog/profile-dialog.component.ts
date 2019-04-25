@@ -1,9 +1,12 @@
 import {Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
-import {MAT_DIALOG_DATA, MatDialogRef, MatSnackBar} from '@angular/material';
+import {MAT_DIALOG_DATA, MatDialog, MatDialogRef, MatSnackBar} from '@angular/material';
 import {FormBuilder, Validators} from '@angular/forms';
 import {AlertService} from '../alert.service';
 import {Application} from '../api/models/application';
+import {User} from '../api/models/user';
+import {UserDialogComponent} from '../user-dialog/user-dialog.component';
+import {UsersService} from '../api/services/users.service';
 
 @Component({
   selector: 'app-profile-dialog',
@@ -22,8 +25,8 @@ export class ProfileDialogComponent implements OnInit {
     application: [this.data.profile.application]
   });
 
-  constructor(public dialogRef: MatDialogRef<ProfileDialogComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: any,
+  constructor(public dialogRef: MatDialogRef<ProfileDialogComponent>, public dialog: MatDialog,
+              @Inject(MAT_DIALOG_DATA) public data: any, private usersService: UsersService,
               private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) {
   }
 
@@ -55,6 +58,25 @@ export class ProfileDialogComponent implements OnInit {
     }, err => {
       this.alertService.error(err);
     });
+  }
+
+  showEditUserDialog(user: User) {
+    this.dialog.open(UserDialogComponent, {
+      width: "500px",
+      data: {
+        isNew: false, user: user, refresher: this, next: result => {
+          const password = result.password;
+          delete result.passwordConfirmation;
+          return this.usersService.updateUser({name: user.name, password: password, body: result});
+        }
+      }
+    });
+  }
+
+  refresh(delay = 500) {
+    setTimeout(() => {
+      this.dat
+    }, delay);
   }
 
   compareApps(app1, app2) {
