@@ -49,6 +49,7 @@ import { ProductBundleEditorComponent } from './product-bundle-editor/product-bu
 import { BundleRewardsEditorComponent } from './bundle-rewards-editor/bundle-rewards-editor.component';
 import { ProfilesListComponent } from './profiles-list/profiles-list.component';
 import { ProfileDialogComponent } from './profile-dialog/profile-dialog.component';
+import { UserSelectDialogComponent } from './user-select-dialog/user-select-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -69,7 +70,8 @@ export function initialize(configService: ConfigService) {
     IosApplicationConfigurationDialogComponent,
     AndroidGooglePlayConfigurationDialogComponent,
     ProductBundleEditorComponent,
-    ProfileDialogComponent
+    ProfileDialogComponent,
+    UserSelectDialogComponent
   ],
   declarations: [
     AppComponent,
@@ -104,6 +106,7 @@ export function initialize(configService: ConfigService) {
     BundleRewardsEditorComponent,
     ProfilesListComponent,
     ProfileDialogComponent,
+    UserSelectDialogComponent,
   ],
   imports: [
     BrowserModule,
