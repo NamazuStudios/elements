@@ -8,6 +8,7 @@ import {User} from '../api/models/user';
 import {UserDialogComponent} from '../user-dialog/user-dialog.component';
 import {UsersService} from '../api/services/users.service';
 import { map } from 'rxjs/operators';
+import {UserSelectDialogComponent} from '../user-select-dialog/user-select-dialog.component';
 
 @Component({
   selector: 'app-profile-dialog',
@@ -52,6 +53,9 @@ export class ProfileDialogComponent implements OnInit {
     if (this.data.profile.metadata !== undefined) {
       formData.metadata = this.data.profile.metadata;
     }
+    if (this.data.profile.user !== undefined) {
+      formData.user = this.data.profile.user;
+    }
 
     this.data.next(formData).subscribe(r => {
       this.dialogRef.close();
@@ -76,6 +80,17 @@ export class ProfileDialogComponent implements OnInit {
         }
       }
     });
+  }
+
+  showSelectUserDialog() {
+    this.dialog.open(UserSelectDialogComponent, {
+      width: "700px",
+      data: {
+        next: result => {
+          this.data.profile.user = result;
+        }
+      }
+    })
   }
 
   compareApps(app1, app2) {
