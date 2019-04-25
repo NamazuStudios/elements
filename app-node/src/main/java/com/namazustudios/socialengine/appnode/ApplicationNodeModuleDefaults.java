@@ -19,7 +19,7 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(MIN_CONNECTIONS, "10");
         properties.setProperty(MAX_CONNECTIONS, "10000");
         properties.setProperty(BIND_PORT, "28883");
-        properties.setProperty(CONTROL_BIND_ADDR, "tcp://*:20883");
+        properties.setProperty(CONTROL_BIND_PORT, "20883");
         properties.setProperty(APPLICATION_NODE_FQDN, "appnode.tcp.namazustudios.com.");
         properties.setProperty(CONTROL_REQUEST_TIMEOUT, "1000");
         properties.setProperty(SCHEDULER_THREADS, Integer.toString(Runtime.getRuntime().availableProcessors()) + 1);

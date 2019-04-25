@@ -144,7 +144,7 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
     @Override
     // TODO: make some intermediary connection service that takes care of this and srv monitor
     public boolean connectToBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
-        final String backendAddress = RouteRepresentationUtil.buildBackendAddress(
+        final String backendAddress = RouteRepresentationUtil.buildTcpAddress(
                 srvUniqueIdentifier.getHost(),
                 srvUniqueIdentifier.getPort());
 
@@ -159,7 +159,7 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
 
     @Override
     public boolean disconnectFromBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
-        final String backendAddress = RouteRepresentationUtil.buildBackendAddress(
+        final String backendAddress = RouteRepresentationUtil.buildTcpAddress(
                 srvUniqueIdentifier.getHost(),
                 srvUniqueIdentifier.getPort());
 

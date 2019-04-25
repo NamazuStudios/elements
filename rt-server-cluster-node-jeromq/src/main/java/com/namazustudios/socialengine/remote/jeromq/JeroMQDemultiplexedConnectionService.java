@@ -28,11 +28,11 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
     private static final Logger logger = LoggerFactory.getLogger(JeroMQDemultiplexedConnectionService.class);
 
     public static final String BIND_PORT = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.bindPort";
-    public static final String CONTROL_BIND_ADDR = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.controlBindAddress";
+    public static final String CONTROL_BIND_PORT = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.controlBindPort";
     public static final String APPLICATION_NODE_FQDN = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.applicationNodeFqdn";
 
     private Integer bindPort;
-    private String controlBindAddress;
+    private Integer controlBindPort;
     private String applicationNodeFqdn;
 
     private final AtomicReference<Thread> atomicDemultiplexedConnectionThread = new AtomicReference<>();
@@ -53,6 +53,7 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
     private void setUpAndStartDemultiplexedConnection() {
         final Set<String> controlAddresses = new HashSet<>();
         controlAddresses.add(controlAddress);
+        final String controlBindAddress = RouteRepresentationUtil.buildTcpAddress("*", controlBindPort);
         controlAddresses.add(controlBindAddress);
         final JeroMQDemultiplexedConnectionRunnable demultiplexedConnectionRunnable = new JeroMQDemultiplexedConnectionRunnable(
                 controlAddresses,
@@ -78,7 +79,7 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
     }
 
     private void bindBackendAddress() {
-        final String backendAddress = RouteRepresentationUtil.buildBackendAddress("*", getBindPort());
+        final String backendAddress = RouteRepresentationUtil.buildTcpAddress("*", getBindPort());
         logger.info("Issuing bind tcp command to address: {}....", backendAddress);
         issueBindTcpCommand(backendAddress);
         logger.info("Successfully issued bind tcp command to address: {}....", backendAddress);
@@ -87,8 +88,14 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
     void setUpAndStartSrvMonitor() {
 
         srvMonitor.registerOnCreatedSrvRecordListener((SrvRecord srvRecord) -> {
-            // TODO: need a way to ignore current node's SRV record
             logger.info("Detected App Node SRV record creation: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+
+            // if we discover the current instance's srv record...
+            if (RouteRepresentationUtil.isHostLocalhost(srvRecord.getHost()) && srvRecord.getPort() == getBindPort()) {
+                logger.info("Skipping issue open backend command to local instance: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+                return; // then ignore it and do not connect
+            }
+
             final boolean didIssueCommand = connectToBackend(srvRecord.getUniqueIdentifier());
 
             if (didIssueCommand) {
@@ -107,6 +114,12 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
         srvMonitor.registerOnDeletedSrvRecordListener((SrvRecord srvRecord) -> {
             logger.info("Detected App Node SRV record deletion: host={} port={}",
                     srvRecord.getHost(), srvRecord.getPort());
+
+            // if we discover the current instance's srv record...
+            if (RouteRepresentationUtil.isHostLocalhost(srvRecord.getHost()) && srvRecord.getPort() == getBindPort()) {
+                logger.info("Skipping issue close backend command to local instance: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+                return; // then ignore it and do not issue unnecessary disconnect command
+            }
 
             final boolean didIssueCommand = disconnectFromBackend(srvRecord.getUniqueIdentifier());
 
@@ -163,7 +176,7 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
     @Override
     // TODO: make some intermediary connection service that takes care of this and srv monitor
     public boolean connectToBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
-        final String backendAddress = RouteRepresentationUtil.buildBackendAddress(
+        final String backendAddress = RouteRepresentationUtil.buildTcpAddress(
                 srvUniqueIdentifier.getHost(),
                 srvUniqueIdentifier.getPort());
 
@@ -178,7 +191,7 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
 
     @Override
     public boolean disconnectFromBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
-        final String backendAddress = RouteRepresentationUtil.buildBackendAddress(
+        final String backendAddress = RouteRepresentationUtil.buildTcpAddress(
                 srvUniqueIdentifier.getHost(),
                 srvUniqueIdentifier.getPort());
 
@@ -209,13 +222,13 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
         this.bindPort = bindPort;
     }
 
-    public String getControlBindAddress() {
-        return controlBindAddress;
+    public Integer getControlBindPort() {
+        return controlBindPort;
     }
 
     @Inject
-    public void setControlBindAddress(@Named(CONTROL_BIND_ADDR) String controlBindAddress) {
-        this.controlBindAddress = controlBindAddress;
+    public void setControlBindPort(@Named(CONTROL_BIND_PORT) Integer controlBindPort) {
+        this.controlBindPort = controlBindPort;
     }
 
     public String getControlAddress() {

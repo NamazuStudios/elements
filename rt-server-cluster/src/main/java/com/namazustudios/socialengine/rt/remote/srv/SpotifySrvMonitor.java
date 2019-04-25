@@ -48,6 +48,8 @@ public class SpotifySrvMonitor implements SrvMonitor, ErrorHandler, ChangeNotifi
 //                            final SrvRecord srvRecord = new SrvRecord("appnode.tcp.namazustudios.com.", 28883, 10, 10, 10);
                             final SrvRecord srvRecord = new SrvRecord("localhost.", 28883, 10, 10, 10);
                             notifyCreationListeners(srvRecord);
+                            final SrvRecord srvRecord2 = new SrvRecord("localhost.", 28884, 10, 10, 10);
+                            notifyCreationListeners(srvRecord2);
                         }
                     },
                     5000

@@ -76,7 +76,9 @@ public class LuaResource implements Resource {
     /**
      * Redirects the print function to the logger returned by {@link #getScriptLog()}.
      */
-    private final JavaFunction printToScriptLog = new ScriptLogger(s -> getScriptLog().info("{}", s));
+    // TODO: undo this (commented out to clean out debug logs)
+//    private final JavaFunction printToScriptLog = new ScriptLogger(s -> getScriptLog().info("{}", s));
+    private final JavaFunction printToScriptLog = new ScriptLogger(s -> {});
 
     /**
      * Creates an instance of {@link LuaResource} with the given {@link LuaState}

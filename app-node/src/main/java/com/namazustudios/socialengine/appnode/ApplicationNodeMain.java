@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.appnode;
 
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
+import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.CommandPreamble;
 import com.namazustudios.socialengine.rt.jeromq.Connection;
 import com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder;
@@ -13,7 +14,7 @@ import org.zeromq.ZMsg;
 import java.util.Properties;
 
 import static com.namazustudios.socialengine.appnode.Constants.CONTROL_REQUEST_TIMEOUT;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.CONTROL_BIND_ADDR;
+import static com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.CONTROL_BIND_PORT;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.STATUS_REQUEST;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static java.lang.String.format;
@@ -38,7 +39,8 @@ public class ApplicationNodeMain {
             if(arg.equalsIgnoreCase("--status-check")) {
                 final Properties properties = defaultConfigurationSupplier.get();
 
-                String statusCheckAddress = properties.getProperty(CONTROL_BIND_ADDR);
+                final Integer port = Integer.parseInt(properties.getProperty(CONTROL_BIND_PORT));
+                final String statusCheckAddress = RouteRepresentationUtil.buildTcpAddress("*", port);
 
                 logger.info(format("Performing status check on %s...", statusCheckAddress));
 
@@ -46,7 +48,7 @@ public class ApplicationNodeMain {
 
                 try (ZContext context = new ZContext()) {
                     try (final Connection connection = from(context, c -> c.createSocket(REQ))) {
-                        connection.socket().connect(properties.getProperty(CONTROL_BIND_ADDR));
+                        connection.socket().connect(properties.getProperty(statusCheckAddress));
 
                         try {
                             connection.socket().setReceiveTimeOut(Integer.parseInt(properties.getProperty(CONTROL_REQUEST_TIMEOUT)));

@@ -18,7 +18,7 @@ public class RouteRepresentationUtil {
 
     private static final Charset UTF_8 = Charset.forName("UTF-8");
 
-    public static String buildBackendAddress(final String host, final int port) {
+    public static String buildTcpAddress(final String host, final int port) {
         if (host == null || host.length() == 0 || port < 0) {
             return null;
         }
@@ -35,6 +35,30 @@ public class RouteRepresentationUtil {
         final String backendAddress = "tcp://" + validatedHost + ":" + port;
 
         return backendAddress;
+    }
+
+    public static boolean isHostLocalhost(final String host) {
+        final String validatedHost;
+
+        if (host.endsWith(".")) {
+            validatedHost = host.substring(0, host.length() - 1);
+        }
+        else {
+            validatedHost = host;
+        }
+
+        // TODO: should get this list validated
+        if (validatedHost.equals("localhost")
+                || validatedHost.equals("*")
+                || validatedHost.equals("::1")
+                || validatedHost.equals("127.0.0.1")
+                || validatedHost.equals("0.0.0.0")
+        ) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     /**
