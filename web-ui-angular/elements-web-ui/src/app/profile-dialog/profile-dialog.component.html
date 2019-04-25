@@ -25,10 +25,10 @@
 
       <div class="prof-form-row">
         <mat-form-field>
-          <input matInput disabled placeholder="Name" name="userName" [value]="data.profile.user ? data.profile.user.name : ''">
+          <input matInput disabled placeholder="Name" name="userName" formControlName="userName" [value]="data.profile.user ? data.profile.user.name : ''">
         </mat-form-field>
         <mat-form-field>
-          <input matInput disabled placeholder="Email" name="userEmail" [value]="data.profile.user ? data.profile.user.email : ''">
+          <input matInput disabled placeholder="Email" name="userEmail" formControlName="userEmail" [value]="data.profile.user ? data.profile.user.email : ''">
         </mat-form-field>
       </div>
 
