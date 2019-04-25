@@ -14,6 +14,8 @@
     <a mat-menu-item (click)="addApplicationConfiguration('FIREBASE')">Add Firebase</a>
     <a mat-menu-item (click)="addApplicationConfiguration('MATCHMAKING')">Add Matchmaking</a>
     <a mat-menu-item (click)="addApplicationConfiguration('AMAZON_GAME_ON')">Add Amazon Game On</a>
+    <a mat-menu-item (click)="addApplicationConfiguration('IOS_APP_STORE')">Add iOS App Store</a>
+    <a mat-menu-item (click)="addApplicationConfiguration('ANDROID_GOOGLE_PLAY')">Add Google Play</a>
   </mat-menu>
 
   <button mat-raised-button color="primary" (click)="deleteSelectedApplicationConfigurations()" [disabled]="!hasSelection">Delete Selected</button>

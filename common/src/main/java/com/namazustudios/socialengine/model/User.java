@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.model;
 
 import com.namazustudios.socialengine.Constants;
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -25,6 +26,11 @@ public class User implements Serializable {
     @NotNull
     @Pattern(regexp = Constants.Regexp.EMAIL_ADDRESS)
     private String email;
+
+    @ApiModelProperty("The user's plaintext password, only to be provided in POST/PUT requests in the User Resource " +
+            "REST API interface. In the future, a dedicated REST API model may be constructed instead of using a " +
+            "direct User model.")
+    private String password;
 
     @NotNull
     private Level level;
@@ -123,6 +129,14 @@ public class User implements Serializable {
         this.email = email;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     /**
      * Gets the user's access level.
      * @return
@@ -187,6 +201,7 @@ public class User implements Serializable {
         if (getId() != null ? !getId().equals(user.getId()) : user.getId() != null) return false;
         if (getName() != null ? !getName().equals(user.getName()) : user.getName() != null) return false;
         if (getEmail() != null ? !getEmail().equals(user.getEmail()) : user.getEmail() != null) return false;
+        if (getPassword() != null ? !getPassword().equals(user.getPassword()) : user.getPassword() != null) return false;
         if (getLevel() != user.getLevel()) return false;
         return getFacebookId() != null ? getFacebookId().equals(user.getFacebookId()) : user.getFacebookId() == null;
     }
@@ -197,6 +212,7 @@ public class User implements Serializable {
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getEmail() != null ? getEmail().hashCode() : 0);
         result = 31 * result + (getLevel() != null ? getLevel().hashCode() : 0);
+        result = 31 * result + (getPassword() != null ? getPassword().hashCode() : 0);
         result = 31 * result + (isActive() ? 1 : 0);
         result = 31 * result + (getFacebookId() != null ? getFacebookId().hashCode() : 0);
         return result;

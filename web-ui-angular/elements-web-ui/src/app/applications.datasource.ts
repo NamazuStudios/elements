@@ -26,11 +26,11 @@ export class ApplicationsDataSource implements DataSource<Application> {
   }
 
   // add in search when ready
-  loadApplications(search:string, offset: number, count: number) {
+  loadApplications(search: string, offset: number, count: number) {
     this.loadingSubject.next(true);
 
     // add search when ready
-    this.applicationsService.getApplications({ offset: offset, count: count })
+    this.applicationsService.getApplications({ offset: offset, count: count, search: search })
       .pipe(
         catchError(() => of({ objects: [], total: 0 })),
         finalize(() => this.loadingSubject.next(false)))

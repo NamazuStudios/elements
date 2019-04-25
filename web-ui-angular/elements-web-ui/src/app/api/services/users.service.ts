@@ -112,7 +112,7 @@ class UsersService extends BaseService {
     let __headers = new HttpHeaders();
     let __body: any = null;
 
-    if (params.password != null) __params = __params.set('password', params.password.toString());
+    //if (params.password != null) __params = __params.set('password', params.password.toString());
     __body = params.body;
     let req = new HttpRequest<any>(
       'PUT',
@@ -257,7 +257,7 @@ class UsersService extends BaseService {
     let __headers = new HttpHeaders();
     let __body: any = null;
 
-    if (params.password != null) __params = __params.set('password', params.password.toString());
+    //if (params.password != null) __params = __params.set('password', params.password.toString());
     __body = params.body;
     let req = new HttpRequest<any>(
       'POST',

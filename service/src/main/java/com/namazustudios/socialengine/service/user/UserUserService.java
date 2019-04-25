@@ -55,7 +55,7 @@ public class UserUserService extends AnonUserService implements UserService {
     @Override
     public User updateUser(User user) {
 
-        checkForCurrentUser(user.getName());
+        checkForCurrentUser(user.getId());
 
         // Regular users cannot change their own level or change their name.  The underlying DAO
         // may support name changes, but this cannot be done here.

@@ -118,7 +118,7 @@ public class V1StandardSecurityGamePrizeInvoker implements GameOnGamePrizeInvoke
 
         final ErrorResponse error = response.readEntity(ErrorResponse.class);
 
-        final String errorMessage = error.getMessage() != null ? error.getMessage() : error.getError().getMessage();
+        final String errorMessage = error.getMessage() != null ? error.getMessage() : error.getMessage();
 
         if (FORBIDDEN.getStatusCode() == response.getStatus()) {
             throw new ForbiddenException("Player forbidden by GameOn: " + errorMessage);

@@ -20,13 +20,17 @@ export class MissionDialogComponent implements OnInit {
   @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
   @ViewChild(MissionStepsCardComponent) stepsCard: MissionStepsCardComponent;
 
+  originalMetadata = JSON.parse(JSON.stringify(this.data.mission.metadata || {}));
+  originalSteps = JSON.parse(JSON.stringify(this.data.mission.steps || []));
+  originalFinalStep = JSON.parse(JSON.stringify(this.data.mission.finalRepeatStep || null));
+
   selectable = true;
   removable = true;
   addOnBlur = true;
   readonly separatorKeyCodes: number[] = [ENTER, COMMA];
 
   missionForm = this.formBuilder.group({
-    name: [ this.data.mission.name, [Validators.required, Validators.pattern('^[a-zA-Z0-9]+$') ]],
+    name: [ this.data.mission.name, [Validators.required, Validators.pattern('^[_a-zA-Z0-9]+$') ]],
     displayName: [ this.data.mission.displayName, [Validators.required]],
     description: [ this.data.mission.description ],
     tags: []
@@ -63,6 +67,9 @@ export class MissionDialogComponent implements OnInit {
     // simply close editor without making any changes to data
     if (!saveChanges) {
       this.dialogRef.close();
+      this.data.mission.metadata = this.originalMetadata;
+      this.data.mission.steps = this.originalSteps;
+      this.data.mission.finalRepeatStep = this.originalFinalStep;
       return;
     }
 

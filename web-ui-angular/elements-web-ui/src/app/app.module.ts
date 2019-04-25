@@ -42,6 +42,11 @@ import { MissionDialogComponent } from './mission-dialog/mission-dialog.componen
 import { MissionStepsCardComponent } from './mission-dialog/mission-steps-card/mission-steps-card.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MissionRewardsEditorComponent } from './mission-dialog/mission-rewards-editor/mission-rewards-editor.component';
+import { IosApplicationConfigurationDialogComponent } from './ios-application-configuration-dialog/ios-application-configuration-dialog.component';
+import { AndroidGooglePlayConfigurationDialogComponent } from './android-google-play-configuration-dialog/android-google-play-configuration-dialog.component';
+import { ProductBundleListComponent } from './product-bundle-list/product-bundle-list.component';
+import { ProductBundleEditorComponent } from './product-bundle-editor/product-bundle-editor.component';
+import { BundleRewardsEditorComponent } from './bundle-rewards-editor/bundle-rewards-editor.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -58,7 +63,10 @@ export function initialize(configService: ConfigService) {
     FirebaseApplicationConfigurationDialogComponent,
     MatchmakingApplicationConfigurationDialogComponent,
     GameOnApplicationConfigurationDialogComponent,
-    GameOnPrizeDialogComponent
+    GameOnPrizeDialogComponent,
+    IosApplicationConfigurationDialogComponent,
+    AndroidGooglePlayConfigurationDialogComponent,
+    ProductBundleEditorComponent
   ],
   declarations: [
     AppComponent,
@@ -86,6 +94,11 @@ export function initialize(configService: ConfigService) {
     MissionDialogComponent,
     MissionStepsCardComponent,
     MissionRewardsEditorComponent,
+    IosApplicationConfigurationDialogComponent,
+    AndroidGooglePlayConfigurationDialogComponent,
+    ProductBundleListComponent,
+    ProductBundleEditorComponent,
+    BundleRewardsEditorComponent,
   ],
   imports: [
     BrowserModule,

@@ -23,9 +23,9 @@ export class UserDialogComponent implements OnInit {
 
   userForm = this.formBuilder.group({
     id: [ this.data.user.id ],
-    name: [ this.data.user.name, [ Validators.required, Validators.pattern('^[a-zA-Z0-9]+$') ]],
+    name: [ this.data.user.name, [ Validators.required, Validators.pattern('^\\S+$') ]],
     email: [ this.data.user.email, [ Validators.required, Validators.email ]],
-    password: [ '' ],
+    password: [ '', [ Validators.pattern('^\\S+$') ]],
     passwordConfirmation: [ '', this.passwordMatchValidator ],
     level: [ this.data.user.level, Validators.required ]
   });

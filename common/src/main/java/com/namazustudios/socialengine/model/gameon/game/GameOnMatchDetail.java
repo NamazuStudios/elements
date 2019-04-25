@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @ApiModel(description = "Represents a GameOn Match.  Maps direclty to the Amazon GameOn APIs.  Contains slightly more" +
@@ -37,6 +38,9 @@ public class GameOnMatchDetail {
 
     @ApiModelProperty("Remaining number of attempts if the player is already in the match.")
     private Integer attemptsRemaining;
+
+    @ApiModelProperty("The metadata of the tournament - text for any additional information (e.g. Rules, Disclaimers, etc.)")
+    private String metadata;
 
     public String getMatchId() {
         return matchId;
@@ -110,6 +114,14 @@ public class GameOnMatchDetail {
         this.attemptsRemaining = attemptsRemaining;
     }
 
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -123,13 +135,14 @@ public class GameOnMatchDetail {
                 Objects.equals(getLastScoreDate(), that.getLastScoreDate()) &&
                 Objects.equals(getScore(), that.getScore()) &&
                 Objects.equals(getScoreDate(), that.getScoreDate()) &&
-                Objects.equals(getAttemptsRemaining(), that.getAttemptsRemaining());
+                Objects.equals(getAttemptsRemaining(), that.getAttemptsRemaining()) &&
+                Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(getMatchId(), getTournamentDetails(), getAwardedPrizes(), getCanEnter(), getLastScore(), getLastScoreDate(), getScore(), getScoreDate(), getAttemptsRemaining());
+        return Objects.hash(getMatchId(), getTournamentDetails(), getAwardedPrizes(), getCanEnter(), getLastScore(), getLastScoreDate(), getScore(), getScoreDate(), getAttemptsRemaining(), getMetadata());
     }
 
     @Override
@@ -144,6 +157,7 @@ public class GameOnMatchDetail {
                 ", score=" + score +
                 ", scoreDate=" + scoreDate +
                 ", attemptsRemaining=" + attemptsRemaining +
+                ", metadata='" + metadata + '\'' +
                 '}';
     }
 
