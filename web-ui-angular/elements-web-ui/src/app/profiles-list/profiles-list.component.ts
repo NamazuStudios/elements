@@ -73,7 +73,7 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
         this.input.nativeElement.value,
         this.paginator.pageIndex * this.paginator.pageSize,
         this.paginator.pageSize);
-    }, delay)
+    }, delay);
   }
 
   /** Whether the number of selected elements matches the total number of rows. */
