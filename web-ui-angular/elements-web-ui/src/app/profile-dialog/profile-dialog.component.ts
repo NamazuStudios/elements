@@ -73,12 +73,6 @@ export class ProfileDialogComponent implements OnInit {
     });
   }
 
-  refresh(delay = 500) {
-    setTimeout(() => {
-      this.dat
-    }, delay);
-  }
-
   compareApps(app1, app2) {
     return app1.name == app2.name;
   }
