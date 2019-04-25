@@ -24,7 +24,8 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
   dataSource: ProfilesDataSource;
   displayedColumns = ["select", "id", "name", "userName", "userEmail", "applicationName", "actions"];
   currentProfiles: Array<Profile> = [];
-  allApplications = [{name: "All"}];
+  allApplications = [];
+  selectAll = {name: "All"};
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild('input') input: ElementRef;
@@ -119,7 +120,7 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
   showDialog(isNew: boolean, profile: Profile, next) {
     this.dialog.open(ProfileDialogComponent, {
       width: '900px',
-      data: { isNew: isNew, profile: profile, next: next, refresher: this, applications: this.allApplications.length > 1 ? this.allApplications.slice(1) : []}
+      data: { isNew: isNew, profile: profile, next: next, refresher: this, applications: this.allApplications }
     });
   }
 
@@ -135,8 +136,13 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
     });
   }
 
+  compareApps(app1, app2) {
+    return app1.name == app2.name;
+  }
+
   filterByApplication(application) {
-    if (application.name == "All") {
+    const name = application.name;
+    if (name == "All") {
 
     }
   }
