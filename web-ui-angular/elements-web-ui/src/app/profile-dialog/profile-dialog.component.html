@@ -18,7 +18,7 @@
       <div class="prof-form-row">
         <h2>User Info</h2>
         <div class="user-buttons">
-          <button color="primary" type="button" mat-raised-button>Select User</button>
+          <button color="primary" type="button" mat-raised-button (click)="showSelectUserDialog()">Select User</button>
           <button color="primary" type="button" mat-raised-button [disabled]="!data.profile.user" (click)="showEditUserDialog(data.profile.user)">Edit User</button>
         </div>
       </div>
