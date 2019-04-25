@@ -7,6 +7,7 @@ import {Application} from '../api/models/application';
 import {User} from '../api/models/user';
 import {UserDialogComponent} from '../user-dialog/user-dialog.component';
 import {UsersService} from '../api/services/users.service';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-profile-dialog',
@@ -64,10 +65,14 @@ export class ProfileDialogComponent implements OnInit {
     this.dialog.open(UserDialogComponent, {
       width: "500px",
       data: {
-        isNew: false, user: user, refresher: this, next: result => {
+        isNew: false, user: user, next: result => {
           const password = result.password;
           delete result.passwordConfirmation;
-          return this.usersService.updateUser({name: user.name, password: password, body: result});
+          return this.usersService.updateUser({name: user.name, password: password, body: result}).pipe(
+            map(r => {
+              this.data.profile.user = r;
+            })
+          );
         }
       }
     });
