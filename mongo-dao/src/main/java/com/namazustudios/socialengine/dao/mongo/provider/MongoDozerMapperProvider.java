@@ -10,10 +10,7 @@ import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatchSnapshot;
-import com.namazustudios.socialengine.dao.mongo.model.mission.MongoMission;
-import com.namazustudios.socialengine.dao.mongo.model.mission.MongoReward;
-import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuance;
-import com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgress;
+import com.namazustudios.socialengine.dao.mongo.model.mission.*;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.*;
 import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
@@ -25,6 +22,8 @@ import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.mission.Mission;
+import com.namazustudios.socialengine.model.mission.ProgressMissionInfo;
+import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.reward.Reward;
 import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import com.namazustudios.socialengine.model.mission.Progress;
@@ -88,10 +87,12 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(Profile.class, MongoProfile.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))
-                .fields("application.id", "application.objectId", customConverter(ObjectIdConverter.class));
+                .fields("application.id", "application.objectId", customConverter(ObjectIdConverter.class))
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(Match.class, MongoMatch.class)
-                .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+                .fields("id", "objectId", customConverter(ObjectIdConverter.class))
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(MongoMatch.class, MongoMatchSnapshot.class)
                 .fields("player.objectId", "player.objectId", customConverter(ObjectIdConverter.class))
@@ -122,7 +123,8 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("deviceOSType", "objectId.deviceOSType");
 
             mapping(Item.class, MongoItem.class)
-                .fields("id","objectId", customConverter(ObjectIdConverter.class));
+                .fields("id","objectId", customConverter(ObjectIdConverter.class))
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(InventoryItem.class, MongoInventoryItem.class)
                 .fields("id","objectId", customConverter(MongoInventoryItemIdConverter.class))
@@ -131,7 +133,8 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("item.id", "objectId.itemObjectId", customConverter(ObjectIdConverter.class));
 
             mapping(Mission.class, MongoMission.class)
-                .fields("id","objectId", customConverter(ObjectIdConverter.class));
+                .fields("id","objectId", customConverter(ObjectIdConverter.class))
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(Progress.class, MongoProgress.class)
                 .fields("id","objectId", customConverter(MongoProgressIdConverter.class))
@@ -139,7 +142,21 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("mission.id", "objectId.missionId", customConverter(ObjectIdConverter.class));
 
             mapping(RewardIssuance.class, MongoRewardIssuance.class)
-                .fields("id","objectId", customConverter(MongoRewardIssuanceIdConverter.class));
+                .fields("id","objectId", customConverter(MongoRewardIssuanceIdConverter.class))
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));
+
+            mapping(Reward.class, MongoReward.class)
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));
+
+            mapping(ProgressMissionInfo.class, MongoProgressMissionInfo.class)
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));
+
+            mapping(Step.class, MongoStep.class)
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));
+
+            mapping(ProductBundle.class, MongoProductBundle.class)
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));
+
             }
         };
 
