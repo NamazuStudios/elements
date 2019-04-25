@@ -24,9 +24,10 @@ export class ProfileDialogComponent implements OnInit {
   profileForm = this.formBuilder.group({
     displayName: [this.data.profile.displayName, [Validators.required]],
     imageUrl: [this.data.profile.imageUrl],
-    application: [this.data.profile.application, [Validators.required]],
+    application: [{value: this.data.profile.application, disabled: !this.data.isNew}, [Validators.required]],
     userName: [{value: this.data.profile.user ? this.data.profile.user.name : undefined, disabled: true}, [Validators.required]],
-    userEmail: [{value: this.data.profile.user ? this.data.profile.user.email : undefined, disabled: true}, [Validators.required]]
+    userEmail: [{value: this.data.profile.user ? this.data.profile.user.email : undefined, disabled: true}, [Validators.required]],
+    userFacebook: [{value: this.data.profile.user ? this.data.profile.user.facebookId : undefined, disabled : true}]
   });
 
   constructor(public dialogRef: MatDialogRef<ProfileDialogComponent>, public dialog: MatDialog,
@@ -96,6 +97,8 @@ export class ProfileDialogComponent implements OnInit {
   }
 
   compareApps(app1, app2) {
+    if (app1 == undefined || app2 == undefined) return false;
+    if (app1 == null && app2 == null) return true;
     return app1.name == app2.name;
   }
 
