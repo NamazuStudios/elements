@@ -137,7 +137,6 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
   }
 
   filterByApplication(applicationId) {
-    console.log(applicationId);
     if (applicationId == "All") {
       this.refresh(0);
       return;
