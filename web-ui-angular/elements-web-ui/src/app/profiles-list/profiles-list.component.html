@@ -15,11 +15,11 @@
 
     <mat-form-field>
       <mat-label>Application</mat-label>
-      <mat-select [(value)]="selectAll" [compareWith]="compareApps" (valueChange)="filterByApplication($event)">
-        <mat-option [value]="selectAll">
+      <mat-select value="All"  (selectionChange)="filterByApplication($event.value)">
+        <mat-option value="All">
           All
         </mat-option>
-        <mat-option *ngFor="let application of allApplications" [value]="application">
+        <mat-option *ngFor="let application of allApplications" [value]="application.id">
           {{application.name}}
         </mat-option>
       </mat-select>

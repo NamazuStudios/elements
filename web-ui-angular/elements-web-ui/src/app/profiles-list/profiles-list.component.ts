@@ -25,7 +25,7 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
   displayedColumns = ["select", "id", "name", "userName", "userEmail", "applicationName", "actions"];
   currentProfiles: Array<Profile> = [];
   allApplications = [];
-  selectAll = {name: "All"};
+  selectAll = {id: "All", name: "All"};
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild('input') input: ElementRef;
@@ -136,14 +136,20 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  compareApps(app1, app2) {
-    return app1.name == app2.name;
-  }
-
-  filterByApplication(application) {
-    const name = application.name;
-    if (name == "All") {
-
+  filterByApplication(applicationId) {
+    console.log(applicationId);
+    if (applicationId == "All") {
+      this.refresh(0);
+      return;
     }
+
+    setTimeout(() => {
+      this.selection.clear();
+      this.dataSource.loadProfiles(
+        `userId="${applicationId}"`,
+        0,
+        this.paginator.pageSize
+      );
+    }, 0);
   }
 }
