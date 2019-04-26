@@ -47,7 +47,7 @@
     </div>
   </form>
 
-  <div id="lastLogin" #lastLogin>Last Login: 2019-04-22 23:34:05</div>
+  <div id="lastLogin">Last Login: {{data.profile.lastLogin ? data.profile.lastLogin : "N/A"}}</div>
 
   <app-json-editor-card [editTarget]="data.profile" topic="Profile"></app-json-editor-card>
 </div>
