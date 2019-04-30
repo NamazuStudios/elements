@@ -102,4 +102,10 @@ export class ProfileDialogComponent implements OnInit {
     return app1.name == app2.name;
   }
 
+  parseDate(timestamp: number) {
+    const date = new Date(timestamp);
+
+    return date;
+  }
+
 }
