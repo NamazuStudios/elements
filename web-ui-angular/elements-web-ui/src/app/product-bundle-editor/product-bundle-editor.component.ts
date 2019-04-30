@@ -36,6 +36,8 @@ export class ProductBundleEditorComponent implements OnInit {
       return;
     }
 
+    this.editorCard.validateMetadata(true);
+
     const formData = this.productBundleForm.value;
     if (this.data.productBundle !== undefined) {
       formData.metadata = this.data.productBundle.metadata;
