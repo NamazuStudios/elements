@@ -41,6 +41,9 @@ public class GameOnTournamentResource {
             @QueryParam("filterBy")
             final TournamentFilter filterBy,
 
+            @QueryParam("limit")
+            final int limit,
+
             @QueryParam("period")
             final TournamentPeriod period,
 
@@ -57,7 +60,7 @@ public class GameOnTournamentResource {
         return eligibleOnly ?
             getGameOnTournamentService().getEligibleTournaments(
                 deviceOSType, appBuildType,             // Session related parameters
-                filterBy, period, playerAttributes) :   // Filter/query related parameters
+                filterBy, limit, period, playerAttributes) :   // Filter/query related parameters
             getGameOnTournamentService().getTournaments(
                 deviceOSType, appBuildType,             // Session related parameters
                 filterBy, period, playerAttributes);    // Filter/query related parameters

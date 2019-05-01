@@ -33,6 +33,8 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
 
     public static final String ENTER = "enter";
 
+    public static final String LIMIT = "limit";
+
     public static final String PERIOD = "period";
 
     public static final String LEADERBOARD = "leaderboard";
@@ -40,8 +42,6 @@ public class V1GameOnMatchInvoker implements GameOnMatchInvoker {
     public static final String FILTER_BY = "filterBy";
 
     public static final String PLAYER_ATTRIBUTES = "playerAttributes";
-
-    public static final String LIMIT = "limit";
 
     public static final String CURSOR = "cursor";
 

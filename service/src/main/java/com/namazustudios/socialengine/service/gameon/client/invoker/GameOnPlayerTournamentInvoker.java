@@ -15,6 +15,7 @@ public interface GameOnPlayerTournamentInvoker {
 
     List<GameOnTournamentSummary> getSummaries(
             TournamentFilter filterBy,
+            int limit,
             TournamentPeriod period,
             String playerAttributes);
 

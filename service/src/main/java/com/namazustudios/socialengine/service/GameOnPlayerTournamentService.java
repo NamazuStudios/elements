@@ -15,14 +15,15 @@ public interface GameOnPlayerTournamentService {
      * @param deviceOSType the device OS type, used to select the {@link GameOnSession} to use
      * @param appBuildType the app build type
      * @param filterBy the filtering parameters
-     * @param period
+     * @param limit the maximum number of tournaments to retrieve
+     * @param period the period of time for the start date of the tournament (e.g. week = up to one week in the future)
      * @param playerAttributes the player attributes, specified as a string
      * @return a {@link List<GameOnTournamentSummary>}, never null
      */
     List<GameOnTournamentSummary> getEligibleTournaments(
             DeviceOSType deviceOSType, AppBuildType appBuildType,
-            TournamentFilter filterBy, TournamentPeriod period,
-            String playerAttributes);
+            TournamentFilter filterBy, int limit,
+            TournamentPeriod period, String playerAttributes);
 
     /**
      * Gets details for a specific tournament.  For a tournament to be eligible, the player must meet all eligibility
