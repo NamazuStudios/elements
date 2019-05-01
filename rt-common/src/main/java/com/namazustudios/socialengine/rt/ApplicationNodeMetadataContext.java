@@ -12,7 +12,7 @@ import java.util.UUID;
 public interface ApplicationNodeMetadataContext {
 
     @RemotelyInvokable
-    UUID getUUID();
+    UUID getUuid();
 
     @RemotelyInvokable
     int getResourceAllocation();
