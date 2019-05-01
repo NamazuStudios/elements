@@ -11,8 +11,8 @@ import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.ConnectionService;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
-import com.namazustudios.socialengine.rt.remote.srv.SpotifySrvMonitor;
-import com.namazustudios.socialengine.rt.remote.srv.SrvMonitor;
+import com.namazustudios.socialengine.rt.srv.SpotifySrvMonitorService;
+import com.namazustudios.socialengine.rt.srv.SrvMonitorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -41,8 +41,8 @@ public class MultiNodeContainerModule extends AbstractModule {
             .to(JeroMQDemultiplexedConnectionService.class)
             .asEagerSingleton();
 
-        bind(SrvMonitor.class)
-            .to(SpotifySrvMonitor.class)
+        bind(SrvMonitorService.class)
+            .to(SpotifySrvMonitorService.class)
             .asEagerSingleton();
 
         bind(new TypeLiteral<Set<Node>>(){})

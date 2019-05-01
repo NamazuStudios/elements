@@ -1,17 +1,5 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionService;
-import com.namazustudios.socialengine.rt.remote.ConnectionService;
-import com.namazustudios.socialengine.rt.remote.srv.SpotifySrvMonitor;
-import com.namazustudios.socialengine.rt.remote.srv.SrvMonitor;
-import org.testng.annotations.Test;
-import org.zeromq.ZContext;
-
-import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionService.APPLICATION_NODE_FQDN;
-
 public class JeroMQMultiplexerTest {
 
 //    @Test(expectedExceptions = IllegalArgumentException.class)
@@ -31,8 +19,8 @@ public class JeroMQMultiplexerTest {
 //                    .to(JeroMQMultiplexedConnectionService.class)
 //                    .asEagerSingleton();
 //
-//                bind(SrvMonitor.class)
-//                        .to(SpotifySrvMonitor.class)
+//                bind(SrvMonitorService.class)
+//                        .to(SpotifySrvMonitorService.class)
 //                        .asEagerSingleton();
 //
 //            }

@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.remote.srv;
+package com.namazustudios.socialengine.rt.srv;
 
 import com.spotify.dns.*;
 
@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class SpotifySrvMonitor implements SrvMonitor, ErrorHandler, ChangeNotifier.Listener<LookupResult> {
+public class SpotifySrvMonitorService implements SrvMonitorService, ErrorHandler, ChangeNotifier.Listener<LookupResult> {
 
     private String fqdn;
     private boolean monitoring = false;
@@ -26,7 +26,7 @@ public class SpotifySrvMonitor implements SrvMonitor, ErrorHandler, ChangeNotifi
 
     public boolean start(final String fqdn) {
         if (monitoring) {
-            throw new IllegalStateException("SpotifySrvMonitor is already started.");
+            throw new IllegalStateException("SpotifySrvMonitorService is already started.");
         }
 
         DnsSrvWatcher<LookupResult> watcher = createSpotifyWatcher();
@@ -84,7 +84,7 @@ public class SpotifySrvMonitor implements SrvMonitor, ErrorHandler, ChangeNotifi
 
     public void stop() {
         if (!monitoring) {
-            throw new IllegalStateException("SpotifySrvMonitor has not been started.");
+            throw new IllegalStateException("SpotifySrvMonitorService has not been started.");
         }
 
         if (notifier != null) {

@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.jeromq.*;
-import com.namazustudios.socialengine.rt.remote.srv.SrvMonitor;
-import com.namazustudios.socialengine.rt.remote.srv.SrvRecord;
-import com.namazustudios.socialengine.rt.remote.srv.SrvUniqueIdentifier;
+import com.namazustudios.socialengine.rt.srv.SrvMonitorService;
+import com.namazustudios.socialengine.rt.srv.SrvRecord;
+import com.namazustudios.socialengine.rt.srv.SrvUniqueIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.*;
@@ -36,7 +36,7 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
 
     private final String controlAddress = format("inproc://%s.control", randomUUID());
 
-    private SrvMonitor srvMonitor;
+    private SrvMonitorService srvMonitorService;
 
     @Override
     public void start() {
@@ -69,7 +69,7 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
 
     private void setUpAndStartSrvMonitor() {
 
-        srvMonitor.registerOnCreatedSrvRecordListener((SrvRecord srvRecord) -> {
+        srvMonitorService.registerOnCreatedSrvRecordListener((SrvRecord srvRecord) -> {
             logger.info("Detected App Node SRV record creation: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
             final boolean didIssueCommand = connectToBackend(srvRecord.getUniqueIdentifier());
 
@@ -81,12 +81,12 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
             }
         });
 
-        srvMonitor.registerOnUpdatedSrvRecordListener((SrvRecord srvRecord) -> {
+        srvMonitorService.registerOnUpdatedSrvRecordListener((SrvRecord srvRecord) -> {
             // for now, ignore updates
             logger.info("Detected App Node SRV record update: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
         });
 
-        srvMonitor.registerOnDeletedSrvRecordListener((SrvRecord srvRecord) -> {
+        srvMonitorService.registerOnDeletedSrvRecordListener((SrvRecord srvRecord) -> {
             logger.info("Detected App Node SRV record deletion: host={} port={}",
                     srvRecord.getHost(), srvRecord.getPort());
 
@@ -101,7 +101,7 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
         });
 
         logger.info("Starting SRV record monitor for FQDN: {}...", applicationNodeFqdn);
-        final boolean didStart = srvMonitor.start(applicationNodeFqdn);
+        final boolean didStart = srvMonitorService.start(applicationNodeFqdn);
 
         if (didStart) {
             logger.info("Successfully started SRV record monitor for FQDN: {}", applicationNodeFqdn);
@@ -194,13 +194,13 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
         return controlAddress;
     }
 
-    public SrvMonitor getSrvMonitor() {
-        return srvMonitor;
+    public SrvMonitorService getSrvMonitorService() {
+        return srvMonitorService;
     }
 
     @Inject
-    public void setSrvMonitor(SrvMonitor srvMonitor) {
-        this.srvMonitor = srvMonitor;
+    public void setSrvMonitorService(SrvMonitorService srvMonitorService) {
+        this.srvMonitorService = srvMonitorService;
     }
 
 }

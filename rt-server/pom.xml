@@ -48,6 +48,11 @@
             <version>${guice.version}</version>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>com.spotify</groupId>
+            <artifactId>dns</artifactId>
+            <version>3.1.5</version>
+        </dependency>
     </dependencies>
 
 </project>

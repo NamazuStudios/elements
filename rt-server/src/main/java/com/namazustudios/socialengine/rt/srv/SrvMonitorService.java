@@ -1,9 +1,9 @@
-package com.namazustudios.socialengine.rt.remote.srv;
+package com.namazustudios.socialengine.rt.srv;
 
 import java.util.Set;
 import java.util.function.Consumer;
 
-public interface SrvMonitor {
+public interface SrvMonitorService {
 
     /**
      * Begins monitoring for SRV records that match the given FQDN.

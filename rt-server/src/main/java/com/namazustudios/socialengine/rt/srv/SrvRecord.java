@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.remote.srv;
+package com.namazustudios.socialengine.rt.srv;
 
 import com.spotify.dns.LookupResult;
 

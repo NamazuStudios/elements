@@ -6,7 +6,7 @@ import java.util.UUID;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.ROUTING_COMMAND;
 import com.namazustudios.socialengine.rt.remote.RoutingCommand.Action;
-import com.namazustudios.socialengine.rt.remote.srv.SrvUniqueIdentifier;
+import com.namazustudios.socialengine.rt.srv.SrvUniqueIdentifier;
 
 import static com.namazustudios.socialengine.rt.remote.RoutingCommand.buildRoutingCommand;
 import static com.namazustudios.socialengine.rt.remote.RoutingCommand.Action.*;

@@ -2,10 +2,7 @@ package com.namazustudios.socialengine.appnode;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.namazustudios.socialengine.appnode.guice.JaxRSClientModule;
-import com.namazustudios.socialengine.appnode.guice.MultiNodeContainerModule;
-import com.namazustudios.socialengine.appnode.guice.ServicesModule;
-import com.namazustudios.socialengine.appnode.guice.VersionModule;
+import com.namazustudios.socialengine.appnode.guice.*;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
@@ -35,6 +32,7 @@ public class ApplicationNode {
                 new MongoSearchModule(),
                 new RTFilesystemGitLoaderModule(),
                 new MultiNodeContainerModule(),
+                new ApplicationNodeMetadataContextModule(),
                 new FirebaseAppFactoryModule(),
                 new GuiceStandardNotificationFactoryModule(),
                 new JaxRSClientModule(),
