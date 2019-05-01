@@ -63,7 +63,7 @@ public class GameOnTournamentResource {
                 filterBy, limit, period, playerAttributes) :   // Filter/query related parameters
             getGameOnTournamentService().getTournaments(
                 deviceOSType, appBuildType,             // Session related parameters
-                filterBy, period, playerAttributes);    // Filter/query related parameters
+                filterBy, limit, period, playerAttributes);    // Filter/query related parameters
     }
 
     @GET
