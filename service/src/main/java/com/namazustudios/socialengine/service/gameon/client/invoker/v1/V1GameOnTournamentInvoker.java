@@ -81,8 +81,7 @@ public class V1GameOnTournamentInvoker implements GameOnTournamentInvoker {
         if (period != null)             target = target.queryParam(PERIOD, period);
         if (filterBy != null)           target = target.queryParam(FILTER_BY, filterBy);
         if (playerAttributes != null)   target = target.queryParam(PLAYER_ATTRIBUTES, playerAttributes);
-
-        target = target.queryParam(LIMIT, limit);
+        if (limit > 0)                  target = target.queryParam(LIMIT, limit);
 
         final Response response = target
             .request()
