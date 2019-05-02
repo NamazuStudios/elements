@@ -21,7 +21,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
   hasSelection = false;
   selection: SelectionModel<User>;
   dataSource: UsersDataSource;
-  displayedColumns= ["select", "id", "email", "level", "actions"];
+  displayedColumns = ["select", "id", "email", "level", "actions"];
   currentUsers: User[];
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
@@ -69,7 +69,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
         this.input.nativeElement.value,
         this.paginator.pageIndex * this.paginator.pageSize,
         this.paginator.pageSize);
-    }, delay)
+    }, delay);
   }
 
   /** Whether the number of selected elements matches the total number of rows. */

@@ -53,7 +53,9 @@ export class UserDialogComponent implements OnInit {
 
     this.data.next(res).subscribe(r => {
       this.dialogRef.close();
-      this.data.refresher.refresh();
+      if (this.data.refresher) {
+        this.data.refresher.refresh();
+      }
     }, err => {
       this.alertService.error(err);
     });
