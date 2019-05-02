@@ -15,7 +15,7 @@ public interface ApplicationNodeMetadataContext {
     UUID getUuid();
 
     @RemotelyInvokable
-    int getResourceAllocation();
+    long getInMemoryResourceCount();
 
     @RemotelyInvokable
     double getLoadAverage();

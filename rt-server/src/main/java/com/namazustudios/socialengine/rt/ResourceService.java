@@ -312,6 +312,8 @@ public interface ResourceService extends AutoCloseable {
         });
     }
 
+    long getInMemoryResourceCount();
+
     /**
      * Contains the association between the {@link Path} and {@link ResourceId}.
      */

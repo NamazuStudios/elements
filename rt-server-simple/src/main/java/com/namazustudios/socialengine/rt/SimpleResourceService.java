@@ -451,6 +451,11 @@ public class SimpleResourceService implements ResourceService {
         return storage;
     }
 
+    @Override
+    public long getInMemoryResourceCount() {
+        return getStorage().getResources().size();
+    }
+
     public ResourceLockService getResourceLockService() {
         return resourceLockService;
     }

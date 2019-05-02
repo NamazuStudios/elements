@@ -987,6 +987,14 @@ public class XodusResourceService implements ResourceService {
         return getEnvironment().openStore(STORE_ACQUIRES, WITHOUT_DUPLICATES, txn);
     }
 
+    @Override
+    public long getInMemoryResourceCount() {
+        return getEnvironment().computeInReadonlyTransaction(txn -> {
+            Store acquiresStore = openAcquires(txn);
+            return acquiresStore.count(txn);
+        });
+    }
+
     /**
      * Accepting a {@link StringBuilder}, this will completely dump the store contents to the builder.  Useful and
      * strongly only recommended for debugging and testing purposes, this can potentially use enough memory to

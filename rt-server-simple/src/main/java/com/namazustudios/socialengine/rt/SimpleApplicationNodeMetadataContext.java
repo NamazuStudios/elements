@@ -21,6 +21,8 @@ public class SimpleApplicationNodeMetadataContext implements ApplicationNodeMeta
 
     private LoadMonitorService loadMonitorService;
 
+    private ResourceService resourceService;
+
     final private UUID localApplicationNodeUuid;
 
     public SimpleApplicationNodeMetadataContext() {
@@ -72,8 +74,8 @@ public class SimpleApplicationNodeMetadataContext implements ApplicationNodeMeta
     }
 
     @Override
-    public int getResourceAllocation() {
-        return -1;  // TODO: figure out how to look up the total number of resources
+    public long getInMemoryResourceCount() {
+        return getResourceService().getInMemoryResourceCount();
     }
 
     @Override
@@ -89,5 +91,14 @@ public class SimpleApplicationNodeMetadataContext implements ApplicationNodeMeta
     @Inject
     public void setLoadMonitorService(LoadMonitorService loadMonitorService) {
         this.loadMonitorService = loadMonitorService;
+    }
+
+    public ResourceService getResourceService() {
+        return resourceService;
+    }
+
+    @Inject
+    public void setResourceService(ResourceService resourceService) {
+        this.resourceService = resourceService;
     }
 }
