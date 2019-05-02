@@ -1,10 +1,13 @@
-<h1 mat-dialog-title>
-  <span>Edit Product Bundle</span>
-  <span class="disp-checkbox"><mat-checkbox [checked]="data.productBundle.display"></mat-checkbox> Display</span>
-</h1>
+<form [formGroup]="productBundleForm">
+  <h1 mat-dialog-title>
+    <span>Edit Product Bundle</span>
+    <span class="disp-checkbox">
+      <mat-checkbox matInput name="display" formControlName="display" [checked]="data.productBundle.display"></mat-checkbox>
+      Display
+    </span>
+  </h1>
 
-<div mat-dialog-content>
-  <form [formGroup]="productBundleForm">
+  <div mat-dialog-content>
     <div class="bundle-form-row">
       <mat-form-field>
         <input autofocus matInput placeholder="Product ID" name="productId" formControlName="productId">
@@ -22,12 +25,12 @@
         <mat-error *ngIf="productBundleForm.controls.description.hasError('required')">Description is required</mat-error>
       </mat-form-field>
     </div>
-  </form>
 
-  <app-bundle-rewards-editor [rawRewards]="data.productBundle.productBundleRewards"></app-bundle-rewards-editor>
+    <app-bundle-rewards-editor [rawRewards]="data.productBundle.productBundleRewards"></app-bundle-rewards-editor>
 
-  <app-json-editor-card [editTarget]="data.productBundle" topic="Product Bundle"></app-json-editor-card>
-</div>
+    <app-json-editor-card [editTarget]="data.productBundle" topic="Product Bundle"></app-json-editor-card>
+  </div>
+</form>
 
 <div mat-dialog-actions>
   <button type="button" mat-raised-button (click)="close(true)" [disabled]="!productBundleForm.valid || !editorCard.isJSONValid">OK</button>
