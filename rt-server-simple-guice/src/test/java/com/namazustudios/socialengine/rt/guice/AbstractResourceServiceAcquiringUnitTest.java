@@ -12,6 +12,7 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
@@ -33,9 +34,10 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
     public static Object[][] initialDataProvider() {
 
         final List<Object[]> testData = new ArrayList<>();
+        final UUID nodeUuid = randomUUID();
 
         for (int i = 0; i < 100; ++i) {
-            final ResourceId resourceId = new ResourceId();
+            final ResourceId resourceId = new ResourceId(nodeUuid);
             final Path path = new Path(asList("test", randomUUID().toString()));
             testData.add(new Object[]{resourceId, path});
         }
@@ -259,7 +261,9 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
         List<ResourceService.Listing> listingList = listingStream.collect(toList());
         assertEquals(listingList.size(), 0, "Expected empty dataset to start.");
 
-        final ResourceId resourceId = new ResourceId();
+        final UUID nodeUuid = randomUUID();
+
+        final ResourceId resourceId = new ResourceId(nodeUuid);
         final Resource resource = Mockito.mock(Resource.class);
 
         when(resource.getId()).thenReturn(resourceId);

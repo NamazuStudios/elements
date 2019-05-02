@@ -52,7 +52,7 @@ public class LuaResource implements Resource {
 
     private final Map<TaskId, PendingTask> taskIdPendingTaskMap = new HashMap<>();
 
-    private ResourceId resourceId = new ResourceId();
+    private ResourceId resourceId;
 
     private Attributes attributes = Attributes.emptyAttributes();
 
@@ -91,9 +91,14 @@ public class LuaResource implements Resource {
      * @param luaState the luaState
      */
     @Inject
-    public LuaResource(final LuaState luaState, final Context context, final ResourceAcquisition resourceAcquisition) {
+    public LuaResource(
+            final LuaState luaState,
+            final Context context,
+            final ResourceAcquisition resourceAcquisition,
+            final ApplicationNodeMetadataContext applicationNodeMetadataContext
+    ) {
         try {
-
+            this.resourceId = new ResourceId(applicationNodeMetadataContext.getUuid());
             this.luaState = luaState;
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
             this.persistence = new Persistence(this, this::getScriptLog);

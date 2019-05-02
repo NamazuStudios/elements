@@ -32,12 +32,12 @@ public class ApplicationNode {
                 new MongoSearchModule(),
                 new RTFilesystemGitLoaderModule(),
                 new MultiNodeContainerModule(),
-                new ApplicationNodeMetadataContextModule(),
                 new FirebaseAppFactoryModule(),
                 new GuiceStandardNotificationFactoryModule(),
                 new JaxRSClientModule(),
                 new VersionModule(),
-                new ServicesModule()
+                new ServicesModule(),
+                new ApplicationNodeMetadataContextModule()
         );
     }
 

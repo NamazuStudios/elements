@@ -59,7 +59,6 @@ public class SimpleApplicationNodeMetadataContext implements ApplicationNodeMeta
 
     @Override
     public void start() {
-
         getLoadMonitorService().start();
     }
 

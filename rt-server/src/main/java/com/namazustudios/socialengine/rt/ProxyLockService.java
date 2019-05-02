@@ -37,24 +37,6 @@ public class ProxyLockService<LockT> implements OptimisticLockService<LockT> {
     }
 
     @Override
-    public LockT createLock(Object ... values) {
-        return (LockT) newProxyInstance(
-                getClass().getClassLoader(),
-                new Class<?>[] {tClass, Lock.class},
-                (proxy, method, args) -> {
-                    if ("equals".equals(method.getName()) && args.length == 1) {
-                        return proxy == args[0];
-                    } else if ("hashCode".equals(method.getName()) && args == null) {
-                        return System.identityHashCode(proxy);
-                    } else if ("toString".equals(method.getName()) && args == null) {
-                        return "Proxy Lock for " + tClass;
-                    } else {
-                        throw new NotImplementedException();
-                    }
-                });
-    }
-
-    @Override
     public boolean isLock(final LockT candidate) {
         return (candidate instanceof Lock);
     }
