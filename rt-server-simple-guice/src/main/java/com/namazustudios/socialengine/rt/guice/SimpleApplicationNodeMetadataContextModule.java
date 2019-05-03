@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.appnode.guice;
+package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.*;
 import com.namazustudios.socialengine.rt.ApplicationNodeMetadataContext;
@@ -8,9 +8,9 @@ import com.namazustudios.socialengine.rt.SimpleLoadMonitorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ApplicationNodeMetadataContextModule extends AbstractModule {
+public class SimpleApplicationNodeMetadataContextModule extends AbstractModule {
 
-    private static final Logger logger = LoggerFactory.getLogger(ApplicationNodeMetadataContextModule.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimpleApplicationNodeMetadataContextModule.class);
 
     @Override
     protected void configure() {

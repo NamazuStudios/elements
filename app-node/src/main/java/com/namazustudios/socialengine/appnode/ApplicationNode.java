@@ -36,8 +36,7 @@ public class ApplicationNode {
                 new GuiceStandardNotificationFactoryModule(),
                 new JaxRSClientModule(),
                 new VersionModule(),
-                new ServicesModule(),
-                new ApplicationNodeMetadataContextModule()
+                new ServicesModule()
         );
     }
 
