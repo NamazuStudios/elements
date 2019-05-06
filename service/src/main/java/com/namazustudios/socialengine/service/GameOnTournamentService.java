@@ -17,28 +17,30 @@ public interface GameOnTournamentService {
      * @param deviceOSType the device OS type, used to select the {@link GameOnSession} to use
      * @param appBuildType the application build type, used to select the {@link GameOnSession} to use
      * @param filterBy the filtering parameters
+     * @param limit the maximum number of tournaments to be returned
      * @param period filtering by time period
      * @param playerAttributes the player attributes, specified as a string
      * @return a {@link List<GameOnTournamentSummary>}, never null
      */
     List<GameOnTournamentSummary> getTournaments(
         DeviceOSType deviceOSType, AppBuildType appBuildType,
-        TournamentFilter filterBy, TournamentPeriod period, String playerAttributes);
+        TournamentFilter filterBy, int limit, TournamentPeriod period, String playerAttributes);
 
     /**
      * Gets all eligible tournaments based on the supplied inputs.  For a tournament to be eligible, the player must
      * meet all eligibility requirements and must not already be entered into the tournament.
      *
      * @param deviceOSType the device OS type, used to select the {@link GameOnSession} to use
-     * @param appBuildType the application build type, used to select the {@link GameOnSession} to use
+     * @param appBuildType the app build type
      * @param filterBy the filtering parameters
-     * @param period filtering by time period
+     * @param limit the maximum number of tournaments to retrieve
+     * @param period the period of time for the start date of the tournament (e.g. week = up to one week in the future)
      * @param playerAttributes the player attributes, specified as a string
      * @return a {@link List<GameOnTournamentSummary>}, never null
      */
     List<GameOnTournamentSummary> getEligibleTournaments(
-            DeviceOSType deviceOSType,
-            AppBuildType appBuildType, TournamentFilter filterBy,
+            DeviceOSType deviceOSType, AppBuildType appBuildType,
+            TournamentFilter filterBy, int limit,
             TournamentPeriod period, String playerAttributes);
 
     /**

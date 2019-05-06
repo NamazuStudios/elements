@@ -48,7 +48,7 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
     @Override
     public List<GameOnTournamentSummary> getTournaments(
             final DeviceOSType deviceOSType, final AppBuildType appBuildType,
-            final TournamentFilter filterBy, final TournamentPeriod period, final String playerAttributes) {
+            final TournamentFilter filterBy, final int limit, final TournamentPeriod period, final String playerAttributes) {
 
         final GameOnSession gameOnSession;
         gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
@@ -58,7 +58,7 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
                 .withSession(gameOnSession)
                 .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
                 .build()
-                .getSummaries(filterBy, period, playerAttributes);
+                .getSummaries(filterBy, limit, period, playerAttributes);
 
         return gameOnTournamentSummaries
                 .stream()
@@ -69,7 +69,7 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
     @Override
     public List<GameOnTournamentSummary> getEligibleTournaments(
             final DeviceOSType deviceOSType, final AppBuildType appBuildType,
-            final TournamentFilter filterBy, final TournamentPeriod period, final String playerAttributes) {
+            final TournamentFilter filterBy, final int limit, final TournamentPeriod period, final String playerAttributes) {
 
         final GameOnSession gameOnSession;
         gameOnSession = getGameOnSessionService().createOrGetCurrentSession(deviceOSType, appBuildType);
@@ -81,7 +81,7 @@ public class UserGameOnTournamentService implements GameOnTournamentService {
             .withSession(gameOnSession)
             .withExpirationRetry(ex -> getGameOnSessionService().refreshExpiredSession(ex.getExpired()))
             .build()
-            .getSummaries(filterBy, period, playerAttributes);
+            .getSummaries(filterBy, limit, period, playerAttributes);
 
         return gameOnTournamentSummaries
             .stream()

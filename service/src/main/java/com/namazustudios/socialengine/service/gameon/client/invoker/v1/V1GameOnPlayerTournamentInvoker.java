@@ -32,6 +32,8 @@ public class V1GameOnPlayerTournamentInvoker implements GameOnPlayerTournamentIn
 
     public static final String ENTER = "enter";
 
+    public static final String LIMIT = "limit";
+
     public static final String PERIOD = "period";
 
     public static final String FILTER_BY = "filterBy";
@@ -69,6 +71,7 @@ public class V1GameOnPlayerTournamentInvoker implements GameOnPlayerTournamentIn
     @Override
     public List<GameOnTournamentSummary> getSummaries(
             final TournamentFilter filterBy,
+            final int limit,
             final TournamentPeriod period,
             final String playerAttributes) {
 
@@ -79,6 +82,7 @@ public class V1GameOnPlayerTournamentInvoker implements GameOnPlayerTournamentIn
         if (period != null)             target = target.queryParam(PERIOD, period);
         if (filterBy != null)           target = target.queryParam(FILTER_BY, filterBy);
         if (playerAttributes != null)   target = target.queryParam(PLAYER_ATTRIBUTES, playerAttributes);
+        if (limit > 0)                  target = target.queryParam(LIMIT, limit);
 
         final Response response = target
             .request()
