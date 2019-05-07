@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.*;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.Thread.interrupted;
 import static java.util.stream.IntStream.range;
@@ -23,13 +24,13 @@ public class ConnectionsManager implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(ConnectionsManager.class);
 
-    private final List<SetupConsumer> setupConsumers = new LinkedList<>();
+    private final AtomicReference<List<SetupConsumer>> atomicSetupConsumers = new AtomicReference<>(new LinkedList<>());
 
     private final Map<Integer, MonitorThread> monitorThreads = new LinkedHashMap<>();
 
     private ZContext zContext;
 
-    private Map<Integer, MessageConsumer> messageHandlers;
+    private final AtomicReference<Map<Integer, MessageConsumer>> atomicMessageHandlers = new AtomicReference<>(new HashMap<>());
 
     private Poller poller;
 
@@ -44,6 +45,7 @@ public class ConnectionsManager implements AutoCloseable {
      * @param setupConsumer a method to be invoked on the connection poll thread.
      */
     public void registerSetupHandler(final SetupConsumer setupConsumer) {
+        final List<SetupConsumer> setupConsumers = atomicSetupConsumers.get();
         setupConsumers.add(setupConsumer);
     }
 
@@ -56,8 +58,7 @@ public class ConnectionsManager implements AutoCloseable {
     private void setupAndStartPollerOnCurrentThread() {
         poller = zContext.createPoller(0);
 
-        messageHandlers = new LinkedHashMap<>();
-
+        final List<SetupConsumer> setupConsumers = atomicSetupConsumers.get();
         for (SetupConsumer setupConsumer : setupConsumers) {
             setupConsumer.accept(this);
         }
@@ -81,6 +82,8 @@ public class ConnectionsManager implements AutoCloseable {
                         if (didReceiveInput) {
                             final ZMQ.Socket socket = poller.getSocket(socketHandle);
                             final ZMsg msg = recvMsg(socket);
+
+                            final Map<Integer, MessageConsumer> messageHandlers = atomicMessageHandlers.get();
 
                             if (!messageHandlers.containsKey(socketHandle)) {
                                 logger.warn("Message Handler not found for socket handle {}. Dropping message.", socketHandle);
@@ -129,6 +132,7 @@ public class ConnectionsManager implements AutoCloseable {
 
         final int socketHandle = poller.register(socket, POLLIN | POLLERR);
 
+        final Map<Integer, MessageConsumer> messageHandlers = atomicMessageHandlers.get();
         messageHandlers.put(socketHandle, messageConsumer);
 
         if (shouldMonitor) {
@@ -181,6 +185,7 @@ public class ConnectionsManager implements AutoCloseable {
 
         final int socketHandle = poller.register(socket, POLLIN | POLLERR);
 
+        final Map<Integer, MessageConsumer> messageHandlers = atomicMessageHandlers.get();
         messageHandlers.put(socketHandle, messageConsumer);
 
         if (shouldMonitor) {
@@ -203,7 +208,7 @@ public class ConnectionsManager implements AutoCloseable {
         return bindToAddressesAndBeginPolling(addresses, socketType, messageConsumer, shouldMonitor);
     }
 
-    public void closeAndDestroySocketHandle(final int socketHandle) throws Exception {
+    public void closeAndDestroySocketHandle(final int socketHandle) throws IllegalStateException {
         if (poller == null) {
             throw new IllegalStateException("Poller not set, cannot close socket with handle: " + socketHandle);
         }
@@ -225,6 +230,7 @@ public class ConnectionsManager implements AutoCloseable {
 
         zContext.destroySocket(socket);
 
+        final Map<Integer, MessageConsumer> messageHandlers = atomicMessageHandlers.get();
         messageHandlers.remove(socketHandle);
     }
 
@@ -269,6 +275,7 @@ public class ConnectionsManager implements AutoCloseable {
 
     @Override
     public void close() {
+        final Map<Integer, MessageConsumer> messageHandlers = atomicMessageHandlers.get();
         for (int socketHandle : messageHandlers.keySet()) {
             try {
                 closeAndDestroySocketHandle(socketHandle);
@@ -278,6 +285,7 @@ public class ConnectionsManager implements AutoCloseable {
             }
 
         }
+        messageHandlers.clear();
 
         for (final MonitorThread monitorThread : monitorThreads.values()) {
             monitorThread.close();
@@ -285,7 +293,9 @@ public class ConnectionsManager implements AutoCloseable {
 
         zContext = null;
         poller = null;
-        messageHandlers = null;
+
+        final List<SetupConsumer> setupConsumers = atomicSetupConsumers.get();
+        setupConsumers.clear();
     }
 
     @FunctionalInterface

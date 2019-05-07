@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.annotation.Dispatch;
+import com.namazustudios.socialengine.rt.annotation.RoutingStrategy;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -22,6 +23,8 @@ public class Invocation implements Serializable {
     private List<Object> arguments;
 
     private Dispatch.Type dispatchType;
+
+    private RoutingStrategy.Type routingStrategyType;
 
     /**
      * Gets the string representing the type of the remote object to invoke.  {@see {@link Class#getName()}}
@@ -135,6 +138,14 @@ public class Invocation implements Serializable {
         this.dispatchType = dispatchType;
     }
 
+    public RoutingStrategy.Type getRoutingStrategyType() {
+        return routingStrategyType;
+    }
+
+    public void setRoutingStrategyType(RoutingStrategy.Type routingStrategyType) {
+        this.routingStrategyType = routingStrategyType;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -149,7 +160,13 @@ public class Invocation implements Serializable {
             return false;
         if (getArguments() != null ? !getArguments().equals(that.getArguments()) : that.getArguments() != null)
             return false;
-        return getDispatchType() == that.getDispatchType();
+        if (getDispatchType() != that.getDispatchType()) {
+            return false;
+        }
+        if (getRoutingStrategyType() != that.getRoutingStrategyType()) {
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -160,6 +177,7 @@ public class Invocation implements Serializable {
         result = 31 * result + (getParameters() != null ? getParameters().hashCode() : 0);
         result = 31 * result + (getArguments() != null ? getArguments().hashCode() : 0);
         result = 31 * result + (getDispatchType() != null ? getDispatchType().hashCode() : 0);
+        result = 31 * result + (getRoutingStrategyType() != null ? getRoutingStrategyType().hashCode() : 0);
         return result;
     }
 
@@ -172,6 +190,7 @@ public class Invocation implements Serializable {
                 ", parameters=" + parameters +
                 ", arguments=" + arguments +
                 ", dispatchType=" + dispatchType +
+                ", routingStrategyType=" + routingStrategyType +
                 '}';
     }
 }
