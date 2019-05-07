@@ -1,11 +1,13 @@
 package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.annotation.Dispatch;
-import com.namazustudios.socialengine.rt.annotation.RoutingStrategy;
+import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable.RoutingStrategy;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a remote invocation.  This contains enough information to invoke the method remotely.
@@ -24,7 +26,7 @@ public class Invocation implements Serializable {
 
     private Dispatch.Type dispatchType;
 
-    private RoutingStrategy.Type routingStrategyType;
+    private EnumSet<RoutingStrategy> routingStrategies;
 
     /**
      * Gets the string representing the type of the remote object to invoke.  {@see {@link Class#getName()}}
@@ -138,47 +140,31 @@ public class Invocation implements Serializable {
         this.dispatchType = dispatchType;
     }
 
-    public RoutingStrategy.Type getRoutingStrategyType() {
-        return routingStrategyType;
+    public EnumSet<RoutingStrategy> getRoutingStrategies() {
+        return routingStrategies;
     }
 
-    public void setRoutingStrategyType(RoutingStrategy.Type routingStrategyType) {
-        this.routingStrategyType = routingStrategyType;
+    public void setRoutingStrategies(EnumSet<RoutingStrategy> routingStrategies) {
+        this.routingStrategies = routingStrategies;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Invocation)) return false;
-
+        if (o == null || getClass() != o.getClass()) return false;
         Invocation that = (Invocation) o;
-
-        if (getType() != null ? !getType().equals(that.getType()) : that.getType() != null) return false;
-        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
-        if (getMethod() != null ? !getMethod().equals(that.getMethod()) : that.getMethod() != null) return false;
-        if (getParameters() != null ? !getParameters().equals(that.getParameters()) : that.getParameters() != null)
-            return false;
-        if (getArguments() != null ? !getArguments().equals(that.getArguments()) : that.getArguments() != null)
-            return false;
-        if (getDispatchType() != that.getDispatchType()) {
-            return false;
-        }
-        if (getRoutingStrategyType() != that.getRoutingStrategyType()) {
-            return false;
-        }
-        return true;
+        return Objects.equals(getType(), that.getType()) &&
+                Objects.equals(getName(), that.getName()) &&
+                Objects.equals(getMethod(), that.getMethod()) &&
+                Objects.equals(getParameters(), that.getParameters()) &&
+                Objects.equals(getArguments(), that.getArguments()) &&
+                getDispatchType() == that.getDispatchType() &&
+                Objects.equals(getRoutingStrategies(), that.getRoutingStrategies());
     }
 
     @Override
     public int hashCode() {
-        int result = getType() != null ? getType().hashCode() : 0;
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getMethod() != null ? getMethod().hashCode() : 0);
-        result = 31 * result + (getParameters() != null ? getParameters().hashCode() : 0);
-        result = 31 * result + (getArguments() != null ? getArguments().hashCode() : 0);
-        result = 31 * result + (getDispatchType() != null ? getDispatchType().hashCode() : 0);
-        result = 31 * result + (getRoutingStrategyType() != null ? getRoutingStrategyType().hashCode() : 0);
-        return result;
+        return Objects.hash(getType(), getName(), getMethod(), getParameters(), getArguments(), getDispatchType(), getRoutingStrategies());
     }
 
     @Override
@@ -190,7 +176,7 @@ public class Invocation implements Serializable {
                 ", parameters=" + parameters +
                 ", arguments=" + arguments +
                 ", dispatchType=" + dispatchType +
-                ", routingStrategyType=" + routingStrategyType +
+                ", routingStrategies=" + routingStrategies +
                 '}';
     }
 }

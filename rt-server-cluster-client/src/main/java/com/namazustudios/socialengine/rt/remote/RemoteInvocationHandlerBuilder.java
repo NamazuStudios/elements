@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.Reflection;
 import com.namazustudios.socialengine.rt.annotation.*;
+import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable.RoutingStrategy;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker.InvocationErrorConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,8 +11,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,7 +20,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static com.namazustudios.socialengine.rt.Reflection.*;
-import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
@@ -39,7 +38,7 @@ public class RemoteInvocationHandlerBuilder {
 
     private final Dispatch.Type dispatchType;
 
-    private final RoutingStrategy.Type routingStrategyType;
+    private final EnumSet<RoutingStrategy> routingStrategies;
 
     private final RemoteInvoker remoteInvoker;
 
@@ -52,7 +51,10 @@ public class RemoteInvocationHandlerBuilder {
         this.type = type;
         this.method = method;
         this.dispatchType = Dispatch.Type.determine(method);
-        this.routingStrategyType = RoutingStrategy.Type.determine(method);
+
+        final EnumSet<RoutingStrategy> routingStrategies = EnumSet.noneOf(RoutingStrategy.class);
+        Collections.addAll(routingStrategies, RoutingStrategy.determine(method));
+        this.routingStrategies = routingStrategies;
 
         this.remoteInvoker = remoteInvoker;
 
@@ -94,8 +96,8 @@ public class RemoteInvocationHandlerBuilder {
         return dispatchType;
     }
 
-    public RoutingStrategy.Type getRoutingStrategyType() {
-        return routingStrategyType;
+    public EnumSet<RoutingStrategy> getRoutingStrategies() {
+        return routingStrategies;
     }
 
     /**
@@ -140,7 +142,7 @@ public class RemoteInvocationHandlerBuilder {
             final Invocation invocation = new Invocation();
 
             invocation.setDispatchType(getDispatchType());
-            invocation.setRoutingStrategyType(getRoutingStrategyType());
+            invocation.setRoutingStrategies(getRoutingStrategies());
             invocation.setType(getType().getName());
             invocation.setName(getName());
             invocation.setMethod(getMethod().getName());

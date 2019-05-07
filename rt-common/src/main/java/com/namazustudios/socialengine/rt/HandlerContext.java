@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
+import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable.RoutingStrategy;
 import com.namazustudios.socialengine.rt.exception.HandlerTimeoutException;
 import com.namazustudios.socialengine.rt.util.SyncWait;
 
@@ -77,7 +78,7 @@ public interface HandlerContext {
      *
      * @return {@link Future<Object>} which can be used to obtain the result of the invocation.
      */
-    @RemotelyInvokable
+    @RemotelyInvokable(RoutingStrategy.ANY)
     void invokeSingleUseHandlerAsync(
         @ResultHandler Consumer<Object> success, @ErrorHandler Consumer<Throwable> failure,
         @Serialize Attributes attributes, @Serialize String module,
@@ -124,7 +125,7 @@ public interface HandlerContext {
      * @param args the arguments passed to the method {@see {@link MethodDispatcher#params(Object...)}}
      * @return the {@link Future<Object>} of the result.
      */
-    @RemotelyInvokable
+    @RemotelyInvokable({RoutingStrategy.ADDRESSED, RoutingStrategy.ANY})
     void invokeRetainedHandlerAsync(
         @ResultHandler Consumer<Object> success, @ErrorHandler Consumer<Throwable> failure,
         @Serialize Attributes attributes, @Serialize String module,
