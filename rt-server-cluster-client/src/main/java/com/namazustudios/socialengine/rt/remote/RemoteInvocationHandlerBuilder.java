@@ -39,6 +39,8 @@ public class RemoteInvocationHandlerBuilder {
 
     private final Dispatch.Type dispatchType;
 
+    private final RoutingStrategy.Type routingStrategyType;
+
     private final RemoteInvoker remoteInvoker;
 
     public RemoteInvocationHandlerBuilder(final RemoteInvoker remoteInvoker, final Class<?> type, final Method method) {
@@ -50,6 +52,8 @@ public class RemoteInvocationHandlerBuilder {
         this.type = type;
         this.method = method;
         this.dispatchType = Dispatch.Type.determine(method);
+        this.routingStrategyType = RoutingStrategy.Type.determine(method);
+
         this.remoteInvoker = remoteInvoker;
 
     }
@@ -88,6 +92,10 @@ public class RemoteInvocationHandlerBuilder {
      */
     public Dispatch.Type getDispatchType() {
         return dispatchType;
+    }
+
+    public RoutingStrategy.Type getRoutingStrategyType() {
+        return routingStrategyType;
     }
 
     /**
@@ -132,6 +140,7 @@ public class RemoteInvocationHandlerBuilder {
             final Invocation invocation = new Invocation();
 
             invocation.setDispatchType(getDispatchType());
+            invocation.setRoutingStrategyType(getRoutingStrategyType());
             invocation.setType(getType().getName());
             invocation.setName(getName());
             invocation.setMethod(getMethod().getName());

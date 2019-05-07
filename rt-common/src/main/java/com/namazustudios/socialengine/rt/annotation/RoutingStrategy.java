@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.rt.annotation;
 
+import java.lang.reflect.Method;
+
 public @interface RoutingStrategy {
-    Type type();
+    Type value();
 
     enum Type {
         /**
@@ -33,6 +35,11 @@ public @interface RoutingStrategy {
          * performing the invocation. The resource utilization poll of the local app node should not occur over the
          * network and neither should the local invocation (should the local app node be chosen to perform it).
          */
-        ANY,
+        ANY;
+
+        public static Type determine(final Method method) {
+            final RoutingStrategy routingStrategy = method.getAnnotation(RoutingStrategy.class);
+            return routingStrategy.value();
+        }
     }
 }
