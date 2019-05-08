@@ -59,8 +59,15 @@ export class MissionRewardsEditorComponent implements OnInit {
     }
   }
 
-  updateReward(reward: Reward, param: string, event: any) {
-    reward[param] = event.target.value;
+  updateRewardQuantity(reward: Reward, newQuantity: number) {
+    reward.quantity = newQuantity;
+  }
+
+  updateRewardItem(reward: Reward, itemName: string) {
+    // get item specified by name
+    this.itemsService.getItemByIdentifier(itemName).subscribe((item: Item) => {
+      reward.item = item;
+    });
   }
 
   ngOnInit() {
