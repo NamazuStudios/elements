@@ -9,8 +9,8 @@
 <div class="prelim-wrapper">
   <form [formGroup]="stepForm">
     <mat-accordion [multi]="true" class="prelim-steps" cdkDropList (cdkDropListDropped)="drop($event)">
-      <mat-expansion-panel class="step" cdkDrag *ngFor="let step of mission.steps; let i = index" [expanded]="step.isNew">
-        <mat-expansion-panel-header>
+      <mat-expansion-panel class="step" cdkDragLockAxis="y" cdkDrag *ngFor="let step of mission.steps; let i = index" [expanded]="step.isNew">
+        <mat-expansion-panel-header cdkDragHandle>
           <mat-icon cdkDragHandle>reorder</mat-icon>
           <span class="step-num"><b>Step {{i + 1}}: </b></span>
           <span class="step-name" *ngIf="step.displayName">{{step.displayName}}</span><span class="step-name" *ngIf="!step.displayName">N/A</span>
