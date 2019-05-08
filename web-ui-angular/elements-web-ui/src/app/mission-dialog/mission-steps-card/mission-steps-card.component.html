@@ -73,7 +73,7 @@
 
         <app-mission-rewards-editor class="final-step-reward-editor" [rewards]="mission.finalRepeatStep.rewards"></app-mission-rewards-editor>
 
-        <app-json-editor-card topic="Step" [editTarget]="mission.finalRepeatStep.metadata || {}"></app-json-editor-card>
+        <app-json-editor-card topic="Step" [editTarget]="mission.finalRepeatStep || {}"></app-json-editor-card>
 
         <mat-action-row>
           <button type="button" mat-raised-button color="primary" (click)="deleteFinalStep()">Delete Step</button>
