@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rest.inventory;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.CreateInventoryItem;
+import com.namazustudios.socialengine.model.inventory.DeleteInventoryItem;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.inventory.InventoryItemQuantityAdjustment;
 import com.namazustudios.socialengine.service.inventory.SimpleInventoryItemService;
@@ -94,6 +95,14 @@ public class SimpleInventoryItemResource {
             createInventoryItem.getItem(),
             createInventoryItem.getQuantity());
 
+    }
+
+    @DELETE
+    @Path("{inventoryItemId}")
+    @ApiOperation(value = "Delete the inventory item as identified by the given item name/id",
+                  notes = "Delete the inventory item as identified by the given item name/id")
+    public void deleteInventoryItem(@PathParam("inventoryItemId") final String inventoryItemId) {
+        getSimpleInventoryItemService().deleteInventoryItem(inventoryItemId);
     }
 
     public ValidationHelper getValidationHelper() {

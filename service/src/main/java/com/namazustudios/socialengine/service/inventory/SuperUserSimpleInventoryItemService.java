@@ -27,4 +27,9 @@ public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItem
         return getInventoryItemDao().createInventoryItem(inventoryItem);
     }
 
+    @Override
+    public void deleteInventoryItem(final String inventoryItemId) {
+        getInventoryItemDao().deleteInventoryItem(inventoryItemId);
+    }
+
 }
