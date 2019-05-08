@@ -16,7 +16,8 @@ export class ProductBundleEditorComponent implements OnInit {
   productBundleForm = this.formBuilder.group({
     productId: [this.data.productBundle.productId, [Validators.required]],
     displayName: [this.data.productBundle.displayName, [Validators.required]],
-    description: [this.data.productBundle.description, [Validators.required]]
+    description: [this.data.productBundle.description, [Validators.required]],
+    display: [this.data.productBundle.display]
   });
 
   originalMetadata = JSON.parse(JSON.stringify(this.data.productBundle.metadata || {}));
@@ -34,6 +35,8 @@ export class ProductBundleEditorComponent implements OnInit {
       this.dialogRef.close();
       return;
     }
+
+    this.editorCard.validateMetadata(true);
 
     const formData = this.productBundleForm.value;
     if (this.data.productBundle !== undefined) {

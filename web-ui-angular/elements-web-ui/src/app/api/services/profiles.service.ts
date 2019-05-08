@@ -111,6 +111,7 @@ class ProfilesService extends BaseService {
     let __body: any = null;
 
     __body = params.body;
+    __body.id = params.profileId;
     let req = new HttpRequest<any>(
       'PUT',
       this.rootUrl + `/profile/${params.profileId}`,

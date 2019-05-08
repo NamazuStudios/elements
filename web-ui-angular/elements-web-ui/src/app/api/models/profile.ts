@@ -27,4 +27,6 @@ export interface Profile {
    * A non-unique display name for this profile.
    */
   displayName: string;
+
+  lastLogin?: number;
 }
