@@ -37,7 +37,7 @@ public class CORSFilter implements ContainerResponseFilter {
 
     public static final String AC_ALLOW_ALLOW_METHODS = "Access-Control-Allow-Methods";
 
-    public static final String AC_ALLOW_ALLOW_METHODS_VALUE = "GET, POST, PUT, DELETE";
+    public static final String AC_ALLOW_ALLOW_METHODS_VALUE = "GET, POST, PUT, PATCH, DELETE";
 
     private Set<URI> allowedOrigins;
 

@@ -119,9 +119,9 @@ public interface InventoryItemDao {
     InventoryItem adjustQuantityForItem(User user, String itemNameOrId, int priority, int quantityDelta);
 
     /**
-     * Deletes an inventory item using the value of {@link InventoryItem#getId()}.
+     * Deletes an inventory item.
      *
-     * @param inventoryItemId the inventory item ID
+     * @param inventoryItemId the {@link InventoryItem}'s id.
      */
     void deleteInventoryItem(String inventoryItemId);
 

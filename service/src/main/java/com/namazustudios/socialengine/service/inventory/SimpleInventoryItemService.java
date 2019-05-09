@@ -55,4 +55,11 @@ public interface SimpleInventoryItemService {
      */
     InventoryItem createInventoryItem(User user, Item item, int initialQuantity);
 
+    /**
+     * Deletes an {@link InventoryItem} from the given {@link User}'s inventory.
+     *
+     * @param inventoryItemId the {@link InventoryItem}'s id.
+     */
+    void deleteInventoryItem(String inventoryItemId);
+
 }
