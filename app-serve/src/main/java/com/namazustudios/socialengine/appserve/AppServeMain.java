@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.appserve;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -16,6 +17,8 @@ import com.namazustudios.socialengine.rt.NullResourceAcquisition;
 import com.namazustudios.socialengine.rt.ResourceAcquisition;
 import org.apache.bval.guice.ValidationModule;
 import org.eclipse.jetty.server.Server;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -41,7 +44,7 @@ public class AppServeMain {
                 @Override
                 protected void configure() {
                     bind(ResourceAcquisition.class).to(NullResourceAcquisition.class);
-                    bind(Client.class).toProvider(ClientBuilder::newClient).asEagerSingleton();
+                    bind(Client.class).toProvider(AppServeMain::buildClient).asEagerSingleton();
                 }
             }
         );
@@ -50,6 +53,12 @@ public class AppServeMain {
         server.start();
         server.join();
 
+    }
+
+    public static Client buildClient() {
+        final JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
+        return client;
     }
 
 }

@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rest.guice;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.google.inject.AbstractModule;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider;
 
 import javax.net.ssl.*;
 import javax.ws.rs.client.Client;
@@ -62,7 +65,13 @@ public class HttpClientModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(Client.class).toProvider(ClientBuilder::newClient).asEagerSingleton();
+        bind(Client.class).toProvider(HttpClientModule::buildClient).asEagerSingleton();
+    }
+
+    public static Client buildClient() {
+        final JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
+        return client;
     }
 
 }
