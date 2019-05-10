@@ -45,9 +45,9 @@
         </mat-action-row>
       </mat-expansion-panel>
 
-      <mat-expansion-panel class="step" cdkDrag *ngIf="mission.finalRepeatStep">
+      <mat-expansion-panel class="step" *ngIf="mission.finalRepeatStep">
         <mat-expansion-panel-header>
-          <mat-icon cdkDragHandle>reorder</mat-icon>
+          <mat-icon>reorder</mat-icon>
           <span class="step-num"><b>Final Repeat Step: </b></span>
           <span class="step-name" *ngIf="mission.finalRepeatStep.displayName">{{mission.finalRepeatStep.displayName}}</span><span class="step-name" *ngIf="!mission.finalRepeatStep.displayName">N/A</span>
           <span class="step-count"><b>Count:</b> <span *ngIf="mission.finalRepeatStep.count">{{mission.finalRepeatStep.count}}</span><span *ngIf="!mission.finalRepeatStep.count">N/A</span></span>
