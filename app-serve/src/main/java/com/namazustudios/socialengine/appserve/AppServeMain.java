@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.appserve;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -22,6 +23,8 @@ import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvi
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.ext.ContextResolver;
+import javax.ws.rs.ext.Provider;
 
 public class AppServeMain {
 
@@ -56,9 +59,23 @@ public class AppServeMain {
     }
 
     public static Client buildClient() {
-        final JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        final Client client = ClientBuilder.newClient(new ClientConfig(jacksonJsonProvider));
+        final Client client = ClientBuilder.newClient().register(ObjectMapperContextResolver.class);
         return client;
+    }
+
+    @Provider
+    public static class ObjectMapperContextResolver implements ContextResolver<ObjectMapper> {
+        private final ObjectMapper mapper;
+
+        public ObjectMapperContextResolver() {
+            mapper = new ObjectMapper();
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        }
+
+        @Override
+        public ObjectMapper getContext(Class<?> type) {
+            return mapper;
+        }
     }
 
 }
