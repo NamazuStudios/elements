@@ -1,10 +1,17 @@
 package com.namazustudios.socialengine.rest.guice;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider;
 
 import javax.net.ssl.*;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.ext.ContextResolver;
+import javax.ws.rs.ext.Provider;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
@@ -62,7 +69,27 @@ public class HttpClientModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(Client.class).toProvider(ClientBuilder::newClient).asEagerSingleton();
+        bind(Client.class).toProvider(HttpClientModule::buildClient).asEagerSingleton();
+    }
+
+    public static Client buildClient() {
+        final Client client = ClientBuilder.newClient().register(ObjectMapperContextResolver.class);
+        return client;
+    }
+
+    @Provider
+    public static class ObjectMapperContextResolver implements ContextResolver<ObjectMapper> {
+        private final ObjectMapper mapper;
+
+        public ObjectMapperContextResolver() {
+            mapper = new ObjectMapper();
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        }
+
+        @Override
+        public ObjectMapper getContext(Class<?> type) {
+            return mapper;
+        }
     }
 
 }
