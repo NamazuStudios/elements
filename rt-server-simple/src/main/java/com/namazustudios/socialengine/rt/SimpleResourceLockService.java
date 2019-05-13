@@ -108,15 +108,24 @@ public class SimpleResourceLockService implements ResourceLockService {
     }
 
     private void cleanup(final ResourceId resourceId) {
-        if (resourceIdLockMap.remove(resourceId) != null) {
-            logger.warn("Cleaned up orphaned lock {}.", resourceId);
+        if (resourceIdLockMap.remove(resourceId) == null) {
+            logger.warn("Attempting to clean up lock which was already cleaned up {}.", resourceId);
+        } else {
+            logger.trace("Cleaned up orphaned lock {}.", resourceId);
         }
     }
 
     @Override
     public void delete(final ResourceId resourceId) {
+
         final Reference<SharedLock> ref = resourceIdLockMap.remove(resourceId);
-        if (ref != null) collections.remove(ref);
+
+        if (ref == null) {
+            logger.warn("Removing lock that was already cleaned up {}", resourceId);
+        } else {
+            collections.remove(ref);
+        }
+
     }
 
     private class SharedLock {

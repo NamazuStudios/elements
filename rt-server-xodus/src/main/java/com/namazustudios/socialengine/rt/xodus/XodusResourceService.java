@@ -711,6 +711,7 @@ public class XodusResourceService implements ResourceService {
         final Store paths = openPaths(txn);
         final Store resourceIds = openResourceIds(txn);
         final Store resources = openResources(txn);
+        final Store acquires = openAcquires(txn);
 
         final ByteIterable resourceIdValue;
 
@@ -768,6 +769,7 @@ public class XodusResourceService implements ResourceService {
 
         if (remove) {
             // Finally, do a hard delete if we're getting rid of the data completely.
+            acquires.delete(txn, resourceIdValue);
             resources.delete(txn, resourceIdValue);
         }
 
@@ -812,12 +814,16 @@ public class XodusResourceService implements ResourceService {
         final Store paths = openPaths(txn);
         final Store resourceIds = openResourceIds(txn);
         final Store resources = openResources(txn);
-        doRemoveResource(txn, resourceIdKey, paths, resourceIds, resources);
+        final Store acquires = openAcquires(txn);
+        doRemoveResource(txn, resourceIdKey, paths, resourceIds, resources, acquires);
     }
 
     private void doRemoveResource(final Transaction txn,
                                   final ByteIterable resourceIdKey,
-                                  final Store paths, final Store resourceIds, final Store resources) {
+                                  final Store paths,
+                                  final Store resourceIds,
+                                  final Store resources,
+                                  final Store acquires) {
 
         debugPreRemove.accept(txn, resourceIdKey);
 
@@ -852,9 +858,11 @@ public class XodusResourceService implements ResourceService {
             logger.error("Consistency error.  Reverse mapping broken for {}.  Zero paths deleted.", resourceId);
         }
 
+        acquires.delete(txn, resourceIdKey);
         resources.delete(txn, resourceIdKey);
 
         debugPostRemove.accept(txn, resourceIdKey);
+
     }
 
     @Override
@@ -915,7 +923,7 @@ public class XodusResourceService implements ResourceService {
                 } catch (Exception ex) {
                     try {
                         logger.error("Caught exception persisting resource {}  Destroying..", xr.getId(), ex);
-                        doRemoveResource(txn, xr.getXodusCacheKey().getKey(), paths, resourceIds, resources);
+                        doRemoveResource(txn, xr.getXodusCacheKey().getKey(), paths, resourceIds, resources, acquires);
                     } catch (Exception _ex) {
                         logger.error("Caught exception destroying resource {}.", xr.getId(), _ex);
                     }
