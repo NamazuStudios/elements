@@ -30,7 +30,7 @@ public interface ResourceLockService {
     void delete(ResourceId resourceId);
 
     /**
-     * Convienience wrapper to automatically close a {@link Lock} managed by this instance.
+     * Convenience wrapper to automatically manage the state of an underlying lock.  {@lin #getMonitor}
      */
     interface Monitor extends AutoCloseable {
 
@@ -46,7 +46,7 @@ public interface ResourceLockService {
          * @param name the name of the {@link Condition}
          * @return the {@link Condition}
          */
-        default Condition getCondition(final String name) {return null;}
+        Condition getCondition(final String name);
 
     }
 
