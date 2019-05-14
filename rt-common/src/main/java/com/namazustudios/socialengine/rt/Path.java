@@ -25,7 +25,7 @@ import static java.util.Collections.unmodifiableList;
  *
  * Created by patricktwohig on 9/4/15.
  */
-public class Path implements Comparable<Path>, Serializable {
+public class Path implements Comparable<Path>, Serializable, RoutingAddressProvider {
 
     /**
      * The separator of the context from the path components. Literal value "://", e.g. "myContext://foo/bar".
@@ -594,6 +594,10 @@ public class Path implements Comparable<Path>, Serializable {
     public static Path fromPathString(final String pathString, final String pathSeparator) {
         final ContextAndComponents contextAndComponents = contextAndComponentsFromPath(pathString, pathSeparator);
         return new Path(contextAndComponents.getContext(), contextAndComponents.getComponents());
+    }
+
+    public String getRoutingAddress() {
+        return context;
     }
 
 }

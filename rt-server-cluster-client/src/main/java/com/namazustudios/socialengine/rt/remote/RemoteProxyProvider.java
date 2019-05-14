@@ -6,6 +6,11 @@ import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import static com.namazustudios.socialengine.rt.Reflection.methods;
 
 public class RemoteProxyProvider<ProxyableT> implements Provider<ProxyableT> {
@@ -43,9 +48,13 @@ public class RemoteProxyProvider<ProxyableT> implements Provider<ProxyableT> {
             .dontProxyDefaultMethods();
 
         methods(interfaceClassT)
-            .filter(m -> m.getAnnotation(RemotelyInvokable.class) != null)
-            .map(m -> new RemoteInvocationHandlerBuilder(remoteInvoker, interfaceClassT, m).withName(name))
-            .forEach(b -> builder.handler(b.build()).forMethod(b.getMethod()));
+                .filter(m -> m.getAnnotation(RemotelyInvokable.class) != null)
+                .forEach(m -> {
+
+                });
+
+//            .map(m -> new RemoteInvocationHandlerBuilder(remoteInvoker, interfaceClassT, m).withName(name))
+//            .forEach(b -> builder.handler(b.build()).forMethod(b.getMethod()));
 
         return builder.build();
 

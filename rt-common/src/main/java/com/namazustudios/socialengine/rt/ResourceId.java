@@ -11,7 +11,7 @@ import java.util.UUID;
  *
  * Created by patricktwohig on 4/11/17.
  */
-public class ResourceId implements Serializable {
+public class ResourceId implements Serializable, RoutingAddressProvider {
 
     public static final String ADDRESS_SEPARATOR = "@";
 
@@ -107,5 +107,14 @@ public class ResourceId implements Serializable {
         final UUID resourceUuid = UUID.fromString(resourceUuidString);
 
         return resourceUuid;
+    }
+
+    public String getRoutingAddress() {
+        if (nodeUuid != null) {
+            return nodeUuid.toString();
+        }
+        else {
+            return null;
+        }
     }
 }
