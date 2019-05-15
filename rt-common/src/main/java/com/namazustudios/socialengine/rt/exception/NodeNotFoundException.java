@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.exception;
 
+import com.namazustudios.socialengine.rt.ResponseCode;
+
 public class NodeNotFoundException extends InternalException {
 
     public NodeNotFoundException() { }
@@ -20,4 +22,8 @@ public class NodeNotFoundException extends InternalException {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 
+    @Override
+    public ResponseCode getResponseCode() {
+        return ResponseCode.NODE_NOT_FOUND;
+    }
 }

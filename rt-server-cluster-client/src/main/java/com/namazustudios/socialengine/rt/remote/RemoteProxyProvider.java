@@ -21,6 +21,8 @@ public class RemoteProxyProvider<ProxyableT> implements Provider<ProxyableT> {
 
     private final Class<ProxyableT> interfaceClassT;
 
+    private RemoteInvokerRegistry remoteInvokerRegistry;
+
     public RemoteProxyProvider(final Class<ProxyableT> proxyableInterface) {
         this(proxyableInterface, null);
     }
@@ -48,13 +50,9 @@ public class RemoteProxyProvider<ProxyableT> implements Provider<ProxyableT> {
             .dontProxyDefaultMethods();
 
         methods(interfaceClassT)
-                .filter(m -> m.getAnnotation(RemotelyInvokable.class) != null)
-                .forEach(m -> {
-
-                });
-
-//            .map(m -> new RemoteInvocationHandlerBuilder(remoteInvoker, interfaceClassT, m).withName(name))
-//            .forEach(b -> builder.handler(b.build()).forMethod(b.getMethod()));
+            .filter(m -> m.getAnnotation(RemotelyInvokable.class) != null)
+            .map(m -> new RemoteInvocationHandlerBuilder(remoteInvoker, interfaceClassT, m).withName(name))
+            .forEach(b -> builder.handler(b.build()).forMethod(b.getMethod()));
 
         return builder.build();
 
@@ -69,4 +67,12 @@ public class RemoteProxyProvider<ProxyableT> implements Provider<ProxyableT> {
         this.remoteInvokerProvider = remoteInvokerProvider;
     }
 
+    public RemoteInvokerRegistry getRemoteInvokerRegistry() {
+        return remoteInvokerRegistry;
+    }
+
+    @Inject
+    public void setRemoteInvokerRegistry(RemoteInvokerRegistry remoteInvokerRegistry) {
+        this.remoteInvokerRegistry = remoteInvokerRegistry;
+    }
 }

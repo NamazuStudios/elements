@@ -84,6 +84,11 @@ public enum ResponseCode {
     OPERATION_NOT_FOUND,
 
     /**
+     * The system could not contact the app node with the given address.
+     */
+    NODE_NOT_FOUND,
+
+    /**
      * No {@link HttpOperation} for the particular {@link HttpVerb} could be matched.
      */
     VERB_NOT_SUPPORTED,
