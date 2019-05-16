@@ -26,7 +26,7 @@ import static org.zeromq.ZContext.shadow;
 
 public class SimpleConnectionPool implements ConnectionPool {
 
-    private static final Logger logger = LoggerFactory.getLogger(DynamicConnectionPool.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimpleConnectionPool.class);
 
     private static final int REPORT_INTERVAL = 30;
 
