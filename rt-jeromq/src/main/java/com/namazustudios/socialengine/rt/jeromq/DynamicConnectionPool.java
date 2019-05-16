@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -8,7 +9,6 @@ import org.zeromq.ZMQ;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -19,15 +19,10 @@ import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+@Deprecated
 public class DynamicConnectionPool implements ConnectionPool {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicConnectionPool.class);
-
-    public static final String TIMEOUT = "com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.timeout";
-
-    public static final String MIN_CONNECTIONS = "com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.minConnections";
-
-    public static final String MAX_CONNECTIONS = "com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.maxConnections";
 
     private final AtomicInteger highWaterMark = new AtomicInteger();
 
@@ -68,12 +63,23 @@ public class DynamicConnectionPool implements ConnectionPool {
     }
 
     @Override
-    public <T> Future<T> process(final Function<Connection, T> consumer) {
+    public <T> T process(final Function<Connection, T> consumer) {
 
         final Context c = context.get();
 
         if (c != null) {
-            return c.process(consumer);
+            try {
+                return c.process(consumer).get();
+            } catch (InterruptedException ex) {
+                logger.info("Interrupted waiting on background thread to finish handling request.");
+                throw new InternalException(ex);
+            } catch (ExecutionException ex) {
+                if (ex.getCause() instanceof RuntimeException) {
+                    throw (RuntimeException)ex.getCause();
+                } else {
+                    throw new InternalException(ex.getCause());
+                }
+            }
         } else {
             throw new IllegalStateException("Not started.");
         }
@@ -90,7 +96,7 @@ public class DynamicConnectionPool implements ConnectionPool {
     }
 
     @Inject
-    public void setTimeout(@Named(TIMEOUT) int timeout) {
+    public void setTimeout(@Named(ConnectionPool.TIMEOUT) int timeout) {
         this.timeout = timeout;
     }
 
@@ -99,7 +105,7 @@ public class DynamicConnectionPool implements ConnectionPool {
     }
 
     @Inject
-    public void setMinConnections(@Named(MIN_CONNECTIONS) int minConnections) {
+    public void setMinConnections(@Named(ConnectionPool.MIN_CONNECTIONS) int minConnections) {
         this.minConnections = minConnections;
     }
 
@@ -108,7 +114,7 @@ public class DynamicConnectionPool implements ConnectionPool {
     }
 
     @Inject
-    public void setMaxConnections(@Named(MAX_CONNECTIONS) int maxConnections) {
+    public void setMaxConnections(@Named(ConnectionPool.MAX_CONNECTIONS) int maxConnections) {
         this.maxConnections = maxConnections;
     }
 

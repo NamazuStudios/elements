@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.appnode;
 
 import com.namazustudios.socialengine.config.ModuleDefaults;
 import com.namazustudios.socialengine.rt.HandlerContext;
+import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 
 import java.util.Properties;
 
@@ -9,16 +10,15 @@ import static com.namazustudios.socialengine.appnode.Constants.*;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.BIND_ADDR;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.CONTROL_BIND_ADDR;
 import static com.namazustudios.socialengine.rt.Constants.*;
-import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.*;
 
 public class ApplicationNodeModuleDefaults implements ModuleDefaults {
 
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.setProperty(TIMEOUT, "60");
-        properties.setProperty(MIN_CONNECTIONS, "10");
-        properties.setProperty(MAX_CONNECTIONS, "10000");
+        properties.setProperty(ConnectionPool.TIMEOUT, "60");
+        properties.setProperty(ConnectionPool.MIN_CONNECTIONS, "10");
+        properties.setProperty(ConnectionPool.MAX_CONNECTIONS, "10000");
         properties.setProperty(BIND_ADDR, "tcp://*:28883");
         properties.setProperty(CONTROL_BIND_ADDR, "tcp://*:20883");
         properties.setProperty(CONTROL_REQUEST_TIMEOUT, "1000");

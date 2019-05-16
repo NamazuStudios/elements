@@ -153,15 +153,15 @@ public class    DynamicConnectionPoolIntegrationTest {
             binder().bind(ConnectionPool.class).to(DynamicConnectionPool.class).asEagerSingleton();
 
             binder().bind(Integer.class)
-                    .annotatedWith(named(DynamicConnectionPool.TIMEOUT))
+                    .annotatedWith(named(ConnectionPool.TIMEOUT))
                     .toInstance(60);
 
             binder().bind(Integer.class)
-                    .annotatedWith(named(DynamicConnectionPool.MIN_CONNECTIONS))
+                    .annotatedWith(named(ConnectionPool.MIN_CONNECTIONS))
                     .toInstance(10);
 
             binder().bind(Integer.class)
-                    .annotatedWith(named(DynamicConnectionPool.MAX_CONNECTIONS))
+                    .annotatedWith(named(ConnectionPool.MAX_CONNECTIONS))
                     .toInstance(250);
 
         }

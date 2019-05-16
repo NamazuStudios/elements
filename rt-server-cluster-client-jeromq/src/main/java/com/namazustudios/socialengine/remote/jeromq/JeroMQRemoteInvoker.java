@@ -17,6 +17,7 @@ import zmq.ZError;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.nio.channels.Pipe;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;

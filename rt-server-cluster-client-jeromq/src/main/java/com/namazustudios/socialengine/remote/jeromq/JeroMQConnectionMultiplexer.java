@@ -1,37 +1,36 @@
     package com.namazustudios.socialengine.remote.jeromq;
 
-import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
-import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.jeromq.*;
-import com.namazustudios.socialengine.rt.remote.RoutingHeader;
-import com.namazustudios.socialengine.rt.util.SyncWait;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.zeromq.*;
+    import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
+    import com.namazustudios.socialengine.rt.exception.InternalException;
+    import com.namazustudios.socialengine.rt.jeromq.*;
+    import com.namazustudios.socialengine.rt.remote.RoutingHeader;
+    import com.namazustudios.socialengine.rt.util.SyncWait;
+    import org.slf4j.Logger;
+    import org.slf4j.LoggerFactory;
+    import org.zeromq.*;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
+    import javax.inject.Inject;
+    import javax.inject.Named;
+    import java.util.UUID;
+    import java.util.concurrent.atomic.AtomicReference;
 
-import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND;
-import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_RESPONSE;
-import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
-import static com.namazustudios.socialengine.rt.jeromq.JeroMQSocketHost.send;
-import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.CLOSE;
-import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.OPEN;
-import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.CONTINUE;
-import static java.lang.String.format;
-import static java.lang.Thread.interrupted;
-import static java.util.UUID.randomUUID;
-import static java.util.stream.IntStream.range;
-import static org.zeromq.ZContext.shadow;
-import static org.zeromq.ZMQ.*;
-import static org.zeromq.ZMQ.Poller.POLLERR;
-import static org.zeromq.ZMQ.Poller.POLLIN;
-import static org.zeromq.ZMsg.recvMsg;
-import static zmq.ZError.EHOSTUNREACH;
+    import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND;
+    import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_RESPONSE;
+    import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
+    import static com.namazustudios.socialengine.rt.jeromq.JeroMQSocketHost.send;
+    import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.CLOSE;
+    import static com.namazustudios.socialengine.rt.jeromq.RoutingCommand.Action.OPEN;
+    import static com.namazustudios.socialengine.rt.remote.RoutingHeader.Status.CONTINUE;
+    import static java.lang.String.format;
+    import static java.lang.Thread.interrupted;
+    import static java.util.UUID.randomUUID;
+    import static java.util.stream.IntStream.range;
+    import static org.zeromq.ZContext.shadow;
+    import static org.zeromq.ZMQ.*;
+    import static org.zeromq.ZMQ.Poller.POLLERR;
+    import static org.zeromq.ZMQ.Poller.POLLIN;
+    import static org.zeromq.ZMsg.recvMsg;
+    import static zmq.ZError.EHOSTUNREACH;
 
 public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 

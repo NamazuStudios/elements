@@ -9,9 +9,6 @@ import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.CONNECT_ADDRESS;
-import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.MAX_CONNECTIONS;
-import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.MIN_CONNECTIONS;
-import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.TIMEOUT;
 
 public class JeroMQRemoteInvokerModule extends PrivateModule {
 
@@ -22,7 +19,6 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
     private Runnable bindMinConnectionsAction = () -> {};
 
     private Runnable bindMaxConnectionsAction = () -> {};
-
 
     /**
      * Specifies the connect address used by the underlying {@link JeroMQRemoteInvoker}.  This provides a binding for
@@ -49,7 +45,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
      */
     public JeroMQRemoteInvokerModule withTimeout(final int timeoutInSeconds) {
         bindTimeoutAction = () -> bind(Integer.class)
-            .annotatedWith(named(TIMEOUT))
+            .annotatedWith(named(ConnectionPool.TIMEOUT))
             .toInstance(timeoutInSeconds);
         return this;
     }
@@ -62,7 +58,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
      */
     public JeroMQRemoteInvokerModule withMinimumConnections(final int minimumConnections) {
         bindMinConnectionsAction = () -> bind(Integer.class)
-            .annotatedWith(named(MIN_CONNECTIONS))
+            .annotatedWith(named(ConnectionPool.MIN_CONNECTIONS))
             .toInstance(minimumConnections);
         return this;
     }
@@ -75,7 +71,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
      */
     public JeroMQRemoteInvokerModule withMaximumConnections(int maximumConnections) {
         bindMaxConnectionsAction = () -> bind(Integer.class)
-                .annotatedWith(named(MAX_CONNECTIONS))
+                .annotatedWith(named(ConnectionPool.MAX_CONNECTIONS))
                 .toInstance(maximumConnections);
         return this;
     }
