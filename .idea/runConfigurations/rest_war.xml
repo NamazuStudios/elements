@@ -13,6 +13,7 @@
     </deployment>
     <server-settings>
       <data>
+        <option name="baseDirectoryName" value="rest-war_namazu-socialengine-system_2" />
         <option name="configFiles">
           <list>
             <JettyConfigFile>
@@ -354,6 +355,7 @@
             </JettyConfigFile>
           </list>
         </option>
+        <base-directory-name>rest-war_namazu-socialengine-system_2</base-directory-name>
         <option name="myConfigFiles">
           <list>
             <JettyConfigFile>

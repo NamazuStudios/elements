@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
+import com.namazustudios.socialengine.rt.jeromq.SimpleConnectionPool;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 
 import static com.google.inject.name.Names.named;
@@ -87,7 +88,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
         bindTimeoutAction.run();
 
         bind(RemoteInvoker.class).to(JeroMQRemoteInvoker.class).asEagerSingleton();
-        bind(ConnectionPool.class).to(DynamicConnectionPool.class);
+        bind(ConnectionPool.class).to(SimpleConnectionPool.class);
 
         expose(RemoteInvoker.class);
 

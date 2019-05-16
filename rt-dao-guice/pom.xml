@@ -60,6 +60,11 @@
             <artifactId>rt-server-cluster-client-jeromq-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-jeromq-guice</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

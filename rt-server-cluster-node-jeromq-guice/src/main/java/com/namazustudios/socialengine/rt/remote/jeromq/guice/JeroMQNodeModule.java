@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.remote.jeromq.JeroMQNode;
 import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
-import com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool;
+import com.namazustudios.socialengine.rt.jeromq.SimpleConnectionPool;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.*;
@@ -104,7 +104,7 @@ public class JeroMQNodeModule extends PrivateModule {
         install(new FSTPayloadReaderWriterModule());
 
         bind(Node.class).to(JeroMQNode.class).asEagerSingleton();
-        bind(ConnectionPool.class).to(DynamicConnectionPool.class);
+        bind(ConnectionPool.class).to(SimpleConnectionPool.class);
 
         bindNodeIdAction.run();
         bindNodeNameAction.run();

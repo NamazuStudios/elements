@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import org.slf4j.Logger;
@@ -25,12 +24,12 @@ import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertEquals;
 import static org.zeromq.ZMsg.*;
 
-@Guice(modules = DynamicConnectionPoolIntegrationTest.Module.class)
-public class DynamicConnectionPoolIntegrationTest {
+@Guice(modules = SimpleConnectionPoolIntegrationTest.Module.class)
+public class SimpleConnectionPoolIntegrationTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(DynamicConnectionPoolIntegrationTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimpleConnectionPoolIntegrationTest.class);
 
-    private static final String TEST_ADDRESS = "inproc://DynamicConnectionPoolIntegrationTest";
+    private static final String TEST_ADDRESS = "inproc://SimpleConnectionPoolIntegrationTest";
 
     private ZContext zContext;
 
@@ -150,7 +149,7 @@ public class DynamicConnectionPoolIntegrationTest {
         protected void configure() {
 
             binder().bind(ZContext.class).asEagerSingleton();
-            binder().bind(ConnectionPool.class).to(DynamicConnectionPool.class).asEagerSingleton();
+            binder().bind(ConnectionPool.class).to(SimpleConnectionPool.class).asEagerSingleton();
 
             binder().bind(Integer.class)
                     .annotatedWith(named(ConnectionPool.TIMEOUT))
