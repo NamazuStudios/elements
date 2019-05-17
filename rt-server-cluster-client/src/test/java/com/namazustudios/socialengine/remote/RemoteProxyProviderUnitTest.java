@@ -117,7 +117,7 @@ public class RemoteProxyProviderUnitTest {
         expected.setMethod("testAsyncReturnVoid");
         expected.setParameters(asList(String.class.getName(), Consumer.class.getName(), Consumer.class.getName()));
         expected.setArguments(asList("Hello World!"));
-        expected.setDispatchType(Dispatch.Type.CONSUMER);
+        expected.setDispatchType(Dispatch.Type.ASYNCHRONOUS);
 
         final InvocationError expectedInvocationError = new InvocationError();
         expectedInvocationError.setThrowable(expectedRuntimeException);
@@ -125,7 +125,7 @@ public class RemoteProxyProviderUnitTest {
         final InvocationResult expectedInvocationResult = new InvocationResult();
         expectedInvocationResult.setResult("Why, hello to you as well!");
 
-        verify(getMockRemoteInvoker()).invokeAsyncV(
+        verify(getMockRemoteInvoker()).invokeAsync(
             argThat(i -> i.equals(expected)),
                 argThat(cl -> {
                     cl.forEach(c -> c.accept(expectedInvocationResult));
@@ -162,7 +162,7 @@ public class RemoteProxyProviderUnitTest {
         expected.setArguments(asList("Hello World!"));
         expected.setDispatchType(Dispatch.Type.FUTURE);
 
-        verify(getMockRemoteInvoker()).invokeAsync(
+        verify(getMockRemoteInvoker()).invokeFuture(
             eq(expected),
             eq(emptyList()), any(RemoteInvoker.InvocationErrorConsumer.class)
         );
@@ -198,7 +198,7 @@ public class RemoteProxyProviderUnitTest {
         final InvocationResult expectedInvocationResult = new InvocationResult();
         expectedInvocationResult.setResult("Why, hello to you as well!");
 
-        verify(getMockRemoteInvoker()).invokeAsync(
+        verify(getMockRemoteInvoker()).invokeFuture(
             argThat(i -> i.equals(expected)),
             argThat(cl -> {
                 cl.forEach(c -> c.accept(expectedInvocationResult));
@@ -237,7 +237,7 @@ public class RemoteProxyProviderUnitTest {
         final InvocationResult expectedInvocationResult = new InvocationResult();
         expectedInvocationResult.setResult("Why, hello to you as well!");
 
-        verify(getMockRemoteInvoker()).invokeAsync(
+        verify(getMockRemoteInvoker()).invokeFuture(
             argThat(i -> i.equals(expected)),
             argThat(cl -> {
                 cl.forEach(c -> c.accept(expectedInvocationResult));
@@ -257,7 +257,7 @@ public class RemoteProxyProviderUnitTest {
 
     public Future<Object> setupMockToReturnFuture() {
         final Future<Object> future = mock(Future.class);
-        when(getMockRemoteInvoker().invokeAsync(any(), any(), any())).thenReturn(future);
+        when(getMockRemoteInvoker().invokeFuture(any(), any(), any())).thenReturn(future);
         return future;
     }
 

@@ -12,7 +12,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
@@ -51,6 +50,13 @@ public class RemoteInvocationHandlerBuilder {
         this.method = method;
         this.dispatchType = Dispatch.Type.determine(method);
         this.remoteInvoker = remoteInvoker;
+
+        switch (dispatchType) {
+            case HYBRID:
+            case CONSUMER:
+                logger.warn("Using dispatch type {} for method {}.  Usage is discouraged.", dispatchType, format(method));
+                break;
+        }
 
     }
 
@@ -157,11 +163,14 @@ public class RemoteInvocationHandlerBuilder {
         switch (type) {
             case SYNCHRONOUS:
                 return remoteInvoker::invokeSync;
-            case FUTURE:
+            case ASYNCHRONOUS:
                 return remoteInvoker::invokeAsync;
+            case FUTURE:
+                return remoteInvoker::invokeFuture;
+            case HYBRID:
             case CONSUMER:
-                return isVoidMethod()   ? remoteInvoker::invokeAsyncV :
-                       isFutureMethod() ? remoteInvoker::invokeAsync :
+                return isVoidMethod()   ? remoteInvoker::invokeAsync :
+                       isFutureMethod() ? remoteInvoker::invokeFuture :
                                           remoteInvoker::invokeSync;
             default:
                 throw new IllegalArgumentException("Unknown dispatch type: " + type);

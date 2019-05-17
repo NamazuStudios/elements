@@ -66,9 +66,9 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     }
 
     @Override
-    public Future<Object> invokeAsync(final Invocation invocation,
-                                      final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-                                      final InvocationErrorConsumer asyncInvocationErrorConsumer) {
+    public Future<Object> invokeFuture(final Invocation invocation,
+                                       final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+                                       final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
         final Map<String, String > mdcContext = MDC.getCopyOfContextMap();
         final CompletableFuture<Object> completableFuture = new CompletableFuture<>();

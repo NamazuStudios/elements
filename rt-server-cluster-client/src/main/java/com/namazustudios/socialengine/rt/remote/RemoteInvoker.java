@@ -33,7 +33,7 @@ public interface RemoteInvoker {
 
     /**
      *
-     * @deprecated This maps directly to {@link #invokeAsync(Invocation, List, InvocationErrorConsumer)}, but was
+     * @deprecated This maps directly to {@link #invokeFuture(Invocation, List, InvocationErrorConsumer)}, but was
      * renamed for clarity on the behavior.  This is not very useful because it can force more threads than are
      * necessary to create a remote invocation.
      *
@@ -46,7 +46,7 @@ public interface RemoteInvoker {
     default Future<Object> invoke(Invocation invocation,
                                   List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
                                   InvocationErrorConsumer asyncInvocationErrorConsumer) {
-        return invokeAsync(invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
+        return invokeFuture(invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
     }
 
     /**
@@ -64,10 +64,10 @@ public interface RemoteInvoker {
      * @param asyncInvocationErrorConsumer a {@link Consumer<InvocationError>} to receive async errors
      * @return a null {@link Void}, for the sake of clarity
      */
-    default Void invokeAsyncV(Invocation invocation,
-                                List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-                                InvocationErrorConsumer asyncInvocationErrorConsumer) {
-        invokeAsync(invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
+    default Void invokeAsync(Invocation invocation,
+                             List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+                             InvocationErrorConsumer asyncInvocationErrorConsumer) {
+        invokeFuture(invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
         return null;
     }
 
@@ -82,9 +82,9 @@ public interface RemoteInvoker {
      * @param asyncInvocationErrorConsumer a {@link Consumer<InvocationError>} to receive async errors
      * @return a {@link Future<Object>} which returns the result of the remote invocation
      */
-    Future<Object> invokeAsync(Invocation invocation,
-                               List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-                               InvocationErrorConsumer asyncInvocationErrorConsumer);
+    Future<Object> invokeFuture(Invocation invocation,
+                                List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+                                InvocationErrorConsumer asyncInvocationErrorConsumer);
 
     /**
      * Sends the {@link Invocation} to the remote service and waits for the {@link InvocationResult}.  The supplied
@@ -93,7 +93,7 @@ public interface RemoteInvoker {
      * Typically this is used with the {@link Type#SYNCHRONOUS}
      *
      * The default implementation of this method simply uses the {@link Future<Object>} returned by the method defined
-     * by {@link #invokeAsync(Invocation, List, InvocationErrorConsumer)} and blocks on {@link Future#get()}.  However,
+     * by {@link #invokeFuture(Invocation, List, InvocationErrorConsumer)} and blocks on {@link Future#get()}.  However,
      * the underlying implementation should override this method to implement a more efficient means of blocking, such
      * as actually blocking on the underlying network socket.
      *
@@ -107,7 +107,7 @@ public interface RemoteInvoker {
                               InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception {
         try {
             final Future<Object> objectFuture;
-            objectFuture = invokeAsync(invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
+            objectFuture = invokeFuture(invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
             return objectFuture.get();
         } catch (ExecutionException ex) {
             if (ex.getCause() instanceof RuntimeException) {
