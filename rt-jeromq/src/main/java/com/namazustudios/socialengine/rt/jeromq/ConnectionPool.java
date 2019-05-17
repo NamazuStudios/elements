@@ -69,8 +69,8 @@ public interface ConnectionPool {
      * @param consumer the {@link Consumer<Connection>}
      * @return the {@link Future<Void>}
      */
-    default Future<Void> processV(final Consumer<Connection> consumer) {
-        return process(connection -> {
+    default void processV(final Consumer<Connection> consumer) {
+        process(connection -> {
             consumer.accept(connection);
             return null;
         });

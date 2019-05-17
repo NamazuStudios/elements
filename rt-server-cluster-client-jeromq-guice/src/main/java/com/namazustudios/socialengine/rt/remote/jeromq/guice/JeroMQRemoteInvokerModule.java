@@ -1,15 +1,19 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
 import com.google.inject.PrivateModule;
+import com.google.inject.Provider;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
-import com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.SimpleConnectionPool;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 
+import java.util.concurrent.ExecutorService;
+
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.CONNECT_ADDRESS;
+import static com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.ASYNC_EXECUTOR_SERVICE;
+import static java.util.concurrent.Executors.newCachedThreadPool;
 
 public class JeroMQRemoteInvokerModule extends PrivateModule {
 
@@ -20,6 +24,30 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
     private Runnable bindMinConnectionsAction = () -> {};
 
     private Runnable bindMaxConnectionsAction = () -> {};
+
+    private Runnable bindExecutorServiceAction = () -> {};
+
+    /**
+     * Binds the default {@link ExecutorService} which is used to handle background tasks in the {@link RemoteInvoker}.
+     *
+     * @return this instance
+     */
+    public JeroMQRemoteInvokerModule withDefaultExecutorServiceProvider() {
+        return withExecutorServiceProvider(() -> newCachedThreadPool());
+    }
+
+    /**
+     * Specifies the {@link Provider<ExecutorService>} used by the {@link RemoteInvoker} instance.
+     *
+     * @param executorServiceProvider the {@link Provider<ExecutorService>}
+     * @return this instance
+     */
+    public JeroMQRemoteInvokerModule withExecutorServiceProvider(final Provider<ExecutorService> executorServiceProvider) {
+        bindExecutorServiceAction = () -> bind(ExecutorService.class)
+            .annotatedWith(named(ASYNC_EXECUTOR_SERVICE))
+            .toProvider(executorServiceProvider);
+        return this;
+    }
 
     /**
      * Specifies the connect address used by the underlying {@link JeroMQRemoteInvoker}.  This provides a binding for
@@ -85,6 +113,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
         bindConnectAddressAction.run();
         bindMinConnectionsAction.run();
         bindMaxConnectionsAction.run();
+        bindExecutorServiceAction.run();
         bindTimeoutAction.run();
 
         bind(RemoteInvoker.class).to(JeroMQRemoteInvoker.class).asEagerSingleton();

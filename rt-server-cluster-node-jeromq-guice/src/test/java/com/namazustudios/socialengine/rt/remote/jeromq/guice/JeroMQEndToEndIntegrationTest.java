@@ -335,7 +335,7 @@ public class JeroMQEndToEndIntegrationTest {
         @Override
         protected void configure() {
 
-            install(new JeroMQRemoteInvokerModule());
+            install(new JeroMQRemoteInvokerModule().withDefaultExecutorServiceProvider());
 
             bind(ZContext.class).toInstance(zContext);
 
