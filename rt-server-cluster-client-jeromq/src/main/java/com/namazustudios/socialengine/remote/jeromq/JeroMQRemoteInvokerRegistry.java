@@ -30,14 +30,9 @@ public class JeroMQRemoteInvokerRegistry implements RemoteInvokerRegistry {
     }
 
     @Override
-    public RemoteInvoker getRemoteInvoker(String address) throws NodeNotFoundException {
+    public RemoteInvoker getRemoteInvoker(String address) {
         final Map<String, RemoteInvoker> remoteInvokerMap = atomicRemoteInvokerMapReference.get();
-        if (remoteInvokerMap.containsKey(address)) {
-            return remoteInvokerMap.get(address);
-        }
-        else {
-            throw new NodeNotFoundException("Node not found for identifier: " + address);
-        }
+        return remoteInvokerMap.get(address);
     }
 
     @Override

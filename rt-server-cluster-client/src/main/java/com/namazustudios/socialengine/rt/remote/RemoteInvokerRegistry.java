@@ -14,7 +14,7 @@ public interface RemoteInvokerRegistry {
      * @param address the node identifier string.
      * @return a RemoteInvoker for the given address.
      */
-    RemoteInvoker getRemoteInvoker(String address) throws NodeNotFoundException;
+    RemoteInvoker getRemoteInvoker(String address);
 
     /**
      * Returns all registered {@link RemoteInvoker}s.
