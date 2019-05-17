@@ -19,8 +19,8 @@ public class RTDaoModuleDefaults implements ModuleDefaults {
         properties.put(GIT_STORAGE_DIRECTORY, "repositories");
         properties.put(CONNECT_ADDR, "tcp://localhost:28883");
         properties.setProperty(ConnectionPool.TIMEOUT, "60");
-        properties.setProperty(ConnectionPool.MIN_CONNECTIONS, "10");
-        properties.setProperty(ConnectionPool.MAX_CONNECTIONS, "10000");
+        properties.setProperty(ConnectionPool.MIN_CONNECTIONS, "1000");
+        properties.setProperty(ConnectionPool.MAX_CONNECTIONS, "450000");
         return properties;
     }
 
