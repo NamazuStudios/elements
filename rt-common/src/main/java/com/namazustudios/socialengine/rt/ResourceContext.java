@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable.RoutingStrategy;
+import com.namazustudios.socialengine.rt.remote.AddressedRoutingStrategy;
 import com.namazustudios.socialengine.rt.util.SyncWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,7 +95,7 @@ public interface ResourceContext {
      * @param path the {@link Path} for the {@link Resource}
      * @param args the arguments to pass to the {@link Resource} on initialization
      */
-    @RemotelyInvokable({RoutingStrategy.ADDRESSED, RoutingStrategy.ANY})
+    @RemotelyInvokable(AnyOrAddressedRoutingStrategy.class)
     void createAttributesAsync(@ResultHandler Consumer<ResourceId> success,
                                @ErrorHandler  Consumer<Throwable> failure,
                                @Serialize String module,
@@ -129,7 +130,7 @@ public interface ResourceContext {
      * @param args the args
      * @return
      */
-    @RemotelyInvokable(RoutingStrategy.ADDRESSED)
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
     void invokeAsync(@ResultHandler Consumer<Object> success,
                      @ErrorHandler  Consumer<Throwable> failure,
                      @Serialize ResourceId resourceId,
@@ -163,7 +164,7 @@ public interface ResourceContext {
      * @param args the args
      * @return
      */
-    @RemotelyInvokable(RoutingStrategy.ADDRESSED)
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
     void invokePathAsync(@ResultHandler Consumer<Object> success,
                          @ErrorHandler  Consumer<Throwable> failure,
                          @Serialize Path path, @Serialize String method, @Serialize Object... args);
@@ -185,7 +186,7 @@ public interface ResourceContext {
      * @param failure called if the operation fails
      * @param resourceId the {@link ResourceId}
      */
-    @RemotelyInvokable(RoutingStrategy.ADDRESSED)
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
     void destroyAsync(@ResultHandler Consumer<Void> success,
                       @ErrorHandler  Consumer<Throwable> failure,
                       @Serialize     ResourceId resourceId);
@@ -218,7 +219,7 @@ public interface ResourceContext {
      * This may not exist for all implementations of {@link ResourceContext}, and may simply provide an exception
      * indicating so.
      */
-    @RemotelyInvokable(RoutingStrategy.ADDRESSED)
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
     void destroyAllResourcesAsync(@ResultHandler Consumer<Void> success,
                                   @ErrorHandler  Consumer<Throwable> failure);
 

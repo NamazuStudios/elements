@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.remote.jeromq;
 import com.namazustudios.socialengine.rt.jeromq.*;
 import com.namazustudios.socialengine.rt.srv.SrvMonitorService;
 import com.namazustudios.socialengine.rt.srv.SrvRecord;
-import com.namazustudios.socialengine.rt.srv.SrvUniqueIdentifier;
+import com.namazustudios.socialengine.rt.SrvUniqueIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.*;

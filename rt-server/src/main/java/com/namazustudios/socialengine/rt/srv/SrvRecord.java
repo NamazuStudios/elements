@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.srv;
 
+import com.namazustudios.socialengine.rt.SrvUniqueIdentifier;
 import com.spotify.dns.LookupResult;
 
 import java.util.Objects;

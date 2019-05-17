@@ -14,5 +14,5 @@ import java.lang.reflect.Method;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RemotelyInvokable {
-    Class<RoutingStrategy> value();
+    Class<? extends RoutingStrategy> value();
 }

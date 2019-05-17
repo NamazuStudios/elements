@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable.RoutingStrategy;
 import com.namazustudios.socialengine.rt.annotation.Serialize;
+import com.namazustudios.socialengine.rt.remote.AddressedRoutingStrategy;
 
 import java.util.concurrent.TimeUnit;
 
@@ -31,7 +32,7 @@ public interface SchedulerContext {
      * @param taskId the {@link TaskId} of the task
      *
      */
-    @RemotelyInvokable(RoutingStrategy.ADDRESSED)
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
     void resumeTaskAfterDelay(@Serialize long time,
                               @Serialize TimeUnit timeUnit,
                               @Serialize TaskId taskId);
@@ -42,7 +43,7 @@ public interface SchedulerContext {
      * @param taskId the {@link TaskId} of the supplied task
      * @param results zero or more results from resuming the task
      */
-    @RemotelyInvokable(RoutingStrategy.ADDRESSED)
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
     void resume(@Serialize TaskId taskId, @Serialize Object ... results);
 
     /**
@@ -51,7 +52,7 @@ public interface SchedulerContext {
      * @param result the result of the network operation, passed to the task
      *
      */
-    @RemotelyInvokable(RoutingStrategy.ADDRESSED)
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
     void resumeFromNetwork(@Serialize TaskId taskId, @Serialize Object result);
 
     /**
@@ -61,7 +62,7 @@ public interface SchedulerContext {
      * @param throwable the error in the blocked operation
      *
      */
-    @RemotelyInvokable(RoutingStrategy.ADDRESSED)
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
     void resumeWithError(@Serialize TaskId taskId, @Serialize Throwable throwable);
 
 }

@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.remote;
+package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.RoutingAddressProvider;
 import com.namazustudios.socialengine.rt.RoutingStrategy;

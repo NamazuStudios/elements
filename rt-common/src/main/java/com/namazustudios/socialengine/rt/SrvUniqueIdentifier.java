@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.srv;
+package com.namazustudios.socialengine.rt;
 
 import java.util.Objects;
 

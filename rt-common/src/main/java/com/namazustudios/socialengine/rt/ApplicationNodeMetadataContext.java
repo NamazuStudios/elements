@@ -12,13 +12,13 @@ import java.util.UUID;
 @Proxyable
 public interface ApplicationNodeMetadataContext {
 
-    @RemotelyInvokable({RoutingStrategy.ADDRESSED, RoutingStrategy.AGGREGATE})
+    @RemotelyInvokable(AggregateOrAddressedRoutingStrategy.class)
     UUID getUuid();
 
-    @RemotelyInvokable({RoutingStrategy.ADDRESSED, RoutingStrategy.AGGREGATE})
+    @RemotelyInvokable(AggregateOrAddressedRoutingStrategy.class)
     long getInMemoryResourceCount();
 
-    @RemotelyInvokable({RoutingStrategy.ADDRESSED, RoutingStrategy.AGGREGATE})
+    @RemotelyInvokable(AggregateOrAddressedRoutingStrategy.class)
     double getLoadAverage();
 
     /**
