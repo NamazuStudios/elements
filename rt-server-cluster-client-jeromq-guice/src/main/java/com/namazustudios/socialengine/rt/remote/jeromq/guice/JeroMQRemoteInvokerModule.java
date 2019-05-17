@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.jeromq.SimpleConnectionPool;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.CONNECT_ADDRESS;
@@ -33,7 +34,18 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
      * @return this instance
      */
     public JeroMQRemoteInvokerModule withDefaultExecutorServiceProvider() {
-        return withExecutorServiceProvider(() -> newCachedThreadPool());
+        return withExecutorServiceProvider(() -> {
+
+            final AtomicInteger count = new AtomicInteger();
+
+            return newCachedThreadPool(r -> {
+                final Thread thread = new Thread(r);
+                thread.setDaemon(true);
+                thread.setName(JeroMQRemoteInvoker.class.getSimpleName() + "-" + count.getAndIncrement());
+                return thread;
+            });
+
+        });
     }
 
     /**
