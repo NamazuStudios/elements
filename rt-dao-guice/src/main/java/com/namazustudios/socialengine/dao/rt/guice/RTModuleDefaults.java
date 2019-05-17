@@ -12,7 +12,7 @@ public class RTModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.setProperty(ZContextProvider.MAX_SOCKETS, "262144");
+        properties.setProperty(ZContextProvider.MAX_SOCKETS, "500000");
         properties.setProperty(ZContextProvider.IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         return properties;
     }
