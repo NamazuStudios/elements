@@ -19,8 +19,6 @@ import com.namazustudios.socialengine.rt.NullResourceAcquisition;
 import com.namazustudios.socialengine.rt.ResourceAcquisition;
 import org.apache.bval.guice.ValidationModule;
 import org.eclipse.jetty.server.Server;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;

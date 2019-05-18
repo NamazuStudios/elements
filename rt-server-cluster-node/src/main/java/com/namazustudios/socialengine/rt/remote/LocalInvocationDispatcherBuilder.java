@@ -77,7 +77,7 @@ public class LocalInvocationDispatcherBuilder {
             case ASYNCHRONOUS:
                 returnValueStrategy = ignoreReturnValueStrategy();
                 break;
-                
+
             default:
                 throw new IllegalArgumentException("Dispatch type " + getDispatchType() + " is not supported for method " + method);
 
