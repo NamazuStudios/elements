@@ -38,7 +38,7 @@ public interface Connection extends AutoCloseable {
      *
      * {@see {@link #from(ZContext, Function, Logger) }
      *
-     * @param context the {@link com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.Context}
+     * @param context the {@link ZContext}
      * @param socketSupplier the {@link Function<ZContext, Socket>}
      * @return the {@link Connection}
      * @throws IllegalArgumentException if the supplied {@link Socket} is not part of the {@link ZContext}

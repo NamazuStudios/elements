@@ -14,12 +14,11 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
+import com.namazustudios.socialengine.guice.ZContextModule;
 import com.namazustudios.socialengine.rt.NullResourceAcquisition;
 import com.namazustudios.socialengine.rt.ResourceAcquisition;
 import org.apache.bval.guice.ValidationModule;
 import org.eclipse.jetty.server.Server;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -41,6 +40,7 @@ public class AppServeMain {
             new MongoDaoModule(),
             new ValidationModule(),
             new MongoSearchModule(),
+            new ZContextModule(),
             new JeroMQMultiplexerModule(),
             new RTFilesystemGitLoaderModule(),
             new AbstractModule() {

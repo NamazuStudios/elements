@@ -440,7 +440,7 @@ public class XodusResourceService implements ResourceService {
             doLink(txn, paths, resourceIdKey, pathKey);
 
             int acquires = doAcquire(txn, resourceIdKey);
-            if (acquires != 1) throw new IllegalStateException("Expecting newly acquired resource count of 1");
+            if (acquires != 1) throw new IllegalStateException("Expecting newly acquired resource count of 1.  Got: " + acquires);
 
             return (Supplier<XodusResource>) () -> {
                 try (final Monitor monitor = getResourceLockService().getMonitor(resourceId)) {

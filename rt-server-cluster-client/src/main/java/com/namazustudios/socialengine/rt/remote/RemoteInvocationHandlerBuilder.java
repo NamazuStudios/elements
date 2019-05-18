@@ -12,7 +12,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
@@ -51,6 +50,13 @@ public class RemoteInvocationHandlerBuilder {
         this.method = method;
         this.dispatchType = Dispatch.Type.determine(method);
         this.remoteInvoker = remoteInvoker;
+
+        switch (dispatchType) {
+            case HYBRID:
+            case CONSUMER:
+                logger.warn("Using dispatch type {} for method {}.  Usage is discouraged.", dispatchType, format(method));
+                break;
+        }
 
     }
 
@@ -144,9 +150,7 @@ public class RemoteInvocationHandlerBuilder {
             final List<Consumer<InvocationResult>> invocationResultConsumerList;
             invocationResultConsumerList = invocationResultConsumerAssembler.apply(args, invocationErrorConsumer);
 
-            final Future<Object> objectFuture;
-            objectFuture = remoteInvoker.invoke(invocation, invocationResultConsumerList, invocationErrorConsumer);
-            return returnValueTransformer.transform(objectFuture);
+            return returnValueTransformer.transform(invocation, invocationResultConsumerList, invocationErrorConsumer);
 
         };
 
@@ -158,27 +162,29 @@ public class RemoteInvocationHandlerBuilder {
 
         switch (type) {
             case SYNCHRONOUS:
-                return getSynchronousReturnValueTransformer();
+                return remoteInvoker::invokeSync;
+            case ASYNCHRONOUS:
+                return remoteInvoker::invokeAsync;
             case FUTURE:
-                return future -> future;
+                return remoteInvoker::invokeFuture;
+            case HYBRID:
             case CONSUMER:
-                return void.class.equals(getMethod().getReturnType()) ? future -> null :
-                       Future.class.isAssignableFrom(getMethod().getReturnType()) ? future -> future :
-                       future -> getSynchronousReturnValueTransformer();
+                return isVoidMethod()   ? remoteInvoker::invokeAsync :
+                       isFutureMethod() ? remoteInvoker::invokeFuture :
+                                          remoteInvoker::invokeSync;
             default:
                 throw new IllegalArgumentException("Unknown dispatch type: " + type);
         }
 
     }
 
-    private ReturnValueTransformer getSynchronousReturnValueTransformer() {
-        return future -> {
-            try {
-                return future.get();
-            } catch (ExecutionException ex) {
-                throw ex.getCause();
-            }
-        };
+    private boolean isVoidMethod() {
+        final Class<?> rType = getMethod().getReturnType();
+        return void.class.equals(rType) || Void.class.equals(rType);
+    }
+
+    private boolean isFutureMethod() {
+        return Future.class.isAssignableFrom(getMethod().getReturnType());
     }
 
     private Function<Object[], List<Object>> getParameterAssembler() {
@@ -272,7 +278,9 @@ public class RemoteInvocationHandlerBuilder {
     }
 
     /**
-     * Transforms the return value as the result of an {@link Invocation}.
+     * Transforms the an Invocation and supporting arguments to a {@link Object} as the return value of a proxied
+     * method call.  This is responsible for selecting the proper dispatch method of of the {@link RemoteInvoker} and
+     * returning the result as an {@link Object}.
      */
     @FunctionalInterface
     private interface ReturnValueTransformer {
@@ -281,11 +289,12 @@ public class RemoteInvocationHandlerBuilder {
          * Performs the translation.  This will translate the return value and, if necessary, throw an instance of
          * {@link Throwable} if the remote {@link Method} failed.
          *
-         * @param objectFuture the {@link Future<Object>} supplied by {@link RemoteInvoker#invoke(Invocation, List, InvocationErrorConsumer) <Consumer>)}
          * @return an {@link Object} to return from the {@link InvocationHandler}
          * @throws Throwable if an exception occurs, can also be re-throwing the remiote invocation error
          */
-        Object transform(Future<Object> objectFuture) throws Throwable;
+        Object transform(Invocation invocation,
+                         List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+                         InvocationErrorConsumer asyncInvocationErrorConsumer) throws Throwable;
 
     }
 

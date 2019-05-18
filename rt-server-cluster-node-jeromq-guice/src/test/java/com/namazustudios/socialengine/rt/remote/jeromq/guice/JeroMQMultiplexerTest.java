@@ -6,13 +6,14 @@ import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import org.testng.annotations.Test;
 import org.zeromq.ZContext;
+import org.zeromq.ZMQException;
 
 import static com.google.inject.name.Names.named;
 import static java.util.UUID.randomUUID;
 
 public class JeroMQMultiplexerTest {
 
-    @Test(expectedExceptions = IllegalArgumentException.class)
+    @Test(expectedExceptions = ZMQException.class)
     public void testFailsWithBadHostname() {
 
         final ZContext zContext = new ZContext();

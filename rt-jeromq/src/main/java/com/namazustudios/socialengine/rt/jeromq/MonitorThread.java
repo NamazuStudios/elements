@@ -15,6 +15,7 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.zeromq.ZContext.shadow;
 
 public class MonitorThread extends Thread implements AutoCloseable {
 
@@ -30,13 +31,14 @@ public class MonitorThread extends Thread implements AutoCloseable {
         setName(name);
         setDaemon(true);
         this.logger = logger;
-        this.zContext = ZContext.shadow(zContext);
+        this.zContext = zContext;
         this.monitored = monitored;
     }
 
     @Override
     public void run() {
-        try (final ZMonitor zMonitor = new ZMonitor(zContext, monitored).add(ZMonitor.Event.ALL).start()) {
+        try (final ZContext shadow = shadow(zContext);
+             final ZMonitor zMonitor = new ZMonitor(shadow, monitored).add(ZMonitor.Event.ALL).start()) {
 
             final Stopwatch stopwatch = Stopwatch.createStarted();
             final Map<String, Integer> zEventCountMap = new LinkedHashMap<>();

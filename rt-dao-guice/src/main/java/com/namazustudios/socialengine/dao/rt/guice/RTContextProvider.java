@@ -5,9 +5,7 @@ import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.ClusterClientContextModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -34,6 +32,7 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
             final String connectAddress = connectionMultiplexer.getConnectAddress(nodeUuid);
 
             final JeroMQClientModule jeroMQClientModule = new JeroMQClientModule()
+                .withDefaultExecutorServiceProvider()
                 .withConnectAddress(connectAddress);
 
             final Injector contextInjector = getInjectorProvider()

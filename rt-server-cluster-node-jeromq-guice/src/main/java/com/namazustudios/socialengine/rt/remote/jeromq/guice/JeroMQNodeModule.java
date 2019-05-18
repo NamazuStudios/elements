@@ -5,14 +5,10 @@ import com.namazustudios.socialengine.remote.jeromq.JeroMQNode;
 import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
-import com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool;
-import com.namazustudios.socialengine.rt.jeromq.Identity;
+import com.namazustudios.socialengine.rt.jeromq.SimpleConnectionPool;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.*;
-import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.MAX_CONNECTIONS;
-import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.MIN_CONNECTIONS;
-import static com.namazustudios.socialengine.rt.jeromq.DynamicConnectionPool.TIMEOUT;
 
 public class JeroMQNodeModule extends PrivateModule {
 
@@ -71,7 +67,7 @@ public class JeroMQNodeModule extends PrivateModule {
      */
     public JeroMQNodeModule withTimeout(final int timeoutInSeconds) {
         bindTimeoutAction = () -> bind(Integer.class)
-                .annotatedWith(named(TIMEOUT))
+                .annotatedWith(named(ConnectionPool.TIMEOUT))
                 .toInstance(timeoutInSeconds);
         return this;
     }
@@ -84,7 +80,7 @@ public class JeroMQNodeModule extends PrivateModule {
      */
     public JeroMQNodeModule withMinimumConnections(final int minimumConnections) {
         bindMinConnectionsAction = () -> bind(Integer.class)
-                .annotatedWith(named(MIN_CONNECTIONS))
+                .annotatedWith(named(ConnectionPool.MIN_CONNECTIONS))
                 .toInstance(minimumConnections);
         return this;
     }
@@ -97,7 +93,7 @@ public class JeroMQNodeModule extends PrivateModule {
      */
     public JeroMQNodeModule withMaximumConnections(int maximumConnections) {
         bindMaxConnectionsAction = () -> bind(Integer.class)
-                .annotatedWith(named(MAX_CONNECTIONS))
+                .annotatedWith(named(ConnectionPool.MAX_CONNECTIONS))
                 .toInstance(maximumConnections);
         return this;
     }
@@ -108,7 +104,7 @@ public class JeroMQNodeModule extends PrivateModule {
         install(new FSTPayloadReaderWriterModule());
 
         bind(Node.class).to(JeroMQNode.class).asEagerSingleton();
-        bind(ConnectionPool.class).to(DynamicConnectionPool.class);
+        bind(ConnectionPool.class).to(SimpleConnectionPool.class);
 
         bindNodeIdAction.run();
         bindNodeNameAction.run();

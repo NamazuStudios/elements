@@ -19,6 +19,12 @@ import java.util.function.Function;
  */
 public interface ConnectionPool {
 
+    String TIMEOUT = "com.namazustudios.socialengine.rt.jeromq.ConnectionPool.timeout";
+
+    String MIN_CONNECTIONS = "com.namazustudios.socialengine.rt.jeromq.ConnectionPool.minConnections";
+
+    String MAX_CONNECTIONS = "com.namazustudios.socialengine.rt.jeromq.ConnectionPool.maxConnections";
+
     /**
      * Starts the {@link ConnectionPool}, blocking as necessary to startup and connect.  This accepts a {@link Function}
      * which will supply the {@link Socket} instances.  Note that each {@link Socket} supplied should be interchangeable
@@ -55,7 +61,7 @@ public interface ConnectionPool {
      *
      * @param tFunction the {@Function<Connection, T>} to handle the connection
      */
-    <T> Future<T> process(Function<Connection, T> tFunction);
+    <T> T process(Function<Connection, T> tFunction);
 
     /**
      * Invokes {@link #process(Function)} with a {@link Consumer} and returns a {@link Future<Void>}.
@@ -63,8 +69,8 @@ public interface ConnectionPool {
      * @param consumer the {@link Consumer<Connection>}
      * @return the {@link Future<Void>}
      */
-    default Future<Void> processV(final Consumer<Connection> consumer) {
-        return process(connection -> {
+    default void processV(final Consumer<Connection> consumer) {
+        process(connection -> {
             consumer.accept(connection);
             return null;
         });

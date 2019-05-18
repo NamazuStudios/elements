@@ -9,7 +9,6 @@ public class JeroMQMultiplexerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(ZContext.class).asEagerSingleton();
         bind(ConnectionMultiplexer.class).to(JeroMQConnectionMultiplexer.class).asEagerSingleton();
     }
 
