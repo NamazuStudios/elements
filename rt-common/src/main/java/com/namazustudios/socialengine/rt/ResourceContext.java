@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
-import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable.RoutingStrategy;
 import com.namazustudios.socialengine.rt.remote.AddressedRoutingStrategy;
 import com.namazustudios.socialengine.rt.util.SyncWait;
 import org.slf4j.Logger;
@@ -39,7 +38,7 @@ public interface ResourceContext {
      * @return the system-assigned {@link ResourceId}
      */
     default ResourceId create(@Serialize final String module,
-                              @Serialize final Path path,
+                              @AddressProvider @Serialize final Path path,
                               @Serialize final Object... args) {
         final SyncWait<ResourceId> resourceIdSyncWait = new SyncWait<>(getClass());
         createAsync(resourceIdSyncWait.getResultConsumer(), resourceIdSyncWait.getErrorConsumer(),
@@ -61,7 +60,7 @@ public interface ResourceContext {
     default void createAsync(@ResultHandler final Consumer<ResourceId> success,
                              @ErrorHandler  final Consumer<Throwable> failure,
                              @Serialize final String module,
-                             @Serialize final Path path,
+                             @AddressProvider @Serialize final Path path,
                              @Serialize final Object... args) {
         createAttributesAsync(success, failure, module, path, emptyAttributes(), args);
     }
@@ -76,7 +75,7 @@ public interface ResourceContext {
      * @return the system-assigned {@link ResourceId}
      */
     default ResourceId createAttributes(@Serialize final String module,
-                                        @Serialize final Path path,
+                                        @AddressProvider @Serialize final Path path,
                                         @Serialize final Attributes attributes,
                                         @Serialize final Object... args) {
         final SyncWait<ResourceId> resourceIdSyncWait = new SyncWait<>(getClass());
@@ -99,7 +98,7 @@ public interface ResourceContext {
     void createAttributesAsync(@ResultHandler Consumer<ResourceId> success,
                                @ErrorHandler  Consumer<Throwable> failure,
                                @Serialize String module,
-                               @Serialize Path path,
+                               @AddressProvider @Serialize Path path,
                                @Serialize Attributes attributes,
                                @Serialize Object... args);
 
@@ -111,7 +110,7 @@ public interface ResourceContext {
      * @param args the argument array
      * @return the result of the invocation
      */
-    default Object invoke(@Serialize final ResourceId resourceId,
+    default Object invoke(@AddressProvider @Serialize final ResourceId resourceId,
                           @Serialize final String method,
                           @Serialize final Object... args) {
         final SyncWait<Object> resultSyncWait = new SyncWait<>(getClass());
@@ -133,7 +132,7 @@ public interface ResourceContext {
     @RemotelyInvokable(AddressedRoutingStrategy.class)
     void invokeAsync(@ResultHandler Consumer<Object> success,
                      @ErrorHandler  Consumer<Throwable> failure,
-                     @Serialize ResourceId resourceId,
+                     @AddressProvider @Serialize ResourceId resourceId,
                      @Serialize String method,
                      @Serialize Object... args);
 
@@ -145,7 +144,7 @@ public interface ResourceContext {
      * @param args the argument array
      * @return the result of the invocation
      */
-    default Object invokePath(@Serialize final Path path,
+    default Object invokePath(@AddressProvider @Serialize final Path path,
                               @Serialize final String method,
                               @Serialize final Object... args) {
         final SyncWait<Object> resultSyncWait = new SyncWait<>(getClass());
@@ -167,14 +166,16 @@ public interface ResourceContext {
     @RemotelyInvokable(AddressedRoutingStrategy.class)
     void invokePathAsync(@ResultHandler Consumer<Object> success,
                          @ErrorHandler  Consumer<Throwable> failure,
-                         @Serialize Path path, @Serialize String method, @Serialize Object... args);
+                         @AddressProvider @Serialize Path path,
+                         @Serialize String method,
+                         @Serialize Object... args);
 
     /**
      * Destroys the {@link Resource} with the provided {@link ResourceId}.
      *
      * @param resourceId the {@link ResourceId}
      */
-    default void destroy(@Serialize final ResourceId resourceId) {
+    default void destroy(@AddressProvider @Serialize final ResourceId resourceId) {
         final SyncWait<Void> resultSyncWait = new SyncWait<>(getClass());
         destroyAsync(resultSyncWait.getResultConsumer(), resultSyncWait.getErrorConsumer(), resourceId);
         resultSyncWait.get();
@@ -189,7 +190,7 @@ public interface ResourceContext {
     @RemotelyInvokable(AddressedRoutingStrategy.class)
     void destroyAsync(@ResultHandler Consumer<Void> success,
                       @ErrorHandler  Consumer<Throwable> failure,
-                      @Serialize     ResourceId resourceId);
+                      @AddressProvider @Serialize     ResourceId resourceId);
 
     /**
      * Destroys the {@link Resource} using the {@link ResourceId} {@link String}.

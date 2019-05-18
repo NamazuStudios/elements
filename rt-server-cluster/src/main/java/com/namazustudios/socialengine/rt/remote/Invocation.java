@@ -1,11 +1,10 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.RoutingStrategy;
 import com.namazustudios.socialengine.rt.annotation.Dispatch;
-import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable.RoutingStrategy;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,7 +25,9 @@ public class Invocation implements Serializable {
 
     private Dispatch.Type dispatchType;
 
-    private EnumSet<RoutingStrategy> routingStrategies;
+    private RoutingStrategy routingStrategy;
+
+    private String routingAddress;
 
     /**
      * Gets the string representing the type of the remote object to invoke.  {@see {@link Class#getName()}}
@@ -140,12 +141,20 @@ public class Invocation implements Serializable {
         this.dispatchType = dispatchType;
     }
 
-    public EnumSet<RoutingStrategy> getRoutingStrategies() {
-        return routingStrategies;
+    public RoutingStrategy getRoutingStrategy() {
+        return routingStrategy;
     }
 
-    public void setRoutingStrategies(EnumSet<RoutingStrategy> routingStrategies) {
-        this.routingStrategies = routingStrategies;
+    public void setRoutingStrategy(RoutingStrategy routingStrategy) {
+        this.routingStrategy = routingStrategy;
+    }
+
+    public String getRoutingAddress() {
+        return routingAddress;
+    }
+
+    public void setRoutingAddress(String routingAddress) {
+        this.routingAddress = routingAddress;
     }
 
     @Override
@@ -159,12 +168,13 @@ public class Invocation implements Serializable {
                 Objects.equals(getParameters(), that.getParameters()) &&
                 Objects.equals(getArguments(), that.getArguments()) &&
                 getDispatchType() == that.getDispatchType() &&
-                Objects.equals(getRoutingStrategies(), that.getRoutingStrategies());
+                Objects.equals(getRoutingStrategy(), that.getRoutingStrategy()) &&
+                Objects.equals(getRoutingAddress(), that.getRoutingAddress());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getType(), getName(), getMethod(), getParameters(), getArguments(), getDispatchType(), getRoutingStrategies());
+        return Objects.hash(getType(), getName(), getMethod(), getParameters(), getArguments(), getDispatchType(), getRoutingStrategy(), getRoutingAddress());
     }
 
     @Override
@@ -176,7 +186,8 @@ public class Invocation implements Serializable {
                 ", parameters=" + parameters +
                 ", arguments=" + arguments +
                 ", dispatchType=" + dispatchType +
-                ", routingStrategies=" + routingStrategies +
+                ", routingStrategy=" + routingStrategy +
+                ", routingAddress='" + routingAddress + '\'' +
                 '}';
     }
 }

@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
-import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable.RoutingStrategy;
 
 import java.util.UUID;
 
@@ -12,13 +11,13 @@ import java.util.UUID;
 @Proxyable
 public interface ApplicationNodeMetadataContext {
 
-    @RemotelyInvokable(AggregateOrAddressedRoutingStrategy.class)
+    @RemotelyInvokable(AggregateRoutingStrategy.class)
     UUID getUuid();
 
-    @RemotelyInvokable(AggregateOrAddressedRoutingStrategy.class)
+    @RemotelyInvokable(AggregateRoutingStrategy.class)
     long getInMemoryResourceCount();
 
-    @RemotelyInvokable(AggregateOrAddressedRoutingStrategy.class)
+    @RemotelyInvokable(AggregateRoutingStrategy.class)
     double getLoadAverage();
 
     /**

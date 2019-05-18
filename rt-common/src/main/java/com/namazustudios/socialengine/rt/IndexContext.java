@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
-import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable.RoutingStrategy;
 import com.namazustudios.socialengine.rt.remote.AddressedRoutingStrategy;
 import com.namazustudios.socialengine.rt.util.SyncWait;
 
@@ -51,7 +50,7 @@ public interface IndexContext {
      * @return a {@link Future<Stream<Listing>>} which can be used to obtain the result
      */
     @RemotelyInvokable(AggregateOrAddressedRoutingStrategy.class)
-    void listAsync(@Serialize Path path,
+    void listAsync(@AddressProvider @Serialize Path path,
                    @ResultHandler Consumer<Stream<Listing>> success,
                    @ErrorHandler  Consumer<Throwable> failure);
 
@@ -81,7 +80,7 @@ public interface IndexContext {
      *
      */
     @RemotelyInvokable(AddressedRoutingStrategy.class)
-    void linkAsync(@Serialize ResourceId resourceId,
+    void linkAsync(@AddressProvider @Serialize ResourceId resourceId,
                    @Serialize Path destination,
                    @ResultHandler Consumer<Void> success,
                    @ErrorHandler  Consumer<Throwable> failure);
@@ -108,7 +107,7 @@ public interface IndexContext {
      * @return a {@link Future} which can be used to obtain the result of the operation
      */
     @RemotelyInvokable(AddressedRoutingStrategy.class)
-    void linkPathAsync(@Serialize Path source, @Serialize Path destination,
+    void linkPathAsync(@AddressProvider @Serialize Path source, @Serialize Path destination,
                        @ResultHandler Consumer<Void> success,
                        @ErrorHandler  Consumer<Throwable> failure);
 
@@ -139,7 +138,7 @@ public interface IndexContext {
      * @return a {@link Future} which can be used to obtain the result of the operation
      */
     @RemotelyInvokable(AddressedRoutingStrategy.class)
-    void unlinkAsync(@Serialize Path path,
+    void unlinkAsync(@AddressProvider @Serialize Path path,
                      @ResultHandler Consumer<Unlink> success,
                      @ErrorHandler  Consumer<Throwable> failure);
 

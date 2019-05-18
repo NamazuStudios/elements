@@ -41,8 +41,6 @@ public class RemoteProxyProvider<ProxyableT> implements Provider<ProxyableT> {
     @Override
     public ProxyableT get() {
 
-        final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
-
         final ProxyBuilder<ProxyableT> builder = new ProxyBuilder<>(interfaceClassT)
             .withToString()
             .withDefaultHashCodeAndEquals()
@@ -51,7 +49,7 @@ public class RemoteProxyProvider<ProxyableT> implements Provider<ProxyableT> {
 
         methods(interfaceClassT)
             .filter(m -> m.getAnnotation(RemotelyInvokable.class) != null)
-            .map(m -> new RemoteInvocationHandlerBuilder(remoteInvoker, interfaceClassT, m).withName(name))
+            .map(m -> new RemoteInvocationHandlerBuilder(getRemoteInvokerRegistry(), interfaceClassT, m).withName(name))
             .forEach(b -> builder.handler(b.build()).forMethod(b.getMethod()));
 
         return builder.build();
