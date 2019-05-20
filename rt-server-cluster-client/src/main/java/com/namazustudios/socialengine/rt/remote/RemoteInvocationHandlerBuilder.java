@@ -1,10 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.Reflection;
-import com.namazustudios.socialengine.rt.annotation.Dispatch;
-import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
-import com.namazustudios.socialengine.rt.annotation.ResultHandler;
-import com.namazustudios.socialengine.rt.annotation.Serialize;
+import com.namazustudios.socialengine.rt.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -218,25 +215,15 @@ public class RemoteInvocationHandlerBuilder {
         return objects -> stream(indices).mapToObj(index -> objects[index]).collect(toList());
     }
 
-//    private Function<Object[], RoutingAddressProvider> getRoutingAddressProviderAssembler() {
-//        final Method method = getMethod();
-//        final int[] indices = indices(method, AddressProvider.class);
-//        if (indices.length > 1) {
-//            throw new IllegalArgumentException("There should be at most one AddressProvider for method signature: " + method.toString());
-//        }
-//
-//        if (indices.length == 1) {
-//            final int addressProviderIndex = indices[0];
-//            return objects -> (RoutingAddressProvider) objects[addressProviderIndex];
-//        }
-//        else {
-//            return objects -> null;
-//        }
-//    }
-
     private Function<Object[], Object> getAddressAssembler() {
-        // TODO: Return Closure to extract Address from parameters
-        return null;
+
+        final Method method = getMethod();
+        final int[] indices = indices(method, AddressProvider.class);
+        if (indices.length != 1) throw new IllegalArgumentException("Only parameter may bear AddressProvider.");
+
+        final int index = indices[0];
+        return objects -> objects[index];
+
     }
 
     private Function<Object[], InvocationErrorConsumer> getInvocationErrorConsumerAssembler() {
